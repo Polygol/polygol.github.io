@@ -719,10 +719,6 @@ document.addEventListener('DOMContentLoaded', () => {
             url: "https://calendar.google.com",
             icon: "gcalendar.png"
         },
-        "cal": {
-            url: "https://calendar.google.com",
-            icon: "gcalendar.png"
-        },
         "docs": {
             url: "https://docs.google.com",
             icon: "gdocs.png"
