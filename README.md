@@ -1,5 +1,5 @@
 ![GurasuraisuMK](https://github.com/user-attachments/assets/e13475bc-ea23-4c7a-b9a0-2b51c2ffed54)
-# Gurasuraisu Mocha 
+# Gurasuraisu
 Ambient display with clock, weather and advanced features without tracking you or displaying ads.
 
 ## Contributions
@@ -18,3 +18,5 @@ As Mocha evolves, new features and updates will continue to be added, including:
 - Complete feature parity with Gurasuraisu Lite.
 - Advanced customization options.
 - Integration with more third-party services to enhance functionality.
+
+Previously named Gurasuraisu Mocha
