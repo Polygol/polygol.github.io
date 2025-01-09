@@ -914,6 +914,7 @@ function consoleGreeting() {
     console.info("                            Welcome to Gurasuraisu!");
     console.info("                      https://gurasuraisu.github.io");
 }
+consoleGreeting()
 
     // Touch Events
     appDrawer.addEventListener('touchstart', (e) => {
@@ -979,4 +980,3 @@ function consoleGreeting() {
     goFullscreen();
     updateDisplay();
     initAppDraw();
-    consoleGreeting()
