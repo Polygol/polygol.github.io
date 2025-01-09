@@ -639,9 +639,8 @@ searchInput.addEventListener('keydown', (event) => {
         }
         const firstWord = query.split(' ')[0].toLowerCase();
         if (firstWord === "how" || firstWord === "help" || firstWord === "ai" || firstWord === "why") {
-            // legacy: const bingUrl = `https://www.bing.com/search?showconv=1&sendquery=1&q=${encodeURIComponent(query)}`;
-            showPopup("Reddit Answers is in the process of replacing Copilot. Please open and use Reddit Answers for the time being");
-            // legacy: window.open(bingUrl, '_blank');
+            const bingUrl = `https://www.bing.com/search?showconv=1&sendquery=1&q=${encodeURIComponent(query)}`;
+            window.open(bingUrl, '_blank');
         } else if (query) {
             window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
         }
