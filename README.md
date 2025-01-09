@@ -1,4 +1,4 @@
-![GurasuraisuMK](https://github.com/user-attachments/assets/e13475bc-ea23-4c7a-b9a0-2b51c2ffed54)
+![ddd](https://github.com/user-attachments/assets/b946b20e-000e-46ed-ac85-9158a551ee98)
 # Gurasuraisu
 Ambient display with clock, weather and advanced features without tracking you or displaying ads.
 
