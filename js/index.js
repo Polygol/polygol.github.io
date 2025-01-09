@@ -974,9 +974,9 @@ function consoleGreeting() {
     }
 
     // Call initialization
-    consoleGreeting()
     initializeCustomization();
     firstSetup();
     goFullscreen();
     updateDisplay();
     initAppDraw();
+    consoleGreeting()
