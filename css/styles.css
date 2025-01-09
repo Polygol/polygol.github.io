@@ -230,6 +230,7 @@ body.light-theme {
         }
 
         .detailed-weather {
+            border: 2px solid var(--search-background);
             font-size: 1.5rem;
             padding: 20px;
             border-radius: 30px;
