@@ -916,11 +916,21 @@ function consoleGreeting() {
             https://gurasuraisu.github.io         
     `;
 
-    console.info(greeting);
+    const license = `
+        Copyright © 2025 Gurasuraisu
+        Licensed under the GNU General Public License, Version 2.0 (GPL-2.0)
+        You may obtain a copy of the License at https://www.gnu.org/licenses/gpl-3.0.html
+        `;
 
-    console.info("Copyright © 2025 Gurasuraisu")
-    console.info("Gurasuraisu is open source, and free for all.")
-    console.info("If you have paid for this FREE software, you have been scammed.")
+    const theft = `
+        THEFT NOTICE
+        Gurasuraisu is open source, and free for all.
+        Please make sure to use Gurasuraisu from https://gurasuraisu.github.io to avoid counterfeit versions.
+        `;
+
+    console.info(greeting);
+    console.info(license);
+    console.info(theft);
 }
     
 consoleGreeting()
