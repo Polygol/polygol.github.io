@@ -170,6 +170,7 @@ body.light-theme {
             background-color: transparent;
             box-shadow: none;
             user-select: none;
+            border: none;
         }
 
         #weatherModal .modal-content {
