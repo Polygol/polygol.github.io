@@ -334,6 +334,18 @@ body.light-theme {
             user-select: none;
         }
 
+.search-button {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: url('https://fonts.gstatic.com/s/i/materialiconsoutlined/search/v6/24px.svg') no-repeat center center;
+  background-size: contain;
+  width: 30px;
+  height: 30px;
+  border: none;
+  cursor: pointer;
+}
+
         .search-container {
             position: fixed;
             top: 50px;
@@ -788,4 +800,8 @@ body.light-theme {
         left: 25px;
         font-size: 1.2rem;
     }
+}
+
+.hidden {
+  display: none;
 }
