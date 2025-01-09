@@ -889,6 +889,32 @@ function setupDrawerInteractions() {
         isDragging = false;
     }
 
+function consoleGreeting() {
+    console.info("                   --==++++++++++                  ");
+    console.info("                 :=++**********++++                ");
+    console.info("               :-++*************+++++              ");
+    console.info("              :=++**********++++++++++             ");
+    console.info("            :-=+***#@%#+++++*%@#+++++++            ");
+    console.info("           .:=+****%@@#+++==*@@%======++           ");
+    console.info("          :-=+*****%@@*====-*@@%=--====++          ");
+    console.info("         :-=+******%@@*-----+@@#-----====+         ");
+    console.info("        :-=+*****++#@@*--:::+@@#-:----=====+       ");
+    console.info("       :-++*****+++==--::::::::::::----======      ");
+    console.info("      :-++*****+++==--::::::::::::::-----====      ");
+    console.info("     :-=++***++++*%%%%%%%%%%%%%%%*::::------==     ");
+    console.info("    :-=+++*++++=#%@@@@@@@@@@@@@@@@*:::::::::---    ");
+    console.info("    -=+++++++===%@@@@@@@@@@@@@@@@@%:.........::    ");
+    console.info("    ==++++++=-::%@@@@@@@@@@@@@@@@@%:        ..:    ");
+    console.info("    ==++++==-:..#@@@@@@@@@@@@@@@@@%:         .:    ");
+    console.info("    ======-::...#@@@@@@@@@@@@@@@@@%:        ..:    ");
+    console.info("     ===--::....*@@@@@@@@@@@@@@@@@*.      ...:     ");
+    console.info("       =---::....+%@@@@@@@@@@@@@%*.........::      ");
+    console.info("         =-----::::::::::::::::::::::::::--        ");
+    console.info("                                                   ");
+    console.info("                            Welcome to Gurasuraisu!");
+    console.info("                      https://gurasuraisu.github.io");
+}
+
     // Touch Events
     appDrawer.addEventListener('touchstart', (e) => {
         startDrag(e.touches[0].clientY);
@@ -948,6 +974,7 @@ function setupDrawerInteractions() {
     }
 
     // Call initialization
+    consoleGreeting()
     initializeCustomization();
     firstSetup();
     goFullscreen();
