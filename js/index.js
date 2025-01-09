@@ -917,6 +917,10 @@ function consoleGreeting() {
     `;
 
     console.info(greeting);
+
+    console.info("Copyright © 2025 Gurasuraisu")
+    console.info("Gurasuraisu is open source, and free for all.")
+    console.info("If you have paid for this FREE software, you have been scammed.")
 }
     
 consoleGreeting()
