@@ -878,6 +878,15 @@ function setupDrawerInteractions() {
         }
     });
 
+// Get references to the search bar and the button
+const searchBar = document.querySelector('.search-container');
+const searchButton = document.querySelector('.search-button');
+
+// Add a click event listener to the button to toggle the search bar
+searchButton.addEventListener('click', () => {
+  searchBar.classList.toggle('hidden');
+});
+    
     // Mouse wheel events (applied globally but limited by conditions)
     document.addEventListener('wheel', (e) => {
         // Scroll up from bottom to open drawer
