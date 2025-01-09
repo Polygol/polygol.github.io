@@ -131,6 +131,7 @@ body.light-theme {
             color: var(--text-color);
             padding: 40px;
             border-radius: 50px;
+            border: 2px solid var(--search-background);
             opacity: 0;
             transition: transform 0.3s ease, opacity 0.3s ease;
             overflow-y: auto;
