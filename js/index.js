@@ -751,58 +751,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // App definitions
     const apps = {
-        "youtube": {
-            url: "https://youtube.com",
-            icon: "yt.png"
-        },
-        "drive": {
-            url: "https://drive.google.com",
-            icon: "gdrive.png"
-        },
-        "calendar": {
-            url: "https://calendar.google.com",
-            icon: "gcalendar.png"
-        },
-        "cal": {
-            url: "https://calendar.google.com",
-            icon: "gcalendar.png"
-        },
-        "docs": {
-            url: "https://docs.google.com",
-            icon: "gdocs.png"
-        },
-        "photos": {
-            url: "https://photos.google.com",
-            icon: "gphotos.png"
-        },
-        "notes": {
-            url: "https://keep.google.com",
-            icon: "gkeep.png"
-        },
-        "keep": {
-            url: "https://keep.google.com",
-            icon: "gkeep.png"
-        },
-        "calculator": {
-            url: "https://calculator.apps.chrome",
-            icon: "calculator.png"
-        },
-        "music": {
-            url: "https://music.apple.com",
-            icon: "amusic.png"
-        },
-        "notion": {
-            url: "https://notion.so",
-            icon: "notion.png"
-        },
-        "find my": {
-            url: "https://www.icloud.com/find",
-            icon: "afindmy.png"
-        },
-        "settings": {
-            url: "#settings",
-            icon: "settings.png"
-        },
+        // "youtube": {
+            // url: "https://youtube.com",
+            // icon: "yt.png"
+        // },
     };
 
     const appDrawer = document.getElementById('app-drawer');
