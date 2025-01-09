@@ -3,7 +3,7 @@
     --background-color-dark: #1c1c1c;
     --text-color-dark: #f9f9f9;
     --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
-    --modal-background-dark: rgba(51, 51, 51, 1);
+    --modal-background-dark: rgba(51, 51, 51, 0.8);
     --modal-transparent-dark: rgba(51, 51, 51, 0.7);
     --search-background-dark: rgba(102, 102, 102, 0.8);
     --dark-transparent: rgba(255, 255, 255, 0.1); /* Lighter transparent for dark mode */
@@ -12,7 +12,7 @@
     --background-color-light: #f0f0f0;
     --text-color-light: #333333;
     --secondary-text-color-light: rgba(0, 0, 0, 0.7);
-    --modal-background-light: rgba(240, 240, 240, 1);
+    --modal-background-light: rgba(240, 240, 240, 0.8);
     --modal-transparent-light: rgba(240, 240, 240, 0.9);
     --search-background-light: rgba(220, 220, 220, 0.8);
     --light-transparent: rgba(0, 0, 0, 0.2); /* Darker transparent for light mode */
@@ -130,7 +130,6 @@ body.light-theme {
             color: var(--text-color);
             padding: 40px;
             border-radius: 50px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
             opacity: 0;
             transition: transform 0.3s ease, opacity 0.3s ease;
             overflow-y: auto;
@@ -179,7 +178,6 @@ body.light-theme {
 
         #weatherModal .detailed-weather {
             background-color: rgba(51, 51, 51, 0.7); /* Keeps the content background */
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
             user-select: none;
         }
 
