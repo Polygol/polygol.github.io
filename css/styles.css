@@ -394,7 +394,7 @@ body.light-theme[style*="background-image"] .info {
         }
         
         .search-input::placeholder {
-            color: var(--secondary-text-color);
+            color: var(--text-color);
             text-align: left;
         }
         
@@ -412,7 +412,7 @@ body.light-theme[style*="background-image"] .info {
             left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--secondary-text-color);
+            color: var(--text-color);
             font-size: 1.5rem;
             font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;
             z-index: 1;
@@ -429,6 +429,7 @@ body.light-theme[style*="background-image"] .info {
             padding: 10px 0;
             background-color: var(--modal-background);
             color: var(--text-color);
+            backdrop-filter: blur(50px)
             border-radius: 10px;
             z-index: 10;
         }
