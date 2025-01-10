@@ -137,12 +137,11 @@ body.light-theme[style*="background-image"] .info {
 .temperature {
     font-size: 1.2rem;
     font-weight: 400;
-    display: flex;
-    align-items: center; /* Ensures vertical centering */
-    justify-content: center;
+    display: flex; /* Flexbox ensures horizontal alignment */
+    align-items: center; /* Centers text and icon vertically */
+    gap: 0.3rem; /* Adds consistent spacing between text and icon */
     line-height: 1; /* Prevents unnecessary spacing */
     user-select: none;
-    height: 100%; /* Matches the parent's height */
 }
 
 .temperature span {
