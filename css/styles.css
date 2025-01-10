@@ -356,7 +356,6 @@ body.light-theme {
             padding: 0;
             z-index: 20;
             transition: all 0.3s ease;
-            margin: 0 10px;
         }
         
         .search-input {
@@ -430,7 +429,7 @@ body.light-theme {
 }
 
 .clockwidgets:has(.search-input:focus) {
-    gap: 175px; /* Adjust this value based on your needs */
+    gap: 20px; /* Adjust this value based on your needs */
 }
 
 .clockwidgets:has(.search-input:focus) > *:not(.search-container) {
