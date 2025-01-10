@@ -77,6 +77,14 @@ body.light-theme[style*="background-image"] .info {
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
+.material-symbols-rounded {
+  font-variation-settings:
+  'FILL' 1,
+  'wght' 700,
+  'GRAD' 0,
+  'opsz' 24
+}
+
         .container {
             width: clamp(300px, 90%, 1200px);
             margin: 0 auto;
