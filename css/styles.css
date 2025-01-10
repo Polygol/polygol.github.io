@@ -340,7 +340,7 @@ body.light-theme {
 
         .search-container {
             position: absolute;
-            top: calc(10px + var(--clock-height));
+            top: calc(50px + var(--clock-height));
             left: 0;
             right: 0;
             width: 100%;
