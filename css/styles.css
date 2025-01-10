@@ -127,35 +127,31 @@ body.light-theme[style*="background-image"] .info {
     width: fit-content;
     font-weight: 400;
     color: var(--text-color);
-    padding: 14px 20px;  /* Keep padding consistent with search-input */
+    padding: 14px 20px;
     border-radius: 50px;
     background-color: var(--search-background);
     backdrop-filter: blur(50px);
     display: flex;
-    align-items: center;
+    align-items: center; /* Vertically centers everything inside */
     justify-content: center;
-    line-height: 1;
     cursor: pointer;
     user-select: none;
     transition: background-color 0.3s;
     box-sizing: border-box;
-    height: 51px; /* Reduced from 52px to 51px for that final perfect alignment */
+    height: 51px; /* Consistent height */
 }
 
 .temperature {
-    font-size: 1.2rem;
-    font-weight: 400;
-    display: flex; /* Flexbox ensures horizontal alignment */
-    align-items: center; /* Centers text and icon vertically */
-    gap: 0.3rem; /* Adds consistent spacing between text and icon */
-    line-height: 1; /* Prevents unnecessary spacing */
-    user-select: none;
+    display: flex;
+    align-items: center; /* Ensures vertical centering */
+    gap: 0.4rem; /* Spacing between the text and the icon */
+    line-height: 1; /* Prevents extra spacing */
 }
 
 .temperature span {
     display: inline-block;
-    line-height: 1; /* Ensures the text remains vertically centered */
-    vertical-align: middle; /* Aligns text perfectly */
+    line-height: 1; /* Ensures the text stays aligned properly */
+    margin: 0; /* Removes any potential margin issues */
 }
 
         .weather-icon {
