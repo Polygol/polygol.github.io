@@ -153,6 +153,10 @@ body.light-theme[style*="background-image"] .info {
             user-select: none;
         }
 
+#temperature, #weather-icon {
+  vertical-align: middle; 
+}
+
         .modal {
             display: none;
             position: fixed;
