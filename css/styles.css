@@ -393,6 +393,7 @@ body.light-theme[style*="background-image"] .info {
             padding: 0;
             z-index: 20;
             transition: all 0.3s ease;
+            line-height: 19.2px; 
         }
         
         .search-input {
