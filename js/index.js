@@ -64,38 +64,124 @@ function updateTitle() {
     }
 }
 
+// Function to check if it's daytime (between 6:00 and 18:00)
+function isDaytime() {
+    const hour = new Date().getHours();
+    return hour >= 6 && hour <= 18;
+}
+
+function isDaytimeForHour(timeString) {
+    const hour = new Date(timeString).getHours();
+    return hour >= 6 && hour <= 18;
+}
+
 // Start an interval to update the title every second
 setInterval(updateTitle, 1000);
 
 const weatherConditions = {
-    0: { description: 'Clear Sky', icon: 'sunny' },
-    1: { description: 'Mainly Clear', icon: 'partly_cloudy_day' },
-    2: { description: 'Partly Cloudy', icon: 'cloud' },
-    3: { description: 'Overcast', icon: 'cloud' },
-    45: { description: 'Fog', icon: 'foggy' },
-    48: { description: 'Depositing Rime Fog', icon: 'foggy' },
-    51: { description: 'Light Drizzle', icon: 'rainy_light' },
-    53: { description: 'Moderate Drizzle', icon: 'rainy' },
-    55: { description: 'Dense Drizzle', icon: 'rainy_heavy' },
-    56: { description: 'Light Freezing Drizzle', icon: 'weather_hail' },
-    57: { description: 'Dense Freezing Drizzle', icon: 'weather_hail' },
-    61: { description: 'Slight Rain', icon: 'rainy_light' },
-    63: { description: 'Moderate Rain', icon: 'rainy' },
-    65: { description: 'Heavy Rain', icon: 'rainy_heavy' },
-    66: { description: 'Light Freezing Rain', icon: 'weather_hail' },
-    67: { description: 'Heavy Freezing Rain', icon: 'weather_hail' },
-    71: { description: 'Slight Snow', icon: 'weather_snowy' },
-    73: { description: 'Moderate Snow', icon: 'weather_snow' },
-    75: { description: 'Heavy Snow', icon: 'weather_snow' },
-    77: { description: 'Snow Grains', icon: 'weather_snow' },
-    80: { description: 'Slight Showers', icon: 'rainy_light' },
-    81: { description: 'Moderate Showers', icon: 'rainy' },
-    82: { description: 'Violent Showers', icon: 'thunderstorm' },
-    85: { description: 'Slight Snow Showers', icon: 'weather_mix' },
-    86: { description: 'Heavy Snow Showers', icon: 'weather_snowy_heavy' },
-    95: { description: 'Thunderstorm', icon: 'thunderstorm' },
-    96: { description: 'Thunderstorm with Hail', icon: 'severe_weather' },
-    99: { description: 'Heavy Thunderstorm with Hail', icon: 'severe_weather' }
+    0: { 
+        description: 'Clear Sky', 
+        icon: () => isDaytime() ? 'clear_day' : 'clear_night'
+    },
+    1: { 
+        description: 'Mainly Clear', 
+        icon: () => isDaytime() ? 'partly_cloudy_day' : 'partly_cloudy_night'
+    },
+    2: { 
+        description: 'Partly Cloudy', 
+        icon: () => isDaytime() ? 'partly_cloudy_day' : 'partly_cloudy_night'
+    },
+    3: { description: 'Overcast', icon: () => 'cloudy' },
+    45: { description: 'Fog', icon: () => 'foggy' },
+    48: { description: 'Depositing Rime Fog', icon: () => 'foggy' },
+    51: { 
+        description: 'Light Drizzle', 
+        icon: () => isDaytime() ? 'rainy_light' : 'rainy_light'
+    },
+    53: { 
+        description: 'Moderate Drizzle', 
+        icon: () => isDaytime() ? 'rainy' : 'rainy'
+    },
+    55: { 
+        description: 'Dense Drizzle', 
+        icon: () => isDaytime() ? 'rainy' : 'rainy'
+    },
+    56: { 
+        description: 'Light Freezing Drizzle', 
+        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
+    },
+    57: { 
+        description: 'Dense Freezing Drizzle', 
+        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
+    },
+    61: { 
+        description: 'Slight Rain', 
+        icon: () => isDaytime() ? 'rainy_light' : 'rainy_light'
+    },
+    63: { 
+        description: 'Moderate Rain', 
+        icon: () => isDaytime() ? 'rainy' : 'rainy'
+    },
+    65: { 
+        description: 'Heavy Rain', 
+        icon: () => isDaytime() ? 'rainy' : 'rainy'
+    },
+    66: { 
+        description: 'Light Freezing Rain', 
+        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
+    },
+    67: { 
+        description: 'Heavy Freezing Rain', 
+        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
+    },
+    71: { 
+        description: 'Slight Snow', 
+        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
+    },
+    73: { 
+        description: 'Moderate Snow', 
+        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
+    },
+    75: { 
+        description: 'Heavy Snow', 
+        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
+    },
+    77: { 
+        description: 'Snow Grains', 
+        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
+    },
+    80: { 
+        description: 'Slight Showers', 
+        icon: () => isDaytime() ? 'rainy_light' : 'rainy_light'
+    },
+    81: { 
+        description: 'Moderate Showers', 
+        icon: () => isDaytime() ? 'rainy' : 'rainy'
+    },
+    82: { 
+        description: 'Violent Showers', 
+        icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
+    },
+    85: { 
+        description: 'Slight Snow Showers', 
+        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
+    },
+    86: { 
+        description: 'Heavy Snow Showers', 
+        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
+    },
+    95: { 
+        description: 'Thunderstorm', 
+        icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
+    },
+    96: { 
+        description: 'Thunderstorm with Hail', 
+        icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
+    },
+    99: { 
+        description: 'Heavy Thunderstorm with Hail', 
+        icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
+    }
 };
 
 function updateClockAndDate() {
@@ -183,11 +269,12 @@ async function updateSmallWeather() {
 
         const temperatureElement = document.getElementById('temperature');
         const weatherIconElement = document.getElementById('weather-icon');
-        const weatherInfo = weatherConditions[weatherData.current.weathercode] || { description: 'Unknown', icon: '❓' };
+        const weatherInfo = weatherConditions[weatherData.current.weathercode] || { description: 'Unknown', icon: () => '❓' };
 
         document.getElementById('weather').style.display = 'block';
         temperatureElement.textContent = `${weatherData.current.temperature}°C`;
-        weatherIconElement.textContent = weatherInfo.icon;
+        weatherIconElement.className = 'material-symbols-rounded';
+        weatherIconElement.textContent = weatherInfo.icon(true); // Assuming daytime for small weather widget
     } catch (error) {
         console.error('Error updating small weather widget:', error);
         document.getElementById('weather').style.display = 'none';
@@ -203,7 +290,7 @@ async function displayDetailedWeather() {
     }
 
     const { city, current, dailyForecast, hourlyForecast } = weatherData;
-    const currentWeather = weatherConditions[current.weathercode] || { description: 'Unknown', icon: '❓' };
+    const currentWeather = weatherConditions[current.weathercode] || { description: 'Unknown', icon: () => '❓' };
 
     const currentTime = new Date();
     const nextDayMidnight = new Date(currentTime);
@@ -227,6 +314,7 @@ async function displayDetailedWeather() {
     const isDaytime = hour >= 6 && hour <= 18;
     let backgroundColor = isDaytime ? '#2F4F4F' : '#0C0C0C';
 
+    // Set background color based on weather code
     switch (current.weathercode) {
         case 0: backgroundColor = '#2C3539'; break; // Clear Sky
         case 1: backgroundColor = '#3E474D'; break; // Mainly Clear
@@ -245,50 +333,56 @@ async function displayDetailedWeather() {
         case 96: case 99: backgroundColor = '#B5651D'; break; // Thunderstorm with Hail
         default: backgroundColor = '#2F4F4F'; break;
     }
-
+    
     document.getElementById('detailedWeather').style.backgroundColor = backgroundColor;
 
     document.getElementById('detailedWeather').innerHTML = `
-                <h2>${current.temperature}°C</h2>
-                <p class="location-text">${city}</p>
-                <span class="weather-icon">${currentWeather.icon}</span>
-                <p>${currentWeather.description}</p>
-                <p class="additional-info">Wind Speed: ${current.windspeed} km/h</p>
-                <div class="hourly-forecast">
-                    ${validHourlyForecast.map((hour, index) => {
-        const hourClass = index === 0 ? 'hour first' :
-            index === validHourlyForecast.length - 1 ? 'hour last' : 'hour';
-        const hourString = getHourString(hour.time);
-        const hourWeather = weatherConditions[hour.weatherCode] || { description: 'Unknown', icon: '❓' };
+        <h2>${current.temperature}°C</h2>
+        <p class="location-text">${city}</p>
+        <span class="weather-icon material-symbols-rounded">${currentWeather.icon(isDaytime)}</span>
+        <p>${currentWeather.description}</p>
+        <p class="additional-info">Wind Speed: ${current.windspeed} km/h</p>
+        <div class="hourly-forecast">
+            ${validHourlyForecast.map((hour, index) => {
+                const hourClass = index === 0 ? 'hour first' :
+                    index === validHourlyForecast.length - 1 ? 'hour last' : 'hour';
+                const hourString = getHourString(hour.time);
+                const hourWeather = weatherConditions[hour.weatherCode] || { description: 'Unknown', icon: () => '❓' };
 
-        return `
-                            <div class="${hourClass}">
-                                <span>${hourString}</span>
-                                <span>${hour.temperature}°C</span>
-                                <span>${hourWeather.icon}</span>
-                                <span>${hourWeather.description}</span>
-                            </div>
-                        `;
-    }).join('')}
-                </div>
-                <div class="forecast-container">
-                    ${dailyForecast.time.slice(1, 6).map((date, index) => {
-        const dayName = getDayOfWeek(date);
-        const weatherCode = dailyForecast.weathercode[index + 1];
-        const maxTemp = dailyForecast.temperature_2m_max[index + 1];
-        const forecastWeather = weatherConditions[weatherCode] || { description: 'Unknown', icon: '❓' };
+                return `
+                    <div class="${hourClass}">
+                        <span>${hourString}</span>
+                        <span>${hour.temperature}°C</span>
+                        <span class="material-symbols-rounded">${hourWeather.icon(isDaytimeForHour(hour.time))}</span>
+                        <span>${hourWeather.description}</span>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+        <div class="forecast-container">
+            ${dailyForecast.time.slice(1, 6).map((date, index) => {
+                const dayName = getDayOfWeek(date);
+                const weatherCode = dailyForecast.weathercode[index + 1];
+                const maxTemp = dailyForecast.temperature_2m_max[index + 1];
+                const forecastWeather = weatherConditions[weatherCode] || { description: 'Unknown', icon: () => '❓' };
 
-        return `
-                            <div class="forecast-day">
-                                <p class="day-name">${dayName}</p>
-                                <p class="forecast-icon">${forecastWeather.icon}</p>
-                                <p>${maxTemp}°C</p>
-                                <p>${forecastWeather.description}</p>
-                            </div>
-                        `;
-    }).join('')}
-                </div>
-            `;
+                return `
+                    <div class="forecast-day">
+                        <p class="day-name">${dayName}</p>
+                        <p class="forecast-icon material-symbols-rounded">${forecastWeather.icon(true)}</p>
+                        <p>${maxTemp}°C</p>
+                        <p>${forecastWeather.description}</p>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+// Helper function to determine if a specific hour is daytime
+function isDaytimeForHour(timeString) {
+    const hour = new Date(timeString).getHours();
+    return hour >= 6 && hour <= 18;
 }
 
 const clockElement = document.getElementById('clock');
