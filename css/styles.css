@@ -125,6 +125,8 @@ body.light-theme[style*="background-image"] .info {
     backdrop-filter: blur(50px);
     display: flex;
     align-items: center;
+    justify-content: center;
+    line-height: 1;
     cursor: pointer;
     user-select: none;
     transition: background-color 0.3s;
@@ -135,13 +137,17 @@ body.light-theme[style*="background-image"] .info {
         .temperature {
             font-size: 1.2rem;
             font-weight: 400;
-            display: inline;
+            display: inline-flex;
+            align-items: center;
+            height: 100%;
             user-select: none;
         }
 
         .weather-icon {
             font-size: 1.2rem;
-            display: inline;
+            display: inline-flex;
+            align-items: center;
+            height: 100%;
             user-select: none;
         }
 
