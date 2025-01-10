@@ -374,7 +374,7 @@ body.light-theme {
         }
         
         .search-input:focus {
-            background-color: rgba(85, 85, 85, 0.8);
+            background-color: var(--modal-background);
         }
         
         .search-icon {
@@ -382,7 +382,7 @@ body.light-theme {
             left: 35px;
             top: 50%;
             transform: translateY(-50%);
-            color: #bbb;
+            color: var(--secondary-text-color);
             font-size: 1.5rem;
             font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;
             z-index: 1;
