@@ -138,23 +138,20 @@ body.light-theme[style*="background-image"] .info {
             font-size: 1.2rem;
             font-weight: 400;
             display: inline-flex;
-            padding-left: 30px;
             align-items: center;
             height: 100%;
             user-select: none;
         }
 
-.weather-icon {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.2rem;
-    font-family: 'Material Symbols Rounded', sans-serif;
-    font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;
-    pointer-events: none;
-    user-select: none;
-}
+        .weather-icon {
+            font-size: 1.2rem;
+            font-family: 'Material Symbols Rounded', sans-serif;
+            font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;
+            display: inline-flex;
+            align-items: center;
+            height: 100%;
+            user-select: none;
+        }
 
         .modal {
             display: none;
