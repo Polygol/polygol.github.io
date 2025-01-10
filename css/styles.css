@@ -79,7 +79,7 @@ body.light-theme {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-top: 10px;
+            margin-bottom: 10px;
             user-select: none;
             gap: clamp(0.5rem, 2vw, 1rem);
         }
@@ -339,8 +339,8 @@ body.light-theme {
         }
 
         .search-container {
-            position: fixed;
-            top: 50px;
+            position: absolute;
+            top: calc(10px + var(--clock-height));
             left: 0;
             right: 0;
             width: 100%;
