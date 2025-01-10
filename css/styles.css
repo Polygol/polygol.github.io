@@ -132,7 +132,7 @@ body.light-theme[style*="background-image"] .info {
     box-sizing: border-box;
     border: none;
     border-radius: 50px;
-    height: 51px; /* Reduced from 52px to 51px for that final perfect alignment */
+    height: 52px;
 }
 
         .temperature {
