@@ -134,14 +134,22 @@ body.light-theme[style*="background-image"] .info {
     height: 51px; /* Reduced from 52px to 51px for that final perfect alignment */
 }
 
-        .temperature {
-            font-size: 1.2rem;
-            font-weight: 400;
-            display: inline-flex;
-            align-items: center;
-            height: 100%;
-            user-select: none;
-        }
+.temperature {
+    font-size: 1.2rem;
+    font-weight: 400;
+    display: flex;
+    align-items: center; /* Ensures vertical centering */
+    justify-content: center;
+    line-height: 1; /* Prevents unnecessary spacing */
+    user-select: none;
+    height: 100%; /* Matches the parent's height */
+}
+
+.temperature span {
+    display: inline-block;
+    line-height: 1; /* Ensures the text remains vertically centered */
+    vertical-align: middle; /* Aligns text perfectly */
+}
 
         .weather-icon {
             font-size: 1.2rem;
