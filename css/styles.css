@@ -119,7 +119,8 @@ body.light-theme[style*="background-image"] .info {
     width: fit-content;
     font-weight: 400;
     color: var(--text-color);
-    padding: 14px 20px;  /* Keep padding consistent with search-input */
+    padding-top: 8px;
+    padding-bottom: 8px;
     border-radius: 50px;
     background-color: var(--search-background);
     backdrop-filter: blur(50px);
