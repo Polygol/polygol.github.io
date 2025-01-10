@@ -427,10 +427,10 @@ body.light-theme[style*="background-image"] .info {
             flex-direction: row;
             gap: 10px; /* Space between suggestions */
             padding: 10px 0;
+            border-radius: 20px;
             background-color: var(--modal-background);
             color: var(--text-color);
-            backdrop-filter: blur(50px)
-            border-radius: 10px;
+            backdrop-filter: blur(50px);
             z-index: 10;
         }
         
