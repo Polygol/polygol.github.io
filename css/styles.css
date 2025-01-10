@@ -152,17 +152,17 @@ body.light-theme[style*="background-image"] .info {
     display: inline-block;
     line-height: 1; /* Ensures the text stays aligned properly */
     margin: 0; /* Removes any potential margin issues */
+    vertical-align: middle; /* Aligns baseline of text and icon */
 }
 
-        .weather-icon {
-            font-size: 1.2rem;
-            font-family: 'Material Symbols Rounded', sans-serif;
-            font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;
-            display: inline-flex;
-            align-items: center;
-            height: 100%;
-            user-select: none;
-        }
+.weather-icon {
+    font-size: 1.2rem; /* Matches text size */
+    font-family: 'Material Symbols Rounded', sans-serif;
+    font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;
+    display: inline-block; /* Ensures proper baseline alignment */
+    vertical-align: middle; /* Aligns icon with text */
+    line-height: 1; /* Prevents additional height issues */
+}
 
         .modal {
             display: none;
