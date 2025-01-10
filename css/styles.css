@@ -93,15 +93,17 @@ body.light-theme {
         }
 
         .weather-widget {
-            font-size: clamp(1.2rem, 3vw, 2rem);
+            font-size: 1.2rem;
             font-weight: 400;
             color: var(--text-color);
-            padding: 10px;
-            border-radius: 15px;
-            background: transparent;
+            padding: 15px 20px;
+            border-radius: 50px;
+            background-color: var(--search-background);
+            backdrop-filter: blur(50px);
             display: none;
             cursor: pointer;
             user-select: none;
+            transition: background-color 0.3s;
         }
 
         .temperature {
