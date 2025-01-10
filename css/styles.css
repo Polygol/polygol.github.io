@@ -119,7 +119,7 @@ body.light-theme[style*="background-image"] .info {
     width: fit-content;
     font-weight: 400;
     color: var(--text-color);
-    padding: 15px 20px;  /* Keep padding consistent with search-input */
+    padding: 14px 20px;  /* Keep padding consistent with search-input */
     border-radius: 50px;
     background-color: var(--search-background);
     backdrop-filter: blur(50px);
@@ -129,7 +129,7 @@ body.light-theme[style*="background-image"] .info {
     user-select: none;
     transition: background-color 0.3s;
     box-sizing: border-box;
-    height: 54px; /* Add explicit height to match search input (24px line height + 15px top/bottom padding) */
+    height: 52px; /* Add explicit height to match search input (24px line height + 15px top/bottom padding) */
 }
 
         .temperature {
@@ -384,7 +384,7 @@ body.light-theme[style*="background-image"] .info {
         
         .search-input {
             width: 100%;
-            padding: 15px 20px 15px 50px;
+            padding: 14px 20px 14px 50px;
             border: none;
             border-radius: 50px;
             background-color: var(--search-background);
