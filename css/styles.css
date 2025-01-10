@@ -349,11 +349,10 @@ body.light-theme {
             width: 100%;
             max-width: 135px;
             width: fit-content;
-            margin: 10px auto;
             display: inline-flex;
             justify-content: center;
             align-items: center;
-            padding: 0 20px;
+            padding: 0;
             z-index: 10;
             transition: all 0.3s ease;
         }
@@ -383,7 +382,7 @@ body.light-theme {
         
         .search-icon {
             position: absolute;
-            left: 35px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--secondary-text-color);
