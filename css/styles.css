@@ -59,7 +59,6 @@ body.light-theme {
 /* Text fill blur effect for clock when wallpaper is present */
 body[style*="background-image"] .clock {
     text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.1);
 }
 
 /* Text fill blur effect for date and other info when wallpaper is present */
@@ -71,7 +70,6 @@ body[style*="background-image"] .info {
 /* Adjust for light theme */
 body.light-theme[style*="background-image"] .clock {
     text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.1);
 }
 
 body.light-theme[style*="background-image"] .date,
