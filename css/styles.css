@@ -356,11 +356,11 @@ body.light-theme {
         
         .search-input {
             width: 100%;
-            padding: 15px 50px 15px 60px;
+            padding: 15px 0px 15px 50px;
             border: none;
             border-radius: 50px;
             background-color: var(--search-background);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(50px);
             color: var(--text-color);
             font-size: 1.2rem;
             outline: none;
@@ -370,7 +370,7 @@ body.light-theme {
         
         .search-input::placeholder {
             color: var(--secondary-text-color);
-            text-align: center;
+            text-align: left;
         }
         
         .search-input:focus {
