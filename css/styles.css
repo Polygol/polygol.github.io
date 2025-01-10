@@ -181,7 +181,7 @@ body.light-theme[style*="background-image"] .info {
 
         .modal::-webkit-scrollbar-thumb, .modal-content::-webkit-scrollbar-thumb {
             background-color: rgba(255,255,255,0.3);
-            border-radius: 4px;
+            border-radius: 50px;
         }
 
         .modal.show {
