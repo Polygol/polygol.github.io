@@ -434,7 +434,6 @@ body.light-theme {
 
 .clockwidgets:has(.search-input:focus) > *:not(.search-container) {
     opacity: 0.5;
-    transform: scale(0.95);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
