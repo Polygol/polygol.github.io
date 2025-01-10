@@ -385,7 +385,8 @@ body.light-theme {
 
 .search-container:focus-within {
     min-width: 300px;
-        
+}
+    
         .search-icon {
             position: absolute;
             left: 15px;
@@ -709,7 +710,8 @@ body.light-theme {
         @media (max-width: 600px) {
             .app-drawer-grid {
                 grid-template-columns: repeat(3, 1fr);
-
+            }
+                
         @media (max-width: 768px) {
             .clock {
                 font-size: 6rem;
