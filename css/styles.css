@@ -107,14 +107,14 @@ body.light-theme {
         }
 
         .temperature {
-            font-size: 2rem;
+            font-size: 1.2rem;
             font-weight: 400;
             display: inline;
             user-select: none;
         }
 
         .weather-icon {
-            font-size: 2rem;
+            font-size: 1.2rem;
             display: inline;
             user-select: none;
         }
