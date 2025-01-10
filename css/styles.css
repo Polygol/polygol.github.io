@@ -5,7 +5,7 @@
     --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
     --modal-background-dark: rgba(51, 51, 51, 0.8);
     --modal-transparent-dark: rgba(51, 51, 51, 0.7);
-    --search-background-dark: rgba(51, 51, 51, 0.8);
+    --search-background-dark: rgba(51, 51, 51, 0.5);
     --dark-transparent: rgba(255, 255, 255, 0.1); /* Lighter transparent for dark mode */
     
     /* Light Theme Variables */
@@ -14,7 +14,7 @@
     --secondary-text-color-light: rgba(0, 0, 0, 0.7);
     --modal-background-light: rgba(240, 240, 240, 0.8);
     --modal-transparent-light: rgba(240, 240, 240, 0.9);
-    --search-background-light: rgba(220, 220, 220, 0.8);
+    --search-background-light: rgba(220, 220, 220, 0.5);
     --light-transparent: rgba(0, 0, 0, 0.2); /* Darker transparent for light mode */
 
     /* Base Variables */
