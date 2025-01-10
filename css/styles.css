@@ -259,6 +259,7 @@ body.light-theme[style*="background-image"] .info {
 
         .detailed-weather {
             border: 2px solid var(--search-background);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
             font-size: 1.5rem;
             padding: 20px;
             border-radius: 30px;
