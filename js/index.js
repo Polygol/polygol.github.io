@@ -936,6 +936,42 @@ function setupDrawerInteractions() {
     });
 }
 
+// Close modals when clicking outside
+blurOverlay.addEventListener('click', (event) => {
+    // Only close if clicking directly on the blur overlay
+    if (event.target === blurOverlay) {
+        // Close timezone modal
+        if (timezoneModal.classList.contains('show')) {
+            timezoneModal.classList.remove('show');
+            blurOverlay.classList.remove('show');
+            setTimeout(() => {
+                timezoneModal.style.display = 'none';
+                blurOverlay.style.display = 'none';
+            }, 300);
+        }
+        
+        // Close weather modal
+        if (weatherModal.classList.contains('show')) {
+            weatherModal.classList.remove('show');
+            blurOverlay.classList.remove('show');
+            setTimeout(() => {
+                weatherModal.style.display = 'none';
+                blurOverlay.style.display = 'none';
+            }, 300);
+        }
+        
+        // Close customize modal
+        if (customizeModal.classList.contains('show')) {
+            customizeModal.classList.remove('show');
+            blurOverlay.classList.remove('show');
+            setTimeout(() => {
+                customizeModal.style.display = 'none';
+                blurOverlay.style.display = 'none';
+            }, 300);
+        }
+    }
+});
+
     // Initialize everything
     function initAppDraw() {
         createAppIcons();
