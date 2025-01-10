@@ -429,8 +429,8 @@ body.light-theme[style*="background-image"] .info {
             flex-direction: row;
             gap: 10px; /* Space between suggestions */
             padding: 10px 0;
-            background-color: rgba(102, 102, 102, 0.9);
-            color: white;
+            background-color: var(--modal-background);
+            color: var(--text-color);
             border-radius: 10px;
             z-index: 10;
         }
@@ -456,7 +456,6 @@ body.light-theme[style*="background-image"] .info {
 }
 
 .clockwidgets:has(.search-input:focus) > *:not(.search-container) {
-    opacity: 0.5;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
