@@ -123,7 +123,8 @@ body.light-theme[style*="background-image"] .info {
             border-radius: 50px;
             background-color: var(--search-background);
             backdrop-filter: blur(50px);
-            display: none;
+            display: flex;
+            align-items: center;
             cursor: pointer;
             user-select: none;
             transition: background-color 0.3s;
