@@ -56,6 +56,35 @@ body.light-theme {
             touch-action: manipulation;
         }
 
+        /* Add these base styles for clock and info when wallpaper is present */
+        body[style*="background-image"] .clock,
+        body[style*="background-image"] .info {
+            background-color: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 30px;
+            transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+        }
+
+        /* Specifically style the clock container */
+        body[style*="background-image"] .clock {
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        /* Style the info container */
+        body[style*="background-image"] .info {
+            display: inline-flex;
+            padding: 15px 25px;
+        }
+
+        /* Adjust for light theme */
+        body.light-theme[style*="background-image"] .clock,
+        body.light-theme[style*="background-image"] .info {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
         .container {
             width: clamp(300px, 90%, 1200px);
             margin: 0 auto;
