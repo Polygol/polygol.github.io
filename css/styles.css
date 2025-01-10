@@ -56,34 +56,28 @@ body.light-theme {
             touch-action: manipulation;
         }
 
-        /* Add these base styles for clock and info when wallpaper is present */
-        body[style*="background-image"] .clock,
-        body[style*="background-image"] .info {
-            background-color: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 30px;
-            transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
-        }
+/* Text fill blur effect for clock when wallpaper is present */
+body[style*="background-image"] .clock {
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.1);
+}
 
-        /* Specifically style the clock container */
-        body[style*="background-image"] .clock {
-            display: inline-block;
-            margin-bottom: 20px;
-        }
+/* Text fill blur effect for date and other info when wallpaper is present */
+body[style*="background-image"] .date,
+body[style*="background-image"] .info {
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
 
-        /* Style the info container */
-        body[style*="background-image"] .info {
-            display: inline-flex;
-            padding: 15px 25px;
-        }
+/* Adjust for light theme */
+body.light-theme[style*="background-image"] .clock {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.1);
+}
 
-        /* Adjust for light theme */
-        body.light-theme[style*="background-image"] .clock,
-        body.light-theme[style*="background-image"] .info {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
+body.light-theme[style*="background-image"] .date,
+body.light-theme[style*="background-image"] .info {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
 
         .container {
             width: clamp(300px, 90%, 1200px);
