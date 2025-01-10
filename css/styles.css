@@ -134,6 +134,7 @@ body.light-theme {
             border: 2px solid var(--search-background);
             opacity: 0;
             transition: transform 0.3s ease, opacity 0.3s ease;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
             overflow-y: auto;
             user-select: none;
         }
