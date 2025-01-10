@@ -93,7 +93,9 @@ body.light-theme {
         }
 
         .weather-widget {
+            position: relative;
             font-size: 1.2rem;
+            width: fit-content;
             font-weight: 400;
             color: var(--text-color);
             padding: 15px 20px;
@@ -104,6 +106,7 @@ body.light-theme {
             cursor: pointer;
             user-select: none;
             transition: background-color 0.3s;
+            align-items: center;
         }
 
         .temperature {
@@ -345,8 +348,9 @@ body.light-theme {
             right: 0;
             width: 100%;
             max-width: 135px;
+            width: fit-content;
             margin: 10px auto;
-            display: flex;
+            display: inline-flex;
             justify-content: center;
             align-items: center;
             padding: 0 20px;
@@ -407,6 +411,15 @@ body.light-theme {
             cursor: pointer;
             white-space: nowrap; /* Prevent breaking into multiple lines */
         }
+
+.clockwidgets {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 10px auto;
+}
 
         .customize {
             position: fixed;
@@ -684,7 +697,7 @@ body.light-theme {
             .clock {
                 font-size: 6rem;
             }
-            .date, .weather-widget, .temperature, .weather-icon, .timezone {
+            .date, .timezone {
                 font-size: 1.5rem;
             }
         }
@@ -700,7 +713,7 @@ body.light-theme {
                 font-size: 4rem;
             }
 
-            .date, .weather-widget, .temperature, .weather-icon, .timezone {
+            .date, .timezone {
                 font-size: 1rem;
                 user-select: none;
             }
