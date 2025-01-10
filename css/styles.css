@@ -339,12 +339,12 @@ body.light-theme {
         }
 
         .search-container {
-            position: absolute;
+            position: relative;
             left: 0;
             right: 0;
             width: 100%;
             max-width: 135px;
-            margin: 10 auto;
+            margin: 10px auto;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -390,7 +390,7 @@ body.light-theme {
         
         .autocomplete-suggestions {
             position: absolute;
-            right: -5px;
+            top: 75px;
             display: flex;
             flex-direction: row;
             gap: 10px; /* Space between suggestions */
@@ -405,10 +405,6 @@ body.light-theme {
             padding: 10px;
             cursor: pointer;
             white-space: nowrap; /* Prevent breaking into multiple lines */
-        }
-        
-        .autocomplete-suggestion:hover {
-            background-color: rgba(85, 85, 85, 0.9);
         }
 
         .customize {
