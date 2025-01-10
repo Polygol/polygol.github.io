@@ -113,26 +113,25 @@ body.light-theme[style*="background-image"] .info {
             user-select: none;
         }
 
-.clockwidget {
+.weather-widget {
     position: relative;
-    height: 52px;
-    padding: 14px 20px;
+    font-size: 1.2rem;
+    width: fit-content;
+    font-weight: 400;
+    color: var(--text-color);
+    padding: 14px 20px;  /* Keep padding consistent with search-input */
     border-radius: 50px;
     background-color: var(--search-background);
     backdrop-filter: blur(50px);
-    color: var(--text-color);
-    font-size: 1.2rem;
     display: flex;
     align-items: center;
-    box-sizing: border-box;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.weather-widget {
-    width: fit-content;
+    justify-content: center;
+    line-height: 1;
     cursor: pointer;
-    padding-left: 50px;
     user-select: none;
+    transition: background-color 0.3s;
+    box-sizing: border-box;
+    height: 51px; /* Reduced from 52px to 51px for that final perfect alignment */
 }
 
         .temperature {
@@ -377,24 +376,35 @@ body.light-theme[style*="background-image"] .info {
             user-select: none;
         }
 
-.search-container {
-    position: relative;
-    min-width: 135px;
-    max-width: 135px;
-    width: fit-content;
-    display: inline-flex;
-}
+        .search-container {
+            position: relative;
+            left: 0;
+            right: 0;
+            width: 100%;
+            min-width: 135px;
+            max-width: 135px;
+            width: fit-content;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            z-index: 20;
+            transition: all 0.3s ease;
+        }
         
-.search-input {
-    width: 100%;
-    padding-left: 50px;
-    border: none;
-    background: transparent;
-    color: var(--text-color);
-    font-size: 1.2rem;
-    outline: none;
-    font-family: 'Inter', sans-serif;
-}
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 50px;
+            border: none;
+            border-radius: 50px;
+            background-color: var(--search-background);
+            backdrop-filter: blur(50px);
+            color: var(--text-color);
+            font-size: 1.2rem;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Inter', sans-serif;
+        }
         
         .search-input::placeholder {
             color: var(--text-color);
