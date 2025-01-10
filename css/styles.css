@@ -340,11 +340,11 @@ body.light-theme {
 
         .search-container {
             position: absolute;
-            top: calc(50px + var(--clock-height));
+            margin-top: 10px;
             left: 0;
             right: 0;
             width: 100%;
-            max-width: 300px;
+            max-width: 150px;
             margin: 0 auto;
             display: flex;
             justify-content: center;
