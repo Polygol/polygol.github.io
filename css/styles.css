@@ -347,19 +347,21 @@ body.light-theme {
             left: 0;
             right: 0;
             width: 100%;
+            min-width: 135px;
             max-width: 135px;
             width: fit-content;
             display: inline-flex;
             justify-content: center;
             align-items: center;
             padding: 0;
-            z-index: 10;
+            z-index: 20;
             transition: all 0.3s ease;
+            margin: 0 10px;
         }
         
         .search-input {
             width: 100%;
-            padding: 15px 0px 15px 50px;
+            padding: 15px 20px 15px 50px;
             border: none;
             border-radius: 50px;
             background-color: var(--search-background);
@@ -367,7 +369,7 @@ body.light-theme {
             color: var(--text-color);
             font-size: 1.2rem;
             outline: none;
-            transition: background-color 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-family: 'Inter', sans-serif;
         }
         
@@ -377,8 +379,12 @@ body.light-theme {
         }
         
         .search-input:focus {
+            width: 300px;
             background-color: var(--modal-background);
         }
+
+.search-container:focus-within {
+    min-width: 300px;
         
         .search-icon {
             position: absolute;
@@ -390,6 +396,7 @@ body.light-theme {
             font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;
             z-index: 1;
             pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .autocomplete-suggestions {
@@ -418,6 +425,17 @@ body.light-theme {
     gap: 20px;
     width: 100%;
     margin: 10px auto;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clockwidgets:has(.search-input:focus) {
+    gap: 175px; /* Adjust this value based on your needs */
+}
+
+.clockwidgets:has(.search-input:focus) > *:not(.search-container) {
+    opacity: 0.5;
+    transform: scale(0.95);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
         .customize {
