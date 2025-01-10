@@ -358,7 +358,7 @@ body.light-theme {
             width: 100%;
             padding: 15px 50px 15px 60px;
             border: none;
-            border-radius: 30px;
+            border-radius: 50px;
             background-color: var(--search-background);
             backdrop-filter: blur(10px);
             color: var(--text-color);
@@ -416,7 +416,7 @@ body.light-theme {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background-color: var(--transparent-color);
+            background-color: var(--search-background);
             color: var(--text-color);
             border-radius: 20px;
             backdrop-filter: blur(50px);
@@ -429,10 +429,6 @@ body.light-theme {
             transition: background-color 0.3s ease;
         }
 
-        .customize:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-        }
-
         #wallpaperInput {
             display: none;
         }
@@ -443,7 +439,7 @@ body.light-theme {
     align-items: center;
     margin: 20px 0;
     padding: 10px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--transparent-color);;
     border-radius: 15px;
 }
 
