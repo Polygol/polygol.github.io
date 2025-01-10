@@ -113,23 +113,24 @@ body.light-theme[style*="background-image"] .info {
             user-select: none;
         }
 
-        .weather-widget {
-            position: relative;
-            font-size: 1.2rem;
-            width: fit-content;
-            font-weight: 400;
-            color: var(--text-color);
-            padding: 15px 20px;
-            border-radius: 50px;
-            background-color: var(--search-background);
-            backdrop-filter: blur(50px);
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-            transition: background-color 0.3s;
-            align-items: center;
-        }
+.weather-widget {
+    position: relative;
+    font-size: 1.2rem;
+    width: fit-content;
+    font-weight: 400;
+    color: var(--text-color);
+    padding: 15px 20px;  /* Keep padding consistent with search-input */
+    border-radius: 50px;
+    background-color: var(--search-background);
+    backdrop-filter: blur(50px);
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s;
+    box-sizing: border-box;
+    height: 54px; /* Add explicit height to match search input (24px line height + 15px top/bottom padding) */
+}
 
         .temperature {
             font-size: 1.2rem;
