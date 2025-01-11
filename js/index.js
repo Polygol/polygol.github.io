@@ -1198,11 +1198,8 @@ document.addEventListener('keydown', (event) => {
 
 // Add event listener for keydown
 document.addEventListener('keydown', (event) => {
-    // Only handle number keys and enter if no modals are open and no input is focused
-    if (
-        document.activeElement.tagName !== 'INPUT' && 
-        blurOverlay.style.display !== 'block'
-    ) {
+    // Only handle number keys and enter if timezone modal is open
+    if (timezoneModal.classList.contains('show')) {
         // Handle number keys (0-9)
         if (/^[0-9]$/.test(event.key)) {
             event.preventDefault();
