@@ -85,6 +85,18 @@ body.light-theme[style*="background-image"] .info {
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
+.drawer-handle {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px; /* Height of handle area */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    cursor: grab;
+}
+
 .drawer-pill {
     position: absolute;
     bottom: 10px;
