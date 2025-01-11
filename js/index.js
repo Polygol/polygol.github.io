@@ -983,7 +983,6 @@ function initializeCustomization() {
             appIcon.addEventListener('click', (e) => {
                 e.stopPropagation();
                 try {
-                    // Special handling for local apps
                     if (appDetails.url.startsWith('#')) {
                         switch (appDetails.url) {
                             case '#settings':
@@ -996,12 +995,13 @@ function initializeCustomization() {
                                 showPopup(`${appName} app opened`);
                         }
                     } else {
-                        // Open external apps in new tab
                         window.open(appDetails.url, '_blank', 'noopener,noreferrer');
                     }
-
-                    // Close the drawer
+    
+                    // Close the drawer and update initialDrawerPosition
                     appDrawer.classList.remove('open');
+                    appDrawer.style.bottom = '-100%';
+                    initialDrawerPosition = -100; // Add this line to fix the swipe down issue
                 } catch (error) {
                     showPopup(`Failed to open ${appName}`);
                     console.error(`App open error: ${error}`);
@@ -1246,7 +1246,6 @@ document.addEventListener('keydown', (event) => {
         createAppIcons();
         setupDrawerInteractions();
     }
-
 
     // Call initialization
     initializeCustomization();
