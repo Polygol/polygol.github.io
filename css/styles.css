@@ -142,7 +142,6 @@ body.light-theme[style*="background-image"] .info {
             font-size: clamp(1.2rem, 3vw, 2rem);
             font-weight: 400;
             color: var(--text-color);
-            margin-right: 10px;
             user-select: none;
         }
 
