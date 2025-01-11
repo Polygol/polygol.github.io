@@ -35,12 +35,11 @@
             <input type="checkbox" id="theme-switch">
         </div>
         <div class="wallpaper-upload">
-            <label>Upload Wallpaper</label>
-            <input type="file" id="wallpaperInput" accept=".png, .jpg, .jpeg">
-            <button id="uploadButton">Choose File</button>
+            <label>Wallpaper</label>
+            <input type="file" id="wallpaperInput" accept=".png, .jpg, .jpeg, .svg, .gif">
+            <button id="uploadButton">Choose Image</button>
         </div>
-        Copyright © 2025 Gurasuraisu
-        Licensed under the GNU General Public License, Version 3.0
+        Copyright © 2025 Gurasuraisu. Licensed under the GNU General Public License, Version 3.0
     </div>
 </div>
     
@@ -62,8 +61,8 @@
                 <button class="btn" onclick="addTime(300)">+5:00</button>
             </div>
             <div class="action-buttons">
-                <button class="action-btn running" id="startBtn" onclick="toggleTimer()">Start</button>
-                <button class="action-btn running" id="resetBtn" onclick="resetTimer()">Reset</button>
+                <button class="action-btn running" id="startBtn" onclick="toggleTimer()"><span class="material-symbols-rounded">play_arrow</span></button>
+                <button class="action-btn running" id="resetBtn" onclick="resetTimer()"><span class="material-symbols-rounded">restart_alt</span></button>
             </div>
         </div>
     </div>
