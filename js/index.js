@@ -513,7 +513,7 @@ function resetTimer() {
     timeLeft = 0;
     totalTime = 0;
     updateDisplay();
-    startBtn.textContent = 'Start';
+    startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>';
 }
 
 function playAlarm() {
