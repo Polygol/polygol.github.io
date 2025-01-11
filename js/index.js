@@ -484,12 +484,12 @@ function addTime(seconds) {
         updateDisplay();
     }
 }
-
+<span class="material-symbols-rounded">play_arrow</span>
 function toggleTimer() {
     if (timerId) {
         clearInterval(timerId);
         timerId = null;
-        startBtn.textContent = 'Start';
+        startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>';
     } else {
         if (timeLeft > 0) {
             timerId = setInterval(() => {
@@ -498,11 +498,11 @@ function toggleTimer() {
                 if (timeLeft <= 0) {
                     clearInterval(timerId);
                     timerId = null;
-                    startBtn.textContent = 'Start';
+                    startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>';
                     playAlarm();
                 }
             }, 1000);
-            startBtn.textContent = 'Pause';
+            startBtn.innerHTML = '<span class="material-symbols-rounded">pause</span>';
         }
     }
 }
