@@ -1,3 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
 :root {
     /* Dark Theme (Default) Variables */
     --background-color-dark: #1c1c1c;
@@ -547,6 +552,32 @@ body.light-theme[style*="background-image"] .info {
     padding: 10px 10px;
     border-radius: 25px;
     cursor: pointer;
+}
+
+.font-selection {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 15px 20px;
+    background-color: var(--transparent-color);
+    border-radius: 20px;
+}
+
+#font-select {
+    background-color: var(--transparent-color);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 25px;
+    cursor: pointer;
+    outline: none;
+}
+
+#font-select option {
+    background-color: var(--background-color);
+    color: var(--text-color);
 }
 
 .timer-circle {
