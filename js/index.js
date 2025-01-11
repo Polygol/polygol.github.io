@@ -1019,15 +1019,12 @@ function setupDrawerInteractions() {
     let isDragging = false;
     const flickVelocityThreshold = 0.4;
     const openThreshold = -50;
-    let touchStartTime = 0;
-    let isSwiping = false;
 
     // Start interaction (common for touch and mouse)
     function startDrag(yPosition) {
         startY = yPosition;
         currentY = yPosition;
         isDragging = true;
-        touchStartTime = Date.now();
         appDrawer.style.transition = 'none';
     }
 
@@ -1040,34 +1037,26 @@ function setupDrawerInteractions() {
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
 
-        // Start showing drawer if swiping up from bottom of screen
-        if (!isSwiping && startY > windowHeight * 0.8 && deltaY > 0) {
-            isSwiping = true;
-            appDrawer.style.bottom = '-100%';
-        }
-
-        if (isSwiping || appDrawer.classList.contains('open')) {
-            const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-            appDrawer.style.bottom = `${newPosition}%`;
-        }
+        // Calculate and clamp the drawer's position
+        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+        appDrawer.style.bottom = `${newPosition}%`;
     }
 
     // End interaction (handle swipe or drag release)
     function endDrag() {
         if (!isDragging) return;
 
-        const touchEndTime = Date.now();
-        const touchDuration = touchEndTime - touchStartTime;
         const deltaY = startY - currentY;
-        const velocity = Math.abs(deltaY / touchDuration);
+        const deltaTime = 100;
+        const velocity = deltaY / deltaTime;
 
         appDrawer.style.transition = 'bottom 0.3s ease';
 
-        if ((velocity > flickVelocityThreshold && deltaY > 0) || deltaY > 50) {
+        if (velocity > flickVelocityThreshold || deltaY > 50) {
             appDrawer.style.bottom = '0%';
             appDrawer.classList.add('open');
             initialDrawerPosition = 0;
-        } else if ((velocity > flickVelocityThreshold && deltaY < 0) || deltaY < -50) {
+        } else if (velocity < -flickVelocityThreshold || deltaY < -50) {
             appDrawer.style.bottom = '-100%';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
@@ -1085,26 +1074,32 @@ function setupDrawerInteractions() {
         }
 
         isDragging = false;
-        isSwiping = false;
     }
 
     // Touch Events
     appDrawer.addEventListener('touchstart', (e) => {
-        startDrag(e.touches[0].clientY);
-    }, { passive: true });
+        if (e.touches[0].clientY > window.innerHeight * 0.8 || appDrawer.classList.contains('open')) {
+            startDrag(e.touches[0].clientY);
+        }
+    });
 
     document.addEventListener('touchmove', (e) => {
-        moveDrawer(e.touches[0].clientY);
-    }, { passive: true });
+        if (isDragging) {
+            e.preventDefault();
+            moveDrawer(e.touches[0].clientY);
+        }
+    }, { passive: false });
 
     document.addEventListener('touchend', () => {
         endDrag();
     });
 
     // Mouse Events
-    appDrawer.addEventListener('mousedown', (e) => {
+    document.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
-        startDrag(e.clientY);
+        if (e.clientY > window.innerHeight * 0.8 || appDrawer.classList.contains('open')) {
+            startDrag(e.clientY);
+        }
     });
 
     document.addEventListener('mousemove', (e) => {
@@ -1116,7 +1111,7 @@ function setupDrawerInteractions() {
     document.addEventListener('mouseup', () => {
         endDrag();
     });
-    
+
     // Toggle button for opening the drawer
     appDrawerToggle.addEventListener('click', () => {
         appDrawer.style.transition = 'bottom 0.3s ease';
