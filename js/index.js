@@ -484,7 +484,7 @@ function addTime(seconds) {
         updateDisplay();
     }
 }
-<span class="material-symbols-rounded">play_arrow</span>
+
 function toggleTimer() {
     if (timerId) {
         clearInterval(timerId);
