@@ -821,20 +821,29 @@ function applyWallpaper() {
 function setupFontSelection() {
     const fontSelect = document.getElementById('font-select');
     const clockElement = document.getElementById('clock');
+    const infoElement = document.querySelector('.info');
     
     // Load saved font preference
     const savedFont = localStorage.getItem('clockFont') || 'Inter';
     fontSelect.value = savedFont;
-    clockElement.style.fontFamily = savedFont;
+    
+    // Apply font to both elements
+    function applyFont(fontFamily) {
+        clockElement.style.fontFamily = fontFamily;
+        infoElement.style.fontFamily = fontFamily;
+    }
+    
+    // Apply initial font
+    applyFont(savedFont);
     
     // Handle font changes
     fontSelect.addEventListener('change', (e) => {
         const selectedFont = e.target.value;
         // Ensure font is loaded before applying
         document.fonts.load(`16px ${selectedFont}`).then(() => {
-            clockElement.style.fontFamily = selectedFont;
+            applyFont(selectedFont);
             localStorage.setItem('clockFont', selectedFont);
-            showPopup('Clock font updated');
+            showPopup('Font updated');
         }).catch(() => {
             showPopup('Failed to load font');
         });
