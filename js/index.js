@@ -1037,9 +1037,14 @@ function setupDrawerInteractions() {
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
 
-        // Calculate and clamp the drawer's position
-        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-        appDrawer.style.bottom = `${newPosition}%`;
+        // Start showing drawer if swiping up from bottom
+        if (startY > windowHeight * 0.8 && !appDrawer.classList.contains('open')) {
+            appDrawer.style.bottom = `${-100 + movementPercentage}%`;
+        } else {
+            // For dragging when drawer is already open
+            const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+            appDrawer.style.bottom = `${newPosition}%`;
+        }
     }
 
     // End interaction (handle swipe or drag release)
@@ -1077,11 +1082,11 @@ function setupDrawerInteractions() {
     }
 
     // Touch Events
-    appDrawer.addEventListener('touchstart', (e) => {
+    document.addEventListener('touchstart', (e) => {
         if (e.touches[0].clientY > window.innerHeight * 0.8 || appDrawer.classList.contains('open')) {
             startDrag(e.touches[0].clientY);
         }
-    });
+    }, { passive: false });
 
     document.addEventListener('touchmove', (e) => {
         if (isDragging) {
