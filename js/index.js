@@ -586,19 +586,38 @@ function showPopup(message) {
     }
     
     popup.appendChild(document.createTextNode(message));
-
-    const lastPopup = document.querySelector('.popup');
-    const topPosition = lastPopup ? lastPopup.offsetTop + lastPopup.offsetHeight + 10 : 20;
-
-    popup.style.top = `${topPosition}px`;
     popup.classList.add('popup');
 
+    // Get all existing popups
+    const existingPopups = document.querySelectorAll('.popup');
+    
+    // If there are already 2 popups, remove the oldest one
+    if (existingPopups.length >= 2) {
+        document.body.removeChild(existingPopups[0]);
+    }
+
+    // Recalculate positions for all popups
+    const remainingPopups = document.querySelectorAll('.popup');
+    remainingPopups.forEach((p, index) => {
+        p.style.top = `${20 + (index * 70)}px`; // 70px spacing between popups
+    });
+
+    // Position the new popup
+    popup.style.top = `${20 + (remainingPopups.length * 70)}px`;
+    
     document.body.appendChild(popup);
 
     setTimeout(() => {
         popup.style.opacity = '0';
         setTimeout(() => {
-            document.body.removeChild(popup);
+            if (document.body.contains(popup)) {
+                document.body.removeChild(popup);
+                // Readjust positions of remaining popups
+                const remainingPopups = document.querySelectorAll('.popup');
+                remainingPopups.forEach((p, index) => {
+                    p.style.top = `${20 + (index * 70)}px`;
+                });
+            }
         }, 500);
     }, 3000);
 }
