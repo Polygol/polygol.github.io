@@ -555,7 +555,7 @@ function showPopup(message) {
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'rgba(51, 51, 51, 0.9)';
-    popup.style.backdrop-filter = 'blur(10px)';
+    popup.style.backdropFilter = 'blur(10px)';
     popup.style.color = 'white';
     popup.style.padding = '20px';
     popup.style.borderRadius = '30px';
@@ -907,24 +907,6 @@ function initializeCustomization() {
     applyWallpaper();
     setupFontSelection();
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Popup Function
-    function showPopup(message) {
-        const popup = document.createElement('div');
-        popup.classList.add('popup');
-        popup.textContent = message;
-
-        document.body.appendChild(popup);
-
-        setTimeout(() => {
-            popup.style.opacity = '0';
-            setTimeout(() => {
-                document.body.removeChild(popup);
-            }, 500);
-        }, 3000);
-    }
-});
 
     // App definitions
     const apps = {
