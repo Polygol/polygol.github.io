@@ -732,10 +732,6 @@ body.light-theme[style*="background-image"] .info {
     background-color: var(--transparent-color);
 }
 
-.action-btn:hover {
-    background-color: rgba(255,255,255,0.2);
-}
-
 /* App Drawer Styles */
 .app-drawer {
     position: fixed;
