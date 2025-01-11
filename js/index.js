@@ -1113,14 +1113,6 @@ function setupDrawerInteractions() {
         endDrag();
     });
 
-    // Toggle button for opening the drawer
-    drawer-pill.addEventListener('click', () => {
-        appDrawer.style.transition = 'bottom 0.3s ease';
-        appDrawer.style.bottom = '0%';
-        appDrawer.classList.add('open');
-        initialDrawerPosition = 0;
-    });
-
     // Close drawer when clicking outside
     document.addEventListener('click', (e) => {
         if (appDrawer.classList.contains('open') &&
