@@ -666,19 +666,14 @@ const searchIcon = document.getElementById('search-icon');
 const autocompleteSuggestions = document.getElementById('autocomplete-suggestions');
 
 const appLinks = {
-    "youtube": "https://youtube.com",
-    "yt": "https://youtube.com",
-    "drive": "https://drive.google.com",
-    "calendar": "https://calendar.google.com",
-    "cal": "https://calendar.google.com",
-    "docs": "https://docs.google.com",
-    "photos": "https://photos.google.com",
-    "notes": "https://keep.google.com",
-    "keep": "https://keep.google.com",
-    "calculator": "https://calculator.apps.chrome",
-    "music": "https://music.apple.com",
-    "notion": "https://notion.so",
-    "find my": "https://www.icloud.com/find",
+    "Chronos": "https://gurasuraisu.github.io/chronos",
+    "Ailuator": "https://gurasuraisu.github.io/ailuator",
+    "Wordy": "https://gurasuraisu.github.io/wordy",
+    "Music": "https://gurasuraisu.github.io/music",
+    "Stickies": "https://gurasuraisu.github.io/stickies",
+    "Moments": "https://gurasuraisu.github.io/moments",
+    "SketchPad": "https://photos.google.com",
+    "Fantaskical": "https://gurasuraisu.github.io/fantaskical",
 };
 
 function fuzzySearch(query, appList) {
