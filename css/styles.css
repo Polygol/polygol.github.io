@@ -766,6 +766,8 @@ body.light-theme[style*="background-image"] .info {
         }
 
         .app-drawer-content {
+            display: flex;
+            align-items: center;
             padding: 20px;
             height: 100%;
             overflow-y: auto;
@@ -774,7 +776,7 @@ body.light-theme[style*="background-image"] .info {
 
         .app-drawer-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 15px;
         }
 
@@ -784,7 +786,7 @@ body.light-theme[style*="background-image"] .info {
             align-items: center;
             cursor: pointer;
             transition: transform 0.2s;
-            padding: 10px;
+            padding: 15px;
             border-radius: 10px;
             user-select: none;
         }
@@ -795,14 +797,13 @@ body.light-theme[style*="background-image"] .info {
         }
 
         .app-icon img {
-            width: 60px;
-            height: 60px;
+            width: 75%;
+            height: 75%;
             margin-bottom: 10px;
             object-fit: contain;
         }
 
         .app-icon span {
-            font-size: 12px;
             text-align: center;
             text-transform: capitalize;
             color: var(--text-color);
@@ -825,5 +826,5 @@ body.light-theme[style*="background-image"] .info {
 
         @media (max-width: 600px) {
             .app-drawer-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(4, 1fr);
             }
