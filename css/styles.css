@@ -14,7 +14,7 @@
     --modal-background-dark: rgba(51, 51, 51, 0.8);
     --modal-transparent-dark: rgba(51, 51, 51, 0.7);
     --search-background-dark: rgba(51, 51, 51, 0.5);
-    --dark-transparent: rgba(255, 255, 255, 0.1); /* Lighter transparent for dark mode */
+    --dark-transparent: rgba(255, 255, 255, 0.1); 
     
     /* Light Theme Variables */
     --background-color-light: #f0f0f0;
@@ -23,7 +23,7 @@
     --modal-background-light: rgba(240, 240, 240, 0.8);
     --modal-transparent-light: rgba(240, 240, 240, 0.9);
     --search-background-light: rgba(220, 220, 220, 0.5);
-    --light-transparent: rgba(255, 255, 255, 0.1); /* Darker transparent for light mode */
+    --light-transparent: rgba(255, 255, 255, 0.1); 
 
     /* Base Variables */
     --base-font-size: clamp(16px, 2vw + 1rem, 24px);
