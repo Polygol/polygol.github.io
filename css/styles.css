@@ -87,10 +87,10 @@ body.light-theme[style*="background-image"] .info {
 
 .drawer-pill {
     position: absolute;
-    top: 8px;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 36px;
+    width: 25%;
     height: 5px;
     background-color: var(--text-color);
     border-radius: 3px;
@@ -737,8 +737,7 @@ body.light-theme[style*="background-image"] .info {
     overflow: hidden;
     touch-action: none;
     user-select: none;
-    backdrop-filter: blur(10px); /* Apply blur to the background */
-    -webkit-backdrop-filter: blur(10px); /* Safari support */
+    backdrop-filter: blur(50px); /* Apply blur to the background */
     touch-action: none;
     user-select: none;
 }
@@ -749,7 +748,7 @@ body.light-theme[style*="background-image"] .info {
 
         .app-drawer-handle {
             width: 50px;
-            height: 2px;
+            height: 5px;
             background-color: var(--text-color);
             border-radius: 3px;
             position: absolute;
