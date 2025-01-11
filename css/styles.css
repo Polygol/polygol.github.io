@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DynaPuff:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bungee:wght@400;700&display=swap');
 
 :root {
     /* Dark Theme (Default) Variables */
@@ -579,6 +579,12 @@ body.light-theme[style*="background-image"] .info {
     background-color: var(--background-color);
     color: var(--text-color);
 }
+
+#font-select option[value="Inter"] { font-family: 'Inter', sans-serif; }
+#font-select option[value="Roboto"] { font-family: 'Roboto', sans-serif; }
+#font-select option[value="DynaPuff"] { font-family: 'DynaPuff', cursive; }
+#font-select option[value="DM Serif Display"] { font-family: 'DM Serif Display', serif; }
+#font-select option[value="Bungee"] { font-family: 'Bungee', cursive; }
 
 .timer-circle {
     position: relative;
