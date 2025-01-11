@@ -1114,7 +1114,7 @@ function setupDrawerInteractions() {
     });
 
     // Toggle button for opening the drawer
-    appDrawerToggle.addEventListener('click', () => {
+    drawer-pill.addEventListener('click', () => {
         appDrawer.style.transition = 'bottom 0.3s ease';
         appDrawer.style.bottom = '0%';
         appDrawer.classList.add('open');
