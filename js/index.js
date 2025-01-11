@@ -1019,8 +1019,8 @@ function setupDrawerInteractions() {
     let isDragging = false;
     const flickVelocityThreshold = 0.4;
     const openThreshold = -50;
+    const drawerPill = document.querySelector('.drawer-pill');
 
-    // Start interaction (common for touch and mouse)
     function startDrag(yPosition) {
         startY = yPosition;
         currentY = yPosition;
@@ -1028,7 +1028,6 @@ function setupDrawerInteractions() {
         appDrawer.style.transition = 'none';
     }
 
-    // Move drawer (dragging interaction)
     function moveDrawer(yPosition) {
         if (!isDragging) return;
 
@@ -1037,17 +1036,10 @@ function setupDrawerInteractions() {
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
 
-        // Start showing drawer if swiping up from bottom
-        if (startY > windowHeight * 0.8 && !appDrawer.classList.contains('open')) {
-            appDrawer.style.bottom = `${-100 + movementPercentage}%`;
-        } else {
-            // For dragging when drawer is already open
-            const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-            appDrawer.style.bottom = `${newPosition}%`;
-        }
+        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+        appDrawer.style.bottom = `${newPosition}%`;
     }
 
-    // End interaction (handle swipe or drag release)
     function endDrag() {
         if (!isDragging) return;
 
@@ -1083,8 +1075,12 @@ function setupDrawerInteractions() {
 
     // Touch Events
     document.addEventListener('touchstart', (e) => {
-        if (e.touches[0].clientY > window.innerHeight * 0.95 || appDrawer.classList.contains('open')) {
-            startDrag(e.touches[0].clientY);
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        if (element === drawerPill || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+            startDrag(touch.clientY);
+            e.preventDefault();
         }
     }, { passive: false });
 
@@ -1102,7 +1098,9 @@ function setupDrawerInteractions() {
     // Mouse Events
     document.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
-        if (e.clientY > window.innerHeight * 0.8 || appDrawer.classList.contains('open')) {
+        const element = document.elementFromPoint(e.clientX, e.clientY);
+        
+        if (element === drawerPill || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
             startDrag(e.clientY);
         }
     });
