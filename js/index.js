@@ -927,10 +927,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // App definitions
     const apps = {
-        // "youtube": {
-            // url: "https://youtube.com",
-            // icon: "yt.png"
-        // },
+        "Chronos": {
+            url: "https://gurasuraisu.github.io/chronos",
+            icon: "alarm.png"
+        },
+        
+        "Ailuator": {
+            url: "https://gurasuraisu.github.io/ailuator",
+            icon: "calculator.png"
+        },
+
+        "Wordy": {
+            url: "https://gurasuraisu.github.io/wordy",
+            icon: "docs.png"
+        },
+
+        "Music": {
+            url: "https://gurasuraisu.github.io/music",
+            icon: "music.png"
+        },
+
+        "Stickies": {
+            url: "https://gurasuraisu.github.io/stickies",
+            icon: "notes.png"
+        },
+
+        "Moments": {
+            url: "https://gurasuraisu.github.io/moments",
+            icon: "photos.png"
+        },
+
+        "SketchPad": {
+            url: "https://gurasuraisu.github.io/sketchpad",
+            icon: "sketch.png"
+        },
+
+        "Fantaskical": {
+            url: "https://gurasuraisu.github.io/fantaskical",
+            icon: "tasks.png"
+        },
     };
 
     const appDrawer = document.getElementById('app-drawer');
