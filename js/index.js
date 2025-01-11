@@ -1146,6 +1146,79 @@ blurOverlay.addEventListener('click', (event) => {
     }
 });
 
+// Add event listener for ESC key
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        // Close timezone modal
+        if (timezoneModal.classList.contains('show')) {
+            timezoneModal.classList.remove('show');
+            blurOverlay.classList.remove('show');
+            setTimeout(() => {
+                timezoneModal.style.display = 'none';
+                blurOverlay.style.display = 'none';
+            }, 300);
+        }
+        
+        // Close weather modal
+        if (weatherModal.classList.contains('show')) {
+            weatherModal.classList.remove('show');
+            blurOverlay.classList.remove('show');
+            setTimeout(() => {
+                weatherModal.style.display = 'none';
+                blurOverlay.style.display = 'none';
+            }, 300);
+        }
+        
+        // Close customize modal
+        if (customizeModal.classList.contains('show')) {
+            customizeModal.classList.remove('show');
+            blurOverlay.classList.remove('show');
+            setTimeout(() => {
+                customizeModal.style.display = 'none';
+                blurOverlay.style.display = 'none';
+            }, 300);
+        }
+    }
+});
+
+// Add event listener for spacebar
+document.addEventListener('keydown', (event) => {
+    // Check if the key pressed is spacebar
+    if (event.code === 'Space' || event.key === ' ') {
+        // Check if no modals are open by checking the blur overlay's display state
+        if (
+            document.activeElement.tagName !== 'INPUT' && 
+            blurOverlay.style.display !== 'block'
+        ) {
+            event.preventDefault(); // Prevent spacebar from scrolling the page
+            searchInput.focus();
+        }
+    }
+});
+
+// Add event listener for keydown
+document.addEventListener('keydown', (event) => {
+    // Only handle number keys and enter if no modals are open and no input is focused
+    if (
+        document.activeElement.tagName !== 'INPUT' && 
+        blurOverlay.style.display !== 'block'
+    ) {
+        // Handle number keys (0-9)
+        if (/^[0-9]$/.test(event.key)) {
+            event.preventDefault();
+            const minutes = parseInt(event.key);
+            if (!timerId) { // Only add time if timer isn't running
+                addTime(minutes * 60); // Convert minutes to seconds
+            }
+        }
+        // Handle enter key to toggle timer
+        else if (event.key === 'Enter') {
+            event.preventDefault();
+            toggleTimer();
+        }
+    }
+});
+
     // Initialize everything
     function initAppDraw() {
         createAppIcons();
