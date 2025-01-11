@@ -824,7 +824,7 @@ body.light-theme[style*="background-image"] .info {
             text-align: center;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 800px) {
             .app-drawer-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
