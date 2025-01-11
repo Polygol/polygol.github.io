@@ -603,16 +603,6 @@ body.light-theme[style*="background-image"] .info {
     cursor: pointer;
 }
 
-.copyright {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 20px 0;
-    padding: 15px 20px;
-    background-color: var(--transparent-color);
-    border-radius: 20px;
-}
-
 #font-select option[value="Roboto"] { font-family: 'Roboto', sans-serif; }
 #font-select option[value="DynaPuff"] { font-family: 'DynaPuff', cursive; }
 #font-select option[value="DM Serif Display"] { font-family: 'DM Serif Display', serif; }
