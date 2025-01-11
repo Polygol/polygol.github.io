@@ -503,9 +503,9 @@ body.light-theme[style*="background-image"] .info {
     justify-content: space-between;
     align-items: center;
     margin: 20px 0;
-    padding: 10px;
+    padding: 15px 20px;
     background-color: var(--transparent-color);;
-    border-radius: 15px;
+    border-radius: 20px;
 }
 
 #theme-switch {
@@ -541,7 +541,8 @@ body.light-theme[style*="background-image"] .info {
 
 #uploadButton {
     background-color: var(--transparent-color);
-    color: white;
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
     border: none;
     padding: 10px 10px;
     border-radius: 25px;
