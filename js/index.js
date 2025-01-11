@@ -1083,7 +1083,7 @@ function setupDrawerInteractions() {
 
     // Touch Events
     document.addEventListener('touchstart', (e) => {
-        if (e.touches[0].clientY > window.innerHeight * 0.8 || appDrawer.classList.contains('open')) {
+        if (e.touches[0].clientY > window.innerHeight * 0.95 || appDrawer.classList.contains('open')) {
             startDrag(e.touches[0].clientY);
         }
     }, { passive: false });
