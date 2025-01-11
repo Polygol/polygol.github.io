@@ -557,7 +557,35 @@ function showPopup(message) {
     popup.style.borderRadius = '30px';
     popup.style.zIndex = '1000';
     popup.style.transition = 'opacity 0.5s';
-    popup.textContent = message;
+    popup.style.display = 'flex';
+    popup.style.alignItems = 'center';
+    popup.style.gap = '10px';
+
+    // Check for specific words to determine icon
+    const checkWords = ['updated', 'complete', 'done', 'success'];
+    const closeWords = ['failed', 'canceled'];
+    
+    let shouldShowIcon = false;
+    let iconType = '';
+    
+    // Check if message contains any of the trigger words
+    if (checkWords.some(word => message.toLowerCase().includes(word))) {
+        shouldShowIcon = true;
+        iconType = 'check';
+    } else if (closeWords.some(word => message.toLowerCase().includes(word))) {
+        shouldShowIcon = true;
+        iconType = 'close';
+    }
+    
+    // Add icon if needed
+    if (shouldShowIcon) {
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-rounded';
+        icon.textContent = iconType;
+        popup.appendChild(icon);
+    }
+    
+    popup.appendChild(document.createTextNode(message));
 
     const lastPopup = document.querySelector('.popup');
     const topPosition = lastPopup ? lastPopup.offsetTop + lastPopup.offsetHeight + 10 : 20;
