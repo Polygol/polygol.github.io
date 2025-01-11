@@ -583,6 +583,16 @@ body.light-theme[style*="background-image"] .info {
     color: var(--text-color);
 }
 
+.version-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 15px 20px;
+    background-color: var(--transparent-color);
+    border-radius: 20px;
+}
+
 #versionButton {
     background-color: var(--transparent-color);
     color: var(--text-color);
@@ -591,6 +601,16 @@ body.light-theme[style*="background-image"] .info {
     padding: 10px 10px;
     border-radius: 25px;
     cursor: pointer;
+}
+
+.copyright {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 15px 20px;
+    background-color: var(--transparent-color);
+    border-radius: 20px;
 }
 
 #font-select option[value="Roboto"] { font-family: 'Roboto', sans-serif; }
