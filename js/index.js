@@ -830,9 +830,14 @@ function setupFontSelection() {
     // Handle font changes
     fontSelect.addEventListener('change', (e) => {
         const selectedFont = e.target.value;
-        clockElement.style.fontFamily = selectedFont;
-        localStorage.setItem('clockFont', selectedFont);
-        showPopup('Clock font updated');
+        // Ensure font is loaded before applying
+        document.fonts.load(`16px ${selectedFont}`).then(() => {
+            clockElement.style.fontFamily = selectedFont;
+            localStorage.setItem('clockFont', selectedFont);
+            showPopup('Clock font updated');
+        }).catch(() => {
+            showPopup('Failed to load font');
+        });
     });
 }
 
