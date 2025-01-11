@@ -583,11 +583,13 @@ body.light-theme[style*="background-image"] .info {
     color: var(--text-color);
 }
 
-#font-select option[value="Inter"] { font-family: 'Inter', sans-serif; }
 #font-select option[value="Roboto"] { font-family: 'Roboto', sans-serif; }
 #font-select option[value="DynaPuff"] { font-family: 'DynaPuff', cursive; }
 #font-select option[value="DM Serif Display"] { font-family: 'DM Serif Display', serif; }
 #font-select option[value="Bungee"] { font-family: 'Bungee', cursive; }
+#font-select option[value="Roboto Mono"] { font-family: 'Roboto Mono', monospace; }
+#font-select option[value="VT323"] { font-family: 'VT323', monospace; }
+#font-select option[value="Kalam"] { font-family: 'Kalam', cursive; }
 
 .timer-circle {
     position: relative;
