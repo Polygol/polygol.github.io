@@ -478,6 +478,7 @@ function updateDisplay() {
 }
 
 function addTime(seconds) {
+    if (!timezoneModal.classList.contains('show')) return;
     if (!timerId) {
         timeLeft += seconds;
         totalTime = timeLeft;
@@ -486,6 +487,7 @@ function addTime(seconds) {
 }
 
 function toggleTimer() {
+    if (!timezoneModal.classList.contains('show')) return;
     if (timerId) {
         clearInterval(timerId);
         timerId = null;
@@ -508,6 +510,7 @@ function toggleTimer() {
 }
 
 function resetTimer() {
+    if (!timezoneModal.classList.contains('show')) return;
     if (timerId) clearInterval(timerId);
     timerId = null;
     timeLeft = 0;
@@ -1198,20 +1201,24 @@ document.addEventListener('keydown', (event) => {
 
 // Add event listener for keydown
 document.addEventListener('keydown', (event) => {
-    // Only handle number keys and enter if timezone modal is open
-    if (timezoneModal.classList.contains('show')) {
+    // Only handle keys if timer modal is open and we're not in an input field
+    if (timezoneModal.classList.contains('show') && document.activeElement.tagName !== 'INPUT') {
         // Handle number keys (0-9)
         if (/^[0-9]$/.test(event.key)) {
             event.preventDefault();
+            // Only add time if timer isn't running
             const minutes = parseInt(event.key);
-            if (!timerId) { // Only add time if timer isn't running
-                addTime(minutes * 60); // Convert minutes to seconds
-            }
+            addTime(minutes * 60); // Convert minutes to seconds
         }
         // Handle enter key to toggle timer
         else if (event.key === 'Enter') {
             event.preventDefault();
             toggleTimer();
+        }
+        // Handle backspace key to reset timer
+        else if (event.key === 'Backspace') {
+            event.preventDefault();
+            resetTimer();
         }
     }
 });
