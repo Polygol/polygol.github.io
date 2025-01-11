@@ -555,6 +555,7 @@ function showPopup(message) {
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'rgba(51, 51, 51, 0.9)';
+    popup.style.backdrop-filter = 'blur(10px)';
     popup.style.color = 'white';
     popup.style.padding = '20px';
     popup.style.borderRadius = '30px';
