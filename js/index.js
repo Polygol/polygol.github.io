@@ -818,10 +818,29 @@ function applyWallpaper() {
     }
 }
 
+function setupFontSelection() {
+    const fontSelect = document.getElementById('font-select');
+    const clockElement = document.getElementById('clock');
+    
+    // Load saved font preference
+    const savedFont = localStorage.getItem('clockFont') || 'Inter';
+    fontSelect.value = savedFont;
+    clockElement.style.fontFamily = savedFont;
+    
+    // Handle font changes
+    fontSelect.addEventListener('change', (e) => {
+        const selectedFont = e.target.value;
+        clockElement.style.fontFamily = selectedFont;
+        localStorage.setItem('clockFont', selectedFont);
+        showPopup('Clock font updated');
+    });
+}
+
 // Initialize theme and wallpaper on load
 function initializeCustomization() {
     setupThemeSwitcher();
     applyWallpaper();
+    setupFontSelection();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1071,6 +1090,7 @@ blurOverlay.addEventListener('click', (event) => {
         createAppIcons();
         setupDrawerInteractions();
     }
+
 
     // Call initialization
     initializeCustomization();
