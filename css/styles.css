@@ -23,7 +23,7 @@
     --modal-background-light: rgba(240, 240, 240, 0.8);
     --modal-transparent-light: rgba(240, 240, 240, 0.9);
     --search-background-light: rgba(220, 220, 220, 0.5);
-    --light-transparent: rgba(220, 220, 220, 0.1); /* Darker transparent for light mode */
+    --light-transparent: rgba(255, 255, 255, 0.1); /* Darker transparent for light mode */
 
     /* Base Variables */
     --base-font-size: clamp(16px, 2vw + 1rem, 24px);
