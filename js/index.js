@@ -1397,38 +1397,41 @@ function setupDrawerInteractions() {
     }
 
     // Touch Events
-    document.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        
-        // Check if touch is on handle area or if drawer is already open
-        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
-            startDrag(touch.clientY);
-            e.preventDefault();
-        }
-    }, { passive: false });
+document.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    // For opening: only allow dragging from handle area
+    // For closing: allow dragging from anywhere in the drawer when it's open
+    if (drawerHandle.contains(element) || 
+        (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+        startDrag(touch.clientY);
+        e.preventDefault();
+    }
+}, { passive: false });
 
-    document.addEventListener('touchmove', (e) => {
-        if (isDragging) {
-            e.preventDefault();
-            moveDrawer(e.touches[0].clientY);
-        }
-    }, { passive: false });
+document.addEventListener('touchmove', (e) => {
+    if (isDragging) {
+        e.preventDefault();
+        moveDrawer(e.touches[0].clientY);
+    }
+}, { passive: false });
 
-    document.addEventListener('touchend', () => {
-        endDrag();
-    });
+document.addEventListener('touchend', () => {
+    endDrag();
+});
 
     // Mouse Events
-    document.addEventListener('mousedown', (e) => {
-        if (e.button !== 0) return;
-        const element = document.elementFromPoint(e.clientX, e.clientY);
-        
-        // Check if click is on handle area or if drawer is already open
-        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
-            startDrag(e.clientY);
-        }
-    });
+document.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    const element = document.elementFromPoint(e.clientX, e.clientY);
+    
+    // Same logic for mouse events
+    if (drawerHandle.contains(element) || 
+        (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+        startDrag(e.clientY);
+    }
+});
 
     document.addEventListener('mousemove', (e) => {
         if (isDragging) {
