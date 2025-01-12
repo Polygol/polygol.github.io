@@ -44,6 +44,10 @@ Please make sure to use Gurasuraisu from https://gurasuraisu.github.io to avoid 
     
 consoleGreeting()
 
+let showSeconds = localStorage.getItem('showSeconds') !== 'false';
+let timeLeft = 0; 
+let timerId = null;
+
 // IndexedDB setup for video storage
 const dbName = 'WallpaperDB';
 const storeName = 'wallpapers';
@@ -103,9 +107,6 @@ function updatePersistentClockVisibility() {
         persistentClock.classList.remove('show');
     }
 }
-
-let timeLeft = 0; 
-let timerId = null; 
 
 // Function to update the document title
 function updateTitle() {
@@ -247,7 +248,10 @@ function updateClockAndDate() {
     let minutes = String(now.getMinutes()).padStart(2, '0');
     let seconds = String(now.getSeconds()).padStart(2, '0');
     
-    clockElement.textContent = showSeconds ? 
+    // Add a fallback value for showSeconds
+    const shouldShowSeconds = typeof showSeconds !== 'undefined' ? showSeconds : false;
+    
+    clockElement.textContent = shouldShowSeconds ? 
         `${hours}:${minutes}:${seconds}` : 
         `${hours}:${minutes}`;
         
@@ -510,7 +514,6 @@ closeWeatherModal.addEventListener('click', () => {
 });
 
 setInterval(updateClockAndDate, 1000);
-updateClockAndDate();
 updateSmallWeather();
 
 // Timer Variables
@@ -1643,6 +1646,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('load', () => {
     ensureVideoLoaded();
     initializeClockSettings();
+    updateClockAndDate()
 });
 
 setInterval(ensureVideoLoaded, 1000);
