@@ -44,6 +44,12 @@ Please make sure to use Gurasuraisu from https://gurasuraisu.github.io to avoid 
     
 consoleGreeting()
 
+const secondsSwitch = document.getElementById('seconds-switch');
+
+let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults to true
+
+secondsSwitch.checked = showSeconds;
+
 // IndexedDB setup for video storage
 const dbName = 'WallpaperDB';
 const storeName = 'wallpapers';
@@ -110,11 +116,15 @@ let timerId = null;
 // Function to update the document title
 function updateTitle() {
     if (timeLeft > 0 && timerId) {
-        // If timer is active, show remaining time
         document.title = `${formatTime(timeLeft)} • Gurasuraisu`;
     } else {
-        // Otherwise, show current 24-hour time
-        document.title = `${getCurrentTime24()} • Gurasuraisu`;
+        let now = new Date();
+        let hours = String(now.getHours()).padStart(2, '0');
+        let minutes = String(now.getMinutes()).padStart(2, '0');
+        let seconds = String(now.getSeconds()).padStart(2, '0');
+        document.title = showSeconds ? 
+            `${hours}:${minutes}:${seconds} • Gurasuraisu` : 
+            `${hours}:${minutes} • Gurasuraisu`;
     }
 }
 
@@ -239,17 +249,24 @@ const weatherConditions = {
 };
 
 function updateClockAndDate() {
-    const clockElement = document.getElementById('clock');
-    const dateElement = document.getElementById('date');
-    const now = new Date();
-
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    clockElement.textContent = `${hours}:${minutes}:${seconds}`;
-
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    dateElement.textContent = now.toLocaleDateString(undefined, options);
+    let clockElement = document.getElementById('clock');
+    let dateElement = document.getElementById('date');
+    let now = new Date();
+    
+    let hours = String(now.getHours()).padStart(2, '0');
+    let minutes = String(now.getMinutes()).padStart(2, '0');
+    let seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    clockElement.textContent = showSeconds ? 
+        `${hours}:${minutes}:${seconds}` : 
+        `${hours}:${minutes}`;
+        
+    dateElement.textContent = now.toLocaleDateString(undefined, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
 }
 
 async function fetchLocationAndWeather() {
@@ -1444,6 +1461,12 @@ appDrawerObserver.observe(appDrawer, {
 
 timerWidget.addEventListener('click', () => {
     toggleTimer();
+});
+
+secondsSwitch.addEventListener('change', function() {
+    showSeconds = this.checked;
+    localStorage.setItem('showSeconds', showSeconds);
+    updateClockAndDate();
 });
 
 blurOverlay.addEventListener('click', (event) => {
