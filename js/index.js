@@ -81,6 +81,9 @@ function updatePersistentClockVisibility() {
     }
 }
 
+let timeLeft = 0; 
+let timerId = null; 
+
 // Function to update the document title
 function updateTitle() {
     if (timeLeft > 0 && timerId) {
@@ -258,7 +261,7 @@ async function fetchLocationAndWeather() {
                 const currentWeatherData = await currentResponse.json();
                 const dailyForecastData = await dailyResponse.json();
                 const hourlyForecastData = await hourlyResponse.json();
-                
+ 
                 resolve({
                     city,
                     current: currentWeatherData.current_weather,
@@ -266,6 +269,10 @@ async function fetchLocationAndWeather() {
                     hourlyForecast: hourlyForecastData.hourly
                 });
 
+                localStorage.setItem('lastWeatherData', JSON.stringify(weatherData));
+
+                resolve(weatherData);
+                
             } catch (error) {
                 console.error('Error fetching weather data:', error);
                 if (!navigator.onLine) {
