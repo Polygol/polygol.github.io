@@ -47,7 +47,6 @@ consoleGreeting()
 const secondsSwitch = document.getElementById('seconds-switch');
 
 let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults to true
-let isDrawerDragging = false;
 
 secondsSwitch.checked = showSeconds;
 
@@ -1275,30 +1274,25 @@ function createAppIcons() {
         appIcon.classList.add('app-icon');
         appIcon.dataset.app = appName;
 
+        // Create icon image
         const img = document.createElement('img');
         img.src = `/assets/appicon/${appDetails.icon}`;
         img.alt = appName;
         img.onerror = () => {
-            img.src = '/assets/question.png';
+            img.src = '/assets/default-app-icon.png';
         };
-        img.draggable = false
 
+        // Create app name label
         const label = document.createElement('span');
         label.textContent = appName;
 
         appIcon.appendChild(img);
         appIcon.appendChild(label);
 
+        // Add both click and touch events to handle all interaction types
         const handleAppOpen = (e) => {
-            // Prevent app opening if drawer is being dragged
-            if (isDrawerDragging) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-            }
-
-            e.preventDefault();
-            e.stopPropagation();
+            e.preventDefault(); // Prevent default behavior
+            e.stopPropagation(); // Stop event from bubbling up
             
             try {
                 if (appDetails.url.startsWith('#')) {
@@ -1309,11 +1303,14 @@ function createAppIcons() {
                         case '#weather':
                             showPopup('Opening Weather');
                             break;
+                        default:
+                            showPopup(`${appName} app opened`);
                     }
                 } else {
                     window.open(appDetails.url, '_blank', 'noopener,noreferrer');
                 }
 
+                // Close the drawer
                 appDrawer.classList.remove('open');
                 appDrawer.style.bottom = '-100%';
                 initialDrawerPosition = -100;
@@ -1323,12 +1320,9 @@ function createAppIcons() {
             }
         };
 
+        // Add both click and touch events
         appIcon.addEventListener('click', handleAppOpen);
         appIcon.addEventListener('touchend', handleAppOpen);
-
-        appGrid.appendChild(appIcon);
-
-        appIcon.ondragstart = (e) => e.preventDefault(); 
 
         appGrid.appendChild(appIcon);
     });
@@ -1348,12 +1342,12 @@ function setupDrawerInteractions() {
         startY = yPosition;
         currentY = yPosition;
         isDragging = true;
-        isDrawerDragging = true; // Set the global flag
         appDrawer.style.transition = 'none';
     }
 
     function moveDrawer(yPosition) {
         if (!isDragging) return;
+
         currentY = yPosition;
         const deltaY = startY - currentY;
         const windowHeight = window.innerHeight;
@@ -1365,17 +1359,12 @@ function setupDrawerInteractions() {
 
     function endDrag() {
         if (!isDragging) return;
-        
+
         const deltaY = startY - currentY;
         const deltaTime = 100;
         const velocity = deltaY / deltaTime;
 
         appDrawer.style.transition = 'bottom 0.3s ease';
-
-        // Set timeout to prevent immediate app opening after drag
-        setTimeout(() => {
-            isDrawerDragging = false;
-        }, 50);
 
         if (velocity > flickVelocityThreshold || deltaY > 50) {
             appDrawer.style.bottom = '0%';
