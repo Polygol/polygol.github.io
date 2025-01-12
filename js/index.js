@@ -1279,7 +1279,7 @@ function createAppIcons() {
         img.src = `/assets/appicon/${appDetails.icon}`;
         img.alt = appName;
         img.onerror = () => {
-            img.src = '/assets/question.png';
+            img.src = '/assets/default-app-icon.png';
         };
 
         const label = document.createElement('span');
@@ -1288,22 +1288,42 @@ function createAppIcons() {
         appIcon.appendChild(img);
         appIcon.appendChild(label);
 
-        appIcon.addEventListener('click', (e) => {
-            if (!isDrawerDragging) {
+        const handleAppOpen = (e) => {
+            // Prevent app opening if drawer is being dragged
+            if (isDrawerDragging) {
                 e.preventDefault();
                 e.stopPropagation();
-                
-                try {
-                    window.open(appDetails.url, '_blank', 'noopener,noreferrer');
-                    appDrawer.classList.remove('open');
-                    appDrawer.style.bottom = '-100%';
-                    initialDrawerPosition = -100;
-                } catch (error) {
-                    showPopup(`Failed to open ${appName}`);
-                    console.error(`App open error: ${error}`);
-                }
+                return;
             }
-        });
+
+            e.preventDefault();
+            e.stopPropagation();
+            
+            try {
+                if (appDetails.url.startsWith('#')) {
+                    switch (appDetails.url) {
+                        case '#settings':
+                            showPopup('Opening Settings');
+                            break;
+                        case '#weather':
+                            showPopup('Opening Weather');
+                            break;
+                    }
+                } else {
+                    window.open(appDetails.url, '_blank', 'noopener,noreferrer');
+                }
+
+                appDrawer.classList.remove('open');
+                appDrawer.style.bottom = '-100%';
+                initialDrawerPosition = -100;
+            } catch (error) {
+                showPopup(`Failed to open ${appName}`);
+                console.error(`App open error: ${error}`);
+            }
+        };
+
+        appIcon.addEventListener('click', handleAppOpen);
+        appIcon.addEventListener('touchend', handleAppOpen);
 
         appGrid.appendChild(appIcon);
     });
@@ -1314,63 +1334,43 @@ function setupDrawerInteractions() {
     let currentY = 0;
     let initialDrawerPosition = -100;
     let isDragging = false;
-    let dragStartTime = 0;
     const flickVelocityThreshold = 0.4;
     const openThreshold = -50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
-    const DRAG_THRESHOLD = 150; // milliseconds to determine if it's a drag vs tap
-    
+
     function startDrag(yPosition) {
         startY = yPosition;
         currentY = yPosition;
         isDragging = true;
-        isDrawerDragging = true;
-        dragStartTime = Date.now();
+        isDrawerDragging = true; // Set the global flag
         appDrawer.style.transition = 'none';
     }
 
-function moveDrawer(yPosition) {
-    if (!isDragging) return;
-    
-    const dragDuration = Date.now() - dragStartTime;
-    if (dragDuration > DRAG_THRESHOLD) {
-        // Only disable pointer events if we're actually dragging
-        const appIcons = appDrawer.querySelectorAll('.app-icon');
-        appIcons.forEach(icon => {
-            icon.style.pointerEvents = 'none';
-        });
-    }
-    
-    currentY = yPosition;
-    const delta = startY - currentY;
-    const windowHeight = window.innerHeight;
-    const movementPercentage = (delta / windowHeight) * 100;
-    const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-    appDrawer.style.bottom = `${newPosition}%`;
-}
+    function moveDrawer(yPosition) {
+        if (!isDragging) return;
+        currentY = yPosition;
+        const deltaY = startY - currentY;
+        const windowHeight = window.innerHeight;
+        const movementPercentage = (deltaY / windowHeight) * 100;
 
-function endDrag(e) {
-    if (!isDragging) return;
-    
-    const dragDuration = Date.now() - dragStartTime;
-
-    // Re-enable pointer events
-    const appIcons = appDrawer.querySelectorAll('.app-icon');
-    appIcons.forEach(icon => {
-        icon.style.pointerEvents = 'auto';
-    });
-
-    appDrawer.style.transition = 'bottom 0.3s ease';
-
-    // If it's a short duration, treat it as a tap
-    if (dragDuration < DRAG_THRESHOLD) {
-        isDragging = false;
-        isDrawerDragging = false;
-        return;
+        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+        appDrawer.style.bottom = `${newPosition}%`;
     }
 
-        const velocity = (startY - currentY) / dragDuration;
+    function endDrag() {
+        if (!isDragging) return;
+        
+        const deltaY = startY - currentY;
+        const deltaTime = 100;
+        const velocity = deltaY / deltaTime;
+
+        appDrawer.style.transition = 'bottom 0.3s ease';
+
+        // Set timeout to prevent immediate app opening after drag
+        setTimeout(() => {
+            isDrawerDragging = false;
+        }, 50);
 
         if (velocity > flickVelocityThreshold || deltaY > 50) {
             appDrawer.style.bottom = '0%';
@@ -1394,23 +1394,38 @@ function endDrag(e) {
         }
 
         isDragging = false;
-        isDrawerDragging = false;
     }
 
     // Touch Events
-    appDrawer.addEventListener('touchstart', (e) => {
-        startDrag(e.touches[0].clientY);
-    }, { passive: true });
+    document.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Check if touch is on handle area or if drawer is already open
+        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+            startDrag(touch.clientY);
+            e.preventDefault();
+        }
+    }, { passive: false });
 
-    appDrawer.addEventListener('touchmove', (e) => {
-        moveDrawer(e.touches[0].clientY);
-    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+        if (isDragging) {
+            e.preventDefault();
+            moveDrawer(e.touches[0].clientY);
+        }
+    }, { passive: false });
 
-    appDrawer.addEventListener('touchend', endDrag);
+    document.addEventListener('touchend', () => {
+        endDrag();
+    });
 
     // Mouse Events
-    appDrawer.addEventListener('mousedown', (e) => {
-        if (e.button === 0) {
+    document.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        const element = document.elementFromPoint(e.clientX, e.clientY);
+        
+        // Check if click is on handle area or if drawer is already open
+        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
             startDrag(e.clientY);
         }
     });
@@ -1420,8 +1435,10 @@ function endDrag(e) {
             moveDrawer(e.clientY);
         }
     });
-    
-    document.addEventListener('mouseup', endDrag);
+
+    document.addEventListener('mouseup', () => {
+        endDrag();
+    });
 
     // Close drawer when clicking outside
     document.addEventListener('click', (e) => {
