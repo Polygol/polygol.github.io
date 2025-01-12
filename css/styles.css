@@ -118,6 +118,27 @@ body.light-theme[style*="background-image"] .info {
     opacity: 0.8;
 }
 
+.persistent-clock {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    background-color: transparent;
+    padding: 8px 18px;
+    border-radius: 50px;
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    user-select: none;
+}
+
+.persistent-clock.show {
+    opacity: 1;
+    visibility: visible;
+}
+
         .container {
             width: clamp(300px, 90%, 1200px);
             margin: 0 auto;
