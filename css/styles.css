@@ -899,3 +899,13 @@ body.light-theme[style*="background-image"] .info {
             .app-drawer-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
+
+        @media (max-width: 500px) {
+            .app-drawer-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+        @media (max-width: 300px) {
+            .app-drawer-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
