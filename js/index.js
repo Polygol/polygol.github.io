@@ -1330,46 +1330,45 @@ function setupDrawerInteractions() {
         appDrawer.style.transition = 'none';
     }
 
-    function moveDrawer(yPosition) {
-        if (!isDragging) return;
-        
-        const deltaY = Math.abs(startY - yPosition);
-        if (deltaY > DRAG_THRESHOLD) {
-            // Only disable pointer events if we're actually dragging
-            const appIcons = appDrawer.querySelectorAll('.app-icon');
-            appIcons.forEach(icon => {
-                icon.style.pointerEvents = 'none';
-            });
-        }
-        
-        currentY = yPosition;
-        const delta = startY - currentY;
-        const windowHeight = window.innerHeight;
-        const movementPercentage = (delta / windowHeight) * 100;
-        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-        appDrawer.style.bottom = `${newPosition}%`;
-    }
-
-    function endDrag(e) {
-        if (!isDragging) return;
-        
-        const deltaY = Math.abs(startY - currentY);
-        const dragDuration = Date.now() - dragStartTime;
-
-        // Re-enable pointer events
+function moveDrawer(yPosition) {
+    if (!isDragging) return;
+    
+    const dragDuration = Date.now() - dragStartTime;
+    if (dragDuration > DRAG_THRESHOLD) {
+        // Only disable pointer events if we're actually dragging
         const appIcons = appDrawer.querySelectorAll('.app-icon');
         appIcons.forEach(icon => {
-            icon.style.pointerEvents = 'auto';
+            icon.style.pointerEvents = 'none';
         });
+    }
+    
+    currentY = yPosition;
+    const delta = startY - currentY;
+    const windowHeight = window.innerHeight;
+    const movementPercentage = (delta / windowHeight) * 100;
+    const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+    appDrawer.style.bottom = `${newPosition}%`;
+}
 
-        appDrawer.style.transition = 'bottom 0.3s ease';
+function endDrag(e) {
+    if (!isDragging) return;
+    
+    const dragDuration = Date.now() - dragStartTime;
 
-        // If it's a small movement and short duration, treat it as a tap
-        if (deltaY < DRAG_THRESHOLD && dragDuration < 200) {
-            isDragging = false;
-            isDrawerDragging = false;
-            return;
-        }
+    // Re-enable pointer events
+    const appIcons = appDrawer.querySelectorAll('.app-icon');
+    appIcons.forEach(icon => {
+        icon.style.pointerEvents = 'auto';
+    });
+
+    appDrawer.style.transition = 'bottom 0.3s ease';
+
+    // If it's a short duration, treat it as a tap
+    if (dragDuration < DRAG_THRESHOLD) {
+        isDragging = false;
+        isDrawerDragging = false;
+        return;
+    }
 
         const velocity = (startY - currentY) / dragDuration;
 
