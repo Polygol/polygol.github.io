@@ -28,7 +28,7 @@ function consoleGreeting() {
     const license = `
 Copyright © 2025 Gurasuraisu, kirbIndustries
 Licensed under the GNU General Public License, Version 2.0 (GPL-2.0)
-You may obtain a copy of the License at https://www.gnu.org/licenses/gpl-3.0.html
+You may obtain a copy of the License at https://www.gnu.org/licenses/gpl-2.0.html
     `;
 
     const theft = `
