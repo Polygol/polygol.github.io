@@ -488,39 +488,25 @@ function addTime(seconds) {
 
 function toggleTimer() {
     if (!timezoneModal.classList.contains('show')) return;
-    const timerClock = document.getElementById('timer-clock');
-    
     if (timerId) {
         clearInterval(timerId);
         timerId = null;
         startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>';
-        timerClock.style.display = 'none';
     } else {
         if (timeLeft > 0) {
             timerId = setInterval(() => {
                 timeLeft--;
                 updateDisplay();
-                updateTimerClock();
                 if (timeLeft <= 0) {
                     clearInterval(timerId);
                     timerId = null;
                     startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>';
-                    timerClock.style.display = 'none';
                     playAlarm();
                 }
             }, 1000);
             startBtn.innerHTML = '<span class="material-symbols-rounded">pause</span>';
-            timerClock.style.display = 'flex';
         }
     }
-}
-
-function updateTimerClock() {
-    const timerClockTime = document.getElementById('timer-clock-time');
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    timerClockTime.textContent = `${hours}:${minutes}`;
 }
 
 function resetTimer() {
@@ -531,7 +517,6 @@ function resetTimer() {
     totalTime = 0;
     updateDisplay();
     startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>';
-    document.getElementById('timer-clock').style.display = 'none';
 }
 
 function playAlarm() {
