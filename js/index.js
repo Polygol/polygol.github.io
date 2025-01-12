@@ -725,6 +725,7 @@ const appLinks = {
     "Moments": "https://gurasuraisu.github.io/moments",
     "SketchPad": "https://photos.google.com",
     "Fantaskical": "https://gurasuraisu.github.io/fantaskical",
+    "Clapper": "https://gurasuraisu.github.io/clapper",
 };
 
 function fuzzySearch(query, appList) {
@@ -996,6 +997,11 @@ function initializeCustomization() {
         "Fantaskical": {
             url: "https://gurasuraisu.github.io/fantaskical",
             icon: "tasks.png"
+        },
+
+        "Clapper": {
+            url: "https://gurasuraisu.github.io/clapper",
+            icon: "video.png"
         },
     };
 
