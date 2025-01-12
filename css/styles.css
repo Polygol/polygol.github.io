@@ -511,6 +511,7 @@ body.light-theme[style*="background-image"] .info {
     display: none;  /* Hidden by default */
     align-items: center;
     justify-content: center;
+    gap: 8px; /* Add gap between text and icon */
     line-height: 1;
     cursor: pointer;
     user-select: none;
@@ -532,12 +533,11 @@ body.light-theme[style*="background-image"] .info {
 
 .timer-icon {
     font-size: 1.2rem;
-    font-family: 'Material Symbols Rounded', sans-serif;
-    font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;
     display: inline-flex;
     align-items: center;
     height: 100%;
     user-select: none;
+    vertical-align: middle;
 }
 
 .clockwidgets {
