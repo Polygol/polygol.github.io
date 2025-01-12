@@ -892,7 +892,7 @@ wallpaperInput.addEventListener('change', (event) => {
         saveWallpaper(file);
         showPopup('Wallpaper updated');
     } else {
-        showPopup('Please upload a PNG or JPEG image');
+        showPopup('Failed to update wallpaper');
     }
 });
 
