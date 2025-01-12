@@ -48,6 +48,7 @@ consoleGreeting()
 const dbName = 'WallpaperDB';
 const storeName = 'wallpapers';
 const version = 1;
+const VIDEO_VERSION = '1.0';
 
 // Initialize IndexedDB
 function initDB() {
@@ -930,7 +931,13 @@ async function storeVideo(videoBlob) {
         const transaction = db.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
         
-        const request = store.put(videoBlob, 'currentVideo');
+        const videoData = {
+            blob: videoBlob,
+            version: VIDEO_VERSION,
+            timestamp: Date.now()
+        };
+        
+        const request = store.put(videoData, 'currentVideo');
         request.onerror = () => reject(request.error);
         request.onsuccess = () => resolve();
     });
@@ -1063,11 +1070,12 @@ async function applyWallpaper() {
 
     try {
         if (wallpaperType && wallpaperType.startsWith('video/')) {
-            const videoBlob = await getVideo();
-            if (videoBlob) {
+            const videoData = await getVideo();
+            if (videoData && videoData.blob) {
                 // Remove any existing video element
                 const existingVideo = document.querySelector('#background-video');
                 if (existingVideo) {
+                    URL.revokeObjectURL(existingVideo.src);
                     existingVideo.remove();
                 }
 
@@ -1088,20 +1096,35 @@ async function applyWallpaper() {
                 video.style.zIndex = '-1';
                 video.style.objectFit = 'cover';
                 
-                video.src = URL.createObjectURL(videoBlob);
-                document.body.insertBefore(video, document.body.firstChild);
-                document.body.style.backgroundImage = 'none';
+                // Create new blob URL with cache busting
+                const blobUrl = URL.createObjectURL(videoData.blob);
+                video.src = blobUrl;
+
+                // Add error handling for video loading
+                video.onerror = (e) => {
+                    console.error('Video loading error:', e);
+                    showPopup('Error loading video wallpaper');
+                };
+
+                // Ensure video loads before adding to DOM
+                video.onloadeddata = () => {
+                    document.body.insertBefore(video, document.body.firstChild);
+                    document.body.style.backgroundImage = 'none';
+                };
+
+                // Force video to load
+                video.load();
             }
         } else {
+            // Handle image wallpaper (existing code)
             const savedWallpaper = localStorage.getItem('customWallpaper');
             if (savedWallpaper) {
-                // Remove any existing video element
                 const existingVideo = document.querySelector('#background-video');
                 if (existingVideo) {
+                    URL.revokeObjectURL(existingVideo.src);
                     existingVideo.remove();
                 }
 
-                // Apply image wallpaper
                 document.body.style.backgroundImage = `url('${savedWallpaper}')`;
                 document.body.style.backgroundSize = 'cover';
                 document.body.style.backgroundPosition = 'center';
@@ -1111,6 +1134,15 @@ async function applyWallpaper() {
     } catch (error) {
         console.error('Error applying wallpaper:', error);
         showPopup('Failed to apply wallpaper');
+    }
+}
+
+function ensureVideoLoaded() {
+    const video = document.querySelector('#background-video');
+    if (video && video.paused) {
+        video.play().catch(err => {
+            console.error('Error playing video:', err);
+        });
     }
 }
 
@@ -1502,6 +1534,12 @@ window.addEventListener('offline', () => {
 document.addEventListener('DOMContentLoaded', () => {
     applyWallpaper();
 });
+
+window.addEventListener('load', () => {
+    ensureVideoLoaded();
+});
+
+setInterval(ensureVideoLoaded, 1000);
 
     // Initialize everything
     function initAppDraw() {
