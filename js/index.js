@@ -488,9 +488,7 @@ updateClockAndDate();
 updateSmallWeather();
 
 // Timer Variables
-let timeLeft = 0;
 let totalTime = 0;
-let timerId = null;
 const display = document.getElementById('display');
 const timeInput = document.getElementById('timeInput');
 const startBtn = document.getElementById('startBtn');
