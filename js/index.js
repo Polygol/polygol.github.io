@@ -1343,7 +1343,7 @@ function setupDrawerInteractions() {
         startY = yPosition;
         currentY = yPosition;
         isDragging = true;
-        isDrawerDragging = true; // Set the global flag
+        isDrawerDragging = true;
         appDrawer.style.transition = 'none';
     }
 
@@ -1367,7 +1367,6 @@ function setupDrawerInteractions() {
 
         appDrawer.style.transition = 'bottom 0.3s ease';
 
-        // Set timeout to prevent immediate app opening after drag
         setTimeout(() => {
             isDrawerDragging = false;
         }, 50);
@@ -1401,8 +1400,8 @@ function setupDrawerInteractions() {
         const touch = e.touches[0];
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
         
-        // Check if touch is on handle area or if drawer is already open
-        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+        // Allow dragging if touch starts in app drawer or handle
+        if (appDrawer.contains(element) || drawerHandle.contains(element)) {
             startDrag(touch.clientY);
             e.preventDefault();
         }
@@ -1424,8 +1423,8 @@ function setupDrawerInteractions() {
         if (e.button !== 0) return;
         const element = document.elementFromPoint(e.clientX, e.clientY);
         
-        // Check if click is on handle area or if drawer is already open
-        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+        // Allow dragging if mouse down starts in app drawer or handle
+        if (appDrawer.contains(element) || drawerHandle.contains(element)) {
             startDrag(e.clientY);
         }
     });
