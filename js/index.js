@@ -912,16 +912,104 @@ wallpaperInput.addEventListener('change', (event) => {
     }
 });
 
-// Existing wallpaper save and apply functions remain the same
-function saveWallpaper(file) {
-    const reader = new FileReader();
-    reader.onload = function (event) {
-        const mediaDataUrl = event.target.result;
-        localStorage.setItem('customWallpaper', mediaDataUrl);
-        localStorage.setItem('wallpaperType', file.type);
+// Function to check storage availability
+function checkStorageQuota(data) {
+    try {
+        localStorage.setItem('quotaTest', data);
+        localStorage.removeItem('quotaTest');
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+// Compression utility function
+async function compressMedia(file) {
+    // For images, try storing without compression first
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        const uncompressedData = await new Promise((resolve) => {
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(file);
+        });
+
+        // Check if uncompressed data can be stored
+        if (checkStorageQuota(uncompressedData)) {
+            return uncompressedData;
+        }
+
+        // If quota exceeded, compress the image
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                let width = img.width;
+                let height = img.height;
+                const maxDimension = 1920;
+                
+                if (width > height && width > maxDimension) {
+                    height *= maxDimension / width;
+                    width = maxDimension;
+                } else if (height > maxDimension) {
+                    width *= maxDimension / height;
+                    height = maxDimension;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                URL.revokeObjectURL(img.src);
+                resolve(compressedDataUrl);
+            };
+        });
+    }
+    
+    // For videos, use object URL
+    if (file.type.startsWith('video/')) {
+        const url = URL.createObjectURL(file);
+        return url;
+    }
+    
+    // For other files, return as is
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+    });
+}
+
+async function saveWallpaper(file) {
+    try {
+        const compressedMedia = await compressMedia(file);
+        
+        // For videos, store the URL instead of the data
+        if (file.type.startsWith('video/')) {
+            localStorage.setItem('wallpaperType', file.type);
+            localStorage.setItem('customWallpaper', compressedMedia);
+        } else {
+            // Try to store the compressed data
+            try {
+                localStorage.setItem('wallpaperType', file.type);
+                localStorage.setItem('customWallpaper', compressedMedia);
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    showPopup('File too large. Please choose a smaller file.');
+                    return;
+                }
+                throw e;
+            }
+        }
+        
         applyWallpaper();
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+        console.error('Error saving wallpaper:', error);
+        showPopup('Failed to save wallpaper');
+    }
 }
 
 function applyWallpaper() {
