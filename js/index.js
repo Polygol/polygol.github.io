@@ -1024,62 +1024,68 @@ function initializeCustomization() {
     const appGrid = document.getElementById('app-grid');
     const appDrawerToggle = document.getElementById('app-drawer-toggle');
 
-    // Function to create app icons
-    function createAppIcons() {
-        appGrid.innerHTML = '';
+// Function to create app icons
+function createAppIcons() {
+    appGrid.innerHTML = '';
 
-        Object.entries(apps).forEach(([appName, appDetails]) => {
-            const appIcon = document.createElement('div');
-            appIcon.classList.add('app-icon');
-            appIcon.dataset.app = appName;
+    Object.entries(apps).forEach(([appName, appDetails]) => {
+        const appIcon = document.createElement('div');
+        appIcon.classList.add('app-icon');
+        appIcon.dataset.app = appName;
 
-            // Create icon image
-            const img = document.createElement('img');
-            img.src = `/assets/appicon/${appDetails.icon}`;
-            img.alt = appName;
-            img.onerror = () => {
-                img.src = '/assets/default-app-icon.png'; // Fallback icon
-            };
+        // Create icon image
+        const img = document.createElement('img');
+        img.src = `/assets/appicon/${appDetails.icon}`;
+        img.alt = appName;
+        img.onerror = () => {
+            img.src = '/assets/default-app-icon.png';
+        };
 
-            // Create app name label
-            const label = document.createElement('span');
-            label.textContent = appName;
+        // Create app name label
+        const label = document.createElement('span');
+        label.textContent = appName;
 
-            appIcon.appendChild(img);
-            appIcon.appendChild(label);
+        appIcon.appendChild(img);
+        appIcon.appendChild(label);
 
-            // Add click event to open app
-            appIcon.addEventListener('click', (e) => {
-                e.stopPropagation();
-                try {
-                    if (appDetails.url.startsWith('#')) {
-                        switch (appDetails.url) {
-                            case '#settings':
-                                showPopup('Opening Settings');
-                                break;
-                            case '#weather':
-                                showPopup('Opening Weather');
-                                break;
-                            default:
-                                showPopup(`${appName} app opened`);
-                        }
-                    } else {
-                        window.open(appDetails.url, '_blank', 'noopener,noreferrer');
+        // Add both click and touch events to handle all interaction types
+        const handleAppOpen = (e) => {
+            e.preventDefault(); // Prevent default behavior
+            e.stopPropagation(); // Stop event from bubbling up
+            
+            try {
+                if (appDetails.url.startsWith('#')) {
+                    switch (appDetails.url) {
+                        case '#settings':
+                            showPopup('Opening Settings');
+                            break;
+                        case '#weather':
+                            showPopup('Opening Weather');
+                            break;
+                        default:
+                            showPopup(`${appName} app opened`);
                     }
-    
-                    // Close the drawer and update initialDrawerPosition
-                    appDrawer.classList.remove('open');
-                    appDrawer.style.bottom = '-100%';
-                    initialDrawerPosition = -100; // Add this line to fix the swipe down issue
-                } catch (error) {
-                    showPopup(`Failed to open ${appName}`);
-                    console.error(`App open error: ${error}`);
+                } else {
+                    window.open(appDetails.url, '_blank', 'noopener,noreferrer');
                 }
-            });
 
-            appGrid.appendChild(appIcon);
-        });
-    }
+                // Close the drawer
+                appDrawer.classList.remove('open');
+                appDrawer.style.bottom = '-100%';
+                initialDrawerPosition = -100;
+            } catch (error) {
+                showPopup(`Failed to open ${appName}`);
+                console.error(`App open error: ${error}`);
+            }
+        };
+
+        // Add both click and touch events
+        appIcon.addEventListener('click', handleAppOpen);
+        appIcon.addEventListener('touchend', handleAppOpen);
+
+        appGrid.appendChild(appIcon);
+    });
+}
 
 function setupDrawerInteractions() {
     let startY = 0;
