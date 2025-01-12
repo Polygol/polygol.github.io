@@ -1279,8 +1279,9 @@ function createAppIcons() {
         img.src = `/assets/appicon/${appDetails.icon}`;
         img.alt = appName;
         img.onerror = () => {
-            img.src = '/assets/default-app-icon.png';
+            img.src = '/assets/question.png';
         };
+        img.draggable = false
 
         const label = document.createElement('span');
         label.textContent = appName;
