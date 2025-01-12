@@ -239,17 +239,24 @@ const weatherConditions = {
 };
 
 function updateClockAndDate() {
-    const clockElement = document.getElementById('clock');
-    const dateElement = document.getElementById('date');
-    const now = new Date();
-
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    clockElement.textContent = `${hours}:${minutes}:${seconds}`;
-
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    dateElement.textContent = now.toLocaleDateString(undefined, options);
+    let clockElement = document.getElementById('clock');
+    let dateElement = document.getElementById('date');
+    let now = new Date();
+    
+    let hours = String(now.getHours()).padStart(2, '0');
+    let minutes = String(now.getMinutes()).padStart(2, '0');
+    let seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    clockElement.textContent = showSeconds ? 
+        `${hours}:${minutes}:${seconds}` : 
+        `${hours}:${minutes}`;
+        
+    dateElement.textContent = now.toLocaleDateString(undefined, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
 }
 
 async function fetchLocationAndWeather() {
@@ -1189,6 +1196,106 @@ function setupFontSelection() {
     });
 }
 
+let showSeconds = localStorage.getItem('showSeconds') !== 'false';
+let isEditMode = false;
+let isDragging = false;
+let currentX;
+let currentY;
+let initialX;
+let initialY;
+
+function initializeClockSettings() {
+    const container = document.querySelector('.container');
+    const secondsSwitch = document.getElementById('seconds-switch');
+    const editClockSwitch = document.getElementById('edit-clock-switch');
+    
+    // Initialize switches from localStorage
+    secondsSwitch.checked = showSeconds;
+    editClockSwitch.checked = false;
+    
+    // Load saved position if exists
+    const savedPosition = localStorage.getItem('clockPosition');
+    if (savedPosition) {
+        const { left, top, width, height } = JSON.parse(savedPosition);
+        container.style.left = left;
+        container.style.top = top;
+        container.style.width = width;
+        container.style.height = height;
+    }
+
+    // Seconds switch handler
+    secondsSwitch.addEventListener('change', function() {
+        showSeconds = this.checked;
+        localStorage.setItem('showSeconds', showSeconds);
+        updateClockAndDate();
+    });
+    
+    // Edit mode switch handler
+    editClockSwitch.addEventListener('change', function() {
+        isEditMode = this.checked;
+        container.classList.toggle('editable', isEditMode);
+        if (!isEditMode) {
+            // Save position when exiting edit mode
+            saveClockPosition();
+        }
+        showPopup(isEditMode ? 'Clock edit mode enabled' : 'Clock edit mode disabled');
+    });
+}
+
+function saveClockPosition() {
+    const container = document.querySelector('.container');
+    const position = {
+        left: container.style.left,
+        top: container.style.top,
+        width: container.style.width,
+        height: container.style.height
+    };
+    localStorage.setItem('clockPosition', JSON.stringify(position));
+}
+
+const container = document.querySelector('.container');
+
+container.addEventListener('mousedown', dragStart);
+document.addEventListener('mousemove', drag);
+document.addEventListener('mouseup', dragEnd);
+
+function dragStart(e) {
+    if (!isEditMode) return;
+    
+    if (e.target === container || container.contains(e.target)) {
+        initialX = e.clientX - container.offsetLeft;
+        initialY = e.clientY - container.offsetTop;
+        isDragging = true;
+    }
+}
+
+function drag(e) {
+    if (!isEditMode || !isDragging) return;
+    
+    e.preventDefault();
+    currentX = e.clientX - initialX;
+    currentY = e.clientY - initialY;
+    
+    // Keep container within window bounds
+    const maxX = window.innerWidth - container.offsetWidth;
+    const maxY = window.innerHeight - container.offsetHeight;
+    
+    currentX = Math.min(Math.max(0, currentX), maxX);
+    currentY = Math.min(Math.max(0, currentY), maxY);
+    
+    container.style.left = currentX + 'px';
+    container.style.top = currentY + 'px';
+}
+
+function dragEnd() {
+    if (isDragging) {
+        isDragging = false;
+        if (!isEditMode) {
+            saveClockPosition();
+        }
+    }
+}
+
 // Initialize theme and wallpaper on load
 function initializeCustomization() {
     setupThemeSwitcher();
@@ -1535,6 +1642,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('load', () => {
     ensureVideoLoaded();
+    initializeClockSettings();
 });
 
 setInterval(ensureVideoLoaded, 1000);
