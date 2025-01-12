@@ -489,13 +489,11 @@ function addTime(seconds) {
 
 const timerWidget = document.getElementById('timer-widget');
 const timerText = document.getElementById('timer-text');
-const timerIcon = document.getElementById('timer-icon');
 
 function updateTimerWidget() {
     if (timeLeft > 0) {
         timerWidget.style.display = 'flex';
         timerText.textContent = formatTime(timeLeft);
-        timerIcon.textContent = timerId ? 'pause' : 'play_arrow';
     } else {
         timerWidget.style.display = 'none';
     }
