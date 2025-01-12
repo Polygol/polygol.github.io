@@ -148,7 +148,6 @@ body.light-theme[style*="background-image"] .info {
             position: relative;
             transition: border-color 0.3s;
             user-select: none;
-            pointer-events: none;
         }
 
 .container.editable {
