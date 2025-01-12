@@ -53,6 +53,34 @@ function getCurrentTime24() {
     return `${hours}:${minutes}:${seconds}`;
 }
 
+const persistentClock = document.getElementById('persistent-clock');
+
+function updatePersistentClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    persistentClock.textContent = `${hours}:${minutes}`;
+}
+
+// Update clock every second
+setInterval(updatePersistentClock, 1000);
+updatePersistentClock(); // Initial update
+
+// Show/hide persistent clock based on modal/drawer state
+function updatePersistentClockVisibility() {
+    const isModalOpen = 
+        timezoneModal.classList.contains('show') || 
+        weatherModal.classList.contains('show') || 
+        customizeModal.classList.contains('show') ||
+        appDrawer.classList.contains('open');
+
+    if (isModalOpen) {
+        persistentClock.classList.add('show');
+    } else {
+        persistentClock.classList.remove('show');
+    }
+}
+
 // Function to update the document title
 function updateTitle() {
     if (timeLeft > 0 && timerId) {
@@ -399,6 +427,7 @@ clockElement.addEventListener('click', () => {
     setTimeout(() => {
         timezoneModal.classList.add('show');
         blurOverlay.classList.add('show');
+        updatePersistentClockVisibility();
     }, 10);
 });
 
@@ -408,6 +437,7 @@ weatherWidget.addEventListener('click', () => {
     setTimeout(() => {
         weatherModal.classList.add('show');
         blurOverlay.classList.add('show');
+        updatePersistentClockVisibility();
     }, 10);
     displayDetailedWeather();
 });
@@ -418,6 +448,7 @@ closeModal.addEventListener('click', () => {
     setTimeout(() => {
         timezoneModal.style.display = 'none';
         blurOverlay.style.display = 'none';
+        updatePersistentClockVisibility();
     }, 300);
 });
 
@@ -427,6 +458,7 @@ closeWeatherModal.addEventListener('click', () => {
     setTimeout(() => {
         weatherModal.style.display = 'none';
         blurOverlay.style.display = 'none';
+        updatePersistentClockVisibility();
     }, 300);
 });
 
@@ -835,6 +867,7 @@ customizeButton.addEventListener('click', () => {
     setTimeout(() => {
         customizeModal.classList.add('show');
         blurOverlay.classList.add('show');
+        updatePersistentClockVisibility();
     }, 10);
 });
 
@@ -844,6 +877,7 @@ closeCustomizeModal.addEventListener('click', () => {
     setTimeout(() => {
         customizeModal.style.display = 'none';
         blurOverlay.style.display = 'none';
+        updatePersistentClockVisibility();
     }, 300);
 });
 
@@ -1145,78 +1179,53 @@ function setupDrawerInteractions() {
     });
 }
 
+const appDrawerObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            updatePersistentClockVisibility();
+        }
+    });
+});
+
+appDrawerObserver.observe(appDrawer, {
+    attributes: true
+});
+
 timerWidget.addEventListener('click', () => {
     toggleTimer();
 });
 
-// Close modals when clicking outside
 blurOverlay.addEventListener('click', (event) => {
-    // Only close if clicking directly on the blur overlay
     if (event.target === blurOverlay) {
-        // Close timezone modal
-        if (timezoneModal.classList.contains('show')) {
-            timezoneModal.classList.remove('show');
-            blurOverlay.classList.remove('show');
-            setTimeout(() => {
-                timezoneModal.style.display = 'none';
-                blurOverlay.style.display = 'none';
-            }, 300);
-        }
-        
-        // Close weather modal
-        if (weatherModal.classList.contains('show')) {
-            weatherModal.classList.remove('show');
-            blurOverlay.classList.remove('show');
-            setTimeout(() => {
-                weatherModal.style.display = 'none';
-                blurOverlay.style.display = 'none';
-            }, 300);
-        }
-        
-        // Close customize modal
-        if (customizeModal.classList.contains('show')) {
-            customizeModal.classList.remove('show');
-            blurOverlay.classList.remove('show');
-            setTimeout(() => {
-                customizeModal.style.display = 'none';
-                blurOverlay.style.display = 'none';
-            }, 300);
-        }
+        // Close all modals
+        [timezoneModal, weatherModal, customizeModal].forEach(modal => {
+            if (modal.classList.contains('show')) {
+                modal.classList.remove('show');
+                blurOverlay.classList.remove('show');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    blurOverlay.style.display = 'none';
+                    updatePersistentClockVisibility();
+                }, 300);
+            }
+        });
     }
 });
 
-// Add event listener for ESC key
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
-        // Close timezone modal
-        if (timezoneModal.classList.contains('show')) {
-            timezoneModal.classList.remove('show');
-            blurOverlay.classList.remove('show');
-            setTimeout(() => {
-                timezoneModal.style.display = 'none';
-                blurOverlay.style.display = 'none';
-            }, 300);
-        }
-        
-        // Close weather modal
-        if (weatherModal.classList.contains('show')) {
-            weatherModal.classList.remove('show');
-            blurOverlay.classList.remove('show');
-            setTimeout(() => {
-                weatherModal.style.display = 'none';
-                blurOverlay.style.display = 'none';
-            }, 300);
-        }
-        
-        // Close customize modal
-        if (customizeModal.classList.contains('show')) {
-            customizeModal.classList.remove('show');
-            blurOverlay.classList.remove('show');
-            setTimeout(() => {
-                customizeModal.style.display = 'none';
-                blurOverlay.style.display = 'none';
-            }, 300);
-        }
+        // Close all modals
+        [timezoneModal, weatherModal, customizeModal].forEach(modal => {
+            if (modal.classList.contains('show')) {
+                modal.classList.remove('show');
+                blurOverlay.classList.remove('show');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    blurOverlay.style.display = 'none';
+                    updatePersistentClockVisibility();
+                }, 300);
+            }
+        });
     }
 });
 
