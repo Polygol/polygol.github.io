@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=DynaPuff:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Bungee:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=VT323:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap');
 
 :root {
@@ -700,9 +700,10 @@ body.light-theme[style*="background-image"] .info {
 #font-select option[value="Roboto"] { font-family: 'Roboto', sans-serif; }
 #font-select option[value="DynaPuff"] { font-family: 'DynaPuff', cursive; }
 #font-select option[value="DM Serif Display"] { font-family: 'DM Serif Display', serif; }
-#font-select option[value="Bungee"] { font-family: 'Bungee', cursive; }
+#font-select option[value="Anton"] { font-family: 'Anton', sans-serif; }
 #font-select option[value="Roboto Mono"] { font-family: 'Roboto Mono', monospace; }
-#font-select option[value="VT323"] { font-family: 'VT323', monospace; }
+#font-select option[value="DotGothic16"] { font-family: 'DotGothic16', monospace; }
+#font-select option[value="Kalam"] { font-family: 'Kalam', cursive; }
 #font-select option[value="Kalam"] { font-family: 'Kalam', cursive; }
 
 .timer-circle {
