@@ -1087,8 +1087,6 @@ async function applyWallpaper() {
                 video.muted = true;
                 video.playsInline = true;
                 video.style.position = 'fixed';
-                video.style.right = '0';
-                video.style.bottom = '0';
                 video.style.minWidth = '100%';
                 video.style.minHeight = '100%';
                 video.style.width = 'auto';
