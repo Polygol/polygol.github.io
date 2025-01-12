@@ -231,9 +231,9 @@ async function fetchLocationAndWeather() {
         navigator.geolocation.getCurrentPosition(async (position) => {
             try {
                 const { latitude, longitude } = position.coords;
-
                 const geocodingUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
                 let city = 'Unknown Location';
+                
                 try {
                     const geocodingResponse = await fetch(geocodingUrl);
                     const geocodingData = await geocodingResponse.json();
@@ -245,23 +245,10 @@ async function fetchLocationAndWeather() {
                     console.warn('Could not retrieve city name', geocodingError);
                 }
 
-                } catch (error) {
-                    console.error('Error fetching weather data:', error);
-                    if (!navigator.onLine) {
-                        showPopup('You are currently offline');
-                    }
-                    // Return cached data if available
-                    const cachedData = localStorage.getItem('lastWeatherData');
-                    if (cachedData) {
-                        return JSON.parse(cachedData);
-                    }
-                    throw error;
-                }
-
                 const currentWeatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
                 const dailyForecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,weathercode&timezone=Europe/London`;
                 const hourlyForecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weathercode&timezone=Europe/London`;
-
+                
                 const [currentResponse, dailyResponse, hourlyResponse] = await Promise.all([
                     fetch(currentWeatherUrl),
                     fetch(dailyForecastUrl),
@@ -271,15 +258,25 @@ async function fetchLocationAndWeather() {
                 const currentWeatherData = await currentResponse.json();
                 const dailyForecastData = await dailyResponse.json();
                 const hourlyForecastData = await hourlyResponse.json();
-
+                
                 resolve({
                     city,
                     current: currentWeatherData.current_weather,
                     dailyForecast: dailyForecastData.daily,
                     hourlyForecast: hourlyForecastData.hourly
                 });
+
             } catch (error) {
                 console.error('Error fetching weather data:', error);
+                if (!navigator.onLine) {
+                    showPopup('You are currently offline');
+                }
+                // Return cached data if available
+                const cachedData = localStorage.getItem('lastWeatherData');
+                if (cachedData) {
+                    resolve(JSON.parse(cachedData));
+                    return;
+                }
                 reject(error);
             }
         }, (error) => {
