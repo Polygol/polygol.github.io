@@ -28,7 +28,7 @@ function consoleGreeting() {
     const license = `
 Copyright © 2025 Gurasuraisu, kirbIndustries
 Licensed under the GNU General Public License, Version 2.0 (GPL-2.0)
-You may obtain a copy of the License at https://www.gnu.org/licenses/gpl-2.0.html
+You may obtain a copy of the License at https://www.gnu.org/licenses/gpl-3.0.html
     `;
 
     const theft = `
@@ -43,16 +43,6 @@ Please make sure to use Gurasuraisu from https://gurasuraisu.github.io to avoid 
 }
     
 consoleGreeting()
-
-let showSeconds = localStorage.getItem('showSeconds') !== 'false';
-let timeLeft = 0; 
-let timerId = null;
-let isEditMode = false;
-let isDragging = false;
-let currentX;
-let currentY;
-let initialX;
-let initialY;
 
 // IndexedDB setup for video storage
 const dbName = 'WallpaperDB';
@@ -113,6 +103,9 @@ function updatePersistentClockVisibility() {
         persistentClock.classList.remove('show');
     }
 }
+
+let timeLeft = 0; 
+let timerId = null; 
 
 // Function to update the document title
 function updateTitle() {
@@ -246,27 +239,17 @@ const weatherConditions = {
 };
 
 function updateClockAndDate() {
-    let clockElement = document.getElementById('clock');
-    let dateElement = document.getElementById('date');
-    let now = new Date();
-    
-    let hours = String(now.getHours()).padStart(2, '0');
-    let minutes = String(now.getMinutes()).padStart(2, '0');
-    let seconds = String(now.getSeconds()).padStart(2, '0');
-    
-    // Add a fallback value for showSeconds
-    const shouldShowSeconds = typeof showSeconds !== 'undefined' ? showSeconds : false;
-    
-    clockElement.textContent = shouldShowSeconds ? 
-        `${hours}:${minutes}:${seconds}` : 
-        `${hours}:${minutes}`;
-        
-    dateElement.textContent = now.toLocaleDateString(undefined, {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+    const clockElement = document.getElementById('clock');
+    const dateElement = document.getElementById('date');
+    const now = new Date();
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    clockElement.textContent = `${hours}:${minutes}:${seconds}`;
+
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    dateElement.textContent = now.toLocaleDateString(undefined, options);
 }
 
 async function fetchLocationAndWeather() {
@@ -520,6 +503,7 @@ closeWeatherModal.addEventListener('click', () => {
 });
 
 setInterval(updateClockAndDate, 1000);
+updateClockAndDate();
 updateSmallWeather();
 
 // Timer Variables
@@ -1205,98 +1189,6 @@ function setupFontSelection() {
     });
 }
 
-function initializeClockSettings() {
-    const container = document.querySelector('.container');
-    const secondsSwitch = document.getElementById('seconds-switch');
-    const editClockSwitch = document.getElementById('edit-clock-switch');
-    
-    // Initialize switches from localStorage
-    secondsSwitch.checked = showSeconds;
-    editClockSwitch.checked = false;
-    
-    // Load saved position if exists
-    const savedPosition = localStorage.getItem('clockPosition');
-    if (savedPosition) {
-        const { left, top, width, height } = JSON.parse(savedPosition);
-        container.style.left = left;
-        container.style.top = top;
-        container.style.width = width;
-        container.style.height = height;
-    }
-
-    // Seconds switch handler
-    secondsSwitch.addEventListener('change', function() {
-        showSeconds = this.checked;
-        localStorage.setItem('showSeconds', showSeconds);
-        updateClockAndDate();
-    });
-    
-    // Edit mode switch handler
-    editClockSwitch.addEventListener('change', function() {
-        isEditMode = this.checked;
-        container.classList.toggle('editable', isEditMode);
-        if (!isEditMode) {
-            // Save position when exiting edit mode
-            saveClockPosition();
-        }
-        showPopup(isEditMode ? 'Clock edit mode enabled' : 'Clock edit mode disabled');
-    });
-}
-
-function saveClockPosition() {
-    const container = document.querySelector('.container');
-    const position = {
-        left: container.style.left,
-        top: container.style.top,
-        width: container.style.width,
-        height: container.style.height
-    };
-    localStorage.setItem('clockPosition', JSON.stringify(position));
-}
-
-const container = document.querySelector('.container');
-
-container.addEventListener('mousedown', dragStart);
-document.addEventListener('mousemove', drag);
-document.addEventListener('mouseup', dragEnd);
-
-function dragStart(e) {
-    if (!isEditMode) return;
-    
-    if (e.target === container || container.contains(e.target)) {
-        initialX = e.clientX - container.offsetLeft;
-        initialY = e.clientY - container.offsetTop;
-        isDragging = true;
-    }
-}
-
-function drag(e) {
-    if (!isEditMode || !isDragging) return;
-    
-    e.preventDefault();
-    currentX = e.clientX - initialX;
-    currentY = e.clientY - initialY;
-    
-    // Keep container within window bounds
-    const maxX = window.innerWidth - container.offsetWidth;
-    const maxY = window.innerHeight - container.offsetHeight;
-    
-    currentX = Math.min(Math.max(0, currentX), maxX);
-    currentY = Math.min(Math.max(0, currentY), maxY);
-    
-    container.style.left = currentX + 'px';
-    container.style.top = currentY + 'px';
-}
-
-function dragEnd() {
-    if (isDragging) {
-        isDragging = false;
-        if (!isEditMode) {
-            saveClockPosition();
-        }
-    }
-}
-
 // Initialize theme and wallpaper on load
 function initializeCustomization() {
     setupThemeSwitcher();
@@ -1643,8 +1535,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('load', () => {
     ensureVideoLoaded();
-    initializeClockSettings();
-    updateClockAndDate()
 });
 
 setInterval(ensureVideoLoaded, 1000);
