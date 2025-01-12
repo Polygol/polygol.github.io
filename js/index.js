@@ -1308,8 +1308,6 @@ function createAppIcons() {
                         case '#weather':
                             showPopup('Opening Weather');
                             break;
-                        default:
-                            showPopup(`${appName} app opened`);
                     }
                 } else {
                     window.open(appDetails.url, '_blank', 'noopener,noreferrer');
