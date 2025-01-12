@@ -297,10 +297,6 @@ async function fetchLocationAndWeather() {
     });
 }
 
-if (weatherData) {
-    localStorage.setItem('lastWeatherData', JSON.stringify(weatherData));
-}
-
 function getDayOfWeek(dateString) {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { weekday: 'long' });
