@@ -1199,9 +1199,9 @@ function setupFontSelection() {
         document.fonts.load(`16px ${selectedFont}`).then(() => {
             applyFont(selectedFont);
             localStorage.setItem('clockFont', selectedFont);
-            showPopup('Font updated');
+            showPopup('Clock Style updated');
         }).catch(() => {
-            showPopup('Failed to load font');
+            showPopup('Failed to load Clock Style');
         });
     });
 }
