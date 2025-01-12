@@ -53,6 +53,43 @@ function getCurrentTime24() {
     return `${hours}:${minutes}:${seconds}`;
 }
 
+const cornerClock = document.getElementById('cornerClock');
+
+function updateCornerClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    cornerClock.textContent = `${hours}:${minutes}`;
+}
+
+function showCornerClock() {
+    cornerClock.classList.add('visible');
+}
+
+function hideCornerClock() {
+    cornerClock.classList.remove('visible');
+}
+
+function updateCornerClockVisibility() {
+    const isAnyModalVisible = 
+        timezoneModal.classList.contains('show') ||
+        weatherModal.classList.contains('show') ||
+        customizeModal.classList.contains('show') ||
+        appDrawer.classList.contains('open');
+
+    if (isAnyModalVisible) {
+        showCornerClock();
+    } else {
+        hideCornerClock();
+    }
+}
+
+setInterval(() => {
+    if (cornerClock.classList.contains('visible')) {
+        updateCornerClock();
+    }
+}, 1000);
+
 // Function to update the document title
 function updateTitle() {
     if (timeLeft > 0 && timerId) {
@@ -399,6 +436,7 @@ clockElement.addEventListener('click', () => {
     setTimeout(() => {
         timezoneModal.classList.add('show');
         blurOverlay.classList.add('show');
+        updateCornerClockVisibility();
     }, 10);
 });
 
@@ -408,6 +446,7 @@ weatherWidget.addEventListener('click', () => {
     setTimeout(() => {
         weatherModal.classList.add('show');
         blurOverlay.classList.add('show');
+        updateCornerClockVisibility();
     }, 10);
     displayDetailedWeather();
 });
@@ -418,6 +457,7 @@ closeModal.addEventListener('click', () => {
     setTimeout(() => {
         timezoneModal.style.display = 'none';
         blurOverlay.style.display = 'none';
+        updateCornerClockVisibility();
     }, 300);
 });
 
@@ -427,6 +467,7 @@ closeWeatherModal.addEventListener('click', () => {
     setTimeout(() => {
         weatherModal.style.display = 'none';
         blurOverlay.style.display = 'none';
+        updateCornerClockVisibility();
     }, 300);
 });
 
@@ -835,6 +876,7 @@ customizeButton.addEventListener('click', () => {
     setTimeout(() => {
         customizeModal.classList.add('show');
         blurOverlay.classList.add('show');
+        updateCornerClockVisibility();
     }, 10);
 });
 
@@ -844,6 +886,7 @@ closeCustomizeModal.addEventListener('click', () => {
     setTimeout(() => {
         customizeModal.style.display = 'none';
         blurOverlay.style.display = 'none';
+        updateCornerClockVisibility();
     }, 300);
 });
 
@@ -1058,30 +1101,30 @@ function setupDrawerInteractions() {
     function endDrag() {
         if (!isDragging) return;
 
-        const deltaY = startY - currentY;
-        const deltaTime = 100;
-        const velocity = deltaY / deltaTime;
-
         appDrawer.style.transition = 'bottom 0.3s ease';
 
         if (velocity > flickVelocityThreshold || deltaY > 50) {
             appDrawer.style.bottom = '0%';
             appDrawer.classList.add('open');
             initialDrawerPosition = 0;
+            showCornerClock();
         } else if (velocity < -flickVelocityThreshold || deltaY < -50) {
             appDrawer.style.bottom = '-100%';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
+            hideCornerClock();
         } else {
             const currentBottom = parseFloat(appDrawer.style.bottom);
             if (currentBottom >= openThreshold) {
                 appDrawer.style.bottom = '0%';
                 appDrawer.classList.add('open');
                 initialDrawerPosition = 0;
+                showCornerClock();
             } else {
                 appDrawer.style.bottom = '-100%';
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
+                hideCornerClock();
             }
         }
 
@@ -1271,3 +1314,5 @@ document.addEventListener('keydown', (event) => {
     goFullscreen();
     updateDisplay();
     initAppDraw();
+    updateCornerClock();
+    updateCornerClockVisibility();
