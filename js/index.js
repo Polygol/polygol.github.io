@@ -1279,7 +1279,7 @@ function createAppIcons() {
         img.src = `/assets/appicon/${appDetails.icon}`;
         img.alt = appName;
         img.onerror = () => {
-            img.src = '/assets/default-app-icon.png';
+            img.src = '/assets/question.png';
         };
 
         const label = document.createElement('span');
@@ -1288,46 +1288,22 @@ function createAppIcons() {
         appIcon.appendChild(img);
         appIcon.appendChild(label);
 
-        const handleAppOpen = (e) => {
-            if (isDrawerDragging || isDragging) {
+        appIcon.addEventListener('click', (e) => {
+            if (!isDrawerDragging) {
                 e.preventDefault();
                 e.stopPropagation();
-                return;
-            }
-
-            e.preventDefault();
-            e.stopPropagation();
-            
-            try {
-                if (appDetails.url.startsWith('#')) {
-                    switch (appDetails.url) {
-                        case '#settings':
-                            showPopup('Opening Settings');
-                            break;
-                        case '#weather':
-                            showPopup('Opening Weather');
-                            break;
-                    }
-                } else {
+                
+                try {
                     window.open(appDetails.url, '_blank', 'noopener,noreferrer');
+                    appDrawer.classList.remove('open');
+                    appDrawer.style.bottom = '-100%';
+                    initialDrawerPosition = -100;
+                } catch (error) {
+                    showPopup(`Failed to open ${appName}`);
+                    console.error(`App open error: ${error}`);
                 }
-
-                appDrawer.classList.remove('open');
-                appDrawer.style.bottom = '-100%';
-                initialDrawerPosition = -100;
-            } catch (error) {
-                showPopup(`Failed to open ${appName}`);
-                console.error(`App open error: ${error}`);
-            }
-        };
-
-        appIcon.addEventListener('touchend', (e) => {
-            if (!isDrawerDragging) {
-                handleAppOpen(e);
             }
         });
-        
-        appIcon.addEventListener('click', handleAppOpen);
 
         appGrid.appendChild(appIcon);
     });
@@ -1352,44 +1328,50 @@ function setupDrawerInteractions() {
         isDrawerDragging = true;
         dragStartTime = Date.now();
         appDrawer.style.transition = 'none';
-        
-        // Disable pointer events on app icons during drag
-        const appIcons = appDrawer.querySelectorAll('.app-icon');
-        appIcons.forEach(icon => {
-            icon.style.pointerEvents = 'none';
-        });
     }
 
     function moveDrawer(yPosition) {
         if (!isDragging) return;
+        
+        const deltaY = Math.abs(startY - yPosition);
+        if (deltaY > DRAG_THRESHOLD) {
+            // Only disable pointer events if we're actually dragging
+            const appIcons = appDrawer.querySelectorAll('.app-icon');
+            appIcons.forEach(icon => {
+                icon.style.pointerEvents = 'none';
+            });
+        }
+        
         currentY = yPosition;
-        const deltaY = startY - currentY;
+        const delta = startY - currentY;
         const windowHeight = window.innerHeight;
-        const movementPercentage = (deltaY / windowHeight) * 100;
-
+        const movementPercentage = (delta / windowHeight) * 100;
         const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
         appDrawer.style.bottom = `${newPosition}%`;
     }
 
-    function endDrag() {
+    function endDrag(e) {
         if (!isDragging) return;
         
-        const deltaY = startY - currentY;
-        const deltaTime = 100;
-        const velocity = deltaY / deltaTime;
+        const deltaY = Math.abs(startY - currentY);
         const dragDuration = Date.now() - dragStartTime;
 
-        appDrawer.style.transition = 'bottom 0.3s ease';
-
-        // Re-enable pointer events on app icons
+        // Re-enable pointer events
         const appIcons = appDrawer.querySelectorAll('.app-icon');
         appIcons.forEach(icon => {
             icon.style.pointerEvents = 'auto';
         });
 
-        setTimeout(() => {
+        appDrawer.style.transition = 'bottom 0.3s ease';
+
+        // If it's a small movement and short duration, treat it as a tap
+        if (deltaY < DRAG_THRESHOLD && dragDuration < 200) {
+            isDragging = false;
             isDrawerDragging = false;
-        }, 50);
+            return;
+        }
+
+        const velocity = (startY - currentY) / dragDuration;
 
         if (velocity > flickVelocityThreshold || deltaY > 50) {
             appDrawer.style.bottom = '0%';
@@ -1413,50 +1395,34 @@ function setupDrawerInteractions() {
         }
 
         isDragging = false;
+        isDrawerDragging = false;
     }
 
     // Touch Events
-    document.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        if (appDrawer.classList.contains('open') || 
-            drawerHandle.contains(e.target)) {
-            startDrag(touch.clientY);
-            e.preventDefault();
-        }
-    }, { passive: false });
+    appDrawer.addEventListener('touchstart', (e) => {
+        startDrag(e.touches[0].clientY);
+    }, { passive: true });
 
-    document.addEventListener('touchmove', (e) => {
-        if (isDragging) {
-            e.preventDefault();
-            moveDrawer(e.touches[0].clientY);
-        }
-    }, { passive: false });
+    appDrawer.addEventListener('touchmove', (e) => {
+        moveDrawer(e.touches[0].clientY);
+    }, { passive: true });
 
-document.addEventListener('touchend', () => {
-    endDrag();
-});
+    appDrawer.addEventListener('touchend', endDrag);
 
     // Mouse Events
-document.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return;
-    const element = document.elementFromPoint(e.clientX, e.clientY);
-    
-    // Same logic for mouse events
-    if (drawerHandle.contains(element) || 
-        (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
-        startDrag(e.clientY);
-    }
-});
+    appDrawer.addEventListener('mousedown', (e) => {
+        if (e.button === 0) {
+            startDrag(e.clientY);
+        }
+    });
 
     document.addEventListener('mousemove', (e) => {
         if (isDragging) {
             moveDrawer(e.clientY);
         }
     });
-
-    document.addEventListener('mouseup', () => {
-        endDrag();
-    });
+    
+    document.addEventListener('mouseup', endDrag);
 
     // Close drawer when clicking outside
     document.addEventListener('click', (e) => {
