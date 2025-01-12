@@ -1327,6 +1327,10 @@ function createAppIcons() {
         appIcon.addEventListener('touchend', handleAppOpen);
 
         appGrid.appendChild(appIcon);
+
+        appIcon.ondragstart = (e) => e.preventDefault(); 
+
+        appGrid.appendChild(appIcon);
     });
 }
 
