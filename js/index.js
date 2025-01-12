@@ -44,6 +44,28 @@ Please make sure to use Gurasuraisu from https://gurasuraisu.github.io to avoid 
     
 consoleGreeting()
 
+// IndexedDB setup for video storage
+const dbName = 'WallpaperDB';
+const storeName = 'wallpapers';
+const version = 1;
+
+// Initialize IndexedDB
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName, version);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        
+        request.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(storeName)) {
+                db.createObjectStore(storeName);
+            }
+        };
+    });
+}
+
 // Function to get current time in 24-hour format (HH:MM:SS)
 function getCurrentTime24() {
     const now = new Date();
@@ -902,6 +924,30 @@ uploadButton.addEventListener('click', () => {
     wallpaperInput.click();
 });
 
+async function storeVideo(videoBlob) {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], 'readwrite');
+        const store = transaction.objectStore(storeName);
+        
+        const request = store.put(videoBlob, 'currentVideo');
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve();
+    });
+}
+
+async function getVideo() {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], 'readonly');
+        const store = transaction.objectStore(storeName);
+        
+        const request = store.get('currentVideo');
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+    });
+}
+
 wallpaperInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (file && ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'video/mp4'].includes(file.type)) {
@@ -985,17 +1031,17 @@ async function compressMedia(file) {
 
 async function saveWallpaper(file) {
     try {
-        const compressedMedia = await compressMedia(file);
-        
-        // For videos, store the URL instead of the data
         if (file.type.startsWith('video/')) {
+            // Store video in IndexedDB
+            await storeVideo(file);
             localStorage.setItem('wallpaperType', file.type);
-            localStorage.setItem('customWallpaper', compressedMedia);
+            applyWallpaper();
         } else {
-            // Try to store the compressed data
+            // Handle images as before
+            const mediaData = await compressMedia(file);
             try {
                 localStorage.setItem('wallpaperType', file.type);
-                localStorage.setItem('customWallpaper', compressedMedia);
+                localStorage.setItem('customWallpaper', mediaData);
             } catch (e) {
                 if (e.name === 'QuotaExceededError') {
                     showPopup('File too large. Please choose a smaller file.');
@@ -1003,62 +1049,83 @@ async function saveWallpaper(file) {
                 }
                 throw e;
             }
+            applyWallpaper();
         }
-        
-        applyWallpaper();
+        showPopup('Wallpaper updated');
     } catch (error) {
         console.error('Error saving wallpaper:', error);
         showPopup('Failed to save wallpaper');
     }
 }
 
-function applyWallpaper() {
-    const savedWallpaper = localStorage.getItem('customWallpaper');
+async function applyWallpaper() {
     const wallpaperType = localStorage.getItem('wallpaperType');
 
-    if (savedWallpaper) {
+    try {
         if (wallpaperType && wallpaperType.startsWith('video/')) {
-            // Remove any existing video element
-            const existingVideo = document.querySelector('#background-video');
-            if (existingVideo) {
-                existingVideo.remove();
-            }
+            const videoBlob = await getVideo();
+            if (videoBlob) {
+                // Remove any existing video element
+                const existingVideo = document.querySelector('#background-video');
+                if (existingVideo) {
+                    existingVideo.remove();
+                }
 
-            // Create and configure video element
-            const video = document.createElement('video');
-            video.id = 'background-video';
-            video.autoplay = true;
-            video.loop = true;
-            video.muted = true;
-            video.playsInline = true;
-            video.style.position = 'fixed';
-            video.style.right = '0';
-            video.style.bottom = '0';
-            video.style.minWidth = '100%';
-            video.style.minHeight = '100%';
-            video.style.width = 'auto';
-            video.style.height = 'auto';
-            video.style.zIndex = '-1';
-            video.style.objectFit = 'cover';
-            
-            video.src = savedWallpaper;
-            document.body.insertBefore(video, document.body.firstChild);
-            document.body.style.backgroundImage = 'none';
+                // Create and configure video element
+                const video = document.createElement('video');
+                video.id = 'background-video';
+                video.autoplay = true;
+                video.loop = true;
+                video.muted = true;
+                video.playsInline = true;
+                video.style.position = 'fixed';
+                video.style.right = '0';
+                video.style.bottom = '0';
+                video.style.minWidth = '100%';
+                video.style.minHeight = '100%';
+                video.style.width = 'auto';
+                video.style.height = 'auto';
+                video.style.zIndex = '-1';
+                video.style.objectFit = 'cover';
+                
+                video.src = URL.createObjectURL(videoBlob);
+                document.body.insertBefore(video, document.body.firstChild);
+                document.body.style.backgroundImage = 'none';
+            }
         } else {
-            // Remove any existing video element
-            const existingVideo = document.querySelector('#background-video');
-            if (existingVideo) {
-                existingVideo.remove();
-            }
+            const savedWallpaper = localStorage.getItem('customWallpaper');
+            if (savedWallpaper) {
+                // Remove any existing video element
+                const existingVideo = document.querySelector('#background-video');
+                if (existingVideo) {
+                    existingVideo.remove();
+                }
 
-            // Apply image wallpaper
-            document.body.style.backgroundImage = `url('${savedWallpaper}')`;
-            document.body.style.backgroundSize = 'cover';
-            document.body.style.backgroundPosition = 'center';
-            document.body.style.backgroundRepeat = 'no-repeat';
+                // Apply image wallpaper
+                document.body.style.backgroundImage = `url('${savedWallpaper}')`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+                document.body.style.backgroundRepeat = 'no-repeat';
+            }
         }
+    } catch (error) {
+        console.error('Error applying wallpaper:', error);
+        showPopup('Failed to apply wallpaper');
     }
 }
+
+// Clean up blob URLs when video element is removed
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        mutation.removedNodes.forEach((node) => {
+            if (node.id === 'background-video' && node.src) {
+                URL.revokeObjectURL(node.src);
+            }
+        });
+    });
+});
+
+observer.observe(document.body, { childList: true });
 
 function setupFontSelection() {
     const fontSelect = document.getElementById('font-select');
@@ -1429,6 +1496,11 @@ window.addEventListener('online', () => {
 
 window.addEventListener('offline', () => {
     showPopup('You are offline');
+});
+
+// Call applyWallpaper on page load
+document.addEventListener('DOMContentLoaded', () => {
+    applyWallpaper();
 });
 
     // Initialize everything
