@@ -534,6 +534,8 @@ function resetTimer() {
     updateDisplay();
     updateTimerWidget();
     startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>';
+    alarmSound.pause(); // Stop the alarm sound
+    alarmSound.currentTime = 0; // Reset the sound to the beginning
 }
 
 function playAlarm() {
