@@ -47,6 +47,12 @@ consoleGreeting()
 let showSeconds = localStorage.getItem('showSeconds') !== 'false';
 let timeLeft = 0; 
 let timerId = null;
+let isEditMode = false;
+let isDragging = false;
+let currentX;
+let currentY;
+let initialX;
+let initialY;
 
 // IndexedDB setup for video storage
 const dbName = 'WallpaperDB';
@@ -1198,14 +1204,6 @@ function setupFontSelection() {
         });
     });
 }
-
-let showSeconds = localStorage.getItem('showSeconds') !== 'false';
-let isEditMode = false;
-let isDragging = false;
-let currentX;
-let currentY;
-let initialX;
-let initialY;
 
 function initializeClockSettings() {
     const container = document.querySelector('.container');
