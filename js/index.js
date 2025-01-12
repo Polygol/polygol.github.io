@@ -47,6 +47,7 @@ consoleGreeting()
 const secondsSwitch = document.getElementById('seconds-switch');
 
 let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults to true
+let isDrawerDragging = false;
 
 secondsSwitch.checked = showSeconds;
 
@@ -1268,32 +1269,58 @@ function initializeCustomization() {
 // Function to create app icons
 function createAppIcons() {
     appGrid.innerHTML = '';
-
     Object.entries(apps).forEach(([appName, appDetails]) => {
         const appIcon = document.createElement('div');
         appIcon.classList.add('app-icon');
         appIcon.dataset.app = appName;
-
-        // Create icon image
+        
         const img = document.createElement('img');
         img.src = `/assets/appicon/${appDetails.icon}`;
         img.alt = appName;
         img.onerror = () => {
-            img.src = '/assets/default-app-icon.png';
+            img.src = '/assets/question.png';
         };
-
-        // Create app name label
+        img.draggable = false;
+        
         const label = document.createElement('span');
         label.textContent = appName;
-
+        
         appIcon.appendChild(img);
         appIcon.appendChild(label);
 
-        // Add both click and touch events to handle all interaction types
-        const handleAppOpen = (e) => {
-            e.preventDefault(); // Prevent default behavior
-            e.stopPropagation(); // Stop event from bubbling up
+        // Track if the touch/click is a potential drag
+        let isDragging = false;
+        let startX, startY;
+
+        // Add touch start handler
+        appIcon.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isDragging = false;
+        });
+
+        // Add touch move handler to detect dragging
+        appIcon.addEventListener('touchmove', (e) => {
+            if (!startX || !startY) return;
             
+            const diffX = Math.abs(e.touches[0].clientX - startX);
+            const diffY = Math.abs(e.touches[0].clientY - startY);
+            
+            // If moved more than 10px, consider it a drag
+            if (diffX > 10 || diffY > 10) {
+                isDragging = true;
+            }
+        });
+
+        const handleAppOpen = (e) => {
+            // Prevent default behavior
+            e.preventDefault();
+            
+            // Don't open if drawer is being dragged or if this is a drag gesture
+            if (isDrawerDragging || isDragging) {
+                return;
+            }
+
             try {
                 if (appDetails.url.startsWith('#')) {
                     switch (appDetails.url) {
@@ -1303,14 +1330,10 @@ function createAppIcons() {
                         case '#weather':
                             showPopup('Opening Weather');
                             break;
-                        default:
-                            showPopup(`${appName} app opened`);
                     }
                 } else {
                     window.open(appDetails.url, '_blank', 'noopener,noreferrer');
                 }
-
-                // Close the drawer
                 appDrawer.classList.remove('open');
                 appDrawer.style.bottom = '-100%';
                 initialDrawerPosition = -100;
@@ -1320,10 +1343,19 @@ function createAppIcons() {
             }
         };
 
-        // Add both click and touch events
-        appIcon.addEventListener('click', handleAppOpen);
-        appIcon.addEventListener('touchend', handleAppOpen);
+        // Use mouseup/touchend instead of click
+        appIcon.addEventListener('mouseup', handleAppOpen);
+        appIcon.addEventListener('touchend', (e) => {
+            if (!isDragging) {
+                handleAppOpen(e);
+            }
+            // Reset drag tracking
+            startX = null;
+            startY = null;
+            isDragging = false;
+        });
 
+        appIcon.ondragstart = (e) => e.preventDefault();
         appGrid.appendChild(appIcon);
     });
 }
@@ -1342,12 +1374,12 @@ function setupDrawerInteractions() {
         startY = yPosition;
         currentY = yPosition;
         isDragging = true;
+        isDrawerDragging = true; // Set the global flag
         appDrawer.style.transition = 'none';
     }
 
     function moveDrawer(yPosition) {
         if (!isDragging) return;
-
         currentY = yPosition;
         const deltaY = startY - currentY;
         const windowHeight = window.innerHeight;
@@ -1359,12 +1391,17 @@ function setupDrawerInteractions() {
 
     function endDrag() {
         if (!isDragging) return;
-
+        
         const deltaY = startY - currentY;
         const deltaTime = 100;
         const velocity = deltaY / deltaTime;
 
         appDrawer.style.transition = 'bottom 0.3s ease';
+
+        // Set timeout to prevent immediate app opening after drag
+        setTimeout(() => {
+            isDrawerDragging = false;
+        }, 50);
 
         if (velocity > flickVelocityThreshold || deltaY > 50) {
             appDrawer.style.bottom = '0%';
