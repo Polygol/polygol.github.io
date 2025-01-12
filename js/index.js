@@ -483,6 +483,21 @@ function addTime(seconds) {
         timeLeft += seconds;
         totalTime = timeLeft;
         updateDisplay();
+        updateTimerWidget();
+    }
+}
+
+const timerWidget = document.getElementById('timer-widget');
+const timerText = document.getElementById('timer-text');
+const timerIcon = document.getElementById('timer-icon');
+
+function updateTimerWidget() {
+    if (timeLeft > 0) {
+        timerWidget.style.display = 'flex';
+        timerText.textContent = formatTime(timeLeft);
+        timerIcon.textContent = timerId ? 'pause' : 'play_arrow';
+    } else {
+        timerWidget.style.display = 'none';
     }
 }
 
@@ -497,16 +512,19 @@ function toggleTimer() {
             timerId = setInterval(() => {
                 timeLeft--;
                 updateDisplay();
+                updateTimerWidget();
                 if (timeLeft <= 0) {
                     clearInterval(timerId);
                     timerId = null;
                     startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>';
+                    timerWidget.style.display = 'none';
                     playAlarm();
                 }
             }, 1000);
             startBtn.innerHTML = '<span class="material-symbols-rounded">pause</span>';
         }
     }
+    updateTimerWidget();
 }
 
 function resetTimer() {
@@ -516,6 +534,7 @@ function resetTimer() {
     timeLeft = 0;
     totalTime = 0;
     updateDisplay();
+    updateTimerWidget();
     startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>';
 }
 
@@ -1125,6 +1144,10 @@ function setupDrawerInteractions() {
         }
     });
 }
+
+timerWidget.addEventListener('click', () => {
+    toggleTimer();
+});
 
 // Close modals when clicking outside
 blurOverlay.addEventListener('click', (event) => {
