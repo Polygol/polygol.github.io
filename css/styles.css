@@ -894,7 +894,7 @@ body.light-theme[style*="background-image"] .info {
             background-color: var(--text-color);
             border-radius: 3px;
             position: absolute;
-            top: 35px;
+            top: calc(20px + (1.2rem + 16px)/2 - 2.5px);
             left: 50%;
             transform: translateX(-50%);
         }
