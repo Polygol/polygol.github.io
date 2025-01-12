@@ -1288,39 +1288,14 @@ function createAppIcons() {
         appIcon.appendChild(img);
         appIcon.appendChild(label);
 
-        // Track if the touch/click is a potential drag
-        let isDragging = false;
-        let startX, startY;
+        let touchStartTime = 0;
+        let touchStartX = 0;
+        let touchStartY = 0;
 
-        // Add touch start handler
-        appIcon.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            isDragging = false;
-        });
-
-        // Add touch move handler to detect dragging
-        appIcon.addEventListener('touchmove', (e) => {
-            if (!startX || !startY) return;
+        const handleAppOpen = () => {
+            // Only open if drawer isn't being dragged
+            if (isDrawerDragging) return;
             
-            const diffX = Math.abs(e.touches[0].clientX - startX);
-            const diffY = Math.abs(e.touches[0].clientY - startY);
-            
-            // If moved more than 10px, consider it a drag
-            if (diffX > 10 || diffY > 10) {
-                isDragging = true;
-            }
-        });
-
-        const handleAppOpen = (e) => {
-            // Prevent default behavior
-            e.preventDefault();
-            
-            // Don't open if drawer is being dragged or if this is a drag gesture
-            if (isDrawerDragging || isDragging) {
-                return;
-            }
-
             try {
                 if (appDetails.url.startsWith('#')) {
                     switch (appDetails.url) {
@@ -1343,16 +1318,41 @@ function createAppIcons() {
             }
         };
 
-        // Use mouseup/touchend instead of click
-        appIcon.addEventListener('mouseup', handleAppOpen);
+        // Handle touch events
+        appIcon.addEventListener('touchstart', (e) => {
+            touchStartTime = Date.now();
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
         appIcon.addEventListener('touchend', (e) => {
-            if (!isDragging) {
-                handleAppOpen(e);
+            const touchEndTime = Date.now();
+            const touchDuration = touchEndTime - touchStartTime;
+            
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            
+            const moveDistance = Math.sqrt(
+                Math.pow(touchEndX - touchStartX, 2) + 
+                Math.pow(touchEndY - touchStartY, 2)
+            );
+
+            // If touch duration is short and movement is minimal, consider it a tap
+            if (touchDuration < 300 && moveDistance < 10) {
+                e.preventDefault();
+                handleAppOpen();
             }
-            // Reset drag tracking
-            startX = null;
-            startY = null;
-            isDragging = false;
+        });
+
+        // Handle mouse events
+        appIcon.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Small delay to ensure drag state is updated
+            setTimeout(() => {
+                if (!isDrawerDragging) {
+                    handleAppOpen();
+                }
+            }, 10);
         });
 
         appIcon.ondragstart = (e) => e.preventDefault();
