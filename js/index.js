@@ -1365,8 +1365,10 @@ function setupDrawerInteractions() {
     let currentY = 0;
     let initialDrawerPosition = -100;
     let isDragging = false;
+    let lastDragTime = 0;
     const flickVelocityThreshold = 0.4;
     const openThreshold = -50;
+    const minDragDistance = 10; // Minimum pixels to consider it a drag
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
 
@@ -1374,12 +1376,19 @@ function setupDrawerInteractions() {
         startY = yPosition;
         currentY = yPosition;
         isDragging = true;
-        isDrawerDragging = true; // Set the global flag
+        isDrawerDragging = true;
+        lastDragTime = Date.now();
         appDrawer.style.transition = 'none';
     }
 
     function moveDrawer(yPosition) {
         if (!isDragging) return;
+        
+        // Check if this is actually a drag or just a small movement
+        if (Math.abs(yPosition - startY) < minDragDistance) {
+            return;
+        }
+        
         currentY = yPosition;
         const deltaY = startY - currentY;
         const windowHeight = window.innerHeight;
@@ -1387,21 +1396,22 @@ function setupDrawerInteractions() {
 
         const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
         appDrawer.style.bottom = `${newPosition}%`;
+        lastDragTime = Date.now();
     }
 
     function endDrag() {
         if (!isDragging) return;
         
         const deltaY = startY - currentY;
-        const deltaTime = 100;
-        const velocity = deltaY / deltaTime;
+        const deltaTime = Date.now() - lastDragTime;
+        const velocity = Math.abs(deltaY) > minDragDistance ? deltaY / deltaTime : 0;
 
         appDrawer.style.transition = 'bottom 0.3s ease';
 
-        // Set timeout to prevent immediate app opening after drag
+        // Longer timeout to ensure drag is fully complete
         setTimeout(() => {
             isDrawerDragging = false;
-        }, 50);
+        }, 300);
 
         if (velocity > flickVelocityThreshold || deltaY > 50) {
             appDrawer.style.bottom = '0%';
@@ -1425,16 +1435,19 @@ function setupDrawerInteractions() {
         }
 
         isDragging = false;
+        startY = 0;
+        currentY = 0;
     }
 
     // Touch Events
-    document.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        
-        // Check if touch is on handle area or if drawer is already open
-        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
-            startDrag(touch.clientY);
+    drawerHandle.addEventListener('touchstart', (e) => {
+        startDrag(e.touches[0].clientY);
+        e.preventDefault();
+    }, { passive: false });
+
+    appDrawer.addEventListener('touchstart', (e) => {
+        if (appDrawer.classList.contains('open')) {
+            startDrag(e.touches[0].clientY);
             e.preventDefault();
         }
     }, { passive: false });
@@ -1451,13 +1464,17 @@ function setupDrawerInteractions() {
     });
 
     // Mouse Events
-    document.addEventListener('mousedown', (e) => {
-        if (e.button !== 0) return;
-        const element = document.elementFromPoint(e.clientX, e.clientY);
-        
-        // Check if click is on handle area or if drawer is already open
-        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+    drawerHandle.addEventListener('mousedown', (e) => {
+        if (e.button === 0) {
             startDrag(e.clientY);
+            e.preventDefault();
+        }
+    });
+
+    appDrawer.addEventListener('mousedown', (e) => {
+        if (e.button === 0 && appDrawer.classList.contains('open')) {
+            startDrag(e.clientY);
+            e.preventDefault();
         }
     });
 
@@ -1473,9 +1490,13 @@ function setupDrawerInteractions() {
 
     // Close drawer when clicking outside
     document.addEventListener('click', (e) => {
-        if (appDrawer.classList.contains('open') &&
+        // Only handle clicks if we're not dragging
+        if (!isDragging && 
+            !isDrawerDragging && 
+            appDrawer.classList.contains('open') &&
             !appDrawer.contains(e.target) &&
             !appDrawerToggle.contains(e.target)) {
+            
             appDrawer.style.transition = 'bottom 0.3s ease';
             appDrawer.style.bottom = '-100%';
             appDrawer.classList.remove('open');
