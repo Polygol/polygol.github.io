@@ -904,7 +904,7 @@ uploadButton.addEventListener('click', () => {
 
 wallpaperInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
-    if (file && ['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+    if (file && ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'video/mp4'].includes(file.type)) {
         saveWallpaper(file);
         showPopup('Wallpaper updated');
     } else {
@@ -916,8 +916,9 @@ wallpaperInput.addEventListener('change', (event) => {
 function saveWallpaper(file) {
     const reader = new FileReader();
     reader.onload = function (event) {
-        const imageDataUrl = event.target.result;
-        localStorage.setItem('customWallpaper', imageDataUrl);
+        const mediaDataUrl = event.target.result;
+        localStorage.setItem('customWallpaper', mediaDataUrl);
+        localStorage.setItem('wallpaperType', file.type);
         applyWallpaper();
     };
     reader.readAsDataURL(file);
@@ -925,11 +926,49 @@ function saveWallpaper(file) {
 
 function applyWallpaper() {
     const savedWallpaper = localStorage.getItem('customWallpaper');
+    const wallpaperType = localStorage.getItem('wallpaperType');
+
     if (savedWallpaper) {
-        document.body.style.backgroundImage = `url('${savedWallpaper}')`;
-        document.body.style.backgroundSize = 'cover';
-        document.body.style.backgroundPosition = 'center';
-        document.body.style.backgroundRepeat = 'no-repeat';
+        if (wallpaperType && wallpaperType.startsWith('video/')) {
+            // Remove any existing video element
+            const existingVideo = document.querySelector('#background-video');
+            if (existingVideo) {
+                existingVideo.remove();
+            }
+
+            // Create and configure video element
+            const video = document.createElement('video');
+            video.id = 'background-video';
+            video.autoplay = true;
+            video.loop = true;
+            video.muted = true;
+            video.playsInline = true;
+            video.style.position = 'fixed';
+            video.style.right = '0';
+            video.style.bottom = '0';
+            video.style.minWidth = '100%';
+            video.style.minHeight = '100%';
+            video.style.width = 'auto';
+            video.style.height = 'auto';
+            video.style.zIndex = '-1';
+            video.style.objectFit = 'cover';
+            
+            video.src = savedWallpaper;
+            document.body.insertBefore(video, document.body.firstChild);
+            document.body.style.backgroundImage = 'none';
+        } else {
+            // Remove any existing video element
+            const existingVideo = document.querySelector('#background-video');
+            if (existingVideo) {
+                existingVideo.remove();
+            }
+
+            // Apply image wallpaper
+            document.body.style.backgroundImage = `url('${savedWallpaper}')`;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+            document.body.style.backgroundRepeat = 'no-repeat';
+        }
     }
 }
 
