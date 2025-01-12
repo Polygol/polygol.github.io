@@ -1289,8 +1289,7 @@ function createAppIcons() {
         appIcon.appendChild(label);
 
         const handleAppOpen = (e) => {
-            // Prevent app opening if drawer is being dragged
-            if (isDrawerDragging) {
+            if (isDrawerDragging || isDragging) {
                 e.preventDefault();
                 e.stopPropagation();
                 return;
@@ -1322,8 +1321,13 @@ function createAppIcons() {
             }
         };
 
+        appIcon.addEventListener('touchend', (e) => {
+            if (!isDrawerDragging) {
+                handleAppOpen(e);
+            }
+        });
+        
         appIcon.addEventListener('click', handleAppOpen);
-        appIcon.addEventListener('touchend', handleAppOpen);
 
         appGrid.appendChild(appIcon);
     });
@@ -1334,17 +1338,26 @@ function setupDrawerInteractions() {
     let currentY = 0;
     let initialDrawerPosition = -100;
     let isDragging = false;
+    let dragStartTime = 0;
     const flickVelocityThreshold = 0.4;
     const openThreshold = -50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
-
+    const DRAG_THRESHOLD = 150; // milliseconds to determine if it's a drag vs tap
+    
     function startDrag(yPosition) {
         startY = yPosition;
         currentY = yPosition;
         isDragging = true;
-        isDrawerDragging = true; // Set the global flag
+        isDrawerDragging = true;
+        dragStartTime = Date.now();
         appDrawer.style.transition = 'none';
+        
+        // Disable pointer events on app icons during drag
+        const appIcons = appDrawer.querySelectorAll('.app-icon');
+        appIcons.forEach(icon => {
+            icon.style.pointerEvents = 'none';
+        });
     }
 
     function moveDrawer(yPosition) {
@@ -1364,10 +1377,16 @@ function setupDrawerInteractions() {
         const deltaY = startY - currentY;
         const deltaTime = 100;
         const velocity = deltaY / deltaTime;
+        const dragDuration = Date.now() - dragStartTime;
 
         appDrawer.style.transition = 'bottom 0.3s ease';
 
-        // Set timeout to prevent immediate app opening after drag
+        // Re-enable pointer events on app icons
+        const appIcons = appDrawer.querySelectorAll('.app-icon');
+        appIcons.forEach(icon => {
+            icon.style.pointerEvents = 'auto';
+        });
+
         setTimeout(() => {
             isDrawerDragging = false;
         }, 50);
@@ -1397,25 +1416,21 @@ function setupDrawerInteractions() {
     }
 
     // Touch Events
-document.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    
-    // For opening: only allow dragging from handle area
-    // For closing: allow dragging from anywhere in the drawer when it's open
-    if (drawerHandle.contains(element) || 
-        (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
-        startDrag(touch.clientY);
-        e.preventDefault();
-    }
-}, { passive: false });
+    document.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        if (appDrawer.classList.contains('open') || 
+            drawerHandle.contains(e.target)) {
+            startDrag(touch.clientY);
+            e.preventDefault();
+        }
+    }, { passive: false });
 
-document.addEventListener('touchmove', (e) => {
-    if (isDragging) {
-        e.preventDefault();
-        moveDrawer(e.touches[0].clientY);
-    }
-}, { passive: false });
+    document.addEventListener('touchmove', (e) => {
+        if (isDragging) {
+            e.preventDefault();
+            moveDrawer(e.touches[0].clientY);
+        }
+    }, { passive: false });
 
 document.addEventListener('touchend', () => {
     endDrag();
