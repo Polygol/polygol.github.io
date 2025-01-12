@@ -146,8 +146,31 @@ body.light-theme[style*="background-image"] .info {
             text-align: center;
             padding: 20px;
             position: relative;
+            transition: border-color 0.3s;
             user-select: none;
+            pointer-events: none;
         }
+
+.container.editable {
+    cursor: move;
+    resize: both;
+    overflow: auto;
+    border: 2px solid var(--transparent-color);
+    pointer-events: all;
+}
+
+.container.editable::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 15px;
+    height: 15px;
+    cursor: se-resize;
+    background: var(--text-color);
+    opacity: 0.3;
+    border-radius: 3px;
+}
 
         .clock {
             font-size: clamp(4rem, 10vw, 8rem);
@@ -649,6 +672,47 @@ body.light-theme[style*="background-image"] .info {
     padding: 10px 10px;
     border-radius: 25px;
     cursor: pointer;
+}
+
+.clock-settings {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 15px 20px;
+    background-color: var(--transparent-color);
+    border-radius: 20px;
+}
+
+#seconds-switch {
+    appearance: none;
+    width: 60px;
+    height: 32px;
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 16px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#seconds-switch::before {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-color: white;
+    border-radius: 50%;
+    top: 4px;
+    left: 4px;
+    transition: transform 0.3s;
+}
+
+#seconds-switch:checked {
+    background-color: #3c78d8;
+}
+
+#seconds-switch:checked::before {
+    transform: translateX(28px);
 }
 
 .font-selection {
