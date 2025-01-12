@@ -245,6 +245,19 @@ async function fetchLocationAndWeather() {
                     console.warn('Could not retrieve city name', geocodingError);
                 }
 
+                } catch (error) {
+                    console.error('Error fetching weather data:', error);
+                    if (!navigator.onLine) {
+                        showPopup('You are currently offline');
+                    }
+                    // Return cached data if available
+                    const cachedData = localStorage.getItem('lastWeatherData');
+                    if (cachedData) {
+                        return JSON.parse(cachedData);
+                    }
+                    throw error;
+                }
+
                 const currentWeatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
                 const dailyForecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,weathercode&timezone=Europe/London`;
                 const hourlyForecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weathercode&timezone=Europe/London`;
@@ -278,6 +291,10 @@ async function fetchLocationAndWeather() {
             maximumAge: 0
         });
     });
+}
+
+if (weatherData) {
+    localStorage.setItem('lastWeatherData', JSON.stringify(weatherData));
 }
 
 function getDayOfWeek(dateString) {
@@ -1272,6 +1289,15 @@ document.addEventListener('keydown', (event) => {
             resetTimer();
         }
     }
+});
+
+window.addEventListener('online', () => {
+    showPopup('You are back online');
+    updateSmallWeather(); // Refresh weather data
+});
+
+window.addEventListener('offline', () => {
+    showPopup('You are offline');
 });
 
     // Initialize everything
