@@ -118,6 +118,28 @@ body.light-theme[style*="background-image"] .info {
     opacity: 0.8;
 }
 
+.corner-clock {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--text-color);
+    background-color: var(--search-background);
+    padding: 8px 18px;
+    border-radius: 50px;
+    backdrop-filter: blur(50px);
+    z-index: 1500;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.corner-clock.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
         .container {
             width: clamp(300px, 90%, 1200px);
             margin: 0 auto;
