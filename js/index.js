@@ -1334,9 +1334,82 @@ function setupDrawerInteractions() {
     let initialDrawerPosition = -100;
     let isDragging = false;
     const flickVelocityThreshold = 0.4;
+    const dockThreshold = -25; // Threshold for dock appearance
     const openThreshold = -50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
+    
+    // Create dock element
+    const dock = document.createElement('div');
+    dock.id = 'dock';
+    dock.className = 'dock';
+    document.body.appendChild(dock);
+    
+    // Style for the dock
+    const style = document.createElement('style');
+    style.textContent = `
+        .dock {
+            position: fixed;
+            bottom: -70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--modal-background);
+            backdrop-filter: blur(50px);
+            border-radius: 16px;
+            padding: 8px;
+            display: flex;
+            gap: 12px;
+            transition: bottom 0.3s ease;
+            z-index: 998;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .dock.show {
+            bottom: 20px;
+        }
+        
+        .dock-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .dock-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        .dock-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Populate dock with first 5 apps
+    function populateDock() {
+        dock.innerHTML = '';
+        Object.entries(apps).slice(0, 5).forEach(([appName, appDetails]) => {
+            const dockIcon = document.createElement('div');
+            dockIcon.className = 'dock-icon';
+            
+            const img = document.createElement('img');
+            img.src = `/assets/appicon/${appDetails.icon}`;
+            img.alt = appName;
+            
+            dockIcon.appendChild(img);
+            dockIcon.addEventListener('click', () => {
+                window.open(appDetails.url, '_blank');
+            });
+            
+            dock.appendChild(dockIcon);
+        });
+    }
+    
+    populateDock();
 
     function startDrag(yPosition) {
         startY = yPosition;
@@ -1352,6 +1425,13 @@ function setupDrawerInteractions() {
         const deltaY = startY - currentY;
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
+        
+        // Show dock for small movements
+        if (movementPercentage > 10 && movementPercentage < 25) {
+            dock.classList.add('show');
+        } else {
+            dock.classList.remove('show');
+        }
 
         const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
         appDrawer.style.bottom = `${newPosition}%`;
@@ -1363,28 +1443,31 @@ function setupDrawerInteractions() {
         const deltaY = startY - currentY;
         const deltaTime = 100;
         const velocity = deltaY / deltaTime;
+        const windowHeight = window.innerHeight;
+        const movementPercentage = (deltaY / windowHeight) * 100;
 
         appDrawer.style.transition = 'bottom 0.3s ease';
 
-        if (velocity > flickVelocityThreshold || deltaY > 50) {
-            appDrawer.style.bottom = '0%';
-            appDrawer.classList.add('open');
-            initialDrawerPosition = 0;
-        } else if (velocity < -flickVelocityThreshold || deltaY < -50) {
+        // Small swipe - show dock
+        if (movementPercentage > 10 && movementPercentage <= 25) {
+            dock.classList.add('show');
             appDrawer.style.bottom = '-100%';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
-        } else {
-            const currentBottom = parseFloat(appDrawer.style.bottom);
-            if (currentBottom >= openThreshold) {
-                appDrawer.style.bottom = '0%';
-                appDrawer.classList.add('open');
-                initialDrawerPosition = 0;
-            } else {
-                appDrawer.style.bottom = '-100%';
-                appDrawer.classList.remove('open');
-                initialDrawerPosition = -100;
-            }
+        } 
+        // Large swipe - show full drawer
+        else if (movementPercentage > 25) {
+            dock.classList.remove('show');
+            appDrawer.style.bottom = '0%';
+            appDrawer.classList.add('open');
+            initialDrawerPosition = 0;
+        } 
+        // Close everything
+        else {
+            dock.classList.remove('show');
+            appDrawer.style.bottom = '-100%';
+            appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
         }
 
         isDragging = false;
@@ -1443,6 +1526,12 @@ function setupDrawerInteractions() {
             appDrawer.style.bottom = '-100%';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!dock.contains(e.target) && !drawerHandle.contains(e.target)) {
+            dock.classList.remove('show');
         }
     });
 }
