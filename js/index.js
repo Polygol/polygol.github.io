@@ -1333,6 +1333,7 @@ function setupDrawerInteractions() {
     let currentY = 0;
     let initialDrawerPosition = -100;
     let isDragging = false;
+    let isDrawerInMotion = false;
     const flickVelocityThreshold = 0.4;
     const dockThreshold = -25; // Threshold for dock appearance
     const openThreshold = -50;
@@ -1413,6 +1414,7 @@ function setupDrawerInteractions() {
         startY = yPosition;
         currentY = yPosition;
         isDragging = true;
+        isDrawerInMotion = true;
         appDrawer.style.transition = 'none';
     }
 
@@ -1478,8 +1480,12 @@ function setupDrawerInteractions() {
             initialDrawerPosition = -100;
         }
 
-    isDragging = false;
-}
+        isDragging = false;
+
+        setTimeout(() => {
+            isDrawerInMotion = false;
+        }, 300); // 300ms matches the transition duration in the CSS
+    }
 
     // Touch Events
     document.addEventListener('touchstart', (e) => {
@@ -1538,7 +1544,7 @@ function setupDrawerInteractions() {
     });
 
     document.addEventListener('click', (e) => {
-        if (!isDragging && !dock.contains(e.target) && !drawerHandle.contains(e.target)) {
+        if (!isDrawerInMotion && !dock.contains(e.target) && !drawerHandle.contains(e.target)) {
             dock.classList.remove('show');
         }
     });
