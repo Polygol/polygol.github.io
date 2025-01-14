@@ -1270,7 +1270,7 @@ function populateDock() {
     drawerIcon.className = 'dock-icon drawer-opener';
     
     const drawerImg = document.createElement('img');
-    drawerImg.src = '/assets/appoff.png'; // Make sure to have this icon
+    drawerImg.src = '/assets/appicon/appoff.png'; // Make sure to have this icon
     drawerImg.alt = 'Open Apps';
     
     drawerIcon.appendChild(drawerImg);
@@ -1279,12 +1279,14 @@ function populateDock() {
             // Close drawer
             appDrawer.style.transition = 'bottom 0.3s ease';
             appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
         } else {
             // Open drawer
             appDrawer.style.transition = 'bottom 0.3s ease';
             appDrawer.style.bottom = '0%';
+            appDrawer.style.opacity = '1';
             appDrawer.classList.add('open');
             initialDrawerPosition = 0;
         }
