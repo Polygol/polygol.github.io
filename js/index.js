@@ -1383,19 +1383,6 @@ function setupDrawerInteractions() {
             height: 100%;
             object-fit: cover;
         }
-        
-        #app-drawer {
-            transition: opacity 0.3s ease;
-            opacity: 0;
-        }
-
-        #app-drawer.open {
-            opacity: 1;
-        }
-
-        #app-drawer.closing {
-            opacity: 0;
-        }
     `;
     document.head.appendChild(style);
     
