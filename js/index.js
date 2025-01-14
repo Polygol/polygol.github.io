@@ -1423,7 +1423,7 @@ function setupDrawerInteractions() {
         const deltaY = startY - currentY;
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
-        
+    
         // Show dock for small movements
         if (movementPercentage > 10 && movementPercentage < 25) {
             dock.classList.add('show');
@@ -1432,6 +1432,13 @@ function setupDrawerInteractions() {
         }
 
         const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+    
+        // Calculate opacity based on drawer position
+        // When newPosition is -100 (fully hidden), opacity is 0
+        // When newPosition is 0 (fully shown), opacity is 1
+        const opacity = (newPosition + 100) / 100;
+        appDrawer.style.opacity = opacity;
+    
         appDrawer.style.bottom = `${newPosition}%`;
     }
 
@@ -1444,12 +1451,13 @@ function setupDrawerInteractions() {
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
 
-        appDrawer.style.transition = 'bottom 0.3s ease';
+        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
 
         // Small swipe - show dock
         if (movementPercentage > 10 && movementPercentage <= 25) {
             dock.classList.add('show');
             appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
         } 
@@ -1457,6 +1465,7 @@ function setupDrawerInteractions() {
         else if (movementPercentage > 25) {
             dock.classList.remove('show');
             appDrawer.style.bottom = '0%';
+            appDrawer.style.opacity = '1';
             appDrawer.classList.add('open');
             initialDrawerPosition = 0;
         } 
@@ -1464,12 +1473,13 @@ function setupDrawerInteractions() {
         else {
             dock.classList.remove('show');
             appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
         }
 
-        isDragging = false;
-    }
+    isDragging = false;
+}
 
     // Touch Events
     document.addEventListener('touchstart', (e) => {
