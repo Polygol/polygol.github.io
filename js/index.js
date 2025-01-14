@@ -1350,7 +1350,7 @@ function setupDrawerInteractions() {
     style.textContent = `
         .dock {
             position: fixed;
-            bottom: -100%;
+            bottom: -100px;
             left: 50%;
             transform: translateX(-50%);
             background: var(--modal-background);
