@@ -103,7 +103,7 @@ body.light-theme[style*="background-image"] .info {
     justify-content: center;
     align-items: flex-start;
     cursor: grab;
-    z-index: 1000;
+    z-index: 1001;
 }
 
 .drawer-pill {
