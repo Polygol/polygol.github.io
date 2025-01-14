@@ -1265,14 +1265,41 @@ function initializeCustomization() {
 function populateDock() {
     dock.innerHTML = '';
     
-    // Sort apps by usage count
+    // Create drawer opener as first icon
+    const drawerIcon = document.createElement('div');
+    drawerIcon.className = 'dock-icon drawer-opener';
+    
+    const drawerImg = document.createElement('img');
+    drawerImg.src = '/assets/appoff.png'; // Make sure to have this icon
+    drawerImg.alt = 'Open Apps';
+    
+    drawerIcon.appendChild(drawerImg);
+    drawerIcon.addEventListener('click', () => {
+        if (appDrawer.classList.contains('open')) {
+            // Close drawer
+            appDrawer.style.transition = 'bottom 0.3s ease';
+            appDrawer.style.bottom = '-100%';
+            appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
+        } else {
+            // Open drawer
+            appDrawer.style.transition = 'bottom 0.3s ease';
+            appDrawer.style.bottom = '0%';
+            appDrawer.classList.add('open');
+            initialDrawerPosition = 0;
+        }
+    });
+    
+    dock.appendChild(drawerIcon);
+    
+    // Add the most used apps (now only 5 since drawer opener takes first spot)
     const sortedApps = Object.entries(apps)
         .map(([appName, appDetails]) => ({
             name: appName,
             details: appDetails,
             usage: appUsage[appName] || 0
         }))
-        .sort((a, b) => b.usage - a.usage) // Sort by usage count in descending order
+        .sort((a, b) => b.usage - a.usage)
         .slice(0, 5); // Take top 5 most used apps
     
     sortedApps.forEach(({name, details}) => {
@@ -1285,11 +1312,9 @@ function populateDock() {
         
         dockIcon.appendChild(img);
         dockIcon.addEventListener('click', () => {
-            // Increment usage counter when app is opened
             appUsage[name] = (appUsage[name] || 0) + 1;
             saveUsageData();
             window.open(details.url, '_blank');
-            // Update dock to reflect new usage counts
             populateDock();
         });
         
@@ -1442,11 +1467,29 @@ function setupDrawerInteractions() {
             height: 100%;
             object-fit: cover;
         }
+
+        .dock-icon.drawer-opener::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .app-drawer.open ~ .dock .drawer-opener::after {
+            opacity: 1;
+        }
     `;
     document.head.appendChild(style);
     
     populateDock();
-
+    
     function startDrag(yPosition) {
         startY = yPosition;
         currentY = yPosition;
@@ -1581,7 +1624,10 @@ function setupDrawerInteractions() {
     });
 
     document.addEventListener('click', (e) => {
-        if (!isDrawerInMotion && !dock.contains(e.target) && !drawerHandle.contains(e.target)) {
+        if (!isDrawerInMotion && 
+            !dock.contains(e.target) && 
+            !drawerHandle.contains(e.target) && 
+            !appDrawer.classList.contains('open')) { // Only hide dock if drawer is closed
             dock.classList.remove('show');
         }
     });
