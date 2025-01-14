@@ -1335,7 +1335,7 @@ function setupDrawerInteractions() {
     let isDragging = false;
     const flickVelocityThreshold = 0.4;
     const openThreshold = -50;
-    const dockThreshold = 25; // Threshold for dock gesture
+    const dockThreshold = 25;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
     
@@ -1345,7 +1345,6 @@ function setupDrawerInteractions() {
     dock.className = 'dock';
     document.body.appendChild(dock);
     
-    // Add styles for dock and drawer animations
     const style = document.createElement('style');
     style.textContent = `
         .dock {
@@ -1384,19 +1383,22 @@ function setupDrawerInteractions() {
             height: 100%;
             object-fit: cover;
         }
-
+        
         #app-drawer {
-            transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            transition: opacity 0.3s ease;
             opacity: 0;
         }
 
         #app-drawer.open {
             opacity: 1;
         }
+
+        #app-drawer.closing {
+            opacity: 0;
+        }
     `;
     document.head.appendChild(style);
     
-    // Populate dock with first 5 apps
     function populateDock() {
         dock.innerHTML = '';
         Object.entries(apps).slice(0, 5).forEach(([appName, appDetails]) => {
@@ -1433,16 +1435,19 @@ function setupDrawerInteractions() {
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
 
-        // Handle dock vs drawer behavior
+        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+        appDrawer.style.bottom = `${newPosition}%`;
+
         if (movementPercentage <= dockThreshold) {
             dock.classList.add('show');
-            appDrawer.style.bottom = '-100%';
-            appDrawer.classList.remove('open');
+            if (newPosition < -50) {
+                appDrawer.classList.remove('open');
+            }
         } else {
             dock.classList.remove('show');
-            const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-            appDrawer.style.bottom = `${newPosition}%`;
-            if (newPosition > -50) appDrawer.classList.add('open');
+            if (newPosition > -50) {
+                appDrawer.classList.add('open');
+            }
         }
     }
 
@@ -1450,28 +1455,39 @@ function setupDrawerInteractions() {
         if (!isDragging) return;
 
         const deltaY = startY - currentY;
+        const deltaTime = 100;
+        const velocity = deltaY / deltaTime;
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
 
-        appDrawer.style.transition = 'bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease';
-
         if (movementPercentage <= dockThreshold) {
-            // Keep dock open
             dock.classList.add('show');
+            appDrawer.classList.add('closing');
             appDrawer.style.bottom = '-100%';
-            appDrawer.classList.remove('open');
+            setTimeout(() => {
+                appDrawer.classList.remove('open', 'closing');
+            }, 300);
             initialDrawerPosition = -100;
-        } else if (movementPercentage > dockThreshold) {
-            // Open drawer fully
+        } else if (velocity > flickVelocityThreshold || movementPercentage > openThreshold) {
             dock.classList.remove('show');
             appDrawer.style.bottom = '0%';
             appDrawer.classList.add('open');
+            appDrawer.classList.remove('closing');
             initialDrawerPosition = 0;
+        } else {
+            dock.classList.remove('show');
+            appDrawer.classList.add('closing');
+            appDrawer.style.bottom = '-100%';
+            setTimeout(() => {
+                appDrawer.classList.remove('open', 'closing');
+            }, 300);
+            initialDrawerPosition = -100;
         }
 
         isDragging = false;
     }
 
+    // Keep existing event listeners
     document.addEventListener('touchstart', (e) => {
         const touch = e.touches[0];
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -1512,7 +1528,6 @@ function setupDrawerInteractions() {
         endDrag();
     });
 
-    // Close dock and drawer when clicking outside
     document.addEventListener('click', (e) => {
         if (!dock.contains(e.target) && !drawerHandle.contains(e.target)) {
             dock.classList.remove('show');
@@ -1520,9 +1535,11 @@ function setupDrawerInteractions() {
         if (appDrawer.classList.contains('open') && 
             !appDrawer.contains(e.target) && 
             !appDrawerToggle.contains(e.target)) {
-            appDrawer.style.transition = 'bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease';
+            appDrawer.classList.add('closing');
             appDrawer.style.bottom = '-100%';
-            appDrawer.classList.remove('open');
+            setTimeout(() => {
+                appDrawer.classList.remove('open', 'closing');
+            }, 300);
             initialDrawerPosition = -100;
         }
     });
