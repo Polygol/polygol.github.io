@@ -1270,7 +1270,7 @@ function initializeCustomization() {
 function createAppIcons() {
     appGrid.innerHTML = '';
     
-    // Convert apps object to array and add usage data
+    // Convert apps object to array with usage data
     const appsArray = Object.entries(apps)
         .map(([appName, appDetails]) => ({
             name: appName,
@@ -1279,42 +1279,41 @@ function createAppIcons() {
         }))
         .sort((a, b) => b.usage - a.usage); // Sort by usage count in descending order
 
-    appsArray.forEach(({name, details}) => {
+    appsArray.forEach((app) => {
         const appIcon = document.createElement('div');
         appIcon.classList.add('app-icon');
-        appIcon.dataset.app = name;
+        appIcon.dataset.app = app.name;
 
         // Create icon image
         const img = document.createElement('img');
-        img.src = `/assets/appicon/${details.icon}`;
-        img.alt = name;
+        img.src = `/assets/appicon/${app.details.icon}`;
+        img.alt = app.name;
         img.onerror = () => {
             img.src = '/assets/default-app-icon.png';
         };
 
         // Create app name label
         const label = document.createElement('span');
-        label.textContent = name;
+        label.textContent = app.name;
 
         appIcon.appendChild(img);
         appIcon.appendChild(label);
 
         // Add both click and touch events to handle all interaction types
         const handleAppOpen = (e) => {
-            e.preventDefault(); // Prevent default behavior
-            e.stopPropagation(); // Stop event from bubbling up
+            e.preventDefault();
+            e.stopPropagation();
             
             try {
                 // Increment usage counter
-                appUsage[name] = (appUsage[name] || 0) + 1;
-                saveUsageData(); // Save to localStorage
+                appUsage[app.name] = (appUsage[app.name] || 0) + 1;
+                saveUsageData();
                 
-                // Update both dock and drawer to reflect new usage
+                // Update both dock and drawer
                 populateDock();
-                createAppIcons(); // Recreate app icons with new order
 
-                if (details.url.startsWith('#')) {
-                    switch (details.url) {
+                if (app.details.url.startsWith('#')) {
+                    switch (app.details.url) {
                         case '#settings':
                             showPopup('Opening Settings');
                             break;
@@ -1322,17 +1321,17 @@ function createAppIcons() {
                             showPopup('Opening Weather');
                             break;
                         default:
-                            showPopup(`${name} app opened`);
+                            showPopup(`${app.name} app opened`);
                     }
                 } else {
-                    window.open(details.url, '_blank', 'noopener,noreferrer');
+                    window.open(app.details.url, '_blank', 'noopener,noreferrer');
                 }
                 // Close the drawer
                 appDrawer.classList.remove('open');
                 appDrawer.style.bottom = '-100%';
                 initialDrawerPosition = -100;
             } catch (error) {
-                showPopup(`Failed to open ${name}`);
+                showPopup(`Failed to open ${app.name}`);
                 console.error(`App open error: ${error}`);
             }
         };
