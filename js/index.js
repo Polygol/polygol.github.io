@@ -1443,9 +1443,9 @@ function setupDrawerInteractions() {
             border-radius: 30px;
             padding: 8px;
             display: flex;
-            gap: 12px;
+            gap: 8px;
             transition: bottom 0.3s ease;
-            z-index: 998;
+            z-index: 1001;
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
         }
         
