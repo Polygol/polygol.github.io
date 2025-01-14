@@ -1538,7 +1538,7 @@ function setupDrawerInteractions() {
     });
 
     document.addEventListener('click', (e) => {
-        if (!dock.contains(e.target) && !drawerHandle.contains(e.target)) {
+        if (!isDragging && !dock.contains(e.target) && !drawerHandle.contains(e.target)) {
             dock.classList.remove('show');
         }
     });
