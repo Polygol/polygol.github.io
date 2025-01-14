@@ -1262,6 +1262,41 @@ function initializeCustomization() {
         },
     };
 
+function populateDock() {
+    dock.innerHTML = '';
+    
+    // Sort apps by usage count
+    const sortedApps = Object.entries(apps)
+        .map(([appName, appDetails]) => ({
+            name: appName,
+            details: appDetails,
+            usage: appUsage[appName] || 0
+        }))
+        .sort((a, b) => b.usage - a.usage) // Sort by usage count in descending order
+        .slice(0, 5); // Take top 5 most used apps
+    
+    sortedApps.forEach(({name, details}) => {
+        const dockIcon = document.createElement('div');
+        dockIcon.className = 'dock-icon';
+        
+        const img = document.createElement('img');
+        img.src = `/assets/appicon/${details.icon}`;
+        img.alt = name;
+        
+        dockIcon.appendChild(img);
+        dockIcon.addEventListener('click', () => {
+            // Increment usage counter when app is opened
+            appUsage[name] = (appUsage[name] || 0) + 1;
+            saveUsageData();
+            window.open(details.url, '_blank');
+            // Update dock to reflect new usage counts
+            populateDock();
+        });
+        
+        dock.appendChild(dockIcon);
+    });
+}
+
     const appDrawer = document.getElementById('app-drawer');
     const appGrid = document.getElementById('app-grid');
     const appDrawerToggle = document.getElementById('app-drawer-toggle');
@@ -1270,21 +1305,19 @@ function initializeCustomization() {
 function createAppIcons() {
     appGrid.innerHTML = '';
     
-    // Convert apps object to array with usage data
     const appsArray = Object.entries(apps)
         .map(([appName, appDetails]) => ({
             name: appName,
             details: appDetails,
             usage: appUsage[appName] || 0
         }))
-        .sort((a, b) => b.usage - a.usage); // Sort by usage count in descending order
+        .sort((a, b) => b.usage - a.usage);
 
     appsArray.forEach((app) => {
         const appIcon = document.createElement('div');
         appIcon.classList.add('app-icon');
         appIcon.dataset.app = app.name;
 
-        // Create icon image
         const img = document.createElement('img');
         img.src = `/assets/appicon/${app.details.icon}`;
         img.alt = app.name;
@@ -1292,25 +1325,21 @@ function createAppIcons() {
             img.src = '/assets/default-app-icon.png';
         };
 
-        // Create app name label
         const label = document.createElement('span');
         label.textContent = app.name;
 
         appIcon.appendChild(img);
         appIcon.appendChild(label);
 
-        // Add both click and touch events to handle all interaction types
         const handleAppOpen = (e) => {
             e.preventDefault();
             e.stopPropagation();
             
             try {
-                // Increment usage counter
                 appUsage[app.name] = (appUsage[app.name] || 0) + 1;
                 saveUsageData();
                 
-                // Update both dock and drawer
-                populateDock();
+                populateDock(); // Now this should work
 
                 if (app.details.url.startsWith('#')) {
                     switch (app.details.url) {
@@ -1326,7 +1355,6 @@ function createAppIcons() {
                 } else {
                     window.open(app.details.url, '_blank', 'noopener,noreferrer');
                 }
-                // Close the drawer
                 appDrawer.classList.remove('open');
                 appDrawer.style.bottom = '-100%';
                 initialDrawerPosition = -100;
@@ -1336,7 +1364,6 @@ function createAppIcons() {
             }
         };
 
-        // Add both click and touch events
         appIcon.addEventListener('click', handleAppOpen);
         appIcon.addEventListener('touchend', handleAppOpen);
         appGrid.appendChild(appIcon);
@@ -1417,40 +1444,6 @@ function setupDrawerInteractions() {
         }
     `;
     document.head.appendChild(style);
-    
-    // Populate dock with first 5 apps
-    function populateDock() {
-        dock.innerHTML = '';
-        
-        // Sort apps by usage count
-        const sortedApps = Object.entries(apps)
-            .map(([appName, appDetails]) => ({
-                name: appName,
-                details: appDetails,
-                usage: appUsage[appName] || 0
-            }))
-            .sort((a, b) => b.usage - a.usage) // Sort by usage count in descending order
-            .slice(0, 5); // Take top 5 most used apps
-        
-        sortedApps.forEach(({name, details}) => {
-            const dockIcon = document.createElement('div');
-            dockIcon.className = 'dock-icon';
-            
-            const img = document.createElement('img');
-            img.src = `/assets/appicon/${details.icon}`;
-            img.alt = name;
-            
-            dockIcon.appendChild(img);
-            dockIcon.addEventListener('click', () => {
-                appUsage[name] = (appUsage[name] || 0) + 1;
-                saveUsageData();
-                window.open(details.url, '_blank');
-                populateDock();
-            });
-            
-            dock.appendChild(dockIcon);
-        });
-    }
     
     populateDock();
 
