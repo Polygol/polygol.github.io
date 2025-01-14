@@ -1334,8 +1334,8 @@ function setupDrawerInteractions() {
     let initialDrawerPosition = -100;
     let isDragging = false;
     const flickVelocityThreshold = 0.4;
+    const dockThreshold = -25; // Threshold for dock appearance
     const openThreshold = -50;
-    const dockThreshold = 25;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
     
@@ -1345,6 +1345,7 @@ function setupDrawerInteractions() {
     dock.className = 'dock';
     document.body.appendChild(dock);
     
+    // Style for the dock
     const style = document.createElement('style');
     style.textContent = `
         .dock {
@@ -1386,6 +1387,7 @@ function setupDrawerInteractions() {
     `;
     document.head.appendChild(style);
     
+    // Populate dock with first 5 apps
     function populateDock() {
         dock.innerHTML = '';
         Object.entries(apps).slice(0, 5).forEach(([appName, appDetails]) => {
@@ -1421,21 +1423,16 @@ function setupDrawerInteractions() {
         const deltaY = startY - currentY;
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
+        
+        // Show dock for small movements
+        if (movementPercentage > 10 && movementPercentage < 25) {
+            dock.classList.add('show');
+        } else {
+            dock.classList.remove('show');
+        }
 
         const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
         appDrawer.style.bottom = `${newPosition}%`;
-
-        if (movementPercentage <= dockThreshold) {
-            dock.classList.add('show');
-            if (newPosition < -50) {
-                appDrawer.classList.remove('open');
-            }
-        } else {
-            dock.classList.remove('show');
-            if (newPosition > -50) {
-                appDrawer.classList.add('open');
-            }
-        }
     }
 
     function endDrag() {
@@ -1447,38 +1444,39 @@ function setupDrawerInteractions() {
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
 
-        if (movementPercentage <= dockThreshold) {
+        appDrawer.style.transition = 'bottom 0.3s ease';
+
+        // Small swipe - show dock
+        if (movementPercentage > 10 && movementPercentage <= 25) {
             dock.classList.add('show');
-            appDrawer.classList.add('closing');
             appDrawer.style.bottom = '-100%';
-            setTimeout(() => {
-                appDrawer.classList.remove('open', 'closing');
-            }, 300);
+            appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
-        } else if (velocity > flickVelocityThreshold || movementPercentage > openThreshold) {
+        } 
+        // Large swipe - show full drawer
+        else if (movementPercentage > 25) {
             dock.classList.remove('show');
             appDrawer.style.bottom = '0%';
             appDrawer.classList.add('open');
-            appDrawer.classList.remove('closing');
             initialDrawerPosition = 0;
-        } else {
+        } 
+        // Close everything
+        else {
             dock.classList.remove('show');
-            appDrawer.classList.add('closing');
             appDrawer.style.bottom = '-100%';
-            setTimeout(() => {
-                appDrawer.classList.remove('open', 'closing');
-            }, 300);
+            appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
         }
 
         isDragging = false;
     }
 
-    // Keep existing event listeners
+    // Touch Events
     document.addEventListener('touchstart', (e) => {
         const touch = e.touches[0];
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
         
+        // Check if touch is on handle area or if drawer is already open
         if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
             startDrag(touch.clientY);
             e.preventDefault();
@@ -1496,10 +1494,12 @@ function setupDrawerInteractions() {
         endDrag();
     });
 
+    // Mouse Events
     document.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         const element = document.elementFromPoint(e.clientX, e.clientY);
         
+        // Check if click is on handle area or if drawer is already open
         if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
             startDrag(e.clientY);
         }
@@ -1515,19 +1515,21 @@ function setupDrawerInteractions() {
         endDrag();
     });
 
+    // Close drawer when clicking outside
+    document.addEventListener('click', (e) => {
+        if (appDrawer.classList.contains('open') &&
+            !appDrawer.contains(e.target) &&
+            !appDrawerToggle.contains(e.target)) {
+            appDrawer.style.transition = 'bottom 0.3s ease';
+            appDrawer.style.bottom = '-100%';
+            appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
+        }
+    });
+
     document.addEventListener('click', (e) => {
         if (!dock.contains(e.target) && !drawerHandle.contains(e.target)) {
             dock.classList.remove('show');
-        }
-        if (appDrawer.classList.contains('open') && 
-            !appDrawer.contains(e.target) && 
-            !appDrawerToggle.contains(e.target)) {
-            appDrawer.classList.add('closing');
-            appDrawer.style.bottom = '-100%';
-            setTimeout(() => {
-                appDrawer.classList.remove('open', 'closing');
-            }, 300);
-            initialDrawerPosition = -100;
         }
     });
 }
