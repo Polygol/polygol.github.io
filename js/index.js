@@ -1451,7 +1451,7 @@ function setupDrawerInteractions() {
         }
         
         .dock.show {
-            bottom: 25px;
+            bottom: 10px;
         }
         
         .dock-icon {
