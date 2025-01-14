@@ -882,6 +882,7 @@ body.light-theme[style*="background-image"] .info {
     backdrop-filter: blur(50px); /* Apply blur to the background */
     touch-action: none;
     user-select: none;
+    opacity: 0;
 }
 
         .app-drawer.open {
