@@ -1438,8 +1438,9 @@ function setupDrawerInteractions() {
             bottom: -100px;
             left: 50%;
             transform: translateX(-50%);
-            background: var(--modal-background);
-            backdrop-filter: blur(20px);
+            background: var(--search-background);
+            backdrop-filter: blur(50px);
+            border: 2px solid var(--transparent-color);
             border-radius: 34px;
             padding: 8px 9px;
             display: flex;
