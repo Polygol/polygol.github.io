@@ -45,6 +45,7 @@ Please make sure to use Gurasuraisu from https://gurasuraisu.github.io to avoid 
 consoleGreeting()
 
 const secondsSwitch = document.getElementById('seconds-switch');
+const appUsage = {};
 
 let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults to true
 
@@ -1328,6 +1329,21 @@ function createAppIcons() {
     });
 }
 
+Object.keys(apps).forEach(appName => {
+    appUsage[appName] = 0;
+});
+
+// Load saved usage data from localStorage
+const savedUsage = localStorage.getItem('appUsage');
+if (savedUsage) {
+    Object.assign(appUsage, JSON.parse(savedUsage));
+}
+
+// Save usage data whenever an app is opened
+function saveUsageData() {
+    localStorage.setItem('appUsage', JSON.stringify(appUsage));
+}
+
 function setupDrawerInteractions() {
     let startY = 0;
     let currentY = 0;
@@ -1391,17 +1407,31 @@ function setupDrawerInteractions() {
     // Populate dock with first 5 apps
     function populateDock() {
         dock.innerHTML = '';
-        Object.entries(apps).slice(0, 5).forEach(([appName, appDetails]) => {
+        
+        // Sort apps by usage count
+        const sortedApps = Object.entries(apps)
+            .map(([appName, appDetails]) => ({
+                name: appName,
+                details: appDetails,
+                usage: appUsage[appName] || 0
+            }))
+            .sort((a, b) => b.usage - a.usage) // Sort by usage count in descending order
+            .slice(0, 5); // Take top 5 most used apps
+        
+        sortedApps.forEach(({name, details}) => {
             const dockIcon = document.createElement('div');
             dockIcon.className = 'dock-icon';
             
             const img = document.createElement('img');
-            img.src = `/assets/appicon/${appDetails.icon}`;
-            img.alt = appName;
+            img.src = `/assets/appicon/${details.icon}`;
+            img.alt = name;
             
             dockIcon.appendChild(img);
             dockIcon.addEventListener('click', () => {
-                window.open(appDetails.url, '_blank');
+                appUsage[name] = (appUsage[name] || 0) + 1;
+                saveUsageData();
+                window.open(details.url, '_blank');
+                populateDock();
             });
             
             dock.appendChild(dockIcon);
