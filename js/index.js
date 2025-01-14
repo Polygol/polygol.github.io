@@ -1269,23 +1269,32 @@ function initializeCustomization() {
 // Function to create app icons
 function createAppIcons() {
     appGrid.innerHTML = '';
+    
+    // Convert apps object to array and add usage data
+    const appsArray = Object.entries(apps)
+        .map(([appName, appDetails]) => ({
+            name: appName,
+            details: appDetails,
+            usage: appUsage[appName] || 0
+        }))
+        .sort((a, b) => b.usage - a.usage); // Sort by usage count in descending order
 
-    Object.entries(apps).forEach(([appName, appDetails]) => {
+    appsArray.forEach(({name, details}) => {
         const appIcon = document.createElement('div');
         appIcon.classList.add('app-icon');
-        appIcon.dataset.app = appName;
+        appIcon.dataset.app = name;
 
         // Create icon image
         const img = document.createElement('img');
-        img.src = `/assets/appicon/${appDetails.icon}`;
-        img.alt = appName;
+        img.src = `/assets/appicon/${details.icon}`;
+        img.alt = name;
         img.onerror = () => {
             img.src = '/assets/default-app-icon.png';
         };
 
         // Create app name label
         const label = document.createElement('span');
-        label.textContent = appName;
+        label.textContent = name;
 
         appIcon.appendChild(img);
         appIcon.appendChild(label);
@@ -1296,8 +1305,16 @@ function createAppIcons() {
             e.stopPropagation(); // Stop event from bubbling up
             
             try {
-                if (appDetails.url.startsWith('#')) {
-                    switch (appDetails.url) {
+                // Increment usage counter
+                appUsage[name] = (appUsage[name] || 0) + 1;
+                saveUsageData(); // Save to localStorage
+                
+                // Update both dock and drawer to reflect new usage
+                populateDock();
+                createAppIcons(); // Recreate app icons with new order
+
+                if (details.url.startsWith('#')) {
+                    switch (details.url) {
                         case '#settings':
                             showPopup('Opening Settings');
                             break;
@@ -1305,18 +1322,17 @@ function createAppIcons() {
                             showPopup('Opening Weather');
                             break;
                         default:
-                            showPopup(`${appName} app opened`);
+                            showPopup(`${name} app opened`);
                     }
                 } else {
-                    window.open(appDetails.url, '_blank', 'noopener,noreferrer');
+                    window.open(details.url, '_blank', 'noopener,noreferrer');
                 }
-
                 // Close the drawer
                 appDrawer.classList.remove('open');
                 appDrawer.style.bottom = '-100%';
                 initialDrawerPosition = -100;
             } catch (error) {
-                showPopup(`Failed to open ${appName}`);
+                showPopup(`Failed to open ${name}`);
                 console.error(`App open error: ${error}`);
             }
         };
@@ -1324,7 +1340,6 @@ function createAppIcons() {
         // Add both click and touch events
         appIcon.addEventListener('click', handleAppOpen);
         appIcon.addEventListener('touchend', handleAppOpen);
-
         appGrid.appendChild(appIcon);
     });
 }
