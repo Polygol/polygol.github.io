@@ -1334,8 +1334,8 @@ function setupDrawerInteractions() {
     let initialDrawerPosition = -100;
     let isDragging = false;
     const flickVelocityThreshold = 0.4;
-    const dockThreshold = -25; // Threshold for dock appearance
-    const openThreshold = -50;
+    const dockThreshold = { min: 10, max: 25 }; // Threshold range for dock
+    const drawerThreshold = 25; // Minimum threshold for drawer
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
     
@@ -1354,8 +1354,8 @@ function setupDrawerInteractions() {
             left: 50%;
             transform: translateX(-50%);
             background: var(--modal-background);
-            backdrop-filter: blur(50px);
-            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
             padding: 8px;
             display: flex;
             gap: 12px;
@@ -1365,13 +1365,12 @@ function setupDrawerInteractions() {
         }
         
         .dock.show {
-            bottom: 20px;
+            bottom: 25px;
         }
         
         .dock-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
+            width: 75px;
+            height: 75px;
             transition: transform 0.2s ease;
             cursor: pointer;
         }
@@ -1384,12 +1383,10 @@ function setupDrawerInteractions() {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 12px;
         }
     `;
     document.head.appendChild(style);
     
-    // Populate dock with first 5 apps
     function populateDock() {
         dock.innerHTML = '';
         Object.entries(apps).slice(0, 5).forEach(([appName, appDetails]) => {
@@ -1426,42 +1423,47 @@ function setupDrawerInteractions() {
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
         
-        // Show dock for small movements
-        if (movementPercentage > 10 && movementPercentage < 25) {
+        // Show dock only within dock threshold range
+        if (movementPercentage >= dockThreshold.min && movementPercentage <= dockThreshold.max) {
             dock.classList.add('show');
-        } else {
+            appDrawer.style.bottom = '-100%'; // Keep drawer hidden
+        } 
+        // Show drawer only above drawer threshold
+        else if (movementPercentage > drawerThreshold) {
             dock.classList.remove('show');
+            const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+            appDrawer.style.bottom = `${newPosition}%`;
         }
-
-        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-        appDrawer.style.bottom = `${newPosition}%`;
+        // Hide both for small movements
+        else {
+            dock.classList.remove('show');
+            appDrawer.style.bottom = '-100%';
+        }
     }
 
     function endDrag() {
         if (!isDragging) return;
 
         const deltaY = startY - currentY;
-        const deltaTime = 100;
-        const velocity = deltaY / deltaTime;
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
 
         appDrawer.style.transition = 'bottom 0.3s ease';
 
-        // Small swipe - show dock
-        if (movementPercentage > 10 && movementPercentage <= 25) {
+        // Handle dock range
+        if (movementPercentage >= dockThreshold.min && movementPercentage <= dockThreshold.max) {
             dock.classList.add('show');
             appDrawer.style.bottom = '-100%';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
-        } 
-        // Large swipe - show full drawer
-        else if (movementPercentage > 25) {
+        }
+        // Handle drawer range
+        else if (movementPercentage > drawerThreshold) {
             dock.classList.remove('show');
             appDrawer.style.bottom = '0%';
             appDrawer.classList.add('open');
             initialDrawerPosition = 0;
-        } 
+        }
         // Close everything
         else {
             dock.classList.remove('show');
@@ -1478,7 +1480,6 @@ function setupDrawerInteractions() {
         const touch = e.touches[0];
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
         
-        // Check if touch is on handle area or if drawer is already open
         if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
             startDrag(touch.clientY);
             e.preventDefault();
@@ -1501,7 +1502,6 @@ function setupDrawerInteractions() {
         if (e.button !== 0) return;
         const element = document.elementFromPoint(e.clientX, e.clientY);
         
-        // Check if click is on handle area or if drawer is already open
         if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
             startDrag(e.clientY);
         }
@@ -1517,21 +1517,18 @@ function setupDrawerInteractions() {
         endDrag();
     });
 
-    // Close drawer when clicking outside
+    // Close dock and drawer when clicking outside
     document.addEventListener('click', (e) => {
-        if (appDrawer.classList.contains('open') &&
-            !appDrawer.contains(e.target) &&
+        if (!dock.contains(e.target) && !drawerHandle.contains(e.target)) {
+            dock.classList.remove('show');
+        }
+        if (appDrawer.classList.contains('open') && 
+            !appDrawer.contains(e.target) && 
             !appDrawerToggle.contains(e.target)) {
             appDrawer.style.transition = 'bottom 0.3s ease';
             appDrawer.style.bottom = '-100%';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
-        }
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!dock.contains(e.target) && !drawerHandle.contains(e.target)) {
-            dock.classList.remove('show');
         }
     });
 }
