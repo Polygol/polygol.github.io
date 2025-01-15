@@ -111,6 +111,7 @@ body.light-theme[style*="background-image"] .info {
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
+    transition: opacity 0.3s ease;
     width: 25%;
     height: 5px;
     background-color: var(--text-color);
