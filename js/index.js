@@ -1503,17 +1503,18 @@ function setupDrawerInteractions() {
 
     function moveDrawer(yPosition) {
         if (!isDragging) return;
-
         currentY = yPosition;
         const deltaY = startY - currentY;
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
     
-        // Show dock for small movements
+        // Show dock and hide drawer-pill
         if (movementPercentage > 10 && movementPercentage < 25) {
             dock.classList.add('show');
+            drawerPill.style.opacity = '0';
         } else {
             dock.classList.remove('show');
+            drawerPill.style.opacity = '1';
         }
 
         const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
