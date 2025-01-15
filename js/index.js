@@ -286,7 +286,7 @@ async function fetchLocationAndWeather() {
                         geocodingData.address.village ||
                         'Unknown Location';
                 } catch (geocodingError) {
-                    console.warn('Could not retrieve city name', geocodingError);
+                    console.warn('Failed to retrieve city name', geocodingError);
                 }
 
                 const currentWeatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
@@ -364,7 +364,7 @@ async function updateSmallWeather() {
     } catch (error) {
         console.error('Error updating small weather widget:', error);
         document.getElementById('weather').style.display = 'none';
-        showPopup('Could not retrieve weather information');
+        showPopup('Failed to retrieve weather information');
     }
 }
 
@@ -1633,6 +1633,7 @@ function setupDrawerInteractions() {
             !drawerHandle.contains(e.target) && 
             !appDrawer.classList.contains('open')) { // Only hide dock if drawer is closed
             dock.classList.remove('show');
+            drawerPill.style.opacity = '1'; // Restore drawer-pill opacity when dock is hidden
         }
     });
 }
