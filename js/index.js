@@ -863,6 +863,23 @@ function createSetupScreen() {
             opacity: 0.8;
         }
 
+        .option-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        
+        .option-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .option-description {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
         .setup-option {
             background: var(--search-background);
             border: 2px solid transparent;
@@ -949,6 +966,29 @@ function createSetupScreen() {
             options: []
         },
         {
+            title: "We respect your privacy",
+            description: "We will never send your data to anyone, not even our servers. Your information stays on your device at all times.",
+            options: []
+        },
+        {
+            title: "App Permissions",
+            description: "Gurasuraisu needs some permissions to provide the best experience.",
+            options: [
+                { 
+                    name: "Location Access (for weather)",
+                    description: "Enable local weather information",
+                    permission: "geolocation",
+                    default: true 
+                },
+                { 
+                    name: "Notifications",
+                    description: "For timer alerts and updates",
+                    permission: "notifications",
+                    default: true 
+                }
+            ]
+        },
+        {
             title: "Choose Your Theme",
             description: "Select a theme that matches your style.",
             options: [
@@ -979,71 +1019,114 @@ function createSetupScreen() {
     function createPage(pageData) {
         const page = document.createElement('div');
         page.className = 'setup-page';
-
+    
+        // Add title
         const title = document.createElement('h1');
         title.className = 'setup-title';
         title.textContent = pageData.title;
         page.appendChild(title);
-
+    
+        // Add description
         const description = document.createElement('p');
         description.className = 'setup-description';
         description.textContent = pageData.description;
         page.appendChild(description);
-
+    
+        // Add options
         if (pageData.options.length > 0) {
             pageData.options.forEach(option => {
                 const optionElement = document.createElement('div');
                 optionElement.className = 'setup-option';
                 if (option.default) optionElement.classList.add('selected');
-
+    
+                const optionContent = document.createElement('div');
+                optionContent.className = 'option-content';
+    
                 const optionText = document.createElement('span');
+                optionText.className = 'option-title';
                 optionText.textContent = option.name;
-                optionElement.appendChild(optionText);
-
+    
+                if (option.description) {
+                    const optionDesc = document.createElement('span');
+                    optionDesc.className = 'option-description';
+                    optionDesc.textContent = option.description;
+                    optionContent.appendChild(optionDesc);
+                }
+    
+                optionContent.insertBefore(optionText, optionContent.firstChild);
+                optionElement.appendChild(optionContent);
+    
                 const checkIcon = document.createElement('span');
                 checkIcon.className = 'material-symbols-rounded';
                 checkIcon.textContent = 'check_circle';
                 optionElement.appendChild(checkIcon);
-
-                optionElement.addEventListener('click', () => {
-                    // Remove selected class from all options in this page
-                    page.querySelectorAll('.setup-option').forEach(el => {
-                        el.classList.remove('selected');
+    
+                // Handle click events based on option type
+                if (option.permission) {
+                    optionElement.addEventListener('click', async () => {
+                        try {
+                            let permissionGranted = false;
+                            switch (option.permission) {
+                                case 'geolocation':
+                                    permissionGranted = await new Promise(resolve => {
+                                        navigator.geolocation.getCurrentPosition(
+                                            () => resolve(true),
+                                            () => resolve(false)
+                                        );
+                                    });
+                                    if (permissionGranted) updateSmallWeather();
+                                    break;
+                                case 'notifications':
+                                    const notifResult = await Notification.requestPermission();
+                                    permissionGranted = notifResult === 'granted';
+                                    break;
+                            }
+                            if (permissionGranted) optionElement.classList.add('selected');
+                        } catch (error) {
+                            console.error(`Permission request failed:`, error);
+                            optionElement.classList.remove('selected');
+                        }
                     });
-                    optionElement.classList.add('selected');
-
-                    // Save the selection
-                    switch(pageData.title) {
-                        case "Choose Your Theme":
-                            localStorage.setItem('theme', option.value);
-                            document.body.classList.toggle('light-theme', option.value === 'light');
-                            break;
-                        case "Clock Style":
-                            localStorage.setItem('showSeconds', option.value);
-                            showSeconds = option.value;
-                            updateClockAndDate();
-                            break;
-                        case "Weather Widget":
-                            localStorage.setItem('showWeather', option.value);
-                            showWeather = option.value;
-                            document.getElementById('weather').style.display = option.value ? 'block' : 'none';
-                            if (option.value) updateSmallWeather();
-                            break;
-                    }
-                });
+                } else {
+                    optionElement.addEventListener('click', () => {
+                        // Deselect all options
+                        page.querySelectorAll('.setup-option').forEach(el => el.classList.remove('selected'));
+                        optionElement.classList.add('selected');
+    
+                        // Save the selection
+                        switch (pageData.title) {
+                            case "Choose Your Theme":
+                                localStorage.setItem('theme', option.value);
+                                document.body.classList.toggle('light-theme', option.value === 'light');
+                                break;
+                            case "Clock Style":
+                                localStorage.setItem('showSeconds', option.value);
+                                showSeconds = option.value;
+                                updateClockAndDate();
+                                break;
+                            case "Weather Widget":
+                                localStorage.setItem('showWeather', option.value);
+                                showWeather = option.value;
+                                document.getElementById('weather').style.display = option.value ? 'block' : 'none';
+                                if (option.value) updateSmallWeather();
+                                break;
+                        }
+                    });
+                }
+    
                 page.appendChild(optionElement);
             });
-
-            // Select default option if none selected
-            const hasSelectedOption = page.querySelector('.setup-option.selected');
-            if (!hasSelectedOption) {
+    
+            // Ensure a default option is selected if none are selected
+            if (!page.querySelector('.setup-option.selected')) {
                 page.querySelector('.setup-option').classList.add('selected');
             }
         }
-
+    
+        // Add navigation buttons
         const buttons = document.createElement('div');
         buttons.className = 'setup-buttons';
-
+    
         if (currentPage > 0) {
             const backButton = document.createElement('button');
             backButton.className = 'setup-button secondary';
@@ -1054,7 +1137,7 @@ function createSetupScreen() {
             });
             buttons.appendChild(backButton);
         }
-
+    
         const nextButton = document.createElement('button');
         nextButton.className = 'setup-button primary';
         nextButton.textContent = currentPage === setupPages.length - 1 ? 'Get Started' : 'Continue';
@@ -1073,7 +1156,7 @@ function createSetupScreen() {
             }
         });
         buttons.appendChild(nextButton);
-
+    
         page.appendChild(buttons);
         return page;
     }
