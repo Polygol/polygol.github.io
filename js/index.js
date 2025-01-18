@@ -46,12 +46,12 @@ consoleGreeting()
 
 const secondsSwitch = document.getElementById('seconds-switch');
 const appUsage = {};
+const weatherSwitch = document.getElementById('weather-switch');
 
 let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults to true
 let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults to true
 
 secondsSwitch.checked = showSeconds;
-weatherSwitch.checked = showWeather;
 
 // IndexedDB setup for video storage
 const dbName = 'WallpaperDB';
