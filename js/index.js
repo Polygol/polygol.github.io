@@ -968,10 +968,10 @@ function createSetupScreen() {
             title: "Weather Widget",
             description: "Would you like to see weather information?",
             options: [
-                { name: "Enable Weather", value: true, default: true },
-                { name: "Disable Weather", value: false }
+                { name: "Show Weather", value: true, default: true },
+                { name: "Hide Weather", value: false }
             ]
-        }
+        },
     ];
 
     let currentPage = 0;
@@ -1024,7 +1024,8 @@ function createSetupScreen() {
                             updateClockAndDate();
                             break;
                         case "Weather Widget":
-                            localStorage.setItem('weatherEnabled', option.value);
+                            localStorage.setItem('showWeather', option.value);
+                            showWeather = option.value;
                             document.getElementById('weather').style.display = option.value ? 'block' : 'none';
                             if (option.value) updateSmallWeather();
                             break;
