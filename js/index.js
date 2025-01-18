@@ -966,16 +966,11 @@ function createSetupScreen() {
             options: []
         },
         {
-            title: "We respect your privacy",
-            description: "We will never send your data to anyone, not even our servers. Your information stays on your device at all times.",
-            options: []
-        },
-        {
-            title: "App Permissions",
+            title: "Allow Permissions",
             description: "Gurasuraisu needs some permissions to provide the best experience.",
             options: [
                 { 
-                    name: "Location Access (for weather)",
+                    name: "Location Access",
                     description: "Enable local weather information",
                     permission: "geolocation",
                     default: true 
@@ -989,16 +984,21 @@ function createSetupScreen() {
             ]
         },
         {
+            title: "We respect your privacy",
+            description: "We will never send your data to anyone, not even our servers. Your information stays on your device at all times.",
+            options: []
+        },
+        {
             title: "Choose Your Theme",
             description: "Select a theme that matches your style.",
             options: [
-                { name: "Light Theme", value: "light" },
-                { name: "Dark Theme", value: "dark", default: true }
+                { name: "Light Mode", value: "light" },
+                { name: "Dark Mode", value: "dark", default: true }
             ]
         },
         {
-            title: "Clock Style",
-            description: "Choose how you'd like to view time.",
+            title: "Clock Format",
+            description: "Choose what format you'd like to view time.",
             options: [
                 { name: "Show Seconds", value: true, default: true },
                 { name: "Hide Seconds", value: false }
@@ -1006,11 +1006,16 @@ function createSetupScreen() {
         },
         {
             title: "Weather Widget",
-            description: "Would you like to see weather information?",
+            description: "Choose to show or hide weather widget. To get weather information, allow location access.",
             options: [
                 { name: "Show Weather", value: true, default: true },
                 { name: "Hide Weather", value: false }
             ]
+        },
+        {
+            title: "Configure more options in Settings",
+            description: "To configure your Gurasuraisu, click on the gear icon on the bottom right.",
+            options: []
         },
     ];
 
