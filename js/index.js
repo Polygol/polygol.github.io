@@ -257,6 +257,40 @@ function updateWeatherVisibility() {
     weatherWidget.style.display = showWeather ? 'block' : 'none';
 }
 
+function setupWeatherToggle() {
+    const weatherSwitch = document.getElementById('weather-switch');
+    if (!weatherSwitch) return; // Guard clause in case element isn't found
+    
+    let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults to true
+    
+    // Initialize weather switch state
+    weatherSwitch.checked = showWeather;
+    
+    // Update weather visibility based on saved preference
+    function updateWeatherVisibility() {
+        const weatherWidget = document.getElementById('weather');
+        if (weatherWidget) {
+            weatherWidget.style.display = showWeather ? 'block' : 'none';
+        }
+    }
+    
+    // Add event listener for weather switch
+    weatherSwitch.addEventListener('change', function() {
+        showWeather = this.checked;
+        localStorage.setItem('showWeather', showWeather);
+        updateWeatherVisibility();
+        if (showWeather) {
+            updateSmallWeather(); // Refresh weather data when enabling
+            showPopup('Weather widget enabled');
+        } else {
+            showPopup('Weather widget disabled');
+        }
+    });
+    
+    // Set initial visibility
+    updateWeatherVisibility();
+}
+
 function updateClockAndDate() {
     let clockElement = document.getElementById('clock');
     let dateElement = document.getElementById('date');
@@ -357,6 +391,7 @@ function getHourString(dateString) {
 }
 
 async function updateSmallWeather() {
+    const showWeather = localStorage.getItem('showWeather') !== 'false';
     if (!showWeather) return; // Don't update if weather is hidden
     
     try {
@@ -1976,18 +2011,6 @@ secondsSwitch.addEventListener('change', function() {
     updateClockAndDate();
 });
 
-weatherSwitch.addEventListener('change', function() {
-    showWeather = this.checked;
-    localStorage.setItem('showWeather', showWeather);
-    updateWeatherVisibility();
-    if (showWeather) {
-        updateSmallWeather(); // Refresh weather data when enabling
-        showPopup('Weather widget enabled');
-    } else {
-        showPopup('Weather widget disabled');
-    }
-});
-
 blurOverlay.addEventListener('click', (event) => {
     if (event.target === blurOverlay) {
         // Close all modals
@@ -2089,6 +2112,7 @@ setInterval(ensureVideoLoaded, 1000);
 
     // Call initialization
     initializeCustomization();
+    setupWeatherToggle()
     firstSetup();
     goFullscreen();
     updateDisplay();
