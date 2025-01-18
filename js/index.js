@@ -821,7 +821,7 @@ function createSetupScreen() {
 
         .setup-option {
             background: var(--search-background);
-            border: 2px solid var(--transparent-color);
+            border: 2px solid transparent;
             border-radius: 15px;
             padding: 1rem;
             margin: 1rem 0;
@@ -841,13 +841,13 @@ function createSetupScreen() {
             display: flex;
             gap: 1rem;
             justify-content: center;
+            font-family: 'Inter', sans-serif;
         }
 
         .setup-button {
             padding: 0.8rem 2rem;
             border-radius: 25px;
             border: none;
-            font: "Inter", sans-serif;
             font-size: 1rem;
             cursor: pointer;
             transition: opacity 0.2s ease;
@@ -884,7 +884,7 @@ function createSetupScreen() {
         }
 
         .setup-option.selected {
-            border-color: var(--accent-color);
+            border-color: var(--text-color);
         }
 
         .setup-option .material-symbols-rounded {
