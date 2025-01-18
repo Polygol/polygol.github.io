@@ -756,8 +756,7 @@ function firstSetup() {
     const hasVisitedBefore = localStorage.getItem('hasVisitedBefore');
 
     if (!hasVisitedBefore) {
-        showPopup('Welcome to Gurasuraisu!');
-        localStorage.setItem('hasVisitedBefore', 'true');
+        createSetupScreen(); // Show setup screen for first-time users
     }
 
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -766,6 +765,312 @@ function firstSetup() {
         showPopup('For optimal experience, use a touchscreen device');
         localStorage.setItem('hasSeenPopupTouchscreen', 'true');
     }
+
+    // Set the visited flag after setup is complete
+    localStorage.setItem('hasVisitedBefore', 'true');
+}
+
+function createSetupScreen() {
+    const setupContainer = document.createElement('div');
+    setupContainer.className = 'setup-screen';
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        .setup-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--background-color);
+            backdrop-filter: blur(50px);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color);
+            transition: opacity 0.5s ease;
+        }
+
+        .setup-page {
+            max-width: 600px;
+            padding: 2rem;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .setup-page.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .setup-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .setup-description {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.8;
+        }
+
+        .setup-option {
+            background: var(--search-background);
+            border: 2px solid var(--transparent-color);
+            border-radius: 15px;
+            padding: 1rem;
+            margin: 1rem 0;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .setup-option:hover {
+            transform: scale(1.02);
+        }
+
+        .setup-buttons {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .setup-button {
+            padding: 0.8rem 2rem;
+            border-radius: 25px;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .setup-button.primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .setup-button.secondary {
+            background: var(--search-background);
+            color: var(--text-color);
+        }
+
+        .setup-progress {
+            position: fixed;
+            bottom: 2rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-color);
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        .progress-dot.active {
+            opacity: 1;
+        }
+
+        .setup-option.selected {
+            border-color: var(--accent-color);
+        }
+
+        .setup-option .material-symbols-rounded {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .setup-option.selected .material-symbols-rounded {
+            opacity: 1;
+        }
+    `;
+    document.head.appendChild(style);
+
+    const setupPages = [
+        {
+            title: "Welcome to Gurasuraisu",
+            description: "Let's set up your personalized experience.",
+            options: []
+        },
+        {
+            title: "Choose Your Theme",
+            description: "Select a theme that matches your style.",
+            options: [
+                { name: "Light Theme", value: "light" },
+                { name: "Dark Theme", value: "dark", default: true }
+            ]
+        },
+        {
+            title: "Clock Style",
+            description: "Choose how you'd like to view time.",
+            options: [
+                { name: "Show Seconds", value: true, default: true },
+                { name: "Hide Seconds", value: false }
+            ]
+        },
+        {
+            title: "Weather Widget",
+            description: "Would you like to see weather information?",
+            options: [
+                { name: "Enable Weather", value: true, default: true },
+                { name: "Disable Weather", value: false }
+            ]
+        }
+    ];
+
+    let currentPage = 0;
+
+    function createPage(pageData) {
+        const page = document.createElement('div');
+        page.className = 'setup-page';
+
+        const title = document.createElement('h1');
+        title.className = 'setup-title';
+        title.textContent = pageData.title;
+        page.appendChild(title);
+
+        const description = document.createElement('p');
+        description.className = 'setup-description';
+        description.textContent = pageData.description;
+        page.appendChild(description);
+
+        if (pageData.options.length > 0) {
+            pageData.options.forEach(option => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'setup-option';
+                if (option.default) optionElement.classList.add('selected');
+
+                const optionText = document.createElement('span');
+                optionText.textContent = option.name;
+                optionElement.appendChild(optionText);
+
+                const checkIcon = document.createElement('span');
+                checkIcon.className = 'material-symbols-rounded';
+                checkIcon.textContent = 'check_circle';
+                optionElement.appendChild(checkIcon);
+
+                optionElement.addEventListener('click', () => {
+                    // Remove selected class from all options in this page
+                    page.querySelectorAll('.setup-option').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    optionElement.classList.add('selected');
+
+                    // Save the selection
+                    switch(pageData.title) {
+                        case "Choose Your Theme":
+                            localStorage.setItem('theme', option.value);
+                            document.body.classList.toggle('light-theme', option.value === 'light');
+                            break;
+                        case "Clock Style":
+                            localStorage.setItem('showSeconds', option.value);
+                            showSeconds = option.value;
+                            updateClockAndDate();
+                            break;
+                        case "Weather Widget":
+                            localStorage.setItem('weatherEnabled', option.value);
+                            document.getElementById('weather').style.display = option.value ? 'block' : 'none';
+                            if (option.value) updateSmallWeather();
+                            break;
+                    }
+                });
+                page.appendChild(optionElement);
+            });
+
+            // Select default option if none selected
+            const hasSelectedOption = page.querySelector('.setup-option.selected');
+            if (!hasSelectedOption) {
+                page.querySelector('.setup-option').classList.add('selected');
+            }
+        }
+
+        const buttons = document.createElement('div');
+        buttons.className = 'setup-buttons';
+
+        if (currentPage > 0) {
+            const backButton = document.createElement('button');
+            backButton.className = 'setup-button secondary';
+            backButton.textContent = 'Back';
+            backButton.addEventListener('click', () => {
+                currentPage--;
+                updateSetup();
+            });
+            buttons.appendChild(backButton);
+        }
+
+        const nextButton = document.createElement('button');
+        nextButton.className = 'setup-button primary';
+        nextButton.textContent = currentPage === setupPages.length - 1 ? 'Get Started' : 'Continue';
+        nextButton.addEventListener('click', () => {
+            if (currentPage === setupPages.length - 1) {
+                // Complete setup
+                localStorage.setItem('hasVisitedBefore', 'true');
+                setupContainer.style.opacity = '0';
+                setTimeout(() => {
+                    setupContainer.remove();
+                    showPopup('Welcome to Gurasuraisu!');
+                }, 500);
+            } else {
+                currentPage++;
+                updateSetup();
+            }
+        });
+        buttons.appendChild(nextButton);
+
+        page.appendChild(buttons);
+        return page;
+    }
+
+    function updateSetup() {
+        const currentPageElement = setupContainer.querySelector('.setup-page');
+        if (currentPageElement) {
+            currentPageElement.classList.remove('active');
+            setTimeout(() => {
+                currentPageElement.remove();
+                const newPage = createPage(setupPages[currentPage]);
+                setupContainer.appendChild(newPage);
+                setTimeout(() => {
+                    newPage.classList.add('active');
+                }, 10);
+            }, 300);
+        } else {
+            const newPage = createPage(setupPages[currentPage]);
+            setupContainer.appendChild(newPage);
+            setTimeout(() => {
+                newPage.classList.add('active');
+            }, 10);
+        }
+
+        // Update progress dots
+        const progressDots = setupContainer.querySelectorAll('.progress-dot');
+        progressDots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentPage);
+        });
+    }
+
+    // Create progress dots
+    const progressContainer = document.createElement('div');
+    progressContainer.className = 'setup-progress';
+    setupPages.forEach(() => {
+        const dot = document.createElement('div');
+        dot.className = 'progress-dot';
+        progressContainer.appendChild(dot);
+    });
+    setupContainer.appendChild(progressContainer);
+
+    document.body.appendChild(setupContainer);
+    updateSetup();
 }
 
 const searchInput = document.getElementById('search-input');
