@@ -847,14 +847,15 @@ function createSetupScreen() {
             padding: 0.8rem 2rem;
             border-radius: 25px;
             border: none;
+            font: "Inter", sans-serif;
             font-size: 1rem;
             cursor: pointer;
             transition: opacity 0.2s ease;
         }
 
         .setup-button.primary {
-            background: var(--accent-color);
-            color: white;
+            background: var(--search-background);
+            color: var(--text-color);
         }
 
         .setup-button.secondary {
