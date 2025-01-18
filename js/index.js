@@ -46,10 +46,13 @@ consoleGreeting()
 
 const secondsSwitch = document.getElementById('seconds-switch');
 const appUsage = {};
+const weatherSwitch = document.getElementById('weather-switch');
 
 let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults to true
+let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults to true
 
 secondsSwitch.checked = showSeconds;
+weatherSwitch.checked = showWeather;
 
 // IndexedDB setup for video storage
 const dbName = 'WallpaperDB';
@@ -249,6 +252,11 @@ const weatherConditions = {
     }
 };
 
+function updateWeatherVisibility() {
+    const weatherWidget = document.getElementById('weather');
+    weatherWidget.style.display = showWeather ? 'block' : 'none';
+}
+
 function updateClockAndDate() {
     let clockElement = document.getElementById('clock');
     let dateElement = document.getElementById('date');
@@ -349,6 +357,8 @@ function getHourString(dateString) {
 }
 
 async function updateSmallWeather() {
+    if (!showWeather) return; // Don't update if weather is hidden
+    
     try {
         const weatherData = await fetchLocationAndWeather();
         if (!weatherData) throw new Error('Weather data not available');
@@ -357,10 +367,10 @@ async function updateSmallWeather() {
         const weatherIconElement = document.getElementById('weather-icon');
         const weatherInfo = weatherConditions[weatherData.current.weathercode] || { description: 'Unknown', icon: () => '❓' };
 
-        document.getElementById('weather').style.display = 'block';
+        document.getElementById('weather').style.display = showWeather ? 'block' : 'none';
         temperatureElement.textContent = `${weatherData.current.temperature}°C`;
         weatherIconElement.className = 'material-symbols-rounded';
-        weatherIconElement.textContent = weatherInfo.icon(true); // Assuming daytime for small weather widget
+        weatherIconElement.textContent = weatherInfo.icon(true);
     } catch (error) {
         console.error('Error updating small weather widget:', error);
         document.getElementById('weather').style.display = 'none';
@@ -1966,6 +1976,18 @@ secondsSwitch.addEventListener('change', function() {
     updateClockAndDate();
 });
 
+weatherSwitch.addEventListener('change', function() {
+    showWeather = this.checked;
+    localStorage.setItem('showWeather', showWeather);
+    updateWeatherVisibility();
+    if (showWeather) {
+        updateSmallWeather(); // Refresh weather data when enabling
+        showPopup('Weather widget enabled');
+    } else {
+        showPopup('Weather widget disabled');
+    }
+});
+
 blurOverlay.addEventListener('click', (event) => {
     if (event.target === blurOverlay) {
         // Close all modals
@@ -2059,7 +2081,7 @@ window.addEventListener('load', () => {
 
 setInterval(ensureVideoLoaded, 1000);
 
-    // Initialize everything
+    // Initialize app drawer
     function initAppDraw() {
         createAppIcons();
         setupDrawerInteractions();
@@ -2071,3 +2093,4 @@ setInterval(ensureVideoLoaded, 1000);
     goFullscreen();
     updateDisplay();
     initAppDraw();
+    updateWeatherVisibility();
