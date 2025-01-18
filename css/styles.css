@@ -715,6 +715,47 @@ body.light-theme[style*="background-image"] .info {
     transform: translateX(28px);
 }
 
+.weather-settings {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 15px 20px;
+    background-color: var(--transparent-color);
+    border-radius: 20px;
+}
+
+#weather-switch {
+    appearance: none;
+    width: 60px;
+    height: 32px;
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 16px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#weather-switch::before {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-color: white;
+    border-radius: 50%;
+    top: 4px;
+    left: 4px;
+    transition: transform 0.3s;
+}
+
+#weather-switch:checked {
+    background-color: #3c78d8;
+}
+
+#weather-switch:checked::before {
+    transform: translateX(28px);
+}
+
 .font-selection {
     display: flex;
     justify-content: space-between;
