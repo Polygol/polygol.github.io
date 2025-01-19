@@ -2052,12 +2052,13 @@ window.addEventListener('load', () => {
     ensureVideoLoaded();
 });
 
+document.addEventListener('DOMContentLoaded', setupDrawerInteractions);
+
 setInterval(ensureVideoLoaded, 1000);
 
     // Initialize app drawer
     function initAppDraw() {
         createAppIcons();
-        setupDrawerInteractions();
     }
 
     // Call initialization
