@@ -1000,34 +1000,6 @@ body.light-theme[style*="background-image"] .info {
             max-width: 80%;
             text-align: center;
         }
-
-        .embed-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 998; /* Below drawer handle and clock */
-            display: none;
-            background: var(--background-color);
-        }
-    
-        .embed-container.active {
-            display: block;
-        }
-    
-        .embed-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-    
-        body.app-open .container,
-        body.app-open .customize,
-        body.app-open .clockwidgets,
-        body.app-open #weather {
-            display: none;
-        }
     
         .drawer-handle {
             z-index: 999;
