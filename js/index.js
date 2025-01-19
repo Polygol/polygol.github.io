@@ -1766,6 +1766,7 @@ function populateDock() {
     const appDrawer = document.getElementById('app-drawer');
     const appGrid = document.getElementById('app-grid');
     const appDrawerToggle = document.getElementById('app-drawer-toggle');
+    const drawerHandle = document.getElementById('drawer-handle');
 
 // Function to create app icons
 function createAppIcons() {
