@@ -1982,15 +1982,17 @@ function setupDrawerInteractions() {
     let isDragging = false;
     let isDrawerInMotion = false;
     const flickVelocityThreshold = 0.4;
-    const dockThreshold = -25; // Threshold for dock appearance
+    const dockThreshold = -25;
     const openThreshold = -50;
-    const drawerHandle = document.querySelector('.drawer-handle');
     
     // Create dock element
     const dock = document.createElement('div');
     dock.id = 'dock';
     dock.className = 'dock';
     document.body.appendChild(dock);
+    
+    // Get the drawer handle AFTER it's been moved to persistentUI
+    const drawerHandle = document.querySelector('.drawer-handle');
     
     populateDock();
     
@@ -2047,15 +2049,17 @@ function setupDrawerInteractions() {
         updatePersistentClockVisibility();
     }
     
-    drawerHandle.addEventListener('touchstart', e => handleDragStart(e.touches[0].clientY));
-    drawerHandle.addEventListener('touchmove', e => handleDragMove(e.touches[0].clientY));
-    drawerHandle.addEventListener('touchend', handleDragEnd);
-    
-    drawerHandle.addEventListener('mousedown', e => handleDragStart(e.clientY));
-    drawerHandle.addEventListener('mousemove', e => {
-        if (e.buttons === 1) handleDragMove(e.clientY);
-    });
-    drawerHandle.addEventListener('mouseup', handleDragEnd);
+    if (drawerHandle) {
+        drawerHandle.addEventListener('touchstart', e => handleDragStart(e.touches[0].clientY));
+        drawerHandle.addEventListener('touchmove', e => handleDragMove(e.touches[0].clientY));
+        drawerHandle.addEventListener('touchend', handleDragEnd);
+        
+        drawerHandle.addEventListener('mousedown', e => handleDragStart(e.clientY));
+        drawerHandle.addEventListener('mousemove', e => {
+            if (e.buttons === 1) handleDragMove(e.clientY);
+        });
+        drawerHandle.addEventListener('mouseup', handleDragEnd);
+    }
 }
 
 const appDrawerObserver = new MutationObserver((mutations) => {
