@@ -1766,7 +1766,6 @@ function populateDock() {
     const appDrawer = document.getElementById('app-drawer');
     const appGrid = document.getElementById('app-grid');
     const appDrawerToggle = document.getElementById('app-drawer-toggle');
-    const drawerHandle = document.getElementById('drawer-handle');
 
 // Function to create app icons
 function createAppIcons() {
@@ -1806,12 +1805,25 @@ function createAppIcons() {
                 appUsage[app.name] = (appUsage[app.name] || 0) + 1;
                 saveUsageData();
                 
-                // Create embed instead of opening new window
-                createEmbed(app.details.url);
-                
+                populateDock(); // Now this should work
+
+                if (app.details.url.startsWith('#')) {
+                    switch (app.details.url) {
+                        case '#settings':
+                            showPopup('Opening Settings');
+                            break;
+                        case '#weather':
+                            showPopup('Opening Weather');
+                            break;
+                        default:
+                            showPopup(`${app.name} app opened`);
+                    }
+                } else {
+                    window.open(app.details.url, '_blank', 'noopener,noreferrer');
+                }
                 appDrawer.classList.remove('open');
                 appDrawer.style.bottom = '-100%';
-                
+                initialDrawerPosition = -100;
             } catch (error) {
                 showPopup(`Failed to open ${app.name}`);
                 console.error(`App open error: ${error}`);
@@ -1842,101 +1854,227 @@ function saveUsageData() {
 function setupDrawerInteractions() {
     let startY = 0;
     let currentY = 0;
-    let startTime = 0;
-    let holdTimeout;
-    const SWIPE_THRESHOLD = 50;
-    const HOLD_DURATION = 500;
-
-    function handleSwipeGesture(deltaY, holdTime) {
-        const swipePercentage = (deltaY / window.innerHeight) * 100;
-
-        // Short swipe (10%) - Show dock
-        if (swipePercentage >= 10 && swipePercentage < 25) {
-            dock.classList.add('show');
-            appDrawer.classList.remove('open');
-            return;
+    let initialDrawerPosition = -100;
+    let isDragging = false;
+    let isDrawerInMotion = false;
+    const flickVelocityThreshold = 0.4;
+    const dockThreshold = -25; // Threshold for dock appearance
+    const openThreshold = -50;
+    const drawerPill = document.querySelector('.drawer-pill');
+    const drawerHandle = document.querySelector('.drawer-handle');
+    
+    // Create dock element
+    const dock = document.createElement('div');
+    dock.id = 'dock';
+    dock.className = 'dock';
+    document.body.appendChild(dock);
+    
+    // Style for the dock
+    const style = document.createElement('style');
+    style.textContent = `
+        .dock {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--search-background);
+            backdrop-filter: blur(50px);
+            border: 2px solid var(--transparent-color);
+            border-radius: 34px;
+            padding: 8px 9px;
+            display: flex;
+            gap: 8px;
+            transition: bottom 0.3s ease;
+            z-index: 1001;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .dock.show {
+            bottom: 10px;
+        }
+        
+        .dock-icon {
+            width: 75px;
+            height: 75px;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .dock-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        .dock-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        // Hold gesture - Open app drawer
-        if (holdTime >= HOLD_DURATION) {
-            dock.classList.remove('show');
-            appDrawer.style.bottom = '0%';
-            appDrawer.classList.add('open');
-            return;
+        .dock-icon.drawer-opener::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
-
-        // Regular swipe - Go home
-        if (swipePercentage >= 25) {
-            const embedContainer = document.querySelector('.embed-container');
-            if (embedContainer) {
-                embedContainer.remove();
-                document.querySelectorAll('body > *').forEach(el => {
-                    el.style.removeProperty('display');
-                });
-            }
-            dock.classList.remove('show');
-            appDrawer.classList.remove('open');
+        
+        .app-drawer.open ~ .dock .drawer-opener::after {
+            opacity: 1;
         }
+    `;
+    document.head.appendChild(style);
+    
+    populateDock();
+    
+    function startDrag(yPosition) {
+        startY = yPosition;
+        currentY = yPosition;
+        isDragging = true;
+        isDrawerInMotion = true;
+        appDrawer.style.transition = 'none';
     }
 
-    drawerHandle.addEventListener('touchstart', (e) => {
-        startY = e.touches[0].clientY;
-        startTime = Date.now();
-        
-        holdTimeout = setTimeout(() => {
+    function moveDrawer(yPosition) {
+        if (!isDragging) return;
+        currentY = yPosition;
+        const deltaY = startY - currentY;
+        const windowHeight = window.innerHeight;
+        const movementPercentage = (deltaY / windowHeight) * 100;
+    
+        // Show dock and hide drawer-pill
+        if (movementPercentage > 10 && movementPercentage < 25) {
+            dock.classList.add('show');
+            drawerPill.style.opacity = '0';
+        } else {
+            dock.classList.remove('show');
+            drawerPill.style.opacity = '1';
+        }
+
+        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+    
+        // Calculate opacity based on drawer position
+        // When newPosition is -100 (fully hidden), opacity is 0
+        // When newPosition is 0 (fully shown), opacity is 1
+        const opacity = (newPosition + 100) / 100;
+        appDrawer.style.opacity = opacity;
+    
+        appDrawer.style.bottom = `${newPosition}%`;
+    }
+
+    function endDrag() {
+        if (!isDragging) return;
+
+        const deltaY = startY - currentY;
+        const deltaTime = 100;
+        const velocity = deltaY / deltaTime;
+        const windowHeight = window.innerHeight;
+        const movementPercentage = (deltaY / windowHeight) * 100;
+
+        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+
+        // Small swipe - show dock
+        if (movementPercentage > 10 && movementPercentage <= 25) {
+            dock.classList.add('show');
+            appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
+            appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
+        } 
+        // Large swipe - show full drawer
+        else if (movementPercentage > 25) {
+            dock.classList.remove('show');
+            appDrawer.style.bottom = '0%';
+            appDrawer.style.opacity = '1';
             appDrawer.classList.add('open');
-        }, HOLD_DURATION);
+            initialDrawerPosition = 0;
+        } 
+        // Close everything
+        else {
+            dock.classList.remove('show');
+            appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
+            appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
+        }
+
+        isDragging = false;
+
+        setTimeout(() => {
+            isDrawerInMotion = false;
+        }, 300); // 300ms matches the transition duration in the CSS
+    }
+
+    // Touch Events
+    document.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Check if touch is on handle area or if drawer is already open
+        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+            startDrag(touch.clientY);
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+        if (isDragging) {
+            e.preventDefault();
+            moveDrawer(e.touches[0].clientY);
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchend', () => {
+        endDrag();
     });
 
-    drawerHandle.addEventListener('touchmove', (e) => {
-        currentY = e.touches[0].clientY;
-        const deltaY = startY - currentY;
+    // Mouse Events
+    document.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        const element = document.elementFromPoint(e.clientX, e.clientY);
         
-        if (Math.abs(deltaY) > SWIPE_THRESHOLD) {
-            clearTimeout(holdTimeout);
+        // Check if click is on handle area or if drawer is already open
+        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+            startDrag(e.clientY);
         }
     });
 
-    drawerHandle.addEventListener('touchend', (e) => {
-        clearTimeout(holdTimeout);
-        const deltaY = startY - currentY;
-        const holdTime = Date.now() - startTime;
-        
-        handleSwipeGesture(deltaY, holdTime);
-    });
-}
-
-function createEmbed(url) {
-    // Create embed container
-    const embedContainer = document.createElement('div');
-    embedContainer.className = 'embed-container';
-    embedContainer.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1000;
-        background: var(--background-color);
-    `;
-
-    // Create iframe
-    const iframe = document.createElement('iframe');
-    iframe.src = url;
-    iframe.style.cssText = `
-        width: 100%;
-        height: 100%;
-        border: none;
-    `;
-    embedContainer.appendChild(iframe);
-
-    // Hide all elements except permitted ones
-    document.querySelectorAll('body > *:not(.drawer-handle):not(.persistent-clock):not(.app-drawer):not(.dock)').forEach(el => {
-        el.style.display = 'none';
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            moveDrawer(e.clientY);
+        }
     });
 
-    document.body.appendChild(embedContainer);
-    return embedContainer;
+    document.addEventListener('mouseup', () => {
+        endDrag();
+    });
+
+    // Close drawer when clicking outside
+    document.addEventListener('click', (e) => {
+        if (appDrawer.classList.contains('open') &&
+            !appDrawer.contains(e.target) &&
+            !appDrawerToggle.contains(e.target)) {
+            appDrawer.style.transition = 'bottom 0.3s ease';
+            appDrawer.style.bottom = '-100%';
+            appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!isDrawerInMotion && 
+            !dock.contains(e.target) && 
+            !drawerHandle.contains(e.target) && 
+            !appDrawer.classList.contains('open')) { // Only hide dock if drawer is closed
+            dock.classList.remove('show');
+            drawerPill.style.opacity = '1'; // Restore drawer-pill opacity when dock is hidden
+        }
+    });
 }
 
 const appDrawerObserver = new MutationObserver((mutations) => {
@@ -2052,13 +2190,12 @@ window.addEventListener('load', () => {
     ensureVideoLoaded();
 });
 
-document.addEventListener('DOMContentLoaded', setupDrawerInteractions);
-
 setInterval(ensureVideoLoaded, 1000);
 
     // Initialize app drawer
     function initAppDraw() {
         createAppIcons();
+        setupDrawerInteractions();
     }
 
     // Call initialization
