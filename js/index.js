@@ -1984,8 +1984,7 @@ function setupDrawerInteractions() {
     const flickVelocityThreshold = 0.4;
     const dockThreshold = -25; // Threshold for dock appearance
     const openThreshold = -50;
-    const drawerPill = document.querySelector('.drawer-pill');
-    const drawerHandle = document.querySelector('.drawer-pill');
+    const drawerHandle = document.querySelector('.drawer-handle');
     
     // Create dock element
     const dock = document.createElement('div');
