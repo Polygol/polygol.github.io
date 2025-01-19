@@ -1767,39 +1767,6 @@ function populateDock() {
     const appGrid = document.getElementById('app-grid');
     const appDrawerToggle = document.getElementById('app-drawer-toggle');
 
-function createEmbed(url) {
-    // Create embed container
-    const embedContainer = document.createElement('div');
-    embedContainer.className = 'embed-container';
-    embedContainer.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1000;
-        background: var(--background-color);
-    `;
-
-    // Create iframe
-    const iframe = document.createElement('iframe');
-    iframe.src = url;
-    iframe.style.cssText = `
-        width: 100%;
-        height: 100%;
-        border: none;
-    `;
-    embedContainer.appendChild(iframe);
-
-    // Hide all elements except permitted ones
-    document.querySelectorAll('body > *:not(.drawer-handle):not(.persistent-clock):not(.app-drawer):not(.dock)').forEach(el => {
-        el.style.display = 'none';
-    });
-
-    document.body.appendChild(embedContainer);
-    return embedContainer;
-}
-
 // Function to create app icons
 function createAppIcons() {
     appGrid.innerHTML = '';
@@ -1936,6 +1903,39 @@ function setupDrawerInteractions() {
         
         handleSwipeGesture(deltaY, holdTime);
     });
+}
+
+function createEmbed(url) {
+    // Create embed container
+    const embedContainer = document.createElement('div');
+    embedContainer.className = 'embed-container';
+    embedContainer.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        background: var(--background-color);
+    `;
+
+    // Create iframe
+    const iframe = document.createElement('iframe');
+    iframe.src = url;
+    iframe.style.cssText = `
+        width: 100%;
+        height: 100%;
+        border: none;
+    `;
+    embedContainer.appendChild(iframe);
+
+    // Hide all elements except permitted ones
+    document.querySelectorAll('body > *:not(.drawer-handle):not(.persistent-clock):not(.app-drawer):not(.dock)').forEach(el => {
+        el.style.display = 'none';
+    });
+
+    document.body.appendChild(embedContainer);
+    return embedContainer;
 }
 
 const appDrawerObserver = new MutationObserver((mutations) => {
