@@ -1701,6 +1701,161 @@ function initializeCustomization() {
         },
     };
 
+class AppManager {
+    constructor() {
+        this.activeApp = null;
+        this.minimizedApps = new Map();
+        this.setupUI();
+    }
+    
+    setupUI() {
+        // Create persistent UI container
+        this.persistentUI = document.createElement('div');
+        this.persistentUI.className = 'persistent-ui';
+        document.body.appendChild(this.persistentUI);
+        
+        // Move persistent elements to container
+        ['#persistent-clock', '.drawer-handle', '#app-drawer'].forEach(selector => {
+            const element = document.querySelector(selector);
+            if (element) this.persistentUI.appendChild(element);
+        });
+        
+        // Create app controls
+        this.appControls = document.createElement('div');
+        this.appControls.className = 'app-controls';
+        this.appControls.innerHTML = `
+            <button class="app-control-button minimize-app">
+                <span class="material-symbols-rounded">minimize</span>
+            </button>
+            <button class="app-control-button close-app">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        `;
+        this.persistentUI.appendChild(this.appControls);
+        
+        // Add event listeners
+        this.appControls.querySelector('.minimize-app').addEventListener('click', () => this.minimizeApp());
+        this.appControls.querySelector('.close-app').addEventListener('click', () => this.closeApp());
+    }
+    
+    openApp(url, appName) {
+        // Create new embed
+        const embed = document.createElement('div');
+        embed.className = 'fullscreen-embed';
+        embed.innerHTML = `<iframe src="${url}" frameborder="0" allowfullscreen></iframe>`;
+        
+        // Handle existing active app
+        if (this.activeApp) {
+            this.minimizeApp();
+        }
+        
+        // Set as active app
+        this.activeApp = {
+            element: embed,
+            name: appName,
+            url: url
+        };
+        
+        document.body.appendChild(embed);
+        document.body.classList.add('app-open');
+        this.appControls.classList.add('visible');
+        
+        // Update usage statistics
+        this.updateAppUsage(appName);
+    }
+    
+    minimizeApp() {
+        if (!this.activeApp) return;
+        
+        const {element, name, url} = this.activeApp;
+        element.classList.add('minimized');
+        
+        this.minimizedApps.set(name, {element, url});
+        this.activeApp = null;
+        
+        document.body.classList.remove('app-open');
+        this.appControls.classList.remove('visible');
+    }
+    
+    closeApp() {
+        if (!this.activeApp) return;
+        
+        const {element} = this.activeApp;
+        element.remove();
+        this.activeApp = null;
+        
+        document.body.classList.remove('app-open');
+        this.appControls.classList.remove('visible');
+    }
+    
+    restoreApp(appName) {
+        const app = this.minimizedApps.get(appName);
+        if (!app) return;
+        
+        if (this.activeApp) {
+            this.minimizeApp();
+        }
+        
+        app.element.classList.remove('minimized');
+        this.activeApp = {
+            element: app.element,
+            name: appName,
+            url: app.url
+        };
+        
+        this.minimizedApps.delete(appName);
+        document.body.classList.add('app-open');
+        this.appControls.classList.add('visible');
+    }
+    
+    updateAppUsage(appName) {
+        appUsage[appName] = (appUsage[appName] || 0) + 1;
+        saveUsageData();
+        populateDock();
+    }
+}
+
+const appManager = new AppManager();
+
+function handleAppOpen(app) {
+    return (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        try {
+            if (app.details.url.startsWith('#')) {
+                // Handle internal apps
+                switch (app.details.url) {
+                    case '#settings':
+                        showPopup('Opening Settings');
+                        break;
+                    case '#weather':
+                        showPopup('Opening Weather');
+                        break;
+                    default:
+                        showPopup(`${app.name} app opened`);
+                }
+            } else {
+                // Check if app is minimized
+                if (appManager.minimizedApps.has(app.name)) {
+                    appManager.restoreApp(app.name);
+                } else {
+                    appManager.openApp(app.details.url, app.name);
+                }
+            }
+            
+            // Close app drawer
+            appDrawer.classList.remove('open');
+            appDrawer.style.bottom = '-100%';
+            initialDrawerPosition = -100;
+            
+        } catch (error) {
+            showPopup(`Failed to open ${app.name}`);
+            console.error(`App open error: ${error}`);
+        }
+    };
+}
+
 function populateDock() {
     dock.innerHTML = '';
     
@@ -1796,40 +1951,6 @@ function createAppIcons() {
 
         appIcon.appendChild(img);
         appIcon.appendChild(label);
-
-        const handleAppOpen = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            try {
-                appUsage[app.name] = (appUsage[app.name] || 0) + 1;
-                saveUsageData();
-                
-                populateDock(); // Now this should work
-
-                if (app.details.url.startsWith('#')) {
-                    switch (app.details.url) {
-                        case '#settings':
-                            showPopup('Opening Settings');
-                            break;
-                        case '#weather':
-                            showPopup('Opening Weather');
-                            break;
-                        default:
-                            showPopup(`${app.name} app opened`);
-                    }
-                } else {
-                    window.open(app.details.url, '_blank', 'noopener,noreferrer');
-                }
-                appDrawer.classList.remove('open');
-                appDrawer.style.bottom = '-100%';
-                initialDrawerPosition = -100;
-            } catch (error) {
-                showPopup(`Failed to open ${app.name}`);
-                console.error(`App open error: ${error}`);
-            }
-        };
-
         appIcon.addEventListener('click', handleAppOpen);
         appIcon.addEventListener('touchend', handleAppOpen);
         appGrid.appendChild(appIcon);
@@ -1854,6 +1975,9 @@ function saveUsageData() {
 function setupDrawerInteractions() {
     let startY = 0;
     let currentY = 0;
+    let startTime = 0;
+    let holdTimeout;
+    let isHolding = false;
     let initialDrawerPosition = -100;
     let isDragging = false;
     let isDrawerInMotion = false;
@@ -1869,212 +1993,70 @@ function setupDrawerInteractions() {
     dock.className = 'dock';
     document.body.appendChild(dock);
     
-    // Style for the dock
-    const style = document.createElement('style');
-    style.textContent = `
-        .dock {
-            position: fixed;
-            bottom: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--search-background);
-            backdrop-filter: blur(50px);
-            border: 2px solid var(--transparent-color);
-            border-radius: 34px;
-            padding: 8px 9px;
-            display: flex;
-            gap: 8px;
-            transition: bottom 0.3s ease;
-            z-index: 1001;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        }
-        
-        .dock.show {
-            bottom: 10px;
-        }
-        
-        .dock-icon {
-            width: 75px;
-            height: 75px;
-            transition: transform 0.2s ease;
-            cursor: pointer;
-        }
-        
-        .dock-icon:hover {
-            transform: scale(1.1);
-        }
-        
-        .dock-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .dock-icon.drawer-opener::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: var(--accent-color);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .app-drawer.open ~ .dock .drawer-opener::after {
-            opacity: 1;
-        }
-    `;
-    document.head.appendChild(style);
-    
     populateDock();
     
-    function startDrag(yPosition) {
+    function handleDragStart(yPosition) {
         startY = yPosition;
         currentY = yPosition;
-        isDragging = true;
-        isDrawerInMotion = true;
-        appDrawer.style.transition = 'none';
+        startTime = Date.now();
+        
+        holdTimeout = setTimeout(() => {
+            isHolding = true;
+            appDrawer.style.transition = 'bottom 0.3s ease';
+            appDrawer.style.bottom = '0%';
+            appDrawer.classList.add('open');
+            updatePersistentClockVisibility();
+        }, 500);
     }
-
-    function moveDrawer(yPosition) {
-        if (!isDragging) return;
+    
+    function handleDragMove(yPosition) {
         currentY = yPosition;
         const deltaY = startY - currentY;
-        const windowHeight = window.innerHeight;
-        const movementPercentage = (deltaY / windowHeight) * 100;
-    
-        // Show dock and hide drawer-pill
-        if (movementPercentage > 10 && movementPercentage < 25) {
-            dock.classList.add('show');
-            drawerPill.style.opacity = '0';
-        } else {
-            dock.classList.remove('show');
-            drawerPill.style.opacity = '1';
+        const swipePercent = (deltaY / window.innerHeight) * 100;
+        
+        if (Math.abs(deltaY) > 10) {
+            clearTimeout(holdTimeout);
         }
-
-        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-    
-        // Calculate opacity based on drawer position
-        // When newPosition is -100 (fully hidden), opacity is 0
-        // When newPosition is 0 (fully shown), opacity is 1
-        const opacity = (newPosition + 100) / 100;
-        appDrawer.style.opacity = opacity;
-    
-        appDrawer.style.bottom = `${newPosition}%`;
+        
+        if (swipePercent >= 10 && swipePercent < 25) {
+            dock.classList.add('show');
+        } else if (swipePercent >= 25 && !isHolding) {
+            if (appManager.activeApp) {
+                appManager.minimizeApp();
+            }
+            document.body.classList.remove('app-open');
+        }
     }
-
-    function endDrag() {
-        if (!isDragging) return;
-
+    
+    function handleDragEnd() {
+        clearTimeout(holdTimeout);
         const deltaY = startY - currentY;
-        const deltaTime = 100;
-        const velocity = deltaY / deltaTime;
-        const windowHeight = window.innerHeight;
-        const movementPercentage = (deltaY / windowHeight) * 100;
-
-        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-
-        // Small swipe - show dock
-        if (movementPercentage > 10 && movementPercentage <= 25) {
-            dock.classList.add('show');
-            appDrawer.style.bottom = '-100%';
-            appDrawer.style.opacity = '0';
-            appDrawer.classList.remove('open');
-            initialDrawerPosition = -100;
-        } 
-        // Large swipe - show full drawer
-        else if (movementPercentage > 25) {
-            dock.classList.remove('show');
-            appDrawer.style.bottom = '0%';
-            appDrawer.style.opacity = '1';
-            appDrawer.classList.add('open');
-            initialDrawerPosition = 0;
-        } 
-        // Close everything
-        else {
-            dock.classList.remove('show');
-            appDrawer.style.bottom = '-100%';
-            appDrawer.style.opacity = '0';
-            appDrawer.classList.remove('open');
-            initialDrawerPosition = -100;
+        const swipePercent = (deltaY / window.innerHeight) * 100;
+        
+        if (!isHolding) {
+            if (swipePercent >= 10 && swipePercent < 25) {
+                dock.classList.add('show');
+            } else if (swipePercent >= 25) {
+                if (appManager.activeApp) {
+                    appManager.minimizeApp();
+                }
+                document.body.classList.remove('app-open');
+            }
         }
-
-        isDragging = false;
-
-        setTimeout(() => {
-            isDrawerInMotion = false;
-        }, 300); // 300ms matches the transition duration in the CSS
+        
+        isHolding = false;
+        updatePersistentClockVisibility();
     }
-
-    // Touch Events
-    document.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        
-        // Check if touch is on handle area or if drawer is already open
-        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
-            startDrag(touch.clientY);
-            e.preventDefault();
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchmove', (e) => {
-        if (isDragging) {
-            e.preventDefault();
-            moveDrawer(e.touches[0].clientY);
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchend', () => {
-        endDrag();
+    
+    drawerHandle.addEventListener('touchstart', e => handleDragStart(e.touches[0].clientY));
+    drawerHandle.addEventListener('touchmove', e => handleDragMove(e.touches[0].clientY));
+    drawerHandle.addEventListener('touchend', handleDragEnd);
+    
+    drawerHandle.addEventListener('mousedown', e => handleDragStart(e.clientY));
+    drawerHandle.addEventListener('mousemove', e => {
+        if (e.buttons === 1) handleDragMove(e.clientY);
     });
-
-    // Mouse Events
-    document.addEventListener('mousedown', (e) => {
-        if (e.button !== 0) return;
-        const element = document.elementFromPoint(e.clientX, e.clientY);
-        
-        // Check if click is on handle area or if drawer is already open
-        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
-            startDrag(e.clientY);
-        }
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-            moveDrawer(e.clientY);
-        }
-    });
-
-    document.addEventListener('mouseup', () => {
-        endDrag();
-    });
-
-    // Close drawer when clicking outside
-    document.addEventListener('click', (e) => {
-        if (appDrawer.classList.contains('open') &&
-            !appDrawer.contains(e.target) &&
-            !appDrawerToggle.contains(e.target)) {
-            appDrawer.style.transition = 'bottom 0.3s ease';
-            appDrawer.style.bottom = '-100%';
-            appDrawer.classList.remove('open');
-            initialDrawerPosition = -100;
-        }
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!isDrawerInMotion && 
-            !dock.contains(e.target) && 
-            !drawerHandle.contains(e.target) && 
-            !appDrawer.classList.contains('open')) { // Only hide dock if drawer is closed
-            dock.classList.remove('show');
-            drawerPill.style.opacity = '1'; // Restore drawer-pill opacity when dock is hidden
-        }
-    });
+    drawerHandle.addEventListener('mouseup', handleDragEnd);
 }
 
 const appDrawerObserver = new MutationObserver((mutations) => {
