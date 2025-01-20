@@ -1960,10 +1960,17 @@ function setupDrawerInteractions() {
             initialScale = parseFloat(getComputedStyle(embed).transform.split(',')[3]) || 1;
         }
         
+        // Clear any existing timeout
+        if (holdTimeout) {
+            clearTimeout(holdTimeout);
+        }
+        
+        // Set new hold timeout
         holdTimeout = setTimeout(() => {
             if (Math.abs(startY - currentY) < 10) {
                 isHolding = true;
-                if (swipeState === 'home') {
+                const currentPercent = calculateSwipePercent(currentY);
+                if (currentPercent > dockThreshold) {
                     swipeState = 'drawer';
                     appDrawer.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
                     appDrawer.style.bottom = '0';
@@ -1989,6 +1996,17 @@ function setupDrawerInteractions() {
 
         const swipePercent = calculateSwipePercent(yPosition);
         
+        // Check if we should transition to drawer state
+        if (isHolding && swipePercent > dockThreshold) {
+            swipeState = 'drawer';
+            appDrawer.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+            appDrawer.style.bottom = '0';
+            appDrawer.style.opacity = '1';
+            appDrawer.style.transform = 'scale(1)';
+            appDrawer.classList.add('open');
+            return;
+        }
+
         if (!isHolding) {
             if (swipePercent <= dockThreshold) {
                 swipeState = 'dock';
@@ -2059,24 +2077,11 @@ function setupDrawerInteractions() {
         swipeState = 'none';
     }
     
-    // Touch events
-    drawerHandle.addEventListener('touchstart', e => {
-        e.preventDefault();
-        handleDragStart(e.touches[0].clientY);
-    }, { passive: false });
-    
-    drawerHandle.addEventListener('touchmove', e => {
-        e.preventDefault();
-        handleDragMove(e.touches[0].clientY);
-    }, { passive: false });
-    
-    drawerHandle.addEventListener('touchend', handleDragEnd);
-    drawerHandle.addEventListener('touchcancel', handleDragEnd);
-
-    // Mouse events
+    // Modify mouse event handlers
     drawerHandle.addEventListener('mousedown', e => {
         e.preventDefault();
         isMouseDown = true;
+        document.body.style.userSelect = 'none'; // Prevent text selection
         handleDragStart(e.clientY);
     });
     
@@ -2084,33 +2089,51 @@ function setupDrawerInteractions() {
         if (isMouseDown) {
             e.preventDefault();
             handleDragMove(e.clientY);
+            
+            // Update cursor style
+            document.body.style.cursor = 'grabbing';
         }
-    });
+    }, { passive: false });
     
     window.addEventListener('mouseup', e => {
         if (isMouseDown) {
             e.preventDefault();
             handleDragEnd();
+            
+            // Reset cursor and text selection
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
         }
     });
 
+    // Add a better cleanup for mouse leave
     window.addEventListener('mouseleave', () => {
         if (isMouseDown) {
             handleDragEnd();
+            isMouseDown = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
         }
     });
 
-    document.addEventListener('click', (e) => {
-        if (!isDrawerInMotion && 
-            !dock.contains(e.target) && 
-            !drawerHandle.contains(e.target) && 
-            !appDrawer.classList.contains('open')) {
-            dock.classList.remove('show');
-            drawerPill.style.opacity = '1';
+    // Cleanup function for both touch and mouse events
+    function cleanup() {
+        isMouseDown = false;
+        isHolding = false;
+        isDrawerInMotion = false;
+        if (holdTimeout) {
+            clearTimeout(holdTimeout);
         }
-    });
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    }
 
-    drawerHandle.addEventListener('selectstart', e => e.preventDefault());
+    // Add cleanup to existing touch handlers
+    drawerHandle.addEventListener('touchcancel', cleanup);
+    drawerHandle.addEventListener('touchend', () => {
+        handleDragEnd();
+        cleanup();
+    });
 }
 
 const appDrawerObserver = new MutationObserver((mutations) => {
