@@ -1884,7 +1884,6 @@ function setupDrawerInteractions() {
     const homeThreshold = 25;
     const drawerThreshold = 50;
     const drawerPill = document.querySelector('.drawer-pill');
-    const drawerHandle = document.querySelector('.drawer-handle');
     const appDrawer = document.querySelector('.app-drawer');
     
     const dock = document.createElement('div');
