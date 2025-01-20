@@ -883,7 +883,7 @@ function createSetupScreen() {
         .setup-option {
             background: var(--search-background);
             border: 2px solid transparent;
-            border-radius: 15px;
+            border-radius: 25px;
             padding: 1rem;
             margin: 1rem 0;
             cursor: pointer;
