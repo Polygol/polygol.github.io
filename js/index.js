@@ -2067,6 +2067,16 @@ function setupDrawerInteractions() {
     });
     
     window.addEventListener('mouseup', handleDragEnd);
+
+    document.addEventListener('click', (e) => {
+        if (!isDrawerInMotion && 
+            !dock.contains(e.target) && 
+            !drawerHandle.contains(e.target) && 
+            !appDrawer.classList.contains('open')) { // Only hide dock if drawer is closed
+            dock.classList.remove('show');
+            drawerPill.style.opacity = '1'; // Restore drawer-pill opacity when dock is hidden
+        }
+    });
 }
 
 const appDrawerObserver = new MutationObserver((mutations) => {
