@@ -1871,201 +1871,184 @@ function saveUsageData() {
 }
 
 function setupDrawerInteractions() {
-    // State management
     let startY = 0;
     let currentY = 0;
+    let startTime = 0;
     let isActive = false;
     let isDragging = false;
-    let isHolding = false;
-    let holdTimer = null;
+    let initialVelocity = 0;
     let lastY = 0;
     let lastTime = 0;
-    let velocity = 0;
-    
-    // Constants
-    const DOCK_THRESHOLD = 10; // % of screen height
-    const HOME_THRESHOLD = 25;
-    const HOLD_DURATION = 300; // ms
-    const MIN_DRAG_TO_START = 5; // px
-    
-    // Elements
+    const flickVelocityThreshold = 0.4;
+    const dockThreshold = 10;
+    const homeThreshold = 25;
+    const drawerThreshold = 50;
+    const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
     const appDrawer = document.querySelector('.app-drawer');
-    const dock = document.querySelector('.dock') || createDock();
     
-    function createDock() {
-        const dock = document.createElement('div');
-        dock.className = 'dock';
-        document.body.appendChild(dock);
-        populateDock(); // Assuming this function exists
-        return dock;
-    }
+    const dock = document.createElement('div');
+    dock.id = 'dock';
+    dock.className = 'dock';
+    document.body.appendChild(dock);
+    
+    populateDock();
+    
+    // Constants
+    const VELOCITY_THRESHOLD = 0.8; // Velocity needed for flick gesture
+    const DRAG_THRESHOLD = 50; // Minimum pixels to start drag
+    const HOME_THRESHOLD = 150; // Pixels needed to trigger home gesture
+    const SPRING_TENSION = 0.2; // Spring animation tension
+    const SPRING_DAMPING = 0.7; // Spring animation damping
+    
+    // Animation state
+    let animationFrame = null;
+    let springVelocity = 0;
+    let springPosition = 0;
     
     function getActiveApp() {
         return document.querySelector('.fullscreen-embed');
     }
     
-    function calculateProgress(y) {
-        const delta = startY - y;
-        return (delta / window.innerHeight) * 100;
-    }
-    
-    function updateDockVisibility(progress) {
-        const opacity = Math.min(1, Math.max(0, progress / DOCK_THRESHOLD));
-        dock.style.opacity = opacity.toString();
-        dock.style.transform = `translateY(${Math.max(0, 20 - progress * 2)}px)`;
-        
-        if (progress >= DOCK_THRESHOLD * 0.8) {
-            dock.classList.add('visible');
-        }
-    }
-    
-    function updateAppScale(progress) {
+    function updateAppTransform(progress) {
         const app = getActiveApp();
         if (!app) return;
         
-        const scale = Math.max(0.7, 1 - (progress / 100));
+        // Calculate scale and opacity based on progress
+        const scale = Math.max(0.7, 1 - (progress / HOME_THRESHOLD) * 0.3);
         const opacity = Math.max(0, 1 - (progress / HOME_THRESHOLD));
         
-        app.style.transition = 'none';
-        app.style.transform = `scale(${scale})`;
+        // Apply transforms with hardware acceleration
+        app.style.transform = `translate3d(0, 0, 0) scale(${scale})`;
         app.style.opacity = opacity.toString();
     }
     
-    function showAppDrawer() {
-        appDrawer.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-        appDrawer.style.transform = 'scale(1)';
-        appDrawer.style.bottom = '0';
-        appDrawer.style.opacity = '1';
-        appDrawer.classList.add('open');
+    function showAppDrawer(progress) {
+        const drawer = document.getElementById('app-drawer');
+        const normalizedProgress = Math.min(1, progress / HOME_THRESHOLD);
+        
+        drawer.style.transition = 'none';
+        drawer.style.transform = `translate3d(0, ${100 - (normalizedProgress * 100)}%, 0)`;
+        drawer.style.opacity = normalizedProgress.toString();
+        
+        if (normalizedProgress > 0) {
+            drawer.classList.add('open');
+        }
     }
     
-    function hideAppDrawer() {
-        appDrawer.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-        appDrawer.style.transform = 'scale(0.95)';
-        appDrawer.style.bottom = '-100%';
-        appDrawer.style.opacity = '0';
-        appDrawer.classList.remove('open');
-    }
-    
-    function goHome() {
-        const app = getActiveApp();
-        if (app) {
-            app.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-            app.style.transform = 'scale(0.7)';
-            app.style.opacity = '0';
+    function animateSpring() {
+        if (!isDragging) {
+            // Apply spring physics
+            const displacement = springPosition;
+            const springForce = -SPRING_TENSION * displacement;
+            springVelocity = (springVelocity + springForce) * SPRING_DAMPING;
+            springPosition += springVelocity;
             
-            setTimeout(() => {
-                app.remove();
-                document.querySelectorAll('body > *').forEach(el => {
-                    if (el.style.display === 'none') el.style.display = '';
-                });
-            }, 300);
+            // Apply spring animation to UI
+            updateAppTransform(Math.max(0, springPosition));
+            showAppDrawer(Math.max(0, springPosition));
+            
+            // Continue animation if movement is significant
+            if (Math.abs(springVelocity) > 0.01 || Math.abs(springPosition) > 0.01) {
+                animationFrame = requestAnimationFrame(animateSpring);
+            } else {
+                // Cleanup when spring settles
+                finishInteraction();
+            }
         }
     }
     
-    function resetUI() {
+    function finishInteraction() {
+        const drawer = document.getElementById('app-drawer');
         const app = getActiveApp();
-        if (app) {
-            app.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-            app.style.transform = 'scale(1)';
-            app.style.opacity = '1';
+        
+        if (springPosition > HOME_THRESHOLD / 2) {
+            // Complete transition to home
+            if (app) {
+                app.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                app.style.transform = 'scale(0.7)';
+                app.style.opacity = '0';
+                setTimeout(() => app.remove(), 300);
+            }
+            
+            drawer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            drawer.style.transform = 'translate3d(0, 0, 0)';
+            drawer.style.opacity = '1';
+        } else {
+            // Reset to app state
+            if (app) {
+                app.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                app.style.transform = 'scale(1)';
+                app.style.opacity = '1';
+            }
+            
+            drawer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            drawer.style.transform = 'translate3d(0, 100%, 0)';
+            drawer.style.opacity = '0';
+            setTimeout(() => drawer.classList.remove('open'), 300);
         }
-        
-        dock.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-        dock.style.opacity = '0';
-        dock.style.transform = 'translateY(20px)';
-        dock.classList.remove('visible');
-        
-        hideAppDrawer();
     }
     
     function handleStart(y) {
+        // Cancel any ongoing animations
+        if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
+        }
+        
         startY = y;
         currentY = y;
+        startTime = Date.now();
         isActive = true;
-        lastTime = Date.now();
+        isDragging = false;
         lastY = y;
-        velocity = 0;
-        
-        holdTimer = setTimeout(() => {
-            if (isActive && Math.abs(startY - currentY) < MIN_DRAG_TO_START) {
-                isHolding = true;
-                showAppDrawer();
-            }
-        }, HOLD_DURATION);
+        lastTime = Date.now();
+        springPosition = 0;
+        springVelocity = 0;
     }
     
     function handleMove(y) {
         if (!isActive) return;
         
-        const prevY = currentY;
-        currentY = y;
+        const deltaY = startY - y;
+        const deltaTime = Date.now() - lastTime;
         
-        // Calculate velocity
-        const now = Date.now();
-        const deltaTime = now - lastTime;
+        // Calculate instantaneous velocity
         if (deltaTime > 0) {
-            velocity = (lastY - y) / deltaTime;
+            initialVelocity = (lastY - y) / deltaTime;
         }
-        lastTime = now;
-        lastY = y;
         
-        // Start dragging if moved enough
-        if (!isDragging && Math.abs(startY - y) > MIN_DRAG_TO_START) {
+        // Start dragging if threshold is met
+        if (Math.abs(deltaY) > DRAG_THRESHOLD) {
             isDragging = true;
-            clearTimeout(holdTimer);
         }
         
-        if (isDragging && !isHolding) {
-            const progress = calculateProgress(y);
-            
-            if (progress <= DOCK_THRESHOLD) {
-                updateDockVisibility(progress);
-            } else {
-                dock.classList.add('visible');
-                dock.style.opacity = '1';
-                updateAppScale(progress);
-            }
+        if (isDragging) {
+            // Update UI based on drag position
+            springPosition = Math.max(0, deltaY);
+            updateAppTransform(springPosition);
+            showAppDrawer(springPosition);
         }
+        
+        lastY = y;
+        lastTime = Date.now();
     }
     
     function handleEnd() {
         if (!isActive) return;
         
-        clearTimeout(holdTimer);
-        const progress = calculateProgress(currentY);
-        const isFlick = Math.abs(velocity) > 0.5;
-        
-        if (!isDragging && !isHolding) {
-            resetUI();
-        } else if (isHolding) {
-            // Keep app drawer open
-        } else if (progress > HOME_THRESHOLD || (isFlick && progress > DOCK_THRESHOLD)) {
-            goHome();
-            resetUI();
-        } else if (progress > DOCK_THRESHOLD * 0.8) {
-            // Keep dock visible
-            dock.classList.add('visible');
-            dock.style.opacity = '1';
-            dock.style.transform = 'translateY(0)';
-            
-            const app = getActiveApp();
-            if (app) {
-                app.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-                app.style.transform = 'scale(1)';
-                app.style.opacity = '1';
-            }
-        } else {
-            resetUI();
-        }
-        
         isActive = false;
         isDragging = false;
-        isHolding = false;
+        
+        // Set initial spring velocity based on gesture velocity
+        springVelocity = initialVelocity * 15; // Amplify the gesture velocity
+        
+        // Start spring animation
+        animateSpring();
     }
     
-    // Touch Events
+    // Touch event handlers
+    const drawerHandle = document.querySelector('.drawer-handle');
+    
     drawerHandle.addEventListener('touchstart', e => {
         e.preventDefault();
         handleStart(e.touches[0].clientY);
@@ -2081,7 +2064,7 @@ function setupDrawerInteractions() {
     window.addEventListener('touchend', () => handleEnd());
     window.addEventListener('touchcancel', () => handleEnd());
     
-    // Mouse Events
+    // Mouse event handlers
     drawerHandle.addEventListener('mousedown', e => {
         e.preventDefault();
         handleStart(e.clientY);
