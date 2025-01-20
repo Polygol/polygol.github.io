@@ -104,6 +104,8 @@ body.light-theme[style*="background-image"] .info {
     align-items: flex-start;
     cursor: grab;
     z-index: 1001;
+    touch-action: none;
+    user-select: none;
 }
 
 .drawer-pill {
@@ -925,6 +927,12 @@ body.light-theme[style*="background-image"] .info {
     touch-action: none;
     user-select: none;
     opacity: 0;
+}
+
+#app-drawer {
+    transform-origin: bottom;
+    will-change: transform, opacity, bottom;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
         .app-drawer.open {
