@@ -1873,25 +1873,16 @@ function saveUsageData() {
 function setupDrawerInteractions() {
     let startY = 0;
     let currentY = 0;
-    let startTime = 0;
-    let holdTimeout;
-    let isHolding = false;
+    let initialDrawerPosition = -100;
+    let isDragging = false;
     let isDrawerInMotion = false;
-    let isMouseDown = false;
     const flickVelocityThreshold = 0.4;
-    const dockThreshold = 10;
-    const homeThreshold = 25;
-    const drawerThreshold = 50;
+    const dockThreshold = -25; // Threshold for dock appearance
+    const openThreshold = -50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
-    const appDrawer = document.querySelector('.app-drawer');
-
-    let lastY = 0;
-    let lastTime = 0;
-    let velocity = 0;
-    let swipeState = 'none';
-    let initialScale = 1;
     
+    // Create dock element
     const dock = document.createElement('div');
     dock.id = 'dock';
     dock.className = 'dock';
@@ -1899,240 +1890,148 @@ function setupDrawerInteractions() {
     
     populateDock();
 
-    function calculateSwipePercent(yPosition) {
-        const deltaY = startY - yPosition;
-        return (deltaY / window.innerHeight) * 100;
-    }
-
-    function updateDockVisibility(percent) {
-        const dockOpacity = Math.min(1, Math.max(0, percent / dockThreshold));
-        dock.style.opacity = dockOpacity;
-        dock.style.transform = `translateY(${Math.max(0, 20 - percent * 2)}px)`;
-        
-        if (percent >= dockThreshold * 0.8) {
-            dock.classList.add('show');
-        }
-    }
-
-    function updateHomeAnimation(percent) {
-        const embed = document.querySelector('.fullscreen-embed');
-        if (embed) {
-            const scale = Math.max(0.7, 1 - (percent / 100));
-            const opacity = Math.max(0, 1 - (percent / homeThreshold));
-            embed.style.transition = 'none';
-            embed.style.transform = `scale(${scale})`;
-            embed.style.opacity = opacity;
-        }
-    }
-
-    function handleHomeGesture(animate = true) {
-        const embed = document.querySelector('.fullscreen-embed');
-        if (embed) {
-            if (animate) {
-                embed.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-            }
-            embed.style.transform = 'scale(0.7)';
-            embed.style.opacity = '0';
-            
-            setTimeout(() => {
-                embed.remove();
-                document.querySelectorAll('body > *').forEach(el => {
-                    if (el.style.display === 'none') {
-                        el.style.display = '';
-                    }
-                });
-            }, animate ? 300 : 0);
-        }
-    }
-
-    function handleDragStart(yPosition) {
+    function startDrag(yPosition) {
         startY = yPosition;
         currentY = yPosition;
-        startTime = Date.now();
-        lastY = yPosition;
-        lastTime = Date.now();
-        velocity = 0;
-        swipeState = 'none';
+        isDragging = true;
         isDrawerInMotion = true;
-        
-        const embed = document.querySelector('.fullscreen-embed');
-        if (embed) {
-            initialScale = parseFloat(getComputedStyle(embed).transform.split(',')[3]) || 1;
-        }
-        
-        // Clear any existing timeout
-        if (holdTimeout) {
-            clearTimeout(holdTimeout);
-        }
-        
-        // Set new hold timeout
-        holdTimeout = setTimeout(() => {
-            if (Math.abs(startY - currentY) < 10) {
-                isHolding = true;
-                const currentPercent = calculateSwipePercent(currentY);
-                if (currentPercent > dockThreshold) {
-                    swipeState = 'drawer';
-                    appDrawer.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-                    appDrawer.style.bottom = '0';
-                    appDrawer.style.opacity = '1';
-                    appDrawer.style.transform = 'scale(1)';
-                    appDrawer.classList.add('open');
-                }
-            }
-        }, 300);
+        appDrawer.style.transition = 'none';
     }
-    
-    function handleDragMove(yPosition) {
-        if (!startY) return;
+
+    function moveDrawer(yPosition) {
+        if (!isDragging) return;
         currentY = yPosition;
-        
-        const now = Date.now();
-        const deltaTime = now - lastTime;
-        if (deltaTime > 0) {
-            velocity = (lastY - yPosition) / deltaTime;
-        }
-        lastY = yPosition;
-        lastTime = now;
-
-        const swipePercent = calculateSwipePercent(yPosition);
-        
-        // Check if we should transition to drawer state
-        if (isHolding && swipePercent > dockThreshold) {
-            swipeState = 'drawer';
-            appDrawer.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-            appDrawer.style.bottom = '0';
-            appDrawer.style.opacity = '1';
-            appDrawer.style.transform = 'scale(1)';
-            appDrawer.classList.add('open');
-            return;
-        }
-
-        if (!isHolding) {
-            if (swipePercent <= dockThreshold) {
-                swipeState = 'dock';
-                updateDockVisibility(swipePercent);
-            } else {
-                swipeState = 'home';
-                updateDockVisibility(dockThreshold);
-                updateHomeAnimation(swipePercent);
-            }
-        }
-    }
+        const deltaY = startY - currentY;
+        const windowHeight = window.innerHeight;
+        const movementPercentage = (deltaY / windowHeight) * 100;
     
-    function handleDragEnd() {
-        if (!startY) return;
-        
-        clearTimeout(holdTimeout);
-        
-        const finalPercent = calculateSwipePercent(currentY);
-        const swipeVelocity = Math.abs(velocity);
-        const swipeTime = Date.now() - startTime;
-
-        appDrawer.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-        dock.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-
-        if (isHolding && swipeState === 'drawer') {
-            // Keep drawer open - it's already animated in
-        } else if (finalPercent >= homeThreshold || (swipeVelocity > flickVelocityThreshold && finalPercent > dockThreshold)) {
-            handleHomeGesture(true);
-            appDrawer.style.bottom = '-100%';
-            appDrawer.classList.remove('open');
-            dock.classList.remove('show');
-        } else if (finalPercent >= dockThreshold * 0.8) {
-            // Show dock only
-            const embed = document.querySelector('.fullscreen-embed');
-            if (embed) {
-                embed.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-                embed.style.transform = `scale(${initialScale})`;
-                embed.style.opacity = '1';
-            }
+        // Show dock and hide drawer-pill
+        if (movementPercentage > 10 && movementPercentage < 25) {
             dock.classList.add('show');
-            dock.style.opacity = '1';
-            dock.style.transform = 'translateY(0)';
+            drawerPill.style.opacity = '0';
         } else {
-            // Reset everything
-            const embed = document.querySelector('.fullscreen-embed');
-            if (embed) {
-                embed.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
-                embed.style.transform = `scale(${initialScale})`;
-                embed.style.opacity = '1';
-            }
+            dock.classList.remove('show');
+            drawerPill.style.opacity = '1';
+        }
+
+        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+    
+        // Calculate opacity based on drawer position
+        // When newPosition is -100 (fully hidden), opacity is 0
+        // When newPosition is 0 (fully shown), opacity is 1
+        const opacity = (newPosition + 100) / 100;
+        appDrawer.style.opacity = opacity;
+    
+        appDrawer.style.bottom = `${newPosition}%`;
+    }
+
+    function endDrag() {
+        if (!isDragging) return;
+
+        const deltaY = startY - currentY;
+        const deltaTime = 100;
+        const velocity = deltaY / deltaTime;
+        const windowHeight = window.innerHeight;
+        const movementPercentage = (deltaY / windowHeight) * 100;
+
+        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+
+        // Small swipe - show dock
+        if (movementPercentage > 10 && movementPercentage <= 25) {
+            dock.classList.add('show');
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
-            appDrawer.style.transform = 'scale(0.95)';
             appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
+        } 
+        // Large swipe - show full drawer
+        else if (movementPercentage > 25) {
             dock.classList.remove('show');
-            dock.style.opacity = '0';
-            dock.style.transform = 'translateY(20px)';
+            appDrawer.style.bottom = '0%';
+            appDrawer.style.opacity = '1';
+            appDrawer.classList.add('open');
+            initialDrawerPosition = 0;
+        } 
+        // Close everything
+        else {
+            dock.classList.remove('show');
+            appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
+            appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
         }
+
+        isDragging = false;
 
         setTimeout(() => {
             isDrawerInMotion = false;
-        }, 300);
-
-        startY = 0;
-        currentY = 0;
-        isHolding = false;
-        isMouseDown = false;
-        swipeState = 'none';
+        }, 300); // 300ms matches the transition duration in the CSS
     }
-    
-    // Modify mouse event handlers
-    drawerHandle.addEventListener('mousedown', e => {
-        e.preventDefault();
-        isMouseDown = true;
-        document.body.style.userSelect = 'none'; // Prevent text selection
-        handleDragStart(e.clientY);
-    });
-    
-    window.addEventListener('mousemove', e => {
-        if (isMouseDown) {
+
+    // Touch Events
+    document.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Check if touch is on handle area or if drawer is already open
+        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+            startDrag(touch.clientY);
             e.preventDefault();
-            handleDragMove(e.clientY);
-            
-            // Update cursor style
-            document.body.style.cursor = 'grabbing';
         }
     }, { passive: false });
-    
-    window.addEventListener('mouseup', e => {
-        if (isMouseDown) {
+
+    document.addEventListener('touchmove', (e) => {
+        if (isDragging) {
             e.preventDefault();
-            handleDragEnd();
-            
-            // Reset cursor and text selection
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
+            moveDrawer(e.touches[0].clientY);
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchend', () => {
+        endDrag();
+    });
+
+    // Mouse Events
+    document.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        const element = document.elementFromPoint(e.clientX, e.clientY);
+        
+        // Check if click is on handle area or if drawer is already open
+        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+            startDrag(e.clientY);
         }
     });
 
-    // Add a better cleanup for mouse leave
-    window.addEventListener('mouseleave', () => {
-        if (isMouseDown) {
-            handleDragEnd();
-            isMouseDown = false;
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            moveDrawer(e.clientY);
         }
     });
 
-    // Cleanup function for both touch and mouse events
-    function cleanup() {
-        isMouseDown = false;
-        isHolding = false;
-        isDrawerInMotion = false;
-        if (holdTimeout) {
-            clearTimeout(holdTimeout);
-        }
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-    }
+    document.addEventListener('mouseup', () => {
+        endDrag();
+    });
 
-    // Add cleanup to existing touch handlers
-    drawerHandle.addEventListener('touchcancel', cleanup);
-    drawerHandle.addEventListener('touchend', () => {
-        handleDragEnd();
-        cleanup();
+    // Close drawer when clicking outside
+    document.addEventListener('click', (e) => {
+        if (appDrawer.classList.contains('open') &&
+            !appDrawer.contains(e.target) &&
+            !appDrawerToggle.contains(e.target)) {
+            appDrawer.style.transition = 'bottom 0.3s ease';
+            appDrawer.style.bottom = '-100%';
+            appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!isDrawerInMotion && 
+            !dock.contains(e.target) && 
+            !drawerHandle.contains(e.target) && 
+            !appDrawer.classList.contains('open')) { // Only hide dock if drawer is closed
+            dock.classList.remove('show');
+            drawerPill.style.opacity = '1'; // Restore drawer-pill opacity when dock is hidden
+        }
     });
 }
 
