@@ -705,9 +705,9 @@ function showPopup(message) {
     popup.style.top = '20px';
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
-    popup.style.backgroundColor = 'rgba(51, 51, 51, 0.9)';
-    popup.style.backdropFilter = 'blur(10px)';
-    popup.style.color = 'white';
+    popup.style.backgroundColor = 'var(--search-background)';
+    popup.style.backdropFilter = 'blur(50px)';
+    popup.style.color = 'var(--text-color)';
     popup.style.padding = '20px';
     popup.style.borderRadius = '30px';
     popup.style.zIndex = '1000';
@@ -966,6 +966,11 @@ function createSetupScreen() {
             options: []
         },
         {
+            title: "Data & Privacy",
+            description: "We will never send your data to anyone, not even our servers. Your information stays on your device at all times.",
+            options: []
+        },
+        {
             title: "Allow Permissions",
             description: "Gurasuraisu needs some permissions to provide the best experience.",
             options: [
@@ -982,11 +987,6 @@ function createSetupScreen() {
                     default: true 
                 }
             ]
-        },
-        {
-            title: "We respect your privacy",
-            description: "We will never send your data to anyone, not even our servers. Your information stays on your device at all times.",
-            options: []
         },
         {
             title: "Choose Your Theme",
