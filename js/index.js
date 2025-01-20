@@ -1876,11 +1876,17 @@ function setupDrawerInteractions() {
     let startTime = 0;
     let holdTimeout;
     let isHolding = false;
+    let initialDrawerPosition = -100;
     const flickVelocityThreshold = 0.4;
     const dockThreshold = -25; // Threshold for dock appearance
     const openThreshold = -50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
+
+    // Track velocity for smooth animations
+    let lastY = 0;
+    let lastTime = 0;
+    let velocity = 0;
     
     // Create dock element
     const dock = document.createElement('div');
@@ -1889,85 +1895,129 @@ function setupDrawerInteractions() {
     document.body.appendChild(dock);
     
     populateDock();
+
+    function updateDrawerPosition(yPosition) {
+        const deltaY = startY - yPosition;
+        const swipePercent = (deltaY / window.innerHeight) * 100;
+        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + swipePercent));
+        
+        // Calculate velocity
+        const now = Date.now();
+        const deltaTime = now - lastTime;
+        if (deltaTime > 0) {
+            velocity = (yPosition - lastY) / deltaTime;
+        }
+        lastY = yPosition;
+        lastTime = now;
+        
+        // Apply position with spring physics
+        appDrawer.style.transition = 'none';
+        appDrawer.style.bottom = `${newPosition}%`;
+        appDrawer.style.opacity = Math.max(0, Math.min(1, (newPosition + 100) / 100));
+        
+        // Add subtle scale effect
+        const scale = 0.95 + ((newPosition + 100) / 100) * 0.05;
+        appDrawer.style.transform = `scale(${scale})`;
+    }
     
     function handleDragStart(yPosition) {
         startY = yPosition;
         currentY = yPosition;
         startTime = Date.now();
+        lastY = yPosition;
+        lastTime = Date.now();
+        velocity = 0;
         
-        // Start hold timer
+        appDrawer.style.transition = 'none';
+        initialDrawerPosition = parseFloat(getComputedStyle(appDrawer).bottom) / window.innerHeight * 100;
+        
         holdTimeout = setTimeout(() => {
             isHolding = true;
-            // Open app drawer
-            appDrawer.style.transition = 'bottom 0.3s ease';
+            appDrawer.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             appDrawer.style.bottom = '0%';
             appDrawer.classList.add('open');
-        }, 500); // 500ms hold threshold
+        }, 500);
     }
     
     function handleDragMove(yPosition) {
+        if (!startY) return;
         currentY = yPosition;
-        const deltaY = startY - currentY;
-        const swipePercent = (deltaY / window.innerHeight) * 100;
-        
-        // Clear hold timer if moved too much
-        if (Math.abs(deltaY) > 10) {
-            clearTimeout(holdTimeout);
-        }
-        
-        // Show dock for small swipe
-        if (swipePercent >= 10 && swipePercent < 25) {
-            dock.classList.add('show');
-        }
-        // Go home for regular swipe
-        else if (swipePercent >= 25 && !isHolding) {
-            // Remove fullscreen embed if exists
-            const embed = document.querySelector('.fullscreen-embed');
-            if (embed) {
-                embed.remove();
-                // Show all elements again
-                document.querySelectorAll('body > *').forEach(el => {
-                    el.style.display = '';
-                });
-            }
-        }
+        updateDrawerPosition(yPosition);
     }
     
     function handleDragEnd() {
         clearTimeout(holdTimeout);
-        const deltaY = startY - currentY;
-        const swipePercent = (deltaY / window.innerHeight) * 100;
-        const swipeTime = Date.now() - startTime;
         
-        if (!isHolding) {
-            if (swipePercent >= 10 && swipePercent < 25) {
-                // Keep dock visible
-                dock.classList.add('show');
-            } else if (swipePercent >= 25) {
-                // Go home
-                const embed = document.querySelector('.fullscreen-embed');
-                if (embed) {
-                    embed.remove();
-                    document.querySelectorAll('body > *').forEach(el => {
-                        el.style.display = '';
-                    });
-                }
+        if (!startY) return;
+        
+        const deltaY = startY - currentY;
+        const swipeTime = Date.now() - startTime;
+        const swipeVelocity = deltaY / swipeTime;
+        
+        appDrawer.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        
+        // Determine final position based on velocity and position
+        const currentPosition = parseFloat(getComputedStyle(appDrawer).bottom) / window.innerHeight * 100;
+        const isMovingUp = velocity < 0;
+        
+        if (Math.abs(velocity) > flickVelocityThreshold) {
+            // Fast swipe
+            if (isMovingUp) {
+                appDrawer.style.bottom = '0%';
+                appDrawer.classList.add('open');
+                initialDrawerPosition = 0;
+            } else {
+                appDrawer.style.bottom = '-100%';
+                appDrawer.classList.remove('open');
+                initialDrawerPosition = -100;
+            }
+        } else {
+            // Slow drag - snap to nearest position
+            if (currentPosition > -50) {
+                appDrawer.style.bottom = '0%';
+                appDrawer.classList.add('open');
+                initialDrawerPosition = 0;
+            } else {
+                appDrawer.style.bottom = '-100%';
+                appDrawer.classList.remove('open');
+                initialDrawerPosition = -100;
             }
         }
         
+        // Reset tracking variables
+        startY = 0;
+        currentY = 0;
         isHolding = false;
     }
     
-    // Add event listeners for touch and mouse events
-    drawerHandle.addEventListener('touchstart', e => handleDragStart(e.touches[0].clientY));
-    drawerHandle.addEventListener('touchmove', e => handleDragMove(e.touches[0].clientY));
-    drawerHandle.addEventListener('touchend', handleDragEnd);
+    // Touch events
+    drawerHandle.addEventListener('touchstart', e => {
+        e.preventDefault();
+        handleDragStart(e.touches[0].clientY);
+    }, { passive: false });
     
-    drawerHandle.addEventListener('mousedown', e => handleDragStart(e.clientY));
-    drawerHandle.addEventListener('mousemove', e => {
-        if (e.buttons === 1) handleDragMove(e.clientY);
+    drawerHandle.addEventListener('touchmove', e => {
+        e.preventDefault();
+        handleDragMove(e.touches[0].clientY);
+    }, { passive: false });
+    
+    drawerHandle.addEventListener('touchend', handleDragEnd);
+    drawerHandle.addEventListener('touchcancel', handleDragEnd);
+
+    // Mouse events
+    drawerHandle.addEventListener('mousedown', e => {
+        e.preventDefault();
+        handleDragStart(e.clientY);
     });
-    drawerHandle.addEventListener('mouseup', handleDragEnd);
+    
+    window.addEventListener('mousemove', e => {
+        if (startY) {
+            e.preventDefault();
+            handleDragMove(e.clientY);
+        }
+    });
+    
+    window.addEventListener('mouseup', handleDragEnd);
 }
 
 const appDrawerObserver = new MutationObserver((mutations) => {
