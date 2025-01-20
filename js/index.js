@@ -1877,10 +1877,11 @@ function setupDrawerInteractions() {
     let holdTimeout;
     let isHolding = false;
     let isDrawerInMotion = false;
+    let isMouseDown = false;
     const flickVelocityThreshold = 0.4;
-    const dockThreshold = 10; // 10% for dock
-    const homeThreshold = 25; // 25% for home
-    const drawerThreshold = 50; // 50% for drawer
+    const dockThreshold = 10;
+    const homeThreshold = 25;
+    const drawerThreshold = 50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
     const appDrawer = document.querySelector('.app-drawer');
@@ -1889,6 +1890,7 @@ function setupDrawerInteractions() {
     let lastTime = 0;
     let velocity = 0;
     let swipeState = 'none';
+    let initialScale = 1;
     
     const dock = document.createElement('div');
     dock.id = 'dock';
@@ -1903,22 +1905,33 @@ function setupDrawerInteractions() {
     }
 
     function updateDockVisibility(percent) {
-        if (percent <= dockThreshold) {
-            const dockOpacity = Math.min(1, Math.max(0, percent / dockThreshold));
-            dock.style.opacity = dockOpacity;
-            dock.style.transform = `translateY(${Math.max(0, 20 - percent * 2)}px)`;
-            
-            if (percent >= dockThreshold * 0.8) { // Show dock when close to threshold
-                dock.classList.add('show');
-            }
+        const dockOpacity = Math.min(1, Math.max(0, percent / dockThreshold));
+        dock.style.opacity = dockOpacity;
+        dock.style.transform = `translateY(${Math.max(0, 20 - percent * 2)}px)`;
+        
+        if (percent >= dockThreshold * 0.8) {
+            dock.classList.add('show');
         }
     }
 
-    function handleHomeGesture() {
+    function updateHomeAnimation(percent) {
         const embed = document.querySelector('.fullscreen-embed');
         if (embed) {
-            embed.style.transition = 'all 0.5s cubic-bezier(0.32, 0.72, 0, 1)';
-            embed.style.transform = 'scale(0.9)';
+            const scale = Math.max(0.7, 1 - (percent / 100));
+            const opacity = Math.max(0, 1 - (percent / homeThreshold));
+            embed.style.transition = 'none';
+            embed.style.transform = `scale(${scale})`;
+            embed.style.opacity = opacity;
+        }
+    }
+
+    function handleHomeGesture(animate = true) {
+        const embed = document.querySelector('.fullscreen-embed');
+        if (embed) {
+            if (animate) {
+                embed.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+            }
+            embed.style.transform = 'scale(0.7)';
             embed.style.opacity = '0';
             
             setTimeout(() => {
@@ -1928,20 +1941,10 @@ function setupDrawerInteractions() {
                         el.style.display = '';
                     }
                 });
-            }, 500);
+            }, animate ? 300 : 0);
         }
     }
-    
-    function updateDrawerPosition(percent) {
-        if (percent >= drawerThreshold) {
-            const drawerPercent = (percent - drawerThreshold) / (100 - drawerThreshold);
-            appDrawer.style.transition = 'none';
-            appDrawer.style.bottom = `${-100 + (drawerPercent * 100)}%`;
-            appDrawer.style.opacity = drawerPercent;
-            appDrawer.style.transform = `scale(${0.95 + (drawerPercent * 0.05)})`;
-        }
-    }
-    
+
     function handleDragStart(yPosition) {
         startY = yPosition;
         currentY = yPosition;
@@ -1952,12 +1955,24 @@ function setupDrawerInteractions() {
         swipeState = 'none';
         isDrawerInMotion = true;
         
+        const embed = document.querySelector('.fullscreen-embed');
+        if (embed) {
+            initialScale = parseFloat(getComputedStyle(embed).transform.split(',')[3]) || 1;
+        }
+        
         holdTimeout = setTimeout(() => {
             if (Math.abs(startY - currentY) < 10) {
                 isHolding = true;
-                swipeState = 'drawer';
+                if (swipeState === 'home') {
+                    swipeState = 'drawer';
+                    appDrawer.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+                    appDrawer.style.bottom = '0';
+                    appDrawer.style.opacity = '1';
+                    appDrawer.style.transform = 'scale(1)';
+                    appDrawer.classList.add('open');
+                }
             }
-        }, 500);
+        }, 300);
     }
     
     function handleDragMove(yPosition) {
@@ -1978,46 +1993,52 @@ function setupDrawerInteractions() {
             if (swipePercent <= dockThreshold) {
                 swipeState = 'dock';
                 updateDockVisibility(swipePercent);
-            } else if (swipePercent <= homeThreshold) {
+            } else {
                 swipeState = 'home';
-            } else if (swipePercent > drawerThreshold) {
-                swipeState = 'drawer';
-                updateDrawerPosition(swipePercent);
+                updateDockVisibility(dockThreshold);
+                updateHomeAnimation(swipePercent);
             }
-        } else if (swipeState === 'drawer') {
-            updateDrawerPosition(swipePercent);
         }
     }
     
     function handleDragEnd() {
-        clearTimeout(holdTimeout);
-        
         if (!startY) return;
+        
+        clearTimeout(holdTimeout);
         
         const finalPercent = calculateSwipePercent(currentY);
         const swipeVelocity = Math.abs(velocity);
+        const swipeTime = Date.now() - startTime;
 
-        appDrawer.style.transition = 'all 0.5s cubic-bezier(0.32, 0.72, 0, 1)';
+        appDrawer.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
         dock.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
 
-        if (isHolding || (swipeState === 'drawer' && finalPercent >= drawerThreshold)) {
-            // Open drawer fully
-            appDrawer.style.bottom = '0';
-            appDrawer.style.opacity = '1';
-            appDrawer.style.transform = 'scale(1)';
-            appDrawer.classList.add('open');
-        } else if (swipeState === 'home' || (finalPercent >= homeThreshold && swipeVelocity > flickVelocityThreshold)) {
-            // Trigger home gesture
-            handleHomeGesture();
+        if (isHolding && swipeState === 'drawer') {
+            // Keep drawer open - it's already animated in
+        } else if (finalPercent >= homeThreshold || (swipeVelocity > flickVelocityThreshold && finalPercent > dockThreshold)) {
+            handleHomeGesture(true);
             appDrawer.style.bottom = '-100%';
             appDrawer.classList.remove('open');
-        } else if (swipeState === 'dock' && finalPercent >= dockThreshold * 0.8) {
-            // Show dock
+            dock.classList.remove('show');
+        } else if (finalPercent >= dockThreshold * 0.8) {
+            // Show dock only
+            const embed = document.querySelector('.fullscreen-embed');
+            if (embed) {
+                embed.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+                embed.style.transform = `scale(${initialScale})`;
+                embed.style.opacity = '1';
+            }
             dock.classList.add('show');
             dock.style.opacity = '1';
             dock.style.transform = 'translateY(0)';
         } else {
             // Reset everything
+            const embed = document.querySelector('.fullscreen-embed');
+            if (embed) {
+                embed.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+                embed.style.transform = `scale(${initialScale})`;
+                embed.style.opacity = '1';
+            }
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
             appDrawer.style.transform = 'scale(0.95)';
@@ -2029,15 +2050,16 @@ function setupDrawerInteractions() {
 
         setTimeout(() => {
             isDrawerInMotion = false;
-        }, 500);
+        }, 300);
 
         startY = 0;
         currentY = 0;
         isHolding = false;
+        isMouseDown = false;
         swipeState = 'none';
     }
     
-    // Event listeners remain the same...
+    // Touch events
     drawerHandle.addEventListener('touchstart', e => {
         e.preventDefault();
         handleDragStart(e.touches[0].clientY);
@@ -2051,19 +2073,32 @@ function setupDrawerInteractions() {
     drawerHandle.addEventListener('touchend', handleDragEnd);
     drawerHandle.addEventListener('touchcancel', handleDragEnd);
 
+    // Mouse events
     drawerHandle.addEventListener('mousedown', e => {
         e.preventDefault();
+        isMouseDown = true;
         handleDragStart(e.clientY);
     });
     
     window.addEventListener('mousemove', e => {
-        if (startY) {
+        if (isMouseDown) {
             e.preventDefault();
             handleDragMove(e.clientY);
         }
     });
     
-    window.addEventListener('mouseup', handleDragEnd);
+    window.addEventListener('mouseup', e => {
+        if (isMouseDown) {
+            e.preventDefault();
+            handleDragEnd();
+        }
+    });
+
+    window.addEventListener('mouseleave', () => {
+        if (isMouseDown) {
+            handleDragEnd();
+        }
+    });
 
     document.addEventListener('click', (e) => {
         if (!isDrawerInMotion && 
@@ -2074,6 +2109,8 @@ function setupDrawerInteractions() {
             drawerPill.style.opacity = '1';
         }
     });
+
+    drawerHandle.addEventListener('selectstart', e => e.preventDefault());
 }
 
 const appDrawerObserver = new MutationObserver((mutations) => {
