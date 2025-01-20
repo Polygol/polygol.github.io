@@ -1945,6 +1945,7 @@ function setupDrawerInteractions() {
     let isDragging = false;
     const HOLD_DURATION = 500;
     const drawerHandle = document.querySelector('.drawer-handle');
+    const drawerPill = document.querySelector('.drawer-pill');
     const SWIPE_THRESHOLD = {
         DOCK: 10,
         HOME: 25,
