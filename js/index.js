@@ -962,12 +962,12 @@ function createSetupScreen() {
     const setupPages = [
         {
             title: "Welcome to Gurasuraisu",
-            description: "Let's set up your personalized experience.",
+            description: "Let's set up your personalized Gurasuraisu experience.",
             options: []
         },
         {
             title: "Data & Privacy",
-            description: "We will never send your data to anyone, not even our servers. Your information stays on your device at all times.",
+            description: "We will never send your data to anyone, not even our servers. Your data stays on your device at all times.",
             options: []
         },
         {
@@ -1014,7 +1014,7 @@ function createSetupScreen() {
         },
         {
             title: "Configure more options in Settings",
-            description: "To configure your Gurasuraisu, click on the gear icon on the bottom right.",
+            description: "To configure your Gurasuraisu, press on the gear icon on the bottom right.",
             options: []
         },
     ];
