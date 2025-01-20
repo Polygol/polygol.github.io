@@ -1887,6 +1887,7 @@ function setupDrawerInteractions() {
     let lastY = 0;
     let lastTime = 0;
     let velocity = 0;
+    let swipeState = 'none'; // 'dock', 'home', 'drawer'
     
     // Create dock element
     const dock = document.createElement('div');
@@ -1896,28 +1897,47 @@ function setupDrawerInteractions() {
     
     populateDock();
 
-    function updateDrawerPosition(yPosition) {
+    function calculateSwipePercent(yPosition) {
         const deltaY = startY - yPosition;
-        const swipePercent = (deltaY / window.innerHeight) * 100;
-        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + swipePercent));
+        return (deltaY / window.innerHeight) * 100;
+    }
+
+    function updateDockVisibility(percent) {
+        const dockOpacity = Math.min(1, Math.max(0, (percent - 5) / 5));
+        dock.style.opacity = dockOpacity;
+        dock.style.transform = `translateY(${Math.max(0, 20 - percent * 2)}px)`;
         
-        // Calculate velocity
-        const now = Date.now();
-        const deltaTime = now - lastTime;
-        if (deltaTime > 0) {
-            velocity = (yPosition - lastY) / deltaTime;
+        if (percent >= 10) {
+            dock.classList.add('show');
+        } else {
+            dock.classList.remove('show');
         }
-        lastY = yPosition;
-        lastTime = now;
-        
-        // Apply position with spring physics
+    }
+
+    function handleHomeGesture() {
+        const embed = document.querySelector('.fullscreen-embed');
+        if (embed) {
+            embed.style.transition = 'all 0.5s cubic-bezier(0.32, 0.72, 0, 1)';
+            embed.style.transform = 'scale(0.9)';
+            embed.style.opacity = '0';
+            
+            setTimeout(() => {
+                embed.remove();
+                document.querySelectorAll('body > *').forEach(el => {
+                    if (el.style.display === 'none') {
+                        el.style.display = '';
+                    }
+                });
+            }, 500);
+        }
+    }
+    
+    function updateDrawerPosition(percent) {
+        const drawerPercent = Math.max(0, (percent - 50) / 50);
         appDrawer.style.transition = 'none';
-        appDrawer.style.bottom = `${newPosition}%`;
-        appDrawer.style.opacity = Math.max(0, Math.min(1, (newPosition + 100) / 100));
-        
-        // Add subtle scale effect
-        const scale = 0.95 + ((newPosition + 100) / 100) * 0.05;
-        appDrawer.style.transform = `scale(${scale})`;
+        appDrawer.style.bottom = `${-100 + (drawerPercent * 100)}%`;
+        appDrawer.style.opacity = drawerPercent;
+        appDrawer.style.transform = `scale(${0.95 + (drawerPercent * 0.05)})`;
     }
     
     function handleDragStart(yPosition) {
@@ -1927,67 +1947,96 @@ function setupDrawerInteractions() {
         lastY = yPosition;
         lastTime = Date.now();
         velocity = 0;
-        
-        appDrawer.style.transition = 'none';
-        initialDrawerPosition = parseFloat(getComputedStyle(appDrawer).bottom) / window.innerHeight * 100;
+        swipeState = 'none';
         
         holdTimeout = setTimeout(() => {
-            isHolding = true;
-            appDrawer.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            appDrawer.style.bottom = '0%';
-            appDrawer.classList.add('open');
+            if (Math.abs(startY - currentY) < 10) {
+                isHolding = true;
+                appDrawer.style.transition = 'all 0.5s cubic-bezier(0.32, 0.72, 0, 1)';
+                appDrawer.style.bottom = '0%';
+                appDrawer.style.opacity = '1';
+                appDrawer.classList.add('open');
+                swipeState = 'drawer';
+            }
         }, 500);
     }
     
     function handleDragMove(yPosition) {
         if (!startY) return;
         currentY = yPosition;
-        updateDrawerPosition(yPosition);
+        
+        const now = Date.now();
+        const deltaTime = now - lastTime;
+        if (deltaTime > 0) {
+            velocity = (yPosition - lastY) / deltaTime;
+        }
+        lastY = yPosition;
+        lastTime = now;
+
+        const swipePercent = calculateSwipePercent(yPosition);
+        
+        if (!isHolding) {
+            if (swipePercent < 25) {
+                updateDockVisibility(swipePercent);
+                swipeState = swipePercent >= 10 ? 'dock' : 'none';
+            } else {
+                swipeState = 'home';
+                handleHomeGesture();
+            }
+        } else if (swipePercent >= 50) {
+            updateDrawerPosition(swipePercent);
+            swipeState = 'drawer';
+        }
     }
     
+
     function handleDragEnd() {
         clearTimeout(holdTimeout);
         
         if (!startY) return;
         
-        const deltaY = startY - currentY;
+        const finalPercent = calculateSwipePercent(currentY);
         const swipeTime = Date.now() - startTime;
-        const swipeVelocity = deltaY / swipeTime;
-        
-        appDrawer.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-        
-        // Determine final position based on velocity and position
-        const currentPosition = parseFloat(getComputedStyle(appDrawer).bottom) / window.innerHeight * 100;
-        const isMovingUp = velocity < 0;
-        
-        if (Math.abs(velocity) > flickVelocityThreshold) {
-            // Fast swipe
-            if (isMovingUp) {
-                appDrawer.style.bottom = '0%';
-                appDrawer.classList.add('open');
-                initialDrawerPosition = 0;
-            } else {
-                appDrawer.style.bottom = '-100%';
-                appDrawer.classList.remove('open');
-                initialDrawerPosition = -100;
-            }
-        } else {
-            // Slow drag - snap to nearest position
-            if (currentPosition > -50) {
-                appDrawer.style.bottom = '0%';
-                appDrawer.classList.add('open');
-                initialDrawerPosition = 0;
-            } else {
-                appDrawer.style.bottom = '-100%';
-                appDrawer.classList.remove('open');
-                initialDrawerPosition = -100;
-            }
+        const swipeVelocity = Math.abs(velocity);
+
+        switch (swipeState) {
+            case 'dock':
+                dock.style.transition = 'all 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+                if (finalPercent >= 10 || swipeVelocity > 0.4) {
+                    dock.classList.add('show');
+                    dock.style.opacity = '1';
+                    dock.style.transform = 'translateY(0)';
+                } else {
+                    dock.classList.remove('show');
+                    dock.style.opacity = '0';
+                    dock.style.transform = 'translateY(20px)';
+                }
+                break;
+                
+            case 'home':
+                handleHomeGesture();
+                break;
+                
+            case 'drawer':
+                appDrawer.style.transition = 'all 0.5s cubic-bezier(0.32, 0.72, 0, 1)';
+                if (finalPercent >= 50 || swipeVelocity > 0.4) {
+                    appDrawer.style.bottom = '0%';
+                    appDrawer.style.opacity = '1';
+                    appDrawer.style.transform = 'scale(1)';
+                    appDrawer.classList.add('open');
+                } else {
+                    appDrawer.style.bottom = '-100%';
+                    appDrawer.style.opacity = '0';
+                    appDrawer.style.transform = 'scale(0.95)';
+                    appDrawer.classList.remove('open');
+                }
+                break;
         }
-        
-        // Reset tracking variables
+
         startY = 0;
         currentY = 0;
         isHolding = false;
+        swipeState = 'none';
     }
     
     // Touch events
