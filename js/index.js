@@ -280,9 +280,6 @@ function setupWeatherToggle() {
         updateWeatherVisibility();
         if (showWeather) {
             updateSmallWeather(); // Refresh weather data when enabling
-            showPopup('Weather widget enabled');
-        } else {
-            showPopup('Weather widget disabled');
         }
     });
     
@@ -358,7 +355,7 @@ async function fetchLocationAndWeather() {
             } catch (error) {
                 console.error('Error fetching weather data:', error);
                 if (!navigator.onLine) {
-                    showPopup('You are currently offline');
+                    showPopup('You are offline');
                 }
                 // Return cached data if available
                 const cachedData = localStorage.getItem('lastWeatherData');
@@ -717,8 +714,8 @@ function showPopup(message) {
     popup.style.gap = '10px';
 
     // Check for specific words to determine icon
-    const checkWords = ['updated', 'complete', 'done', 'success'];
-    const closeWords = ['failed', 'canceled'];
+    const checkWords = ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'sucessfully'];
+    const closeWords = ['failed', 'canceled', 'error', 'failure'];
     
     let shouldShowIcon = false;
     let iconType = '';
@@ -806,7 +803,7 @@ function firstSetup() {
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     if (!localStorage.getItem('hasSeenPopupTouchscreen') && !isTouchDevice) {
-        showPopup('For optimal experience, use a touchscreen device');
+        showPopup('Failed to recognize touch screen');
         localStorage.setItem('hasSeenPopupTouchscreen', 'true');
     }
 
@@ -1154,6 +1151,7 @@ function createSetupScreen() {
                 setTimeout(() => {
                     setupContainer.remove();
                     showPopup('Welcome to Gurasuraisu!');
+                    showPopup('Swipe up from the navigation bar to get started');
                 }, 500);
             } else {
                 currentPage++;
@@ -1508,7 +1506,7 @@ async function saveWallpaper(file) {
                 localStorage.setItem('customWallpaper', mediaData);
             } catch (e) {
                 if (e.name === 'QuotaExceededError') {
-                    showPopup('File too large. Please choose a smaller file.');
+                    showPopup('Failed to update wallpaper: File too large');
                     return;
                 }
                 throw e;
@@ -1639,7 +1637,6 @@ function setupFontSelection() {
         document.fonts.load(`16px ${selectedFont}`).then(() => {
             applyFont(selectedFont);
             localStorage.setItem('clockFont', selectedFont);
-            showPopup('Clock Style updated');
         }).catch(() => {
             showPopup('Failed to load Clock Style');
         });
@@ -2173,7 +2170,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 window.addEventListener('online', () => {
-    showPopup('You are back online');
+    showPopup('You are online');
     updateSmallWeather(); // Refresh weather data
 });
 
