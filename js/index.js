@@ -1285,7 +1285,7 @@ function handleAppRedirect(query) {
     const bestMatch = fuzzySearch(query, appLinks);
     if (bestMatch) {
         const appLink = appLinks[bestMatch];
-        window.open(appLink, '_blank');
+        createFullscreenEmbed(appLink);
         return true;
     }
     return false;
@@ -1324,10 +1324,9 @@ searchInput.addEventListener('keydown', (event) => {
         }
         const firstWord = query.split(' ')[0].toLowerCase();
         if (firstWord === "how" || firstWord === "help" || firstWord === "ai" || firstWord === "why") {
-            const bingUrl = `https://www.bing.com/search?showconv=1&sendquery=1&q=${encodeURIComponent(query)}`;
-            window.open(bingUrl, '_blank');
+            createFullscreenEmbed(`https://www.bing.com/search?showconv=1&sendquery=1&q=${encodeURIComponent(query)}`);
         } else if (query) {
-            window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+            createFullscreenEmbed(`https://www.google.com/search?q=${encodeURIComponent(query)}`);
         }
     }
 });
@@ -1698,6 +1697,33 @@ function initializeCustomization() {
         },
     };
 
+function createFullscreenEmbed(url) {
+    const embedContainer = document.createElement('div');
+    embedContainer.className = 'fullscreen-embed';
+    embedContainer.innerHTML = `
+        <iframe src="${url}" frameborder="0" allowfullscreen></iframe>
+    `;
+    
+    // Hide all elements except drawer-handle, persistent-clock, and app drawer
+    document.querySelectorAll('body > *:not(.drawer-handle):not(.persistent-clock):not(#app-drawer)').forEach(el => {
+        el.style.display = 'none';
+    });
+    
+    document.body.appendChild(embedContainer);
+}
+
+function closeFullscreenEmbed() {
+    const embed = document.querySelector('.fullscreen-embed');
+    if (embed) {
+        embed.remove();
+        document.querySelectorAll('body > *').forEach(el => {
+            if (el.style.display === 'none') {
+                el.style.display = '';
+            }
+        });
+    }
+}
+
 function populateDock() {
     dock.innerHTML = '';
     
@@ -1706,20 +1732,18 @@ function populateDock() {
     drawerIcon.className = 'dock-icon drawer-opener';
     
     const drawerImg = document.createElement('img');
-    drawerImg.src = '/assets/appicon/appoff.png'; // Make sure to have this icon
+    drawerImg.src = '/assets/appicon/appoff.png';
     drawerImg.alt = 'Open Apps';
     
     drawerIcon.appendChild(drawerImg);
     drawerIcon.addEventListener('click', () => {
         if (appDrawer.classList.contains('open')) {
-            // Close drawer
             appDrawer.style.transition = 'bottom 0.3s ease';
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
         } else {
-            // Open drawer
             appDrawer.style.transition = 'bottom 0.3s ease';
             appDrawer.style.bottom = '0%';
             appDrawer.style.opacity = '1';
@@ -1730,7 +1754,6 @@ function populateDock() {
     
     dock.appendChild(drawerIcon);
     
-    // Add the most used apps (now only 5 since drawer opener takes first spot)
     const sortedApps = Object.entries(apps)
         .map(([appName, appDetails]) => ({
             name: appName,
@@ -1738,7 +1761,7 @@ function populateDock() {
             usage: appUsage[appName] || 0
         }))
         .sort((a, b) => b.usage - a.usage)
-        .slice(0, 5); // Take top 5 most used apps
+        .slice(0, 5);
     
     sortedApps.forEach(({name, details}) => {
         const dockIcon = document.createElement('div');
@@ -1752,7 +1775,7 @@ function populateDock() {
         dockIcon.addEventListener('click', () => {
             appUsage[name] = (appUsage[name] || 0) + 1;
             saveUsageData();
-            window.open(details.url, '_blank');
+            createFullscreenEmbed(details.url);
             populateDock();
         });
         
@@ -1802,8 +1825,6 @@ function createAppIcons() {
                 appUsage[app.name] = (appUsage[app.name] || 0) + 1;
                 saveUsageData();
                 
-                populateDock(); // Now this should work
-
                 if (app.details.url.startsWith('#')) {
                     switch (app.details.url) {
                         case '#settings':
@@ -1816,8 +1837,9 @@ function createAppIcons() {
                             showPopup(`${app.name} app opened`);
                     }
                 } else {
-                    window.open(app.details.url, '_blank', 'noopener,noreferrer');
+                    createFullscreenEmbed(app.details.url);
                 }
+                
                 appDrawer.classList.remove('open');
                 appDrawer.style.bottom = '-100%';
                 initialDrawerPosition = -100;
@@ -1851,9 +1873,9 @@ function saveUsageData() {
 function setupDrawerInteractions() {
     let startY = 0;
     let currentY = 0;
-    let initialDrawerPosition = -100;
-    let isDragging = false;
-    let isDrawerInMotion = false;
+    let startTime = 0;
+    let holdTimeout;
+    let isHolding = false;
     const flickVelocityThreshold = 0.4;
     const dockThreshold = -25; // Threshold for dock appearance
     const openThreshold = -50;
@@ -1868,149 +1890,84 @@ function setupDrawerInteractions() {
     
     populateDock();
     
-    function startDrag(yPosition) {
+    function handleDragStart(yPosition) {
         startY = yPosition;
         currentY = yPosition;
-        isDragging = true;
-        isDrawerInMotion = true;
-        appDrawer.style.transition = 'none';
+        startTime = Date.now();
+        
+        // Start hold timer
+        holdTimeout = setTimeout(() => {
+            isHolding = true;
+            // Open app drawer
+            appDrawer.style.transition = 'bottom 0.3s ease';
+            appDrawer.style.bottom = '0%';
+            appDrawer.classList.add('open');
+        }, 500); // 500ms hold threshold
     }
-
-    function moveDrawer(yPosition) {
-        if (!isDragging) return;
+    
+    function handleDragMove(yPosition) {
         currentY = yPosition;
         const deltaY = startY - currentY;
-        const windowHeight = window.innerHeight;
-        const movementPercentage = (deltaY / windowHeight) * 100;
-    
-        // Show dock and hide drawer-pill
-        if (movementPercentage > 10 && movementPercentage < 25) {
-            dock.classList.add('show');
-            drawerPill.style.opacity = '0';
-        } else {
-            dock.classList.remove('show');
-            drawerPill.style.opacity = '1';
+        const swipePercent = (deltaY / window.innerHeight) * 100;
+        
+        // Clear hold timer if moved too much
+        if (Math.abs(deltaY) > 10) {
+            clearTimeout(holdTimeout);
         }
-
-        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-    
-        // Calculate opacity based on drawer position
-        // When newPosition is -100 (fully hidden), opacity is 0
-        // When newPosition is 0 (fully shown), opacity is 1
-        const opacity = (newPosition + 100) / 100;
-        appDrawer.style.opacity = opacity;
-    
-        appDrawer.style.bottom = `${newPosition}%`;
+        
+        // Show dock for small swipe
+        if (swipePercent >= 10 && swipePercent < 25) {
+            dock.classList.add('show');
+        }
+        // Go home for regular swipe
+        else if (swipePercent >= 25 && !isHolding) {
+            // Remove fullscreen embed if exists
+            const embed = document.querySelector('.fullscreen-embed');
+            if (embed) {
+                embed.remove();
+                // Show all elements again
+                document.querySelectorAll('body > *').forEach(el => {
+                    el.style.display = '';
+                });
+            }
+        }
     }
-
-    function endDrag() {
-        if (!isDragging) return;
-
+    
+    function handleDragEnd() {
+        clearTimeout(holdTimeout);
         const deltaY = startY - currentY;
-        const deltaTime = 100;
-        const velocity = deltaY / deltaTime;
-        const windowHeight = window.innerHeight;
-        const movementPercentage = (deltaY / windowHeight) * 100;
-
-        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-
-        // Small swipe - show dock
-        if (movementPercentage > 10 && movementPercentage <= 25) {
-            dock.classList.add('show');
-            appDrawer.style.bottom = '-100%';
-            appDrawer.style.opacity = '0';
-            appDrawer.classList.remove('open');
-            initialDrawerPosition = -100;
-        } 
-        // Large swipe - show full drawer
-        else if (movementPercentage > 25) {
-            dock.classList.remove('show');
-            appDrawer.style.bottom = '0%';
-            appDrawer.style.opacity = '1';
-            appDrawer.classList.add('open');
-            initialDrawerPosition = 0;
-        } 
-        // Close everything
-        else {
-            dock.classList.remove('show');
-            appDrawer.style.bottom = '-100%';
-            appDrawer.style.opacity = '0';
-            appDrawer.classList.remove('open');
-            initialDrawerPosition = -100;
+        const swipePercent = (deltaY / window.innerHeight) * 100;
+        const swipeTime = Date.now() - startTime;
+        
+        if (!isHolding) {
+            if (swipePercent >= 10 && swipePercent < 25) {
+                // Keep dock visible
+                dock.classList.add('show');
+            } else if (swipePercent >= 25) {
+                // Go home
+                const embed = document.querySelector('.fullscreen-embed');
+                if (embed) {
+                    embed.remove();
+                    document.querySelectorAll('body > *').forEach(el => {
+                        el.style.display = '';
+                    });
+                }
+            }
         }
-
-        isDragging = false;
-
-        setTimeout(() => {
-            isDrawerInMotion = false;
-        }, 300); // 300ms matches the transition duration in the CSS
+        
+        isHolding = false;
     }
-
-    // Touch Events
-    document.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        
-        // Check if touch is on handle area or if drawer is already open
-        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
-            startDrag(touch.clientY);
-            e.preventDefault();
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchmove', (e) => {
-        if (isDragging) {
-            e.preventDefault();
-            moveDrawer(e.touches[0].clientY);
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchend', () => {
-        endDrag();
+    
+    // Add event listeners for touch and mouse events
+    drawerHandle.addEventListener('touchstart', e => handleDragStart(e.touches[0].clientY));
+    drawerHandle.addEventListener('touchmove', e => handleDragMove(e.touches[0].clientY));
+    drawerHandle.addEventListener('touchend', handleDragEnd);
+    
+    drawerHandle.addEventListener('mousedown', e => handleDragStart(e.clientY));
+    drawerHandle.addEventListener('mousemove', e => {
+        if (e.buttons === 1) handleDragMove(e.clientY);
     });
-
-    // Mouse Events
-    document.addEventListener('mousedown', (e) => {
-        if (e.button !== 0) return;
-        const element = document.elementFromPoint(e.clientX, e.clientY);
-        
-        // Check if click is on handle area or if drawer is already open
-        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
-            startDrag(e.clientY);
-        }
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-            moveDrawer(e.clientY);
-        }
-    });
-
-    document.addEventListener('mouseup', () => {
-        endDrag();
-    });
-
-    // Close drawer when clicking outside
-    document.addEventListener('click', (e) => {
-        if (appDrawer.classList.contains('open') &&
-            !appDrawer.contains(e.target) &&
-            !appDrawerToggle.contains(e.target)) {
-            appDrawer.style.transition = 'bottom 0.3s ease';
-            appDrawer.style.bottom = '-100%';
-            appDrawer.classList.remove('open');
-            initialDrawerPosition = -100;
-        }
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!isDrawerInMotion && 
-            !dock.contains(e.target) && 
-            !drawerHandle.contains(e.target) && 
-            !appDrawer.classList.contains('open')) { // Only hide dock if drawer is closed
-            dock.classList.remove('show');
-            drawerPill.style.opacity = '1'; // Restore drawer-pill opacity when dock is hidden
-        }
-    });
+    drawerHandle.addEventListener('mouseup', handleDragEnd);
 }
 
 const appDrawerObserver = new MutationObserver((mutations) => {
@@ -2054,6 +2011,7 @@ blurOverlay.addEventListener('click', (event) => {
 
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
+        closeFullscreenEmbed();
         // Close all modals
         [timezoneModal, weatherModal, customizeModal].forEach(modal => {
             if (modal.classList.contains('show')) {
