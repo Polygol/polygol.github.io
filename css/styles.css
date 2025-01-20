@@ -106,6 +106,7 @@ body.light-theme[style*="background-image"] .info {
     z-index: 1001;
     touch-action: none;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .drawer-pill {
@@ -1025,7 +1026,13 @@ body.light-theme[style*="background-image"] .info {
             z-index: 1001;
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
         }
-        
+
+        #dock {
+            transform-origin: bottom;
+            will-change: transform, opacity;
+            transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+
         .dock.show {
             bottom: 10px;
         }
@@ -1073,6 +1080,9 @@ body.light-theme[style*="background-image"] .info {
             height: 100%;
             z-index: 999;
             background: var(--background-color);
+            transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+            transform-origin: center;
+            will-change: transform, opacity;
         }
         
         .fullscreen-embed iframe {
