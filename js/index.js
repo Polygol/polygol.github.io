@@ -1698,18 +1698,21 @@ function initializeCustomization() {
     };
 
 function createFullscreenEmbed(url) {
+    // Close any existing embed first
+    closeFullscreenEmbed();
+    
     const embedContainer = document.createElement('div');
     embedContainer.className = 'fullscreen-embed';
     embedContainer.innerHTML = `
         <iframe src="${url}" frameborder="0" allowfullscreen></iframe>
     `;
     
-    // Hide all elements except drawer-handle, persistent-clock, and app drawer
-    document.querySelectorAll('body > *:not(.drawer-handle):not(.persistent-clock):not(#app-drawer)').forEach(el => {
+    // Hide elements except necessary ones
+    document.querySelectorAll('body > *:not(.drawer-handle):not(.persistent-clock):not(#app-drawer):not(.dock)').forEach(el => {
         el.style.display = 'none';
     });
     
-    // Show persistent clock when embed is open
+    // Ensure persistent clock is visible
     const persistentClock = document.getElementById('persistent-clock');
     persistentClock.classList.add('show');
     
@@ -1912,14 +1915,29 @@ function setupDrawerInteractions() {
         // Check if there's an open embed
         const openEmbed = document.querySelector('.fullscreen-embed');
         
-        if (openEmbed && movementPercentage > 25) {
-            // Add transition class for smooth animation
-            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-            openEmbed.style.transform = `scale(${1 - (movementPercentage - 25) / 100})`;
-            openEmbed.style.opacity = 1 - ((movementPercentage - 25) / 75);
+        if (openEmbed) {
+            // Make the scaling more responsive
+            const scaleValue = Math.max(0.8, 1 - (movementPercentage / 100));
+            const opacityValue = Math.max(0, 1 - (movementPercentage / 50));
+            
+            openEmbed.style.transition = 'none'; // Remove transition for direct manipulation
+            openEmbed.style.transform = `scale(${scaleValue})`;
+            openEmbed.style.opacity = opacityValue;
+            
+            // Show dock earlier in the gesture
+            if (movementPercentage > 5) {
+                dock.classList.add('show');
+                drawerPill.style.opacity = '0';
+            } else {
+                dock.classList.remove('show');
+                drawerPill.style.opacity = '1';
+            }
+            
+            // Prevent drawer from showing when embed is open
+            return;
         }
-        
-        // Show dock and hide drawer-pill
+    
+        // Regular drawer behavior when no embed is open
         if (movementPercentage > 10 && movementPercentage < 25) {
             dock.classList.add('show');
             drawerPill.style.opacity = '0';
@@ -1933,92 +1951,77 @@ function setupDrawerInteractions() {
         appDrawer.style.opacity = opacity;
         appDrawer.style.bottom = `${newPosition}%`;
     }
-
+    
     function endDrag() {
         if (!isDragging) return;
     
         const deltaY = startY - currentY;
-        const deltaTime = 100;
-        const velocity = deltaY / deltaTime;
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
-    
-        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
     
         // Check if there's an open embed
         const openEmbed = document.querySelector('.fullscreen-embed');
         
-        if (openEmbed && movementPercentage > 50) {
-            // Close embed with animation
-            openEmbed.style.transform = 'scale(0.8)';
-            openEmbed.style.opacity = '0';
-            setTimeout(() => {
-                closeFullscreenEmbed();
-                // Show all elements again
-                document.querySelectorAll('body > *').forEach(el => {
-                    if (el.style.display === 'none') {
-                        el.style.display = '';
-                    }
-                });
-            }, 300);
+        if (openEmbed) {
+            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            
+            // Make the closing threshold more forgiving (30% instead of 50%)
+            if (movementPercentage > 30) {
+                // Close embed with animation
+                openEmbed.style.transform = 'scale(0.8)';
+                openEmbed.style.opacity = '0';
+                setTimeout(() => {
+                    closeFullscreenEmbed();
+                    // Reset states
+                    dock.classList.remove('show');
+                    drawerPill.style.opacity = '1';
+                }, 300);
+            } else {
+                // Reset embed if swipe wasn't enough
+                openEmbed.style.transform = 'scale(1)';
+                openEmbed.style.opacity = '1';
+                dock.classList.remove('show');
+                drawerPill.style.opacity = '1';
+            }
+            
             // Reset drawer state
+            appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+            appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
+            appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
+            
+            isDragging = false;
+            return;
+        }
+    
+        // Regular drawer behavior (rest of the existing code)
+        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+        
+        if (movementPercentage > 10 && movementPercentage <= 25) {
+            dock.classList.add('show');
+            appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
+            appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
+        } else if (movementPercentage > 25) {
+            dock.classList.remove('show');
+            appDrawer.style.bottom = '0%';
+            appDrawer.style.opacity = '1';
+            appDrawer.classList.add('open');
+            initialDrawerPosition = 0;
+        } else {
             dock.classList.remove('show');
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
-        } else if (openEmbed) {
-            // Reset embed if swipe wasn't enough
-            openEmbed.style.transform = 'scale(1)';
-            openEmbed.style.opacity = '1';
-            
-            // Handle dock visibility for smaller swipes
-            if (movementPercentage > 10 && movementPercentage <= 25) {
-                dock.classList.add('show');
-                appDrawer.style.bottom = '-100%';
-                appDrawer.style.opacity = '0';
-                appDrawer.classList.remove('open');
-                initialDrawerPosition = -100;
-            } else {
-                dock.classList.remove('show');
-                appDrawer.style.bottom = '-100%';
-                appDrawer.style.opacity = '0';
-                appDrawer.classList.remove('open');
-                initialDrawerPosition = -100;
-            }
-        } else {
-            // Normal drawer behavior when no embed is open
-            // Small swipe - show dock
-            if (movementPercentage > 10 && movementPercentage <= 25) {
-                dock.classList.add('show');
-                appDrawer.style.bottom = '-100%';
-                appDrawer.style.opacity = '0';
-                appDrawer.classList.remove('open');
-                initialDrawerPosition = -100;
-            } 
-            // Large swipe - show full drawer
-            else if (movementPercentage > 25) {
-                dock.classList.remove('show');
-                appDrawer.style.bottom = '0%';
-                appDrawer.style.opacity = '1';
-                appDrawer.classList.add('open');
-                initialDrawerPosition = 0;
-            } 
-            // Close everything
-            else {
-                dock.classList.remove('show');
-                appDrawer.style.bottom = '-100%';
-                appDrawer.style.opacity = '0';
-                appDrawer.classList.remove('open');
-                initialDrawerPosition = -100;
-            }
         }
     
         isDragging = false;
-    
         setTimeout(() => {
             isDrawerInMotion = false;
-        }, 300); // 300ms matches the transition duration in the CSS
+        }, 300);
     }
 
     // Touch Events
