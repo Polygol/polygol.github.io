@@ -1709,6 +1709,10 @@ function createFullscreenEmbed(url) {
         el.style.display = 'none';
     });
     
+    // Show persistent clock when embed is open
+    const persistentClock = document.getElementById('persistent-clock');
+    persistentClock.classList.add('show');
+    
     document.body.appendChild(embedContainer);
 }
 
@@ -1905,6 +1909,16 @@ function setupDrawerInteractions() {
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
     
+        // Check if there's an open embed
+        const openEmbed = document.querySelector('.fullscreen-embed');
+        
+        if (openEmbed && movementPercentage > 25) {
+            // Add transition class for smooth animation
+            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            openEmbed.style.transform = `scale(${1 - (movementPercentage - 25) / 100})`;
+            openEmbed.style.opacity = 1 - ((movementPercentage - 25) / 75);
+        }
+        
         // Show dock and hide drawer-pill
         if (movementPercentage > 10 && movementPercentage < 25) {
             dock.classList.add('show');
@@ -1913,56 +1927,95 @@ function setupDrawerInteractions() {
             dock.classList.remove('show');
             drawerPill.style.opacity = '1';
         }
-
-        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
     
-        // Calculate opacity based on drawer position
-        // When newPosition is -100 (fully hidden), opacity is 0
-        // When newPosition is 0 (fully shown), opacity is 1
+        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
         const opacity = (newPosition + 100) / 100;
         appDrawer.style.opacity = opacity;
-    
         appDrawer.style.bottom = `${newPosition}%`;
     }
 
     function endDrag() {
         if (!isDragging) return;
-
+    
         const deltaY = startY - currentY;
         const deltaTime = 100;
         const velocity = deltaY / deltaTime;
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
-
+    
         appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-
-        // Small swipe - show dock
-        if (movementPercentage > 10 && movementPercentage <= 25) {
-            dock.classList.add('show');
+    
+        // Check if there's an open embed
+        const openEmbed = document.querySelector('.fullscreen-embed');
+        
+        if (openEmbed && movementPercentage > 50) {
+            // Close embed with animation
+            openEmbed.style.transform = 'scale(0.8)';
+            openEmbed.style.opacity = '0';
+            setTimeout(() => {
+                closeFullscreenEmbed();
+                // Show all elements again
+                document.querySelectorAll('body > *').forEach(el => {
+                    if (el.style.display === 'none') {
+                        el.style.display = '';
+                    }
+                });
+            }, 300);
+            // Reset drawer state
+            dock.classList.remove('show');
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
-        } 
-        // Large swipe - show full drawer
-        else if (movementPercentage > 25) {
-            dock.classList.remove('show');
-            appDrawer.style.bottom = '0%';
-            appDrawer.style.opacity = '1';
-            appDrawer.classList.add('open');
-            initialDrawerPosition = 0;
-        } 
-        // Close everything
-        else {
-            dock.classList.remove('show');
-            appDrawer.style.bottom = '-100%';
-            appDrawer.style.opacity = '0';
-            appDrawer.classList.remove('open');
-            initialDrawerPosition = -100;
+        } else if (openEmbed) {
+            // Reset embed if swipe wasn't enough
+            openEmbed.style.transform = 'scale(1)';
+            openEmbed.style.opacity = '1';
+            
+            // Handle dock visibility for smaller swipes
+            if (movementPercentage > 10 && movementPercentage <= 25) {
+                dock.classList.add('show');
+                appDrawer.style.bottom = '-100%';
+                appDrawer.style.opacity = '0';
+                appDrawer.classList.remove('open');
+                initialDrawerPosition = -100;
+            } else {
+                dock.classList.remove('show');
+                appDrawer.style.bottom = '-100%';
+                appDrawer.style.opacity = '0';
+                appDrawer.classList.remove('open');
+                initialDrawerPosition = -100;
+            }
+        } else {
+            // Normal drawer behavior when no embed is open
+            // Small swipe - show dock
+            if (movementPercentage > 10 && movementPercentage <= 25) {
+                dock.classList.add('show');
+                appDrawer.style.bottom = '-100%';
+                appDrawer.style.opacity = '0';
+                appDrawer.classList.remove('open');
+                initialDrawerPosition = -100;
+            } 
+            // Large swipe - show full drawer
+            else if (movementPercentage > 25) {
+                dock.classList.remove('show');
+                appDrawer.style.bottom = '0%';
+                appDrawer.style.opacity = '1';
+                appDrawer.classList.add('open');
+                initialDrawerPosition = 0;
+            } 
+            // Close everything
+            else {
+                dock.classList.remove('show');
+                appDrawer.style.bottom = '-100%';
+                appDrawer.style.opacity = '0';
+                appDrawer.classList.remove('open');
+                initialDrawerPosition = -100;
+            }
         }
-
+    
         isDragging = false;
-
+    
         setTimeout(() => {
             isDrawerInMotion = false;
         }, 300); // 300ms matches the transition duration in the CSS
