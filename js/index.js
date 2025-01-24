@@ -1702,54 +1702,70 @@ function initializeCustomization() {
     };
 
 function createFullscreenEmbed(url) {
-    // Check if the URL can be embedded
-    try {
-        const iframe = document.createElement('iframe');
-        iframe.src = url;
-        iframe.setAttribute('frameborder', '0');
-        iframe.setAttribute('allowfullscreen', '');
-        
-        // Create a container for the iframe
-        const embedContainer = document.createElement('div');
-        embedContainer.className = 'fullscreen-embed';
-        embedContainer.appendChild(iframe);
-        
-        // Check if iframe loading fails
-        iframe.addEventListener('load', () => {
-            try {
-                // Attempt to access the iframe's content
-                const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-                if (!iframeDocument) {
-                    throw new Error('Cannot access iframe content');
-                }
-            } catch (error) {
-                // If embedding fails, open in a new tab instead
-                window.open(url, '_blank');
-                embedContainer.remove();
-                return;
+    // Attempt to create an iframe
+    const iframe = document.createElement('iframe');
+    iframe.src = url;
+    iframe.setAttribute('frameborder', '0');
+    iframe.setAttribute('allowfullscreen', '');
+    
+    // Create a container for the iframe
+    const embedContainer = document.createElement('div');
+    embedContainer.className = 'fullscreen-embed';
+    embedContainer.appendChild(iframe);
+    
+    // Flag to track if fallback to new tab is needed
+    let openedInNewTab = false;
+    
+    // Try to detect if embedding is blocked
+    iframe.addEventListener('load', () => {
+        try {
+            // Attempt to access iframe content
+            const iframeContent = iframe.contentWindow.document;
+            
+            // If this doesn't throw an error, check if it's actually an error page
+            if (iframeContent.body.textContent.includes('X-Frame-Options') || 
+                iframeContent.body.textContent.includes('frame denied')) {
+                throw new Error('Embedding blocked');
             }
-        });
-        
-        // Handle iframe loading error
-        iframe.addEventListener('error', () => {
+        } catch (error) {
+            // If accessing content fails or is blocked, open in new tab
+            if (!openedInNewTab) {
+                window.open(url, '_blank');
+                openedInNewTab = true;
+                embedContainer.remove();
+            }
+        }
+    });
+    
+    // Handle iframe loading error
+    iframe.addEventListener('error', () => {
+        if (!openedInNewTab) {
             window.open(url, '_blank');
+            openedInNewTab = true;
             embedContainer.remove();
-        });
-        
-        // Hide all elements except drawer-handle, persistent-clock, and app drawer
-        document.querySelectorAll('body > *:not(.drawer-handle):not(.persistent-clock):not(#app-drawer)').forEach(el => {
-            el.style.display = 'none';
-        });
-        
-        // Show persistent clock when embed is open
-        const persistentClock = document.getElementById('persistent-clock');
-        persistentClock.classList.add('show');
-        
-        document.body.appendChild(embedContainer);
-    } catch (error) {
-        // Fallback to opening in a new tab if any error occurs
-        window.open(url, '_blank');
-    }
+        }
+    });
+    
+    // Hide all elements except drawer-handle, persistent-clock, and app drawer
+    document.querySelectorAll('body > *:not(.drawer-handle):not(.persistent-clock):not(#app-drawer)').forEach(el => {
+        el.style.display = 'none';
+    });
+    
+    // Show persistent clock when embed is open
+    const persistentClock = document.getElementById('persistent-clock');
+    persistentClock.classList.add('show');
+    
+    // Append the container
+    document.body.appendChild(embedContainer);
+    
+    // Fallback mechanism: if no event triggers after a short delay, open in new tab
+    setTimeout(() => {
+        if (!openedInNewTab) {
+            window.open(url, '_blank');
+            openedInNewTab = true;
+            embedContainer.remove();
+        }
+    }, 1000);
 }
 
 function closeFullscreenEmbed() {
