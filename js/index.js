@@ -1706,24 +1706,28 @@ function createFullscreenEmbed(url) {
     const embedContainer = document.createElement('div');
     embedContainer.className = 'fullscreen-embed';
 
-    // Check if the website can be embedded
+    // Create the iframe element
     const iframe = document.createElement('iframe');
     iframe.src = url;
     iframe.frameBorder = '0';
     iframe.allowFullscreen = true;
 
-    // Add an event listener to detect if the iframe is blocked
+    // Handle cases where embedding is restricted by CSP or other policies
     iframe.onload = () => {
-        embedContainer.innerHTML = '';
         embedContainer.appendChild(iframe);
     };
 
+    // Fallback: if the iframe is blocked, open the URL in a new tab
     iframe.onerror = () => {
-        alert('This website cannot be embedded. Opening in a new tab instead.');
-        window.open(url, '_blank');
+        // Clean up the embed container to prevent any flickering
         embedContainer.remove();
+
+        // Inform the user and open the site in a new tab
+        showPopup('Opening in a new tab');
+        window.open(url, '_blank');
     };
 
+    // Append the iframe to the container
     embedContainer.appendChild(iframe);
 
     // Hide all elements except drawer-handle, persistent-clock, and app drawer
@@ -1738,18 +1742,6 @@ function createFullscreenEmbed(url) {
     }
 
     document.body.appendChild(embedContainer);
-}
-
-function closeFullscreenEmbed() {
-    const embed = document.querySelector('.fullscreen-embed');
-    if (embed) {
-        embed.remove();
-        document.querySelectorAll('body > *').forEach(el => {
-            if (el.style.display === 'none') {
-                el.style.display = '';
-            }
-        });
-    }
 }
 
 function populateDock() {
