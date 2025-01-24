@@ -33,7 +33,9 @@
             </div>
             <div class="weather-widget" id="weather">
                 <span class="temperature" id="temperature"></span>
-                <span class="weather-icon" id="weather-icon"><span class="material-symbols-rounded">cloud_off</span></span>
+                <span class="weather-icon" id="weather-icon">
+                    <img src="assets/ui/svg/load.svg" alt="Weather Icon" style="width: 24px; height: 24px;">
+                </span>
             </div>
             <div class="timer-widget" id="timer-widget">
                  <span class="timer-text" id="timer-text"></span>
@@ -47,20 +49,32 @@
         <button class="close" id="closeCustomizeModal"><span class="material-symbols-rounded">close</span></button>
         <h2>Settings</h2>
         <div class="theme-toggle">
-            <label for="theme-switch">Light Mode</label>
+            <label for="theme-switch">
+                <span class="material-symbols-rounded">light_mode</span>
+                Light Mode
+            </label>
             <input type="checkbox" id="theme-switch">
         </div>
         <div class="clock-settings">
-            <label for="seconds-switch">Show Seconds</label>
+            <label for="seconds-switch">
+                <span class="material-symbols-rounded">timer_10_select</span>
+                Show Seconds
+            </label>
             <input type="checkbox" id="seconds-switch" checked>
         </div>
         <div class="wallpaper-upload">
-            <label>Wallpaper</label>
+            <label>
+                <span class="material-symbols-rounded">wallpaper</span>
+                Wallpaper
+            </label>
             <input type="file" id="wallpaperInput" accept=".png, .jpeg, .jpg, .gif, .mp4">
             <button id="uploadButton">Choose Image</button>
         </div>
         <div class="font-selection">
-            <label for="font-select">Clock Style</label>
+            <label for="font-select">
+                <span class="material-symbols-rounded">brand_family</span>
+                Clock Style
+            </label>
             <select id="font-select">
                 <option value="Inter">Default</option>
                 <option value="Roboto">Business</option>
@@ -73,11 +87,17 @@
             </select>
         </div>
         <div class="weather-settings">
-            <label for="weather-switch">Show Weather</label>
+            <label for="weather-switch">
+                <span class="material-symbols-rounded">partly_cloudy_day</span>
+                Show Weather
+            </label>
             <input type="checkbox" id="weather-switch" checked>
         </div>
         <div class="version-info">
-            <label>Gurasuraisu Version</label>
+            <label>
+                <span class="material-symbols-rounded">info</span>
+                Gurasuraisu Version
+            </label>
             <button id="versionButton">Gurasuraisu Sodium 13 P1</button>
         </div>
     </div>
@@ -113,7 +133,9 @@
         <div class="modal-content">
             <button class="close" id="closeWeatherModal"><span class="material-symbols-rounded">close</span></button>
             <div id="detailedWeather" class="detailed-weather">
-                <p><span class="material-symbols-rounded">cloud_off</span></p>
+                <p>
+                    <img src="assets/ui/svg/load.svg" alt="Weather" style="width: 24px; height: 24px;">
+                </p>
             </div>
         </div>
     </div>
