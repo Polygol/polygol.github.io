@@ -45,6 +45,7 @@ let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults t
 let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults to true
 
 secondsSwitch.checked = showSeconds;
+searchInput.value = 'Search';
 
 // IndexedDB setup for video storage
 const dbName = 'WallpaperDB';
@@ -1302,38 +1303,59 @@ function showAutocomplete(query) {
     }
 }
 
+searchInput.addEventListener('focus', () => {
+    if (searchInput.value === 'Search') {
+        searchInput.value = '';
+    }
+    searchInput.select();
+});
+
+searchInput.addEventListener('blur', () => {
+    if (searchInput.value.trim() === '') {
+        searchInput.value = 'Search';
+    }
+});
+
+
 searchInput.addEventListener('input', (event) => {
     const query = searchInput.value.trim();
     updateSearchIcon(query);
     showAutocomplete(query);
 });
 
-searchInput.addEventListener('click', () => {
-    searchInput.select();
-});
-
 searchInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
         const query = searchInput.value.trim();
+        
+        // Reset to 'Search' if input is empty
+        if (query === '') {
+            searchInput.value = 'Search';
+            return;
+        }
+
         updateSearchIcon(query);
         
         if (handleAppRedirect(query)) {
-            searchInput.value = ''; // Clear search input
-            searchInput.blur(); // Remove focus
+            searchInput.value = 'Search';
+            searchInput.blur();
             return;
         }
         
         const firstWord = query.split(' ')[0].toLowerCase();
-        if (firstWord === "how" || firstWord === "help" || firstWord === "ai" || firstWord === "why") {
+        if (firstWord === "how" || firstWord === "help" || firstWord === "ai" || firstWord === "why" || firstWord === "is" || firstWord === "what" || firstWord === "when" || firstWord === "where" || firstWord === "who" || firstWord === "which" || firstWord === "can" || firstWord === "could" || firstWord === "will" || firstWord === "would" || firstWord === "does" || firstWord === "did" || firstWord === "should" || firstWord === "are" || firstWord === "have" || firstWord === "has" || firstWord === "may" || firstWord === "might" || firstWord === "was" || firstWord === "were") {
             createFullscreenEmbed(`https://www.bing.com/search?showconv=1&sendquery=1&q=${encodeURIComponent(query)}`);
         } else if (query) {
             createFullscreenEmbed(`https://www.google.com/search?q=${encodeURIComponent(query)}`);
         }
         
-        searchInput.value = ''; // Clear search input
-        searchInput.blur(); // Remove focus
-        autocompleteSuggestions.innerHTML = ''; // Clear autocomplete suggestions
+        searchInput.value = 'Search';
+        searchInput.blur();
+        autocompleteSuggestions.innerHTML = '';
     }
+});
+
+searchInput.addEventListener('click', () => {
+    searchInput.select();
 });
 
 const customizeButton = document.getElementById('customize');
