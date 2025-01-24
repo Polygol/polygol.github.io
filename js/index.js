@@ -1693,19 +1693,38 @@ function initializeCustomization() {
 function createFullscreenEmbed(url) {
     const embedContainer = document.createElement('div');
     embedContainer.className = 'fullscreen-embed';
-    embedContainer.innerHTML = `
-        <iframe src="${url}" frameborder="0" allowfullscreen></iframe>
-    `;
-    
+
+    // Check if the website can be embedded
+    const iframe = document.createElement('iframe');
+    iframe.src = url;
+    iframe.frameBorder = '0';
+    iframe.allowFullscreen = true;
+
+    // Add an event listener to detect if the iframe is blocked
+    iframe.onload = () => {
+        embedContainer.innerHTML = '';
+        embedContainer.appendChild(iframe);
+    };
+
+    iframe.onerror = () => {
+        alert('This website cannot be embedded. Opening in a new tab instead.');
+        window.open(url, '_blank');
+        embedContainer.remove();
+    };
+
+    embedContainer.appendChild(iframe);
+
     // Hide all elements except drawer-handle, persistent-clock, and app drawer
     document.querySelectorAll('body > *:not(.drawer-handle):not(.persistent-clock):not(#app-drawer)').forEach(el => {
         el.style.display = 'none';
     });
-    
+
     // Show persistent clock when embed is open
     const persistentClock = document.getElementById('persistent-clock');
-    persistentClock.classList.add('show');
-    
+    if (persistentClock) {
+        persistentClock.classList.add('show');
+    }
+
     document.body.appendChild(embedContainer);
 }
 
