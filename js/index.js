@@ -1703,45 +1703,54 @@ function initializeCustomization() {
     };
 
 function createFullscreenEmbed(url) {
-    const embedContainer = document.createElement('div');
-    embedContainer.className = 'fullscreen-embed';
-
-    // Create the iframe element
-    const iframe = document.createElement('iframe');
-    iframe.src = url;
-    iframe.frameBorder = '0';
-    iframe.allowFullscreen = true;
-
-    // Handle cases where embedding is restricted by CSP or other policies
-    iframe.onload = () => {
+    // Check if the URL can be embedded
+    try {
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.setAttribute('frameborder', '0');
+        iframe.setAttribute('allowfullscreen', '');
+        
+        // Create a container for the iframe
+        const embedContainer = document.createElement('div');
+        embedContainer.className = 'fullscreen-embed';
         embedContainer.appendChild(iframe);
-    };
-
-    // Fallback: if the iframe is blocked, open the URL in a new tab
-    iframe.onerror = () => {
-        // Clean up the embed container to prevent any flickering
-        embedContainer.remove();
-
-        // Inform the user and open the site in a new tab
-        showPopup('Opening in a new tab');
-        window.open(url, '_blank');
-    };
-
-    // Append the iframe to the container
-    embedContainer.appendChild(iframe);
-
-    // Hide all elements except drawer-handle, persistent-clock, and app drawer
-    document.querySelectorAll('body > *:not(.drawer-handle):not(.persistent-clock):not(#app-drawer)').forEach(el => {
-        el.style.display = 'none';
-    });
-
-    // Show persistent clock when embed is open
-    const persistentClock = document.getElementById('persistent-clock');
-    if (persistentClock) {
+        
+        // Check if iframe loading fails
+        iframe.addEventListener('load', () => {
+            try {
+                // Attempt to access the iframe's content
+                const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+                if (!iframeDocument) {
+                    throw new Error('Cannot access iframe content');
+                }
+            } catch (error) {
+                // If embedding fails, open in a new tab instead
+                window.open(url, '_blank');
+                embedContainer.remove();
+                return;
+            }
+        });
+        
+        // Handle iframe loading error
+        iframe.addEventListener('error', () => {
+            window.open(url, '_blank');
+            embedContainer.remove();
+        });
+        
+        // Hide all elements except drawer-handle, persistent-clock, and app drawer
+        document.querySelectorAll('body > *:not(.drawer-handle):not(.persistent-clock):not(#app-drawer)').forEach(el => {
+            el.style.display = 'none';
+        });
+        
+        // Show persistent clock when embed is open
+        const persistentClock = document.getElementById('persistent-clock');
         persistentClock.classList.add('show');
+        
+        document.body.appendChild(embedContainer);
+    } catch (error) {
+        // Fallback to opening in a new tab if any error occurs
+        window.open(url, '_blank');
     }
-
-    document.body.appendChild(embedContainer);
 }
 
 function closeFullscreenEmbed() {
