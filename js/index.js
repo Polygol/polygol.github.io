@@ -1308,19 +1308,31 @@ searchInput.addEventListener('input', (event) => {
     showAutocomplete(query);
 });
 
+searchInput.addEventListener('click', () => {
+    searchInput.select();
+});
+
 searchInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
         const query = searchInput.value.trim();
         updateSearchIcon(query);
+        
         if (handleAppRedirect(query)) {
+            searchInput.value = ''; // Clear search input
+            searchInput.blur(); // Remove focus
             return;
         }
+        
         const firstWord = query.split(' ')[0].toLowerCase();
         if (firstWord === "how" || firstWord === "help" || firstWord === "ai" || firstWord === "why") {
             createFullscreenEmbed(`https://www.bing.com/search?showconv=1&sendquery=1&q=${encodeURIComponent(query)}`);
         } else if (query) {
             createFullscreenEmbed(`https://www.google.com/search?q=${encodeURIComponent(query)}`);
         }
+        
+        searchInput.value = ''; // Clear search input
+        searchInput.blur(); // Remove focus
+        autocompleteSuggestions.innerHTML = ''; // Clear autocomplete suggestions
     }
 });
 
