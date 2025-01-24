@@ -1713,8 +1713,8 @@ function createFullscreenEmbed(url) {
     embedContainer.className = 'fullscreen-embed';
     embedContainer.appendChild(iframe);
     
-    // Flag to track if fallback to new tab is needed
-    let openedInNewTab = false;
+    // Flag to track embedding status
+    let embedFailed = false;
     
     // Try to detect if embedding is blocked
     iframe.addEventListener('load', () => {
@@ -1722,28 +1722,29 @@ function createFullscreenEmbed(url) {
             // Attempt to access iframe content
             const iframeContent = iframe.contentWindow.document;
             
-            // If this doesn't throw an error, check if it's actually an error page
+            // Specific check for embedding blockage
             if (iframeContent.body.textContent.includes('X-Frame-Options') || 
                 iframeContent.body.textContent.includes('frame denied')) {
-                throw new Error('Embedding blocked');
+                embedFailed = true;
+                window.open(url, '_blank');
+                embedContainer.remove();
+                closeFullscreenEmbed();
             }
         } catch (error) {
-            // If accessing content fails or is blocked, open in new tab
-            if (!openedInNewTab) {
-                window.open(url, '_blank');
-                openedInNewTab = true;
-                embedContainer.remove();
-            }
+            // If accessing content fails, it might be blocked
+            embedFailed = true;
+            window.open(url, '_blank');
+            embedContainer.remove();
+            closeFullscreenEmbed();
         }
     });
     
     // Handle iframe loading error
     iframe.addEventListener('error', () => {
-        if (!openedInNewTab) {
-            window.open(url, '_blank');
-            openedInNewTab = true;
-            embedContainer.remove();
-        }
+        embedFailed = true;
+        window.open(url, '_blank');
+        embedContainer.remove();
+        closeFullscreenEmbed();
     });
     
     // Hide all elements except drawer-handle, persistent-clock, and app drawer
@@ -1757,15 +1758,25 @@ function createFullscreenEmbed(url) {
     
     // Append the container
     document.body.appendChild(embedContainer);
+}
+
+function closeFullscreenEmbed() {
+    // Remove the fullscreen embed container
+    const embedContainer = document.querySelector('.fullscreen-embed');
+    if (embedContainer) {
+        embedContainer.remove();
+    }
     
-    // Fallback mechanism: if no event triggers after a short delay, open in new tab
-    setTimeout(() => {
-        if (!openedInNewTab) {
-            window.open(url, '_blank');
-            openedInNewTab = true;
-            embedContainer.remove();
+    // Restore previously hidden elements
+    document.querySelectorAll('body > *').forEach(el => {
+        if (!el.matches('.drawer-handle, .persistent-clock, #app-drawer')) {
+            el.style.display = '';
         }
-    }, 1000);
+    });
+    
+    // Hide persistent clock
+    const persistentClock = document.getElementById('persistent-clock');
+    persistentClock.classList.remove('show');
 }
 
 function closeFullscreenEmbed() {
