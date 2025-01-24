@@ -313,6 +313,12 @@ body.light-theme[style*="background-image"] .info {
             user-select: none;
         }
 
+        .cust-label {
+            display: inline-flex;
+            align-items: center; /* Align text and icon vertically */
+            gap: 8px; /* Space between text and icon */
+        }
+
         .detailed-weather {
             border: 2px solid var(--search-background);
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
