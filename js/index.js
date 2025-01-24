@@ -31,15 +31,8 @@ Licensed under the GNU General Public License, Version 2.0 (GPL-2.0)
 You may obtain a copy of the License at https://www.gnu.org/licenses/gpl-3.0.html
     `;
 
-    const theft = `
-THEFT NOTICE
-Gurasuraisu is open source, and free for all.
-Please make sure to use Gurasuraisu from https://gurasuraisu.github.io to avoid counterfeit versions.
-    `;
-
     console.info(greeting);
     console.info(license);
-    console.info(theft);
 }
     
 consoleGreeting()
