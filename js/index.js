@@ -1302,62 +1302,39 @@ function showAutocomplete(query) {
     }
 }
 
-searchInput.addEventListener('focus', () => {
-    if (searchInput.value === 'Search') {
-        searchInput.value = '';
-    }
-    searchInput.select();
-});
-
-searchInput.addEventListener('blur', () => {
-    if (searchInput.value.trim() === '') {
-        searchInput.value = 'Search';
-    }
-});
-
-
 searchInput.addEventListener('input', (event) => {
     const query = searchInput.value.trim();
     updateSearchIcon(query);
     showAutocomplete(query);
 });
 
+searchInput.addEventListener('click', () => {
+    searchInput.select();
+});
+
 searchInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
         const query = searchInput.value.trim();
-        
-        // Reset to 'Search' if input is empty
-        if (query === '') {
-            searchInput.value = 'Search';
-            return;
-        }
-
         updateSearchIcon(query);
         
         if (handleAppRedirect(query)) {
-            searchInput.value = 'Search';
-            searchInput.blur();
+            searchInput.value = ''; // Clear search input
+            searchInput.blur(); // Remove focus
             return;
         }
         
         const firstWord = query.split(' ')[0].toLowerCase();
-        if (firstWord === "how" || firstWord === "help" || firstWord === "ai" || firstWord === "why" || firstWord === "is" || firstWord === "what" || firstWord === "when" || firstWord === "where" || firstWord === "who" || firstWord === "which" || firstWord === "can" || firstWord === "could" || firstWord === "will" || firstWord === "would" || firstWord === "does" || firstWord === "did" || firstWord === "should" || firstWord === "are" || firstWord === "have" || firstWord === "has" || firstWord === "may" || firstWord === "might" || firstWord === "was" || firstWord === "were") {
+        if (firstWord === "how" || firstWord === "help" || firstWord === "ai" || firstWord === "why") {
             createFullscreenEmbed(`https://www.bing.com/search?showconv=1&sendquery=1&q=${encodeURIComponent(query)}`);
         } else if (query) {
             createFullscreenEmbed(`https://www.google.com/search?q=${encodeURIComponent(query)}`);
         }
         
-        searchInput.value = 'Search';
-        searchInput.blur();
-        autocompleteSuggestions.innerHTML = '';
+        searchInput.value = ''; // Clear search input
+        searchInput.blur(); // Remove focus
+        autocompleteSuggestions.innerHTML = ''; // Clear autocomplete suggestions
     }
 });
-
-searchInput.addEventListener('click', () => {
-    searchInput.select();
-});
-
-searchInput.value = 'Search';
 
 const customizeButton = document.getElementById('customize');
 const customizeModal = document.getElementById('customizeModal');
