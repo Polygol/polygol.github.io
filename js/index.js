@@ -1744,6 +1744,18 @@ function createFullscreenEmbed(url) {
     document.body.appendChild(embedContainer);
 }
 
+function closeFullscreenEmbed() {
+    const embed = document.querySelector('.fullscreen-embed');
+    if (embed) {
+        embed.remove();
+        document.querySelectorAll('body > *').forEach(el => {
+            if (el.style.display === 'none') {
+                el.style.display = '';
+            }
+        });
+    }
+}
+
 function populateDock() {
     dock.innerHTML = '';
     
