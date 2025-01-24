@@ -45,7 +45,6 @@ let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults t
 let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults to true
 
 secondsSwitch.checked = showSeconds;
-searchInput.value = 'Search';
 
 // IndexedDB setup for video storage
 const dbName = 'WallpaperDB';
@@ -1357,6 +1356,8 @@ searchInput.addEventListener('keydown', (event) => {
 searchInput.addEventListener('click', () => {
     searchInput.select();
 });
+
+searchInput.value = 'Search';
 
 const customizeButton = document.getElementById('customize');
 const customizeModal = document.getElementById('customizeModal');
