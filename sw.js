@@ -1,4 +1,3 @@
-const CACHE_NAME = 'gurasuraisu-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -22,7 +21,7 @@ const ASSETS_TO_CACHE = [
 // Install Service Worker
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches.open('gurasuraisu-cache')
       .then(cache => {
         return cache.addAll(ASSETS_TO_CACHE);
       })
@@ -35,7 +34,7 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== 'gurasuraisu-cache') {
             return caches.delete(cacheName);
           }
         })
@@ -44,33 +43,66 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch Strategy: Cache First, Network Fallback
+// Fetch Strategy: Comprehensive Update Check
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
+      .then(async cachedResponse => {
+        try {
+          // Skip API calls
+          if (event.request.url.includes('api.open-meteo.com') || 
+              event.request.url.includes('nominatim.openstreetmap.org')) {
+            return cachedResponse || fetch(event.request);
+          }
+
+          // Fetch network response
+          const networkResponse = await fetch(event.request);
+
+          // Compare responses
+          if (cachedResponse) {
+            const areSame = await compareResponses(cachedResponse, networkResponse);
+            
+            if (!areSame) {
+              // Update cache if different
+              const cache = await caches.open('gurasuraisu-cache');
+              await cache.put(event.request, networkResponse.clone());
+              return networkResponse;
+            }
+            return cachedResponse;
+          }
+
+          // If no cached response, add to cache
+          const cache = await caches.open('gurasuraisu-cache');
+          await cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+
+        } catch (error) {
+          // Fallback to cached response or root
+          return cachedResponse || caches.match('/');
         }
-        return fetch(event.request)
-          .then(response => {
-            // Cache new resources if they're not API calls
-            if (!event.request.url.includes('api.open-meteo.com') && 
-                !event.request.url.includes('nominatim.openstreetmap.org')) {
-              const responseToCache = response.clone();
-              caches.open(CACHE_NAME)
-                .then(cache => {
-                  cache.put(event.request, responseToCache);
-                });
-            }
-            return response;
-          })
-          .catch(() => {
-            // Return a custom offline page or handle offline state
-            if (event.request.mode === 'navigate') {
-              return caches.match('/');
-            }
-          });
       })
   );
 });
+
+// Deep comparison of responses
+async function compareResponses(cachedResponse, networkResponse) {
+  // Compare response types
+  if (cachedResponse.type !== networkResponse.type) return false;
+
+  // Compare response status
+  if (cachedResponse.status !== networkResponse.status) return false;
+
+  // Deep content comparison for root and key assets
+  try {
+    const cachedText = await cachedResponse.text();
+    const networkText = await networkResponse.text();
+
+    return cachedText === networkText;
+  } catch (error) {
+    // Fallback to header comparison if text comparison fails
+    const cachedHeaders = Object.fromEntries(cachedResponse.headers.entries());
+    const networkHeaders = Object.fromEntries(networkResponse.headers.entries());
+
+    return JSON.stringify(cachedHeaders) === JSON.stringify(networkHeaders);
+  }
+}
