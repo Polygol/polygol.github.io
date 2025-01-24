@@ -1143,7 +1143,6 @@ function createSetupScreen() {
                 setupContainer.style.opacity = '0';
                 setTimeout(() => {
                     setupContainer.remove();
-                    showPopup('Welcome to Gurasuraisu!');
                     showPopup('Swipe up from the navigation bar to get started');
                 }, 500);
             } else {
