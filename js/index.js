@@ -1863,7 +1863,7 @@ function createAppIcons() {
         img.src = `/assets/appicon/${app.details.icon}`;
         img.alt = app.name;
         img.onerror = () => {
-            img.src = '/assets/default-app-icon.png';
+            img.src = '/assets/appicon/question.png';
         };
 
         const label = document.createElement('span');
