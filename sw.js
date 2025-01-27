@@ -18,7 +18,6 @@ const ASSETS_TO_CACHE = [
   'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded'
 ];
 
-// Install Service Worker
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open('gurasuraisu-cache')
@@ -28,7 +27,6 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate Service Worker
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -43,7 +41,6 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch Strategy: Comprehensive Update Check
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
@@ -57,10 +54,11 @@ self.addEventListener('fetch', event => {
 
           // Fetch network response
           const networkResponse = await fetch(event.request);
+          const networkResponseClone = networkResponse.clone();
 
           // Compare responses
           if (cachedResponse) {
-            const areSame = await compareResponses(cachedResponse, networkResponse);
+            const areSame = await compareResponses(cachedResponse.clone(), networkResponseClone);
             
             if (!areSame) {
               // Update cache if different
@@ -75,7 +73,6 @@ self.addEventListener('fetch', event => {
           const cache = await caches.open('gurasuraisu-cache');
           await cache.put(event.request, networkResponse.clone());
           return networkResponse;
-
         } catch (error) {
           // Fallback to cached response or root
           return cachedResponse || caches.match('/');
@@ -84,25 +81,21 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Deep comparison of responses
 async function compareResponses(cachedResponse, networkResponse) {
   // Compare response types
   if (cachedResponse.type !== networkResponse.type) return false;
-
+  
   // Compare response status
   if (cachedResponse.status !== networkResponse.status) return false;
-
-  // Deep content comparison for root and key assets
+  
   try {
     const cachedText = await cachedResponse.text();
     const networkText = await networkResponse.text();
-
     return cachedText === networkText;
   } catch (error) {
     // Fallback to header comparison if text comparison fails
     const cachedHeaders = Object.fromEntries(cachedResponse.headers.entries());
     const networkHeaders = Object.fromEntries(networkResponse.headers.entries());
-
     return JSON.stringify(cachedHeaders) === JSON.stringify(networkHeaders);
   }
 }
