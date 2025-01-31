@@ -1266,7 +1266,38 @@ function fuzzySearch(query, appList) {
 
 function updateSearchIcon(query) {
     const firstWord = query.split(' ')[0].toLowerCase();
-    if (firstWord === "how" || firstWord === "help" || firstWord === "ai" || firstWord === "why") {
+    if (firstWord === "how" || firstWord === "help" || firstWord === "ai" || firstWord === "why" ||
+       firstWord === "what" || firstWord === "when" || firstWord === "where" || firstWord === "who" ||
+       firstWord === "which" || firstWord === "can" || firstWord === "could" || firstWord === "should" ||
+       firstWord === "would" || firstWord === "will" || firstWord === "does" || firstWord === "do" ||
+       firstWord === "is" || firstWord === "are" || firstWord === "may" || firstWord === "might" ||
+       firstWord === "shall" || firstWord === "must" || firstWord === "has" || firstWord === "have" ||
+       firstWord === "had" || firstWord === "were" || firstWord === "was" || firstWord === "did" ||
+       firstWord === "please" || firstWord === "tell" || firstWord === "explain" || firstWord === "show" ||
+       firstWord === "describe" || firstWord === "suggest" || firstWord === "recommend" || firstWord === "need" ||
+       firstWord === "anybody" || firstWord === "anyone" || firstWord === "anything" || firstWord === "wonder" ||
+       firstWord === "whose" || firstWord === "whom" || firstWord === "whence" || firstWord === "whither" ||
+       firstWord === "whether" || firstWord === "hasn't" || firstWord === "haven't" || firstWord === "hadn't" ||
+       firstWord === "wouldn't" || firstWord === "won't" || firstWord === "wasn't" || firstWord === "weren't" ||
+       firstWord === "shouldn't" || firstWord === "isn't" || firstWord === "aren't" || firstWord === "ain't" ||
+       firstWord === "doesn't" || firstWord === "don't" || firstWord === "didn't" || firstWord === "couldn't" ||
+       firstWord === "cannot" || firstWord === "can't" || firstWord === "mightn't" || firstWord === "mustn't" ||
+       firstWord === "define" || firstWord === "compare" || firstWord === "contrast" || firstWord === "analyze" ||
+       firstWord === "evaluate" || firstWord === "assess" || firstWord === "examine" || firstWord === "discuss" ||
+       firstWord === "outline" || firstWord === "summarize" || firstWord === "suppose" || firstWord === "consider" ||
+       firstWord === "give" || firstWord === "state" || firstWord === "determine" || firstWord === "calculate" ||
+       firstWord === "compute" || firstWord === "solve" || firstWord === "find" || firstWord === "identify" ||
+       firstWord === "list" || firstWord === "name" || firstWord === "specify" || firstWord === "advise" ||
+       firstWord === "assist" || firstWord === "aid" || firstWord === "support" || firstWord === "guide" ||
+       firstWord === "clarify" || firstWord === "elaborate" || firstWord === "illustrate" || firstWord === "demonstrate" ||
+       firstWord === "somebody" || firstWord === "someone" || firstWord === "something" || firstWord === "somewhere" ||
+       firstWord === "let" || firstWord === "kindly" || firstWord === "pray" || firstWord === "assist" ||
+       firstWord === "hey" || firstWord === "hi" || firstWord === "hello" || firstWord === "greetings" ||
+       firstWord === "excuse" || firstWord === "pardon" || firstWord === "sorry" || firstWord === "appreciate" ||
+       firstWord === "thanks" || firstWord === "thank" || firstWord === "help" || firstWord === "lookup" ||
+       firstWord === "search" || firstWord === "find" || firstWord === "check" || firstWord === "confirm" ||
+       firstWord === "verify" || firstWord === "validate" || firstWord === "review" || firstWord === "investigate" ||
+       firstWord === "wondering" || firstWord === "curious" || firstWord === "interested" || firstWord === "seeking") {
         searchIcon.textContent = 'forum';
     } else {
         searchIcon.textContent = 'search';
