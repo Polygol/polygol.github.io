@@ -402,16 +402,6 @@ async function updateSmallWeather() {
     }
 }
 
-function closeModal(modal) {
-    modal.classList.remove('show');
-    blurOverlay.classList.remove('show');
-    setTimeout(() => {
-        modal.style.display = 'none';
-        blurOverlay.style.display = 'none';
-        updatePersistentClockVisibility();
-    }, 300);
-}
-
 async function displayDetailedWeather() {
     const weatherData = await fetchLocationAndWeather();
     if (!weatherData) {
@@ -545,7 +535,13 @@ weatherWidget.addEventListener('click', () => {
 });
 
 closeModal.addEventListener('click', () => {
-    closeModal();
+    timezoneModal.classList.remove('show');
+    blurOverlay.classList.remove('show');
+    setTimeout(() => {
+        timezoneModal.style.display = 'none';
+        blurOverlay.style.display = 'none';
+        updatePersistentClockVisibility();
+    }, 300);
 });
 
 closeWeatherModal.addEventListener('click', () => {
@@ -2247,10 +2243,16 @@ blurOverlay.addEventListener('click', (event) => {
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
         closeFullscreenEmbed();
-        // Close all modals using the same animation
+        // Close all modals
         [timezoneModal, weatherModal, customizeModal].forEach(modal => {
             if (modal.classList.contains('show')) {
-                closeModal(modal);
+                modal.classList.remove('show');
+                blurOverlay.classList.remove('show');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    blurOverlay.style.display = 'none';
+                    updatePersistentClockVisibility();
+                }, 300);
             }
         });
     }
