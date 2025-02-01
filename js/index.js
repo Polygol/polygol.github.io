@@ -1307,7 +1307,7 @@ function updateSearchIcon(query) {
        firstWord === "wondering" || firstWord === "curious" || firstWord === "interested" || firstWord === "seeking") {
         searchIcon.textContent = 'forum';
     } else {
-        searchIcon.textContent = 'search';
+        searchIcon.textContent = 'grid_view';
     }
 }
 
