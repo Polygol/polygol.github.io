@@ -1268,7 +1268,7 @@ function updateSearchIcon(query) {
     // First check if the query matches any app
     const bestMatch = fuzzySearch(query, appLinks);
     if (bestMatch) {
-        searchIcon.textContent = 'apps';
+        searchIcon.textContent = 'grid_view';
         return;
     }
 
@@ -1307,7 +1307,7 @@ function updateSearchIcon(query) {
        firstWord === "wondering" || firstWord === "curious" || firstWord === "interested" || firstWord === "seeking") {
         searchIcon.textContent = 'forum';
     } else {
-        searchIcon.textContent = 'grid_view';
+        searchIcon.textContent = 'search';
     }
 }
 
