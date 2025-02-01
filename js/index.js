@@ -1265,6 +1265,13 @@ function fuzzySearch(query, appList) {
 }
 
 function updateSearchIcon(query) {
+    // First check if the query matches any app
+    const bestMatch = fuzzySearch(query, appLinks);
+    if (bestMatch) {
+        searchIcon.textContent = 'apps';
+        return;
+    }
+
     const firstWord = query.split(' ')[0].toLowerCase();
     if (firstWord === "how" || firstWord === "help" || firstWord === "ai" || firstWord === "why" ||
        firstWord === "what" || firstWord === "when" || firstWord === "where" || firstWord === "who" ||
