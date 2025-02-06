@@ -274,7 +274,7 @@ body.light-theme[style*="background-image"] .info {
         }
 
         #weatherModal .detailed-weather {
-            background-color: rgba(51, 51, 51, 0.7); /* Keeps the content background */
+            background-color: rgb(51, 51, 51);
             user-select: none;
         }
 
