@@ -245,8 +245,18 @@ body.light-theme[style*="background-image"] .info {
         }
 
         .modal-content {
-            text-align: center;
+            text-align: left;
             position: relative;
+        }
+
+        .header-row-modal {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-row-modal h2 {
+            margin: 0;
         }
 
         #weatherModal.modal {
