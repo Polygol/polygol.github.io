@@ -639,14 +639,24 @@ body.light-theme[style*="background-image"] .info {
             display: none;
         }
 
-.theme-toggle, .wallpaper-upload {
+.theme-toggle {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 20px 0;
+    margin: 20px 0 5px;
     padding: 15px 20px;
     background-color: var(--transparent-color);;
-    border-radius: 20px;
+    border-radius: 20px 20px 10px 10px;
+}
+
+.wallpaper-upload {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0 20px;
+    padding: 15px 20px;
+    background-color: var(--transparent-color);;
+    border-radius: 10px 10px 20px 20px;
 }
 
 #theme-switch {
@@ -694,10 +704,10 @@ body.light-theme[style*="background-image"] .info {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 20px 0;
+    margin: 20px 0 5px;
     padding: 15px 20px;
     background-color: var(--transparent-color);
-    border-radius: 20px;
+    border-radius: 20px 20px 10px 10px;
 }
 
 #seconds-switch {
@@ -776,10 +786,10 @@ body.light-theme[style*="background-image"] .info {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 20px 0;
+    margin: 5px 0 20px;
     padding: 15px 20px;
     background-color: var(--transparent-color);
-    border-radius: 20px;
+    border-radius: 10px 10px 20px 20px;
 }
 
 #font-select {
