@@ -156,27 +156,6 @@ body.light-theme[style*="background-image"] .info {
             user-select: none;
         }
 
-.container.editable {
-    cursor: move;
-    resize: both;
-    overflow: auto;
-    border: 2px solid var(--transparent-color);
-    pointer-events: all;
-}
-
-.container.editable::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 15px;
-    height: 15px;
-    cursor: se-resize;
-    background: var(--text-color);
-    opacity: 0.3;
-    border-radius: 3px;
-}
-
         .clock {
             font-size: clamp(4rem, 10vw, 8rem);
             font-weight: 700;
@@ -217,7 +196,7 @@ body.light-theme[style*="background-image"] .info {
             border-radius: 45px;
             border: 2px solid var(--search-background);
             opacity: 0;
-            transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s;
+            transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s, color 0.3s;
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
             overflow-y: auto;
             user-select: none;
