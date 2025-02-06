@@ -112,15 +112,15 @@ let timerId = null;
 // Function to update the document title
 function updateTitle() {
     if (timeLeft > 0 && timerId) {
-        document.title = `${formatTime(timeLeft)} • Gurasuraisu`;
+        document.title = `⏳ ${formatTime(timeLeft)} left`;
     } else {
         let now = new Date();
         let hours = String(now.getHours()).padStart(2, '0');
         let minutes = String(now.getMinutes()).padStart(2, '0');
         let seconds = String(now.getSeconds()).padStart(2, '0');
         document.title = showSeconds ? 
-            `${hours}:${minutes}:${seconds} • Gurasuraisu` : 
-            `${hours}:${minutes} • Gurasuraisu`;
+            `${hours}:${minutes}:${seconds}` : 
+            `${hours}:${minutes}`;
     }
 }
 
