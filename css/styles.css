@@ -279,9 +279,6 @@ body.light-theme[style*="background-image"] .info {
         }
 
         .close {
-            position: absolute;
-            top: -17px;
-            left: 5px;
             color: var(--text-color);
             font-size: 24px;
             font-weight: bold;
