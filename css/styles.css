@@ -149,10 +149,9 @@ body.light-theme[style*="background-image"] .info {
             margin: 0 auto;
             padding: 1rem;
             text-align: center;
-            transition: color 0.3s;
             padding: 20px;
             position: relative;
-            transition: border-color 0.3s;
+            transition: border-color 0.3s, color 0.3s;
             user-select: none;
         }
 
@@ -266,6 +265,7 @@ body.light-theme[style*="background-image"] .info {
             cursor: pointer;
             padding: 8px;
             background-color: var(--transparent-color);
+            transition: background-color 0.3s, color 0.3s;
             border: none;
             border-radius: 50%;
             width: 45px;
