@@ -2232,13 +2232,12 @@ secondsSwitch.addEventListener('change', function() {
 });
 
 function setupCustomizeModalGestures() {
-    const persistentClock = document.getElementById('persistent-clock');
+    const touchStartThreshold = window.innerHeight * 0.1; // 10% from top
+    const rightThreshold = window.innerWidth * 0.9; // 10% from right
     let startY = 0;
     let currentY = 0;
     let isDragging = false;
-    const swipeThreshold = 50; // Pixels needed to trigger action
 
-    // Start drag handling
     function startDrag(yPosition) {
         startY = yPosition;
         currentY = yPosition;
@@ -2246,80 +2245,83 @@ function setupCustomizeModalGestures() {
         customizeModal.style.transition = 'none';
     }
 
-    // Move handling
     function moveModal(yPosition) {
         if (!isDragging) return;
         currentY = yPosition;
         const deltaY = currentY - startY;
-
+        
         if (customizeModal.classList.contains('show')) {
-            // When modal is open, handle upward swipe
-            if (deltaY < 0) {
-                const translateY = Math.max(deltaY, -window.innerHeight);
-                customizeModal.style.transform = `translateY(${translateY}px)`;
-                customizeModal.style.opacity = 1 + (deltaY / window.innerHeight);
-            }
+            // Handle upward swipe when modal is open
+            const translateY = Math.max(0, deltaY);
+            customizeModal.style.transform = `translateY(${translateY}px)`;
+            customizeModal.style.opacity = 1 - (translateY / window.innerHeight);
         } else {
-            // When modal is closed, handle downward swipe from clock
-            if (deltaY > 0) {
-                customizeModal.style.display = 'block';
-                blurOverlay.style.display = 'block';
-                const translateY = -window.innerHeight + deltaY;
-                customizeModal.style.transform = `translateY(${translateY}px)`;
-                customizeModal.style.opacity = deltaY / swipeThreshold;
-            }
+            // Handle downward swipe to open modal
+            const translateY = Math.min(0, -deltaY);
+            customizeModal.style.display = 'block';
+            customizeModal.style.transform = `translateY(${-window.innerHeight + Math.abs(translateY)}px)`;
+            customizeModal.style.opacity = Math.abs(translateY) / window.innerHeight;
         }
     }
 
-    // End drag handling
     function endDrag() {
         if (!isDragging) return;
         isDragging = false;
         
         const deltaY = currentY - startY;
+        const threshold = window.innerHeight * 0.2; // 20% threshold for gesture completion
+        
         customizeModal.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-
+        
         if (customizeModal.classList.contains('show')) {
-            // Close modal if swiped up enough
-            if (deltaY < -swipeThreshold) {
-                customizeModal.style.transform = 'translateY(-100%)';
+            // Closing gesture
+            if (deltaY > threshold) {
+                customizeModal.style.transform = `translateY(${window.innerHeight}px)`;
                 customizeModal.style.opacity = '0';
+                blurOverlay.classList.remove('show');
                 setTimeout(() => {
                     customizeModal.classList.remove('show');
-                    blurOverlay.classList.remove('show');
                     customizeModal.style.display = 'none';
                     blurOverlay.style.display = 'none';
                     updatePersistentClockVisibility();
                 }, 300);
             } else {
-                // Reset position if not swiped enough
+                // Reset position if gesture wasn't complete
                 customizeModal.style.transform = 'translateY(0)';
                 customizeModal.style.opacity = '1';
             }
         } else {
-            // Open modal if swiped down enough
-            if (deltaY > swipeThreshold) {
+            // Opening gesture
+            if (-deltaY > threshold) {
                 customizeModal.classList.add('show');
-                blurOverlay.classList.add('show');
                 customizeModal.style.transform = 'translateY(0)';
                 customizeModal.style.opacity = '1';
-                updatePersistentClockVisibility();
+                blurOverlay.style.display = 'block';
+                setTimeout(() => {
+                    blurOverlay.classList.add('show');
+                    updatePersistentClockVisibility();
+                }, 10);
             } else {
-                // Reset if not swiped enough
+                // Reset position if gesture wasn't complete
                 customizeModal.style.display = 'none';
-                blurOverlay.style.display = 'none';
             }
         }
     }
 
-    // Touch events
-    persistentClock.addEventListener('touchstart', (e) => {
-        startDrag(e.touches[0].clientY);
-    }, { passive: false });
-
-    customizeModal.addEventListener('touchstart', (e) => {
-        if (customizeModal.classList.contains('show')) {
-            startDrag(e.touches[0].clientY);
+    // Touch Events
+    document.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        
+        // Check if touch starts in top-right area when modal is closed
+        if (!customizeModal.classList.contains('show')) {
+            if (touch.clientY <= touchStartThreshold && touch.clientX >= rightThreshold) {
+                startDrag(touch.clientY);
+                e.preventDefault();
+            }
+        } else if (customizeModal.contains(e.target)) {
+            // Allow dragging when modal is open and touch is on modal
+            startDrag(touch.clientY);
+            e.preventDefault();
         }
     }, { passive: false });
 
@@ -2331,27 +2333,6 @@ function setupCustomizeModalGestures() {
     }, { passive: false });
 
     document.addEventListener('touchend', () => {
-        endDrag();
-    });
-
-    // Mouse events
-    persistentClock.addEventListener('mousedown', (e) => {
-        startDrag(e.clientY);
-    });
-
-    customizeModal.addEventListener('mousedown', (e) => {
-        if (customizeModal.classList.contains('show')) {
-            startDrag(e.clientY);
-        }
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-            moveModal(e.clientY);
-        }
-    });
-
-    document.addEventListener('mouseup', () => {
         endDrag();
     });
 }
@@ -2442,6 +2423,7 @@ window.addEventListener('offline', () => {
 // Call applyWallpaper on page load
 document.addEventListener('DOMContentLoaded', () => {
     applyWallpaper();
+    setupCustomizeModalGestures();
 });
 
 window.addEventListener('load', () => {
@@ -2463,5 +2445,4 @@ setInterval(ensureVideoLoaded, 1000);
     goFullscreen();
     updateDisplay();
     initAppDraw();
-    setupCustomizeModalGestures();
     updateWeatherVisibility();
