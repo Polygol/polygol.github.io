@@ -2057,9 +2057,6 @@ function setupDrawerInteractions() {
         const movementPercentage = (deltaY / windowHeight) * 100;
     
         appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-    
-        // Check if there's an open embed
-        const openEmbed = document.querySelector('.fullscreen-embed');
 
         // Check if there's an open embed
         const openEmbed = document.querySelector('.fullscreen-embed');
