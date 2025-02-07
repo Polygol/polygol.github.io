@@ -2513,3 +2513,4 @@ setInterval(ensureVideoLoaded, 1000);
     updateDisplay();
     initAppDraw();
     updateWeatherVisibility();
+    setupControlsInteractions();
