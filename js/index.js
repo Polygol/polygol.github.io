@@ -26,7 +26,7 @@ function consoleGreeting() {
     `;
 
     const license = `
-Copyright © 2025 Gurasuraisu, kirbIndustries
+Made by kirbIndustries
 Licensed under the GNU General Public License, Version 2.0 (GPL-2.0)
 You may obtain a copy of the License at https://www.gnu.org/licenses/gpl-3.0.html
     `;
@@ -2209,151 +2209,6 @@ function setupDrawerInteractions() {
     });
 }
 
-function setupControlsInteractions() {
-    let customizeStartY = 0;
-    let customizeCurrentY = 0;
-    let customizeIsDragging = false;
-    let customizeIsInMotion = false;
-
-    document.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        
-        if (blurOverlay.style.display !== 'block' && 
-            touch.clientY < window.innerHeight * 0.1 && 
-            touch.clientX > window.innerWidth * 0.9) {
-            customizeStartY = touch.clientY;
-            customizeCurrentY = touch.clientY;
-            customizeIsDragging = true;
-            customizeIsInMotion = true;
-            
-            customizeModal.style.display = 'block';
-            blurOverlay.style.display = 'block';
-            setTimeout(() => {
-                blurOverlay.classList.add('show');
-                customizeModal.classList.add('show');
-                customizeModal.style.opacity = '1';
-                customizeModal.style.transform = 'translate(-50%) scale(1)';
-            }, 10);
-            
-            e.preventDefault();
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchmove', (e) => {
-        if (customizeIsDragging) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            customizeCurrentY = touch.clientY;
-            
-            const deltaY = customizeStartY - customizeCurrentY;
-            const windowHeight = window.innerHeight;
-            const movementPercentage = (deltaY / windowHeight) * 100;
-            
-            if (movementPercentage > 0) {
-                const scale = Math.max(0.7, 1 - (movementPercentage / 100));
-                customizeModal.style.transform = `translate(-50%) scale(${scale})`;
-                customizeModal.style.opacity = Math.max(0, 1 - (movementPercentage / 50));
-            }
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchend', () => {
-        if (customizeIsDragging) {
-            const deltaY = customizeStartY - customizeCurrentY;
-            const windowHeight = window.innerHeight;
-            const movementPercentage = (deltaY / windowHeight) * 100;
-            
-            if (movementPercentage > 25) {
-                customizeModal.style.transform = 'translate(-50%) scale(0.7)';
-                customizeModal.style.opacity = '0';
-                
-                setTimeout(() => {
-                    customizeModal.classList.remove('show');
-                    blurOverlay.classList.remove('show');
-                    customizeModal.style.display = 'none';
-                    blurOverlay.style.display = 'none';
-                    updatePersistentClockVisibility();
-                }, 300);
-            } else {
-                customizeModal.style.transform = 'translate(-50%) scale(1)';
-                customizeModal.style.opacity = '1';
-            }
-            
-            customizeIsDragging = false;
-            customizeIsInMotion = false;
-        }
-    });
-
-    // Similar modifications for mouse events
-    document.addEventListener('mousedown', (e) => {
-        if (e.button !== 0) return;
-        
-        const element = document.elementFromPoint(e.clientX, e.clientY);
-        
-        if (blurOverlay.style.display !== 'block' && 
-            e.clientY < window.innerHeight * 0.1 && 
-            e.clientX > window.innerWidth * 0.9) {
-            customizeStartY = e.clientY;
-            customizeCurrentY = e.clientY;
-            customizeIsDragging = true;
-            customizeIsInMotion = true;
-            
-            customizeModal.style.display = 'block';
-            blurOverlay.style.display = 'block';
-            setTimeout(() => {
-                blurOverlay.classList.add('show');
-                customizeModal.classList.add('show');
-                customizeModal.style.opacity = '1';
-                customizeModal.style.transform = 'translate(-50%) scale(1)';
-            }, 10);
-        }
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (customizeIsDragging) {
-            customizeCurrentY = e.clientY;
-            
-            const deltaY = customizeStartY - customizeCurrentY;
-            const windowHeight = window.innerHeight;
-            const movementPercentage = (deltaY / windowHeight) * 100;
-            
-            if (movementPercentage > 0) {
-                const scale = Math.max(0.7, 1 - (movementPercentage / 100));
-                customizeModal.style.transform = `translate(-50%) scale(${scale})`;
-                customizeModal.style.opacity = Math.max(0, 1 - (movementPercentage / 50));
-            }
-        }
-    });
-
-    document.addEventListener('mouseup', () => {
-        if (customizeIsDragging) {
-            const deltaY = customizeStartY - customizeCurrentY;
-            const windowHeight = window.innerHeight;
-            const movementPercentage = (deltaY / windowHeight) * 100;
-            
-            if (movementPercentage > 25) {
-                customizeModal.style.transform = 'translate(-50%) scale(0.7)';
-                customizeModal.style.opacity = '0';
-                
-                setTimeout(() => {
-                    customizeModal.classList.remove('show');
-                    blurOverlay.classList.remove('show');
-                    customizeModal.style.display = 'none';
-                    blurOverlay.style.display = 'none';
-                    updatePersistentClockVisibility();
-                }, 300);
-            } else {
-                customizeModal.style.transform = 'translate(-50%) scale(1)';
-                customizeModal.style.opacity = '1';
-            }
-            
-            customizeIsDragging = false;
-            customizeIsInMotion = false;
-        }
-    });
-}
-
 const appDrawerObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
@@ -2484,4 +2339,3 @@ setInterval(ensureVideoLoaded, 1000);
     updateDisplay();
     initAppDraw();
     updateWeatherVisibility();
-    setupControlsInteractions();
