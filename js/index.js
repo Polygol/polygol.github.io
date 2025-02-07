@@ -81,10 +81,21 @@ function getCurrentTime24() {
 const persistentClock = document.getElementById('persistent-clock');
 
 function updatePersistentClock() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    persistentClock.textContent = `${hours}:${minutes}`;
+    const isModalOpen = 
+        timezoneModal.classList.contains('show') || 
+        weatherModal.classList.contains('show') || 
+        customizeModal.classList.contains('show') ||
+        appDrawer.classList.contains('open') ||
+        document.querySelector('.fullscreen-embed');
+        
+    if (isModalOpen) {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        persistentClock.textContent = `${hours}:${minutes}`;
+    } else {
+        persistentClock.textContent = 'Controls';
+    }
 }
 
 // Update clock every second
