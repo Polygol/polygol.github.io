@@ -317,7 +317,7 @@ async function fetchLocationAndWeather() {
                         geocodingData.address.village ||
                         'Unknown Location';
                 } catch (geocodingError) {
-                    console.warn('Failed to retrieve city name', geocodingError);
+                    console.warn('Failed to retrieve your weather location', geocodingError);
                 }
 
                 const currentWeatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
@@ -398,14 +398,14 @@ async function updateSmallWeather() {
     } catch (error) {
         console.error('Error updating small weather widget:', error);
         document.getElementById('weather').style.display = 'none';
-        showPopup('Failed to retrieve weather information');
+        showPopup('Failed to retrieve weather');
     }
 }
 
 async function displayDetailedWeather() {
     const weatherData = await fetchLocationAndWeather();
     if (!weatherData) {
-        document.getElementById('detailedWeather').innerHTML = 'Failed to load weather data.';
+        document.getElementById('detailedWeather').innerHTML = 'Failed to load weather';
         return;
     }
 
