@@ -95,7 +95,7 @@ function updatePersistentClock() {
         const minutes = String(now.getMinutes()).padStart(2, '0');
         persistentClock.textContent = `${hours}:${minutes}`;
     } else {
-        persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span> Controls';
+        persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
     }
 }
 
