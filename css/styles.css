@@ -201,7 +201,7 @@ body.light-theme[style*="background-image"] .info {
             user-select: none;
         }
 
-        .customizeModal {
+        #customizeModal .modal {
             z-index: 9999; !important
         }
         
