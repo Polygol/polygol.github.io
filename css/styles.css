@@ -214,7 +214,7 @@ body.light-theme[style*="background-image"] .info {
             display: block;
             left: auto;
             bottom: auto;
-            transform: translateX(0)
+            transform: translateX(0);
             z-index: 9999; !important
         }
         
