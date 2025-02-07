@@ -213,6 +213,7 @@ body.light-theme[style*="background-image"] .info {
             left: auto;
             bottom: auto;
             transform: translateX(0);
+            width: clamp(280px, 90%, 500px);
             z-index: 9999; !important
         }
         
