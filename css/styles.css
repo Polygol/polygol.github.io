@@ -629,6 +629,7 @@ body.light-theme[style*="background-image"] .info {
             align-items: center;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            visibility: hidden;
         }
 
         #wallpaperInput {
