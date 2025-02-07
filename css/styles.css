@@ -304,7 +304,7 @@ body.light-theme[style*="background-image"] .info {
         .cust-label {
             display: inline-flex;
             align-items: center; /* Align text and icon vertically */
-            gap: 8px; /* Space between text and icon */
+            gap: 15px; /* Space between text and icon */
         }
 
         .detailed-weather {
