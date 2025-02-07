@@ -640,7 +640,7 @@ body.light-theme[style*="background-image"] .info {
     border-radius: 5px 5px 20px 20px;
 }
 
-#theme-switch {
+#theme-switch, #seconds-switch, #weather-switch {
     appearance: none;
     width: 50px;
     height: 32px;
@@ -651,11 +651,11 @@ body.light-theme[style*="background-image"] .info {
     transition: background-color 0.3s;
 }
 
-#theme-switch::before {
+#theme-switch::before, #seconds-switch::before, #weather-switch::before {
     content: '';
     position: absolute;
-    width: 14px;
-    height: 14px;
+    width: 24px;
+    height: 24px;
     background-color: white;
     border-radius: 50%;
     top: 4px;
@@ -663,14 +663,12 @@ body.light-theme[style*="background-image"] .info {
     transition: transform 0.3s;
 }
 
-#theme-switch:checked {
+#theme-switch:checked, #seconds-switch:checked, #weather-switch:checked {
     background-color: #3c78d8;
 }
 
-#theme-switch:checked::before {
+#theme-switch:checked::before, #seconds-switch:checked::before, #weather-switch:checked::before {
     transform: translateX(18px);
-    width: 24px;
-    height: 24px;
 }
 
 #uploadButton {
@@ -693,37 +691,6 @@ body.light-theme[style*="background-image"] .info {
     border-radius: 20px 20px 5px 5px;
 }
 
-#seconds-switch {
-    appearance: none;
-    width: 60px;
-    height: 32px;
-    background-color: rgba(0,0,0,0.1);
-    border-radius: 16px;
-    position: relative;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-#seconds-switch::before {
-    content: '';
-    position: absolute;
-    width: 24px;
-    height: 24px;
-    background-color: white;
-    border-radius: 50%;
-    top: 4px;
-    left: 4px;
-    transition: transform 0.3s;
-}
-
-#seconds-switch:checked {
-    background-color: #3c78d8;
-}
-
-#seconds-switch:checked::before {
-    transform: translateX(28px);
-}
-
 .weather-settings {
     display: flex;
     justify-content: space-between;
@@ -732,37 +699,6 @@ body.light-theme[style*="background-image"] .info {
     padding: 15px 20px;
     background-color: var(--transparent-color);
     border-radius: 20px;
-}
-
-#weather-switch {
-    appearance: none;
-    width: 60px;
-    height: 32px;
-    background-color: rgba(0,0,0,0.1);
-    border-radius: 16px;
-    position: relative;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-#weather-switch::before {
-    content: '';
-    position: absolute;
-    width: 24px;
-    height: 24px;
-    background-color: white;
-    border-radius: 50%;
-    top: 4px;
-    left: 4px;
-    transition: transform 0.3s;
-}
-
-#weather-switch:checked {
-    background-color: #3c78d8;
-}
-
-#weather-switch:checked::before {
-    transform: translateX(28px);
 }
 
 .font-selection {
