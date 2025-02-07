@@ -98,11 +98,17 @@ function updatePersistentClockVisibility() {
         weatherModal.classList.contains('show') || 
         customizeModal.classList.contains('show') ||
         appDrawer.classList.contains('open');
-
     if (isModalOpen) {
-        persistentClock.classList.add('show');
+        updatePersistentClock();
+        if (!window.clockInterval) {
+            window.clockInterval = setInterval(updatePersistentClock, 1000);
+        }
     } else {
-        persistentClock.classList.remove('show');
+        persistentClock.textContent = 'Controls';
+        if (window.clockInterval) {
+            clearInterval(window.clockInterval);
+            window.clockInterval = null;
+        }
     }
 }
 
@@ -1820,10 +1826,6 @@ function createFullscreenEmbed(url) {
         el.style.display = 'none';
     });
     
-    // Show persistent clock when embed is open
-    const persistentClock = document.getElementById('persistent-clock');
-    persistentClock.classList.add('show');
-    
     // Append the container
     document.body.appendChild(embedContainer);
 }
@@ -1841,10 +1843,6 @@ function closeFullscreenEmbed() {
             el.style.display = '';
         }
     });
-    
-    // Hide persistent clock
-    const persistentClock = document.getElementById('persistent-clock');
-    persistentClock.classList.remove('show');
 }
 
 function populateDock() {
