@@ -94,34 +94,13 @@ function updatePersistentClock() {
         const minutes = String(now.getMinutes()).padStart(2, '0');
         persistentClock.textContent = `${hours}:${minutes}`;
     } else {
-        persistentClock.textContent = 'Controls';
+        persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span> Controls';
     }
 }
 
 // Update clock every second
 setInterval(updatePersistentClock, 1000);
 updatePersistentClock(); // Initial update
-
-// Show/hide persistent clock based on modal/drawer state
-function updatePersistentClockVisibility() {
-    const isModalOpen = 
-        timezoneModal.classList.contains('show') || 
-        weatherModal.classList.contains('show') || 
-        customizeModal.classList.contains('show') ||
-        appDrawer.classList.contains('open');
-    if (isModalOpen) {
-        updatePersistentClock();
-        if (!window.clockInterval) {
-            window.clockInterval = setInterval(updatePersistentClock, 1000);
-        }
-    } else {
-        persistentClock.textContent = 'Controls';
-        if (window.clockInterval) {
-            clearInterval(window.clockInterval);
-            window.clockInterval = null;
-        }
-    }
-}
 
 let timeLeft = 0; 
 let timerId = null; 
@@ -536,7 +515,7 @@ clockElement.addEventListener('click', () => {
     setTimeout(() => {
         timezoneModal.classList.add('show');
         blurOverlay.classList.add('show');
-        updatePersistentClockVisibility();
+        updatePersistentClock();
     }, 10);
 });
 
@@ -546,7 +525,7 @@ weatherWidget.addEventListener('click', () => {
     setTimeout(() => {
         weatherModal.classList.add('show');
         blurOverlay.classList.add('show');
-        updatePersistentClockVisibility();
+        updatePersistentClock();
     }, 10);
     displayDetailedWeather();
 });
@@ -557,7 +536,7 @@ closeModal.addEventListener('click', () => {
     setTimeout(() => {
         timezoneModal.style.display = 'none';
         blurOverlay.style.display = 'none';
-        updatePersistentClockVisibility();
+        updatePersistentClock();
     }, 300);
 });
 
@@ -567,7 +546,7 @@ closeWeatherModal.addEventListener('click', () => {
     setTimeout(() => {
         weatherModal.style.display = 'none';
         blurOverlay.style.display = 'none';
-        updatePersistentClockVisibility();
+        updatePersistentClock();
     }, 300);
 });
 
@@ -1449,7 +1428,7 @@ customizeButton.addEventListener('click', () => {
     customizeModal.style.display = 'block';
     setTimeout(() => {
         customizeModal.classList.add('show');
-        updatePersistentClockVisibility();
+        updatePersistentClock();
     }, 10);
 });
 
@@ -1459,7 +1438,7 @@ closeCustomizeModal.addEventListener('click', () => {
     setTimeout(() => {
         customizeModal.style.display = 'none';
         blurOverlay.style.display = 'none';
-        updatePersistentClockVisibility();
+        updatePersistentClock();
     }, 300);
 });
 
@@ -2219,7 +2198,7 @@ function setupDrawerInteractions() {
 const appDrawerObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            updatePersistentClockVisibility();
+            updatePersistentClock();
         }
     });
 });
@@ -2248,7 +2227,7 @@ blurOverlay.addEventListener('click', (event) => {
                 setTimeout(() => {
                     modal.style.display = 'none';
                     blurOverlay.style.display = 'none';
-                    updatePersistentClockVisibility();
+                    updatePersistentClock();
                 }, 300);
             }
         });
@@ -2259,7 +2238,7 @@ persistentClock.addEventListener('click', () => {
     customizeModal.style.display = 'block';
     setTimeout(() => {
         customizeModal.classList.add('show');
-        updatePersistentClockVisibility();
+        updatePersistentClock();
     }, 10);
 });
 
@@ -2274,7 +2253,7 @@ document.addEventListener('keydown', (event) => {
                 setTimeout(() => {
                     modal.style.display = 'none';
                     blurOverlay.style.display = 'none';
-                    updatePersistentClockVisibility();
+                    updatePersistentClock();
                 }, 300);
             }
         });
