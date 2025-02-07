@@ -2215,12 +2215,10 @@ function setupControlsInteractions() {
     let customizeIsDragging = false;
     let customizeIsInMotion = false;
 
-    // Touch Events for Customize Modal
     document.addEventListener('touchstart', (e) => {
         const touch = e.touches[0];
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
         
-        // Check if touch is in top right 10% area when no modals are open
         if (blurOverlay.style.display !== 'block' && 
             touch.clientY < window.innerHeight * 0.1 && 
             touch.clientX > window.innerWidth * 0.9) {
@@ -2229,23 +2227,15 @@ function setupControlsInteractions() {
             customizeIsDragging = true;
             customizeIsInMotion = true;
             
-            // Open customize modal
             customizeModal.style.display = 'block';
             blurOverlay.style.display = 'block';
             setTimeout(() => {
                 blurOverlay.classList.add('show');
                 customizeModal.classList.add('show');
+                customizeModal.style.opacity = '1';
+                customizeModal.style.transform = 'translate(-50%) scale(1)';
             }, 10);
             
-            e.preventDefault();
-        }
-        // Check if touch is on open customize modal
-        else if (customizeModal.classList.contains('show') && customizeModal.contains(element)) {
-            customizeStartY = touch.clientY;
-            customizeCurrentY = touch.clientY;
-            customizeIsDragging = true;
-            customizeIsInMotion = true;
-            customizeModal.style.transition = 'none';
             e.preventDefault();
         }
     }, { passive: false });
@@ -2256,15 +2246,14 @@ function setupControlsInteractions() {
             const touch = e.touches[0];
             customizeCurrentY = touch.clientY;
             
-            // Calculate swipe distance
             const deltaY = customizeStartY - customizeCurrentY;
             const windowHeight = window.innerHeight;
             const movementPercentage = (deltaY / windowHeight) * 100;
             
-            // Animate modal based on swipe
             if (movementPercentage > 0) {
-                customizeModal.style.transform = `translateY(-${movementPercentage}%)`;
-                customizeModal.style.opacity = 1 - (movementPercentage / 100);
+                const scale = Math.max(0.7, 1 - (movementPercentage / 100));
+                customizeModal.style.transform = `translate(-50%) scale(${scale})`;
+                customizeModal.style.opacity = Math.max(0, 1 - (movementPercentage / 50));
             }
         }
     }, { passive: false });
@@ -2275,11 +2264,8 @@ function setupControlsInteractions() {
             const windowHeight = window.innerHeight;
             const movementPercentage = (deltaY / windowHeight) * 100;
             
-            customizeModal.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-            
-            // Close modal if swiped up significantly
             if (movementPercentage > 25) {
-                customizeModal.style.transform = 'translateY(-100%)';
+                customizeModal.style.transform = 'translate(-50%) scale(0.7)';
                 customizeModal.style.opacity = '0';
                 
                 setTimeout(() => {
@@ -2290,8 +2276,7 @@ function setupControlsInteractions() {
                     updatePersistentClockVisibility();
                 }, 300);
             } else {
-                // Reset modal position
-                customizeModal.style.transform = 'translateY(0)';
+                customizeModal.style.transform = 'translate(-50%) scale(1)';
                 customizeModal.style.opacity = '1';
             }
             
@@ -2300,13 +2285,12 @@ function setupControlsInteractions() {
         }
     });
 
-    // Mouse Events (similar logic, using translateY)
+    // Similar modifications for mouse events
     document.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         
         const element = document.elementFromPoint(e.clientX, e.clientY);
         
-        // Check if mouse is in top right 10% area when no modals are open
         if (blurOverlay.style.display !== 'block' && 
             e.clientY < window.innerHeight * 0.1 && 
             e.clientX > window.innerWidth * 0.9) {
@@ -2315,21 +2299,14 @@ function setupControlsInteractions() {
             customizeIsDragging = true;
             customizeIsInMotion = true;
             
-            // Open customize modal
             customizeModal.style.display = 'block';
             blurOverlay.style.display = 'block';
             setTimeout(() => {
                 blurOverlay.classList.add('show');
                 customizeModal.classList.add('show');
+                customizeModal.style.opacity = '1';
+                customizeModal.style.transform = 'translate(-50%) scale(1)';
             }, 10);
-        }
-        // Check if mouse is on open customize modal
-        else if (customizeModal.classList.contains('show') && customizeModal.contains(element)) {
-            customizeStartY = e.clientY;
-            customizeCurrentY = e.clientY;
-            customizeIsDragging = true;
-            customizeIsInMotion = true;
-            customizeModal.style.transition = 'none';
         }
     });
 
@@ -2337,15 +2314,14 @@ function setupControlsInteractions() {
         if (customizeIsDragging) {
             customizeCurrentY = e.clientY;
             
-            // Calculate swipe distance
             const deltaY = customizeStartY - customizeCurrentY;
             const windowHeight = window.innerHeight;
             const movementPercentage = (deltaY / windowHeight) * 100;
             
-            // Animate modal based on swipe
             if (movementPercentage > 0) {
-                customizeModal.style.transform = `translateY(-${movementPercentage}%)`;
-                customizeModal.style.opacity = 1 - (movementPercentage / 100);
+                const scale = Math.max(0.7, 1 - (movementPercentage / 100));
+                customizeModal.style.transform = `translate(-50%) scale(${scale})`;
+                customizeModal.style.opacity = Math.max(0, 1 - (movementPercentage / 50));
             }
         }
     });
@@ -2356,11 +2332,8 @@ function setupControlsInteractions() {
             const windowHeight = window.innerHeight;
             const movementPercentage = (deltaY / windowHeight) * 100;
             
-            customizeModal.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-            
-            // Close modal if swiped up significantly
             if (movementPercentage > 25) {
-                customizeModal.style.transform = 'translateY(-100%)';
+                customizeModal.style.transform = 'translate(-50%) scale(0.7)';
                 customizeModal.style.opacity = '0';
                 
                 setTimeout(() => {
@@ -2371,8 +2344,7 @@ function setupControlsInteractions() {
                     updatePersistentClockVisibility();
                 }, 300);
             } else {
-                // Reset modal position
-                customizeModal.style.transform = 'translateY(0)';
+                customizeModal.style.transform = 'translate(-50%) scale(1)';
                 customizeModal.style.opacity = '1';
             }
             
