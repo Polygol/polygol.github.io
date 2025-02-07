@@ -80,6 +80,7 @@ function getCurrentTime24() {
 
 const persistentClock = document.getElementById('persistent-clock');
 
+document.addEventListener('DOMContentLoaded', () => {
 function updatePersistentClock() {
     const isModalOpen = 
         timezoneModal.classList.contains('show') || 
@@ -101,6 +102,7 @@ function updatePersistentClock() {
 // Update clock every second
 setInterval(updatePersistentClock, 1000);
 updatePersistentClock(); // Initial update
+});
 
 let timeLeft = 0; 
 let timerId = null; 
