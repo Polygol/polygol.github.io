@@ -2209,6 +2209,180 @@ function setupDrawerInteractions() {
     });
 }
 
+function setupControlsInteractions() {
+    let customizeStartY = 0;
+    let customizeCurrentY = 0;
+    let customizeIsDragging = false;
+    let customizeIsInMotion = false;
+
+    // Touch Events for Customize Modal
+    document.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Check if touch is in top right 10% area when no modals are open
+        if (blurOverlay.style.display !== 'block' && 
+            touch.clientY < window.innerHeight * 0.1 && 
+            touch.clientX > window.innerWidth * 0.9) {
+            customizeStartY = touch.clientY;
+            customizeCurrentY = touch.clientY;
+            customizeIsDragging = true;
+            customizeIsInMotion = true;
+            
+            // Open customize modal
+            customizeModal.style.display = 'block';
+            blurOverlay.style.display = 'block';
+            setTimeout(() => {
+                blurOverlay.classList.add('show');
+                customizeModal.classList.add('show');
+            }, 10);
+            
+            e.preventDefault();
+        }
+        // Check if touch is on open customize modal
+        else if (customizeModal.classList.contains('show') && customizeModal.contains(element)) {
+            customizeStartY = touch.clientY;
+            customizeCurrentY = touch.clientY;
+            customizeIsDragging = true;
+            customizeIsInMotion = true;
+            customizeModal.style.transition = 'none';
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+        if (customizeIsDragging) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            customizeCurrentY = touch.clientY;
+            
+            // Calculate swipe distance
+            const deltaY = customizeStartY - customizeCurrentY;
+            const windowHeight = window.innerHeight;
+            const movementPercentage = (deltaY / windowHeight) * 100;
+            
+            // Animate modal based on swipe
+            if (movementPercentage > 0) {
+                customizeModal.style.transform = `translateY(-${movementPercentage}%)`;
+                customizeModal.style.opacity = 1 - (movementPercentage / 100);
+            }
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchend', () => {
+        if (customizeIsDragging) {
+            const deltaY = customizeStartY - customizeCurrentY;
+            const windowHeight = window.innerHeight;
+            const movementPercentage = (deltaY / windowHeight) * 100;
+            
+            customizeModal.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            
+            // Close modal if swiped up significantly
+            if (movementPercentage > 25) {
+                customizeModal.style.transform = 'translateY(-100%)';
+                customizeModal.style.opacity = '0';
+                
+                setTimeout(() => {
+                    customizeModal.classList.remove('show');
+                    blurOverlay.classList.remove('show');
+                    customizeModal.style.display = 'none';
+                    blurOverlay.style.display = 'none';
+                    updatePersistentClockVisibility();
+                }, 300);
+            } else {
+                // Reset modal position
+                customizeModal.style.transform = 'translateY(0)';
+                customizeModal.style.opacity = '1';
+            }
+            
+            customizeIsDragging = false;
+            customizeIsInMotion = false;
+        }
+    });
+
+    // Mouse Events (optional, similar to touch events)
+    document.addEventListener('mousedown', (e) => {
+        // Similar logic to touch start event for mouse interactions
+        if (e.button !== 0) return;
+        
+        const element = document.elementFromPoint(e.clientX, e.clientY);
+        
+        // Check if mouse is in top right 10% area when no modals are open
+        if (blurOverlay.style.display !== 'block' && 
+            e.clientY < window.innerHeight * 0.1 && 
+            e.clientX > window.innerWidth * 0.9) {
+            customizeStartY = e.clientY;
+            customizeCurrentY = e.clientY;
+            customizeIsDragging = true;
+            customizeIsInMotion = true;
+            
+            // Open customize modal
+            customizeModal.style.display = 'block';
+            blurOverlay.style.display = 'block';
+            setTimeout(() => {
+                blurOverlay.classList.add('show');
+                customizeModal.classList.add('show');
+            }, 10);
+        }
+        // Check if mouse is on open customize modal
+        else if (customizeModal.classList.contains('show') && customizeModal.contains(element)) {
+            customizeStartY = e.clientY;
+            customizeCurrentY = e.clientY;
+            customizeIsDragging = true;
+            customizeIsInMotion = true;
+            customizeModal.style.transition = 'none';
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (customizeIsDragging) {
+            customizeCurrentY = e.clientY;
+            
+            // Calculate swipe distance
+            const deltaY = customizeStartY - customizeCurrentY;
+            const windowHeight = window.innerHeight;
+            const movementPercentage = (deltaY / windowHeight) * 100;
+            
+            // Animate modal based on swipe
+            if (movementPercentage > 0) {
+                customizeModal.style.transform = `translateY(-${movementPercentage}%)`;
+                customizeModal.style.opacity = 1 - (movementPercentage / 100);
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (customizeIsDragging) {
+            const deltaY = customizeStartY - customizeCurrentY;
+            const windowHeight = window.innerHeight;
+            const movementPercentage = (deltaY / windowHeight) * 100;
+            
+            customizeModal.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            
+            // Close modal if swiped up significantly
+            if (movementPercentage > 25) {
+                customizeModal.style.transform = 'translateY(-100%)';
+                customizeModal.style.opacity = '0';
+                
+                setTimeout(() => {
+                    customizeModal.classList.remove('show');
+                    blurOverlay.classList.remove('show');
+                    customizeModal.style.display = 'none';
+                    blurOverlay.style.display = 'none';
+                    updatePersistentClockVisibility();
+                }, 300);
+            } else {
+                // Reset modal position
+                customizeModal.style.transform = 'translateY(0)';
+                customizeModal.style.opacity = '1';
+            }
+            
+            customizeIsDragging = false;
+            customizeIsInMotion = false;
+        }
+    });
+}
+
 const appDrawerObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
