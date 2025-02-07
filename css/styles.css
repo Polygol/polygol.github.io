@@ -202,7 +202,7 @@ body.light-theme[style*="background-image"] .info {
         }
 
         #customizeModal.modal {
-            margin: 80px 20px 20px
+            margin: 80px 20px 20px;
             position: fixed;
             top: 0;
             right: 0;
