@@ -916,7 +916,7 @@ function createSetupScreen() {
             position: fixed;
             bottom: 2rem;
             display: flex;
-            gap: 0.5rem;
+            gap: 0.5rem;5
         }
 
         .progress-dot {
@@ -1832,7 +1832,11 @@ function closeFullscreenEmbed() {
     // Restore previously hidden elements
     document.querySelectorAll('body > *').forEach(el => {
         if (!el.matches('.drawer-handle, .persistent-clock, #app-drawer')) {
-            el.style.display = '';
+            if (el.id === 'customizeModal') {
+                el.style.display = 'none'; // Explicitly set customizeModal to none
+            } else {
+                el.style.display = '';
+            }
         }
     });
 }
