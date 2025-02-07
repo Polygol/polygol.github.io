@@ -2232,31 +2232,45 @@ secondsSwitch.addEventListener('change', function() {
 });
 
 function setupCustomizeModalGestures() {
-    const touchStartThreshold = window.innerHeight * 0.1; // 10% from top
-    const rightThreshold = window.innerWidth * 0.9; // 10% from right
+    const touchStartThreshold = window.innerHeight * 0.1;
+    const rightThreshold = window.innerWidth * 0.9;
     let startY = 0;
     let currentY = 0;
     let isDragging = false;
+    let startTime = 0;
+    let lastY = 0;
+    let lastTime = 0;
+    const flickVelocityThreshold = 0.5; // Pixels per millisecond
 
     function startDrag(yPosition) {
         startY = yPosition;
         currentY = yPosition;
+        lastY = yPosition;
         isDragging = true;
+        startTime = Date.now();
+        lastTime = startTime;
         customizeModal.style.transition = 'none';
     }
 
     function moveModal(yPosition) {
         if (!isDragging) return;
+        
+        // Calculate velocity
+        const now = Date.now();
+        const deltaTime = now - lastTime;
+        if (deltaTime > 0) {
+            lastY = currentY;
+            lastTime = now;
+        }
+        
         currentY = yPosition;
         const deltaY = currentY - startY;
         
         if (customizeModal.classList.contains('show')) {
-            // Handle upward swipe when modal is open
             const translateY = Math.max(0, deltaY);
             customizeModal.style.transform = `translateY(${translateY}px)`;
             customizeModal.style.opacity = 1 - (translateY / window.innerHeight);
         } else {
-            // Handle downward swipe to open modal
             const translateY = Math.min(0, -deltaY);
             customizeModal.style.display = 'block';
             customizeModal.style.transform = `translateY(${-window.innerHeight + Math.abs(translateY)}px)`;
@@ -2269,13 +2283,17 @@ function setupCustomizeModalGestures() {
         isDragging = false;
         
         const deltaY = currentY - startY;
-        const threshold = window.innerHeight * 0.2; // 20% threshold for gesture completion
+        const deltaTime = Date.now() - lastTime;
+        const velocity = deltaTime > 0 ? (currentY - lastY) / deltaTime : 0;
+        const threshold = window.innerHeight * 0.2;
         
         customizeModal.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
         
+        const isFlick = Math.abs(velocity) > flickVelocityThreshold;
+        
         if (customizeModal.classList.contains('show')) {
-            // Closing gesture
-            if (deltaY > threshold) {
+            // Closing gesture (upward)
+            if (deltaY > threshold || (isFlick && velocity > 0)) {
                 customizeModal.style.transform = `translateY(${window.innerHeight}px)`;
                 customizeModal.style.opacity = '0';
                 blurOverlay.classList.remove('show');
@@ -2286,13 +2304,13 @@ function setupCustomizeModalGestures() {
                     updatePersistentClockVisibility();
                 }, 300);
             } else {
-                // Reset position if gesture wasn't complete
+                // Reset position
                 customizeModal.style.transform = 'translateY(0)';
                 customizeModal.style.opacity = '1';
             }
         } else {
-            // Opening gesture
-            if (-deltaY > threshold) {
+            // Opening gesture (downward)
+            if (-deltaY > threshold || (isFlick && velocity < 0)) {
                 customizeModal.classList.add('show');
                 customizeModal.style.transform = 'translateY(0)';
                 customizeModal.style.opacity = '1';
@@ -2302,7 +2320,7 @@ function setupCustomizeModalGestures() {
                     updatePersistentClockVisibility();
                 }, 10);
             } else {
-                // Reset position if gesture wasn't complete
+                // Reset position
                 customizeModal.style.display = 'none';
             }
         }
@@ -2312,14 +2330,12 @@ function setupCustomizeModalGestures() {
     document.addEventListener('touchstart', (e) => {
         const touch = e.touches[0];
         
-        // Check if touch starts in top-right area when modal is closed
         if (!customizeModal.classList.contains('show')) {
             if (touch.clientY <= touchStartThreshold && touch.clientX >= rightThreshold) {
                 startDrag(touch.clientY);
                 e.preventDefault();
             }
         } else if (customizeModal.contains(e.target)) {
-            // Allow dragging when modal is open and touch is on modal
             startDrag(touch.clientY);
             e.preventDefault();
         }
@@ -2333,6 +2349,27 @@ function setupCustomizeModalGestures() {
     }, { passive: false });
 
     document.addEventListener('touchend', () => {
+        endDrag();
+    });
+
+    // Mouse Events for testing
+    document.addEventListener('mousedown', (e) => {
+        if (!customizeModal.classList.contains('show')) {
+            if (e.clientY <= touchStartThreshold && e.clientX >= rightThreshold) {
+                startDrag(e.clientY);
+            }
+        } else if (customizeModal.contains(e.target)) {
+            startDrag(e.clientY);
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            moveModal(e.clientY);
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
         endDrag();
     });
 }
@@ -2357,6 +2394,7 @@ blurOverlay.addEventListener('click', (event) => {
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
         closeFullscreenEmbed();
+        searchInput.unfocus();
         // Close all modals
         [timezoneModal, weatherModal, customizeModal].forEach(modal => {
             if (modal.classList.contains('show')) {
