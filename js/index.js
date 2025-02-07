@@ -2231,149 +2231,6 @@ secondsSwitch.addEventListener('change', function() {
     updateClockAndDate();
 });
 
-function setupCustomizeModalGestures() {
-    const touchStartThreshold = window.innerHeight * 0.1;
-    const rightThreshold = window.innerWidth * 0.9;
-    let startY = 0;
-    let currentY = 0;
-    let isDragging = false;
-    let startTime = 0;
-    let lastY = 0;
-    let lastTime = 0;
-    const flickVelocityThreshold = 0.5; // Pixels per millisecond
-
-    function startDrag(yPosition) {
-        startY = yPosition;
-        currentY = yPosition;
-        lastY = yPosition;
-        isDragging = true;
-        startTime = Date.now();
-        lastTime = startTime;
-        customizeModal.style.transition = 'none';
-    }
-
-    function moveModal(yPosition) {
-        if (!isDragging) return;
-        
-        // Calculate velocity
-        const now = Date.now();
-        const deltaTime = now - lastTime;
-        if (deltaTime > 0) {
-            lastY = currentY;
-            lastTime = now;
-        }
-        
-        currentY = yPosition;
-        const deltaY = currentY - startY;
-        
-        if (customizeModal.classList.contains('show')) {
-            const translateY = Math.max(0, deltaY);
-            customizeModal.style.transform = `translateY(${translateY}px)`;
-            customizeModal.style.opacity = 1 - (translateY / window.innerHeight);
-        } else {
-            const translateY = Math.min(0, -deltaY);
-            customizeModal.style.display = 'block';
-            customizeModal.style.transform = `translateY(${-window.innerHeight + Math.abs(translateY)}px)`;
-            customizeModal.style.opacity = Math.abs(translateY) / window.innerHeight;
-        }
-    }
-
-    function endDrag() {
-        if (!isDragging) return;
-        isDragging = false;
-        
-        const deltaY = currentY - startY;
-        const deltaTime = Date.now() - lastTime;
-        const velocity = deltaTime > 0 ? (currentY - lastY) / deltaTime : 0;
-        const threshold = window.innerHeight * 0.2;
-        
-        customizeModal.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-        
-        const isFlick = Math.abs(velocity) > flickVelocityThreshold;
-        
-        if (customizeModal.classList.contains('show')) {
-            // Closing gesture (upward)
-            if (deltaY > threshold || (isFlick && velocity > 0)) {
-                customizeModal.style.transform = `translateY(${window.innerHeight}px)`;
-                customizeModal.style.opacity = '0';
-                blurOverlay.classList.remove('show');
-                setTimeout(() => {
-                    customizeModal.classList.remove('show');
-                    customizeModal.style.display = 'none';
-                    blurOverlay.style.display = 'none';
-                    updatePersistentClockVisibility();
-                }, 300);
-            } else {
-                // Reset position
-                customizeModal.style.transform = 'translateY(0)';
-                customizeModal.style.opacity = '1';
-            }
-        } else {
-            // Opening gesture (downward)
-            if (-deltaY > threshold || (isFlick && velocity < 0)) {
-                customizeModal.classList.add('show');
-                customizeModal.style.transform = 'translateY(0)';
-                customizeModal.style.opacity = '1';
-                blurOverlay.style.display = 'block';
-                setTimeout(() => {
-                    blurOverlay.classList.add('show');
-                    updatePersistentClockVisibility();
-                }, 10);
-            } else {
-                // Reset position
-                customizeModal.style.display = 'none';
-            }
-        }
-    }
-
-    // Touch Events
-    document.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        
-        if (!customizeModal.classList.contains('show')) {
-            if (touch.clientY <= touchStartThreshold && touch.clientX >= rightThreshold) {
-                startDrag(touch.clientY);
-                e.preventDefault();
-            }
-        } else if (customizeModal.contains(e.target)) {
-            startDrag(touch.clientY);
-            e.preventDefault();
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchmove', (e) => {
-        if (isDragging) {
-            e.preventDefault();
-            moveModal(e.touches[0].clientY);
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchend', () => {
-        endDrag();
-    });
-
-    // Mouse Events for testing
-    document.addEventListener('mousedown', (e) => {
-        if (!customizeModal.classList.contains('show')) {
-            if (e.clientY <= touchStartThreshold && e.clientX >= rightThreshold) {
-                startDrag(e.clientY);
-            }
-        } else if (customizeModal.contains(e.target)) {
-            startDrag(e.clientY);
-        }
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-            moveModal(e.clientY);
-        }
-    });
-
-    document.addEventListener('mouseup', () => {
-        endDrag();
-    });
-}
-
 blurOverlay.addEventListener('click', (event) => {
     if (event.target === blurOverlay) {
         // Close all modals
@@ -2394,7 +2251,6 @@ blurOverlay.addEventListener('click', (event) => {
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
         closeFullscreenEmbed();
-        searchInput.unfocus();
         // Close all modals
         [timezoneModal, weatherModal, customizeModal].forEach(modal => {
             if (modal.classList.contains('show')) {
@@ -2461,7 +2317,6 @@ window.addEventListener('offline', () => {
 // Call applyWallpaper on page load
 document.addEventListener('DOMContentLoaded', () => {
     applyWallpaper();
-    setupCustomizeModalGestures();
 });
 
 window.addEventListener('load', () => {
