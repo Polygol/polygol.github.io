@@ -2302,7 +2302,6 @@ function setupControlsInteractions() {
 
     // Mouse Events (optional, similar to touch events)
     document.addEventListener('mousedown', (e) => {
-        // Similar logic to touch start event for mouse interactions
         if (e.button !== 0) return;
         
         const element = document.elementFromPoint(e.clientX, e.clientY);
