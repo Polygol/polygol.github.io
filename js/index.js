@@ -1409,6 +1409,9 @@ const closeCustomizeModal = document.getElementById('closeCustomizeModal');
 const themeSwitch = document.getElementById('theme-switch');
 const wallpaperInput = document.getElementById('wallpaperInput');
 const uploadButton = document.getElementById('uploadButton');
+const SLIDESHOW_INTERVAL = 600000; // 10 minutes in milliseconds
+let slideshowInterval = null;
+let currentWallpaperIndex = 0;
 
 // Theme switching functionality
 function setupThemeSwitcher() {
@@ -1436,10 +1439,8 @@ customizeButton.addEventListener('click', () => {
 
 closeCustomizeModal.addEventListener('click', () => {
     customizeModal.classList.remove('show');
-    blurOverlay.classList.remove('show');
     setTimeout(() => {
         customizeModal.style.display = 'none';
-        blurOverlay.style.display = 'none';
         updatePersistentClock();
     }, 300);
 });
@@ -1479,13 +1480,58 @@ async function getVideo() {
     });
 }
 
-wallpaperInput.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (file && ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'video/mp4'].includes(file.type)) {
-        saveWallpaper(file);
-        showPopup('Wallpaper updated');
-    } else {
-        showPopup('Failed to update wallpaper');
+wallpaperInput.addEventListener('change', async (event) => {
+    const files = Array.from(event.target.files);
+    
+    if (files.length === 0) return;
+    
+    try {
+        if (files.length === 1) {
+            // Single file upload - clear multiple wallpapers
+            localStorage.removeItem('wallpapers');
+            clearInterval(slideshowInterval);
+            slideshowInterval = null;
+            const file = files[0];
+            if (['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'video/mp4'].includes(file.type)) {
+                saveWallpaper(file);
+                showPopup('Wallpaper updated');
+            } else {
+                showPopup('Failed to update wallpaper');
+            }
+        } else {
+            // Multiple files upload
+            const wallpapers = [];
+            for (const file of files) {
+                if (['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'video/mp4'].includes(file.type)) {
+                    if (file.type.startsWith('video/')) {
+                        await storeVideo(file);
+                        wallpapers.push({
+                            type: file.type,
+                            isVideo: true
+                        });
+                    } else {
+                        const mediaData = await compressMedia(file);
+                        wallpapers.push({
+                            type: file.type,
+                            data: mediaData,
+                            isVideo: false
+                        });
+                    }
+                }
+            }
+            
+            if (wallpapers.length > 0) {
+                localStorage.setItem('wallpapers', JSON.stringify(wallpapers));
+                currentWallpaperIndex = 0;
+                applyWallpaper();
+                showPopup('Multiple wallpapers updated');
+            } else {
+                showPopup('No valid wallpapers found');
+            }
+        }
+    } catch (error) {
+        console.error('Error handling wallpapers:', error);
+        showPopup('Failed to update wallpapers');
     }
 });
 
@@ -1590,72 +1636,141 @@ async function saveWallpaper(file) {
 }
 
 async function applyWallpaper() {
-    const wallpaperType = localStorage.getItem('wallpaperType');
+    const wallpapers = JSON.parse(localStorage.getItem('wallpapers'));
+    
+    if (wallpapers && wallpapers.length > 0) {
+        // Clear existing interval if any
+        clearInterval(slideshowInterval);
+        
+        // Function to show next wallpaper
+        async function showNextWallpaper() {
+            const wallpaper = wallpapers[currentWallpaperIndex];
+            
+            try {
+                if (wallpaper.isVideo) {
+                    const videoData = await getVideo();
+                    if (videoData && videoData.blob) {
+                        const existingVideo = document.querySelector('#background-video');
+                        if (existingVideo) {
+                            URL.revokeObjectURL(existingVideo.src);
+                            existingVideo.remove();
+                        }
 
-    try {
-        if (wallpaperType && wallpaperType.startsWith('video/')) {
-            const videoData = await getVideo();
-            if (videoData && videoData.blob) {
-                // Remove any existing video element
-                const existingVideo = document.querySelector('#background-video');
-                if (existingVideo) {
-                    URL.revokeObjectURL(existingVideo.src);
-                    existingVideo.remove();
+                        const video = document.createElement('video');
+                        video.id = 'background-video';
+                        video.autoplay = true;
+                        video.loop = true;
+                        video.muted = true;
+                        video.playsInline = true;
+                        video.style.position = 'fixed';
+                        video.style.minWidth = '100%';
+                        video.style.minHeight = '100%';
+                        video.style.width = 'auto';
+                        video.style.height = 'auto';
+                        video.style.zIndex = '-1';
+                        video.style.objectFit = 'cover';
+                        
+                        const blobUrl = URL.createObjectURL(videoData.blob);
+                        video.src = blobUrl;
+
+                        video.onerror = (e) => {
+                            console.error('Video loading error:', e);
+                            showPopup('Error loading video wallpaper');
+                        };
+
+                        video.onloadeddata = () => {
+                            document.body.insertBefore(video, document.body.firstChild);
+                            document.body.style.backgroundImage = 'none';
+                        };
+
+                        video.load();
+                    }
+                } else {
+                    const existingVideo = document.querySelector('#background-video');
+                    if (existingVideo) {
+                        URL.revokeObjectURL(existingVideo.src);
+                        existingVideo.remove();
+                    }
+
+                    document.body.style.backgroundImage = `url('${wallpaper.data}')`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundRepeat = 'no-repeat';
                 }
-
-                // Create and configure video element
-                const video = document.createElement('video');
-                video.id = 'background-video';
-                video.autoplay = true;
-                video.loop = true;
-                video.muted = true;
-                video.playsInline = true;
-                video.style.position = 'fixed';
-                video.style.minWidth = '100%';
-                video.style.minHeight = '100%';
-                video.style.width = 'auto';
-                video.style.height = 'auto';
-                video.style.zIndex = '-1';
-                video.style.objectFit = 'cover';
                 
-                // Create new blob URL with cache busting
-                const blobUrl = URL.createObjectURL(videoData.blob);
-                video.src = blobUrl;
-
-                // Add error handling for video loading
-                video.onerror = (e) => {
-                    console.error('Video loading error:', e);
-                    showPopup('Error loading video wallpaper');
-                };
-
-                // Ensure video loads before adding to DOM
-                video.onloadeddata = () => {
-                    document.body.insertBefore(video, document.body.firstChild);
-                    document.body.style.backgroundImage = 'none';
-                };
-
-                // Force video to load
-                video.load();
-            }
-        } else {
-            // Handle image wallpaper (existing code)
-            const savedWallpaper = localStorage.getItem('customWallpaper');
-            if (savedWallpaper) {
-                const existingVideo = document.querySelector('#background-video');
-                if (existingVideo) {
-                    URL.revokeObjectURL(existingVideo.src);
-                    existingVideo.remove();
-                }
-
-                document.body.style.backgroundImage = `url('${savedWallpaper}')`;
-                document.body.style.backgroundSize = 'cover';
-                document.body.style.backgroundPosition = 'center';
-                document.body.style.backgroundRepeat = 'no-repeat';
+                currentWallpaperIndex = (currentWallpaperIndex + 1) % wallpapers.length;
+            } catch (error) {
+                console.error('Error applying wallpaper:', error);
+                showPopup('Failed to apply wallpaper');
             }
         }
-    } catch (error) {
-        console.error('Error applying wallpaper:', error);
-        showPopup('Failed to apply wallpaper');
+        
+        // Show first wallpaper immediately
+        await showNextWallpaper();
+        
+        // Set up interval for slideshow
+        slideshowInterval = setInterval(showNextWallpaper, SLIDESHOW_INTERVAL);
+    } else {
+        const wallpaperType = localStorage.getItem('wallpaperType');
+        
+        try {
+            if (wallpaperType && wallpaperType.startsWith('video/')) {
+                const videoData = await getVideo();
+                if (videoData && videoData.blob) {
+                    const existingVideo = document.querySelector('#background-video');
+                    if (existingVideo) {
+                        URL.revokeObjectURL(existingVideo.src);
+                        existingVideo.remove();
+                    }
+
+                    const video = document.createElement('video');
+                    video.id = 'background-video';
+                    video.autoplay = true;
+                    video.loop = true;
+                    video.muted = true;
+                    video.playsInline = true;
+                    video.style.position = 'fixed';
+                    video.style.minWidth = '100%';
+                    video.style.minHeight = '100%';
+                    video.style.width = 'auto';
+                    video.style.height = 'auto';
+                    video.style.zIndex = '-1';
+                    video.style.objectFit = 'cover';
+                    
+                    const blobUrl = URL.createObjectURL(videoData.blob);
+                    video.src = blobUrl;
+
+                    video.onerror = (e) => {
+                        console.error('Video loading error:', e);
+                        showPopup('Error loading video wallpaper');
+                    };
+
+                    video.onloadeddata = () => {
+                        document.body.insertBefore(video, document.body.firstChild);
+                        document.body.style.backgroundImage = 'none';
+                    };
+
+                    video.load();
+                }
+            } else {
+                const savedWallpaper = localStorage.getItem('customWallpaper');
+                if (savedWallpaper) {
+                    const existingVideo = document.querySelector('#background-video');
+                    if (existingVideo) {
+                        URL.revokeObjectURL(existingVideo.src);
+                        existingVideo.remove();
+                    }
+
+                    document.body.style.backgroundImage = `url('${savedWallpaper}')`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundRepeat = 'no-repeat';
+                }
+            }
+        } catch (error) {
+            console.error('Error applying wallpaper:', error);
+            showPopup('Failed to apply wallpaper');
+        }
     }
 }
 
