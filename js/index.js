@@ -1430,10 +1430,8 @@ themeSwitch.addEventListener('change', () => {
 // Customize modal functionality
 customizeButton.addEventListener('click', () => {
     customizeModal.style.display = 'block';
-    blurOverlay.style.display = 'block';
     setTimeout(() => {
         customizeModal.classList.add('show');
-        blurOverlay.classList.add('show');
         updatePersistentClockVisibility();
     }, 10);
 });
@@ -2234,7 +2232,7 @@ secondsSwitch.addEventListener('change', function() {
 blurOverlay.addEventListener('click', (event) => {
     if (event.target === blurOverlay) {
         // Close all modals
-        [timezoneModal, weatherModal, customizeModal].forEach(modal => {
+        [timezoneModal, weatherModal].forEach(modal => {
             if (modal.classList.contains('show')) {
                 modal.classList.remove('show');
                 blurOverlay.classList.remove('show');
@@ -2250,10 +2248,8 @@ blurOverlay.addEventListener('click', (event) => {
 
 persistentClock.addEventListener('click', () => {
     customizeModal.style.display = 'block';
-    blurOverlay.style.display = 'block';
     setTimeout(() => {
         customizeModal.classList.add('show');
-        blurOverlay.classList.add('show');
         updatePersistentClockVisibility();
     }, 10);
 });
