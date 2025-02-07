@@ -200,6 +200,10 @@ body.light-theme[style*="background-image"] .info {
             overflow-y: auto;
             user-select: none;
         }
+
+        .customizeModal {
+            z-index: 9999; !important
+        }
         
         .modal, .modal-content {
             scrollbar-width: thin; /* For Firefox */
