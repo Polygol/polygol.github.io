@@ -796,7 +796,7 @@ function firstSetup() {
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     if (!localStorage.getItem('hasSeenPopupTouchscreen') && !isTouchDevice) {
-        showPopup('Failed to recognize touch screen');
+        showPopup('Touchscreen ready to use');
         localStorage.setItem('hasSeenPopupTouchscreen', 'true');
     }
 
