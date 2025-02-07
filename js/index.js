@@ -2060,6 +2060,9 @@ function setupDrawerInteractions() {
     
         // Check if there's an open embed
         const openEmbed = document.querySelector('.fullscreen-embed');
+
+        // Check if there's an open embed
+        const openEmbed = document.querySelector('.fullscreen-embed');
         
         if (openEmbed && movementPercentage > 50) {
             // Close embed with animation
@@ -2073,6 +2076,8 @@ function setupDrawerInteractions() {
                         el.style.display = '';
                     }
                 });
+                // Explicitly ensure customizeModal is hidden
+                document.getElementById('customizeModal').style.display = 'none';
             }, 300);
             // Reset drawer state
             dock.classList.remove('show');
