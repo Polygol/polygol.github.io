@@ -2300,7 +2300,7 @@ function setupControlsInteractions() {
         }
     });
 
-    // Mouse Events (optional, similar to touch events)
+    // Mouse Events (similar logic, using translateY)
     document.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         
