@@ -2248,6 +2248,16 @@ blurOverlay.addEventListener('click', (event) => {
     }
 });
 
+persistentClock.addEventListener('click', () => {
+    customizeModal.style.display = 'block';
+    blurOverlay.style.display = 'block';
+    setTimeout(() => {
+        customizeModal.classList.add('show');
+        blurOverlay.classList.add('show');
+        updatePersistentClockVisibility();
+    }, 10);
+});
+
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
         closeFullscreenEmbed();
