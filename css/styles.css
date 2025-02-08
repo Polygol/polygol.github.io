@@ -770,10 +770,12 @@ body.light-theme[style*="background-image"] .info {
 #font-select option[value="DynaPuff"] { font-family: 'DynaPuff', cursive; }
 #font-select option[value="DM Serif Display"] { font-family: 'DM Serif Display', serif; }
 #font-select option[value="Anton"] { font-family: 'Anton', sans-serif; }
-#font-select option[value="Roboto Mono"] { font-family: 'Roboto Mono', monospace; }
+#font-select option[value="JetBrains Mono"] { font-family: 'JetBrains Mono', monospace; }
 #font-select option[value="DotGothic16"] { font-family: 'DotGothic16', monospace; }
 #font-select option[value="Kalam"] { font-family: 'Kalam', cursive; }
-#font-select option[value="Kalam"] { font-family: 'Kalam', cursive; }
+#font-select option[value="Patrick Hand"] { font-family: 'Patrick Hand', cursive; }
+#font-select option[value="Cherry Bomb One"] { font-family: 'Cherry Bomb One', cursive; }
+#font-select option[value="Jersey 10"] { font-family: 'Jersey 10', serif; }
 
 .timer-circle {
     position: relative;
