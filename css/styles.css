@@ -6,7 +6,7 @@
 @import url('https://fonts.googleapis.com/css2?family=DotGothic16:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Cherry+Bomb+One:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Micro+5:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Monomaniac+One:wght@400;700&display=swap');
 
 :root {
     /* Dark Theme (Default) Variables */
@@ -775,7 +775,7 @@ body.light-theme[style*="background-image"] .info {
 #font-select option[value="Kalam"] { font-family: 'Kalam', cursive; }
 #font-select option[value="Patrick Hand"] { font-family: 'Patrick Hand', cursive; }
 #font-select option[value="Cherry Bomb One"] { font-family: 'Cherry Bomb One', cursive; }
-#font-select option[value="Micro 5"] { font-family: 'Micro 5', sans-serif; }
+#font-select option[value="Monomaniac One"] { font-family: 'Monomaniac One', sans-serif; }
 
 .timer-circle {
     position: relative;
