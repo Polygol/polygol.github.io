@@ -1492,7 +1492,7 @@ wallpaperInput.addEventListener('change', async (event) => {
             clearInterval(slideshowInterval);
             slideshowInterval = null;
             const file = files[0];
-            if (['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'video/mp4'].includes(file.type)) {
+            if (['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'video/mp4'].includes(file.type)) {
                 saveWallpaper(file);
                 showPopup('Wallpaper updated');
             } else {
@@ -1502,7 +1502,7 @@ wallpaperInput.addEventListener('change', async (event) => {
             // Multiple files upload
             const wallpapers = [];
             for (const file of files) {
-                if (['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'video/mp4'].includes(file.type)) {
+                if (['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'video/mp4'].includes(file.type)) {
                     if (file.type.startsWith('video/')) {
                         await storeVideo(file);
                         wallpapers.push({
