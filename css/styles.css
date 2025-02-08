@@ -153,7 +153,7 @@ body.light-theme[style*="background-image"] .info {
             text-align: center;
             padding: 20px;
             position: relative;
-            transition: border-color 0.3s, color 0.3s;
+            transition: color 0.3s;
             user-select: none;
         }
 
@@ -163,7 +163,7 @@ body.light-theme[style*="background-image"] .info {
             color: var(--text-color);
             cursor: pointer;
             user-select: none;
-            transition: opacity 0.3s ease, filter 0.3s ease;
+            transition: opacity 0.3s ease, filter 0.3s ease, color 0.3s;
         }
 
         .info {
@@ -180,6 +180,7 @@ body.light-theme[style*="background-image"] .info {
             font-weight: 400;
             color: var(--text-color);
             user-select: none;
+            transition: color 0.3s;
         }
 
         .modal {
@@ -197,7 +198,7 @@ body.light-theme[style*="background-image"] .info {
             border-radius: 45px;
             border: 2px solid var(--search-background);
             opacity: 0;
-            transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s, color 0.3s;
+            transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s, color 0.3s, border-color 0.3s;
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
             overflow-y: auto;
             user-select: none;
