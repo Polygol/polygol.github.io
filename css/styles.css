@@ -206,7 +206,7 @@ body.light-theme[style*="background-image"] .info {
             position: fixed;
             top: 0px;
             right: 0px;
-            margin: 80px 20px 20px;
+            margin: 20px;
             padding: 20px;
             box-sizing: border-box;
             overflow: auto;
