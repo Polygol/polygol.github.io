@@ -1811,27 +1811,19 @@ function setupFontSelection() {
         infoElement.style.fontFamily = fontFamily;
     }
     
-    // Function to load and apply font
-    async function loadAndApplyFont(fontName) {
-        try {
-            await document.fonts.load(`16px "${fontName}"`);
-            applyFont(fontName);
-            localStorage.setItem('clockFont', fontName);
-        } catch (error) {
-            console.error('Font loading error:', error);
-            showPopup('Failed to load Clock Style');
-            fontSelect.value = savedFont;
-            applyFont(savedFont);
-        }
-    }
-    
     // Apply initial font
-    loadAndApplyFont(savedFont);
+    applyFont(savedFont);
     
     // Handle font changes
     fontSelect.addEventListener('change', (e) => {
         const selectedFont = e.target.value;
-        loadAndApplyFont(selectedFont);
+        // Ensure font is loaded before applying
+        document.fonts.load(`16px ${selectedFont}`).then(() => {
+            applyFont(selectedFont);
+            localStorage.setItem('clockFont', selectedFont);
+        }).catch(() => {
+            showPopup('Failed to load Clock Style');
+        });
     });
 }
 
