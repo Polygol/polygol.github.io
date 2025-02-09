@@ -127,18 +127,12 @@ function updateTitle() {
         let weatherString = '';
         if (showWeather) {
             const temperatureElement = document.getElementById('temperature');
-            const weatherIconElement = document.getElementById('weather-icon');
             
-            if (temperatureElement && weatherIconElement && weatherIconElement.dataset.weatherCode) {
+            if (temperatureElement) {
                 const temperature = temperatureElement.textContent.replace('°C', '');
-                const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
-                
-                if (weatherConditionsForTitle[weatherCode]) {
-                    weatherString = ` | ${temperature}°C ${weatherConditionsForTitle[weatherCode].icon}`;
-                }
+                weatherString = ` | ${temperature}°C`;
             }
         }
-
         document.title = `${timeString}${weatherString}`;
     }
 }
@@ -171,7 +165,7 @@ function updateFavicon(weatherCode) {
     ctx.fill();
 
     // Draw weather icon
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = isDaytime() ? '#1c1c1c' : '#f9f9f9';
     ctx.font = '24px "Material Symbols Rounded"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
