@@ -139,23 +139,23 @@ function updateTitle() {
 
 function updateFavicon(weatherCode) {
     const favicon = document.createElement('canvas');
-    favicon.width = 32;
-    favicon.height = 32;
+    favicon.width = 100;
+    favicon.height = 100;
     const ctx = favicon.getContext('2d');
     
     // Clear canvas
-    ctx.clearRect(0, 0, 32, 32);
+    ctx.clearRect(0, 0, 100, 100);
     
     // Create rounded rectangle background
     ctx.beginPath();
-    const radius = 8; // Corner radius
+    const radius = 64; // Corner radius
     ctx.moveTo(radius, 0);
-    ctx.lineTo(32 - radius, 0);
-    ctx.quadraticCurveTo(64, 0, 64, radius);
-    ctx.lineTo(32, 32 - radius);
-    ctx.quadraticCurveTo(32, 32, 64 - radius, 32);
-    ctx.lineTo(radius, 32);
-    ctx.quadraticCurveTo(0, 32, 0, 32 - radius);
+    ctx.lineTo(100 - radius, 0);
+    ctx.quadraticCurveTo(100, 0, 100, radius);
+    ctx.lineTo(100, 100 - radius);
+    ctx.quadraticCurveTo(100, 100, 100 - radius, 100);
+    ctx.lineTo(radius, 100);
+    ctx.quadraticCurveTo(0, 100, 0, 100 - radius);
     ctx.lineTo(0, radius);
     ctx.quadraticCurveTo(0, 0, radius, 0);
     ctx.closePath();
@@ -166,13 +166,14 @@ function updateFavicon(weatherCode) {
 
     // Draw weather icon
     ctx.fillStyle = isDaytime() ? '#1c1c1c' : '#f9f9f9';
-    ctx.font = '24px "Material Symbols Rounded"';
+    ctx.font = '72px "Material Symbols Rounded"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    ctx.fontVariationSettings = '"FILL" 1';
     
     const weather = weatherConditions[weatherCode] || weatherConditions[0];
     const iconText = weather.icon();
-    ctx.fillText(iconText, 16, 16);
+    ctx.fillText(iconText, 50, 50); // Center at 50,50 (half of 100x100)
 
     // Update favicon link
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
