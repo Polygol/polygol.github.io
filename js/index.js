@@ -116,9 +116,26 @@ function updateTitle() {
         let hours = String(now.getHours()).padStart(2, '0');
         let minutes = String(now.getMinutes()).padStart(2, '0');
         let seconds = String(now.getSeconds()).padStart(2, '0');
-        document.title = showSeconds ? 
+        
+        // Get weather info from small weather widget elements
+        const temperatureElement = document.getElementById('temperature');
+        const weatherIconElement = document.getElementById('weather-icon');
+        
+        const timeString = showSeconds ? 
             `${hours}:${minutes}:${seconds}` : 
             `${hours}:${minutes}`;
+            
+        let weatherString = '';
+        if (temperatureElement && weatherIconElement && weatherIconElement.dataset.weatherCode) {
+            const temperature = temperatureElement.textContent.replace('°C', '');
+            const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
+            
+            if (weatherConditionsForTitle[weatherCode]) {
+                weatherString = ` • ${weatherConditionsForTitle[weatherCode].icon} ${temperature}°C`;
+            }
+        }
+
+        document.title = `${timeString}${weatherString}`;
     }
 }
 
@@ -135,6 +152,38 @@ function isDaytimeForHour(timeString) {
 
 // Start an interval to update the title every second
 setInterval(updateTitle, 1000);
+
+// Title weather conditions using emojis
+        const weatherConditionsForTitle = {
+            0: { description: 'Clear Sky', icon: '☀️' },
+            1: { description: 'Mainly Clear', icon: '🌤️' },
+            2: { description: 'Partly Cloudy', icon: '⛅' },
+            3: { description: 'Overcast', icon: '☁️' },
+            45: { description: 'Fog', icon: '🌫️' },
+            48: { description: 'Depositing Rime Fog', icon: '🌫️' },
+            51: { description: 'Light Drizzle', icon: '🌦️' },
+            53: { description: 'Moderate Drizzle', icon: '🌦️' },
+            55: { description: 'Dense Drizzle', icon: '🌧️' },
+            56: { description: 'Light Freezing Drizzle', icon: '🌧️' },
+            57: { description: 'Dense Freezing Drizzle', icon: '🌧️' },
+            61: { description: 'Slight Rain', icon: '🌧️' },
+            63: { description: 'Moderate Rain', icon: '🌧️' },
+            65: { description: 'Heavy Rain', icon: '🌧️' },
+            66: { description: 'Light Freezing Rain', icon: '🌧️' },
+            67: { description: 'Heavy Freezing Rain', icon: '🌧️' },
+            71: { description: 'Slight Snow', icon: '🌨️' },
+            73: { description: 'Moderate Snow', icon: '❄️' },
+            75: { description: 'Heavy Snow', icon: '❄️' },
+            77: { description: 'Snow Grains', icon: '❄️' },
+            80: { description: 'Slight Showers', icon: '🌦️' },
+            81: { description: 'Moderate Showers', icon: '🌧️' },
+            82: { description: 'Violent Showers', icon: '⛈️' },
+            85: { description: 'Slight Snow Showers', icon: '🌨️' },
+            86: { description: 'Heavy Snow Showers', icon: '❄️' },
+            95: { description: 'Thunderstorm', icon: '⛈️' },
+            96: { description: 'Thunderstorm with Hail', icon: '⛈️' },
+            99: { description: 'Heavy Thunderstorm with Hail', icon: '🌩️' }
+        };
 
 const weatherConditions = {
     0: { 
@@ -249,32 +298,39 @@ function updateWeatherVisibility() {
 
 function setupWeatherToggle() {
     const weatherSwitch = document.getElementById('weather-switch');
-    if (!weatherSwitch) return; // Guard clause in case element isn't found
+    if (!weatherSwitch) return;
     
-    let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults to true
+    let showWeather = localStorage.getItem('showWeather') !== 'false';
     
-    // Initialize weather switch state
     weatherSwitch.checked = showWeather;
     
-    // Update weather visibility based on saved preference
     function updateWeatherVisibility() {
         const weatherWidget = document.getElementById('weather');
         if (weatherWidget) {
             weatherWidget.style.display = showWeather ? 'block' : 'none';
         }
+        
+        // Force title update without weather when weather is hidden
+        if (!showWeather) {
+            let now = new Date();
+            let hours = String(now.getHours()).padStart(2, '0');
+            let minutes = String(now.getMinutes()).padStart(2, '0');
+            let seconds = String(now.getSeconds()).padStart(2, '0');
+            document.title = showSeconds ? 
+                `${hours}:${minutes}:${seconds}` : 
+                `${hours}:${minutes}`;
+        }
     }
     
-    // Add event listener for weather switch
     weatherSwitch.addEventListener('change', function() {
         showWeather = this.checked;
         localStorage.setItem('showWeather', showWeather);
         updateWeatherVisibility();
         if (showWeather) {
-            updateSmallWeather(); // Refresh weather data when enabling
+            updateSmallWeather();
         }
     });
     
-    // Set initial visibility
     updateWeatherVisibility();
 }
 
@@ -379,7 +435,7 @@ function getHourString(dateString) {
 
 async function updateSmallWeather() {
     const showWeather = localStorage.getItem('showWeather') !== 'false';
-    if (!showWeather) return; // Don't update if weather is hidden
+    if (!showWeather) return;
     
     try {
         const weatherData = await fetchLocationAndWeather();
@@ -393,11 +449,15 @@ async function updateSmallWeather() {
         temperatureElement.textContent = `${weatherData.current.temperature}°C`;
         weatherIconElement.className = 'material-symbols-rounded';
         weatherIconElement.textContent = weatherInfo.icon(true);
+        // Add this line:
+        weatherIconElement.dataset.weatherCode = weatherData.current.weathercode;
     } catch (error) {
         console.error('Error updating small weather widget:', error);
         document.getElementById('weather').style.display = 'none';
         showPopup('Failed to retrieve weather');
     }
+
+    updateTitle();
 }
 
 async function displayDetailedWeather() {
