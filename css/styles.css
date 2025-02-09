@@ -340,6 +340,7 @@ body.light-theme[style*="background-image"] .info {
             max-width: 800px;
             transition: background-color 0.5s;
             user-select: none;
+            font-variant: tabular-nums;
         }
 
         .detailed-weather .weather-icon {
@@ -545,6 +546,7 @@ body.light-theme[style*="background-image"] .info {
             align-items: center;
             height: 100%;
             user-select: none;
+            font-variant: tabular-nums;
         }
 
         .weather-icon {
