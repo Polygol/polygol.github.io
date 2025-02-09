@@ -151,24 +151,27 @@ function updateFavicon(weatherCode) {
     ctx.arc(50, 50, 50, 0, Math.PI * 2);
     ctx.closePath();
     
-    // Get current hour for color transition
-    const hour = new Date().getHours();
+    // Get current hour and minutes for more precise transitions
+    const date = new Date();
+    const hour = date.getHours();
+    const minutes = date.getMinutes();
+    const timeInHours = hour + minutes / 60;
     
     // Define color transitions throughout the day
     let backgroundColor;
-    if (hour >= 5 && hour < 8) { // Dawn
-        const progress = (hour - 5) / 3;
-        backgroundColor = interpolateColors('#FF69B4', '#87CEEB', progress); // Pink to Blue
-    } else if (hour >= 8 && hour < 16) { // Day
-        backgroundColor = '#87CEEB'; // Sky Blue
-    } else if (hour >= 16 && hour < 19) { // Sunset
-        const progress = (hour - 16) / 3;
-        backgroundColor = interpolateColors('#87CEEB', '#FF69B4', progress); // Blue to Pink
-    } else if (hour >= 19 && hour < 22) { // Dusk
-        const progress = (hour - 19) / 3;
-        backgroundColor = interpolateColors('#FF69B4', '#191970', progress); // Pink to Dark Blue
+    if (timeInHours >= 5 && timeInHours < 8) { // Dawn
+        const progress = (timeInHours - 5) / 3;
+        backgroundColor = interpolateColors('#FF69B4', '#87CEEB', progress);
+    } else if (timeInHours >= 8 && timeInHours < 16) { // Day
+        backgroundColor = '#87CEEB';
+    } else if (timeInHours >= 16 && timeInHours < 19) { // Sunset
+        const progress = (timeInHours - 16) / 3;
+        backgroundColor = interpolateColors('#87CEEB', '#FF69B4', progress);
+    } else if (timeInHours >= 19 && timeInHours < 22) { // Dusk
+        const progress = (timeInHours - 19) / 3;
+        backgroundColor = interpolateColors('#FF69B4', '#191970', progress);
     } else { // Night
-        backgroundColor = '#191970'; // Dark Blue
+        backgroundColor = '#191970';
     }
     
     // Fill circle with calculated color
@@ -176,7 +179,7 @@ function updateFavicon(weatherCode) {
     ctx.fill();
     
     // Draw weather icon
-    ctx.fillStyle = (hour >= 6 && hour <= 18) ? '#1c1c1c' : '#f9f9f9';
+    ctx.fillStyle = (timeInHours >= 6 && timeInHours <= 18) ? '#1c1c1c' : '#f9f9f9';
     ctx.font = '72px "Material Symbols Rounded"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -196,7 +199,6 @@ function updateFavicon(weatherCode) {
 
 // Helper function to interpolate between two colors
 function interpolateColors(color1, color2, progress) {
-    // Convert hex to RGB
     const r1 = parseInt(color1.substring(1,3), 16);
     const g1 = parseInt(color1.substring(3,5), 16);
     const b1 = parseInt(color1.substring(5,7), 16);
@@ -205,12 +207,10 @@ function interpolateColors(color1, color2, progress) {
     const g2 = parseInt(color2.substring(3,5), 16);
     const b2 = parseInt(color2.substring(5,7), 16);
     
-    // Interpolate
     const r = Math.round(r1 + (r2 - r1) * progress);
     const g = Math.round(g1 + (g2 - g1) * progress);
     const b = Math.round(b1 + (b2 - b1) * progress);
     
-    // Convert back to hex
     return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
 }
 
@@ -2578,6 +2578,14 @@ window.addEventListener('offline', () => {
 // Call applyWallpaper on page load
 document.addEventListener('DOMContentLoaded', () => {
     applyWallpaper();
+});
+
+// Start update loop once DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Initial update
+    updateFavicon(weatherCode);
+    // Update every minute
+    setInterval(() => updateFavicon(weatherCode), 60000);
 });
 
 window.addEventListener('load', () => {
