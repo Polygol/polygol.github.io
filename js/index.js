@@ -137,6 +137,20 @@ function updateTitle() {
     }
 }
 
+function changeFavicon(faviconData) {
+    const link = document.createElement('link');
+    const oldLink = document.getElementById('dynamic-favicon');
+    
+    link.id = 'dynamic-favicon';
+    link.rel = 'shortcut icon';
+    link.href = faviconData;
+    
+    if (oldLink) {
+        document.head.removeChild(oldLink);
+    }
+    document.head.appendChild(link);
+}
+
 function updateFavicon(weatherCode) {
     const favicon = document.createElement('canvas');
     favicon.width = 100;
@@ -148,15 +162,38 @@ function updateFavicon(weatherCode) {
     
     // Create circle background
     ctx.beginPath();
-    ctx.arc(50, 50, 50, 0, Math.PI * 2); // Center at 50,50 with radius 50
+    ctx.arc(50, 50, 50, 0, Math.PI * 2);
     ctx.closePath();
     
+    // Get current time
+    const date = new Date();
+    const hour = date.getHours();
+    const minutes = date.getMinutes();
+    const timeInHours = hour + minutes / 60;
+    
+    // Define color transitions
+    let backgroundColor;
+    if (timeInHours >= 5 && timeInHours < 8) {
+        const progress = (timeInHours - 5) / 3;
+        backgroundColor = interpolateColors('#FF69B4', '#87CEEB', progress);
+    } else if (timeInHours >= 8 && timeInHours < 16) {
+        backgroundColor = '#87CEEB';
+    } else if (timeInHours >= 16 && timeInHours < 19) {
+        const progress = (timeInHours - 16) / 3;
+        backgroundColor = interpolateColors('#87CEEB', '#FF69B4', progress);
+    } else if (timeInHours >= 19 && timeInHours < 22) {
+        const progress = (timeInHours - 19) / 3;
+        backgroundColor = interpolateColors('#FF69B4', '#191970', progress);
+    } else {
+        backgroundColor = '#191970';
+    }
+    
     // Fill circle
-    ctx.fillStyle = isDaytime() ? '#87CEEB' : '#191970';
+    ctx.fillStyle = backgroundColor;
     ctx.fill();
-
+    
     // Draw weather icon
-    ctx.fillStyle = isDaytime() ? '#1c1c1c' : '#f9f9f9';
+    ctx.fillStyle = (timeInHours >= 6 && timeInHours <= 18) ? '#1c1c1c' : '#f9f9f9';
     ctx.font = '72px "Material Symbols Rounded"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -166,12 +203,24 @@ function updateFavicon(weatherCode) {
     const iconText = weather.icon();
     ctx.fillText(iconText, 50, 55);
     
-    // Update favicon link
-    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-    link.type = 'image/x-icon';
-    link.rel = 'shortcut icon';
-    link.href = favicon.toDataURL();
-    document.head.appendChild(link);
+    // Add timestamp to force cache refresh
+    changeFavicon(favicon.toDataURL() + '?v=' + Date.now());
+}
+
+function interpolateColors(color1, color2, progress) {
+    const r1 = parseInt(color1.substring(1,3), 16);
+    const g1 = parseInt(color1.substring(3,5), 16);
+    const b1 = parseInt(color1.substring(5,7), 16);
+    
+    const r2 = parseInt(color2.substring(1,3), 16);
+    const g2 = parseInt(color2.substring(3,5), 16);
+    const b2 = parseInt(color2.substring(5,7), 16);
+    
+    const r = Math.round(r1 + (r2 - r1) * progress);
+    const g = Math.round(g1 + (g2 - g1) * progress);
+    const b = Math.round(b1 + (b2 - b1) * progress);
+    
+    return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
 }
 
 // Function to check if it's daytime (between 6:00 and 18:00)
