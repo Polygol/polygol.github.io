@@ -139,7 +139,7 @@ body.light-theme[style*="background-image"] .info {
     visibility: visible;
     transition: opacity 0.3s ease, visibility 0.3s ease;
     user-select: none;
-    font-variant: tabular-nums;
+    font-variant-numeric: tabular-nums;
 }
 
 .persistent-clock.show {
@@ -340,7 +340,7 @@ body.light-theme[style*="background-image"] .info {
             max-width: 800px;
             transition: background-color 0.5s;
             user-select: none;
-            font-variant: tabular-nums;
+            font-variant-numeric: tabular-nums;
         }
 
         .detailed-weather .weather-icon {
@@ -546,7 +546,7 @@ body.light-theme[style*="background-image"] .info {
             align-items: center;
             height: 100%;
             user-select: none;
-            font-variant: tabular-nums;
+            font-variant-numeric: tabular-nums;
         }
 
         .weather-icon {
@@ -799,7 +799,7 @@ body.light-theme[style*="background-image"] .info {
     font-weight: 800;
     cursor: pointer;
     user-select: none;
-    font-variant: tabular-nums;
+    font-variant-numeric: tabular-nums;
 }
 
 .timer-input {
@@ -859,7 +859,7 @@ body.light-theme[style*="background-image"] .info {
     font-weight: 500;
     transition: background-color 0.3s ease;
     font-family: 'Inter', sans-serif;
-    font-variant: tabular-nums;
+    font-variant-numeric: tabular-nums;
 }
 
 .action-buttons {
