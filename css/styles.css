@@ -459,7 +459,7 @@ body.light-theme[style*="background-image"] .info {
             border: none;
             border-radius: 50px;
             background-color: var(--search-background);
-            backdrop-filter: blur(50px);
+            backdrop-filter: blur(20px);
             color: var(--text-color);
             font-size: 1.2rem;
             outline: none;
@@ -522,7 +522,7 @@ body.light-theme[style*="background-image"] .info {
     color: var(--text-color);
     padding: 8px 18px;
     background-color: var(--search-background);
-    backdrop-filter: blur(50px);
+    backdrop-filter: blur(20px);
     display: flex;
     align-items: center;
     justify-content: center;
