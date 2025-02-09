@@ -164,7 +164,7 @@ function updateFavicon(weatherCode) {
     
     const weather = weatherConditions[weatherCode] || weatherConditions[0];
     const iconText = weather.icon();
-    ctx.fillText(iconText, 50, 40);
+    ctx.fillText(iconText, 50, 70);
     
     // Update favicon link
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
