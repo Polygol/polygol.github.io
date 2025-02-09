@@ -117,21 +117,25 @@ function updateTitle() {
         let minutes = String(now.getMinutes()).padStart(2, '0');
         let seconds = String(now.getSeconds()).padStart(2, '0');
         
-        // Get weather info from small weather widget elements
-        const temperatureElement = document.getElementById('temperature');
-        const weatherIconElement = document.getElementById('weather-icon');
-        
         const timeString = showSeconds ? 
             `${hours}:${minutes}:${seconds}` : 
             `${hours}:${minutes}`;
             
+        // Check if weather is enabled
+        const showWeather = localStorage.getItem('showWeather') !== 'false';
+        
         let weatherString = '';
-        if (temperatureElement && weatherIconElement && weatherIconElement.dataset.weatherCode) {
-            const temperature = temperatureElement.textContent.replace('°C', '');
-            const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
+        if (showWeather) {
+            const temperatureElement = document.getElementById('temperature');
+            const weatherIconElement = document.getElementById('weather-icon');
             
-            if (weatherConditionsForTitle[weatherCode]) {
-                weatherString = ` • ${weatherConditionsForTitle[weatherCode].icon} ${temperature}°C`;
+            if (temperatureElement && weatherIconElement && weatherIconElement.dataset.weatherCode) {
+                const temperature = temperatureElement.textContent.replace('°C', '');
+                const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
+                
+                if (weatherConditionsForTitle[weatherCode]) {
+                    weatherString = ` • ${weatherConditionsForTitle[weatherCode].icon} ${temperature}°C`;
+                }
             }
         }
 
