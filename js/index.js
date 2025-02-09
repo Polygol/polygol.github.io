@@ -159,12 +159,12 @@ function updateFavicon(weatherCode) {
     ctx.fillStyle = isDaytime() ? '#1c1c1c' : '#f9f9f9';
     ctx.font = '72px "Material Symbols Rounded"';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
+    ctx.textBaseline = 'middle';
     ctx.fontVariationSettings = '"FILL" 1, "wght" 700';
     
     const weather = weatherConditions[weatherCode] || weatherConditions[0];
     const iconText = weather.icon();
-    ctx.fillText(iconText, 50, 100);
+    ctx.fillText(iconText, 50, 90);
     
     // Update favicon link
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
