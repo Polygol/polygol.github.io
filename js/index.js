@@ -196,7 +196,23 @@ function updateFavicon(weatherCode) {
         link.rel = 'shortcut icon';
         document.head.appendChild(link);
     }
-    link.href = favicon.toDataURL() + '?v=' + Date.now();
+    
+    favicon.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        let link = document.querySelector("link[rel='icon']");
+        
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+        }
+        
+        // Add timestamp to force refresh
+        link.href = url + '?v=' + Date.now();
+        
+        // Clean up the old blob URL after a short delay
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+    });
 }
 
 // Helper function to interpolate between two colors
