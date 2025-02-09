@@ -796,6 +796,7 @@ body.light-theme[style*="background-image"] .info {
     font-weight: 800;
     cursor: pointer;
     user-select: none;
+    font-variant: tabular-nums;
 }
 
 .timer-input {
@@ -855,6 +856,7 @@ body.light-theme[style*="background-image"] .info {
     font-weight: 500;
     transition: background-color 0.3s ease;
     font-family: 'Inter', sans-serif;
+    font-variant: tabular-nums;
 }
 
 .action-buttons {
