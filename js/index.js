@@ -138,18 +138,6 @@ function updateTitle() {
 }
 
 function updateFavicon(weatherCode) {
-    const showWeather = localStorage.getItem('showWeather') !== 'false';
-    
-    if (!showWeather) {
-        // Revert to original favicon
-        const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-        link.type = 'image/png';
-        link.rel = 'icon';
-        link.href = '/assets/favicon.png';
-        document.head.appendChild(link);
-        return;
-    }
-    
     const favicon = document.createElement('canvas');
     favicon.width = 32;
     favicon.height = 32;
@@ -163,9 +151,9 @@ function updateFavicon(weatherCode) {
     const radius = 8; // Corner radius
     ctx.moveTo(radius, 0);
     ctx.lineTo(32 - radius, 0);
-    ctx.quadraticCurveTo(32, 0, 32, radius);
+    ctx.quadraticCurveTo(64, 0, 64, radius);
     ctx.lineTo(32, 32 - radius);
-    ctx.quadraticCurveTo(32, 32, 32 - radius, 32);
+    ctx.quadraticCurveTo(32, 32, 64 - radius, 32);
     ctx.lineTo(radius, 32);
     ctx.quadraticCurveTo(0, 32, 0, 32 - radius);
     ctx.lineTo(0, radius);
@@ -377,9 +365,9 @@ function setupWeatherToggle() {
                 
             // Reset favicon to original
             const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-            link.type = 'image/x-icon';
-            link.rel = 'shortcut icon';
-            link.href = 'favicon.ico';
+            link.type = 'image/png';
+            link.rel = 'icon';
+            link.href = 'assests/favicon.png';
             document.head.appendChild(link);
         }
     }
