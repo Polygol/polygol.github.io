@@ -143,6 +143,51 @@ function updateTitle() {
     }
 }
 
+function updateFavicon(weatherCode) {
+    const favicon = document.createElement('canvas');
+    favicon.width = 32;
+    favicon.height = 32;
+    const ctx = favicon.getContext('2d');
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, 32, 32);
+    
+    // Create rounded rectangle background
+    ctx.beginPath();
+    const radius = 8; // Corner radius
+    ctx.moveTo(radius, 0);
+    ctx.lineTo(32 - radius, 0);
+    ctx.quadraticCurveTo(32, 0, 32, radius);
+    ctx.lineTo(32, 32 - radius);
+    ctx.quadraticCurveTo(32, 32, 32 - radius, 32);
+    ctx.lineTo(radius, 32);
+    ctx.quadraticCurveTo(0, 32, 0, 32 - radius);
+    ctx.lineTo(0, radius);
+    ctx.quadraticCurveTo(0, 0, radius, 0);
+    ctx.closePath();
+    
+    // Fill rounded rectangle
+    ctx.fillStyle = isDaytime() ? '#87CEEB' : '#191970';
+    ctx.fill();
+
+    // Draw weather icon
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '24px "Material Symbols Rounded"';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    const weather = weatherConditions[weatherCode] || weatherConditions[0];
+    const iconText = weather.icon();
+    ctx.fillText(iconText, 16, 16);
+
+    // Update favicon link
+    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/x-icon';
+    link.rel = 'shortcut icon';
+    link.href = favicon.toDataURL();
+    document.head.appendChild(link);
+}
+
 // Function to check if it's daytime (between 6:00 and 18:00)
 function isDaytime() {
     const hour = new Date().getHours();
@@ -453,8 +498,10 @@ async function updateSmallWeather() {
         temperatureElement.textContent = `${weatherData.current.temperature}°C`;
         weatherIconElement.className = 'material-symbols-rounded';
         weatherIconElement.textContent = weatherInfo.icon(true);
-        // Add this line:
         weatherIconElement.dataset.weatherCode = weatherData.current.weathercode;
+
+        // Add favicon update
+        updateFavicon(weatherData.current.weathercode);
     } catch (error) {
         console.error('Error updating small weather widget:', error);
         document.getElementById('weather').style.display = 'none';
