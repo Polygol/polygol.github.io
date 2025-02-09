@@ -134,7 +134,7 @@ function updateTitle() {
                 const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
                 
                 if (weatherConditionsForTitle[weatherCode]) {
-                    weatherString = ` • ${temperature}°C ${weatherConditionsForTitle[weatherCode].icon}`;
+                    weatherString = ` | ${temperature}°C ${weatherConditionsForTitle[weatherCode].icon}`;
                 }
             }
         }
