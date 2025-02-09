@@ -146,21 +146,12 @@ function updateFavicon(weatherCode) {
     // Clear canvas
     ctx.clearRect(0, 0, 100, 100);
     
-    // Create rounded rectangle background
+    // Create circle background
     ctx.beginPath();
-    const radius = 64; // Corner radius
-    ctx.moveTo(radius, 0);
-    ctx.lineTo(100 - radius, 0);
-    ctx.quadraticCurveTo(100, 0, 100, radius);
-    ctx.lineTo(100, 100 - radius);
-    ctx.quadraticCurveTo(100, 100, 100 - radius, 100);
-    ctx.lineTo(radius, 100);
-    ctx.quadraticCurveTo(0, 100, 0, 100 - radius);
-    ctx.lineTo(0, radius);
-    ctx.quadraticCurveTo(0, 0, radius, 0);
+    ctx.arc(50, 50, 50, 0, Math.PI * 2); // Center at 50,50 with radius 50
     ctx.closePath();
     
-    // Fill rounded rectangle
+    // Fill circle
     ctx.fillStyle = isDaytime() ? '#87CEEB' : '#191970';
     ctx.fill();
 
@@ -168,13 +159,13 @@ function updateFavicon(weatherCode) {
     ctx.fillStyle = isDaytime() ? '#1c1c1c' : '#f9f9f9';
     ctx.font = '72px "Material Symbols Rounded"';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fontVariationSettings = '"FILL" 1';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fontVariationSettings = '"FILL" 1, "wght" 700';
     
     const weather = weatherConditions[weatherCode] || weatherConditions[0];
     const iconText = weather.icon();
-    ctx.fillText(iconText, 50, 50); // Center at 50,50 (half of 100x100)
-
+    ctx.fillText(iconText, 50, 60);
+    
     // Update favicon link
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
     link.type = 'image/x-icon';
