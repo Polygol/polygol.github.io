@@ -139,6 +139,7 @@ body.light-theme[style*="background-image"] .info {
     visibility: visible;
     transition: opacity 0.3s ease, visibility 0.3s ease;
     user-select: none;
+    font-variant: tabular-nums;
 }
 
 .persistent-clock.show {
