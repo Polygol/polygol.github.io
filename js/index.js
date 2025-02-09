@@ -2318,46 +2318,6 @@ function setupDrawerInteractions() {
     });
 }
 
-function updateManifest() {
-  const backgroundColor = getComputedStyle(document.documentElement)
-    .getPropertyValue('--background-color')
-    .trim() || '#1c1c1c'; // Default to 1c1c1c if not found
-
-  const themeColor = backgroundColor; // Adjust if you want a different theme color
-
-  const manifest = {
-    name: "Gurasuraisu",
-    short_name: "Gurasuraisu",
-    start_url: "/",
-    display: "standalone",
-    background_color: backgroundColor,
-    theme_color: themeColor,
-    icons: [
-      {
-        src: "/assets/gurasuraisu.png",
-        sizes: "192x192",
-        type: "image/png"
-      }
-    ]
-  };
-
-  // Remove any existing manifest
-  let existingManifest = document.querySelector('link[rel="manifest"]');
-  if (existingManifest) {
-    existingManifest.parentNode.removeChild(existingManifest);
-  }
-
-  // Create new manifest
-  const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
-  const manifestURL = URL.createObjectURL(blob);
-
-  const newManifest = document.createElement("link");
-  newManifest.rel = "manifest";
-  newManifest.href = manifestURL;
-
-  document.head.appendChild(newManifest);
-}
-
 const appDrawerObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
@@ -2475,8 +2435,6 @@ window.addEventListener('offline', () => {
 document.addEventListener('DOMContentLoaded', () => {
     applyWallpaper();
 });
-
-document.addEventListener("DOMContentLoaded", updateManifest);
 
 window.addEventListener('load', () => {
     ensureVideoLoaded();
