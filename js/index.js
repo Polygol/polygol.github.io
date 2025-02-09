@@ -144,7 +144,7 @@ function updateFavicon(weatherCode) {
         // Revert to original favicon
         const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
         link.type = 'image/png';
-        link.rel = 'shortcut icon';
+        link.rel = 'icon';
         link.href = '/assets/favicon.png';
         document.head.appendChild(link);
         return;
