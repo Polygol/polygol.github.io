@@ -148,15 +148,35 @@ function updateFavicon(weatherCode) {
     
     // Create circle background
     ctx.beginPath();
-    ctx.arc(50, 50, 50, 0, Math.PI * 2); // Center at 50,50 with radius 50
+    ctx.arc(50, 50, 50, 0, Math.PI * 2);
     ctx.closePath();
     
-    // Fill circle
-    ctx.fillStyle = isDaytime() ? '#87CEEB' : '#191970';
+    // Get current hour for color transition
+    const hour = new Date().getHours();
+    
+    // Define color transitions throughout the day
+    let backgroundColor;
+    if (hour >= 5 && hour < 8) { // Dawn
+        const progress = (hour - 5) / 3;
+        backgroundColor = interpolateColors('#FF69B4', '#87CEEB', progress); // Pink to Blue
+    } else if (hour >= 8 && hour < 16) { // Day
+        backgroundColor = '#87CEEB'; // Sky Blue
+    } else if (hour >= 16 && hour < 19) { // Sunset
+        const progress = (hour - 16) / 3;
+        backgroundColor = interpolateColors('#87CEEB', '#FF69B4', progress); // Blue to Pink
+    } else if (hour >= 19 && hour < 22) { // Dusk
+        const progress = (hour - 19) / 3;
+        backgroundColor = interpolateColors('#FF69B4', '#191970', progress); // Pink to Dark Blue
+    } else { // Night
+        backgroundColor = '#191970'; // Dark Blue
+    }
+    
+    // Fill circle with calculated color
+    ctx.fillStyle = backgroundColor;
     ctx.fill();
-
+    
     // Draw weather icon
-    ctx.fillStyle = isDaytime() ? '#1c1c1c' : '#f9f9f9';
+    ctx.fillStyle = (hour >= 6 && hour <= 18) ? '#1c1c1c' : '#f9f9f9';
     ctx.font = '72px "Material Symbols Rounded"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -172,6 +192,26 @@ function updateFavicon(weatherCode) {
     link.rel = 'shortcut icon';
     link.href = favicon.toDataURL();
     document.head.appendChild(link);
+}
+
+// Helper function to interpolate between two colors
+function interpolateColors(color1, color2, progress) {
+    // Convert hex to RGB
+    const r1 = parseInt(color1.substring(1,3), 16);
+    const g1 = parseInt(color1.substring(3,5), 16);
+    const b1 = parseInt(color1.substring(5,7), 16);
+    
+    const r2 = parseInt(color2.substring(1,3), 16);
+    const g2 = parseInt(color2.substring(3,5), 16);
+    const b2 = parseInt(color2.substring(5,7), 16);
+    
+    // Interpolate
+    const r = Math.round(r1 + (r2 - r1) * progress);
+    const g = Math.round(g1 + (g2 - g1) * progress);
+    const b = Math.round(b1 + (b2 - b1) * progress);
+    
+    // Convert back to hex
+    return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
 }
 
 // Function to check if it's daytime (between 6:00 and 18:00)
