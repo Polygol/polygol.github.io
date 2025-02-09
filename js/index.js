@@ -138,6 +138,18 @@ function updateTitle() {
 }
 
 function updateFavicon(weatherCode) {
+    const showWeather = localStorage.getItem('showWeather') !== 'false';
+    
+    if (!showWeather) {
+        // Revert to original favicon
+        const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+        link.type = 'image/png';
+        link.rel = 'shortcut icon';
+        link.href = '/assets/favicon.png';
+        document.head.appendChild(link);
+        return;
+    }
+    
     const favicon = document.createElement('canvas');
     favicon.width = 32;
     favicon.height = 32;
@@ -362,6 +374,13 @@ function setupWeatherToggle() {
             document.title = showSeconds ? 
                 `${hours}:${minutes}:${seconds}` : 
                 `${hours}:${minutes}`;
+                
+            // Reset favicon to original
+            const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+            link.type = 'image/x-icon';
+            link.rel = 'shortcut icon';
+            link.href = 'favicon.ico';
+            document.head.appendChild(link);
         }
     }
     
