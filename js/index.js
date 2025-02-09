@@ -148,38 +148,15 @@ function updateFavicon(weatherCode) {
     
     // Create circle background
     ctx.beginPath();
-    ctx.arc(50, 50, 50, 0, Math.PI * 2);
+    ctx.arc(50, 50, 50, 0, Math.PI * 2); // Center at 50,50 with radius 50
     ctx.closePath();
     
-    // Get current hour and minutes for more precise transitions
-    const date = new Date();
-    const hour = date.getHours();
-    const minutes = date.getMinutes();
-    const timeInHours = hour + minutes / 60;
-    
-    // Define color transitions throughout the day
-    let backgroundColor;
-    if (timeInHours >= 5 && timeInHours < 8) { // Dawn
-        const progress = (timeInHours - 5) / 3;
-        backgroundColor = interpolateColors('#FF69B4', '#87CEEB', progress);
-    } else if (timeInHours >= 8 && timeInHours < 16) { // Day
-        backgroundColor = '#87CEEB';
-    } else if (timeInHours >= 16 && timeInHours < 19) { // Sunset
-        const progress = (timeInHours - 16) / 3;
-        backgroundColor = interpolateColors('#87CEEB', '#FF69B4', progress);
-    } else if (timeInHours >= 19 && timeInHours < 22) { // Dusk
-        const progress = (timeInHours - 19) / 3;
-        backgroundColor = interpolateColors('#FF69B4', '#191970', progress);
-    } else { // Night
-        backgroundColor = '#191970';
-    }
-    
-    // Fill circle with calculated color
-    ctx.fillStyle = backgroundColor;
+    // Fill circle
+    ctx.fillStyle = isDaytime() ? '#87CEEB' : '#191970';
     ctx.fill();
 
     // Draw weather icon
-    ctx.fillStyle = (timeInHours >= 6 && timeInHours <= 18) ? '#1c1c1c' : '#f9f9f9';
+    ctx.fillStyle = isDaytime() ? '#1c1c1c' : '#f9f9f9';
     ctx.font = '72px "Material Symbols Rounded"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -189,47 +166,12 @@ function updateFavicon(weatherCode) {
     const iconText = weather.icon();
     ctx.fillText(iconText, 50, 55);
     
-    // Update favicon
-    let link = document.querySelector("link[rel*='icon']");
-    if (!link) {
-        link = document.createElement('link');
-        link.rel = 'shortcut icon';
-        document.head.appendChild(link);
-    }
-    
-    favicon.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        let link = document.querySelector("link[rel='icon']");
-        
-        if (!link) {
-            link = document.createElement('link');
-            link.rel = 'icon';
-            document.head.appendChild(link);
-        }
-        
-        // Add timestamp to force refresh
-        link.href = url + '?v=' + Date.now();
-        
-        // Clean up the old blob URL after a short delay
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-    });
-}
-
-// Helper function to interpolate between two colors
-function interpolateColors(color1, color2, progress) {
-    const r1 = parseInt(color1.substring(1,3), 16);
-    const g1 = parseInt(color1.substring(3,5), 16);
-    const b1 = parseInt(color1.substring(5,7), 16);
-    
-    const r2 = parseInt(color2.substring(1,3), 16);
-    const g2 = parseInt(color2.substring(3,5), 16);
-    const b2 = parseInt(color2.substring(5,7), 16);
-    
-    const r = Math.round(r1 + (r2 - r1) * progress);
-    const g = Math.round(g1 + (g2 - g1) * progress);
-    const b = Math.round(b1 + (b2 - b1) * progress);
-    
-    return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
+    // Update favicon link
+    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/x-icon';
+    link.rel = 'shortcut icon';
+    link.href = favicon.toDataURL();
+    document.head.appendChild(link);
 }
 
 // Function to check if it's daytime (between 6:00 and 18:00)
@@ -2596,14 +2538,6 @@ window.addEventListener('offline', () => {
 // Call applyWallpaper on page load
 document.addEventListener('DOMContentLoaded', () => {
     applyWallpaper();
-});
-
-// Start update loop once DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Initial update
-    updateFavicon(weatherCode);
-    // Update every minute
-    setInterval(() => updateFavicon(weatherCode), 60000);
 });
 
 window.addEventListener('load', () => {
