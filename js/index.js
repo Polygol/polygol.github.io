@@ -142,30 +142,33 @@ function updateFavicon(weatherCode) {
     favicon.width = 100;
     favicon.height = 100;
     const ctx = favicon.getContext('2d');
-    
+
+    // Detect system light/dark mode
+    const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
     // Clear canvas
     ctx.clearRect(0, 0, 100, 100);
-    
+
     // Create circle background
     ctx.beginPath();
-    ctx.arc(50, 50, 50, 0, Math.PI * 2); // Center at 50,50 with radius 50
+    ctx.arc(50, 50, 50, 0, Math.PI * 2);
     ctx.closePath();
-    
-    // Fill circle
-    ctx.fillStyle = isDaytime() ? '#87CEEB' : '#191970';
+
+    // Fill circle with appropriate background color
+    ctx.fillStyle = isDarkMode ? '#1c1c1c' : '#f9f9f9';
     ctx.fill();
 
     // Draw weather icon
-    ctx.fillStyle = isDaytime() ? '#1c1c1c' : '#f9f9f9';
+    ctx.fillStyle = isDarkMode ? '#f9f9f9' : '#1c1c1c';
     ctx.font = '72px "Material Symbols Rounded"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fontVariationSettings = '"FILL" 1, "wght" 700';
-    
+
     const weather = weatherConditions[weatherCode] || weatherConditions[0];
     const iconText = weather.icon();
     ctx.fillText(iconText, 50, 55);
-    
+
     // Update favicon link
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
     link.type = 'image/x-icon';
