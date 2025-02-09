@@ -1314,9 +1314,10 @@ const appLinks = {
     "Music": "https://gurasuraisu.github.io/music",
     "Stickies": "https://gurasuraisu.github.io/stickies",
     "Moments": "https://gurasuraisu.github.io/moments",
-    "SketchPad": "https://photos.google.com",
+    "SketchPad": "https://gurasuraisu.github.io/sketchpad",
     "Fantaskical": "https://gurasuraisu.github.io/fantaskical",
     "Clapper": "https://gurasuraisu.github.io/clapper",
+    "Gurasuraisu in Gurasuraisu": "https://gurasuraisu.github.io",
 };
 
 function fuzzySearch(query, appList) {
