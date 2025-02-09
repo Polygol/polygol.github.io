@@ -138,6 +138,7 @@ function updateTitle() {
 }
 
 function updateFavicon(weatherCode) {
+    // Create off-screen canvas
     const favicon = document.createElement('canvas');
     favicon.width = 100;
     favicon.height = 100;
@@ -177,23 +178,34 @@ function updateFavicon(weatherCode) {
     // Fill circle with calculated color
     ctx.fillStyle = backgroundColor;
     ctx.fill();
+
+    // Try to draw the icon with a fallback
+    try {
+        ctx.fillStyle = (timeInHours >= 6 && timeInHours <= 18) ? '#1c1c1c' : '#f9f9f9';
+        ctx.font = '72px "Material Symbols Rounded"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fontVariationSettings = '"FILL" 1, "wght" 700';
+        
+        const weather = weatherConditions[weatherCode] || weatherConditions[0];
+        const iconText = weather.icon();
+        ctx.fillText(iconText, 50, 55);
+    } catch (e) {
+        console.warn('Failed to draw weather icon:', e);
+    }
     
-    // Draw weather icon
-    ctx.fillStyle = (timeInHours >= 6 && timeInHours <= 18) ? '#1c1c1c' : '#f9f9f9';
-    ctx.font = '72px "Material Symbols Rounded"';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fontVariationSettings = '"FILL" 1, "wght" 700';
+    // Remove existing favicon
+    const existingFavicon = document.querySelector("link[rel*='icon']");
+    if (existingFavicon) {
+        existingFavicon.remove();
+    }
     
-    const weather = weatherConditions[weatherCode] || weatherConditions[0];
-    const iconText = weather.icon();
-    ctx.fillText(iconText, 50, 55);
-    
-    // Update favicon link
-    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    // Create new favicon with cache-busting timestamp
+    const link = document.createElement('link');
     link.type = 'image/x-icon';
     link.rel = 'shortcut icon';
-    link.href = favicon.toDataURL();
+    const timestamp = Date.now();
+    link.href = `${favicon.toDataURL()}?v=${timestamp}`;
     document.head.appendChild(link);
 }
 
