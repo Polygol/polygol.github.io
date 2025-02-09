@@ -164,6 +164,7 @@ body.light-theme[style*="background-image"] .info {
             cursor: pointer;
             user-select: none;
             transition: opacity 0.3s ease, filter 0.3s ease, color 0.3s;
+            font-variant-numeric: tabular-nums;
         }
 
         .info {
