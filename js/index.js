@@ -260,8 +260,7 @@ const weatherConditions = {
     77: { 
         description: 'Snow Grains', 
         icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
-    },
-        description: 'Thunderstorm with Hail', 
+    }, 
     80: { 
         description: 'Slight Showers', 
         icon: () => isDaytime() ? 'rainy_light' : 'rainy_light'
