@@ -110,7 +110,7 @@ let timerId = null;
 // Function to update the document title
 function updateTitle() {
     if (timeLeft > 0 && timerId) {
-        document.title = `${formatTime(timeLeft)} ⏱️`;
+        document.title = `${formatTime(timeLeft)} ⏱️ | ${timeString}`;
     } else {
         let now = new Date();
         let hours = String(now.getHours()).padStart(2, '0');
