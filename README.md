@@ -1,5 +1,5 @@
 ![ddd](https://github.com/user-attachments/assets/b946b20e-000e-46ed-ac85-9158a551ee98)
-# Gurasuraisu (Made for GitHub Sites)
+# Gurasuraisu (Made for GitHub Pages)
 Ambient display with clock, weather and advanced features without tracking you or displaying ads.
 Visit at https://gurasuraisu.github.io
 
