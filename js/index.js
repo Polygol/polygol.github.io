@@ -127,54 +127,20 @@ function updateTitle() {
         let weatherString = '';
         if (showWeather) {
             const temperatureElement = document.getElementById('temperature');
+            const weatherIconElement = document.getElementById('weather-icon');
             
-            if (temperatureElement) {
+            if (temperatureElement && weatherIconElement && weatherIconElement.dataset.weatherCode) {
                 const temperature = temperatureElement.textContent.replace('°C', '');
-                weatherString = ` | ${temperature}°C`;
+                const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
+                
+                if (weatherConditionsForTitle[weatherCode]) {
+                    weatherString = ` | ${temperature}°C ${weatherConditionsForTitle[weatherCode].icon}`;
+                }
             }
         }
+
         document.title = `${timeString}${weatherString}`;
     }
-}
-
-function updateFavicon(weatherCode) {
-    const favicon = document.createElement('canvas');
-    favicon.width = 100;
-    favicon.height = 100;
-    const ctx = favicon.getContext('2d');
-
-    // Detect system light/dark mode
-    const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, 100, 100);
-
-    // Create circle background
-    ctx.beginPath();
-    ctx.arc(50, 50, 50, 0, Math.PI * 2);
-    ctx.closePath();
-
-    // Fill circle with appropriate background color
-    ctx.fillStyle = isDarkMode ? '#1c1c1c' : '#f9f9f9';
-    ctx.fill();
-
-    // Draw weather icon
-    ctx.fillStyle = isDarkMode ? '#f9f9f9' : '#1c1c1c';
-    ctx.font = '72px "Material Symbols Rounded"';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fontVariationSettings = '"FILL" 1, "wght" 700';
-
-    const weather = weatherConditions[weatherCode] || weatherConditions[0];
-    const iconText = weather.icon();
-    ctx.fillText(iconText, 50, 55);
-
-    // Update favicon link
-    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-    link.type = 'image/x-icon';
-    link.rel = 'shortcut icon';
-    link.href = favicon.toDataURL();
-    document.head.appendChild(link);
 }
 
 // Function to check if it's daytime (between 6:00 and 18:00)
@@ -295,6 +261,7 @@ const weatherConditions = {
         description: 'Snow Grains', 
         icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
     },
+        description: 'Thunderstorm with Hail', 
     80: { 
         description: 'Slight Showers', 
         icon: () => isDaytime() ? 'rainy_light' : 'rainy_light'
@@ -320,7 +287,6 @@ const weatherConditions = {
         icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
     },
     96: { 
-        description: 'Thunderstorm with Hail', 
         icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
     },
     99: { 
@@ -328,7 +294,6 @@ const weatherConditions = {
         icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
     }
 };
-
 function updateWeatherVisibility() {
     const weatherWidget = document.getElementById('weather');
     weatherWidget.style.display = showWeather ? 'block' : 'none';
@@ -357,13 +322,6 @@ function setupWeatherToggle() {
             document.title = showSeconds ? 
                 `${hours}:${minutes}:${seconds}` : 
                 `${hours}:${minutes}`;
-                
-            // Reset favicon to original
-            const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-            link.type = 'image/png';
-            link.rel = 'icon';
-            link.href = 'assets/favicon.png';
-            document.head.appendChild(link);
         }
     }
     
