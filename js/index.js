@@ -351,7 +351,6 @@ function updateClockAndDate() {
         
     dateElement.textContent = now.toLocaleDateString(undefined, {
         weekday: 'long',
-        year: 'numeric',
         month: 'long',
         day: 'numeric'
     });
