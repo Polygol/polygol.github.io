@@ -593,6 +593,7 @@ body.light-theme[style*="background-image"] .info {
     align-items: center;
     height: 100%;
     user-select: none;
+    font-variant-numeric: tabular-nums;
 }
 
 .timer-icon {
