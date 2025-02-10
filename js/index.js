@@ -453,9 +453,6 @@ async function updateSmallWeather() {
         weatherIconElement.className = 'material-symbols-rounded';
         weatherIconElement.textContent = weatherInfo.icon(true);
         weatherIconElement.dataset.weatherCode = weatherData.current.weathercode;
-
-        // Add favicon update
-        updateFavicon(weatherData.current.weathercode);
     } catch (error) {
         console.error('Error updating small weather widget:', error);
         document.getElementById('weather').style.display = 'none';
@@ -618,6 +615,7 @@ closeWeatherModal.addEventListener('click', () => {
 });
 
 setInterval(updateClockAndDate, 1000);
+setInterval(updateSmallWeather, 600000);
 updateClockAndDate();
 updateSmallWeather();
 
