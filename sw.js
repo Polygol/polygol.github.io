@@ -3,6 +3,8 @@ const ASSETS_TO_CACHE = [
   '/index.html',
   '/css/styles.css',
   '/js/index.js',
+  '/assets',
+  '/manifest.json',
   '/assets/favicon.png',
   '/assets/gurasuraisu.png',
   '/assets/appicon/alarm.png',
@@ -15,7 +17,7 @@ const ASSETS_TO_CACHE = [
   '/assets/appicon/tasks.png',
   '/assets/appicon/video.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap',
-  'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded'
+  'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0'
 ];
 
 self.addEventListener('install', event => {
