@@ -109,17 +109,17 @@ let timerId = null;
 
 // Function to update the document title
 function updateTitle() {
-    const timeString = showSeconds ? 
-        `${hours}:${minutes}:${seconds}` : 
-        `${hours}:${minutes}`;
-    
     if (timeLeft > 0 && timerId) {
-        document.title = `${formatTime(timeLeft)} ⏱️ | ${timeString}`;
+        document.title = `${formatTime(timeLeft)} ⏱️`;
     } else {
         let now = new Date();
         let hours = String(now.getHours()).padStart(2, '0');
         let minutes = String(now.getMinutes()).padStart(2, '0');
         let seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        const timeString = showSeconds ? 
+            `${hours}:${minutes}:${seconds}` : 
+            `${hours}:${minutes}`;
             
         // Check if weather is enabled
         const showWeather = localStorage.getItem('showWeather') !== 'false';
