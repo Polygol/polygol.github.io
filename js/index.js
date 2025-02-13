@@ -519,7 +519,7 @@ async function displayDetailedWeather() {
         <p class="location-text">${city}</p>
         <span class="weather-icon material-symbols-rounded">${currentWeather.icon(isDaytime)}</span>
         <p>${currentWeather.description}</p>
-        <p class="additional-info">Wind ${current.windspeed} km/h</p>
+        <p class="additional-info">${current.windspeed} km/h</p>
         <div class="hourly-forecast">
             ${validHourlyForecast.map((hour, index) => {
                 const hourClass = index === 0 ? 'hour first' :
