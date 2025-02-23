@@ -66,12 +66,10 @@ body.light-theme {
             touch-action: manipulation;
         }
 
-/* Text fill blur effect for clock when wallpaper is present */
 body[style*="background-image"] .clock {
     text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
-/* Text fill blur effect for date and other info when wallpaper is present */
 body[style*="background-image"] .date,
 body[style*="background-image"] .info {
     text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
@@ -317,6 +315,7 @@ body.light-theme[style*="background-image"] .info {
             opacity: 0;
             transition: opacity 0.3s ease;
             user-select: none;
+            background-color: rgba(0, 0, 0, 0.15);
         }
 
         .blur-overlay.show {
