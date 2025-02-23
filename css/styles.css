@@ -148,7 +148,6 @@ body.light-theme[style*="background-image"] .info {
 }
 
         .container {
-            width: clamp(300px, 90%, 1200px);
             margin: 0 auto;
             padding: 1rem;
             text-align: center;
@@ -159,7 +158,7 @@ body.light-theme[style*="background-image"] .info {
         }
 
         .clock {
-            font-size: clamp(4rem, 10vw, 8rem);
+            font-size: clamp(6rem, 12vw, 12rem);
             font-weight: 700;
             color: var(--text-color);
             cursor: pointer;
@@ -178,7 +177,7 @@ body.light-theme[style*="background-image"] .info {
         }
 
         .date {
-            font-size: clamp(1.2rem, 3vw, 2rem);
+            font-size: clamp(1.5rem, 3vw, 2rem);
             font-weight: 400;
             color: var(--text-color);
             user-select: none;
@@ -1060,6 +1059,11 @@ body.light-theme[style*="background-image"] .info {
             border: none;
         }
 
+        @media (max-width: 800px) {
+            .clock {
+                font-size: clamp(4rem, 12vw, 12rem);
+            }
+            
         @media (max-width: 800px) {
             .app-drawer-grid {
                 grid-template-columns: repeat(4, 1fr);
