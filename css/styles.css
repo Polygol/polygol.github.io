@@ -132,7 +132,7 @@ body.light-theme[style*="background-image"] .info {
     color: var(--text-color);
     background-color: transparent;
     transition: color 0.3s;
-    padding: 8px 18px;
+    padding: 8px 14px;
     border-radius: 50px;
     z-index: 1001;
     opacity: 1;
