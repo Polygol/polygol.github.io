@@ -140,6 +140,9 @@ body.light-theme[style*="background-image"] .info {
     transition: opacity 0.3s ease, visibility 0.3s ease;
     user-select: none;
     font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: center; /* Keeps the image and text aligned */
+    gap: 8px; /* Adds spacing between image and text */
 }
 
 .persistent-clock.show {
