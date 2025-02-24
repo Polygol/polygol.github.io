@@ -810,11 +810,17 @@ function showPopup(message) {
         fullscreenBtn.style.backgroundColor = 'var(--transparent-color)';
         fullscreenBtn.style.color = 'var(--text-color)';
         fullscreenBtn.style.cursor = 'pointer';
+        fullscreenBtn.style.display = 'flex';
+        fullscreenBtn.style.alignItems = 'center'; // This ensures vertical centering
+        fullscreenBtn.style.justifyContent = 'center';
+        fullscreenBtn.style.gap = '10px'; // Increased gap between text and icon
         fullscreenBtn.style.fontFamily = 'Inter, sans-serif';
+        fullscreenBtn.style.height = '36px'; // Setting a fixed height helps with centering
 
         // Add the text "Fullscreen"
         const buttonText = document.createElement('span');
         buttonText.textContent = 'Fullscreen';
+        buttonText.style.lineHeight = '1'; // Helps with vertical alignment
         
         // Create the icon element
         const icon = document.createElement('span');
@@ -822,6 +828,9 @@ function showPopup(message) {
         icon.textContent = 'fullscreen';
         icon.style.fontFamily = 'Material Symbols Rounded';
         icon.style.fontSize = '20px';
+        icon.style.lineHeight = '1'; // Helps with vertical alignment
+        icon.style.display = 'flex'; // Makes the icon behave better for alignment
+        icon.style.alignItems = 'center';
         
         // Add text first, then icon
         fullscreenBtn.appendChild(buttonText);
