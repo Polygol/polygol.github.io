@@ -1065,6 +1065,11 @@ function createSetupScreen() {
             ]
         },
         {
+            title: "Gurapps Usage",
+            description: "To use Gurapps, swipe up from the bottom pill and choose an Gurapp to launch.",
+            options: []
+        },
+        {
             title: "Configure more Options in Controls",
             description: "To configure your Gurasuraisu, press on Controls on the top right or access Controls in app by pressing on the clock.",
             options: []
@@ -1205,6 +1210,7 @@ function createSetupScreen() {
                 setupContainer.style.opacity = '0';
                 setTimeout(() => {
                     setupContainer.remove();
+                    goFullscreen()
                     showPopup('Setup complete')
                 }, 500);
             } else {
