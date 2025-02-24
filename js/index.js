@@ -767,7 +767,7 @@ function showPopup(message) {
 
     // Check for specific words to determine icon
     const checkWords = ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'sucessfully'];
-    const closeWords = ['failed', 'canceled', 'error', 'failure'];
+    const closeWords = ['failed', 'canceled', 'error', 'failure', 'fail', 'cancel'];
     
     let shouldShowIcon = false;
     let iconType = '';
@@ -1200,8 +1200,7 @@ function createSetupScreen() {
                 setupContainer.style.opacity = '0';
                 setTimeout(() => {
                     setupContainer.remove();
-                    showPopup('Gurasuraisu Setup successfully completed')
-                    showPopup('Swipe up from the navigation bar to get started');
+                    showPopup('Setup complete')
                 }, 500);
             } else {
                 currentPage++;
