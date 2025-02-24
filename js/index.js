@@ -766,8 +766,8 @@ function showPopup(message) {
     popup.style.gap = '10px';
 
     // Check for specific words to determine icon
-    const checkWords = ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'sucessfully', 'rejected', 'reject', 'not', 'no'];
-    const closeWords = ['failed', 'canceled', 'error', 'failure', 'fail', 'cancel', 'accepted', 'accept', 'yes'];
+    const checkWords = ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'sucessfully', 'accepted', 'accept', 'yes'];
+    const closeWords = ['failed', 'canceled', 'error', 'failure', 'fail', 'cancel', 'rejected', 'reject', 'not', 'no'];
     
     let shouldShowIcon = false;
     let iconType = '';
@@ -793,8 +793,13 @@ function showPopup(message) {
     
     // Check if the message is about fullscreen and add a button if it is
     if (message.toLowerCase().includes('fullscreen')) {
+        // Clear existing text content since we only want to show the button
+        while (popup.firstChild) {
+            popup.removeChild(popup.firstChild);
+        }
+        
         const fullscreenBtn = document.createElement('button');
-        fullscreenBtn.textContent = 'Go Fullscreen';
+        fullscreenBtn.textContent = 'Open Fullscreen';
         fullscreenBtn.style.marginLeft = '10px';
         fullscreenBtn.style.padding = '10px 10px';
         fullscreenBtn.style.borderRadius = '25px';
