@@ -1015,8 +1015,8 @@ function createSetupScreen() {
             options: []
         },
         {
-            title: "Data & Privacy",
-            description: "Your data stays on device at all times. No identifying data is transferred to any online services. Not even Gurasuraisu will be able to view your data.",
+            title: "Open & Private",
+            description: "Your data stays on device at all times. No identifying data is transferred to any online services.",
             options: []
         },
         {
