@@ -814,7 +814,7 @@ function showPopup(message) {
         fullscreenBtn.style.display = 'flex';
         fullscreenBtn.style.alignItems = 'center'; // This ensures vertical centering
         fullscreenBtn.style.justifyContent = 'center';
-        fullscreenBtn.style.gap = '10px'; // Increased gap between text and icon
+        fullscreenBtn.style.gap = '5px'; // Gap between text and icon
         fullscreenBtn.style.fontFamily = 'Inter, sans-serif';
         fullscreenBtn.style.height = '36px'; // Setting a fixed height helps with centering
         
