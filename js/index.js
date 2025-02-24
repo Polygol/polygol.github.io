@@ -846,6 +846,30 @@ function showPopup(message) {
         });
         
         popup.appendChild(fullscreenBtn);
+
+        // Override the default timeout with a longer one for fullscreen popups
+        // Clear any existing timeout first
+        if (popup.timeoutId) {
+            clearTimeout(popup.timeoutId);
+        }
+            
+        // Set a much longer timeout (10 seconds instead of 5 seconds)
+        popup.timeoutId = setTimeout(() => {
+            popup.style.opacity = '0';
+            setTimeout(() => {
+                if (document.body.contains(popup)) {
+                    document.body.removeChild(popup);
+                    // Readjust positions of remaining popups
+                    const remainingPopups = document.querySelectorAll('.popup');
+                    remainingPopups.forEach((p, index) => {
+                        p.style.top = `${20 + (index * 70)}px`;
+                    });
+                }
+            }, 500);
+        }, 10000); // 10 seconds timeout for fullscreen button
+        
+        // Add this return statement to prevent the default timeout from being set
+        return;
     }
     
     popup.classList.add('popup');
@@ -881,7 +905,7 @@ function showPopup(message) {
                 });
             }
         }, 500);
-    }, 3000);
+    }, 5000);
 }
 
 setInterval(() => {
