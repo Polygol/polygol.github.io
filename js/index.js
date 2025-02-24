@@ -796,12 +796,13 @@ function showPopup(message) {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.textContent = 'Go Fullscreen';
         fullscreenBtn.style.marginLeft = '10px';
-        fullscreenBtn.style.padding = '5px 10px';
-        fullscreenBtn.style.borderRadius = '15px';
+        fullscreenBtn.style.padding = '10px 10px';
+        fullscreenBtn.style.borderRadius = '25px';
         fullscreenBtn.style.border = 'none';
-        fullscreenBtn.style.backgroundColor = 'white';
-        fullscreenBtn.style.color = 'black';
+        fullscreenBtn.style.backgroundColor = 'var(--transparent-color)';
+        fullscreenBtn.style.color = 'var(--text-color)';
         fullscreenBtn.style.cursor = 'pointer';
+        fullscreenBtn.style.fontFamily = 'Inter, sans-serif';
         
         fullscreenBtn.addEventListener('click', function() {
             goFullscreen();
