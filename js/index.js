@@ -790,6 +790,31 @@ function showPopup(message) {
     }
     
     popup.appendChild(document.createTextNode(message));
+    
+    // Check if the message is about fullscreen and add a button if it is
+    if (message.toLowerCase().includes('fullscreen')) {
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.textContent = 'Go Fullscreen';
+        fullscreenBtn.style.marginLeft = '10px';
+        fullscreenBtn.style.padding = '5px 10px';
+        fullscreenBtn.style.borderRadius = '15px';
+        fullscreenBtn.style.border = 'none';
+        fullscreenBtn.style.backgroundColor = 'white';
+        fullscreenBtn.style.color = 'black';
+        fullscreenBtn.style.cursor = 'pointer';
+        
+        fullscreenBtn.addEventListener('click', function() {
+            goFullscreen();
+            
+            // Remove the popup after clicking the button
+            if (document.body.contains(popup)) {
+                document.body.removeChild(popup);
+            }
+        });
+        
+        popup.appendChild(fullscreenBtn);
+    }
+    
     popup.classList.add('popup');
 
     // Get all existing popups
@@ -832,6 +857,15 @@ setInterval(() => {
     }
 }, 60000);
 
+function isFullScreen() {
+  return (
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement ||
+    document.msFullscreenElement
+  );
+}
+
 function goFullscreen() {
     const element = document.documentElement;
     if (element.requestFullscreen) {
@@ -843,6 +877,12 @@ function goFullscreen() {
     } else if (element.msRequestFullscreen) { // IE/Edge
         element.msRequestFullscreen();
     }
+}
+
+function checkFullscreen() {
+  if (!isFullScreen()) {
+    showPopup('Fullscreen recommended');
+  }
 }
 
 function firstSetup() {
@@ -2506,6 +2546,8 @@ document.addEventListener('DOMContentLoaded', () => {
     applyWallpaper();
 });
 
+window.addEventListener('load', checkFullscreen);
+
 window.addEventListener('load', () => {
     ensureVideoLoaded();
 });
@@ -2522,7 +2564,6 @@ setInterval(ensureVideoLoaded, 1000);
     initializeCustomization();
     setupWeatherToggle()
     firstSetup();
-    goFullscreen();
     updateDisplay();
     initAppDraw();
     updateWeatherVisibility();
