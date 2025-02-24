@@ -797,10 +797,13 @@ function showPopup(message) {
         while (popup.firstChild) {
             popup.removeChild(popup.firstChild);
         }
+
+        // Make the popup background invisible
+        popup.style.backgroundColor = 'transparent';
+        popup.style.backdropFilter = 'none';
+        popup.style.padding = '0';
         
         const fullscreenBtn = document.createElement('button');
-        fullscreenBtn.textContent = 'Open Fullscreen';
-        fullscreenBtn.style.marginLeft = '10px';
         fullscreenBtn.style.padding = '10px 10px';
         fullscreenBtn.style.borderRadius = '25px';
         fullscreenBtn.style.border = 'none';
@@ -808,6 +811,21 @@ function showPopup(message) {
         fullscreenBtn.style.color = 'var(--text-color)';
         fullscreenBtn.style.cursor = 'pointer';
         fullscreenBtn.style.fontFamily = 'Inter, sans-serif';
+
+        // Add the text "Fullscreen"
+        const buttonText = document.createElement('span');
+        buttonText.textContent = 'Fullscreen';
+        
+        // Create the icon element
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-rounded';
+        icon.textContent = 'fullscreen';
+        icon.style.fontFamily = 'Material Symbols Rounded';
+        icon.style.fontSize = '20px';
+        
+        // Add text first, then icon
+        fullscreenBtn.appendChild(buttonText);
+        fullscreenBtn.appendChild(icon);
         
         fullscreenBtn.addEventListener('click', function() {
             goFullscreen();
