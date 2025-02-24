@@ -766,8 +766,8 @@ function showPopup(message) {
     popup.style.gap = '10px';
 
     // Check for specific words to determine icon
-    const checkWords = ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'sucessfully'];
-    const closeWords = ['failed', 'canceled', 'error', 'failure', 'fail', 'cancel'];
+    const checkWords = ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'sucessfully', 'rejected', 'reject', 'not', 'no'];
+    const closeWords = ['failed', 'canceled', 'error', 'failure', 'fail', 'cancel', 'accepted', 'accept', 'yes'];
     
     let shouldShowIcon = false;
     let iconType = '';
@@ -882,7 +882,7 @@ function goFullscreen() {
 
 function checkFullscreen() {
   if (!isFullScreen()) {
-    showPopup('Fullscreen recommended');
+    showPopup('Not fullscreen');
   }
 }
 
