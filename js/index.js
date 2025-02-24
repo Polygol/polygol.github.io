@@ -1021,17 +1021,22 @@ function createSetupScreen() {
         },
         {
             title: "Allow Permissions",
-            description: "Gurasuraisu needs some permissions to provide the best experience.",
+            description: "Allow some permissions to allow Gurasuraisu work optimally.",
             options: [
+                { 
+                    name: "Basic access",
+                    description: "Enables Gurasuraisu to work properly",
+                    default: true
+                },
                 { 
                     name: "Location Access",
                     description: "Enables Weather and personalized results",
-                    permission: "geolocation", 
+                    permission: "geolocation"
                 },
                 { 
                     name: "Notifications",
                     description: "Enables updates and timer alerts",
-                    permission: "notifications",
+                    permission: "notifications"
                 }
             ]
         },
