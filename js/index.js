@@ -977,7 +977,7 @@ function createSetupScreen() {
             position: fixed;
             bottom: 2rem;
             display: flex;
-            gap: 0.5rem;5
+            gap: 0.5rem;
         }
 
         .progress-dot {
@@ -1152,16 +1152,16 @@ function createSetupScreen() {
     
                         // Save the selection
                         switch (pageData.title) {
-                            case "Choose Your Theme":
+                            case "Cannibalize your Gurasuraisu":
                                 localStorage.setItem('theme', option.value);
                                 document.body.classList.toggle('light-theme', option.value === 'light');
                                 break;
-                            case "Clock Style":
+                            case "Clock Format":
                                 localStorage.setItem('showSeconds', option.value);
                                 showSeconds = option.value;
                                 updateClockAndDate();
                                 break;
-                            case "Weather Widget":
+                            case "Show or Hide Weather":
                                 localStorage.setItem('showWeather', option.value);
                                 showWeather = option.value;
                                 document.getElementById('weather').style.display = option.value ? 'block' : 'none';
