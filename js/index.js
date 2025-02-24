@@ -1010,13 +1010,13 @@ function createSetupScreen() {
 
     const setupPages = [
         {
-            title: "Welcome to Gurasuraisu",
-            description: "Let's set up your personalized Gurasuraisu experience.",
+            title: "Hi there",
+            description: "Get started with Gurasuraisu.",
             options: []
         },
         {
             title: "Data & Privacy",
-            description: "We will never send your data to anyone, not even our servers. Your data stays on your device at all times.",
+            description: "Your data stays on device at all times. No identifying data is transferred to any online services. Not even Gurasuraisu will be able to view your data.",
             options: []
         },
         {
@@ -1025,45 +1025,43 @@ function createSetupScreen() {
             options: [
                 { 
                     name: "Location Access",
-                    description: "Enable local weather information",
-                    permission: "geolocation",
-                    default: true 
+                    description: "Enables Weather and personalized results",
+                    permission: "geolocation", 
                 },
                 { 
                     name: "Notifications",
-                    description: "For timer alerts and updates",
+                    description: "Enables updates and timer alerts",
                     permission: "notifications",
-                    default: true 
                 }
             ]
         },
         {
-            title: "Choose Your Theme",
-            description: "Select a theme that matches your style.",
+            title: "Cannibalize your Gurasuraisu",
+            description: "Select a style that matches you.",
             options: [
-                { name: "Light Mode", value: "light" },
-                { name: "Dark Mode", value: "dark", default: true }
+                { name: "Light", value: "light" },
+                { name: "Dark", value: "dark", default: true }
             ]
         },
         {
             title: "Clock Format",
-            description: "Choose what format you'd like to view time.",
+            description: "Choose a format to view time in.",
             options: [
                 { name: "Show Seconds", value: true, default: true },
                 { name: "Hide Seconds", value: false }
             ]
         },
         {
-            title: "Weather Widget",
-            description: "Choose to show or hide weather widget. To get weather information, allow location access.",
+            title: "Show or Hide Weather",
+            description: "Choose to show or hide Weather. To get Weather, allow location access.",
             options: [
                 { name: "Show Weather", value: true, default: true },
                 { name: "Hide Weather", value: false }
             ]
         },
         {
-            title: "Configure more options in Settings",
-            description: "To configure your Gurasuraisu, press on the gear icon on the bottom right.",
+            title: "Configure more Options in Controls",
+            description: "To configure your Gurasuraisu, press on Controls on the top right or access Controls in app by pressing on the clock.",
             options: []
         },
     ];
