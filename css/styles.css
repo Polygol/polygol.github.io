@@ -443,15 +443,10 @@ body.light-theme[style*="background-image"] .info {
             border-radius: 5px 5px 20px 20px;
             user-select: none;
         }
-
+        
         .search-container {
             position: relative;
-            left: 0;
-            right: 0;
-            width: 100%;
-            min-width: 135px;
-            max-width: 135px;
-            width: fit-content;
+            width: 135px; /* Set a single fixed width initially */
             display: inline-flex;
             justify-content: center;
             align-items: center;
@@ -481,14 +476,14 @@ body.light-theme[style*="background-image"] .info {
         }
         
         .search-input:focus {
-            width: 300px;
+            /* Remove width change from here */
             background-color: var(--modal-background);
         }
-
-.search-container:focus-within {
-    min-width: 300px;
-}
-    
+        
+        .search-container:focus-within {
+            width: 300px; /* Single width declaration for expanded state */
+        }
+        
         .search-icon {
             position: absolute;
             left: 15px;
