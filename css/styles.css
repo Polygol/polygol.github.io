@@ -301,6 +301,10 @@ body.light-theme[style*="background-image"] .info {
             user-select: none;
         }
 
+        .close:hover .material-symbols-rounded {
+          content: "close";
+        }
+
         .timezone {
             font-size: 1.5rem;
             margin: 10px 0;
