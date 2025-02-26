@@ -1572,7 +1572,8 @@ function updateMinimalMode() {
         document.getElementById('search-container'),
         document.getElementById('weather'),
         document.getElementById('customize'),
-        document.getElementById('dock')
+        document.querySelector('.info'),
+        document.querySelector('.clockwidgets')
     ];
     
     if (minimalMode) {
@@ -1594,9 +1595,12 @@ function updateMinimalMode() {
         
         if (document.getElementById('customize'))
             document.getElementById('customize').style.display = 'block';
-        
-        if (document.getElementById('dock'))
-            document.getElementById('dock').style.display = 'flex';
+            
+        if (document.querySelector('.info'))
+            document.querySelector('.info').style.display = '';
+            
+        if (document.querySelector('.clockwidgets'))
+            document.querySelector('.clockwidgets').style.display = '';
         
         // Remove minimal-active class
         document.body.classList.remove('minimal-active');
@@ -1618,7 +1622,6 @@ document.addEventListener('DOMContentLoaded', function() {
 const style = document.createElement('style');
 style.textContent = `
     body.minimal-active .drawer-pill,
-    body.minimal-active #clock,
     body.minimal-active #date,
     body.minimal-active .persistent-clock,
     body.minimal-active .drawer-handle {
@@ -1627,7 +1630,6 @@ style.textContent = `
     }
     
     body.minimal-active .drawer-pill:hover,
-    body.minimal-active #clock:hover,
     body.minimal-active #date:hover,
     body.minimal-active .persistent-clock:hover,
     body.minimal-active .drawer-handle:hover {
