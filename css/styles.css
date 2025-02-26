@@ -446,23 +446,25 @@ body.light-theme[style*="background-image"] .info {
 
         .search-container {
             position: relative;
-            left: 0;
-            right: 0;
-            width: 100%;
-            min-width: 135px;
-            max-width: 135px;
-            width: fit-content;
             display: inline-flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            min-width: 135px;
+            max-width: 300px;
             padding: 0;
             z-index: 20;
             transition: all 0.3s ease;
-            line-height: 19.2px; 
+            line-height: 19.2px;
+        }
+        
+        .search-container:focus-within {
+            min-width: 300px;
         }
         
         .search-input {
-            width: 100%;
+            flex: 1;
+            width: 135px;
+            max-width: 300px;
             padding: 14px 20px 14px 50px;
             border: none;
             border-radius: 50px;
@@ -484,11 +486,7 @@ body.light-theme[style*="background-image"] .info {
             width: 300px;
             background-color: var(--modal-background);
         }
-
-.search-container:focus-within {
-    min-width: 300px;
-}
-    
+        
         .search-icon {
             position: absolute;
             left: 15px;
