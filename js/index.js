@@ -19,7 +19,7 @@ function consoleGreeting() {
     ======-::...#@@@@@@@@@@@@@@@@@%:..........:    
      ===--::....*@@@@@@@@@@@@@@@@@*..........:     
        =---::....+%@@@@@@@@@@@@@%*.........::      
-         --::::::::::::::::::::::::::::::--          
+         --::::::::::::::::::::::::::::::--    
                                                   
                Welcome to Gurasuraisu!            
             https://gurasuraisu.github.io         
@@ -40,9 +40,13 @@ consoleGreeting()
 const secondsSwitch = document.getElementById('seconds-switch');
 const appUsage = {};
 const weatherSwitch = document.getElementById('weather-switch');
+const MAX_RECENT_WALLPAPERS = 10;
 
 let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults to true
 let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults to true
+let recentWallpapers = [];
+let currentWallpaperPosition = 0;
+let isSlideshow = false;
 
 secondsSwitch.checked = showSeconds;
 
@@ -1624,58 +1628,71 @@ async function getVideo() {
 }
 
 wallpaperInput.addEventListener('change', async (event) => {
-    const files = Array.from(event.target.files);
-    
-    if (files.length === 0) return;
-    
-    try {
-        if (files.length === 1) {
-            // Single file upload - clear multiple wallpapers
-            localStorage.removeItem('wallpapers');
-            clearInterval(slideshowInterval);
-            slideshowInterval = null;
-            const file = files[0];
-            if (['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'video/mp4'].includes(file.type)) {
-                saveWallpaper(file);
-                showPopup('Wallpaper updated');
-            } else {
-                showPopup('Failed to update wallpaper');
-            }
-        } else {
-            // Multiple files upload
-            const wallpapers = [];
-            for (const file of files) {
-                if (['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'video/mp4'].includes(file.type)) {
-                    if (file.type.startsWith('video/')) {
-                        await storeVideo(file);
-                        wallpapers.push({
-                            type: file.type,
-                            isVideo: true
-                        });
-                    } else {
-                        const mediaData = await compressMedia(file);
-                        wallpapers.push({
-                            type: file.type,
-                            data: mediaData,
-                            isVideo: false
-                        });
-                    }
-                }
-            }
-            
-            if (wallpapers.length > 0) {
-                localStorage.setItem('wallpapers', JSON.stringify(wallpapers));
-                currentWallpaperIndex = 0;
-                applyWallpaper();
-                showPopup('Multiple wallpapers updated');
-            } else {
-                showPopup('No valid wallpapers found');
-            }
+  let files = Array.from(event.target.files);
+  if (files.length === 0) return;
+  
+  try {
+    if (files.length === 1) {
+      localStorage.removeItem('wallpapers');
+      clearInterval(slideshowInterval);
+      slideshowInterval = null;
+      isSlideshow = false;
+      
+      let file = files[0];
+      if (['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'video/mp4'].includes(file.type)) {
+        saveWallpaper(file);
+      } else {
+        showPopup('Failed to update wallpaper');
+      }
+    } else {
+      let wallpaperEntries = [];
+      
+      for (let file of files) {
+        if (['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'video/mp4'].includes(file.type)) {
+          if (file.type.startsWith('video/')) {
+            await storeVideo(file);
+            wallpaperEntries.push({
+              type: file.type,
+              isVideo: true
+            });
+          } else {
+            let dataUrl = await compressMedia(file);
+            wallpaperEntries.push({
+              type: file.type,
+              data: dataUrl,
+              isVideo: false
+            });
+          }
         }
-    } catch (error) {
-        console.error('Error handling wallpapers:', error);
-        showPopup('Failed to update wallpapers');
+      }
+      
+      if (wallpaperEntries.length > 0) {
+        localStorage.setItem('wallpapers', JSON.stringify(wallpaperEntries));
+        currentWallpaperIndex = 0;
+        isSlideshow = true;
+        
+        // Add slideshow as an entry in recent wallpapers
+        recentWallpapers.unshift({
+          isSlideshow: true,
+          timestamp: Date.now()
+        });
+        
+        while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
+          recentWallpapers.pop();
+        }
+        
+        saveRecentWallpapers();
+        currentWallpaperPosition = 0;
+        applyWallpaper();
+        showPopup('Multiple wallpapers updated');
+      } else {
+        showPopup('No valid wallpapers found');
+      }
     }
+  } catch (error) {
+    console.error('Error handling wallpapers:', error);
+    showPopup('Failed to update wallpapers');
+  }
 });
 
 // Function to check storage availability
@@ -1750,32 +1767,58 @@ async function compressMedia(file) {
 }
 
 async function saveWallpaper(file) {
-    try {
-        if (file.type.startsWith('video/')) {
-            // Store video in IndexedDB
-            await storeVideo(file);
-            localStorage.setItem('wallpaperType', file.type);
-            applyWallpaper();
-        } else {
-            // Handle images as before
-            const mediaData = await compressMedia(file);
-            try {
-                localStorage.setItem('wallpaperType', file.type);
-                localStorage.setItem('customWallpaper', mediaData);
-            } catch (e) {
-                if (e.name === 'QuotaExceededError') {
-                    showPopup('Failed to update wallpaper: File too large');
-                    return;
-                }
-                throw e;
-            }
-            applyWallpaper();
+  try {
+    if (file.type.startsWith('video/')) {
+      await storeVideo(file);
+      localStorage.setItem('wallpaperType', file.type);
+      
+      // Add to recent wallpapers
+      recentWallpapers.unshift({
+        type: file.type,
+        isVideo: true,
+        timestamp: Date.now()
+      });
+      
+    } else {
+      let dataUrl = await compressMedia(file);
+      try {
+        localStorage.setItem('wallpaperType', file.type);
+        localStorage.setItem('customWallpaper', dataUrl);
+        
+        // Add to recent wallpapers
+        recentWallpapers.unshift({
+          type: file.type,
+          data: dataUrl,
+          isVideo: false,
+          timestamp: Date.now()
+        });
+        
+      } catch (error) {
+        if (error.name === 'QuotaExceededError') {
+          showPopup('Failed to update wallpaper: File too large');
+          return;
         }
-        showPopup('Wallpaper updated');
-    } catch (error) {
-        console.error('Error saving wallpaper:', error);
-        showPopup('Failed to save wallpaper');
+        throw error;
+      }
     }
+    
+    // Clear slideshow flag and settings when uploading a single wallpaper
+    isSlideshow = false;
+    localStorage.removeItem('wallpapers');
+    
+    // Limit to MAX_RECENT_WALLPAPERS
+    while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
+      recentWallpapers.pop();
+    }
+    
+    saveRecentWallpapers();
+    currentWallpaperPosition = 0;
+    applyWallpaper();
+    showPopup('Wallpaper updated');
+  } catch (error) {
+    console.error('Error saving wallpaper:', error);
+    showPopup('Failed to save wallpaper');
+  }
 }
 
 async function applyWallpaper() {
@@ -1938,6 +1981,238 @@ const observer = new MutationObserver((mutations) => {
 });
 
 observer.observe(document.body, { childList: true });
+
+// Load recent wallpapers from localStorage on startup
+function loadRecentWallpapers() {
+  try {
+    const savedWallpapers = localStorage.getItem('recentWallpapers');
+    if (savedWallpapers) {
+      recentWallpapers = JSON.parse(savedWallpapers);
+    }
+    
+    // Check if we're in slideshow mode
+    const wallpapers = JSON.parse(localStorage.getItem('wallpapers'));
+    isSlideshow = wallpapers && wallpapers.length > 0;
+    
+    // If using a single wallpaper, add it to recent wallpapers if not already there
+    if (!isSlideshow) {
+      const wallpaperType = localStorage.getItem('wallpaperType');
+      const customWallpaper = localStorage.getItem('customWallpaper');
+      
+      if (wallpaperType && customWallpaper) {
+        // Create an entry for the current wallpaper
+        const currentWallpaper = {
+          type: wallpaperType,
+          data: customWallpaper,
+          isVideo: wallpaperType.startsWith('video/'),
+          timestamp: Date.now()
+        };
+        
+        // Only add if it's not a duplicate
+        if (!recentWallpapers.some(wp => wp.data === customWallpaper)) {
+          recentWallpapers.unshift(currentWallpaper);
+          while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
+            recentWallpapers.pop();
+          }
+          saveRecentWallpapers();
+        }
+      }
+    } else {
+      // Add the slideshow as a special entry if not present
+      const slideshowEntry = {
+        isSlideshow: true,
+        timestamp: Date.now()
+      };
+      
+      if (!recentWallpapers.some(wp => wp.isSlideshow)) {
+        recentWallpapers.unshift(slideshowEntry);
+        while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
+          recentWallpapers.pop();
+        }
+        saveRecentWallpapers();
+      }
+    }
+  } catch (error) {
+    console.error('Error loading recent wallpapers:', error);
+  }
+}
+
+// Save recent wallpapers to localStorage
+function saveRecentWallpapers() {
+  try {
+    localStorage.setItem('recentWallpapers', JSON.stringify(recentWallpapers));
+  } catch (error) {
+    console.error('Error saving recent wallpapers:', error);
+    showPopup('Failed to save wallpaper history');
+  }
+}
+
+// Create the wallpaper upload modal
+function createWallpaperUploadModal() {
+  const modal = document.createElement('div');
+  modal.id = 'wallpaperUploadModal';
+  modal.className = 'modal';
+  modal.style.display = 'none';
+  
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>New Wallpaper</h2>
+        <span id="closeWallpaperUploadModal" class="material-symbols-rounded">close</span>
+      </div>
+      <div class="modal-body">
+        <p>Upload a new wallpaper or select multiple for slideshow</p>
+        <button id="wallpaperUploadButton" class="modal-button">
+          <span class="material-symbols-rounded">upload</span>
+          Upload
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Handle modal actions
+  document.getElementById('closeWallpaperUploadModal').addEventListener('click', () => {
+    modal.classList.remove('show');
+    blurOverlay.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display = 'none';
+      blurOverlay.style.display = 'none';
+      updatePersistentClock();
+    }, 300);
+  });
+  
+  document.getElementById('wallpaperUploadButton').addEventListener('click', () => {
+    wallpaperInput.click();
+  });
+  
+  return modal;
+}
+
+// Function to handle wallpaper switching
+function switchWallpaper(direction) {
+  if (recentWallpapers.length === 0) return;
+  
+  // Calculate new position
+  if (direction === 'right') {
+    currentWallpaperPosition++;
+    if (currentWallpaperPosition >= recentWallpapers.length) {
+      // Show upload modal when swiping past the end
+      const wallpaperUploadModal = document.getElementById('wallpaperUploadModal') || createWallpaperUploadModal();
+      wallpaperUploadModal.style.display = 'block';
+      blurOverlay.style.display = 'block';
+      setTimeout(() => {
+        wallpaperUploadModal.classList.add('show');
+        blurOverlay.classList.add('show');
+        updatePersistentClock();
+      }, 10);
+      
+      // Reset position to last valid wallpaper
+      currentWallpaperPosition = recentWallpapers.length - 1;
+      return;
+    }
+  } else { // left
+    currentWallpaperPosition--;
+    if (currentWallpaperPosition < 0) {
+      currentWallpaperPosition = 0;
+      return;
+    }
+  }
+  
+  const wallpaper = recentWallpapers[currentWallpaperPosition];
+  
+  // Clear current slideshow if it's running
+  clearInterval(slideshowInterval);
+  slideshowInterval = null;
+  
+  // Apply the selected wallpaper
+  if (wallpaper.isSlideshow) {
+    // If it's the slideshow entry, restart the slideshow
+    isSlideshow = true;
+    const wallpapers = JSON.parse(localStorage.getItem('wallpapers'));
+    if (wallpapers && wallpapers.length > 0) {
+      localStorage.setItem('wallpapers', JSON.stringify(wallpapers));
+      currentWallpaperIndex = 0;
+      applyWallpaper();
+      showPopup('Slideshow wallpaper');
+    }
+  } else {
+    // Apply a single wallpaper
+    isSlideshow = false;
+    localStorage.removeItem('wallpapers');
+    
+    if (wallpaper.isVideo) {
+      localStorage.setItem('wallpaperType', wallpaper.type);
+      // Video is already stored in IndexedDB
+      applyWallpaper();
+    } else {
+      localStorage.setItem('wallpaperType', wallpaper.type);
+      localStorage.setItem('customWallpaper', wallpaper.data);
+      applyWallpaper();
+    }
+    
+    showPopup('Wallpaper changed');
+  }
+}
+
+// Add swipe detection for wallpaper switching
+let touchStartX = 0;
+let touchEndX = 0;
+const MIN_SWIPE_DISTANCE = 50;
+
+document.addEventListener('touchstart', (e) => {
+  touchStartX = e.touches[0].clientX;
+}, false);
+
+document.addEventListener('touchend', (e) => {
+  touchEndX = e.changedTouches[0].clientX;
+  handleSwipe();
+}, false);
+
+// Handle mouse swipes too for desktop testing
+let mouseDown = false;
+let mouseStartX = 0;
+
+document.addEventListener('mousedown', (e) => {
+  // Only detect swipes on the background, not on UI elements
+  if (e.target === document.body || e.target.id === 'background-video') {
+    mouseDown = true;
+    mouseStartX = e.clientX;
+  }
+}, false);
+
+document.addEventListener('mouseup', (e) => {
+  if (mouseDown) {
+    mouseDown = false;
+    touchEndX = e.clientX;
+    touchStartX = mouseStartX;
+    handleSwipe();
+  }
+}, false);
+
+function handleSwipe() {
+  const swipeDistance = touchEndX - touchStartX;
+  
+  // Make sure we're not interacting with UI elements
+  if (document.querySelector('.fullscreen-embed') ||
+      timezoneModal.classList.contains('show') ||
+      weatherModal.classList.contains('show') ||
+      customizeModal.classList.contains('show') ||
+      appDrawer.classList.contains('open')) {
+    return;
+  }
+  
+  if (Math.abs(swipeDistance) > MIN_SWIPE_DISTANCE) {
+    if (swipeDistance > 0) {
+      // Swipe right - previous wallpaper
+      switchWallpaper('left');
+    } else {
+      // Swipe left - next wallpaper
+      switchWallpaper('right');
+    }
+  }
+}
 
 function setupFontSelection() {
     const fontSelect = document.getElementById('font-select');
@@ -2577,6 +2852,8 @@ window.addEventListener('offline', () => {
 // Call applyWallpaper on page load
 document.addEventListener('DOMContentLoaded', () => {
     applyWallpaper();
+	loadRecentWallpapers();
+	createWallpaperUploadModal();
 });
 
 window.addEventListener('load', checkFullscreen);
