@@ -1545,9 +1545,12 @@ const closeCustomizeModal = document.getElementById('closeCustomizeModal');
 const themeSwitch = document.getElementById('theme-switch');
 const wallpaperInput = document.getElementById('wallpaperInput');
 const uploadButton = document.getElementById('uploadButton');
+const minimalSwitch = document.getElementById('minimal-switch');
 const SLIDESHOW_INTERVAL = 600000; // 10 minutes in milliseconds
 let slideshowInterval = null;
 let currentWallpaperIndex = 0;
+let minimalMode = localStorage.getItem('minimalMode') === 'true';
+minimalSwitch.checked = minimalMode;
 
 // Theme switching functionality
 function setupThemeSwitcher() {
@@ -1562,6 +1565,84 @@ themeSwitch.addEventListener('change', () => {
     document.body.classList.toggle('light-theme');
     const newTheme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
     localStorage.setItem('theme', newTheme);
+});
+
+function updateMinimalMode() {
+    const elementsToHide = [
+        document.getElementById('search-container'),
+        document.getElementById('weather'),
+        document.getElementById('customize'),
+        document.getElementById('dock')
+    ];
+    
+    if (minimalMode) {
+        // Hide elements
+        elementsToHide.forEach(el => {
+            if (el) el.style.display = 'none';
+        });
+        // Add minimal-active class to body for potential CSS styling
+        document.body.classList.add('minimal-active');
+    } else {
+        // Show elements
+        if (document.getElementById('weather')) {
+            document.getElementById('weather').style.display = 
+                localStorage.getItem('showWeather') !== 'false' ? 'block' : 'none';
+        }
+        
+        if (document.getElementById('search-container'))
+            document.getElementById('search-container').style.display = 'flex';
+        
+        if (document.getElementById('customize'))
+            document.getElementById('customize').style.display = 'block';
+        
+        if (document.getElementById('dock'))
+            document.getElementById('dock').style.display = 'flex';
+        
+        // Remove minimal-active class
+        document.body.classList.remove('minimal-active');
+    }
+}
+
+minimalSwitch.addEventListener('change', function() {
+    minimalMode = this.checked;
+    localStorage.setItem('minimalMode', minimalMode);
+    updateMinimalMode();
+});
+
+// Initialize minimal mode on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateMinimalMode();
+});
+
+// Add a CSS rule for minimal mode
+const style = document.createElement('style');
+style.textContent = `
+    body.minimal-active .drawer-pill,
+    body.minimal-active #clock,
+    body.minimal-active #date,
+    body.minimal-active .persistent-clock,
+    body.minimal-active .drawer-handle {
+        opacity: 0.75;
+        transition: opacity 0.3s ease;
+    }
+    
+    body.minimal-active .drawer-pill:hover,
+    body.minimal-active #clock:hover,
+    body.minimal-active #date:hover,
+    body.minimal-active .persistent-clock:hover,
+    body.minimal-active .drawer-handle:hover {
+        opacity: 1;
+    }
+    
+    body.minimal-active .drawer-pill {
+        background: rgba(255, 255, 255, 0.2);
+    }
+`;
+document.head.appendChild(style);
+
+// Update minimal mode when exiting customize modal
+closeCustomizeModal.addEventListener('click', function() {
+    updateMinimalMode();
 });
 
 // Customize modal functionality
