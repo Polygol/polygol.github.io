@@ -2047,49 +2047,6 @@ function saveRecentWallpapers() {
   }
 }
 
-// Create the wallpaper upload modal
-function createWallpaperUploadModal() {
-  const modal = document.createElement('div');
-  modal.id = 'wallpaperUploadModal';
-  modal.className = 'modal';
-  modal.style.display = 'none';
-  
-  modal.innerHTML = `
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>New Wallpaper</h2>
-        <span id="closeWallpaperUploadModal" class="material-symbols-rounded">close</span>
-      </div>
-      <div class="modal-body">
-        <p>Upload a new wallpaper or select multiple for slideshow</p>
-        <button id="wallpaperUploadButton" class="modal-button">
-          <span class="material-symbols-rounded">upload</span>
-          Upload
-        </button>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(modal);
-  
-  // Handle modal actions
-  document.getElementById('closeWallpaperUploadModal').addEventListener('click', () => {
-    modal.classList.remove('show');
-    blurOverlay.classList.remove('show');
-    setTimeout(() => {
-      modal.style.display = 'none';
-      blurOverlay.style.display = 'none';
-      updatePersistentClock();
-    }, 300);
-  });
-  
-  document.getElementById('wallpaperUploadButton').addEventListener('click', () => {
-    wallpaperInput.click();
-  });
-  
-  return modal;
-}
-
 // Function to handle wallpaper switching
 function switchWallpaper(direction) {
   if (recentWallpapers.length === 0) return;
@@ -2098,13 +2055,10 @@ function switchWallpaper(direction) {
   if (direction === 'right') {
     currentWallpaperPosition++;
     if (currentWallpaperPosition >= recentWallpapers.length) {
-      // Show upload modal when swiping past the end
-      const wallpaperUploadModal = document.getElementById('wallpaperUploadModal') || createWallpaperUploadModal();
-      wallpaperUploadModal.style.display = 'block';
-      blurOverlay.style.display = 'block';
+      // Show customize modal when swiping past the end instead of upload modal
+      customizeModal.style.display = 'block';
       setTimeout(() => {
-        wallpaperUploadModal.classList.add('show');
-        blurOverlay.classList.add('show');
+        customizeModal.classList.add('show');
         updatePersistentClock();
       }, 10);
       
