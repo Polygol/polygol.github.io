@@ -1636,8 +1636,12 @@ style.textContent = `
         opacity: 1;
     }
 
-    body.minimal-active .blur-overlay; {
+    body.minimal-active .blur-overlay {
     	backdrop-filter: blur(50px);
+    }
+    
+    body.minimal-active .clock {
+    	font-size: clamp(6rem, 20vw, 20rem);
     }
     
     body.minimal-active .drawer-pill {
