@@ -1266,17 +1266,6 @@ function createSetupScreen() {
         const buttons = document.createElement('div');
         buttons.className = 'setup-buttons';
     
-        if (currentPage > 0) {
-            const backButton = document.createElement('button');
-            backButton.className = 'setup-button secondary';
-            backButton.textContent = 'Back';
-            backButton.addEventListener('click', () => {
-                currentPage--;
-                updateSetup();
-            });
-            buttons.appendChild(backButton);
-        }
-    
         const nextButton = document.createElement('button');
         nextButton.className = 'setup-button primary';
         nextButton.textContent = currentPage === setupPages.length - 1 ? 'Get Started' : 'Continue';
