@@ -1625,7 +1625,7 @@ style.textContent = `
     body.minimal-active #date,
     body.minimal-active .persistent-clock,
     body.minimal-active .drawer-handle {
-        opacity: 0.75;
+        opacity: 0.5;
         transition: opacity 0.3s ease;
     }
     
@@ -1637,7 +1637,7 @@ style.textContent = `
     }
     
     body.minimal-active .drawer-pill {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0);
     }
 `;
 document.head.appendChild(style);
