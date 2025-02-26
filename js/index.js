@@ -1635,6 +1635,10 @@ style.textContent = `
     body.minimal-active .drawer-handle:hover {
         opacity: 1;
     }
+
+    body.minimal-active .blur-overlay; {
+    	backdrop-filter: blur(50px);
+    }
     
     body.minimal-active .drawer-pill {
         background: rgba(255, 255, 255, 0);
