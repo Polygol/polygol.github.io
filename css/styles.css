@@ -1077,7 +1077,7 @@ body.light-theme[style*="background-image"] .info {
 
         @media (max-width: 800px) {
             .clock {
-                font-size: clamp(4rem, 12vw, 12rem);
+                font-size: clamp(4rem, 20vw, 20rem);
             }
             
         @media (max-width: 800px) {
