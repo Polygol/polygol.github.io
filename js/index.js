@@ -2874,6 +2874,21 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+// Get the element with class="close"
+const closeElement = document.querySelector('.close');
+
+// Store the original icon text
+const originalIcon = closeElement.querySelector('.material-symbols-rounded').textContent;
+
+// Add event listeners for mouseenter and mouseleave
+closeElement.addEventListener('mouseenter', function() {
+  this.querySelector('.material-symbols-rounded').textContent = 'close';
+});
+
+closeElement.addEventListener('mouseleave', function() {
+  this.querySelector('.material-symbols-rounded').textContent = originalIcon;
+});
+
 window.addEventListener('online', () => {
     showPopup('You are online');
     updateSmallWeather(); // Refresh weather data
