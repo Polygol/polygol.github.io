@@ -163,7 +163,7 @@ body.light-theme[style*="background-image"] .info {
         }
 
         .clock {
-            font-size: clamp(6rem, 12vw, 12rem);
+            font-size: clamp(10rem, 12vw, 12rem);
             font-weight: 700;
             color: var(--text-color);
             cursor: pointer;
