@@ -319,7 +319,7 @@ body.light-theme[style*="background-image"] .info {
             opacity: 0;
             transition: opacity 0.3s ease;
             user-select: none;
-            background-color: rgba(0, 0, 0, 0.15);
+            background-color: var(--overlay-color);
         }
 
         .blur-overlay.show {
