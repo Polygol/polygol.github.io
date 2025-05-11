@@ -3661,14 +3661,15 @@ function populateDock() {
     const appIcons = dock.querySelectorAll('.dock-icon');
     appIcons.forEach(icon => icon.remove());
     
+    // Track last opened timestamp for each app instead of usage count
     const sortedApps = Object.entries(apps)
         .filter(([appName]) => appName !== "Apps")  // Filter out Apps
         .map(([appName, appDetails]) => ({
             name: appName,
             details: appDetails,
-            usage: appUsage[appName] || 0
+            lastOpened: appLastOpened[appName] || 0  // Use lastOpened timestamp instead of usage count
         }))
-        .sort((a, b) => b.usage - a.usage)
+        .sort((a, b) => b.lastOpened - a.lastOpened)  // Sort by most recently opened
         .slice(0, 4);  // Only take 4 more
     
     sortedApps.forEach(({ name, details }) => {
@@ -3681,8 +3682,9 @@ function populateDock() {
         
         dockIcon.appendChild(img);
         dockIcon.addEventListener('click', () => {
-            appUsage[name] = (appUsage[name] || 0) + 1;
-            saveUsageData();
+            // Update the last opened timestamp for this app
+            appLastOpened[name] = Date.now();
+            saveLastOpenedData();  // Save the updated timestamps
             createFullscreenEmbed(details.url);
             populateDock();  // Refresh the dock after clicking
         });
