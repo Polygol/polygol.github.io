@@ -2619,18 +2619,31 @@ let tapCount = 0;
 let tapTimer = null;
 let tapTargetIndex = -1;
 
-// Function to create and update the page indicator
-function updatePageIndicator() {
-    // Remove existing indicator if present
-    const existingIndicator = document.getElementById('page-indicator');
-    if (existingIndicator) {
-        existingIndicator.remove();
-    }
-
-    // Create new indicator
+// Create the page indicator once and update it as needed
+function initializePageIndicator() {
+  // Create indicator only if it doesn't exist
+  if (!document.getElementById('page-indicator')) {
     const pageIndicator = document.createElement('div');
     pageIndicator.id = 'page-indicator';
     pageIndicator.className = 'page-indicator';
+    document.body.appendChild(pageIndicator);
+  }
+  
+  // Initial update of the indicator contents
+  updatePageIndicatorContent();
+  resetIndicatorTimeout();
+}
+
+// Update only the contents of the indicator
+function updatePageIndicatorContent() {
+  const pageIndicator = document.getElementById('page-indicator');
+  if (!pageIndicator) return;
+  
+  // Clear existing content
+  pageIndicator.innerHTML = '';
+  
+  // Make sure any fade-out class is removed when updating
+  pageIndicator.classList.remove('fade-out');
   
   // If no wallpapers or only one, show empty/single state
   if (recentWallpapers.length <= 1) {
@@ -2655,6 +2668,8 @@ function updatePageIndicator() {
     }
   } else {
     // Normal case - multiple wallpapers
+    pageIndicator.classList.remove('empty');
+    
     // Create dots for each wallpaper in history
     for (let i = 0; i < recentWallpapers.length; i++) {
       const dot = document.createElement('span');
@@ -2685,32 +2700,39 @@ function updatePageIndicator() {
       pageIndicator.appendChild(dot);
     }
   }
+}
+
+function updatePageIndicator() {
+  // If indicator doesn't exist, create it
+  if (!document.getElementById('page-indicator')) {
+    initializePageIndicator();
+  } else {
+    // Otherwise just update the content
+    updatePageIndicatorContent();
+  }
   
-  // Add to document
-  document.body.appendChild(pageIndicator);
-	
   resetIndicatorTimeout();
 }
 
 // Create a new function to manage the indicator timeout
 function resetIndicatorTimeout() {
-    // Clear any existing timeout
-    clearTimeout(pageIndicatorTimeout);
-    
-    // Only set a new timeout if we're not actively dragging
-    if (!isDragging) {
-        pageIndicatorTimeout = setTimeout(() => {
-            const pageIndicator = document.getElementById('page-indicator');
-            if (pageIndicator) {
-                pageIndicator.classList.add('fade-out');
-                setTimeout(() => {
-                    if (pageIndicator && pageIndicator.parentNode) {
-                        pageIndicator.remove();
-                    }
-                }, 500); // Remove after fade animation
-            }
-        }, INDICATOR_TIMEOUT);
+  // Clear any existing timeout
+  clearTimeout(pageIndicatorTimeout);
+  
+  // Only set a new timeout if we're not actively dragging
+  if (!isDragging) {
+    const pageIndicator = document.getElementById('page-indicator');
+    if (pageIndicator) {
+      pageIndicator.classList.remove('fade-out');
+      
+      pageIndicatorTimeout = setTimeout(() => {
+        if (pageIndicator) {
+          pageIndicator.classList.add('fade-out');
+          // We don't remove the element completely anymore, just hide it with CSS
+        }
+      }, INDICATOR_TIMEOUT);
     }
+  }
 }
 
 // Handle triple tap on dots to remove wallpaper
@@ -2780,7 +2802,7 @@ function removeWallpaper(index) {
     // Show confirmation
     showPopup(currentLanguage.ALL_WALLPAPER_REMOVE);
     
-    // Update the indicator (which will be empty now)
+    // Update the indicator
     updatePageIndicator();
     return;
   }
@@ -3052,6 +3074,7 @@ function addPageIndicatorStyles() {
     
     .fade-out {
       opacity: 0;
+      pointer-events: none;
     }
   `;
   document.head.appendChild(style);
