@@ -1946,7 +1946,7 @@ input[type="color"]::-moz-color-swatch {
     border: 1px solid var(--glass-border);
 }
 
-#font-select {
+#font-select, #search-engine-select, #search-ai-select {
     background-color: var(--transparent-color);
     color: var(--text-color);
     font-family: 'Inter', sans-serif;
@@ -1956,6 +1956,14 @@ input[type="color"]::-moz-color-swatch {
     outline: none;
     transition: background-color 0.2s, transform 0.1s;
     border: 1px solid var(--glass-border);
+    cursor: pointer;
+    transform: scale(1);
+    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+}
+
+#font-select:active, #search-engine-select:active, #search-ai-select:active {
+    transform: scale(0.96);
+    transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
 
 #font-select option {
@@ -1964,53 +1972,16 @@ input[type="color"]::-moz-color-swatch {
     transition: background-color 0.2s, transform 0.1s;
 }
 
-#language-switcher {
-    background-color: var(--transparent-color);
-    color: var(--text-color);
-    font-family: 'Inter', sans-serif;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 25px;
-    cursor: pointer;
-    outline: none;
-    transition: background-color 0.2s, transform 0.1s;
-    border: 1px solid var(--glass-border);
-}
-
 #language-switcher option {
     background-color: var(--background-color);
     color: var(--text-color);
     transition: background-color 0.2s, transform 0.1s;
 }
 
-#search-engine-select {
-    background-color: var(--transparent-color);
-    color: var(--text-color);
-    font-family: 'Inter', sans-serif;
-    padding: 10px 15px;
-    border-radius: 25px;
-    cursor: pointer;
-    outline: none;
-    transition: background-color 0.2s, transform 0.1s;
-    border: 1px solid var(--glass-border);
-}
-
 #search-engine-select option {
     background-color: var(--background-color);
     color: var(--text-color);
     transition: background-color 0.2s, transform 0.1s;
-}
-
-#search-ai-select {
-    background-color: var(--transparent-color);
-    color: var(--text-color);
-    font-family: 'Inter', sans-serif;
-    padding: 10px 15px;
-    border-radius: 25px;
-    cursor: pointer;
-    outline: none;
-    transition: background-color 0.2s, transform 0.1s;
-    border: 1px solid var(--glass-border);
 }
 
 #search-ai-select option {
