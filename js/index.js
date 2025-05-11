@@ -97,8 +97,27 @@ let recentWallpapers = [];
 let currentWallpaperPosition = 0;
 let isSlideshow = false;
 let minimizedEmbeds = {}; // Object to store minimized embeds by URL
+let appLastOpened = {};
 
 secondsSwitch.checked = showSeconds;
+
+function loadSavedData() {
+    // Load existing data if available
+    const savedLastOpened = localStorage.getItem('appLastOpened');
+    if (savedLastOpened) {
+        appLastOpened = JSON.parse(savedLastOpened);
+    }
+    
+    // Load other existing data as before
+    const savedUsage = localStorage.getItem('appUsage');
+    if (savedUsage) {
+        appUsage = JSON.parse(savedUsage);
+    }
+}
+
+function saveLastOpenedData() {
+    localStorage.setItem('appLastOpened', JSON.stringify(appLastOpened));
+}
 
 // IndexedDB setup for video storage
 const dbName = 'WallpaperDB';
@@ -3661,15 +3680,14 @@ function populateDock() {
     const appIcons = dock.querySelectorAll('.dock-icon');
     appIcons.forEach(icon => icon.remove());
     
-    // Track last opened timestamp for each app instead of usage count
     const sortedApps = Object.entries(apps)
         .filter(([appName]) => appName !== "Apps")  // Filter out Apps
         .map(([appName, appDetails]) => ({
             name: appName,
             details: appDetails,
-            lastOpened: appLastOpened[appName] || 0  // Use lastOpened timestamp instead of usage count
+            lastOpened: appLastOpened[appName] || 0
         }))
-        .sort((a, b) => b.lastOpened - a.lastOpened)  // Sort by most recently opened
+        .sort((a, b) => b.lastOpened - a.lastOpened)
         .slice(0, 4);  // Only take 4 more
     
     sortedApps.forEach(({ name, details }) => {
@@ -3684,7 +3702,7 @@ function populateDock() {
         dockIcon.addEventListener('click', () => {
             // Update the last opened timestamp for this app
             appLastOpened[name] = Date.now();
-            saveLastOpenedData();  // Save the updated timestamps
+            saveLastOpenedData();
             createFullscreenEmbed(details.url);
             populateDock();  // Refresh the dock after clicking
         });
@@ -3708,57 +3726,62 @@ function createAppIcons() {
             usage: appUsage[appName] || 0
         }))
         .sort((a, b) => b.usage - a.usage);
-
+    
     appsArray.forEach((app) => {
         const appIcon = document.createElement('div');
         appIcon.classList.add('app-icon');
         appIcon.dataset.app = app.name;
-
+        
         const img = document.createElement('img');
         img.src = `/assets/appicon/${app.details.icon}`;
         img.alt = app.name;
         img.onerror = () => {
             img.src = '/assets/appicon/question.png';
         };
-
+        
         const label = document.createElement('span');
         label.textContent = app.name;
-
+        
         appIcon.appendChild(img);
         appIcon.appendChild(label);
-
-	const handleAppOpen = (e) => {
-	    e.preventDefault();
-	    e.stopPropagation();
-	    
-	    try {
-	        appUsage[app.name] = (appUsage[app.name] || 0) + 1;
-	        saveUsageData();
-	        
-	        if (app.details.url.startsWith('#')) {
-	            switch (app.details.url) {
-	                case '#settings':
-	                    showPopup(currentLanguage.OPEN_SETTINGS);
-	                    break;
-	                case '#tasks':
-	                    showMinimizedEmbeds(); // Add this case to call your new function
-	                    break;
-	                default:
-	                    showPopup(currentLanguage.APP_OPENED.replace("{app}", app));
-	            }
-	        } else {
-	            createFullscreenEmbed(app.details.url);
-	        }
-	        
-	        appDrawer.classList.remove('open');
-	        appDrawer.style.bottom = '-100%';
-	        initialDrawerPosition = -100;
-	    } catch (error) {
-	        showPopup(currentLanguage.APP_OPEN_FAIL.replace("{app}", app));
-	        console.error(`App open error: ${error}`);
-	    }
-	};
-
+        
+        const handleAppOpen = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            try {
+                // Update usage count as before
+                appUsage[app.name] = (appUsage[app.name] || 0) + 1;
+                saveUsageData();
+                
+                // Also save the timestamp when the app was opened
+                appLastOpened[app.name] = Date.now();
+                saveLastOpenedData();
+                
+                if (app.details.url.startsWith('#')) {
+                    switch (app.details.url) {
+                        case '#settings':
+                            showPopup(currentLanguage.OPEN_SETTINGS);
+                            break;
+                        case '#tasks':
+                            showMinimizedEmbeds(); // Add this case to call your new function
+                            break;
+                        default:
+                            showPopup(currentLanguage.APP_OPENED.replace("{app}", app));
+                    }
+                } else {
+                    createFullscreenEmbed(app.details.url);
+                }
+                
+                appDrawer.classList.remove('open');
+                appDrawer.style.bottom = '-100%';
+                initialDrawerPosition = -100;
+            } catch (error) {
+                showPopup(currentLanguage.APP_OPEN_FAIL.replace("{app}", app));
+                console.error(`App open error: ${error}`);
+            }
+        };
+        
         appIcon.addEventListener('click', handleAppOpen);
         appIcon.addEventListener('touchend', handleAppOpen);
         appGrid.appendChild(appIcon);
