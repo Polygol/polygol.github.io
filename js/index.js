@@ -2619,6 +2619,21 @@ let tapCount = 0;
 let tapTimer = null;
 let tapTargetIndex = -1;
 
+function initializeWallpaperTracking() {
+  // If not already initialized, set up wallpaper position
+  if (currentWallpaperPosition === undefined) {
+    currentWallpaperPosition = 0;
+  }
+  
+  // Store the actual order in local storage
+  if (!localStorage.getItem('wallpaperOrder')) {
+    localStorage.setItem('wallpaperOrder', JSON.stringify({
+      position: currentWallpaperPosition,
+      timestamp: Date.now()
+    }));
+  }
+}
+
 // Create the page indicator once and update it as needed
 function initializePageIndicator() {
   // Create indicator only if it doesn't exist
@@ -2683,7 +2698,7 @@ function updatePageIndicatorDots(forceRecreate = false) {
     // Clear existing content
     pageIndicator.innerHTML = '';
     
-    // Create dots for each wallpaper in history
+    // Create dots for each wallpaper in history, in the correct order
     for (let i = 0; i < recentWallpapers.length; i++) {
       const dot = document.createElement('span');
       dot.className = 'indicator-dot';
@@ -2726,6 +2741,29 @@ function updatePageIndicatorDots(forceRecreate = false) {
 
 function updatePageIndicator() {
   initializePageIndicator();
+}
+
+function saveCurrentPosition() {
+  localStorage.setItem('wallpaperOrder', JSON.stringify({
+    position: currentWallpaperPosition,
+    timestamp: Date.now()
+  }));
+}
+
+function loadSavedPosition() {
+  const savedOrder = localStorage.getItem('wallpaperOrder');
+  if (savedOrder) {
+    try {
+      const orderData = JSON.parse(savedOrder);
+      if (orderData.position !== undefined && 
+          orderData.position >= 0 && 
+          orderData.position < recentWallpapers.length) {
+        currentWallpaperPosition = orderData.position;
+      }
+    } catch(e) {
+      console.error('Error parsing saved wallpaper position', e);
+    }
+  }
 }
 
 // Create a new function to manage the indicator timeout
@@ -2806,6 +2844,9 @@ function removeWallpaper(index) {
     // Remove custom wallpaper settings
     localStorage.removeItem('customWallpaper');
     localStorage.removeItem('wallpapers');
+    localStorage.removeItem('wallpaperOrder'); // Clear saved position
+    
+    currentWallpaperPosition = 0;
     
     // Set to default wallpaper type
     localStorage.setItem('wallpaperType', 'default');
@@ -2825,11 +2866,18 @@ function removeWallpaper(index) {
   if (index === currentWallpaperPosition) {
     // If we removed the current wallpaper, go to the previous one
     currentWallpaperPosition = Math.max(0, currentWallpaperPosition - 1);
-    // Apply the new current wallpaper
+    
+    // Save the updated position
+    saveCurrentPosition();
+    
+    // Apply the new current wallpaper (passing 'none' to not change position)
     switchWallpaper('none');
   } else if (index < currentWallpaperPosition) {
     // If we removed a wallpaper before the current one, adjust the position
     currentWallpaperPosition--;
+    
+    // Save the updated position
+    saveCurrentPosition();
   }
   
   // Show confirmation
@@ -2973,6 +3021,9 @@ function handleDotDragEnd(e) {
       currentWallpaperPosition += (dragIndex > newIndex ? 1 : -1);
     }
     
+    // Save the updated position
+    saveCurrentPosition();
+    
     // Force recreate the dots due to reordering
     updatePageIndicatorDots(true);
   } else {
@@ -3004,6 +3055,7 @@ function handleDotDragEnd(e) {
   
   resetIndicatorTimeout();
 }
+
 // New function to jump to a specific wallpaper by index
 function jumpToWallpaper(index) {
   if (index < 0 || index >= recentWallpapers.length || index === currentWallpaperPosition) {
@@ -3011,6 +3063,10 @@ function jumpToWallpaper(index) {
   }
   
   currentWallpaperPosition = index;
+  
+  // Save the position for persistence
+  saveCurrentPosition();
+  
   const wallpaper = recentWallpapers[currentWallpaperPosition];
   
   // Clear current slideshow if it's running
@@ -3128,22 +3184,37 @@ function switchWallpaper(direction) {
   if (recentWallpapers.length === 0) return;
   
   // Calculate new position
+  let newPosition = currentWallpaperPosition;
+  
   if (direction === 'right') {
-    currentWallpaperPosition++;
-    if (currentWallpaperPosition >= recentWallpapers.length) {
-      // Reset position to last valid wallpaper
-      currentWallpaperPosition = recentWallpapers.length - 1;
+    newPosition++;
+    if (newPosition >= recentWallpapers.length) {
+      // Implement wrapping or stop at the end
+      // For UX consistency, let's not wrap around
+      newPosition = recentWallpapers.length - 1;
       return;
     }
   } else if (direction === 'left') {
-    currentWallpaperPosition--;
-    if (currentWallpaperPosition < 0) {
-      currentWallpaperPosition = 0;
+    newPosition--;
+    if (newPosition < 0) {
+      // Don't go below zero
+      newPosition = 0;
       return;
     }
+  } else {
+    // If 'none' is passed, we still want to apply the current position's wallpaper
+    // without changing the position
+  }
+  
+  // Only proceed if position actually changed or we're reapplying
+  if (newPosition !== currentWallpaperPosition && direction !== 'none') {
+    currentWallpaperPosition = newPosition;
   }
   
   const wallpaper = recentWallpapers[currentWallpaperPosition];
+  
+  // Save the position for persistence
+  saveCurrentPosition();
   
   // Clear current slideshow if it's running
   clearInterval(slideshowInterval);
@@ -3246,6 +3317,41 @@ document.addEventListener('mouseup', (e) => {
     handleSwipe();
   }
 }, false);
+
+function initializeAndApplyWallpaper() {
+  // Load saved position
+  loadSavedPosition();
+  
+  // Make sure current position is valid
+  if (recentWallpapers.length > 0) {
+    if (currentWallpaperPosition >= recentWallpapers.length) {
+      currentWallpaperPosition = recentWallpapers.length - 1;
+      saveCurrentPosition();
+    }
+    
+    // Apply the correct wallpaper
+    const wallpaper = recentWallpapers[currentWallpaperPosition];
+    
+    // We don't need to call applyWallpaper() here as it will be called
+    // by the existing page initialization code, just set up the correct 
+    // localStorage values for it to use
+    
+    if (wallpaper.isSlideshow) {
+      isSlideshow = true;
+      // Keep the existing wallpapers array in localStorage
+    } else {
+      isSlideshow = false;
+      localStorage.removeItem('wallpapers');
+      
+      if (wallpaper.isVideo) {
+        localStorage.setItem('wallpaperType', wallpaper.type);
+      } else {
+        localStorage.setItem('wallpaperType', wallpaper.type);
+        localStorage.setItem('customWallpaper', wallpaper.data);
+      }
+    }
+  }
+}
 
 function setupFontSelection() {
     const fontSelect = document.getElementById('font-select');
@@ -4800,7 +4906,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+// Add this to the page initialization code
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize wallpaper tracking
+  initializeWallpaperTracking();
+  
+  // Initialize and prepare to apply the correct wallpaper
+  initializeAndApplyWallpaper();
+    
+  // Create the initial page indicator
+  initializePageIndicator();
   addPageIndicatorStyles();
   checkWallpaperState();
 });
