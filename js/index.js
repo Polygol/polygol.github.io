@@ -3027,7 +3027,7 @@ function addPageIndicatorStyles() {
       transform: translateX(-50%);
       display: flex;
       gap: 10px;
-      z-index: 1000;
+      z-index: 50;
       transition: all 0.5s;
       opacity: 1;
       background-color: var(--search-background);
