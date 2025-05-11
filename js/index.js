@@ -3294,11 +3294,7 @@ const apps = {
     "Weather": {
         url: "/weather/index.html",
         icon: "weather.png"
-    },
-    "Apps": {
-        url: "#tasks",
-        icon: "appstore.png"
-    },
+    }
 };
 
 function createFullscreenEmbed(url) {
@@ -3648,132 +3644,6 @@ function minimizeFullscreenEmbed() {
     }
 }
 
-function showMinimizedEmbeds() {
-  // Create a backdrop that fills the entire screen
-  let backdrop = document.createElement("div");
-  backdrop.className = "task-backdrop";
-  
-  // Close task switcher when tapping the backdrop
-  backdrop.addEventListener("click", (e) => {
-    if (e.target === backdrop) {
-      document.body.removeChild(backdrop);
-    }
-  });
-  
-  // Create the task switcher container
-  let taskSwitcher = document.createElement("div");
-  taskSwitcher.className = "task-switcher";
-  
-  // Add header
-  let header = document.createElement("div");
-  header.className = "task-switcher-header";
-  
-  let title = document.createElement("h2");
-  title.className = "task-switcher-title";
-  title.textContent = "Recent Apps";
-  
-  header.appendChild(title);
-  taskSwitcher.appendChild(header);
-  
-  // Add embed thumbnails
-  let embedsGrid = document.createElement("div");
-  embedsGrid.className = "task-switcher-grid";
-  
-  // Check if there are any minimized embeds
-  let minimizedCount = 0;
-  
-  // Iterate through all minimized embeds
-  for (let url in minimizedEmbeds) {
-    let embed = minimizedEmbeds[url];
-    
-    // Create a wrapper for the embed thumbnail
-    let thumbWrapper = document.createElement("div");
-    thumbWrapper.className = "app-thumb-wrapper";
-    
-    // Get the app name from the URL
-    let appName = "";
-    for (let app in apps) {
-      if (apps[app].url === url) {
-        appName = app;
-        break;
-      }
-    }
-    
-    // Create icon for the app
-    let iconContainer = document.createElement("div");
-    iconContainer.className = "app-icon-container";
-    
-    let appIcon = document.createElement("img");
-    let iconSrc = "";
-    for (let app in apps) {
-      if (apps[app].url === url) {
-        iconSrc = `/assets/appicon/${apps[app].icon}`;
-        break;
-      }
-    }
-    
-    appIcon.src = iconSrc || "/assets/appicon/question.png";
-    appIcon.alt = appName;
-    
-    iconContainer.appendChild(appIcon);
-    thumbWrapper.appendChild(iconContainer);
-    
-    // Add app name
-    let nameLabel = document.createElement("div");
-    nameLabel.className = "app-name-label";
-    nameLabel.textContent = appName || "App";
-    
-    thumbWrapper.appendChild(nameLabel);
-    
-    // Click to reopen the embed
-    thumbWrapper.addEventListener("click", () => {
-      createFullscreenEmbed(url);
-      document.body.removeChild(backdrop);
-    });
-    
-    embedsGrid.appendChild(thumbWrapper);
-    minimizedCount++;
-  }
-  
-  // If no minimized apps, show a message
-  if (minimizedCount === 0) {
-    let noAppsMsg = document.createElement("div");
-    noAppsMsg.className = "no-apps-message";
-    noAppsMsg.textContent = "No minimized apps found";
-    embedsGrid.appendChild(noAppsMsg);
-  }
-  
-  taskSwitcher.appendChild(embedsGrid);
-  backdrop.appendChild(taskSwitcher);
-  document.body.appendChild(backdrop);
-  
-  // Add swipe down to close functionality (iOS-like)
-  let startY;
-  let currentY;
-  backdrop.addEventListener('touchstart', (e) => {
-    startY = e.touches[0].clientY;
-  });
-  
-  backdrop.addEventListener('touchmove', (e) => {
-    currentY = e.touches[0].clientY;
-    let deltaY = currentY - startY;
-    
-    if (deltaY > 0) { // Only allow downward swipe
-      taskSwitcher.style.transform = `translate(-50%, calc(-50% + ${deltaY}px))`;
-      backdrop.style.opacity = 1 - (deltaY / 300);
-    }
-  });
-  
-  backdrop.addEventListener('touchend', (e) => {
-    if (currentY - startY > 100) { // If swiped down enough
-      document.body.removeChild(backdrop);
-    } else {
-      taskSwitcher.style.transform = 'translate(-50%, -50%)';
-      backdrop.style.opacity = 1;
-    }
-  });
-}
-
 function populateDock() {
     // Only add the search container if it's not already there
     if (!dock.querySelector('.search-container')) {
@@ -3791,37 +3661,15 @@ function populateDock() {
     const appIcons = dock.querySelectorAll('.dock-icon');
     appIcons.forEach(icon => icon.remove());
     
-    // First, always add the Apps icon
-    const appsDetails = apps["Apps"];
-    if (appsDetails) {
-        const appsIcon = document.createElement('div');
-        appsIcon.className = 'dock-icon';
-        
-        const img = document.createElement('img');
-        img.src = `/assets/appicon/${appsDetails.icon}`;
-        img.alt = "Apps";
-        
-        appsIcon.appendChild(img);
-        appsIcon.addEventListener('click', () => {
-            appUsage["Apps"] = (appUsage["Apps"] || 0) + 1;
-            saveUsageData();
-            createFullscreenEmbed("#tasks");  // Using #tasks URL directly
-            populateDock();  // Refresh the dock after clicking
-        });
-        
-        dock.appendChild(appsIcon);
-    }
-    
-    // Then add the remaining top-used apps (excluding Apps if it would be duplicated)
     const sortedApps = Object.entries(apps)
-        .filter(([appName]) => appName !== "Apps")  // Filter out Apps since we already added it
+        .filter(([appName]) => appName !== "Apps")  // Filter out Apps
         .map(([appName, appDetails]) => ({
             name: appName,
             details: appDetails,
             usage: appUsage[appName] || 0
         }))
         .sort((a, b) => b.usage - a.usage)
-        .slice(0, 4);  // Only take 4 more since Apps takes the first spot
+        .slice(0, 4);  // Only take 4 more
     
     sortedApps.forEach(({ name, details }) => {
         const dockIcon = document.createElement('div');
