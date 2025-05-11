@@ -2627,26 +2627,30 @@ function initializePageIndicator() {
     pageIndicator.id = 'page-indicator';
     pageIndicator.className = 'page-indicator';
     document.body.appendChild(pageIndicator);
+    
+    // Initial creation of dots
+    updatePageIndicatorDots(true);
+  } else {
+    // Just update dot states
+    updatePageIndicatorDots(false);
   }
   
-  // Initial update of the indicator contents
-  updatePageIndicatorContent();
   resetIndicatorTimeout();
 }
 
 // Update only the contents of the indicator
-function updatePageIndicatorContent() {
+function updatePageIndicatorDots(forceRecreate = false) {
   const pageIndicator = document.getElementById('page-indicator');
   if (!pageIndicator) return;
-  
-  // Clear existing content
-  pageIndicator.innerHTML = '';
   
   // Make sure any fade-out class is removed when updating
   pageIndicator.classList.remove('fade-out');
   
   // If no wallpapers or only one, show empty/single state
   if (recentWallpapers.length <= 1) {
+    // Clear existing content
+    pageIndicator.innerHTML = '';
+    
     if (recentWallpapers.length === 0) {
       // Empty state - no wallpapers
       const emptyText = document.createElement('span');
@@ -2656,6 +2660,7 @@ function updatePageIndicatorContent() {
       pageIndicator.classList.add('empty');
     } else {
       // Single wallpaper state
+      pageIndicator.classList.remove('empty');
       const dot = document.createElement('span');
       dot.className = 'indicator-dot active';
       dot.dataset.index = 0;
@@ -2666,9 +2671,17 @@ function updatePageIndicatorContent() {
       
       pageIndicator.appendChild(dot);
     }
-  } else {
-    // Normal case - multiple wallpapers
-    pageIndicator.classList.remove('empty');
+    return;
+  }
+  
+  // Normal case - multiple wallpapers
+  pageIndicator.classList.remove('empty');
+  
+  // If number of dots doesn't match or forced recreation, recreate all dots
+  const existingDots = pageIndicator.querySelectorAll('.indicator-dot');
+  if (forceRecreate || existingDots.length !== recentWallpapers.length) {
+    // Clear existing content
+    pageIndicator.innerHTML = '';
     
     // Create dots for each wallpaper in history
     for (let i = 0; i < recentWallpapers.length; i++) {
@@ -2699,19 +2712,20 @@ function updatePageIndicatorContent() {
       
       pageIndicator.appendChild(dot);
     }
+  } else {
+    // Just update active state of existing dots
+    existingDots.forEach((dot, i) => {
+      if (i === currentWallpaperPosition) {
+        dot.classList.add('active');
+      } else {
+        dot.classList.remove('active');
+      }
+    });
   }
 }
 
 function updatePageIndicator() {
-  // If indicator doesn't exist, create it
-  if (!document.getElementById('page-indicator')) {
-    initializePageIndicator();
-  } else {
-    // Otherwise just update the content
-    updatePageIndicatorContent();
-  }
-  
-  resetIndicatorTimeout();
+  initializePageIndicator();
 }
 
 // Create a new function to manage the indicator timeout
@@ -2803,7 +2817,7 @@ function removeWallpaper(index) {
     showPopup(currentLanguage.ALL_WALLPAPER_REMOVE);
     
     // Update the indicator
-    updatePageIndicator();
+    updatePageIndicatorDots(true);
     return;
   }
   
@@ -2821,8 +2835,9 @@ function removeWallpaper(index) {
   // Show confirmation
   showPopup(currentLanguage.WALLPAPER_REMOVE);
   
-  // Update the indicator
-  updatePageIndicator();
+  // Force recreate dots when removing a wallpaper
+  updatePageIndicatorDots(true);
+  resetIndicatorTimeout();
 }
 
 // Handle start of dragging a dot
@@ -2957,6 +2972,24 @@ function handleDotDragEnd(e) {
       // Adjust current position if it was in the moved range
       currentWallpaperPosition += (dragIndex > newIndex ? 1 : -1);
     }
+    
+    // Force recreate the dots due to reordering
+    updatePageIndicatorDots(true);
+  } else {
+    // Clean up any dragging visual states
+    const draggedDot = document.querySelector(`.indicator-dot[data-index="${dragIndex}"]`);
+    if (draggedDot) {
+      draggedDot.classList.remove('dragging');
+      draggedDot.style.transform = '';
+    }
+    
+    // Reset any other dots that might have been moved
+    dots.forEach(dot => {
+      dot.style.transform = '';
+    });
+    
+    // Update active state
+    updatePageIndicatorDots(false);
   }
   
   // Clean up
@@ -2969,11 +3002,8 @@ function handleDotDragEnd(e) {
   isDragging = false;
   dragIndex = -1;
   
-  // Update the indicator with new order
-  updatePageIndicator();
   resetIndicatorTimeout();
 }
-
 // New function to jump to a specific wallpaper by index
 function jumpToWallpaper(index) {
   if (index < 0 || index >= recentWallpapers.length || index === currentWallpaperPosition) {
@@ -3012,8 +3042,9 @@ function jumpToWallpaper(index) {
     }
   }
   
-  // Show page indicator
-  updatePageIndicator();
+  // Only update the active state of dots
+  updatePageIndicatorDots(false);
+  resetIndicatorTimeout();
 }
 
 // Add CSS to the head
@@ -3104,7 +3135,7 @@ function switchWallpaper(direction) {
       currentWallpaperPosition = recentWallpapers.length - 1;
       return;
     }
-  } else { // left
+  } else if (direction === 'left') {
     currentWallpaperPosition--;
     if (currentWallpaperPosition < 0) {
       currentWallpaperPosition = 0;
@@ -3145,8 +3176,9 @@ function switchWallpaper(direction) {
     }
   }
   
-  // Show page indicator
-  updatePageIndicator();
+  // Only update the active state of dots
+  updatePageIndicatorDots(false);
+  resetIndicatorTimeout();
 }
 
 // Update handleSwipe to show indicator even if no swipe is detected
