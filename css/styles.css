@@ -1947,7 +1947,7 @@ input[type="color"]::-moz-color-swatch {
     border: 1px solid var(--glass-border);
 }
 
-#font-select, #search-engine-select, #search-ai-select {
+#font-select, #search-engine-select, #search-ai-select, #language-switcher {
     background-color: var(--transparent-color);
     color: var(--text-color);
     font-family: 'Inter', sans-serif;
@@ -1962,7 +1962,7 @@ input[type="color"]::-moz-color-swatch {
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
 
-#font-select:active, #search-engine-select:active, #search-ai-select:active {
+#font-select:active, #search-engine-select:active, #search-ai-select:active, #language-switcher:active {
     transform: scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
