@@ -1764,6 +1764,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .close-popup-btn {
+    display: none;
     background: none;
     cursor: pointer;
     color: var(--text-color);
@@ -1771,7 +1772,6 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--glass-border);
 }
 
 .thermostat-slider-container {
@@ -1789,6 +1789,7 @@ input[type="color"]::-moz-color-swatch {
     background: rgba(0,0,0,0.1);
     outline: none;
     padding: 0 8px;
+    border: 1px solid var(--glass-border);
 }
 
 .thermostat-slider::-webkit-slider-thumb {
@@ -1799,6 +1800,14 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 50%;
     background: var(--secondary-text-color);
     cursor: pointer;
+    border: 1px solid var(--glass-border);
+    transition: width 0.3s, height 0.3s, transform 0.3s;
+}
+
+.thermostat-slider::-webkit-slider-thumb:active {
+    width: 28px;
+    height: 28px;
+    transform: scale(1.1);
 }
 
 .thermostat-slider::-moz-range-thumb {
@@ -1807,6 +1816,14 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 50%;
     background: var(--secondary-text-color);
     cursor: pointer;
+    border: 1px solid var(--glass-border);
+    transition: width 0.3s, height 0.3s, transform 0.3s;
+}
+
+.thermostat-slider::-moz-range-thumb:active {
+    width: 28px;
+    height: 28px;
+    transform: scale(1.1);
 }
 
 #thermostat-popup-value {
@@ -1896,7 +1913,7 @@ input[type="color"]::-moz-color-swatch {
     background-color: var(--secondary-text-color);
     border-radius: 50%;
     top: 50%;
-    left: 5px;
+    left: 6px;
     transform: translateY(-50%);
     transition: transform 0.3s, background-color 0.3s, width 0.3s, height 0.3s, left 0.3s, right 0.3s;
     border: 1px solid var(--glass-border);
