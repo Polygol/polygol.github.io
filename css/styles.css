@@ -1899,10 +1899,9 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 16px;
     position: relative;
     cursor: pointer;
-    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9), background-color 0.3s;
+    transition: background-color 0.3s;
     border: 1px solid var(--glass-border);
     cursor: pointer;
-    transform: scale(1);
 }
 
 #theme-switch::before, #seconds-switch::before, 
@@ -1919,19 +1918,6 @@ input[type="color"]::-moz-color-swatch {
     transform: translateY(-50%);
     transition: transform 0.3s, background-color 0.3s, width 0.3s, height 0.3s, left 0.3s, right 0.3s;
     border: 1px solid var(--glass-border);
-}
-
-#theme-switch:active::before,
-#seconds-switch:active::before,
-#weather-switch:active::before,
-#minimal-switch:active::before,
-#gurapps-switch:active::before,
-#contrast-switch:active::before,
-#animation-switch:active::before,
-#search-switch:active::before,
-#clock-color-switch:active::before {
-    transform: scale(0.96);
-    transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
 
 #theme-switch:checked, #seconds-switch:checked, 
