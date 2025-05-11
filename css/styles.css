@@ -2233,7 +2233,7 @@ input[type="color"]::-moz-color-swatch {
     height: 100%;
     background-color: var(--modal-background); 
     transition: bottom 0.3s ease;
-    z-index: 1000;
+    z-index: 1001;
     overflow: hidden;
     touch-action: none;
     user-select: none;
