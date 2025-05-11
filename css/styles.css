@@ -1764,7 +1764,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .close-popup-btn {
-    display: none;
+    display: none !important;
     background: none;
     cursor: pointer;
     color: var(--text-color);
