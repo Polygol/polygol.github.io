@@ -5,7 +5,7 @@ const ASSETS_TO_CACHE = [
   '/js/index.js',
   '/js/lang.js',
   '/assets/ui/svg/load.svg',
-  '/assets/13.png',
+  '/assets/14.png',
   '/manifest.json',
   '/assets/favicon.png',
   '/assets/gurasuraisu.png',
