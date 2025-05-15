@@ -20,6 +20,7 @@ const ASSETS_TO_CACHE = [
   '/assets/appicon/video.png',
   '/assets/appicon/weather.png',
   '/assets/appicon/notes.png',
+  '/assets/appicon/mail.png',
   '/assets/appicon/appstore.png',
   '/assets/sound/timer.mp3',
   'https://www.gstatic.com/delight/funbox/timer_utilitarian_v2.mp3',
