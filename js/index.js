@@ -1544,6 +1544,7 @@ const appLinks = {
     "Music": "https://gurasuraisu.github.io/music",
     "Fantaskical": "https://gurasuraisu.github.io/fantaskical",
     "Clapper": "https://gurasuraisu.github.io/clapper",
+    "SketchPad": "https://gurasuraisu.github.io/sketchpad",
     "Weather": "https://gurasuraisu.github.io/weather",
 };
 
@@ -3470,6 +3471,10 @@ const apps = {
     "Clapper": {
         url: "/clapper/index.html",
         icon: "video.png"
+    },
+    "SketchPad": {
+        url: "/sketchpad/index.html",
+        icon: "notes.png"
     },
     "Weather": {
         url: "/weather/index.html",
