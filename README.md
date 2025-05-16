@@ -3,4 +3,5 @@
 Ambient display with clock, weather and advanced features without tracking you or displaying ads.
 Visit at https://gurasuraisu.github.io
 
-![kicxs](https://github.com/user-attachments/assets/9df7e24d-2cc7-44bb-b359-ef35c296248f) Made by kirbIndustries
+![kicxs](https://github.com/user-attachments/assets/9df7e24d-2cc7-44bb-b359-ef35c296248f)
+Made by kirbIndustries
