@@ -8,6 +8,53 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded">
     <style>
+        :root {
+            /* Dark Theme (Default) Variables */
+            --background-color-dark: #1c1c1c;
+            --text-color-dark: #f9f9f9;
+            --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
+            --modal-background-dark: rgba(51, 51, 51, 0.8);
+            --modal-transparent-dark: rgba(51, 51, 51, 0.7);
+            --search-background-dark: rgba(51, 51, 51, 0.5);
+            --dark-overlay: rgba(51, 51, 51, 0.2);
+            --dark-transparent: rgba(255, 255, 255, 0.1); 
+            --glass-border-dark: rgba(100, 100, 100, 0.2);
+            
+            /* Light Theme Variables */
+            --background-color-light: #f0f0f0;
+            --text-color-light: #333333;
+            --secondary-text-color-light: rgba(0, 0, 0, 0.7);
+            --modal-background-light: rgba(220, 220, 220, 0.8);
+            --modal-transparent-light: rgba(240, 240, 240, 0.7);
+            --search-background-light: rgba(220, 220, 220, 0.5);
+            --light-overlay: rgba(220, 220, 220, 0.2);
+            --light-transparent: rgba(255, 255, 255, 0.1);
+            --glass-border-light: rgba(200, 200, 200, 0.2);
+            
+            /* Default to Dark Theme */
+            --background-color: var(--background-color-dark);
+            --text-color: var(--text-color-dark);
+            --secondary-text-color: var(--secondary-text-color-dark);
+            --modal-background: var(--modal-background-dark);
+            --modal-transparent: var(--modal-transparent-dark);
+            --search-background: var(--search-background-dark);
+            --overlay-color: var(--dark-overlay);
+            --transparent-color: var(--dark-transparent);
+            --glass-border: var(--glass-border-dark);
+        }
+        
+        body.light-theme {
+            --background-color: var(--background-color-light);
+            --text-color: var(--text-color-light);
+            --secondary-text-color: var(--secondary-text-color-light);
+            --modal-background: var(--modal-background-light);
+            --modal-transparent: var(--modal-transparent-light);
+            --search-background: var(--search-background-light);
+            --overlay-color: var(--light-overlay);
+            --transparent-color: var(--light-transparent);
+            --glass-border: var(--glass-border-light);
+        }
+        
         body {
             font-family: 'Inter', sans-serif;
             background-color: #1c1c1c;
@@ -44,15 +91,15 @@
         p {
             font-size: 20px;
             margin: 10px 0;
-            color: #bbb;
+            color: var(--text-color);
         }
 
         a {
             display: inline-block;
             margin-top: 20px;
             padding: 12px 25px;
-            background-color: #3c78d8;
-            color: white;
+            background-color: var(--text-color);
+            color: var(--background-color);
             text-decoration: none;
             border-radius: 50px;
             font-weight: 600;
@@ -74,5 +121,43 @@
             <a href="/">Go back to smelling Gurasuraisu</a>
         </div>
     </div>
+
+    <script>
+        // Theme synchronization for Gurapp side
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial theme application based on localStorage
+            const storedTheme = localStorage.getItem('theme') || 'dark';
+            document.body.classList.toggle('light-theme', storedTheme === 'light');
+            
+            // Initial animation preference application
+            const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
+            document.body.classList.toggle('reduce-animations', !animationsEnabled);
+            
+            // Set up listener for theme change messages
+            window.addEventListener('message', (event) => {
+                // Verify message origin and type for security
+                if (event.origin === window.location.origin) {
+                    if (event.data.type === 'themeUpdate') {
+                        const newTheme = event.data.theme;
+                        document.body.classList.toggle('light-theme', newTheme === 'light');
+                        console.log('App theme updated via message to:', newTheme);
+                    } else if (event.data.type === 'animationsUpdate') {
+                        const enableAnimations = event.data.enabled;
+                        document.body.classList.toggle('reduce-animations', !enableAnimations);
+                        console.log('App animations updated via message to:', enableAnimations ? 'enabled' : 'disabled');
+                    }
+                }
+            });
+            
+            // Optional: Set up polling fallback to ensure settings stay in sync
+            setInterval(() => {
+                const currentTheme = localStorage.getItem('theme') || 'dark';
+                document.body.classList.toggle('light-theme', currentTheme === 'light');
+                
+                const currentAnimState = localStorage.getItem('animationsEnabled') !== 'false';
+                document.body.classList.toggle('reduce-animations', !currentAnimState);
+            }, 5000);
+        });
+    </script>
 </body>
 </html>
