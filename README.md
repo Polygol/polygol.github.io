@@ -8,10 +8,12 @@ Gurapps are apps that extend your Gurasuraisu experience. The GitHub repository 
 
 # Running Locally
 Gurapps: You must download the Gurapps from each GitHub repository and place them in the root directory in order for Gurapps to work correctly with Gurasuraisu locally.
+
 Assets: You must edit the directory path in the code, since every path assumes that the asset is in root.
 
 # Credits
 Gurapp Icons: kirbIndustries
+
 Timer Sound: Google
 
 ---
