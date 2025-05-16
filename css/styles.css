@@ -284,6 +284,7 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 3px;
     opacity: 1;
     max-width: 280px;
+    box-shadow: 0 0 0 1px var(--glass-border);
 }
 
 .persistent-clock {
