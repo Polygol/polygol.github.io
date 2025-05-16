@@ -5,7 +5,14 @@ Ambient display with clock, weather and advanced features without tracking you o
 **Visit at https://gurasuraisu.github.io**
 
 Gurapps are apps that extend your Gurasuraisu experience. The GitHub repository for each Gurapp are seperate from the `gurasuraisu.github.io` GitHub repository.
-You must download the Gurapps from each GitHub repository and place them in the root directory in order for Gurapps to work correctly with Gurasuraisu locally.
+
+# Running Locally
+Gurapps: You must download the Gurapps from each GitHub repository and place them in the root directory in order for Gurapps to work correctly with Gurasuraisu locally.
+Assets: You must edit the directory path in the code, since every path assumes that the asset is in root.
+
+# Credits
+Gurapp Icons: kirbIndustries
+Timer Sound: Google
 
 ---
 
