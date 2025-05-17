@@ -4039,7 +4039,7 @@ function setupDrawerInteractions() {
     let lastY = 0;
     let velocities = [];
     const flickVelocityThreshold = 0.4;
-    const dockThreshold = -10; // Threshold for dock appearance
+    const dockThreshold = -2.5; // Threshold for dock appearance
     const openThreshold = -50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
