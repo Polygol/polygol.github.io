@@ -4290,7 +4290,7 @@ function setupDrawerInteractions() {
             const currentY = e.touches[0].clientY;
             const deltaY = touchStartY - currentY;
             
-            if (deltaY > 20 && !isInSwipeMode) { // Detected upward swipe
+            if (deltaY > 25 && !isInSwipeMode) { // Detected upward swipe
                 isInSwipeMode = true;
                 startDrag(touchStartY);
                 // Capture all further events
@@ -4323,7 +4323,7 @@ function setupDrawerInteractions() {
             
             const deltaY = touchStartY - e.clientY;
             
-            if (deltaY > 20 && !isInSwipeMode) {
+            if (deltaY > 25 && !isInSwipeMode) {
                 isInSwipeMode = true;
                 startDrag(touchStartY);
                 swipeOverlay.style.pointerEvents = 'auto';
