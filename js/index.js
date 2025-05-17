@@ -4039,6 +4039,20 @@ function setupDrawerInteractions() {
             drawerPill.style.opacity = '1'; // Restore drawer-pill opacity when dock is hidden
         }
     });
+
+document.addEventListener('click', (e) => {
+    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+    
+    // Only execute this logic when an embed is open and the dock is showing
+    if (openEmbed && dock.classList.contains('show')) {
+        // If clicked outside the dock
+        if (!dock.contains(e.target)) {
+            dock.classList.remove('show');
+            dock.style.boxShadow = 'none';
+            drawerPill.style.opacity = '1';
+        }
+    }
+});
     
     // Make app drawer transparent when an app is open
     function updateDrawerOpacityForApps() {
