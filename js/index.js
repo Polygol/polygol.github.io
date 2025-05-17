@@ -4230,7 +4230,7 @@ function setupDrawerInteractions() {
             // Normal drawer behavior when no embed is open
             // Consider both movement percentage and velocity for flick gestures
             const isSignificantSwipe = movementPercentage > 25 || isFlickUp;
-            const isSmallSwipe = movementPercentage > 10 && movementPercentage <= 25;
+            const isSmallSwipe = movementPercentage > 2.5 && movementPercentage <= 25;
             
             // Small swipe - show dock
             if (isSmallSwipe && !isFlickUp) {
