@@ -4027,10 +4027,13 @@ function setupDrawerInteractions() {
     });
 
     document.addEventListener('click', (e) => {
+        // First check if a fullscreen embed is open
+        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+    
         if (!isDrawerInMotion && 
             !dock.contains(e.target) && 
             !drawerHandle.contains(e.target) && 
-            !appDrawer.classList.contains('open')) { // Only hide dock if drawer is closed
+            (openEmbed || !appDrawer.classList.contains('open'))) { // Close dock if embed is open OR drawer is closed
             dock.classList.remove('show');
             dock.style.boxShadow = 'none'; // Disable box shadow when hiding dock
             drawerPill.style.opacity = '1'; // Restore drawer-pill opacity when dock is hidden
