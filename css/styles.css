@@ -2184,6 +2184,12 @@ input[type="color"]::-moz-color-swatch {
     border: 1px solid var(--glass-border);
 }
 
+.controls-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
 .btn-qc {
     background-color: var(--overlay-color);
     color: var(--text-color);
@@ -2193,6 +2199,9 @@ input[type="color"]::-moz-color-swatch {
     width: 45px;
     height: 45px;
     border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .action-buttons {
