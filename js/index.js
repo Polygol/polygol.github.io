@@ -163,6 +163,21 @@ function promptToInstallPWA() {
     }
 }
 
+// Add 12/24 hour format functionality
+let use12HourFormat = localStorage.getItem('use12HourFormat') === 'true'; // Default to 24-hour format if not set
+
+// Setup the hour format toggle
+const hourFormatSwitch = document.getElementById('hour-switch');
+hourFormatSwitch.checked = use12HourFormat; // Initialize the switch state
+
+// Add event listener for the hour format toggle
+hourFormatSwitch.addEventListener('change', function() {
+  use12HourFormat = this.checked;
+  localStorage.setItem('use12HourFormat', use12HourFormat);
+  updateClockAndDate(); // Update clock immediately after change
+  updatePersistentClock(); // Update persistent clock too
+});
+
 // Function to get current time in 24-hour format (HH:MM:SS)
 function getCurrentTime24() {
     const now = new Date();
@@ -179,22 +194,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
     
-    function updatePersistentClock() {
-        const isModalOpen = 
-            timezoneModal.classList.contains('show') || 
-            customizeModal.classList.contains('show') ||
-            (appDrawer && appDrawer.classList.contains('open')) ||
-            document.querySelector('.fullscreen-embed[style*="display: block"]'); // Only count visible embeds
-            
-        if (isModalOpen) {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            persistentClock.textContent = `${hours}:${minutes}`;
-        } else {
-            persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
-        }
+function updatePersistentClock() {
+  const isModalOpen = 
+    timezoneModal.classList.contains('show') || 
+    customizeModal.classList.contains('show') ||
+    (appDrawer && appDrawer.classList.contains('open')) ||
+    document.querySelector('.fullscreen-embed[style*="display: block"]');
+    
+  if (isModalOpen) {
+    const now = new Date();
+    let hours = now.getHours();
+    let minutes = String(now.getMinutes()).padStart(2, '0');
+    
+    let displayHours;
+    let period = '';
+    
+    if (use12HourFormat) {
+      // 12-hour format
+      period = hours >= 12 ? ' PM' : ' AM';
+      displayHours = hours % 12 || 12;
+      displayHours = String(displayHours).padStart(2, '0');
+    } else {
+      // 24-hour format
+      displayHours = String(hours).padStart(2, '0');
     }
+    
+    persistentClock.textContent = `${displayHours}:${minutes}${period}`;
+  } else {
+    persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+  }
+}
     
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
@@ -258,38 +287,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Function to update the document title
 function updateTitle() {
-    if (timeLeft > 0 && timerId) {
-        document.title = `${formatTime(timeLeft)} ⏱️`;
+  if (timeLeft > 0 && timerId) {
+    document.title = `${formatTime(timeLeft)} ⏱️`;
+  } else {
+    let now = new Date();
+    let hours = now.getHours();
+    let minutes = String(now.getMinutes()).padStart(2, '0');
+    let seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    let displayHours;
+    let period = '';
+    
+    if (use12HourFormat) {
+      // 12-hour format
+      period = hours >= 12 ? ' PM' : ' AM';
+      displayHours = hours % 12 || 12;
+      displayHours = String(displayHours).padStart(2, '0');
     } else {
-        let now = new Date();
-        let hours = String(now.getHours()).padStart(2, '0');
-        let minutes = String(now.getMinutes()).padStart(2, '0');
-        let seconds = String(now.getSeconds()).padStart(2, '0');
-        
-        const timeString = showSeconds ? 
-            `${hours}:${minutes}:${seconds}` : 
-            `${hours}:${minutes}`;
-            
-        // Check if weather is enabled
-        const showWeather = localStorage.getItem('showWeather') !== 'false';
-        
-        let weatherString = '';
-        if (showWeather) {
-            const temperatureElement = document.getElementById('temperature');
-            const weatherIconElement = document.getElementById('weather-icon');
-            
-            if (temperatureElement && weatherIconElement && weatherIconElement.dataset.weatherCode) {
-                const temperature = temperatureElement.textContent.replace('°', '');
-                const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
-                
-                if (weatherConditionsForTitle[weatherCode]) {
-                    weatherString = ` | ${temperature}° ${weatherConditionsForTitle[weatherCode].icon}`;
-                }
-            }
-        }
-
-        document.title = `${timeString}${weatherString}`;
+      // 24-hour format
+      displayHours = String(hours).padStart(2, '0');
     }
+    
+    const timeString = showSeconds ? 
+      `${displayHours}:${minutes}:${seconds}${period}` : 
+      `${displayHours}:${minutes}${period}`;
+      
+    // Check if weather is enabled
+    const showWeather = localStorage.getItem('showWeather') !== 'false';
+    
+    let weatherString = '';
+    if (showWeather) {
+      const temperatureElement = document.getElementById('temperature');
+      const weatherIconElement = document.getElementById('weather-icon');
+      
+      if (temperatureElement && weatherIconElement && weatherIconElement.dataset.weatherCode) {
+        const temperature = temperatureElement.textContent.replace('°', '');
+        const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
+        
+        if (weatherConditionsForTitle[weatherCode]) {
+          weatherString = ` | ${temperature}° ${weatherConditionsForTitle[weatherCode].icon}`;
+        }
+      }
+    }
+
+    document.title = `${timeString}${weatherString}`;
+  }
 }
 
 // Function to check if it's daytime (between 6:00 and 18:00)
@@ -487,28 +529,41 @@ function setupWeatherToggle() {
 }
 
 function updateClockAndDate() {
-    let clockElement = document.getElementById('clock');
-    let dateElement = document.getElementById('date');
-    let modalTitle = document.querySelector('#customizeModal h2'); // Select the <h2> inside the modal
+  let clockElement = document.getElementById('clock');
+  let dateElement = document.getElementById('date');
+  let modalTitle = document.querySelector('#customizeModal h2');
+  
+  let now = new Date();
+  
+  let hours = now.getHours();
+  let minutes = String(now.getMinutes()).padStart(2, '0');
+  let seconds = String(now.getSeconds()).padStart(2, '0');
+  
+  let displayHours;
+  let period = '';
+  
+  if (use12HourFormat) {
+    // 12-hour format
+    period = hours >= 12 ? ' PM' : ' AM';
+    displayHours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
+    displayHours = String(displayHours).padStart(2, '0');
+  } else {
+    // 24-hour format
+    displayHours = String(hours).padStart(2, '0');
+  }
+  
+  clockElement.textContent = showSeconds ? 
+    `${displayHours}:${minutes}:${seconds}${period}` : 
+    `${displayHours}:${minutes}${period}`;
     
-    let now = new Date();
-    
-    let hours = String(now.getHours()).padStart(2, '0');
-    let minutes = String(now.getMinutes()).padStart(2, '0');
-    let seconds = String(now.getSeconds()).padStart(2, '0');
-    
-    clockElement.textContent = showSeconds ? 
-        `${hours}:${minutes}:${seconds}` : 
-        `${hours}:${minutes}`;
-        
-    let formattedDate = now.toLocaleDateString(undefined, {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric'
-    });
+  let formattedDate = now.toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
+  });
 
-    dateElement.textContent = formattedDate;
-    modalTitle.textContent = formattedDate; // Update <h2> with the date
+  dateElement.textContent = formattedDate;
+  if (modalTitle) modalTitle.textContent = formattedDate;
 }
 
 async function fetchLocationAndWeather() {
