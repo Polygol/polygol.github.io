@@ -3540,13 +3540,24 @@ function populateDock() {
         img.alt = name;
         
         dockIcon.appendChild(img);
-        dockIcon.addEventListener('click', () => {
-            // Update the last opened timestamp for this app
-            appLastOpened[name] = Date.now();
-            saveLastOpenedData();
-            createFullscreenEmbed(details.url);
-            populateDock();  // Refresh the dock after clicking
-        });
+	dockIcon.addEventListener('click', async () => {
+	    // Minimize current fullscreen embed if one is open
+	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    if (openEmbed) {
+	        minimizeFullscreenEmbed();
+	        
+	        // Slight delay to let minimize animation complete (optional but smooth)
+	        await new Promise(resolve => setTimeout(resolve, 300));
+	    }
+	
+	    // Update the last opened timestamp for this app
+	    appLastOpened[name] = Date.now();
+	    saveLastOpenedData();
+	
+	    // Open the new app
+	    createFullscreenEmbed(details.url);
+	    populateDock(); // Refresh the dock
+	});
         
         dock.appendChild(dockIcon);
     });
@@ -3598,6 +3609,7 @@ function createAppIcons() {
                 // Also save the timestamp when the app was opened
                 appLastOpened[app.name] = Date.now();
                 saveLastOpenedData();
+		populateDock();
                 
                 if (app.details.url.startsWith('#')) {
                     switch (app.details.url) {
