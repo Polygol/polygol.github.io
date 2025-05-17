@@ -2067,9 +2067,9 @@ input[type="color"]::-moz-color-swatch {
 #font-select option[value="DotGothic16"] { font-family: 'DotGothic16', monospace; }
 #font-select option[value="Iansui"] { font-family: 'Iansui', sans-serif; }
 #font-select option[value="Patrick Hand"] { font-family: 'Patrick Hand', cursive; }
-#font-select option[value="Cherry Bomb One"] { font-family: 'Rampart One', sans-serif; }
-#font-select option[value="Monomaniac One"] { font-family: 'Doto', monospace; }
-#font-select option[value="Monomaniac One"] { font-family: 'Nunito', sans-serif; }
+#font-select option[value="Rampart One"] { font-family: 'Rampart One', sans-serif; }
+#font-select option[value="Doto"] { font-family: 'Doto', monospace; }
+#font-select option[value="Nunito"] { font-family: 'Nunito', sans-serif; }
 
 .timer-circle {
     position: relative;
