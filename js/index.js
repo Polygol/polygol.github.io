@@ -1,8 +1,7 @@
-let currentLanguage = LANG_EN; // Default to English
+ let currentLanguage = LANG_EN; // Default to English
 
 function applyLanguage(language) {
     console.log('Applying language:', language);
-    document.getElementById('search-input').placeholder = language.SEARCH_PLACEHOLDER;
     document.querySelector('.modal-content h2').innerText = language.CONTROLS;
     document.querySelector('#silent_switch_qc .qc-label').innerText = language.SILENT;
     document.querySelector('#temp_control_qc .qc-label').innerText = language.TONE;
@@ -12,9 +11,6 @@ function applyLanguage(language) {
     // Updating text content without removing icons
     document.querySelector('.weather-settings .cust-label').childNodes[2].textContent = language.WEATHER;
     document.querySelector('.gurapps-optional .cust-label').childNodes[2].textContent = language.GURAPPS;
-    document.querySelector('.search-toggle .cust-label').childNodes[2].textContent = language.SEARCH_ENABLE;
-    document.querySelector('.search-engine-options .cust-label').childNodes[2].textContent = language.SEARCH_ENGINE;
-    document.querySelector('.search-ai-options .cust-label').childNodes[2].textContent = language.SEARCH_AI;
     document.querySelector('.clock-color-settings .cust-label').childNodes[2].textContent = language.CLOCK_COLOR;
     document.querySelector('.clock-settings .cust-label').childNodes[2].textContent = language.SECONDS;
     document.querySelector('.animation-settings .cust-label').childNodes[2].textContent = language.MOTION;
@@ -1471,351 +1467,6 @@ function createSetupScreen() {
     updateSetup();
 }
 
-const searchInput = document.getElementById('search-input');
-const searchIcon = document.getElementById('search-icon');
-const autocompleteSuggestions = document.getElementById('autocomplete-suggestions');
-
-// Add these variables at the top with your other constants
-const searchEngines = {
-    "Google": "https://www.google.com/search?q=",
-    "Bing": "https://www.bing.com/search?q=",
-    "DuckDuckGo": "https://duckduckgo.com/?q=",
-    "Brave": "https://search.brave.com/search?q=",
-    "Ecosia": "https://www.ecosia.org/search?q="
-};
-
-const aiEngines = {
-    "Bing AI": "https://www.bing.com/search?showconv=1&sendquery=1&q=",
-    "Perplexity": "https://www.perplexity.ai/search?q=",
-    "You.com": "https://you.com/search?q="
-};
-
-// Default engines
-let currentSearchEngine = "Google";
-let currentAIEngine = "Bing AI";
-let searchEnabled = true;
-
-// Initialize the search engine and AI selectors
-function initializeSelectorsSearch() {
-    const searchEngineSelect = document.getElementById('search-engine-select');
-    const searchAISelect = document.getElementById('search-ai-select');
-    const searchSwitch = document.getElementById('search-switch');
-    
-    // Clear existing options
-    searchEngineSelect.innerHTML = '';
-    searchAISelect.innerHTML = '';
-    
-    // Add search engine options
-    Object.keys(searchEngines).forEach(engine => {
-        const option = document.createElement('option');
-        option.value = engine;
-        option.textContent = engine;
-        option.selected = engine === currentSearchEngine;
-        searchEngineSelect.appendChild(option);
-    });
-    
-    // Add AI engine options
-    Object.keys(aiEngines).forEach(engine => {
-        const option = document.createElement('option');
-        option.value = engine;
-        option.textContent = engine;
-        option.selected = engine === currentAIEngine;
-        searchAISelect.appendChild(option);
-    });
-    
-    // Set up event listeners
-    searchEngineSelect.addEventListener('change', (e) => {
-        currentSearchEngine = e.target.value;
-        localStorage.setItem('preferredSearchEngine', currentSearchEngine);
-    });
-    
-    searchAISelect.addEventListener('change', (e) => {
-        currentAIEngine = e.target.value;
-        localStorage.setItem('preferredAIEngine', currentAIEngine);
-    });
-    
-    searchSwitch.checked = searchEnabled;
-    
-    // Function to toggle search elements visibility
-    function updateSearchElementsVisibility() {
-        // Get the search container and toggle its visibility
-        const searchContainer = document.querySelector('.search-container');
-        if (searchContainer) {
-            searchContainer.style.display = searchEnabled ? 'flex' : 'none';
-        }
-        
-        // Also hide search engine and AI options
-        const searchEngineOptions = document.querySelector('.search-engine-options');
-        const searchAIOptions = document.querySelector('.search-ai-options');
-        
-        if (searchEngineOptions) {
-            searchEngineOptions.style.display = searchEnabled ? 'flex' : 'none';
-        }
-        
-        if (searchAIOptions) {
-            searchAIOptions.style.display = searchEnabled ? 'flex' : 'none';
-        }
-    }
-    
-    // Initial check when DOM loads
-    updateSearchElementsVisibility();
-    
-    searchSwitch.addEventListener('change', (e) => {
-        searchEnabled = e.target.checked;
-        localStorage.setItem('searchEnabled', searchEnabled.toString());
-        updateSearchElementsVisibility();
-    });
-}
-
-// Load saved preferences
-function loadPreferencesSearch() {
-    const savedSearchEngine = localStorage.getItem('preferredSearchEngine');
-    const savedAIEngine = localStorage.getItem('preferredAIEngine');
-    const savedSearchEnabled = localStorage.getItem('searchEnabled');
-    
-    if (savedSearchEngine && searchEngines[savedSearchEngine]) {
-        currentSearchEngine = savedSearchEngine;
-    }
-    
-    if (savedAIEngine && aiEngines[savedAIEngine]) {
-        currentAIEngine = savedAIEngine;
-    }
-    
-    if (savedSearchEnabled !== null) {
-        searchEnabled = savedSearchEnabled === 'true';
-        
-        // Apply visibility setting on load
-        const searchContainer = document.querySelector('.search-container');
-        if (searchContainer) {
-            searchContainer.style.display = searchEnabled ? 'flex' : 'none';
-        }
-    }
-}
-
-const appLinks = {
-    "Chronos": "https://gurasuraisu.github.io/chronos",
-    "Ailuator": "https://gurasuraisu.github.io/ailuator",
-    "Wordy": "https://gurasuraisu.github.io/wordy",
-    "Music": "https://gurasuraisu.github.io/music",
-    "Fantaskical": "https://gurasuraisu.github.io/fantaskical",
-    "Clapper": "https://gurasuraisu.github.io/clapper",
-    "SketchPad": "https://gurasuraisu.github.io/sketchpad",
-    "Invitations": "https://gurasuraisu.github.io/invitations",
-    "Weather": "https://gurasuraisu.github.io/weather",
-};
-
-function fuzzySearch(query, appList) {
-    const threshold = 0.5;
-    let bestMatch = null;
-    let highestScore = 0;
-
-    function similarity(s1, s2) {
-        let longer = s1;
-        let shorter = s2;
-        if (s1.length < s2.length) {
-            longer = s2;
-            shorter = s1;
-        }
-        const longerLength = longer.length;
-        if (longerLength === 0) return 1.0;
-        const editDistance = getEditDistance(longer, shorter);
-        return (longerLength - editDistance) / parseFloat(longerLength);
-    }
-
-    function getEditDistance(s1, s2) {
-        const costs = [];
-        for (let i = 0; i <= s1.length; i++) {
-            let lastValue = i;
-            for (let j = 0; j <= s2.length; j++) {
-                if (i === 0) costs[j] = j;
-                else {
-                    if (j > 0) {
-                        let newValue = costs[j - 1];
-                        if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
-                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-                        }
-                        costs[j - 1] = lastValue;
-                        lastValue = newValue;
-                    }
-                }
-            }
-            if (i > 0) costs[s2.length] = lastValue;
-        }
-        return costs[s2.length];
-    }
-
-    Object.keys(appList).forEach(app => {
-        const score = similarity(query.toLowerCase(), app.toLowerCase());
-        if (score > highestScore && score >= threshold) {
-            highestScore = score;
-            bestMatch = app;
-        }
-    });
-
-    return bestMatch;
-}
-
-function updateSearchIcon(query) {
-    // First check if the query matches any app
-    const bestMatch = fuzzySearch(query, appLinks);
-    if (bestMatch) {
-        searchIcon.textContent = 'grid_view';
-        return;
-    }
-
-    const firstWord = query.split(' ')[0].toLowerCase();
-    if (firstWord === "how" || firstWord === "help" || firstWord === "ai" || firstWord === "why" ||
-       firstWord === "what" || firstWord === "when" || firstWord === "where" || firstWord === "who" ||
-       firstWord === "which" || firstWord === "can" || firstWord === "could" || firstWord === "should" ||
-       firstWord === "would" || firstWord === "will" || firstWord === "does" || firstWord === "do" ||
-       firstWord === "is" || firstWord === "are" || firstWord === "may" || firstWord === "might" ||
-       firstWord === "shall" || firstWord === "must" || firstWord === "has" || firstWord === "have" ||
-       firstWord === "had" || firstWord === "were" || firstWord === "was" || firstWord === "did" ||
-       firstWord === "please" || firstWord === "tell" || firstWord === "explain" || firstWord === "show" ||
-       firstWord === "describe" || firstWord === "suggest" || firstWord === "recommend" || firstWord === "need" ||
-       firstWord === "anybody" || firstWord === "anyone" || firstWord === "anything" || firstWord === "wonder" ||
-       firstWord === "whose" || firstWord === "whom" || firstWord === "whence" || firstWord === "whither" ||
-       firstWord === "whether" || firstWord === "hasn't" || firstWord === "haven't" || firstWord === "hadn't" ||
-       firstWord === "wouldn't" || firstWord === "won't" || firstWord === "wasn't" || firstWord === "weren't" ||
-       firstWord === "shouldn't" || firstWord === "isn't" || firstWord === "aren't" || firstWord === "ain't" ||
-       firstWord === "doesn't" || firstWord === "don't" || firstWord === "didn't" || firstWord === "couldn't" ||
-       firstWord === "cannot" || firstWord === "can't" || firstWord === "mightn't" || firstWord === "mustn't" ||
-       firstWord === "define" || firstWord === "compare" || firstWord === "contrast" || firstWord === "analyze" ||
-       firstWord === "evaluate" || firstWord === "assess" || firstWord === "examine" || firstWord === "discuss" ||
-       firstWord === "outline" || firstWord === "summarize" || firstWord === "suppose" || firstWord === "consider" ||
-       firstWord === "give" || firstWord === "state" || firstWord === "determine" || firstWord === "calculate" ||
-       firstWord === "compute" || firstWord === "solve" || firstWord === "find" || firstWord === "identify" ||
-       firstWord === "list" || firstWord === "name" || firstWord === "specify" || firstWord === "advise" ||
-       firstWord === "assist" || firstWord === "aid" || firstWord === "support" || firstWord === "guide" ||
-       firstWord === "clarify" || firstWord === "elaborate" || firstWord === "illustrate" || firstWord === "demonstrate" ||
-       firstWord === "somebody" || firstWord === "someone" || firstWord === "something" || firstWord === "somewhere" ||
-       firstWord === "let" || firstWord === "kindly" || firstWord === "pray" || firstWord === "assist" ||
-       firstWord === "hey" || firstWord === "hi" || firstWord === "hello" || firstWord === "greetings" ||
-       firstWord === "excuse" || firstWord === "pardon" || firstWord === "sorry" || firstWord === "appreciate" ||
-       firstWord === "thanks" || firstWord === "thank" || firstWord === "help" || firstWord === "lookup" ||
-       firstWord === "search" || firstWord === "find" || firstWord === "check" || firstWord === "confirm" ||
-       firstWord === "verify" || firstWord === "validate" || firstWord === "review" || firstWord === "investigate" ||
-       firstWord === "wondering" || firstWord === "curious" || firstWord === "interested" || firstWord === "seeking") {
-        searchIcon.textContent = 'forum';
-    } else {
-        searchIcon.textContent = 'search';
-    }
-}
-
-function handleAppRedirect(query) {
-    const bestMatch = fuzzySearch(query, appLinks);
-    if (bestMatch) {
-        const appLink = appLinks[bestMatch];
-        createFullscreenEmbed(appLink);
-        return true;
-    }
-    return false;
-}
-
-function showAutocomplete(query) {
-    autocompleteSuggestions.innerHTML = '';
-
-    if (query.length > 0) {
-        const matchedApps = Object.keys(appLinks).filter(app => app.toLowerCase().startsWith(query.toLowerCase()));
-        matchedApps.forEach(app => {
-            const suggestionItem = document.createElement('div');
-            suggestionItem.classList.add('autocomplete-suggestion');
-            suggestionItem.textContent = app;
-            suggestionItem.addEventListener('click', () => {
-                searchInput.value = app;
-                autocompleteSuggestions.innerHTML = '';
-            });
-            autocompleteSuggestions.appendChild(suggestionItem);
-        });
-    }
-}
-
-searchInput.addEventListener('input', (event) => {
-    const query = searchInput.value.trim();
-    updateSearchIcon(query);
-    showAutocomplete(query);
-});
-
-searchInput.addEventListener('blur', () => {
-    // Hide autocomplete suggestions
-    autocompleteSuggestions.innerHTML = '';
-    
-    // Reset the search text to blank (if you want to clear it on blur)
-    searchInput.value = '';
-    
-    // Reset the search icon to default
-    searchIcon.textContent = 'search';
-});
-
-searchInput.addEventListener('click', () => {
-    searchInput.select();
-});
-searchInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-        const query = searchInput.value.trim();
-        updateSearchIcon(query);
-        
-        if (handleAppRedirect(query)) {
-            searchInput.value = ''; // Clear search input
-            autocompleteSuggestions.innerHTML = ''; // Clear autocomplete suggestions
-            searchIcon.textContent = 'search'; // Reset icon to default
-            searchInput.blur(); // Remove focus
-            return;
-        }
-        
-        if (searchEnabled) {
-            const firstWord = query.split(' ')[0].toLowerCase();
-            if (firstWord === "how" || firstWord === "help" || firstWord === "ai" || firstWord === "why" ||
-            firstWord === "what" || firstWord === "when" || firstWord === "where" || firstWord === "who" ||
-            firstWord === "which" || firstWord === "can" || firstWord === "could" || firstWord === "should" ||
-            firstWord === "would" || firstWord === "will" || firstWord === "does" || firstWord === "do" ||
-            firstWord === "is" || firstWord === "are" || firstWord === "may" || firstWord === "might" ||
-            firstWord === "shall" || firstWord === "must" || firstWord === "has" || firstWord === "have" ||
-            firstWord === "had" || firstWord === "were" || firstWord === "was" || firstWord === "did" ||
-            firstWord === "please" || firstWord === "tell" || firstWord === "explain" || firstWord === "show" ||
-            firstWord === "describe" || firstWord === "suggest" || firstWord === "recommend" || firstWord === "need" ||
-            firstWord === "anybody" || firstWord === "anyone" || firstWord === "anything" || firstWord === "wonder" ||
-            firstWord === "whose" || firstWord === "whom" || firstWord === "whence" || firstWord === "whither" ||
-            firstWord === "whether" || firstWord === "hasn't" || firstWord === "haven't" || firstWord === "hadn't" ||
-            firstWord === "wouldn't" || firstWord === "won't" || firstWord === "wasn't" || firstWord === "weren't" ||
-            firstWord === "shouldn't" || firstWord === "isn't" || firstWord === "aren't" || firstWord === "ain't" ||
-            firstWord === "doesn't" || firstWord === "don't" || firstWord === "didn't" || firstWord === "couldn't" ||
-            firstWord === "cannot" || firstWord === "can't" || firstWord === "mightn't" || firstWord === "mustn't" ||
-            firstWord === "define" || firstWord === "compare" || firstWord === "contrast" || firstWord === "analyze" ||
-            firstWord === "evaluate" || firstWord === "assess" || firstWord === "examine" || firstWord === "discuss" ||
-            firstWord === "outline" || firstWord === "summarize" || firstWord === "suppose" || firstWord === "consider" ||
-            firstWord === "give" || firstWord === "state" || firstWord === "determine" || firstWord === "calculate" ||
-            firstWord === "compute" || firstWord === "solve" || firstWord === "find" || firstWord === "identify" ||
-            firstWord === "list" || firstWord === "name" || firstWord === "specify" || firstWord === "advise" ||
-            firstWord === "assist" || firstWord === "aid" || firstWord === "support" || firstWord === "guide" ||
-            firstWord === "clarify" || firstWord === "elaborate" || firstWord === "illustrate" || firstWord === "demonstrate" ||
-            firstWord === "somebody" || firstWord === "someone" || firstWord === "something" || firstWord === "somewhere" ||
-            firstWord === "let" || firstWord === "kindly" || firstWord === "pray" || firstWord === "assist" ||
-            firstWord === "hey" || firstWord === "hi" || firstWord === "hello" || firstWord === "greetings" ||
-            firstWord === "excuse" || firstWord === "pardon" || firstWord === "sorry" || firstWord === "appreciate" ||
-            firstWord === "thanks" || firstWord === "thank" || firstWord === "help" || firstWord === "lookup" ||
-            firstWord === "search" || firstWord === "find" || firstWord === "check" || firstWord === "confirm" ||
-            firstWord === "verify" || firstWord === "validate" || firstWord === "review" || firstWord === "investigate" ||
-            firstWord === "wondering" || firstWord === "curious" || firstWord === "interested" || firstWord === "seeking") {
-                createFullscreenEmbed(`${aiEngines[currentAIEngine]}${encodeURIComponent(query)}`);
-            } else if (query) {
-                createFullscreenEmbed(`${searchEngines[currentSearchEngine]}${encodeURIComponent(query)}`);
-            }
-        }
-        
-        searchInput.value = ''; // Clear search input
-        autocompleteSuggestions.innerHTML = ''; // Clear autocomplete suggestions
-        searchIcon.textContent = 'search'; // Reset icon to default
-        searchInput.blur(); // Remove focus
-    }
-});
-
-// Initialize everything when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    loadPreferencesSearch();
-    initializeSelectorsSearch();
-});
-
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize control states
     const storedLightMode = localStorage.getItem('theme') || 'dark';
@@ -2081,14 +1732,6 @@ function updateGurappsVisibility() {
         
         // Reset app functionality
         document.body.classList.remove("gurapps-disabled");
-        
-        // Re-enable search for apps
-        const appKeys = Object.keys(appLinks);
-        appKeys.forEach(key => {
-            if (key !== "Google") { // Keep Google search available
-                appLinks[key] = apps[key].url;
-            }
-        });
     } else {
         // Hide Gurapps elements
         if (drawerHandle) drawerHandle.style.display = "none";
@@ -2105,14 +1748,6 @@ function updateGurappsVisibility() {
             appDrawer.classList.remove("open");
             initialDrawerPosition = -100;
         }
-        
-        // Disable search for apps
-        const appKeys = Object.keys(appLinks);
-        appKeys.forEach(key => {
-            if (key !== "Google") { // Keep Google search available
-                delete appLinks[key];
-            }
-        });
     }
 }
 
@@ -2125,9 +1760,7 @@ gurappsSwitch.addEventListener("change", function() {
 
 function updateMinimalMode() {
     const elementsToHide = [
-        document.getElementById('search-container'),
         document.getElementById('weather'),
-        document.getElementById('customize'),
         document.querySelector('.info'),
         document.querySelector('.clockwidgets')
     ];
@@ -2145,12 +1778,6 @@ function updateMinimalMode() {
             document.getElementById('weather').style.display = 
                 localStorage.getItem('showWeather') !== 'false' ? 'block' : 'none';
         }
-        
-        if (document.getElementById('search-container'))
-            document.getElementById('search-container').style.display = 'flex';
-        
-        if (document.getElementById('customize'))
-            document.getElementById('customize').style.display = 'block';
             
         if (document.querySelector('.info'))
             document.querySelector('.info').style.display = '';
@@ -3604,7 +3231,7 @@ function createFullscreenEmbed(url) {
             }, 300);
         });
 
-        const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .font-selection, .search-toggle, .search-engine-options, .search-ai-options, .weight-slider-container');
+        const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .font-selection, .weight-slider-container');
         controlElements.forEach(el => {
             // Store ALL relevant original styles
             if (!el.dataset.originalStyles) {
@@ -3729,7 +3356,7 @@ function createFullscreenEmbed(url) {
         }, 300);
     });
 
-    const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .font-selection, .search-toggle, .search-engine-options, .search-ai-options, .weight-slider-container');
+    const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .font-selection, .weight-slider-container');
     controlElements.forEach(el => {
         // Store ALL relevant original styles
         if (!el.dataset.originalStyles) {
@@ -3839,7 +3466,7 @@ function minimizeFullscreenEmbed() {
         });
     });
 	
-    const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .font-selection, .search-toggle, .search-engine-options, .search-ai-options, .weight-slider-container');
+    const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .font-selection, .weight-slider-container');
     controlElements.forEach(el => {
         // Get original styles from stored data
         let originalStyles = {};
@@ -3890,19 +3517,7 @@ function minimizeFullscreenEmbed() {
 }
 
 function populateDock() {
-    // Only add the search container if it's not already there
-    if (!dock.querySelector('.search-container')) {
-        const searchContainer = document.createElement('div');
-        searchContainer.className = 'search-container';
-        searchContainer.innerHTML = `
-            <span id="search-icon" class="material-symbols-rounded search-icon">search</span>
-            <input type="text" class="search-input" id="search-input" placeholder="LANG_SEARCH_PLACEHOLDER">
-            <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
-        `;
-        dock.appendChild(searchContainer);
-    }
-    
-    // Clear only the app icons (not the search bar)
+    // Clear only the app icons
     const appIcons = dock.querySelectorAll('.dock-icon');
     appIcons.forEach(icon => icon.remove());
     
@@ -4646,21 +4261,6 @@ document.addEventListener('keydown', (event) => {
                 }, 300);
             }
         });
-    }
-});
-
-// Add event listener for spacebar
-document.addEventListener('keydown', (event) => {
-    // Check if the key pressed is spacebar
-    if (event.code === 'Space' || event.key === ' ') {
-        // Check if no modals are open by checking the blur overlay's display state
-        if (
-            document.activeElement.tagName !== 'INPUT' && 
-            blurOverlay.style.display !== 'block'
-        ) {
-            event.preventDefault(); // Prevent spacebar from scrolling the page
-            searchInput.focus();
-        }
     }
 });
 
