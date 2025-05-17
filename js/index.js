@@ -4039,7 +4039,7 @@ function setupDrawerInteractions() {
     let lastY = 0;
     let velocities = [];
     const flickVelocityThreshold = 0.4;
-    const dockThreshold = -5; // Threshold for dock appearance
+    const dockThreshold = -10; // Threshold for dock appearance
     const openThreshold = -50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
@@ -4125,7 +4125,7 @@ function setupDrawerInteractions() {
         }
         
         // Show dock and hide drawer-pill
-        if (movementPercentage > 10 && movementPercentage < 25) {
+        if (movementPercentage > 2.5 && movementPercentage < 25) {
             dock.classList.add('show');
             dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; 
             drawerPill.style.opacity = '0';
