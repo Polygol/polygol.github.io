@@ -2194,11 +2194,11 @@ input[type="color"]::-moz-color-swatch {
 .btn-qc {
     background-color: var(--overlay-color);
     color: var(--text-color);
-    border-radius: 30px;
+    border-radius: 32px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    width: 45px;
-    height: 45px;
+    width: 32px;
+    height: 32px;
     border: 1px solid var(--glass-border);
     display: flex;
     align-items: center;
