@@ -3826,7 +3826,7 @@ function setupDrawerInteractions() {
             appDrawer.style.opacity = '0';
             
             // Handle dock visibility for smaller swipes
-            if (movementPercentage > 10 && movementPercentage <= 25) {
+            if (movementPercentage > 2.5 && movementPercentage <= 25) {
                 dock.classList.add('show');
                 dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; // Enable box shadow when visible
                 appDrawer.style.bottom = '-100%';
@@ -4248,7 +4248,6 @@ document.getElementById("versionButton").addEventListener("click", function() {
 
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
-        closeFullscreenEmbed();
         // Close all modals
         [timezoneModal, customizeModal].forEach(modal => {
             if (modal.classList.contains('show')) {
@@ -4257,7 +4256,6 @@ document.addEventListener('keydown', (event) => {
                 setTimeout(() => {
                     modal.style.display = 'none';
                     blurOverlay.style.display = 'none';
-                    
                 }, 300);
             }
         });
