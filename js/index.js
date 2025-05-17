@@ -341,8 +341,8 @@ function isDaytimeForHour(timeString) {
     return hour >= 6 && hour <= 18;
 }
 
-// Start an interval to update the title every second
-setInterval(updateTitle, 1000);
+// Start an interval to update the title
+setInterval(updateTitle, 500);
 
 // Title weather conditions using emojis
         const weatherConditionsForTitle = {
@@ -707,7 +707,7 @@ closeModal.addEventListener('click', () => {
     }, 300);
 });
 
-setInterval(updateClockAndDate, 1000);
+setInterval(updateClockAndDate, 500);
 setInterval(updateSmallWeather, 600000);
 updateClockAndDate();
 updateSmallWeather();
