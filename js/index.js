@@ -3545,9 +3545,6 @@ function populateDock() {
 	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
 	    if (openEmbed) {
 	        minimizeFullscreenEmbed();
-	        
-	        // Slight delay to let minimize animation complete (optional but smooth)
-	        await new Promise(resolve => setTimeout(resolve, 300));
 	    }
 	
 	    // Update the last opened timestamp for this app
