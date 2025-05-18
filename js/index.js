@@ -957,30 +957,30 @@ function showPopup(message) {
     
     // If there are already 2 popups, remove the oldest one
     if (existingPopups.length >= 2) {
-       document.body.removeChild(existingPopups[0]);
+        document.body.removeChild(existingPopups[0]);
     }
     // Recalculate positions for all popups
     const remainingPopups = document.querySelectorAll('.popup');
     remainingPopups.forEach((p, index) => {
-       p.style.bottom = `${10 + (index * 10)}vh`; // Spacing between popups, from bottom
+        p.style.bottom = `${20 + (index * 70)}px`; // 70px spacing between popups, from bottom
     });
     // Position the new popup
-    popup.style.bottom = `${10 + (remainingPopups.length * 10)}vh`;
+    popup.style.bottom = `${20 + (remainingPopups.length * 70)}px`;
     
     document.body.appendChild(popup);
     setTimeout(() => {
-       popup.style.opacity = '0';
-       setTimeout(() => {
-           if (document.body.contains(popup)) {
-               document.body.removeChild(popup);
-               // Readjust positions of remaining popups
-               const remainingPopups = document.querySelectorAll('.popup');
-               remainingPopups.forEach((p, index) => {
-                   p.style.bottom = `${10 + (index * 10)}vh`;
-               });
-           }
-       }, 500);
-    }, 5000);
+        popup.style.opacity = '0';
+        setTimeout(() => {
+            if (document.body.contains(popup)) {
+                document.body.removeChild(popup);
+                // Readjust positions of remaining popups
+                const remainingPopups = document.querySelectorAll('.popup');
+                remainingPopups.forEach((p, index) => {
+                    p.style.bottom = `${20 + (index * 70)}px`;
+                });
+            }
+        }, 500);
+    }, 3000);
 }
 
 function showNotification(message, options = {}) {
