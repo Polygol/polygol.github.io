@@ -962,10 +962,10 @@ function showPopup(message) {
     // Recalculate positions for all popups
     const remainingPopups = document.querySelectorAll('.popup');
     remainingPopups.forEach((p, index) => {
-        p.style.bottom = `calc(10vh + ${index * 20}px)`; // Base at 10vh, with 20px spacing between popups
+        p.style.bottom = `calc(10vh + ${index * 80}px)`; // Base at 10vh, with 80px spacing between popups
     });
     // Position the new popup
-    popup.style.bottom = `calc(10vh + ${remainingPopups.length * 20}px)`;
+    popup.style.bottom = `calc(10vh + ${remainingPopups.length * 80}px)`;
     
     document.body.appendChild(popup);
     setTimeout(() => {
@@ -976,7 +976,7 @@ function showPopup(message) {
                 // Readjust positions of remaining popups
                 const remainingPopups = document.querySelectorAll('.popup');
                 remainingPopups.forEach((p, index) => {
-                    p.style.bottom = `calc(10vh + ${index * 20}px)`;
+                    p.style.bottom = `calc(10vh + ${index * 80}px)`;
                 });
             }
         }, 500);
