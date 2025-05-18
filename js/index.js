@@ -1663,7 +1663,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-const customizeButton = document.getElementById('customize');
 const customizeModal = document.getElementById('customizeModal');
 const themeSwitch = document.getElementById('theme-switch');
 const wallpaperInput = document.getElementById('wallpaperInput');
@@ -1826,16 +1825,6 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-// Customize modal functionality
-customizeButton.addEventListener('click', () => {
-    customizeModal.style.display = 'block';
-    blurOverlayControls.style.display = 'block';
-    setTimeout(() => {
-        customizeModal.classList.add('show');
-        blurOverlayControls.classList.add('show');
-    }, 10);
-});
 
 // Wallpaper upload functionality
 uploadButton.addEventListener('click', () => {
