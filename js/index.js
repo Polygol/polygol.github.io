@@ -984,6 +984,204 @@ function showPopup(message) {
 }
 
 function showNotification(message, options = {}) {
+    // Create both an on-screen popup and a persistent notification in the shade
+    const popupNotification = createOnScreenPopup(message, options);
+    const shadeNotification = addToNotificationShade(message, options);
+    
+    // Return control methods for both notification types
+    return {
+        closePopup: popupNotification.close,
+        closeShade: shadeNotification.close,
+        update: (newMessage) => {
+            popupNotification.update(newMessage);
+            shadeNotification.update(newMessage);
+        }
+    };
+}
+
+// Creates a temporary on-screen popup (similar to original showPopup)
+function createOnScreenPopup(message, options = {}) {
+    const popup = document.createElement('div');
+    popup.className = 'on-screen-notification';
+    popup.style.position = 'fixed';
+    popup.style.top = '20px';
+    popup.style.left = '50%';
+    popup.style.transform = 'translateX(-50%)';
+    popup.style.backgroundColor = 'var(--search-background)';
+    popup.style.backdropFilter = 'blur(50px)';
+    popup.style.color = 'var(--text-color)';
+    popup.style.padding = '20px';
+    popup.style.borderRadius = '30px';
+    popup.style.zIndex = '9999996';
+    popup.style.transition = 'opacity 0.5s';
+    popup.style.display = 'flex';
+    popup.style.alignItems = 'center';
+    popup.style.gap = '10px';
+    popup.style.border = '1px solid var(--glass-border)';
+    
+    // Check for specific words to determine icon
+    const checkWords = window.checkWords || ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'successfully', 'accepted', 'accept', 'yes'];
+    const closeWords = window.closeWords || ['failed', 'canceled', 'error', 'failure', 'fail', 'cancel', 'rejected', 'reject', 'not', 'no'];
+    
+    let iconType = '';
+    if (options.icon) {
+        iconType = options.icon;
+    } else if (checkWords.some(word => message.toLowerCase().includes(word))) {
+        iconType = 'check_circle';
+    } else if (closeWords.some(word => message.toLowerCase().includes(word))) {
+        iconType = 'error';
+    } else {
+        iconType = 'info';
+    }
+    
+    // Add icon
+    const icon = document.createElement('span');
+    icon.className = 'material-symbols-rounded';
+    icon.textContent = iconType;
+    popup.appendChild(icon);
+    
+    // Add message text
+    const messageText = document.createElement('div');
+    messageText.textContent = message;
+    popup.appendChild(messageText);
+    
+    // Check if a button should be added
+    if (options.buttonText) {
+        const actionButton = document.createElement('button');
+        actionButton.textContent = options.buttonText;
+        actionButton.style.marginLeft = '10px';
+        actionButton.style.padding = '8px 16px';
+        actionButton.style.borderRadius = '18px';
+        actionButton.style.border = 'none';
+        actionButton.style.backgroundColor = 'var(--accent-color, #0084ff)';
+        actionButton.style.color = 'white';
+        actionButton.style.cursor = 'pointer';
+        
+        if (options.buttonAction && typeof options.buttonAction === 'function') {
+            actionButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                options.buttonAction();
+            });
+        }
+        
+        popup.appendChild(actionButton);
+    }
+    
+    // Special handling for fullscreen notification
+    if (message === (currentLanguage && currentLanguage.NOT_FULLSCREEN)) {
+        // Clear existing content
+        while (popup.firstChild) {
+            popup.removeChild(popup.firstChild);
+        }
+        
+        // Make the popup background invisible
+        popup.style.backgroundColor = 'transparent';
+        popup.style.backdropFilter = 'none';
+        popup.style.padding = '0';
+        
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.style.padding = '10px 10px';
+        fullscreenBtn.style.borderRadius = '25px';
+        fullscreenBtn.style.border = 'none';
+        fullscreenBtn.style.backgroundColor = 'var(--search-background)';
+        fullscreenBtn.style.backdropFilter = 'blur(50px)';
+        fullscreenBtn.style.color = 'var(--text-color)';
+        fullscreenBtn.style.cursor = 'pointer';
+        fullscreenBtn.style.display = 'flex';
+        fullscreenBtn.style.alignItems = 'center';
+        fullscreenBtn.style.justifyContent = 'center';
+        fullscreenBtn.style.gap = '5px';
+        fullscreenBtn.style.fontFamily = 'Inter, sans-serif';
+        fullscreenBtn.style.height = '36px';
+        
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-rounded';
+        icon.textContent = 'fullscreen';
+        icon.style.fontFamily = 'Material Symbols Rounded';
+        icon.style.fontSize = '20px';
+        icon.style.lineHeight = '1';
+        icon.style.display = 'flex';
+        icon.style.alignItems = 'center';
+        
+        const buttonText = document.createElement('span');
+        buttonText.textContent = (currentLanguage && currentLanguage.FULLSCREEN) || 'Fullscreen';
+        buttonText.style.lineHeight = '1';
+        
+        fullscreenBtn.appendChild(icon);
+        fullscreenBtn.appendChild(buttonText);
+        
+        fullscreenBtn.addEventListener('click', function() {
+            if (typeof goFullscreen === 'function') {
+                goFullscreen();
+            }
+            
+            // Remove the popup after clicking the button
+            if (document.body.contains(popup)) {
+                document.body.removeChild(popup);
+            }
+        });
+        
+        popup.appendChild(fullscreenBtn);
+    }
+    
+    // Get all existing popups
+    const existingPopups = document.querySelectorAll('.on-screen-notification');
+    
+    // If there are already 2 popups, remove the oldest one
+    if (existingPopups.length >= 2) {
+        document.body.removeChild(existingPopups[0]);
+    }
+    
+    // Recalculate positions for all popups
+    const remainingPopups = document.querySelectorAll('.on-screen-notification');
+    remainingPopups.forEach((p, index) => {
+        p.style.top = `${20 + (index * 70)}px`;
+    });
+    
+    // Position the new popup
+    popup.style.top = `${20 + (remainingPopups.length * 70)}px`;
+    
+    document.body.appendChild(popup);
+    
+    // Auto-dismiss on-screen popup after 7.5 seconds
+    const timeoutId = setTimeout(() => {
+        popup.style.opacity = '0';
+        setTimeout(() => {
+            if (document.body.contains(popup)) {
+                document.body.removeChild(popup);
+                // Readjust positions of remaining popups
+                const remainingPopups = document.querySelectorAll('.on-screen-notification');
+                remainingPopups.forEach((p, index) => {
+                    p.style.top = `${20 + (index * 70)}px`;
+                });
+            }
+        }, 500);
+    }, 7500);
+    
+    // Return control methods
+    return {
+        close: () => {
+            clearTimeout(timeoutId);
+            popup.style.opacity = '0';
+            setTimeout(() => {
+                if (document.body.contains(popup)) {
+                    document.body.removeChild(popup);
+                    // Readjust positions of remaining popups
+                    const remainingPopups = document.querySelectorAll('.on-screen-notification');
+                    remainingPopups.forEach((p, index) => {
+                        p.style.top = `${20 + (index * 70)}px`;
+                    });
+                }
+            }, 500);
+        },
+        update: (newMessage) => {
+            messageText.textContent = newMessage;
+        }
+    };
+}
+
+// Adds a notification to the notification shade
+function addToNotificationShade(message, options = {}) {
     // Get or create notification shade
     let shade = document.querySelector('.notification-shade');
     if (!shade) {
@@ -998,13 +1196,13 @@ function showNotification(message, options = {}) {
         shade.style.overflowY = 'auto';
         shade.style.zIndex = '9999995';
         shade.style.padding = '20px';
-        shade.style.pointerEvents = 'none'; // Make shade transparent to clicks by default
+        shade.style.pointerEvents = 'none';
         document.body.appendChild(shade);
     }
     
     // Create notification element
     const notification = document.createElement('div');
-    notification.className = 'notification';
+    notification.className = 'shade-notification';
     notification.style.backgroundColor = 'var(--search-background)';
     notification.style.backdropFilter = 'blur(50px)';
     notification.style.color = 'var(--text-color)';
@@ -1019,7 +1217,7 @@ function showNotification(message, options = {}) {
     notification.style.flexDirection = 'column';
     notification.style.gap = '10px';
     notification.style.border = '1px solid var(--glass-border)';
-    notification.style.pointerEvents = 'auto'; // Make notification clickable
+    notification.style.pointerEvents = 'auto';
     
     // Content container
     const contentContainer = document.createElement('div');
@@ -1053,6 +1251,7 @@ function showNotification(message, options = {}) {
     // Create message text
     const messageText = document.createElement('div');
     messageText.style.flex = '1';
+    messageText.style.wordBreak = 'break-word';
     messageText.textContent = message;
     contentContainer.appendChild(messageText);
     
@@ -1198,21 +1397,8 @@ function showNotification(message, options = {}) {
         notification.style.transform = 'translateX(0)';
     }, 50);
     
-    // Auto-dismiss after 7.5 seconds
-    const timeoutId = setTimeout(() => {
-        closeNotification(notification);
-    }, 7500);
-    
-    // Store the timeout ID to cancel if needed
-    notification.dataset.timeoutId = timeoutId;
-    
     // Function to close a notification
     function closeNotification(notif) {
-        // Clear the timeout to prevent duplicate removal attempts
-        if (notif.dataset.timeoutId) {
-            clearTimeout(parseInt(notif.dataset.timeoutId));
-        }
-        
         // Animate out
         notif.style.opacity = '0';
         notif.style.transform = 'translateX(50px)';
@@ -1221,12 +1407,6 @@ function showNotification(message, options = {}) {
         setTimeout(() => {
             if (shade.contains(notif)) {
                 shade.removeChild(notif);
-            }
-            
-            // If no more notifications, consider removing the shade
-            if (shade.children.length === 0) {
-                // Optional: Remove shade when empty
-                // document.body.removeChild(shade);
             }
         }, 300);
     }
