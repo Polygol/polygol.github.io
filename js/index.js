@@ -1,4 +1,4 @@
- let currentLanguage = LANG_EN; // Default to English
+let currentLanguage = LANG_EN; // Default to English
 
 function applyLanguage(language) {
     console.log('Applying language:', language);
@@ -848,7 +848,7 @@ updateActionButtons();
 function showPopup(message) {
     const popup = document.createElement('div');
     popup.style.position = 'fixed';
-    popup.style.top = '20px';
+    popup.style.bottom = '30px';
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'var(--search-background)';
@@ -984,6 +984,263 @@ function showPopup(message) {
             }
         }, 500);
     }, 5000);
+}
+
+function showNotification(message, options = {}) {
+    // Get or create notification shade
+    let shade = document.querySelector('.notification-shade');
+    if (!shade) {
+        shade = document.createElement('div');
+        shade.className = 'notification-shade';
+        shade.style.position = 'fixed';
+        shade.style.top = '0';
+        shade.style.right = '0';
+        shade.style.width = '350px';
+        shade.style.maxWidth = '100%';
+        shade.style.height = '100%';
+        shade.style.overflowY = 'auto';
+        shade.style.zIndex = '9999995';
+        shade.style.padding = '20px';
+        shade.style.pointerEvents = 'none'; // Make shade transparent to clicks by default
+        document.body.appendChild(shade);
+    }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.style.backgroundColor = 'var(--search-background)';
+    notification.style.backdropFilter = 'blur(50px)';
+    notification.style.color = 'var(--text-color)';
+    notification.style.padding = '15px';
+    notification.style.borderRadius = '20px';
+    notification.style.marginBottom = '15px';
+    notification.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+    notification.style.transition = 'all 0.3s ease';
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateX(50px)';
+    notification.style.display = 'flex';
+    notification.style.flexDirection = 'column';
+    notification.style.gap = '10px';
+    notification.style.border = '1px solid var(--glass-border)';
+    notification.style.pointerEvents = 'auto'; // Make notification clickable
+    
+    // Content container
+    const contentContainer = document.createElement('div');
+    contentContainer.style.display = 'flex';
+    contentContainer.style.alignItems = 'center';
+    contentContainer.style.gap = '10px';
+    contentContainer.style.width = '100%';
+    
+    // Determine if we need an icon
+    const checkWords = window.checkWords || ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'successfully', 'accepted', 'accept', 'yes'];
+    const closeWords = window.closeWords || ['failed', 'canceled', 'error', 'failure', 'fail', 'cancel', 'rejected', 'reject', 'not', 'no'];
+    
+    let iconType = '';
+    if (options.icon) {
+        iconType = options.icon;
+    } else if (checkWords.some(word => message.toLowerCase().includes(word))) {
+        iconType = 'check_circle';
+    } else if (closeWords.some(word => message.toLowerCase().includes(word))) {
+        iconType = 'error';
+    } else {
+        iconType = 'info';
+    }
+    
+    // Create icon
+    const icon = document.createElement('span');
+    icon.className = 'material-symbols-rounded';
+    icon.textContent = iconType;
+    icon.style.fontSize = '24px';
+    contentContainer.appendChild(icon);
+    
+    // Create message text
+    const messageText = document.createElement('div');
+    messageText.style.flex = '1';
+    messageText.textContent = message;
+    contentContainer.appendChild(messageText);
+    
+    // Close button
+    const closeBtn = document.createElement('span');
+    closeBtn.className = 'material-symbols-rounded';
+    closeBtn.textContent = 'close';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.fontSize = '20px';
+    closeBtn.style.opacity = '0.7';
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeNotification(notification);
+    });
+    closeBtn.style.transition = 'opacity 0.2s';
+    closeBtn.addEventListener('mouseover', () => {
+        closeBtn.style.opacity = '1';
+    });
+    closeBtn.addEventListener('mouseout', () => {
+        closeBtn.style.opacity = '0.7';
+    });
+    contentContainer.appendChild(closeBtn);
+    
+    notification.appendChild(contentContainer);
+    
+    // Add action button if specified
+    if (options.buttonText) {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'flex-end';
+        
+        const actionButton = document.createElement('button');
+        actionButton.textContent = options.buttonText;
+        actionButton.style.padding = '8px 16px';
+        actionButton.style.borderRadius = '18px';
+        actionButton.style.border = 'none';
+        actionButton.style.backgroundColor = 'var(--accent-color, #0084ff)';
+        actionButton.style.color = 'white';
+        actionButton.style.cursor = 'pointer';
+        actionButton.style.fontFamily = 'inherit';
+        actionButton.style.fontSize = '14px';
+        actionButton.style.transition = 'background-color 0.2s';
+        
+        actionButton.addEventListener('mouseover', () => {
+            actionButton.style.backgroundColor = 'var(--accent-hover-color, #0073e6)';
+        });
+        
+        actionButton.addEventListener('mouseout', () => {
+            actionButton.style.backgroundColor = 'var(--accent-color, #0084ff)';
+        });
+        
+        if (options.buttonAction && typeof options.buttonAction === 'function') {
+            actionButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                options.buttonAction();
+                closeNotification(notification);
+            });
+        }
+        
+        buttonContainer.appendChild(actionButton);
+        notification.appendChild(buttonContainer);
+    }
+    
+    // Add fullscreen button if the message is about fullscreen
+    if (message === (currentLanguage && currentLanguage.NOT_FULLSCREEN)) {
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.style.display = 'flex';
+        fullscreenBtn.style.alignItems = 'center';
+        fullscreenBtn.style.justifyContent = 'center';
+        fullscreenBtn.style.gap = '5px';
+        fullscreenBtn.style.width = '100%';
+        fullscreenBtn.style.padding = '10px';
+        fullscreenBtn.style.borderRadius = '18px';
+        fullscreenBtn.style.border = 'none';
+        fullscreenBtn.style.backgroundColor = 'var(--accent-color, #0084ff)';
+        fullscreenBtn.style.color = 'white';
+        fullscreenBtn.style.cursor = 'pointer';
+        
+        const fsIcon = document.createElement('span');
+        fsIcon.className = 'material-symbols-rounded';
+        fsIcon.textContent = 'fullscreen';
+        
+        const fsText = document.createElement('span');
+        fsText.textContent = (currentLanguage && currentLanguage.FULLSCREEN) || 'Fullscreen';
+        
+        fullscreenBtn.appendChild(fsIcon);
+        fullscreenBtn.appendChild(fsText);
+        
+        fullscreenBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (typeof goFullscreen === 'function') {
+                goFullscreen();
+            }
+            closeNotification(notification);
+        });
+        
+        notification.appendChild(fullscreenBtn);
+    }
+    
+    // Add swipe capability
+    let startX = 0;
+    let currentX = 0;
+    
+    notification.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+    }, { passive: true });
+    
+    notification.addEventListener('touchmove', (e) => {
+        currentX = e.touches[0].clientX;
+        const diff = currentX - startX;
+        
+        // Only allow right swipe (positive diff)
+        if (diff > 0) {
+            notification.style.transform = `translateX(${diff}px)`;
+            notification.style.opacity = 1 - (diff / 200);
+        }
+    }, { passive: true });
+    
+    notification.addEventListener('touchend', () => {
+        const diff = currentX - startX;
+        if (diff > 100) {
+            // Swipe threshold reached, dismiss notification
+            notification.style.transform = 'translateX(400px)';
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                if (shade.contains(notification)) {
+                    shade.removeChild(notification);
+                }
+            }, 300);
+        } else {
+            // Reset position
+            notification.style.transform = 'translateX(0)';
+            notification.style.opacity = '1';
+        }
+    });
+    
+    // Add to notification shade
+    shade.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    }, 50);
+    
+    // Auto-dismiss after 7.5 seconds
+    const timeoutId = setTimeout(() => {
+        closeNotification(notification);
+    }, 7500);
+    
+    // Store the timeout ID to cancel if needed
+    notification.dataset.timeoutId = timeoutId;
+    
+    // Function to close a notification
+    function closeNotification(notif) {
+        // Clear the timeout to prevent duplicate removal attempts
+        if (notif.dataset.timeoutId) {
+            clearTimeout(parseInt(notif.dataset.timeoutId));
+        }
+        
+        // Animate out
+        notif.style.opacity = '0';
+        notif.style.transform = 'translateX(50px)';
+        
+        // Remove after animation completes
+        setTimeout(() => {
+            if (shade.contains(notif)) {
+                shade.removeChild(notif);
+            }
+            
+            // If no more notifications, consider removing the shade
+            if (shade.children.length === 0) {
+                // Optional: Remove shade when empty
+                // document.body.removeChild(shade);
+            }
+        }, 300);
+    }
+    
+    // Return object with methods for controlling the notification
+    return {
+        close: () => closeNotification(notification),
+        update: (newMessage) => {
+            messageText.textContent = newMessage;
+        }
+    };
 }
 
 function isFullScreen() {
