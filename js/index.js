@@ -848,7 +848,7 @@ updateActionButtons();
 function showPopup(message) {
     const popup = document.createElement('div');
     popup.style.position = 'fixed';
-    popup.style.bottom = '30px';
+    popup.style.bottom = '10vh';
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'var(--search-background)';
