@@ -1209,7 +1209,6 @@ function addToNotificationShade(message, options = {}) {
     notification.style.padding = '15px';
     notification.style.borderRadius = '20px';
     notification.style.marginBottom = '15px';
-    notification.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
     notification.style.transition = 'all 0.3s ease';
     notification.style.opacity = '0';
     notification.style.transform = 'translateX(50px)';
@@ -1226,20 +1225,7 @@ function addToNotificationShade(message, options = {}) {
     contentContainer.style.gap = '10px';
     contentContainer.style.width = '100%';
     
-    // Determine if we need an icon
-    const checkWords = window.checkWords || ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'successfully', 'accepted', 'accept', 'yes'];
-    const closeWords = window.closeWords || ['failed', 'canceled', 'error', 'failure', 'fail', 'cancel', 'rejected', 'reject', 'not', 'no'];
-    
-    let iconType = '';
-    if (options.icon) {
-        iconType = options.icon;
-    } else if (checkWords.some(word => message.toLowerCase().includes(word))) {
-        iconType = 'check_circle';
-    } else if (closeWords.some(word => message.toLowerCase().includes(word))) {
-        iconType = 'error';
-    } else {
-        iconType = 'info';
-    }
+    let iconType = 'notifications';
     
     // Create icon
     const icon = document.createElement('span');
