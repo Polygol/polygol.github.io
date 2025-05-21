@@ -22,6 +22,7 @@ const ASSETS_TO_CACHE = [
   '/assets/appicon/notes.png',
   '/assets/appicon/mail.png',
   '/assets/appicon/appstore.png',
+  '/assets/marketing/hero3.png',
   '/assets/sound/timer.mp3',
   'https://www.gstatic.com/delight/funbox/timer_utilitarian_v2.mp3',
   'https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js',
