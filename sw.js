@@ -20,7 +20,7 @@ const ASSETS_TO_CACHE = [
   '/assets/appicon/tasks.png',
   '/assets/appicon/video.png',
   '/assets/appicon/weather.png',
-  '/assets/appicon/notes.png',
+  '/assets/appicon/sketch.png',
   '/assets/appicon/mail.png',
   '/assets/appicon/game.png',
   '/assets/appicon/camera.png',
