@@ -335,11 +335,13 @@ input[type="color"]::-moz-color-swatch {
     user-select: none;
     font-variant-numeric: tabular-nums;
     display: flex;
-    align-items: center; /* Keeps the image and text aligned */
-    gap: 8px; /* Adds spacing between image and text */
+    align-items: center;
+    gap: 8px;
     cursor: pointer;
     transform: scale(1);
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+    position: relative;
+    backdrop-filter: blur(0.1px);
 }
 
 .persistent-clock::before {
@@ -349,20 +351,19 @@ input[type="color"]::-moz-color-swatch {
     z-index: -1;
     backdrop-filter: blur(1px);
     border-radius: inherit;
+    mask-image: radial-gradient(circle, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 1) 100%);
+    -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 1) 100%);
 }
 
 .persistent-clock::after {
     content: "";
     position: absolute;
-    width: 80%;
-    height: 80%;
-    top: 10%;
-    left: 10%;
+    inset: 0;
     z-index: -2;
     backdrop-filter: blur(10px);
     border-radius: inherit;
-    mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 70%);
-    -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 70%);
+    mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 60%);
+    -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 60%);
 }
 
 .persistent-clock:active {
