@@ -269,10 +269,7 @@ function updatePersistentClock() {
     bodyObserver.observe(document.body, { childList: true, subtree: true });
     
     // Update clock
-    setInterval(updatePersistentClock, 500);
-    
-    // Initial update
-    updatePersistentClock();
+    startSynchronizedUpdates();
 }); 
 
 // Function to update the document title
@@ -701,10 +698,33 @@ closeModal.addEventListener('click', () => {
     }, 300);
 });
 
-setInterval(updateClockAndDate, 500);
+function startSynchronizedUpdates() {
+  function scheduleNextUpdate() {
+    const now = new Date();
+    const msUntilNextSecond = 1000 - now.getMilliseconds();
+    
+    setTimeout(() => {
+      updateClockAndDate();
+      updatePersistentClock();
+      
+      setInterval(() => {
+        updateClockAndDate();
+        updatePersistentClock();
+      }, 1000);
+    }, msUntilNextSecond);
+  }
+  
+  // Initial updates
+  updateClockAndDate();
+  updatePersistentClock();
+  
+  // Start synchronized updates
+  scheduleNextUpdate();
+}
+
+startSynchronizedUpdates();
+
 setInterval(updateSmallWeather, 600000);
-updateClockAndDate();
-updateSmallWeather();
 
 // Timer Variables
 let totalTime = 0;
