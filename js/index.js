@@ -269,7 +269,7 @@ function updatePersistentClock() {
     bodyObserver.observe(document.body, { childList: true, subtree: true });
     
     // Update clock
-    setInterval(updatePersistentClock, 500);
+    setInterval(updatePersistentClock, 30000);
     
     // Initial update
     updatePersistentClock();
@@ -336,7 +336,7 @@ function isDaytimeForHour(timeString) {
 }
 
 // Start an interval to update the title
-setInterval(updateTitle, 500);
+setInterval(updateTitle, 1000);
 
 // Title weather conditions using emojis
         const weatherConditionsForTitle = {
