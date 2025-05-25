@@ -3564,7 +3564,7 @@ const apps = {
         icon: "tasks.png"
     },
     "Moments": {
-        url: "/appstore/index.html",
+        url: "/moments/index.html",
         icon: "photos.png"
     },
     "Music": {
