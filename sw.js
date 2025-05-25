@@ -11,6 +11,7 @@ const ASSETS_TO_CACHE = [
   '/assets/gurasuraisu.png',
   '/assets/gurasuraisu-icon.png',
   '/assets/gurasuraisu-icon-alt.png',
+  '/assets/appicon/default.png',
   '/assets/appicon/alarm.png',
   '/assets/appicon/calculator.png',
   '/assets/appicon/docs.png',
@@ -21,7 +22,8 @@ const ASSETS_TO_CACHE = [
   '/assets/appicon/weather.png',
   '/assets/appicon/notes.png',
   '/assets/appicon/mail.png',
-  '/assets/appicon/appstore.png',
+  '/assets/appicon/game.png',
+  '/assets/appicon/camera.png',
   '/assets/marketing/hero3.png',
   '/assets/sound/timer.mp3',
   'https://www.gstatic.com/delight/funbox/timer_utilitarian_v2.mp3',
@@ -47,7 +49,8 @@ const ASSETS_TO_CACHE = [
   '/fantaskical/index.html',
   '/clapper/index.html',
   '/weather/index.html',
-  '/appstore/index.html'
+  '/joyful/index.html'
+  '/camera/index.html'
 ];
 
 self.addEventListener('install', event => {
