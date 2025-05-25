@@ -269,24 +269,11 @@ function updatePersistentClock() {
     bodyObserver.observe(document.body, { childList: true, subtree: true });
     
     // Update clock
-    startSynchronizedPersistentClock();
-});
-
-function startSynchronizedPersistentClock() {
-  function scheduleNextUpdate() {
-    const now = new Date();
-    const msUntilNextSecond = 1000 - now.getMilliseconds();
+    setInterval(updatePersistentClock, 500);
     
-    setTimeout(() => {
-      updatePersistentClock();
-      
-      setInterval(updatePersistentClock, 1000);
-    }, msUntilNextSecond);
-  }
-  
-  updatePersistentClock(); // Initial update
-  scheduleNextUpdate();
-}
+    // Initial update
+    updatePersistentClock();
+}); 
 
 // Function to update the document title
 function updateTitle() {
