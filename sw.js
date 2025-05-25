@@ -49,7 +49,8 @@ const ASSETS_TO_CACHE = [
   '/fantaskical/index.html',
   '/clapper/index.html',
   '/weather/index.html',
-  '/joyful/index.html'
+  '/moments/index.html',
+  '/joyful/index.html',
   '/camera/index.html'
 ];
 
