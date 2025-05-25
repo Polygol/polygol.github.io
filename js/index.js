@@ -269,8 +269,24 @@ function updatePersistentClock() {
     bodyObserver.observe(document.body, { childList: true, subtree: true });
     
     // Update clock
-    startSynchronizedUpdates();
-}); 
+    startSynchronizedPersistentClock();
+});
+
+function startSynchronizedPersistentClock() {
+  function scheduleNextUpdate() {
+    const now = new Date();
+    const msUntilNextSecond = 1000 - now.getMilliseconds();
+    
+    setTimeout(() => {
+      updatePersistentClock();
+      
+      setInterval(updatePersistentClock, 1000);
+    }, msUntilNextSecond);
+  }
+  
+  updatePersistentClock(); // Initial update
+  scheduleNextUpdate();
+}
 
 // Function to update the document title
 function updateTitle() {
@@ -553,6 +569,22 @@ function updateClockAndDate() {
   if (modalTitle) modalTitle.textContent = formattedDate;
 }
 
+function startSynchronizedClockAndDate() {
+  function scheduleNextUpdate() {
+    const now = new Date();
+    const msUntilNextSecond = 1000 - now.getMilliseconds();
+    
+    setTimeout(() => {
+      updateClockAndDate();
+      
+      setInterval(updateClockAndDate, 1000);
+    }, msUntilNextSecond);
+  }
+  
+  updateClockAndDate(); // Initial update
+  scheduleNextUpdate();
+}
+
 async function fetchLocationAndWeather() {
     return new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(async (position) => {
@@ -698,33 +730,9 @@ closeModal.addEventListener('click', () => {
     }, 300);
 });
 
-function startSynchronizedUpdates() {
-  function scheduleNextUpdate() {
-    const now = new Date();
-    const msUntilNextSecond = 1000 - now.getMilliseconds();
-    
-    setTimeout(() => {
-      updateClockAndDate();
-      updatePersistentClock();
-      
-      setInterval(() => {
-        updateClockAndDate();
-        updatePersistentClock();
-      }, 1000);
-    }, msUntilNextSecond);
-  }
-  
-  // Initial updates
-  updateClockAndDate();
-  updatePersistentClock();
-  
-  // Start synchronized updates
-  scheduleNextUpdate();
-}
-
-startSynchronizedUpdates();
-
+startSynchronizedClockAndDate();
 setInterval(updateSmallWeather, 600000);
+updateSmallWeather();
 
 // Timer Variables
 let totalTime = 0;
