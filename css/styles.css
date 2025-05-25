@@ -251,7 +251,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .drawer-handle {
-    position: absolute;
+    position: fixed !important;
     bottom: 0;
     left: 0;
     right: 0;
