@@ -3559,17 +3559,25 @@ const apps = {
         url: "/wordy/index.html",
         icon: "docs.png"
     },
-    "Music": {
-        url: "/music/index.html",
-        icon: "music.png"
-    },
     "Fantaskical": {
         url: "/fantaskical/index.html",
         icon: "tasks.png"
     },
+    "Moments": {
+        url: "/appstore/index.html",
+        icon: "photos.png"
+    },
+    "Music": {
+        url: "/music/index.html",
+        icon: "music.png"
+    },
     "Clapper": {
         url: "/clapper/index.html",
         icon: "video.png"
+    },
+    "Joyful": {
+        url: "/joyful/index.html",
+        icon: "game.png"
     },
     "SketchPad": {
         url: "/sketchpad/index.html",
@@ -3582,6 +3590,10 @@ const apps = {
     "Weather": {
         url: "/weather/index.html",
         icon: "weather.png"
+    },
+    "Camera": {
+        url: "/camera/index.html",
+        icon: "camera.png"
     }
 };
 
@@ -4001,7 +4013,7 @@ function createAppIcons() {
         img.src = `/assets/appicon/${app.details.icon}`;
         img.alt = app.name;
         img.onerror = () => {
-            img.src = '/assets/appicon/question.png';
+            img.src = '/assets/appicon/default.png';
         };
         
         const label = document.createElement('span');
