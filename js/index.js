@@ -5001,7 +5001,9 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeWallpaperTracking();
   
   // Initialize and prepare to apply the correct wallpaper
-  await initializeAndApplyWallpaper();
+  initializeAndApplyWallpaper().catch(error => {
+      console.error("Error initializing wallpaper:", error);
+  });
     
   // Create the initial page indicator
   initializePageIndicator();
