@@ -3581,7 +3581,7 @@ const apps = {
     },
     "SketchPad": {
         url: "/sketchpad/index.html",
-        icon: "notes.png"
+        icon: "sketch.png"
     },
     "Invitations": {
         url: "/invitations/index.html",
