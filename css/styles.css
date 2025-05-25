@@ -2234,7 +2234,7 @@ input[type="color"]::-moz-color-swatch {
         #dock {
             transform-origin: bottom;
             will-change: transform, opacity;
-            transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+            transition: all 0.3s cubic-bezier(.3,1.2,.64,1);
         }
 
         .dock.show {
