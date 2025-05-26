@@ -2251,7 +2251,7 @@ input[type="color"]::-moz-color-swatch {
             transform: translateX(-50%);
             background: var(--search-background);
             backdrop-filter: blur(50px);
-            border: 2px solid var(--transparent-color);
+            border: 1px solid var(--transparent-color);
             border-radius: 36px;
             padding: 8px 10px;
             display: flex;
