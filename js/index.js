@@ -5064,6 +5064,13 @@ window.addEventListener('load', checkScreenSize);
 // Check when window is resized
 window.addEventListener('resize', checkScreenSize);
 
+window.addEventListener('message', (event) => {
+  console.log('📥 Parent received message:', {
+    origin: event.origin,
+    data: event.data,
+  });
+});
+
     // Initialize app drawer
     function initAppDraw() {
         createAppIcons();
