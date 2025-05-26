@@ -165,7 +165,6 @@ hourFormatSwitch.addEventListener('change', function() {
   use12HourFormat = this.checked;
   localStorage.setItem('use12HourFormat', use12HourFormat);
   updateClockAndDate(); // Update clock immediately after change
-  updatePersistentClock(); // Update persistent clock too
 });
 
 // Function to get current time in 24-hour format (HH:MM:SS)
