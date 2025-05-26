@@ -3704,6 +3704,8 @@ function createFullscreenEmbed(url) {
     // Create new embed if not already minimized
     const iframe = document.createElement('iframe');
     iframe.src = url;
+    const appId = Object.keys(apps).find(k => apps[k].url === url);
+    iframe.dataset.appId = appId;
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allowfullscreen', '');
     
@@ -5066,16 +5068,22 @@ window.addEventListener('load', checkScreenSize);
 window.addEventListener('resize', checkScreenSize);
 
 // Gurapp to Gurapp functionality
-window.addEventListener('message', (event) => {
-    if (event.origin !== window.location.origin) return;
+window.addEventListener('message', event => {
+  if (event.origin !== window.location.origin) return;
 
-    // Relay to all iframes
-    const iframes = document.querySelectorAll('iframe');
-    for (const iframe of iframes) {
-        if (iframe.contentWindow !== event.source) {
-            iframe.contentWindow.postMessage(event.data, window.location.origin);
-        }
-    }
+  const { targetApp, ...payload } = event.data;
+  if (!targetApp) return;         // ignore if no target specified
+
+  // find the iframe for that app
+  const iframe = document.querySelector(
+    `iframe[data-app-id="${targetApp}"]`
+  );
+  if (!iframe) {
+    console.warn(`No iframe for app "${targetApp}"`);
+    return;
+  }
+
+  iframe.contentWindow.postMessage(payload, window.location.origin);
 });
 
     // Initialize app drawer
