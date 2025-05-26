@@ -1948,14 +1948,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update current document
         document.body.classList.toggle('light-theme', newTheme === 'light');
 
-        // Notify other components via postMessage
-        window.postMessage(
-           { 
-                type: 'themeUpdate', 
-                theme: newTheme 
-            }, 
-            window.location.origin
-        );
+	const iframes = document.querySelectorAll('iframe');
+	iframes.forEach((iframe) => {
+	    iframe.contentWindow.postMessage({
+	        type: 'themeUpdate',
+	        theme: newTheme
+	    }, window.location.origin);
+	});
     });
     
     // Event listener for minimal mode control
@@ -2141,11 +2140,13 @@ animationSwitch.addEventListener('change', function() {
     localStorage.setItem('animationsEnabled', enableAnimations);
     document.body.classList.toggle('reduce-animations', !enableAnimations);
     
-    // Send message to app side to sync animation preference
-    window.postMessage({
-        type: 'animationsUpdate',
-        enabled: enableAnimations
-    }, window.location.origin);
+    const iframes = document.querySelectorAll('iframe');
+    iframes.forEach((iframe) => {
+        iframe.contentWindow.postMessage({
+            type: 'animationsUpdate',
+            enabled: animationsEnabled  // true or false
+        }, window.location.origin);
+    });
 });
 
 // Function to handle Gurapps visibility
