@@ -5064,11 +5064,17 @@ window.addEventListener('load', checkScreenSize);
 // Check when window is resized
 window.addEventListener('resize', checkScreenSize);
 
+// Gurapp to Gurapp functionality
 window.addEventListener('message', (event) => {
-  console.log('📥 Parent received message:', {
-    origin: event.origin,
-    data: event.data,
-  });
+    if (event.origin !== window.location.origin) return;
+
+    // Relay to all iframes
+    const iframes = document.querySelectorAll('iframe');
+    for (const iframe of iframes) {
+        if (iframe.contentWindow !== event.source) {
+            iframe.contentWindow.postMessage(event.data, window.location.origin);
+        }
+    }
 });
 
     // Initialize app drawer
