@@ -2197,6 +2197,8 @@ input[type="color"]::-moz-color-swatch {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             gap: 15px;
+            max-height: 90vh;
+            width: 100%;
         }
 
         .app-icon {
@@ -2216,8 +2218,8 @@ input[type="color"]::-moz-color-swatch {
         }
 
         .app-icon img {
-            width: 75%;
-            height: 75%;
+            width: min(10vw, 128px);
+            height: min(10vw, 128px);
             margin-bottom: 10px;
             object-fit: contain;
         }
