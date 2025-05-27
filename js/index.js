@@ -181,6 +181,18 @@ const persistentClock = document.getElementById('persistent-clock');
 // Store persistent display data from apps
 const persistentDisplayData = new Map();
 
+let clockUpdateInterval;
+
+function startClockUpdates() {
+    if (clockUpdateInterval) clearInterval(clockUpdateInterval);
+        
+    // Update less frequently when album art is present to avoid flickering
+    const hasAlbumArt = persistentDisplayData.size > 0;
+    const updateFrequency = hasAlbumArt ? 60000 : 30000; // 60s vs 30s
+        
+    clockUpdateInterval = setInterval(updatePersistentClockDisplay, updateFrequency);
+}
+
 function handlePersistentDisplayMessage(data) {
     const { action, data: payload } = data;
     const appId = payload.appId;
@@ -232,17 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
-    let clockUpdateInterval;
-
-    function startClockUpdates() {
-        if (clockUpdateInterval) clearInterval(clockUpdateInterval);
-        
-        // Update less frequently when album art is present to avoid flickering
-        const hasAlbumArt = persistentDisplayData.size > 0;
-        const updateFrequency = hasAlbumArt ? 60000 : 30000; // 60s vs 30s
-        
-        clockUpdateInterval = setInterval(updatePersistentClockDisplay, updateFrequency);
-    }
     
     // Modified updatePersistentClockDisplay function
     window.updatePersistentClockDisplay = function updatePersistentClock() {
