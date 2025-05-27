@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const customizeModal = document.getElementById('customizeModal');
     
     // Modified updatePersistentClockDisplay function
-    window.updatePersistentClockDisplay = function updatePersistentClock() {
+    javascriptwindow.updatePersistentClockDisplay = function updatePersistentClock() {
         const isModalOpen = 
             timezoneModal.classList.contains('show') || 
             customizeModal.classList.contains('show') ||
@@ -255,44 +255,37 @@ document.addEventListener('DOMContentLoaded', () => {
             
         if (isModalOpen) {
             const activeAppData = getActivePersistentData();
-            const originalContent = getOriginalClockContent();
-            
-            // Check if we need to update the structure
-            const currentAppData = persistentClock.querySelector('.app-data');
-            const currentTimeData = persistentClock.querySelector('.original-content');
+            const currentTimeContent = getOriginalClockContent();
             
             if (activeAppData) {
-                // If structure doesn't exist, create it
-                if (!currentAppData || !currentTimeData) {
+                // Check if structure exists, create only if missing
+                let appDataDiv = persistentClock.querySelector('.app-data');
+                let timeDiv = persistentClock.querySelector('.original-content');
+                
+                if (!appDataDiv || !timeDiv) {
+                    // Only create structure if it doesn't exist
                     persistentClock.innerHTML = `
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <div class="app-data"></div>
                             <div class="original-content"></div>
                         </div>
                     `;
+                    appDataDiv = persistentClock.querySelector('.app-data');
+                    timeDiv = persistentClock.querySelector('.original-content');
+                    
+                    // Set app data only when creating new structure
+                    appDataDiv.innerHTML = getPersistentDisplayContent(activeAppData);
                 }
                 
-                // Update content without rebuilding DOM structure
-                const appDataDiv = persistentClock.querySelector('.app-data');
-                const timeDiv = persistentClock.querySelector('.original-content');
+                // Always update time content (this is the main clock update)
+                timeDiv.innerHTML = currentTimeContent;
                 
-                // Only update app data if it's different
-                const newAppContent = getPersistentDisplayContent(activeAppData);
-                if (appDataDiv.innerHTML !== newAppContent) {
-                    appDataDiv.innerHTML = newAppContent;
-                }
-                
-                // Only update time if it's different
-                if (timeDiv.innerHTML !== originalContent) {
-                    timeDiv.innerHTML = originalContent;
-                }
             } else {
-                // Only update if content is different
-                if (persistentClock.innerHTML !== originalContent) {
-                    persistentClock.innerHTML = originalContent;
-                }
+                // No app data, show only clock
+                persistentClock.innerHTML = currentTimeContent;
             }
         } else {
+            // Modal closed, show icon
             const iconContent = '<span class="material-symbols-rounded">page_info</span>';
             if (persistentClock.innerHTML !== iconContent) {
                 persistentClock.innerHTML = iconContent;
