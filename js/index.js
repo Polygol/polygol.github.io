@@ -180,7 +180,7 @@ const persistentClock = document.getElementById('persistent-clock');
     
 // Store persistent display data from apps
 const persistentDisplayData = new Map();
-let lastActiveAppData = null; // Store the last active data to persist it
+let lastKnownAppData = null; // Persist last known app data
 
 let clockUpdateInterval;
 
@@ -191,7 +191,11 @@ function startClockUpdates() {
     const hasAlbumArt = persistentDisplayData.size > 0;
     const updateFrequency = hasAlbumArt ? 60000 : 30000; // 60s vs 30s
         
-    clockUpdateInterval = setInterval(updatePersistentClockDisplay, updateFrequency);
+    clockUpdateInterval = setInterval(() => {
+        if (typeof window.updatePersistentClockDisplay === 'function') {
+            window.updatePersistentClockDisplay();
+        }
+    }, updateFrequency);
 }
 
 function handlePersistentDisplayMessage(data) {
@@ -200,38 +204,44 @@ function handlePersistentDisplayMessage(data) {
     
     switch (action) {
         case 'updateAlbumArt':
-            persistentDisplayData.set(appId, {
+            const albumData = {
                 type: 'albumArt',
                 albumArt: payload.albumArt,
                 appId: appId,
                 timestamp: Date.now()
-            });
+            };
+            persistentDisplayData.set(appId, albumData);
+            lastKnownAppData = albumData; // Store as last known
             break;
             
         case 'updateIcon':
-            persistentDisplayData.set(appId, {
+            const iconData = {
                 type: 'icon',
                 icon: payload.icon,
                 appId: appId,
                 timestamp: Date.now()
-            });
+            };
+            persistentDisplayData.set(appId, iconData);
+            lastKnownAppData = iconData; // Store as last known
             break;
             
         case 'updateCustom':
-            persistentDisplayData.set(appId, {
+            const customData = {
                 type: 'custom',
                 content: payload.content,
                 appId: appId,
                 timestamp: Date.now()
-            });
+            };
+            persistentDisplayData.set(appId, customData);
+            lastKnownAppData = customData; // Store as last known
             break;
             
         case 'clearAlbumArt':
         case 'clear':
             persistentDisplayData.delete(appId);
-            // Only clear lastActiveAppData if it's from the same app
-            if (lastActiveAppData && lastActiveAppData.appId === appId) {
-                lastActiveAppData = null;
+            // Only clear lastKnownAppData if it matches this app
+            if (lastKnownAppData && lastKnownAppData.appId === appId) {
+                lastKnownAppData = null;
             }
             break;
     }
@@ -240,8 +250,8 @@ function handlePersistentDisplayMessage(data) {
     startClockUpdates();
     
     // Update display immediately
-    if (typeof updatePersistentClockDisplay === 'function') {
-        updatePersistentClockDisplay();
+    if (typeof window.updatePersistentClockDisplay === 'function') {
+        window.updatePersistentClockDisplay();
     }
 }
 
@@ -250,64 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const persistentClockElement = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
     
-    // Make this function globally accessible
-    window.updatePersistentClockDisplay = function updatePersistentClock() {
-        const isModalOpen = 
-            timezoneModal.classList.contains('show') || 
-            customizeModal.classList.contains('show') ||
-            (appDrawer && appDrawer.classList.contains('open')) ||
-            document.querySelector('.fullscreen-embed[style*="display: block"]');
-            
-        if (isModalOpen) {
-            const activeAppData = getActivePersistentData();
-            const currentTimeContent = getOriginalClockContent();
-            
-            // Use active data or fallback to last known data
-            const displayData = activeAppData || lastActiveAppData;
-            
-            // Update lastActiveAppData if we have new data
-            if (activeAppData) {
-                lastActiveAppData = activeAppData;
-            }
-            
-            if (displayData) {
-                // Check if structure exists
-                let appDataDiv = persistentClockElement.querySelector('.app-data');
-                let timeDiv = persistentClockElement.querySelector('.original-content');
-                
-                if (!appDataDiv || !timeDiv) {
-                    // Create structure
-                    persistentClockElement.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="app-data">${getPersistentDisplayContent(displayData)}</div>
-                            <div class="original-content">${currentTimeContent}</div>
-                        </div>
-                    `;
-                } else {
-                    // Update only the time - NEVER touch app data unless it's actually different
-                    timeDiv.innerHTML = currentTimeContent;
-                    
-                    // Only update app data if the actual data changed (not just a time update)
-                    const newAppContent = getPersistentDisplayContent(displayData);
-                    if (appDataDiv.innerHTML !== newAppContent) {
-                        appDataDiv.innerHTML = newAppContent;
-                    }
-                }
-            } else {
-                // No app data at all, show only clock
-                if (persistentClockElement.innerHTML !== currentTimeContent) {
-                    persistentClockElement.innerHTML = currentTimeContent;
-                }
-            }
-        } else {
-            // Modal closed, show icon
-            const iconContent = '<span class="material-symbols-rounded">page_info</span>';
-            if (persistentClockElement.innerHTML !== iconContent) {
-                persistentClockElement.innerHTML = iconContent;
-            }
-        }
-    }
-    
+    // Helper functions
     function getOriginalClockContent() {
         const now = new Date();
         let hours = now.getHours();
@@ -337,17 +290,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // If no specific app is visible, return the most recent data
+        // Return most recent data or last known data
         const dataArray = Array.from(persistentDisplayData.values());
-        return dataArray.length > 0 ? dataArray[dataArray.length - 1] : null;
+        return dataArray.length > 0 ? dataArray[dataArray.length - 1] : lastKnownAppData;
     }
     
     function getPersistentDisplayContent(data) {
+        if (!data) return '';
+        
         switch (data.type) {
             case 'albumArt':
                 return `<img src="${data.albumArt}" 
                            alt="Album Art" 
-                           style="width: 24px; height: 24px; border-radius: 6px; object-fit: cover; opacity: 1; transition: opacity 0.2s;"
+                           style="width: 24px; height: 24px; border-radius: 6px; object-fit: cover;"
                            onerror="this.style.display='none'">`;
                 
             case 'icon':
@@ -361,38 +316,77 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Click handler
-    persistentClockElement.addEventListener('click', () => {
-	customizeModal.style.display = 'block';
-        blurOverlayControls.style.display = 'block';
-        setTimeout(() => {
-            customizeModal.classList.add('show');
-            blurOverlayControls.classList.add('show');
-        }, 10);
-    });
+    // Global update function - ONLY updates time, preserves structure
+    window.updatePersistentClockDisplay = function() {
+        const isModalOpen = 
+            timezoneModal.classList.contains('show') || 
+            customizeModal.classList.contains('show') ||
+            (appDrawer && appDrawer.classList.contains('open')) ||
+            document.querySelector('.fullscreen-embed[style*="display: block"]');
+            
+        if (isModalOpen) {
+            const currentTimeContent = getOriginalClockContent();
+            const appData = getActivePersistentData();
+            
+            if (appData) {
+                // Check if we already have the dual structure
+                let timeDiv = persistentClockElement.querySelector('.original-content');
+                let appDataDiv = persistentClockElement.querySelector('.app-data');
+                
+                if (!timeDiv || !appDataDiv) {
+                    // Create the structure ONCE
+                    persistentClockElement.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="app-data">${getPersistentDisplayContent(appData)}</div>
+                            <div class="original-content">${currentTimeContent}</div>
+                        </div>
+                    `;
+                } else {
+                    // ONLY update the time - NEVER touch app data unless it's actually new
+                    timeDiv.textContent = currentTimeContent;
+                }
+            } else {
+                // No app data - show just time
+                persistentClockElement.textContent = currentTimeContent;
+            }
+        } else {
+            // Show icon when modals are closed
+            persistentClockElement.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+        }
+    };
     
-    // Setup observer to watch for embed visibility changes to update clock immediately
+// Click handler - ALWAYS show customize modal
+persistentClockElement.addEventListener('click', () => {
+    customizeModal.style.display = 'block';
+    blurOverlayControls.style.display = 'block';
+    setTimeout(() => {
+        customizeModal.classList.add('show');
+        blurOverlayControls.classList.add('show');
+    }, 10);
+});
+    
+    // Setup observer to watch for embed visibility changes
     const embedObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.attributeName === 'style' && 
                 (mutation.target.classList.contains('fullscreen-embed') || 
                  mutation.target.matches('#app-drawer'))) {
-                updatePersistentClockDisplay();
+                window.updatePersistentClockDisplay();
             }
         });
     });
     
-    // Observe fullscreen-embed style changes
+    // Observe all embed elements
     document.querySelectorAll('.fullscreen-embed').forEach(embed => {
         embedObserver.observe(embed, { attributes: true });
     });
     
-    // Also observe app drawer for open/close state changes
+    // Observe app drawer
     if (appDrawer) {
         embedObserver.observe(appDrawer, { attributes: true });
     }
     
-    // Watch for new embed elements being added
+    // Watch for new embed elements
     const bodyObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === 'childList') {
@@ -401,7 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         node.classList && 
                         node.classList.contains('fullscreen-embed')) {
                         embedObserver.observe(node, { attributes: true });
-                        updatePersistentClockDisplay();
+                        window.updatePersistentClockDisplay();
                     }
                 });
             }
@@ -410,11 +404,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     bodyObserver.observe(document.body, { childList: true, subtree: true });
     
-    // Update clock every 30 seconds for accurate time sync
-    setInterval(updatePersistentClockDisplay, 30000);
+    // Regular clock updates
+    setInterval(() => window.updatePersistentClockDisplay(), 30000);
     
     // Initial update
-    updatePersistentClockDisplay();
+    window.updatePersistentClockDisplay();
 });
 
 // Function to update the document title
