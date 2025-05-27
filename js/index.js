@@ -181,12 +181,57 @@ const persistentClock = document.getElementById('persistent-clock');
 // Store persistent display data from apps
 const persistentDisplayData = new Map();
 
+function handlePersistentDisplayMessage(data) {
+    const { action, data: payload } = data;
+    const appId = payload.appId;
+    
+    switch (action) {
+        case 'updateAlbumArt':
+            persistentDisplayData.set(appId, {
+                type: 'albumArt',
+                albumArt: payload.albumArt,
+                appId: appId,
+                timestamp: Date.now()
+            });
+            break;
+            
+        case 'updateIcon':
+            persistentDisplayData.set(appId, {
+                type: 'icon',
+                icon: payload.icon,
+                appId: appId,
+                timestamp: Date.now()
+            });
+            break;
+            
+        case 'updateCustom':
+            persistentDisplayData.set(appId, {
+                type: 'custom',
+                content: payload.content,
+                appId: appId,
+                timestamp: Date.now()
+            });
+            break;
+            
+        case 'clearAlbumArt':
+        case 'clear':
+            persistentDisplayData.delete(appId);
+            break;
+    }
+    
+    // Update display immediately (call the function that will be defined in DOMContentLoaded)
+    if (typeof updatePersistentClockDisplay === 'function') {
+        updatePersistentClockDisplay();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
     
-    function updatePersistentClock() {
+    // Rename this function to avoid confusion and make it globally accessible
+    window.updatePersistentClockDisplay = function updatePersistentClock() {
         const isModalOpen = 
             timezoneModal.classList.contains('show') || 
             customizeModal.classList.contains('show') ||
@@ -268,48 +313,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function handlePersistentDisplayMessage(data) {
-        const { action, data: payload } = data;
-        const appId = payload.appId;
-        
-        switch (action) {
-            case 'updateAlbumArt':
-                persistentDisplayData.set(appId, {
-                    type: 'albumArt',
-                    albumArt: payload.albumArt,
-                    appId: appId,
-                    timestamp: Date.now()
-                });
-                break;
-                
-            case 'updateIcon':
-                persistentDisplayData.set(appId, {
-                    type: 'icon',
-                    icon: payload.icon,
-                    appId: appId,
-                    timestamp: Date.now()
-                });
-                break;
-                
-            case 'updateCustom':
-                persistentDisplayData.set(appId, {
-                    type: 'custom',
-                    content: payload.content,
-                    appId: appId,
-                    timestamp: Date.now()
-                });
-                break;
-                
-            case 'clearAlbumArt':
-            case 'clear':
-                persistentDisplayData.delete(appId);
-                break;
-        }
-        
-        // Update display immediately
-        updatePersistentClock();
-    }
-    
     // Original click handler for persistent clock (customize modal only)
     persistentClock.addEventListener('click', () => {
         // Check if there's a visible embed open before showing customize modal
@@ -330,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (mutation.attributeName === 'style' && 
                 (mutation.target.classList.contains('fullscreen-embed') || 
                  mutation.target.matches('#app-drawer'))) {
-                updatePersistentClock();
+                updatePersistentClockDisplay();
             }
         });
     });
@@ -354,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         node.classList && 
                         node.classList.contains('fullscreen-embed')) {
                         embedObserver.observe(node, { attributes: true });
-                        updatePersistentClock();
+                        updatePersistentClockDisplay();
                     }
                 });
             }
@@ -364,10 +367,10 @@ document.addEventListener('DOMContentLoaded', () => {
     bodyObserver.observe(document.body, { childList: true, subtree: true });
     
     // Update clock every 30 seconds
-    setInterval(updatePersistentClock, 30000);
+    setInterval(updatePersistentClockDisplay, 30000);
     
     // Initial update
-    updatePersistentClock();
+    updatePersistentClockDisplay();
 });
 
 // Function to update the document title
