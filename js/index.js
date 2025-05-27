@@ -4549,10 +4549,6 @@ function blackoutScreen() {
   blockingOverlay.addEventListener('touchstart', restoreScreenAndMinimize);
 }
 
-timerWidget.addEventListener('click', () => {
-    toggleTimer();
-});
-
 secondsSwitch.addEventListener('change', function() {
     showSeconds = this.checked;
     localStorage.setItem('showSeconds', showSeconds);
