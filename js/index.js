@@ -4936,7 +4936,6 @@ window.addEventListener('message', event => {
     // Call initialization
     initializeCustomization();
     setupWeatherToggle()
-    updateDisplay();
     initAppDraw();
     updateWeatherVisibility();
     preventLeaving();
