@@ -275,9 +275,6 @@ function updatePersistentClock() {
 
 // Function to update the document title
 function updateTitle() {
-  if (timeLeft > 0 && timerId) {
-    document.title = `${formatTime(timeLeft)} ⏱️`;
-  } else {
     let now = new Date();
     let hours = now.getHours();
     let minutes = String(now.getMinutes()).padStart(2, '0');
