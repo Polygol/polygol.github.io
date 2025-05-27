@@ -242,30 +242,6 @@
         </div>
     </div>
 
-    <div id="timezoneModal" class="modal">
-        <div class="modal-content">
-            <button class="close" id="closeModal"><span class="material-symbols-rounded">timer</span></button>
-            <div class="timer-circle">
-                <svg class="progress-ring" width="450" height="450">
-                    <circle cx="225" cy="225" r="210" />
-                    <circle class="progress" cx="225" cy="225" r="210" />
-                </svg>
-                <div class="timer-display" id="display">00:00</div>
-                <input type="text" class="timer-input" id="timeInput" maxlength="4" pattern="\d*">
-            </div>
-            <div class="controls">
-                <button class="btn" onclick="addTime(30)">30s</button>
-                <button class="btn" onclick="addTime(60)">1m</button>
-                <button class="btn" onclick="addTime(300)">5m</button>
-                <button class="btn" onclick="addTime(1800)">30m</button>
-            </div>
-            <div class="action-buttons">
-                <button class="action-btn running" id="startBtn" onclick="toggleTimer()"><span class="material-symbols-rounded">play_arrow</span></button>
-                <button class="action-btn running" id="resetBtn" onclick="resetTimer()"><span class="material-symbols-rounded">restart_alt</span></button>
-            </div>
-        </div>
-    </div>
-
     <div id="dock" class="dock"></div>
     
     <input type="file" id="wallpaperInput" accept=".jpg, .jpeg, .png">
