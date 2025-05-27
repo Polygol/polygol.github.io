@@ -185,7 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
 function updatePersistentClock() {
   const isModalOpen = 
-    timezoneModal.classList.contains('show') || 
     customizeModal.classList.contains('show') ||
     (appDrawer && appDrawer.classList.contains('open')) ||
     document.querySelector('.fullscreen-embed[style*="display: block"]');
@@ -571,6 +570,31 @@ function startSynchronizedClockAndDate() {
   scheduleNextUpdate();
 }
 
+async function getTimezoneFromCoords(latitude, longitude) {
+    try {
+        // Use a timezone API or fallback to browser timezone
+        const response = await fetch(`http://worldtimeapi.org/api/timezone`);
+        if (response.ok) {
+            // For a more accurate solution, you'd want to use a service like:
+            // `https://api.timezonedb.com/v2.1/get-zone?key=YOUR_KEY&format=json&by=position&lat=${latitude}&lng=${longitude}`
+            // For now, we'll use the browser's timezone as fallback
+            return Intl.DateTimeFormat().resolvedOptions().timeZone;
+        }
+    } catch (error) {
+        console.warn('Failed to get timezone, using browser default:', error);
+    }
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+function getTemperatureUnit(country) {
+    // Countries that primarily use Fahrenheit
+    const fahrenheitCountries = ['US', 'USA', 'United States', 'Liberia', 'Myanmar', 'Burma'];
+    
+    return fahrenheitCountries.some(c => 
+        country?.toLowerCase().includes(c.toLowerCase())
+    ) ? 'fahrenheit' : 'celsius';
+}
+
 async function fetchLocationAndWeather() {
     return new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(async (position) => {
@@ -578,6 +602,8 @@ async function fetchLocationAndWeather() {
                 const { latitude, longitude } = position.coords;
                 const geocodingUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
                 let city = 'Unknown Location';
+                let country = '';
+                let timezone = 'UTC';
                 
                 try {
                     const geocodingResponse = await fetch(geocodingUrl);
@@ -586,33 +612,44 @@ async function fetchLocationAndWeather() {
                         geocodingData.address.town ||
                         geocodingData.address.village ||
                         'Unknown Location';
+                    country = geocodingData.address.country || '';
+                    
+                    // Get timezone based on coordinates
+                    timezone = await getTimezoneFromCoords(latitude, longitude);
                 } catch (geocodingError) {
-                    console.warn('Failed to retrieve your weather location', geocodingError);
+                    console.warn('Failed to retrieve location details', geocodingError);
+                    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
                 }
 
-                const currentWeatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
-                const dailyForecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,weathercode&timezone=Europe/London`;
-                const hourlyForecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weathercode&timezone=Europe/London`;
+                // Determine temperature unit based on location
+                const temperatureUnit = getTemperatureUnit(country);
+                const tempUnitParam = temperatureUnit === 'fahrenheit' ? '&temperature_unit=fahrenheit' : '';
+                
+                const currentWeatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=${encodeURIComponent(timezone)}${tempUnitParam}`;
+                const dailyForecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,weathercode&timezone=${encodeURIComponent(timezone)}${tempUnitParam}`;
+                const hourlyForecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weathercode&timezone=${encodeURIComponent(timezone)}${tempUnitParam}`;
                 
                 const [currentResponse, dailyResponse, hourlyResponse] = await Promise.all([
                     fetch(currentWeatherUrl),
                     fetch(dailyForecastUrl),
                     fetch(hourlyForecastUrl)
                 ]);
-
+                
                 const currentWeatherData = await currentResponse.json();
                 const dailyForecastData = await dailyResponse.json();
                 const hourlyForecastData = await hourlyResponse.json();
- 
-                resolve({
+
+                const weatherData = {
                     city,
+                    country,
+                    timezone,
+                    temperatureUnit,
                     current: currentWeatherData.current_weather,
                     dailyForecast: dailyForecastData.daily,
                     hourlyForecast: hourlyForecastData.hourly
-                });
-
+                };
+ 
                 localStorage.setItem('lastWeatherData', JSON.stringify(weatherData));
-
                 resolve(weatherData);
                 
             } catch (error) {
@@ -656,13 +693,17 @@ async function updateSmallWeather() {
     try {
         const weatherData = await fetchLocationAndWeather();
         if (!weatherData) throw new Error('Weather data not available');
-
+        
         const temperatureElement = document.getElementById('temperature');
         const weatherIconElement = document.getElementById('weather-icon');
         const weatherInfo = weatherConditions[weatherData.current.weathercode] || { description: 'Unknown', icon: () => '❓' };
-
+        
         document.getElementById('weather').style.display = showWeather ? 'block' : 'none';
-        temperatureElement.textContent = `${Math.round(weatherData.current.temperature)}°`;
+        
+        // Display temperature with appropriate unit symbol
+        const tempUnit = weatherData.temperatureUnit === 'fahrenheit' ? '°F' : '°C';
+        temperatureElement.textContent = `${Math.round(weatherData.current.temperature)}${tempUnit}`;
+        
         weatherIconElement.className = 'material-symbols-rounded';
         weatherIconElement.textContent = weatherInfo.icon(true);
         weatherIconElement.dataset.weatherCode = weatherData.current.weathercode;
@@ -671,31 +712,24 @@ async function updateSmallWeather() {
         document.getElementById('weather').style.display = 'none';
         showPopup(currentLanguage.FAIL_WEATHER);
     }
-
     updateTitle();
 }
 
-// Helper function to determine if a specific hour is daytime
-function isDaytimeForHour(timeString) {
-    const hour = new Date(timeString).getHours();
+// Updated helper function to determine if a specific hour is daytime based on timezone
+function isDaytimeForHour(timeString, timezone = 'UTC') {
+    const date = new Date(timeString);
+    const hour = new Date(date.toLocaleString("en-US", {timeZone: timezone})).getHours();
     return hour >= 6 && hour <= 18;
 }
 
 const clockElement = document.getElementById('clock');
 const weatherWidget = document.getElementById('weather');
 const dateElement = document.getElementById('date');
-const timezoneModal = document.getElementById('timezoneModal');
 const closeModal = document.getElementById('closeModal');
 const blurOverlay = document.getElementById('blurOverlay');
 
 clockElement.addEventListener('click', () => {
-    timezoneModal.style.display = 'block';
-    blurOverlay.style.display = 'block';
-    setTimeout(() => {
-        timezoneModal.classList.add('show');
-        blurOverlay.classList.add('show');
-        
-    }, 10);
+    createFullscreenEmbed('/chronos/index.html');
 });
 
 weatherWidget.addEventListener('click', () => {
@@ -706,152 +740,9 @@ dateElement.addEventListener('click', () => {
     createFullscreenEmbed('/fantaskical/index.html');
 });
 
-closeModal.addEventListener('click', () => {
-    timezoneModal.classList.remove('show');
-    blurOverlay.classList.remove('show');
-    setTimeout(() => {
-        timezoneModal.style.display = 'none';
-        blurOverlay.style.display = 'none';
-        
-    }, 300);
-});
-
 startSynchronizedClockAndDate();
 setInterval(updateSmallWeather, 600000);
 updateSmallWeather();
-
-// Timer Variables
-let totalTime = 0;
-let timeLeft = 0;
-let timerId = null;
-const display = document.getElementById('display');
-const timeInput = document.getElementById('timeInput');
-const startBtn = document.getElementById('startBtn');
-const resetBtn = document.getElementById('resetBtn');
-const progressRing = document.querySelector('.progress-ring');
-const progressCircle = document.querySelector('.progress-ring circle.progress');
-const timerContainer = document.querySelector('.timer-container');
-
-// Load the MP3 sound for the alarm
-const alarmSound = new Audio('https://www.gstatic.com/delight/funbox/timer_utilitarian_v2.mp3');
-
-const radius = progressCircle.r.baseVal.value;
-const circumference = radius * 2 * Math.PI;
-progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
-
-function setProgress(percent) {
-    const offset = circumference - (percent / 100 * circumference);
-    progressCircle.style.strokeDashoffset = offset;
-}
-
-function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-
-function updateDisplay() {
-    const percent = totalTime > 0 ? Math.min(100, Math.max(0, (timeLeft / totalTime) * 100)) : 0;
-    display.textContent = formatTime(timeLeft);
-    setProgress(percent);
-    progressRing.classList[timeLeft > 0 ? 'add' : 'remove']('active');
-}
-
-function addTime(seconds) {
-    let wasRunning = !!timerId;
-    if (timerId) { clearInterval(timerId); timerId = null; startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>'; }
-    timeLeft += seconds;
-    if (!wasRunning) totalTime = timeLeft;
-    totalTime = Math.max(totalTime, timeLeft);
-    updateDisplay(); updateTimerWidget(); updateActionButtons();
-}
-
-const timerWidget = document.getElementById('timer-widget');
-const timerText = document.getElementById('timer-text');
-
-function updateTimerWidget() {
-    timerWidget.style.display = timeLeft > 0 ? 'flex' : 'none';
-    timerText.textContent = formatTime(timeLeft);
-    const timerIcon = document.querySelector('.timer-icon');
-
-    if (timerId) { // If timer is running (not paused)
-        timerIcon.textContent = 'timer'; // Show timer icon
-    } else { // If timer is paused or not started
-        timerIcon.textContent = 'pause'; // Show pause icon
-    }
-}
-
-function toggleTimer() {
-    if (timerId) {
-        clearInterval(timerId);
-        timerId = null;
-        startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>';
-    } else {
-        if (timeLeft > 0) {
-            timerId = setInterval(() => {
-                timeLeft--;
-                updateDisplay();
-                updateTimerWidget();
-                if (timeLeft <= 0) {
-                    clearInterval(timerId);
-                    timerId = null;
-                    startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>';
-                    timerWidget.style.display = 'none';
-                    playAlarm();
-                }
-            }, 1000);
-            startBtn.innerHTML = '<span class="material-symbols-rounded">pause</span>';
-        }
-    }
-    updateActionButtons();
-    updateTimerWidget(); // Added this line
-}
-
-function updateActionButtons() {
-    const isAlarmPlaying = alarmSound.currentTime > 0 && !alarmSound.paused;
-    if (timeLeft === 0 && isAlarmPlaying){
-        startBtn.style.display = 'none';
-        resetBtn.style.display = 'block';
-    } else if (timeLeft === 0 && !isAlarmPlaying){
-        startBtn.style.display = 'none';
-        resetBtn.style.display = 'block';
-    } else if (timeLeft > 0){
-        startBtn.style.display = 'block';
-        resetBtn.style.display = 'block';
-    } else {
-        startBtn.style.display = 'block';
-        resetBtn.style.display = 'none';
-    }
-}
-
-function resetTimer() {
-    if (timerId) clearInterval(timerId);
-    timerId = null; timeLeft = 0; totalTime = 0; updateDisplay(); updateTimerWidget();
-    startBtn.innerHTML = '<span class="material-symbols-rounded">play_arrow</span>';
-    alarmSound.pause(); alarmSound.currentTime = 0; updateActionButtons();
-}
-
-function playAlarm() {
-    alarmSound.play();
-    updateActionButtons();
-}
-
-display.addEventListener('click', () => {
-    timeInput.value = formatTime(timeLeft).replace(':', '');
-    timeInput.style.display = 'block'; display.style.display = 'none'; timeInput.focus(); updateActionButtons();
-});
-
-timeInput.addEventListener('blur', () => {
-    const input = timeInput.value.padStart(4, '0');
-    const minutes = parseInt(input.slice(0, -2), 10);
-    const seconds = parseInt(input.slice(-2), 10);
-    if (!isNaN(minutes) && !isNaN(seconds)) { timeLeft = minutes * 60 + seconds; totalTime = timeLeft; }
-    updateDisplay(); updateActionButtons(); timeInput.style.display = 'none'; display.style.display = 'block';
-});
-
-timeInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') timeInput.blur(); });
-
-updateActionButtons();
 
 function showPopup(message) {
     const popup = document.createElement('div');
@@ -4672,23 +4563,6 @@ secondsSwitch.addEventListener('change', function() {
     updateClockAndDate();
 });
 
-blurOverlay.addEventListener('click', (event) => {
-    if (event.target === blurOverlay) {
-        // Close all modals
-        [timezoneModal].forEach(modal => {
-            if (modal.classList.contains('show')) {
-                modal.classList.remove('show');
-                blurOverlay.classList.remove('show');
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                    blurOverlay.style.display = 'none';
-                    
-                }, 300);
-            }
-        });
-    }
-});
-
 persistentClock.addEventListener('click', () => {
     customizeModal.style.display = 'block';
     blurOverlayControls.style.display = 'block';
@@ -4705,7 +4579,7 @@ document.getElementById("versionButton").addEventListener("click", function() {
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
         // Close all modals
-        [timezoneModal, customizeModal].forEach(modal => {
+        [customizeModal].forEach(modal => {
             if (modal.classList.contains('show')) {
                 modal.classList.remove('show');
                 blurOverlay.classList.remove('show');
@@ -4715,30 +4589,6 @@ document.addEventListener('keydown', (event) => {
                 }, 300);
             }
         });
-    }
-});
-
-// Add event listener for keydown
-document.addEventListener('keydown', (event) => {
-    // Only handle keys if timer modal is open and we're not in an input field
-    if (timezoneModal.classList.contains('show') && document.activeElement.tagName !== 'INPUT') {
-        // Handle number keys (0-9)
-        if (/^[0-9]$/.test(event.key)) {
-            event.preventDefault();
-            // Only add time if timer isn't running
-            const minutes = parseInt(event.key);
-            addTime(minutes * 60); // Convert minutes to seconds
-        }
-        // Handle enter key to toggle timer
-        else if (event.key === 'Enter') {
-            event.preventDefault();
-            toggleTimer();
-        }
-        // Handle backspace key to reset timer
-        else if (event.key === 'Backspace') {
-            event.preventDefault();
-            resetTimer();
-        }
     }
 });
 
