@@ -317,43 +317,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Global update function - ONLY updates time, preserves structure
-    window.updatePersistentClockDisplay = function() {
-        const isModalOpen = 
-            timezoneModal.classList.contains('show') || 
-            customizeModal.classList.contains('show') ||
-            (appDrawer && appDrawer.classList.contains('open')) ||
-            document.querySelector('.fullscreen-embed[style*="display: block"]');
+window.updatePersistentClockDisplay = function() {
+    const isModalOpen = 
+        timezoneModal.classList.contains('show') || 
+        customizeModal.classList.contains('show') ||
+        (appDrawer && appDrawer.classList.contains('open')) ||
+        document.querySelector('.fullscreen-embed[style*="display: block"]');
+        
+    if (isModalOpen) {
+        const currentTimeContent = getOriginalClockContent();
+        const appData = getActivePersistentData();
+        
+        if (appData) {
+            // Check if we already have the dual structure
+            let timeDiv = persistentClockElement.querySelector('.original-content');
+            let appDataDiv = persistentClockElement.querySelector('.app-data');
             
-        if (isModalOpen) {
-            const currentTimeContent = getOriginalClockContent();
-            const appData = getActivePersistentData();
-            
-            if (appData) {
-                // Check if we already have the dual structure
-                let timeDiv = persistentClockElement.querySelector('.original-content');
-                let appDataDiv = persistentClockElement.querySelector('.app-data');
-                
-                if (!timeDiv || !appDataDiv) {
-                    // Create the structure ONCE
-                    persistentClockElement.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="app-data">${getPersistentDisplayContent(appData)}</div>
-                            <div class="original-content">${currentTimeContent}</div>
-                        </div>
-                    `;
-                } else {
-                    // ONLY update the time - NEVER touch app data unless it's actually new
-                    timeDiv.textContent = currentTimeContent;
-                }
+            if (!timeDiv || !appDataDiv) {
+                // Create the structure ONCE
+                persistentClockElement.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="app-data">${getPersistentDisplayContent(appData)}</div>
+                        <div class="original-content">${currentTimeContent}</div>
+                    </div>
+                `;
             } else {
-                // No app data - show just time
-                persistentClockElement.textContent = currentTimeContent;
+                // ONLY update the time - PRESERVE the app data structure
+                timeDiv.textContent = currentTimeContent;
+                // Don't touch appDataDiv at all unless the data actually changed
             }
         } else {
-            // Show icon when modals are closed
-            persistentClockElement.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+            // STILL PRESERVE STRUCTURE - check if we have app data elements
+            let timeDiv = persistentClockElement.querySelector('.original-content');
+            
+            if (timeDiv) {
+                // We have structure, just update the time
+                timeDiv.textContent = currentTimeContent;
+            } else {
+                // No structure, show just time
+                persistentClockElement.textContent = currentTimeContent;
+            }
         }
-    };
+    } else {
+        // Show icon when modals are closed
+        persistentClockElement.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+    }
+};
     
 // Click handler - ALWAYS show customize modal
 persistentClockElement.addEventListener('click', () => {
