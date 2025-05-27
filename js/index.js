@@ -183,38 +183,141 @@ document.addEventListener('DOMContentLoaded', () => {
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
     
-function updatePersistentClock() {
-  const isModalOpen = 
-    timezoneModal.classList.contains('show') || 
-    customizeModal.classList.contains('show') ||
-    (appDrawer && appDrawer.classList.contains('open')) ||
-    document.querySelector('.fullscreen-embed[style*="display: block"]');
+const persistentClock = document.getElementById('persistent-clock');
+
+// Store persistent display data from apps
+const persistentDisplayData = new Map();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const appDrawer = document.getElementById('app-drawer');
+    const persistentClock = document.querySelector('.persistent-clock');
+    const customizeModal = document.getElementById('customizeModal');
     
-  if (isModalOpen) {
-    const now = new Date();
-    let hours = now.getHours();
-    let minutes = String(now.getMinutes()).padStart(2, '0');
-    
-    let displayHours;
-    let period = '';
-    
-    if (use12HourFormat) {
-      // 12-hour format
-      period = hours >= 12 ? ' PM' : ' AM';
-      displayHours = hours % 12 || 12;
-      displayHours = String(displayHours).padStart(2, '0');
-    } else {
-      // 24-hour format
-      displayHours = String(hours).padStart(2, '0');
+    function updatePersistentClock() {
+        const isModalOpen = 
+            timezoneModal.classList.contains('show') || 
+            customizeModal.classList.contains('show') ||
+            (appDrawer && appDrawer.classList.contains('open')) ||
+            document.querySelector('.fullscreen-embed[style*="display: block"]');
+            
+        if (isModalOpen) {
+            // Get app data and original content
+            const activeAppData = getActivePersistentData();
+            const originalContent = getOriginalClockContent();
+            
+            if (activeAppData) {
+                // Display both app data and original content
+                const appContent = getPersistentDisplayContent(activeAppData);
+                persistentClock.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="app-data">${appContent}</div>
+                        <div class="original-content">${originalContent}</div>
+                    </div>
+                `;
+            } else {
+                // Show only original content
+                persistentClock.innerHTML = originalContent;
+            }
+        } else {
+            persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+        }
     }
     
-    persistentClock.textContent = `${displayHours}:${minutes}${period}`;
-  } else {
-    persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
-  }
-}
+    function getOriginalClockContent() {
+        const now = new Date();
+        let hours = now.getHours();
+        let minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        let displayHours;
+        let period = '';
+        
+        if (use12HourFormat) {
+            period = hours >= 12 ? ' PM' : ' AM';
+            displayHours = hours % 12 || 12;
+            displayHours = String(displayHours).padStart(2, '0');
+        } else {
+            displayHours = String(hours).padStart(2, '0');
+        }
+        
+        return `${displayHours}:${minutes}${period}`;
+    }
     
-    // Make sure we re-attach the click event listener
+    function getActivePersistentData() {
+        // Get data from the currently visible/active app
+        const visibleEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (visibleEmbed) {
+            const appId = visibleEmbed.querySelector('iframe')?.getAttribute('data-app-id');
+            if (appId && persistentDisplayData.has(appId)) {
+                return persistentDisplayData.get(appId);
+            }
+        }
+        
+        // If no specific app is visible, return the most recent data
+        const dataArray = Array.from(persistentDisplayData.values());
+        return dataArray.length > 0 ? dataArray[dataArray.length - 1] : null;
+    }
+    
+    function getPersistentDisplayContent(data) {
+        switch (data.type) {
+            case 'albumArt':
+                return `<img src="${data.albumArt}" 
+                           alt="Album Art" 
+                           style="width: 24px; height: 24px; border-radius: 6px; object-fit: cover;">`;
+                
+            case 'icon':
+                return `<span class="material-symbols-rounded">${data.icon}</span>`;
+                
+            case 'custom':
+                return data.content;
+                
+            default:
+                return '';
+        }
+    }
+    
+    function handlePersistentDisplayMessage(data) {
+        const { action, data: payload } = data;
+        const appId = payload.appId;
+        
+        switch (action) {
+            case 'updateAlbumArt':
+                persistentDisplayData.set(appId, {
+                    type: 'albumArt',
+                    albumArt: payload.albumArt,
+                    appId: appId,
+                    timestamp: Date.now()
+                });
+                break;
+                
+            case 'updateIcon':
+                persistentDisplayData.set(appId, {
+                    type: 'icon',
+                    icon: payload.icon,
+                    appId: appId,
+                    timestamp: Date.now()
+                });
+                break;
+                
+            case 'updateCustom':
+                persistentDisplayData.set(appId, {
+                    type: 'custom',
+                    content: payload.content,
+                    appId: appId,
+                    timestamp: Date.now()
+                });
+                break;
+                
+            case 'clearAlbumArt':
+            case 'clear':
+                persistentDisplayData.delete(appId);
+                break;
+        }
+        
+        // Update display immediately
+        updatePersistentClock();
+    }
+    
+    // Original click handler for persistent clock (customize modal only)
     persistentClock.addEventListener('click', () => {
         // Check if there's a visible embed open before showing customize modal
         const visibleEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
@@ -254,7 +357,7 @@ function updatePersistentClock() {
         mutations.forEach((mutation) => {
             if (mutation.type === 'childList') {
                 mutation.addedNodes.forEach(node => {
-                    if (node.nodeType === 1 && // Element node
+                    if (node.nodeType === 1 && 
                         node.classList && 
                         node.classList.contains('fullscreen-embed')) {
                         embedObserver.observe(node, { attributes: true });
@@ -267,12 +370,12 @@ function updatePersistentClock() {
     
     bodyObserver.observe(document.body, { childList: true, subtree: true });
     
-    // Update clock
+    // Update clock every 30 seconds
     setInterval(updatePersistentClock, 30000);
     
     // Initial update
     updatePersistentClock();
-}); 
+});
 
 // Function to update the document title
 function updateTitle() {
@@ -5066,23 +5169,26 @@ window.addEventListener('load', checkScreenSize);
 // Check when window is resized
 window.addEventListener('resize', checkScreenSize);
 
-// Gurapp to Gurapp functionality
+// Enhanced message handler for gurapp to gurapp + persistent display
 window.addEventListener('message', event => {
-  if (event.origin !== window.location.origin) return;
-
-  const { targetApp, ...payload } = event.data;
-  if (!targetApp) return;         // ignore if no target specified
-
-  // find the iframe for that app
-  const iframe = document.querySelector(
-    `iframe[data-app-id="${targetApp}"]`
-  );
-  if (!iframe) {
-    console.warn(`No iframe for app "${targetApp}"`);
-    return;
-  }
-
-  iframe.contentWindow.postMessage(payload, window.location.origin);
+    if (event.origin !== window.location.origin) return;
+    
+    const { type, targetApp, ...payload } = event.data;
+    
+    // Handle persistent display messages
+    if (type === 'persistentDisplay') {
+        handlePersistentDisplayMessage(payload);
+        return;
+    }
+    
+    // Handle gurapp to gurapp messages
+    if (!targetApp) return;
+    const iframe = document.querySelector(`iframe[data-app-id="${targetApp}"]`);
+    if (!iframe) {
+        console.warn(`No iframe for app "${targetApp}"`);
+        return;
+    }
+    iframe.contentWindow.postMessage(payload, window.location.origin);
 });
 
     // Initialize app drawer
