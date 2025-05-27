@@ -177,11 +177,6 @@ function getCurrentTime24() {
 }
 
 const persistentClock = document.getElementById('persistent-clock');
-
-document.addEventListener('DOMContentLoaded', () => {
-    const appDrawer = document.getElementById('app-drawer');
-    const persistentClock = document.querySelector('.persistent-clock');
-    const customizeModal = document.getElementById('customizeModal');
     
 // Store persistent display data from apps
 const persistentDisplayData = new Map();
