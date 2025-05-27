@@ -183,8 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
     
-const persistentClock = document.getElementById('persistent-clock');
-
 // Store persistent display data from apps
 const persistentDisplayData = new Map();
 
