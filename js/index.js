@@ -180,6 +180,7 @@ const persistentClock = document.getElementById('persistent-clock');
     
 // Store persistent display data from apps
 const persistentDisplayData = new Map();
+let lastActiveAppData = null; // Store the last active data to persist it
 
 let clockUpdateInterval;
 
@@ -228,6 +229,10 @@ function handlePersistentDisplayMessage(data) {
         case 'clearAlbumArt':
         case 'clear':
             persistentDisplayData.delete(appId);
+            // Only clear lastActiveAppData if it's from the same app
+            if (lastActiveAppData && lastActiveAppData.appId === appId) {
+                lastActiveAppData = null;
+            }
             break;
     }
     
@@ -257,7 +262,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const activeAppData = getActivePersistentData();
             const currentTimeContent = getOriginalClockContent();
             
+            // Use active data or fallback to last known data
+            const displayData = activeAppData || lastActiveAppData;
+            
+            // Update lastActiveAppData if we have new data
             if (activeAppData) {
+                lastActiveAppData = activeAppData;
+            }
+            
+            if (displayData) {
                 // Check if structure exists
                 let appDataDiv = persistentClockElement.querySelector('.app-data');
                 let timeDiv = persistentClockElement.querySelector('.original-content');
@@ -266,22 +279,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Create structure
                     persistentClockElement.innerHTML = `
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="app-data">${getPersistentDisplayContent(activeAppData)}</div>
+                            <div class="app-data">${getPersistentDisplayContent(displayData)}</div>
                             <div class="original-content">${currentTimeContent}</div>
                         </div>
                     `;
                 } else {
-                    // Update only the time, preserve app data
+                    // Update only the time - NEVER touch app data unless it's actually different
                     timeDiv.innerHTML = currentTimeContent;
                     
-                    // Only update app data if it's different
-                    const newAppContent = getPersistentDisplayContent(activeAppData);
+                    // Only update app data if the actual data changed (not just a time update)
+                    const newAppContent = getPersistentDisplayContent(displayData);
                     if (appDataDiv.innerHTML !== newAppContent) {
                         appDataDiv.innerHTML = newAppContent;
                     }
                 }
             } else {
-                // No app data, show only clock
+                // No app data at all, show only clock
                 if (persistentClockElement.innerHTML !== currentTimeContent) {
                     persistentClockElement.innerHTML = currentTimeContent;
                 }
@@ -348,18 +361,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Fixed event listener - use the correct element reference
+    // Click handler
     persistentClockElement.addEventListener('click', () => {
-        // Check if there's a visible embed open before showing customize modal
-        const visibleEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (!visibleEmbed) {
-            customizeModal.style.display = 'block';
-            setTimeout(() => {
-                customizeModal.classList.add('show');
-                blurOverlayControls.classList.add('show');
-                blurOverlayControls.style.display = 'block';
-            }, 5);
-        }
+	customizeModal.style.display = 'block';
+        blurOverlayControls.style.display = 'block';
+        setTimeout(() => {
+            customizeModal.classList.add('show');
+            blurOverlayControls.classList.add('show');
+        }, 10);
     });
     
     // Setup observer to watch for embed visibility changes to update clock immediately
