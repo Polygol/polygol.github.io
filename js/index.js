@@ -219,7 +219,10 @@ function handlePersistentDisplayMessage(data) {
             break;
     }
     
-    // Update display immediately (call the function that will be defined in DOMContentLoaded)
+    // Restart clock updates with appropriate frequency
+    startClockUpdates();
+    
+    // Update display immediately
     if (typeof updatePersistentClockDisplay === 'function') {
         updatePersistentClockDisplay();
     }
@@ -229,8 +232,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
+    let clockUpdateInterval;
+
+    function startClockUpdates() {
+        if (clockUpdateInterval) clearInterval(clockUpdateInterval);
+        
+        // Update less frequently when album art is present to avoid flickering
+        const hasAlbumArt = persistentDisplayData.size > 0;
+        const updateFrequency = hasAlbumArt ? 60000 : 30000; // 60s vs 30s
+        
+        clockUpdateInterval = setInterval(updatePersistentClockDisplay, updateFrequency);
+    }
     
-    // Rename this function to avoid confusion and make it globally accessible
+    // Modified updatePersistentClockDisplay function
     window.updatePersistentClockDisplay = function updatePersistentClock() {
         const isModalOpen = 
             timezoneModal.classList.contains('show') || 
@@ -239,25 +253,49 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.fullscreen-embed[style*="display: block"]');
             
         if (isModalOpen) {
-            // Get app data and original content
             const activeAppData = getActivePersistentData();
             const originalContent = getOriginalClockContent();
             
+            // Check if we need to update the structure
+            const currentAppData = persistentClock.querySelector('.app-data');
+            const currentTimeData = persistentClock.querySelector('.original-content');
+            
             if (activeAppData) {
-                // Display both app data and original content
-                const appContent = getPersistentDisplayContent(activeAppData);
-                persistentClock.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <div class="app-data">${appContent}</div>
-                        <div class="original-content">${originalContent}</div>
-                    </div>
-                `;
+                // If structure doesn't exist, create it
+                if (!currentAppData || !currentTimeData) {
+                    persistentClock.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="app-data"></div>
+                            <div class="original-content"></div>
+                        </div>
+                    `;
+                }
+                
+                // Update content without rebuilding DOM structure
+                const appDataDiv = persistentClock.querySelector('.app-data');
+                const timeDiv = persistentClock.querySelector('.original-content');
+                
+                // Only update app data if it's different
+                const newAppContent = getPersistentDisplayContent(activeAppData);
+                if (appDataDiv.innerHTML !== newAppContent) {
+                    appDataDiv.innerHTML = newAppContent;
+                }
+                
+                // Only update time if it's different
+                if (timeDiv.innerHTML !== originalContent) {
+                    timeDiv.innerHTML = originalContent;
+                }
             } else {
-                // Show only original content
-                persistentClock.innerHTML = originalContent;
+                // Only update if content is different
+                if (persistentClock.innerHTML !== originalContent) {
+                    persistentClock.innerHTML = originalContent;
+                }
             }
         } else {
-            persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+            const iconContent = '<span class="material-symbols-rounded">page_info</span>';
+            if (persistentClock.innerHTML !== iconContent) {
+                persistentClock.innerHTML = iconContent;
+            }
         }
     }
     
@@ -300,7 +338,10 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'albumArt':
                 return `<img src="${data.albumArt}" 
                            alt="Album Art" 
-                           style="width: 24px; height: 24px; border-radius: 6px; object-fit: cover;">`;
+                           style="width: 24px; height: 24px; border-radius: 6px; object-fit: cover;"
+                           onload="this.style.opacity='1'" 
+                           onerror="this.style.display='none'"
+                           style="opacity: 0; transition: opacity 0.2s;">`;
                 
             case 'icon':
                 return `<span class="material-symbols-rounded">${data.icon}</span>`;
