@@ -566,21 +566,15 @@ function startSynchronizedClockAndDate() {
   scheduleNextUpdate();
 }
 
-async function getTimezoneFromCoords(latitude, longitude) {
-    try {
-        // Use a timezone API or fallback to browser timezone
-        const response = await fetch(`http://worldtimeapi.org/api/timezone`);
-        if (response.ok) {
-            // For a more accurate solution, you'd want to use a service like:
-            // `https://api.timezonedb.com/v2.1/get-zone?key=YOUR_KEY&format=json&by=position&lat=${latitude}&lng=${longitude}`
-            // For now, we'll use the browser's timezone as fallback
-            return Intl.DateTimeFormat().resolvedOptions().timeZone;
+        async function getTimezoneFromCoords(latitude, longitude) {
+            try {
+                // Use browser's timezone as the primary method
+                return Intl.DateTimeFormat().resolvedOptions().timeZone;
+            } catch (error) {
+                console.warn('Failed to get timezone, using UTC:', error);
+                return 'UTC';
+            }
         }
-    } catch (error) {
-        console.warn('Failed to get timezone, using browser default:', error);
-    }
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
-}
 
 function getTemperatureUnit(country) {
     // Countries that primarily use Fahrenheit
