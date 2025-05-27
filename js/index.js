@@ -275,48 +275,47 @@ function updatePersistentClock() {
 
 // Function to update the document title
 function updateTitle() {
-    let now = new Date();
-    let hours = now.getHours();
-    let minutes = String(now.getMinutes()).padStart(2, '0');
-    let seconds = String(now.getSeconds()).padStart(2, '0');
-    
-    let displayHours;
-    let period = '';
-    
-    if (use12HourFormat) {
-      // 12-hour format
-      period = hours >= 12 ? ' PM' : ' AM';
-      displayHours = hours % 12 || 12;
-      displayHours = String(displayHours).padStart(2, '0');
-    } else {
-      // 24-hour format
-      displayHours = String(hours).padStart(2, '0');
-    }
-    
-    const timeString = showSeconds ? 
-      `${displayHours}:${minutes}:${seconds}${period}` : 
-      `${displayHours}:${minutes}${period}`;
-      
-    // Check if weather is enabled
-    const showWeather = localStorage.getItem('showWeather') !== 'false';
-    
-    let weatherString = '';
-    if (showWeather) {
-      const temperatureElement = document.getElementById('temperature');
-      const weatherIconElement = document.getElementById('weather-icon');
-      
-      if (temperatureElement && weatherIconElement && weatherIconElement.dataset.weatherCode) {
-        const temperature = temperatureElement.textContent.replace('°', '');
-        const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
-        
-        if (weatherConditionsForTitle[weatherCode]) {
-          weatherString = ` | ${temperature}° ${weatherConditionsForTitle[weatherCode].icon}`;
-        }
+  let now = new Date();
+  let hours = now.getHours();
+  let minutes = String(now.getMinutes()).padStart(2, '0');
+  let seconds = String(now.getSeconds()).padStart(2, '0');
+
+  let displayHours;
+  let period = '';
+
+  if (use12HourFormat) {
+    // 12-hour format
+    period = hours >= 12 ? ' PM' : ' AM';
+    displayHours = hours % 12 || 12;
+    displayHours = String(displayHours).padStart(2, '0');
+  } else {
+    // 24-hour format
+    displayHours = String(hours).padStart(2, '0');
+  }
+
+  const timeString = showSeconds ? 
+    `${displayHours}:${minutes}:${seconds}${period}` : 
+    `${displayHours}:${minutes}${period}`;
+
+  // Check if weather is enabled
+  const showWeather = localStorage.getItem('showWeather') !== 'false';
+
+  let weatherString = '';
+  if (showWeather) {
+    const temperatureElement = document.getElementById('temperature');
+    const weatherIconElement = document.getElementById('weather-icon');
+
+    if (temperatureElement && weatherIconElement && weatherIconElement.dataset.weatherCode) {
+      const temperature = temperatureElement.textContent.replace('°', '');
+      const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
+
+      if (weatherConditionsForTitle[weatherCode]) {
+        weatherString = ` | ${temperature}° ${weatherConditionsForTitle[weatherCode].icon}`;
       }
     }
-
-    document.title = `${timeString}${weatherString}`;
   }
+
+  document.title = `${timeString}${weatherString}`;
 }
 
 // Function to check if it's daytime (between 6:00 and 18:00)
