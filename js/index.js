@@ -4826,15 +4826,6 @@ blurOverlay.addEventListener('click', (event) => {
     }
 });
 
-persistentClock.addEventListener('click', () => {
-    customizeModal.style.display = 'block';
-    blurOverlayControls.style.display = 'block';
-    setTimeout(() => {
-        customizeModal.classList.add('show');
-        blurOverlayControls.classList.add('show');
-    }, 10);
-});
-
 document.getElementById("versionButton").addEventListener("click", function() {
     window.open("https://kirbindustries.gitbook.io/gurasuraisu", "_blank");
 });
