@@ -742,11 +742,11 @@ function showPopup(message) {
     popup.style.bottom = '10vh';
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
-    popup.style.backgroundColor = 'var(--overlay-color)';
-    popup.style.backdropFilter = 'blur(50px)';
+    popup.style.backgroundColor = 'var(--search-background)';
+    popup.style.backdropFilter = 'blur(20px)';
     popup.style.color = 'var(--text-color)';
     popup.style.padding = '20px';
-    popup.style.borderRadius = '50px';
+    popup.style.borderRadius = '40px';
     popup.style.zIndex = '9999996';
     popup.style.transition = 'opacity 0.5s';
     popup.style.display = 'flex';
@@ -795,8 +795,8 @@ function showPopup(message) {
         fullscreenBtn.style.padding = '10px 10px';
         fullscreenBtn.style.borderRadius = '25px';
         fullscreenBtn.style.border = 'var(--glass-border)';
-        fullscreenBtn.style.backgroundColor = 'var(--overlay-color)';
-        fullscreenBtn.style.backdropFilter = 'blur(50px)';
+        fullscreenBtn.style.backgroundColor = 'var(--search-background)';
+        fullscreenBtn.style.backdropFilter = 'blur(20px)';
         fullscreenBtn.style.color = 'var(--text-color)';
         fullscreenBtn.style.cursor = 'pointer';
         fullscreenBtn.style.display = 'flex';
@@ -898,7 +898,7 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.top = '20px';
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
-    popup.style.backgroundColor = 'var(--search-background)';
+    popup.style.backgroundColor = 'var(--modal-background)';
     popup.style.backdropFilter = 'blur(50px)';
     popup.style.color = 'var(--text-color)';
     popup.style.padding = '20px';
@@ -958,63 +958,6 @@ function createOnScreenPopup(message, options = {}) {
         popup.appendChild(actionButton);
     }
     
-    // Special handling for fullscreen notification
-    if (message === (currentLanguage && currentLanguage.NOT_FULLSCREEN)) {
-        // Clear existing content
-        while (popup.firstChild) {
-            popup.removeChild(popup.firstChild);
-        }
-        
-        // Make the popup background invisible
-        popup.style.backgroundColor = 'transparent';
-        popup.style.backdropFilter = 'none';
-        popup.style.padding = '0';
-        
-        const fullscreenBtn = document.createElement('button');
-        fullscreenBtn.style.padding = '10px 10px';
-        fullscreenBtn.style.borderRadius = '25px';
-        fullscreenBtn.style.border = 'none';
-        fullscreenBtn.style.backgroundColor = 'var(--search-background)';
-        fullscreenBtn.style.backdropFilter = 'blur(50px)';
-        fullscreenBtn.style.color = 'var(--text-color)';
-        fullscreenBtn.style.cursor = 'pointer';
-        fullscreenBtn.style.display = 'flex';
-        fullscreenBtn.style.alignItems = 'center';
-        fullscreenBtn.style.justifyContent = 'center';
-        fullscreenBtn.style.gap = '5px';
-        fullscreenBtn.style.fontFamily = 'Inter, sans-serif';
-        fullscreenBtn.style.height = '36px';
-        
-        const icon = document.createElement('span');
-        icon.className = 'material-symbols-rounded';
-        icon.textContent = 'fullscreen';
-        icon.style.fontFamily = 'Material Symbols Rounded';
-        icon.style.fontSize = '20px';
-        icon.style.lineHeight = '1';
-        icon.style.display = 'flex';
-        icon.style.alignItems = 'center';
-        
-        const buttonText = document.createElement('span');
-        buttonText.textContent = (currentLanguage && currentLanguage.FULLSCREEN) || 'Fullscreen';
-        buttonText.style.lineHeight = '1';
-        
-        fullscreenBtn.appendChild(icon);
-        fullscreenBtn.appendChild(buttonText);
-        
-        fullscreenBtn.addEventListener('click', function() {
-            if (typeof goFullscreen === 'function') {
-                goFullscreen();
-            }
-            
-            // Remove the popup after clicking the button
-            if (document.body.contains(popup)) {
-                document.body.removeChild(popup);
-            }
-        });
-        
-        popup.appendChild(fullscreenBtn);
-    }
-    
     // Get all existing popups
     const existingPopups = document.querySelectorAll('.on-screen-notification');
     
@@ -1034,7 +977,7 @@ function createOnScreenPopup(message, options = {}) {
     
     document.body.appendChild(popup);
     
-    // Auto-dismiss on-screen popup after 7.5 seconds
+    // Auto-dismiss on-screen popup after 10 seconds
     const timeoutId = setTimeout(() => {
         popup.style.opacity = '0';
         setTimeout(() => {
@@ -1047,7 +990,7 @@ function createOnScreenPopup(message, options = {}) {
                 });
             }
         }, 500);
-    }, 7500);
+    }, 10000);
     
     // Return control methods
     return {
