@@ -440,7 +440,6 @@ input[type="color"]::-moz-color-swatch {
     font-size: clamp(1.5rem, 3vw, 2rem);
     font-weight: 400;
     font-variant-numeric: tabular-nums;
-    color: var(--text-color);
     cursor: pointer;
     user-select: none;
     transform: scale(1);
