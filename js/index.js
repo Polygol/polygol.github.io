@@ -718,14 +718,17 @@ const closeModal = document.getElementById('closeModal');
 const blurOverlay = document.getElementById('blurOverlay');
 
 clockElement.addEventListener('click', () => {
+    if (!gurappsEnabled) return;
     createFullscreenEmbed('/chronos/index.html');
 });
 
 weatherWidget.addEventListener('click', () => {
+    if (!gurappsEnabled) return;
     createFullscreenEmbed('/weather/index.html');
 });
 
 dateElement.addEventListener('click', () => {
+    if (!gurappsEnabled) return;
     createFullscreenEmbed('/fantaskical/index.html');
 });
 
