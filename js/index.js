@@ -1375,7 +1375,7 @@ function createSetupScreen() {
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 0.3s ease, transform 0.3s ease;
-	    height: 100vh;
+	    max-height: 100vh;
 	    overflow: auto;
         }
 
