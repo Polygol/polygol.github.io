@@ -185,7 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
 function updatePersistentClock() {
   const isModalOpen = 
-    customizeModal.classList.contains('show') ||
     (appDrawer && appDrawer.classList.contains('open')) ||
     document.querySelector('.fullscreen-embed[style*="display: block"]');
     
