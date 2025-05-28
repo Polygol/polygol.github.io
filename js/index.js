@@ -742,11 +742,11 @@ function showPopup(message) {
     popup.style.bottom = '10vh';
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
-    popup.style.backgroundColor = 'var(--search-background)';
+    popup.style.backgroundColor = 'var(--overlay-color)';
     popup.style.backdropFilter = 'blur(50px)';
     popup.style.color = 'var(--text-color)';
     popup.style.padding = '20px';
-    popup.style.borderRadius = '30px';
+    popup.style.borderRadius = '50px';
     popup.style.zIndex = '9999996';
     popup.style.transition = 'opacity 0.5s';
     popup.style.display = 'flex';
@@ -794,8 +794,8 @@ function showPopup(message) {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.style.padding = '10px 10px';
         fullscreenBtn.style.borderRadius = '25px';
-        fullscreenBtn.style.border = 'none';
-        fullscreenBtn.style.backgroundColor = 'var(--search-background)';
+        fullscreenBtn.style.border = 'var(--glass-border)';
+        fullscreenBtn.style.backgroundColor = 'var(--overlay-color)';
         fullscreenBtn.style.backdropFilter = 'blur(50px)';
         fullscreenBtn.style.color = 'var(--text-color)';
         fullscreenBtn.style.cursor = 'pointer';
@@ -902,12 +902,12 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.backdropFilter = 'blur(50px)';
     popup.style.color = 'var(--text-color)';
     popup.style.padding = '20px';
-    popup.style.borderRadius = '30px';
+    popup.style.borderRadius = '20px';
     popup.style.zIndex = '9999996';
     popup.style.transition = 'opacity 0.5s';
     popup.style.display = 'flex';
     popup.style.alignItems = 'center';
-    popup.style.gap = '10px';
+    popup.style.gap = '16px';
     popup.style.border = '1px solid var(--glass-border)';
     
     // Check for specific words to determine icon
