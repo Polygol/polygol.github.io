@@ -3371,9 +3371,11 @@ function setupFontSelection() {
         // Only apply custom color if the switch is enabled
         if (colorSwitch.checked) {
             clockElement.style.color = colorPicker.value;
+	    infoElement.style.color = colorPicker.value;
         } else {
             // Reset to default theme color
             clockElement.style.color = ''; // Empty string removes inline style, reverting to CSS
+	    infoElement.style.color = '';
         }
         
         infoElement.style.fontFamily = fontFamily;
