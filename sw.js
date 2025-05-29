@@ -20,7 +20,7 @@ const ASSETS_TO_CACHE = [
   '/assets/appicon/weather.png',
   '/assets/appicon/sketch.png',
   '/assets/appicon/mail.png',
-  '/assets/appicon/game.png',
+  '/assets/appicon/home.png',
   '/assets/appicon/camera.png',
   '/assets/marketing/hero3.png',
   '/assets/sound/timer.mp3',
@@ -48,7 +48,7 @@ const ASSETS_TO_CACHE = [
   '/clapper/index.html',
   '/weather/index.html',
   '/moments/index.html',
-  '/joyful/index.html',
+  '/home/index.html',
   '/camera/index.html'
 ];
 
