@@ -48,7 +48,7 @@ const ASSETS_TO_CACHE = [
   '/clapper/index.html',
   '/weather/index.html',
   '/moments/index.html',
-  '/home/index.html',
+  '/waves/index.html',
   '/camera/index.html'
 ];
 
