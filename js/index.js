@@ -194,11 +194,9 @@ function updatePersistentClock() {
     let minutes = String(now.getMinutes()).padStart(2, '0');
     
     let displayHours;
-    let period = '';
     
     if (use12HourFormat) {
-      // 12-hour format
-      period = hours >= 12 ? ' PM' : ' AM';
+      // 12-hour format without AM/PM
       displayHours = hours % 12 || 12;
       displayHours = String(displayHours).padStart(2, '0');
     } else {
@@ -206,7 +204,7 @@ function updatePersistentClock() {
       displayHours = String(hours).padStart(2, '0');
     }
     
-    persistentClock.textContent = `${displayHours}:${minutes}${period}`;
+    persistentClock.textContent = `${displayHours}:${minutes}`;
   } else {
     persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
   }
