@@ -3405,7 +3405,7 @@ const apps = {
         url: "/clapper/index.html",
         icon: "video.png"
     },
-    "Joyful": {
+    "Home": {
         url: "/home/index.html",
         icon: "home.png"
     },
