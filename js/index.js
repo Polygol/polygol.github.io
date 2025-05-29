@@ -4961,7 +4961,7 @@ function showSystemId(id) {
 // Add PeerJS script
 if (!window.Peer) {
     const script = document.createElement('script');
-    script.src = 'https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js';
+    script.src = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
     script.onload = initializeSystemControl;
     document.head.appendChild(script);
 } else {
