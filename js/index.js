@@ -3403,8 +3403,8 @@ const apps = {
         url: "/clapper/index.html",
         icon: "video.png"
     },
-    "Home": {
-        url: "/home/index.html",
+    "Waves": {
+        url: "/waves/index.html",
         icon: "home.png"
     },
     "SketchPad": {
