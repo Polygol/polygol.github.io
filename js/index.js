@@ -3406,8 +3406,8 @@ const apps = {
         icon: "video.png"
     },
     "Joyful": {
-        url: "/joyful/index.html",
-        icon: "game.png"
+        url: "/home/index.html",
+        icon: "home.png"
     },
     "SketchPad": {
         url: "/sketchpad/index.html",
