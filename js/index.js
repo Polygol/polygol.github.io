@@ -2204,15 +2204,24 @@ wallpaperInput.addEventListener("change", async event => {
                 }
             }
             
-            if (processedWallpapers.length > 0) {
-                localStorage.setItem("wallpapers", JSON.stringify(processedWallpapers));
-                currentWallpaperIndex = 0;
-                isSlideshow = true;
-                
-                recentWallpapers.unshift({
-                    isSlideshow: true,
-                    timestamp: Date.now()
-                });
+	    if (processedWallpapers.length > 0) {
+	        // Get current clock styles for the slideshow
+	        const currentClockStyles = {
+	            font: localStorage.getItem('clockFont') || 'Inter',
+	            weight: localStorage.getItem('clockWeight') || '700',
+	            color: localStorage.getItem('clockColor') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
+	            colorEnabled: localStorage.getItem('clockColorEnabled') === 'true'
+	        };
+	    
+	        localStorage.setItem("wallpapers", JSON.stringify(processedWallpapers));
+	        currentWallpaperIndex = 0;
+	        isSlideshow = true;
+	    
+	        recentWallpapers.unshift({
+	            isSlideshow: true,
+	            timestamp: Date.now(),
+	            clockStyles: currentClockStyles // Store clock styles for slideshow
+	        });
                 
                 while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
                     recentWallpapers.pop();
@@ -2297,6 +2306,14 @@ async function saveWallpaper(file) {
     try {
         const wallpaperId = `wallpaper_${Date.now()}`;
         
+        // Get current clock styles
+        const currentClockStyles = {
+            font: localStorage.getItem('clockFont') || 'Inter',
+            weight: localStorage.getItem('clockWeight') || '700',
+            color: localStorage.getItem('clockColor') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
+            colorEnabled: localStorage.getItem('clockColorEnabled') === 'true'
+        };
+        
         if (file.type.startsWith("video/")) {
             await storeWallpaper(wallpaperId, {
                 blob: file,
@@ -2306,7 +2323,8 @@ async function saveWallpaper(file) {
                 id: wallpaperId,
                 type: file.type,
                 isVideo: true,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                clockStyles: currentClockStyles // Store current clock styles
             });
         } else {
             let compressedData = await compressMedia(file);
@@ -2318,7 +2336,8 @@ async function saveWallpaper(file) {
                 id: wallpaperId,
                 type: file.type,
                 isVideo: false,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                clockStyles: currentClockStyles // Store current clock styles
             });
         }
         
@@ -2494,6 +2513,26 @@ function loadRecentWallpapers() {
     const savedWallpapers = localStorage.getItem('recentWallpapers');
     if (savedWallpapers) {
       recentWallpapers = JSON.parse(savedWallpapers);
+    }
+    
+    // Migrate existing wallpapers without clock styles
+    const defaultClockStyles = {
+        font: 'Inter',
+        weight: '700',
+        color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
+        colorEnabled: false
+    };
+    
+    let updated = false;
+    recentWallpapers.forEach(wallpaper => {
+        if (!wallpaper.clockStyles) {
+            wallpaper.clockStyles = { ...defaultClockStyles };
+            updated = true;
+        }
+    });
+    
+    if (updated) {
+        saveRecentWallpapers();
     }
     
     // Check if we're in slideshow mode
@@ -2992,6 +3031,17 @@ async function jumpToWallpaper(index) {
     
     let wallpaper = recentWallpapers[currentWallpaperPosition];
     
+    // Apply clock styles for this wallpaper if they exist
+    if (wallpaper.clockStyles) {
+        localStorage.setItem('clockFont', wallpaper.clockStyles.font);
+        localStorage.setItem('clockWeight', wallpaper.clockStyles.weight);
+        localStorage.setItem('clockColor', wallpaper.clockStyles.color);
+        localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled);
+        
+        // Re-initialize to apply the styles
+        setupFontSelection();
+    }
+        
     clearInterval(slideshowInterval);
     slideshowInterval = null;
     
@@ -3092,75 +3142,68 @@ function checkWallpaperState() {
 
 // Modify switchWallpaper function to show indicator
 function switchWallpaper(direction) {
-  if (recentWallpapers.length === 0) return;
-  
-  // Calculate new position
-  let newPosition = currentWallpaperPosition;
-  
-  if (direction === 'right') {
-    newPosition++;
-    if (newPosition >= recentWallpapers.length) {
-      // Implement wrapping or stop at the end
-      // For UX consistency, let's not wrap around
-      newPosition = recentWallpapers.length - 1;
-      return;
-    }
-  } else if (direction === 'left') {
-    newPosition--;
-    if (newPosition < 0) {
-      // Don't go below zero
-      newPosition = 0;
-      return;
-    }
-  } else {
-    // If 'none' is passed, we still want to apply the current position's wallpaper
-    // without changing the position
-  }
-  
-  // Only proceed if position actually changed or we're reapplying
-  if (newPosition !== currentWallpaperPosition && direction !== 'none') {
-    currentWallpaperPosition = newPosition;
-  }
-  
-  const wallpaper = recentWallpapers[currentWallpaperPosition];
-  
-  // Save the position for persistence
-  saveCurrentPosition();
-  
-  // Clear current slideshow if it's running
-  clearInterval(slideshowInterval);
-  slideshowInterval = null;
-  
-  // Apply the selected wallpaper
-  if (wallpaper.isSlideshow) {
-    // If it's the slideshow entry, restart the slideshow
-    isSlideshow = true;
-    const wallpapers = JSON.parse(localStorage.getItem('wallpapers'));
-    if (wallpapers && wallpapers.length > 0) {
-      localStorage.setItem('wallpapers', JSON.stringify(wallpapers));
-      currentWallpaperIndex = 0;
-      applyWallpaper();
-      showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
-    }
-  } else {
-    // Apply a single wallpaper
-    isSlideshow = false;
-    localStorage.removeItem('wallpapers');
+    if (recentWallpapers.length === 0) return;
     
-    if (wallpaper.isVideo) {
-      localStorage.setItem('wallpaperType', wallpaper.type);
-      // Video is already stored in IndexedDB
-      applyWallpaper();
-    } else {
-      localStorage.setItem('wallpaperType', wallpaper.type);
-      localStorage.setItem('customWallpaper', wallpaper.data);
-      applyWallpaper();
+    // Calculate new position (existing logic)
+    let newPosition = currentWallpaperPosition;
+    
+    if (direction === 'right') {
+        newPosition++;
+        if (newPosition >= recentWallpapers.length) {
+            newPosition = recentWallpapers.length - 1;
+            return;
+        }
+    } else if (direction === 'left') {
+        newPosition--;
+        if (newPosition < 0) {
+            newPosition = 0;
+            return;
+        }
     }
-  }
-  
-  // Only update the active state of dots
-  updatePageIndicatorDots(false);
-  resetIndicatorTimeout();
+    
+    // Only proceed if position actually changed or we're reapplying
+    if (newPosition !== currentWallpaperPosition && direction !== 'none') {
+        currentWallpaperPosition = newPosition;
+    }
+    
+    const wallpaper = recentWallpapers[currentWallpaperPosition];
+    
+    // Apply clock styles for this wallpaper if they exist
+    if (wallpaper.clockStyles) {
+        // Update localStorage so setupFontSelection can read the values
+        localStorage.setItem('clockFont', wallpaper.clockStyles.font);
+        localStorage.setItem('clockWeight', wallpaper.clockStyles.weight);
+        localStorage.setItem('clockColor', wallpaper.clockStyles.color);
+        localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled);
+        
+        // Re-initialize the font selection to apply the new styles
+        setupFontSelection();
+    }
+    
+    // Save the position for persistence
+    saveCurrentPosition();
+    
+    // Rest of the existing wallpaper switching logic...
+    clearInterval(slideshowInterval);
+    slideshowInterval = null;
+    
+    if (wallpaper.isSlideshow) {
+        isSlideshow = true;
+        const wallpapers = JSON.parse(localStorage.getItem('wallpapers'));
+        if (wallpapers && wallpapers.length > 0) {
+            localStorage.setItem('wallpapers', JSON.stringify(wallpapers));
+            currentWallpaperIndex = 0;
+            applyWallpaper();
+            showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
+        }
+    } else {
+        isSlideshow = false;
+        localStorage.removeItem('wallpapers');
+        applyWallpaper();
+    }
+    
+    updatePageIndicatorDots(false);
+    resetIndicatorTimeout();
 }
 
 // Update handleSwipe to show indicator even if no swipe is detected
@@ -3230,18 +3273,23 @@ document.addEventListener('mouseup', (e) => {
 }, false);
 
 async function initializeAndApplyWallpaper() {
-    // Load saved position
     loadSavedPosition();
     
-    // Make sure current position is valid
     if (recentWallpapers.length > 0) {
         if (currentWallpaperPosition >= recentWallpapers.length) {
             currentWallpaperPosition = recentWallpapers.length - 1;
             saveCurrentPosition();
         }
         
-        // Apply the correct wallpaper
         const wallpaper = recentWallpapers[currentWallpaperPosition];
+        
+        // Apply clock styles for the current wallpaper if they exist
+        if (wallpaper.clockStyles) {
+            localStorage.setItem('clockFont', wallpaper.clockStyles.font);
+            localStorage.setItem('clockWeight', wallpaper.clockStyles.weight);
+            localStorage.setItem('clockColor', wallpaper.clockStyles.color);
+            localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled);
+        }
         
         if (wallpaper.isSlideshow) {
             isSlideshow = true;
@@ -3292,7 +3340,7 @@ function setupFontSelection() {
     
     // Load saved preferences
     const savedFont = localStorage.getItem('clockFont') || 'Inter';
-    const savedWeight = localStorage.getItem('clockWeight') || '700'; // Default 700
+    const savedWeight = localStorage.getItem('clockWeight') || '700';
     const savedColor = localStorage.getItem('clockColor') || defaultColor;
     const colorEnabled = localStorage.getItem('clockColorEnabled') === 'true';
     
@@ -3312,14 +3360,38 @@ function setupFontSelection() {
         // Only apply custom color if the switch is enabled
         if (colorSwitch.checked) {
             clockElement.style.color = colorPicker.value;
-	    infoElement.style.color = colorPicker.value;
+            infoElement.style.color = colorPicker.value;
         } else {
             // Reset to default theme color
             clockElement.style.color = ''; // Empty string removes inline style, reverting to CSS
-	    infoElement.style.color = '';
+            infoElement.style.color = '';
         }
         
         infoElement.style.fontFamily = fontFamily;
+    }
+    
+    // Function to save current clock styles to the current wallpaper
+    function saveCurrentClockStyles() {
+        if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0 && currentWallpaperPosition < recentWallpapers.length) {
+            const currentClockStyles = {
+                font: fontSelect.value,
+                weight: (weightSlider.value * 10).toString(),
+                color: colorPicker.value,
+                colorEnabled: colorSwitch.checked
+            };
+            
+            // Update the current wallpaper's clock styles
+            recentWallpapers[currentWallpaperPosition].clockStyles = currentClockStyles;
+            
+            // Save to localStorage
+            saveRecentWallpapers();
+        }
+        
+        // Also update localStorage for immediate use
+        localStorage.setItem('clockFont', fontSelect.value);
+        localStorage.setItem('clockWeight', (weightSlider.value * 10).toString());
+        localStorage.setItem('clockColor', colorPicker.value);
+        localStorage.setItem('clockColorEnabled', colorSwitch.checked.toString());
     }
     
     // Apply initial styles
@@ -3331,7 +3403,7 @@ function setupFontSelection() {
         // Ensure font is loaded before applying
         document.fonts.load(`16px ${selectedFont}`).then(() => {
             applyStyles();
-            localStorage.setItem('clockFont', selectedFont);
+            saveCurrentClockStyles(); // Save to current wallpaper
         }).catch(() => {
             showPopup(currentLanguage.CLOCK_STYLE_FAILED);
         });
@@ -3339,26 +3411,24 @@ function setupFontSelection() {
     
     // Handle weight changes with the slider
     weightSlider.addEventListener('input', (e) => {
-        const weightValue = e.target.value * 10; // Convert slider value to font weight
-        localStorage.setItem('clockWeight', weightValue);
         applyStyles();
+        saveCurrentClockStyles(); // Save to current wallpaper
     });
     
     // Handle color changes with the color picker
     colorPicker.addEventListener('input', (e) => {
-        localStorage.setItem('clockColor', e.target.value);
         applyStyles();
+        saveCurrentClockStyles(); // Save to current wallpaper
     });
     
     // Handle color switch toggle
     colorSwitch.addEventListener('change', (e) => {
-        const isEnabled = e.target.checked;
-        localStorage.setItem('clockColorEnabled', isEnabled);
         applyStyles();
+        saveCurrentClockStyles(); // Save to current wallpaper
     
         // Show/hide the color picker based on switch state
-        colorPicker.style.display = isEnabled ? 'inline-block' : 'none';
-	colorPicker.disabled = !isEnabled;
+        colorPicker.style.display = e.target.checked ? 'inline-block' : 'none';
+        colorPicker.disabled = !e.target.checked;
     });
     
     // Set initial color picker state based on switch
