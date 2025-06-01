@@ -2054,10 +2054,9 @@ const style = document.createElement('style');
 style.textContent = `
     body.minimal-active .drawer-pill,
     body.minimal-active #date,
-    body.minimal-active .persistent-clock,
-    body.minimal-active .drawer-handle {
+    body.minimal-active .persistent-clock {
         opacity: 0.5;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.3s ease, width 0.3s ease;
     }
 
     body.minimal-active .blur-overlay {
