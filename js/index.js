@@ -2059,13 +2059,6 @@ style.textContent = `
         opacity: 0.5;
         transition: opacity 0.3s ease;
     }
-    
-    body.minimal-active .drawer-pill:hover,
-    body.minimal-active #date:hover,
-    body.minimal-active .persistent-clock:hover,
-    body.minimal-active .drawer-handle:hover {
-        opacity: 1;
-    }
 
     body.minimal-active .blur-overlay {
     	backdrop-filter: blur(50px);
@@ -2076,7 +2069,7 @@ style.textContent = `
     }
     
     body.minimal-active .drawer-pill {
-        background: rgba(255, 255, 255, 0);
+        width: 10%;
     }
 `;
 document.head.appendChild(style);
