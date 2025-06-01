@@ -308,7 +308,7 @@ input[type="color"]::-moz-color-swatch {
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
-    transition: opacity 0.3s ease, background-color 0.3s;
+    transition: opacity 0.3s ease, background-color 0.3s, width 0.3s;
     width: 25%;
     height: 5px;
     background-color: var(--secondary-text-color);
