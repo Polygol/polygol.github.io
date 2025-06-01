@@ -2053,6 +2053,7 @@ document.addEventListener('DOMContentLoaded', function() {
 const style = document.createElement('style');
 style.textContent = `
     body.minimal-active .drawer-pill,
+    body.minimal-active .drawer-handle,
     body.minimal-active #date,
     body.minimal-active .persistent-clock {
         opacity: 0.5;
