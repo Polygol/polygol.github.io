@@ -4057,6 +4057,7 @@ function setupDrawerInteractions() {
             // Add dynamic border radius during drag
             const borderRadius = Math.min(25, (movementPercentage - 25) * 0.5);
             openEmbed.style.borderRadius = `${borderRadius}px`;
+	    openEmbed.style.filter = `blur(${borderRadius}px)`;
             
             // Make app drawer transparent when in an app
             appDrawer.style.opacity = '0';
