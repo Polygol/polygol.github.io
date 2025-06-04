@@ -508,13 +508,18 @@ input[type="color"]::-moz-color-swatch {
             display: block;
             left: auto;
             bottom: auto;
-            transform: translateX(0);
+            transform: translateX(0) scale(1);;
             width: clamp(280px, 90%, 400px);
             z-index: 9999; !important;
             background-color: rgba(0, 0, 0, 0);
             box-shadow: none;
             border: none;
             backdrop-filter: none;
+        }
+
+        #customizeModal.modal.show {
+            transform-origin: top right;
+            transform: scale(0.1);
         }
         
         .modal, .modal-content {
