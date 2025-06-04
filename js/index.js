@@ -3072,6 +3072,7 @@ function addPageIndicatorStyles() {
       padding: 5px 6px;
       border: 1px solid var(--glass-border);
       border-radius: 10px;
+      filter: blur(0px);
     }
 
     .page-indicator.empty {
@@ -3112,6 +3113,7 @@ function addPageIndicatorStyles() {
     .fade-out {
       opacity: 0;
       pointer-events: none;
+      filter: blur(5px);
     }
   `;
   document.head.appendChild(style);
