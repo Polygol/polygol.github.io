@@ -220,7 +220,7 @@ function updatePersistentClock() {
                 customizeModal.classList.add('show');
                 blurOverlayControls.classList.add('show');
                 blurOverlayControls.style.display = 'block';
-            }, 5);
+            }, 10);
         }
     });
     
