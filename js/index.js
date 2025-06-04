@@ -4090,9 +4090,9 @@ function setupDrawerInteractions() {
         // Only update opacity if no embed is open
         if (!openEmbed) {
             const opacity = (newPosition + 100) / 100;
-	    const blurdr = Math.min((newPosition / 5), 1);
+	    const blurdr = Math.max(0, Math.min(5, (100 + newPosition) / 20));
             appDrawer.style.opacity = opacity;
-	    appDrawer.style.filter = 'blur(${blurdr}px)';
+	    appDrawer.style.filter = `blur(${blurdr}px)`;
         }
         
         appDrawer.style.bottom = `${newPosition}%`;
@@ -4151,7 +4151,7 @@ function setupDrawerInteractions() {
             dock.style.boxShadow = 'none';
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
-	    appDrawer.style.filter = 'blur(5px)';
+	    appDrawer.style.filter = 'blur(0px)';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
             interactionBlocker.style.display = 'none';
@@ -4165,7 +4165,7 @@ function setupDrawerInteractions() {
             
             // Keep app drawer transparent when in an app
             appDrawer.style.opacity = '0';
-	    appDrawer.style.filter = 'blur(5px)';
+	    appDrawer.style.filter = 'blur(0px)';
             
             // Handle dock visibility for smaller swipes
             if (movementPercentage > 2.5 && movementPercentage <= 25) {
@@ -4195,7 +4195,7 @@ function setupDrawerInteractions() {
                 dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; // Enable box shadow when visible
                 appDrawer.style.bottom = '-100%';
                 appDrawer.style.opacity = '0';
-		appDrawer.style.filter = 'blur(5px)';
+		appDrawer.style.filter = 'blur(0px)';
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
@@ -4217,7 +4217,7 @@ function setupDrawerInteractions() {
                 dock.style.boxShadow = 'none'; // Disable box shadow when not visible
                 appDrawer.style.bottom = '-100%';
                 appDrawer.style.opacity = '0';
-		appDrawer.style.filter = 'blur(5px)';
+		appDrawer.style.filter = 'blur(0px)';
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
