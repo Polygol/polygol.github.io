@@ -3515,6 +3515,7 @@ function createFullscreenEmbed(url) {
             embedContainer.style.transform = 'scale(1)';
             embedContainer.style.opacity = '1';
             embedContainer.style.borderRadius = '0px'; // Remove border radius when fully opened
+	    embedContainer.style.filter = 'blur(0px)';
         }, 10);
         
         // Hide container with a smooth fade animation
@@ -3604,6 +3605,7 @@ function createFullscreenEmbed(url) {
     embedContainer.style.transform = 'scale(0.8)'; 
     embedContainer.style.opacity = '0';
     embedContainer.style.borderRadius = '25px';
+    embedContainer.style.filter = 'blur(5px)';
     embedContainer.style.overflow = 'hidden'; // Ensure border radius works with iframe
     embedContainer.style.display = 'block';
     
@@ -3705,13 +3707,14 @@ function createFullscreenEmbed(url) {
     void embedContainer.offsetWidth;
     
     // Now add the transition AFTER the element is in the DOM with initial styles applied
-    embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+    embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease';
     
     // Trigger the animation in the next event loop
     setTimeout(() => {
         embedContainer.style.transform = 'scale(1)';
         embedContainer.style.opacity = '1';
         embedContainer.style.borderRadius = '0px'; // Remove border radius when fully opened
+	embedContainer.style.filter = 'blur(0px)';
     }, 10);
     
     // Show the swipe overlay when opening an app
