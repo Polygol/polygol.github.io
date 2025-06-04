@@ -4056,7 +4056,7 @@ function setupDrawerInteractions() {
             
             // Add dynamic border radius during drag
             const borderRadius = Math.min(25, (movementPercentage - 25) * 0.5);
-	    const blurRadius = Math.min(5, (movementPercentage - 5) * 0.5);
+	    const blurRadius = Math.min(5, (movementPercentage - 25) * 0.5);
             openEmbed.style.borderRadius = `${borderRadius}px`;
 	    openEmbed.style.filter = `blur(${blurRadius}px)`;
             
@@ -4127,7 +4127,7 @@ function setupDrawerInteractions() {
             openEmbed.style.transform = 'scale(0.8)';
             openEmbed.style.opacity = '0';
             openEmbed.style.borderRadius = '25px'; // Fully rounded when minimized
-	    openEmbed.style.filter = 'blur(25px)';
+	    openEmbed.style.filter = 'blur(5px)';
             
             setTimeout(() => {
                 minimizeFullscreenEmbed();
