@@ -212,16 +212,12 @@ function updatePersistentClock() {
     
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
-        // Check if there's a visible embed open before showing customize modal
-        const visibleEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (!visibleEmbed) {
-            customizeModal.style.display = 'block';
-	    blurOverlayControls.style.display = 'block';
-            setTimeout(() => {
-		customizeModal.classList.add('show');
-                blurOverlayControls.classList.add('show');
-            }, 10);
-        }
+	customizeModal.style.display = 'block';
+	blurOverlayControls.style.display = 'block';
+        setTimeout(() => {
+	    customizeModal.classList.add('show');
+            blurOverlayControls.classList.add('show');
+        }, 10);
     });
     
     // Setup observer to watch for embed visibility changes to update clock immediately
