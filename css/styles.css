@@ -2330,7 +2330,8 @@ input[type="color"]::-moz-color-swatch {
             z-index: 1000;
             background: var(--background-color);
             overflow: hidden; /* Add this to ensure border-radius works properly */
-            transition: transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease;
+            transition: transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease;
+            filter: none;
         }
         
         .fullscreen-embed iframe {
