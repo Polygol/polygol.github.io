@@ -4459,12 +4459,22 @@ function blackoutScreen() {
   blockingOverlay.style.left = '0';
   blockingOverlay.style.width = '100%';
   blockingOverlay.style.height = '100%';
-  blockingOverlay.style.zIndex = '9999999'; // Highest z-index to block everything
+  blockingOverlay.style.zIndex = '999999999999999'; // Highest z-index to block everything
   blockingOverlay.style.cursor = 'pointer';
+  blockingOverlay.style.pointerEvents = 'all';
   blockingOverlay.style.backgroundColor = 'black'; // Ensure it's completely black
   
   // Add it to the document
   document.body.appendChild(blockingOverlay);
+
+  customizeModal.classList.remove('show');
+  blurOverlayControls.classList.remove('show');
+
+  // Wait for CSS transition to finish before setting display: none
+  setTimeout(() => {
+      customizeModal.style.display = 'none';
+      blurOverlayControls.style.display = 'none';
+  }, 300);
   
   // Pause all videos, embeds, and animations
   document.querySelectorAll('video, iframe, canvas, [data-animation]').forEach(el => {
@@ -4565,10 +4575,10 @@ document.addEventListener('keydown', (event) => {
         [customizeModal].forEach(modal => {
             if (modal.classList.contains('show')) {
                 modal.classList.remove('show');
-                blurOverlay.classList.remove('show');
+                blurOverlayControls.classList.remove('show');
                 setTimeout(() => {
                     modal.style.display = 'none';
-                    blurOverlay.style.display = 'none';
+                    blurOverlayControls.style.display = 'none';
                 }, 300);
             }
         });
