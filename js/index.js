@@ -4050,7 +4050,7 @@ function setupDrawerInteractions() {
         
         if (openEmbed && movementPercentage > 25) {
             // Add transition class for smooth animation
-            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease';
             openEmbed.style.transform = `scale(${1 - (movementPercentage - 25) / 100})`;
             openEmbed.style.opacity = 1 - ((movementPercentage - 25) / 75);
             
@@ -4123,7 +4123,7 @@ function setupDrawerInteractions() {
         
         if (openEmbed && (movementPercentage > 10 || isFlickUp)) {
             // Close embed with animation
-            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease';
             openEmbed.style.transform = 'scale(0.8)';
             openEmbed.style.opacity = '0';
             openEmbed.style.borderRadius = '25px'; // Fully rounded when minimized
@@ -4150,7 +4150,7 @@ function setupDrawerInteractions() {
             openEmbed.style.transform = 'scale(1)';
             openEmbed.style.opacity = '1';
             openEmbed.style.borderRadius = '0px'; // Reset to no border radius
-	    openEmbed.style.filter = 'none';
+	    openEmbed.style.filter = 'blur(0px)';
             
             // Keep app drawer transparent when in an app
             appDrawer.style.opacity = '0';
