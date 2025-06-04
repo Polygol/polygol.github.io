@@ -4090,7 +4090,7 @@ function setupDrawerInteractions() {
         // Only update opacity if no embed is open
         if (!openEmbed) {
             const opacity = (newPosition + 100) / 100;
-	    const blurdr = Math.max(0, Math.min(5, (100 + newPosition) / 20));
+	    const blurdr = Math.max(0, Math.min(5, ((-newPosition) / 20)));
             appDrawer.style.opacity = opacity;
 	    appDrawer.style.filter = `blur(${blurdr}px)`;
         }
@@ -4217,7 +4217,7 @@ function setupDrawerInteractions() {
                 dock.style.boxShadow = 'none'; // Disable box shadow when not visible
                 appDrawer.style.bottom = '-100%';
                 appDrawer.style.opacity = '0';
-		appDrawer.style.filter = 'blur(0px)';
+		appDrawer.style.filter = 'blur(5px)';
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
