@@ -216,8 +216,8 @@ function updatePersistentClock() {
         const visibleEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
         if (!visibleEmbed) {
             customizeModal.style.display = 'block';
+	    customizeModal.classList.add('show');
             setTimeout(() => {
-                customizeModal.classList.add('show');
                 blurOverlayControls.classList.add('show');
                 blurOverlayControls.style.display = 'block';
             }, 10);
