@@ -508,7 +508,7 @@ input[type="color"]::-moz-color-swatch {
             display: block;
             left: auto;
             bottom: auto;
-            transform: translateX(0) scale(1);
+            transform: translateX(0) scale(0.1);
             width: clamp(280px, 90%, 400px);
             z-index: 9999; !important;
             background-color: rgba(0, 0, 0, 0);
@@ -519,7 +519,7 @@ input[type="color"]::-moz-color-swatch {
 
         #customizeModal.modal.show {
             transform-origin: top right;
-            transform: scale(0.1);
+            transform: scale(1);
         }
         
         .modal, .modal-content {
