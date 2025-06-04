@@ -509,7 +509,7 @@ input[type="color"]::-moz-color-swatch {
             left: auto;
             bottom: auto;
             transform-origin: top right;
-            transform: translateX(0) scale(0.75);
+            transform: translateX(0) scale(0.9);
             opacity: 0;
             width: clamp(280px, 90%, 400px);
             z-index: 9999; !important;
