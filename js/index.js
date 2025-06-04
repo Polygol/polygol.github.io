@@ -4126,6 +4126,7 @@ function setupDrawerInteractions() {
             openEmbed.style.transform = 'scale(0.8)';
             openEmbed.style.opacity = '0';
             openEmbed.style.borderRadius = '25px'; // Fully rounded when minimized
+	    openEmbed.style.filter = 'blur(25px)';
             
             setTimeout(() => {
                 minimizeFullscreenEmbed();
@@ -4148,6 +4149,7 @@ function setupDrawerInteractions() {
             openEmbed.style.transform = 'scale(1)';
             openEmbed.style.opacity = '1';
             openEmbed.style.borderRadius = '0px'; // Reset to no border radius
+	    openEmbed.style.filter = 'none';
             
             // Keep app drawer transparent when in an app
             appDrawer.style.opacity = '0';
