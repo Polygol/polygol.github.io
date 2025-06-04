@@ -3508,7 +3508,7 @@ function createFullscreenEmbed(url) {
         void embedContainer.offsetWidth;
         
         // Add transition for all properties
-        embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+        embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease';
         
         // Trigger the animation
         setTimeout(() => {
