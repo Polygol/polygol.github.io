@@ -4467,46 +4467,36 @@ function blackoutScreen() {
   // Add it to the document
   document.body.appendChild(blockingOverlay);
 
+  // Start fade-out animation
   customizeModal.classList.remove('show');
   blurOverlayControls.classList.remove('show');
 
-  // Wait for CSS transition to finish before setting display: none
+  // Wait for the animation to finish before hiding elements and pausing media
   setTimeout(() => {
+      // Hide elements
       customizeModal.style.display = 'none';
       blurOverlayControls.style.display = 'none';
+
+      // Pause all videos, embeds, and animations
+      document.querySelectorAll('video, iframe, canvas, [data-animation]').forEach(el => {
+          if (el.tagName === 'VIDEO') {
+              if (!el.paused) {
+                  el.pause();
+                  el.dataset.wasPlaying = 'true';
+              }
+          } else if (el.tagName === 'IFRAME') {
+              try {
+                  el.dataset.wasActive = 'true';
+                  el.style.pointerEvents = 'none';
+              } catch (e) {
+                  console.error('Failed to pause embed:', e);
+              }
+          } else if (el.style.animationPlayState) {
+              el.dataset.animationState = el.style.animationPlayState;
+              el.style.animationPlayState = 'paused';
+          }
+      });
   }, 300);
-  
-  // Pause all videos, embeds, and animations
-  document.querySelectorAll('video, iframe, canvas, [data-animation]').forEach(el => {
-    if (el.tagName === 'VIDEO') {
-      if (!el.paused) {
-        el.pause();
-        el.dataset.wasPlaying = 'true';
-      }
-    } else if (el.tagName === 'IFRAME') {
-      // For iframe embeds, we'll pause them without destroying
-      try {
-        // Store the current state so we can resume later
-        el.dataset.wasActive = 'true';
-        
-        // For YouTube embeds
-        if (el.src.includes('youtube.com') || el.src.includes('youtu.be')) {
-          el.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-        }
-        // For Vimeo embeds
-        else if (el.src.includes('vimeo.com')) {
-          el.contentWindow.postMessage('{"method":"pause"}', '*');
-        }
-        // For other embeds, we can use CSS to reduce energy usage without destroying
-        el.style.pointerEvents = 'none';
-      } catch (e) {
-        console.error('Failed to pause embed:', e);
-      }
-    } else if (el.style.animationPlayState) {
-      el.dataset.animationState = el.style.animationPlayState;
-      el.style.animationPlayState = 'paused';
-    }
-  });
   
   // Stop animations and reduce energy consumption
   document.body.classList.add('power-save-mode');
@@ -4527,15 +4517,6 @@ function blackoutScreen() {
         delete el.dataset.wasPlaying;
       } else if (el.tagName === 'IFRAME' && el.dataset.wasActive === 'true') {
         try {
-          // For YouTube embeds
-          if (el.src.includes('youtube.com') || el.src.includes('youtu.be')) {
-            el.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-          }
-          // For Vimeo embeds
-          else if (el.src.includes('vimeo.com')) {
-            el.contentWindow.postMessage('{"method":"play"}', '*');
-          }
-          // Re-enable pointer events
           el.style.pointerEvents = 'auto';
           delete el.dataset.wasActive;
         } catch (e) {
