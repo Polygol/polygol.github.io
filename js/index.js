@@ -4559,15 +4559,6 @@ secondsSwitch.addEventListener('change', function() {
     updateClockAndDate();
 });
 
-persistentClock.addEventListener('click', () => {
-    customizeModal.style.display = 'block';
-    blurOverlayControls.style.display = 'block';
-    setTimeout(() => {
-        customizeModal.classList.add('show');
-        blurOverlayControls.classList.add('show');
-    }, 10);
-});
-
 document.getElementById("versionButton").addEventListener("click", function() {
     window.open("https://kirbindustries.gitbook.io/gurasuraisu", "_blank");
 });
@@ -4811,15 +4802,14 @@ window.addEventListener('load', () => {
 });
 
 // Close customizeModal when clicking outside
-window.addEventListener('click', (event) => {
-    if (!customizeModal.contains(event.target) && !persistentClock.contains(event.target)) {
-        customizeModal.classList.remove('show'); // Start animation
-	blurOverlayControls.classList.remove('show');
-        setTimeout(() => {
-            customizeModal.style.display = 'none'; // Hide after animation
-	    blurOverlayControls.style.display = 'none';
-        }, 300); 
-    }
+blurOverlayControls.addEventListener('click', () => {
+    customizeModal.classList.remove('show'); // Start animation
+    blurOverlayControls.classList.remove('show');
+
+    setTimeout(() => {
+        customizeModal.style.display = 'none'; // Hide after animation
+        blurOverlayControls.style.display = 'none';
+    }, 300);
 });
 
 document.addEventListener("DOMContentLoaded", function() {
