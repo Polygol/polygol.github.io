@@ -4145,12 +4145,13 @@ function setupDrawerInteractions() {
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
             interactionBlocker.style.display = 'none';
-        } else if (openEmbed) {
-            // Reset embed if swipe wasn't enough
-            openEmbed.style.transform = 'scale(1)';
-            openEmbed.style.opacity = '1';
-            openEmbed.style.borderRadius = '0px'; // Reset to no border radius
-	    openEmbed.style.filter = 'blur(0px)';
+	} else if (openEmbed) {
+    	    // Reset embed if swipe wasn't enough with explicit transition
+  	    openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease';
+ 	    openEmbed.style.transform = 'scale(1)';
+ 	    openEmbed.style.opacity = '1';
+  	    openEmbed.style.borderRadius = '0px';
+  	    openEmbed.style.filter = 'blur(0px)'; // Animate to no blur instead of 'none'
             
             // Keep app drawer transparent when in an app
             appDrawer.style.opacity = '0';
