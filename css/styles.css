@@ -1881,7 +1881,7 @@ input[type="color"]::-moz-color-swatch {
     background-color: var(--transparent-color);
     color: var(--text-color);
     font-family: 'Inter', sans-serif;
-    padding: 10px 10px;
+    padding: 10px 12.5px;
     border-radius: 25px;
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s;
