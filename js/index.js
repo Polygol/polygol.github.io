@@ -747,7 +747,7 @@ function showPopup(message) {
     popup.style.alignItems = 'center';
     popup.style.gap = '10px';
     popup.style.border = '1px solid var(--glass-border)';
-    popup.style.filter = 'blur(0px)';
+    popup.style.filter = 'none';
 
     // Check for specific words to determine icon
     const checkWords = window.checkWords || ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'successfully', 'accepted', 'accept', 'yes'];
@@ -3074,7 +3074,7 @@ function addPageIndicatorStyles() {
       padding: 5px 6px;
       border: 1px solid var(--glass-border);
       border-radius: 10px;
-      filter: blur(0px);
+      filter: none;
     }
 
     .page-indicator.empty {
@@ -3519,7 +3519,7 @@ function createFullscreenEmbed(url) {
             embedContainer.style.transform = 'scale(1)';
             embedContainer.style.opacity = '1';
             embedContainer.style.borderRadius = '0px'; // Remove border radius when fully opened
-	    embedContainer.style.filter = 'blur(0px)';
+	    embedContainer.style.filter = 'none';
         }, 10);
         
         // Hide container with a smooth fade animation
@@ -3718,7 +3718,7 @@ function createFullscreenEmbed(url) {
         embedContainer.style.transform = 'scale(1)';
         embedContainer.style.opacity = '1';
         embedContainer.style.borderRadius = '0px'; // Remove border radius when fully opened
-	embedContainer.style.filter = 'blur(0px)';
+	embedContainer.style.filter = 'none';
     }, 10);
     
     // Show the swipe overlay when opening an app
@@ -4151,7 +4151,7 @@ function setupDrawerInteractions() {
             dock.style.boxShadow = 'none';
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
-	    appDrawer.style.filter = 'blur(0px)';
+	    appDrawer.style.filter = 'none';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
             interactionBlocker.style.display = 'none';
@@ -4161,11 +4161,11 @@ function setupDrawerInteractions() {
  	    openEmbed.style.transform = 'scale(1)';
  	    openEmbed.style.opacity = '1';
   	    openEmbed.style.borderRadius = '0px';
-  	    openEmbed.style.filter = 'blur(0px)'; // Animate to no blur instead of 'none'
+  	    openEmbed.style.filter = 'none'; // Animate to no blur instead of 'none'
             
             // Keep app drawer transparent when in an app
             appDrawer.style.opacity = '0';
-	    appDrawer.style.filter = 'blur(0px)';
+	    appDrawer.style.filter = 'none';
             
             // Handle dock visibility for smaller swipes
             if (movementPercentage > 2.5 && movementPercentage <= 25) {
@@ -4195,7 +4195,7 @@ function setupDrawerInteractions() {
                 dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; // Enable box shadow when visible
                 appDrawer.style.bottom = '-100%';
                 appDrawer.style.opacity = '0';
-		appDrawer.style.filter = 'blur(0px)';
+		appDrawer.style.filter = 'none';
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
@@ -4206,7 +4206,7 @@ function setupDrawerInteractions() {
                 dock.style.boxShadow = 'none'; // Disable box shadow when not visible
                 appDrawer.style.bottom = '0%';
                 appDrawer.style.opacity = '1';
-		appDrawer.style.filter = 'blur(0px)';
+		appDrawer.style.filter = 'none';
                 appDrawer.classList.add('open');
                 initialDrawerPosition = 0;
                 interactionBlocker.style.display = 'none';
