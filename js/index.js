@@ -1758,6 +1758,48 @@ document.addEventListener('DOMContentLoaded', function() {
         temperaturePopupValue.textContent = `${storedTemperature}°`;
     }
     
+    // Initialize icons based on current states
+    updateLightModeIcon(lightModeSwitch.checked);
+    updateMinimalModeIcon(minimalModeSwitch.checked);
+    updateSilentModeIcon(silentModeSwitch.checked);
+    updateTemperatureIcon(storedTemperature);
+    
+    // Function to update light mode icon
+    function updateLightModeIcon(isLightMode) {
+        const lightModeIcon = lightModeControl.querySelector('.material-symbols-rounded');
+        if (!lightModeIcon) return;
+        
+        if (isLightMode) {
+            lightModeIcon.textContent = 'radio_button_checked'; // Light mode ON
+        } else {
+            lightModeIcon.textContent = 'radio_button_partial'; // Light mode OFF (dark mode)
+        }
+    }
+    
+    // Function to update minimal mode icon
+    function updateMinimalModeIcon(isMinimalMode) {
+        const minimalModeIcon = minimalModeControl.querySelector('.material-symbols-rounded');
+        if (!minimalModeIcon) return;
+        
+        if (isMinimalMode) {
+            minimalModeIcon.textContent = 'screen_record'; // Minimal mode ON
+        } else {
+            minimalModeIcon.textContent = 'filter_tilt_shift'; // Minimal mode OFF
+        }
+    }
+    
+    // Function to update silent mode icon
+    function updateSilentModeIcon(isSilentMode) {
+        const silentModeIcon = silentModeControl.querySelector('.material-symbols-rounded');
+        if (!silentModeIcon) return;
+        
+        if (isSilentMode) {
+            silentModeIcon.textContent = 'notifications_off'; // Silent mode ON
+        } else {
+            silentModeIcon.textContent = 'notifications'; // Silent mode OFF
+        }
+    }
+    
     // Event listener for light mode control
     lightModeControl.addEventListener('click', function() {
         lightModeSwitch.checked = !lightModeSwitch.checked;
@@ -1771,13 +1813,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update current document
         document.body.classList.toggle('light-theme', newTheme === 'light');
 
-	const iframes = document.querySelectorAll('iframe');
-	iframes.forEach((iframe) => {
-	    iframe.contentWindow.postMessage({
-	        type: 'themeUpdate',
-	        theme: newTheme
-	    }, window.location.origin);
-	});
+        // Update icon
+        updateLightModeIcon(lightModeSwitch.checked);
+
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach((iframe) => {
+            iframe.contentWindow.postMessage({
+                type: 'themeUpdate',
+                theme: newTheme
+            }, window.location.origin);
+        });
     });
     
     // Event listener for minimal mode control
@@ -1793,6 +1838,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Toggle active class for visual feedback
         this.classList.toggle('active');
+        
+        // Update icon
+        updateMinimalModeIcon(minimalMode);
     });
 
     // Event listener for silent mode control
@@ -1802,6 +1850,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const silentMode = silentModeSwitch.checked;
         localStorage.setItem('silentMode', silentMode);
+        
+        // Update icon
+        updateSilentModeIcon(silentMode);
         
         // Override the showPopup function based on silent mode state
         if (silentMode) {
@@ -1894,9 +1945,6 @@ document.addEventListener('DOMContentLoaded', function() {
             temperatureIcon.textContent = 'thermometer_add'; // Hot
         }
     }
-    
-    // Initialize the temperature icon on page load
-    updateTemperatureIcon(storedTemperature);
     
     // Override showPopup function to respect silent mode
     const originalShowPopup = window.showPopup;
