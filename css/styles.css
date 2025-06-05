@@ -523,7 +523,7 @@ input[type="color"]::-moz-color-swatch {
         #customizeModal.modal.show {
             transform: scale(1);
             opacity: 1;
-            filter: blur(0px);
+            filter: none;
         }
         
         .modal, .modal-content {
