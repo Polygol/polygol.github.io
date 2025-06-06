@@ -104,119 +104,123 @@
                 </div>
             </div>
             <div class="notification-shade"></div>
-            <div class="weather-settings control-first">
-                <label for="weather-switch" class="cust-label">
-                    <span class="material-symbols-rounded">partly_cloudy_day</span>
-                    LANG_WEATHER
-                </label>
-                <input type="checkbox" id="weather-switch" checked>
-            </div>
-            <div class="gurapps-optional control-middle">
-                <label for="gurapps-switch" class="cust-label">
-                    <span class="material-symbols-rounded">grid_view</span>
-                    LANG_GURAPPS
-                </label>
-                <input type="checkbox" id="gurapps-switch">
-            </div>
-            <div class="clock-color-settings control-middle">
-                <label for="clock-color-picker" class="cust-label">
-                    <span class="material-symbols-rounded">colorize</span>
-                    LANG_CLOCK_COLOR
-                </label>
-                <input type="color" id="clock-color-picker">
-                <input type="checkbox" id="clock-color-switch" checked="">
-            </div>
-            <div class="clock-settings control-middle">
-                <label for="seconds-switch" class="cust-label">
-                    <span class="material-symbols-rounded">timer_10_select</span>
-                    LANG_SECONDS
-                </label>
-                <input type="checkbox" id="seconds-switch" checked>
-            </div>
-            <div class="wallpaper-upload control-middle">
-                <label class="cust-label">
-                    <span class="material-symbols-rounded">filter_vintage</span>
-                    LANG_WALLPAPER
-                </label>
-                <input type="file" id="wallpaperInput" accept=".png, .jpeg, .jpg, .webp, .gif, .mp4" multiple>
-                <button id="uploadButton">LANG_ADD</button>
-            </div>
-            <div class="weight-slider-container">
-                <label for="weight-slider" class="cust-label">
-                    <span class="material-symbols-rounded">line_weight</span>
-                </label>
-                <div class="weight-select-container">
-                    <input type="range" min="20" max="100" value="100" class="weight-slider" id="weight-slider">
+            <div class="home-settings">
+                <div class="weather-settings control-first">
+                    <label for="weather-switch" class="cust-label">
+                        <span class="material-symbols-rounded">partly_cloudy_day</span>
+                        LANG_WEATHER
+                    </label>
+                    <input type="checkbox" id="weather-switch" checked>
+                </div>
+                <div class="gurapps-optional control-middle">
+                    <label for="gurapps-switch" class="cust-label">
+                        <span class="material-symbols-rounded">grid_view</span>
+                        LANG_GURAPPS
+                    </label>
+                    <input type="checkbox" id="gurapps-switch">
+                </div>
+                <div class="clock-color-settings control-middle">
+                    <label for="clock-color-picker" class="cust-label">
+                        <span class="material-symbols-rounded">colorize</span>
+                        LANG_CLOCK_COLOR
+                    </label>
+                    <input type="color" id="clock-color-picker">
+                    <input type="checkbox" id="clock-color-switch" checked="">
+                </div>
+                <div class="clock-settings control-middle">
+                    <label for="seconds-switch" class="cust-label">
+                        <span class="material-symbols-rounded">timer_10_select</span>
+                        LANG_SECONDS
+                    </label>
+                    <input type="checkbox" id="seconds-switch" checked>
+                </div>
+                <div class="wallpaper-upload control-middle">
+                    <label class="cust-label">
+                        <span class="material-symbols-rounded">filter_vintage</span>
+                        LANG_WALLPAPER
+                    </label>
+                    <input type="file" id="wallpaperInput" accept=".png, .jpeg, .jpg, .webp, .gif, .mp4" multiple>
+                    <button id="uploadButton">LANG_ADD</button>
+                </div>
+                <div class="weight-slider-container">
+                    <label for="weight-slider" class="cust-label">
+                        <span class="material-symbols-rounded">line_weight</span>
+                    </label>
+                    <div class="weight-select-container">
+                        <input type="range" min="20" max="100" value="100" class="weight-slider" id="weight-slider">
+                    </div>
+                </div>
+                <div class="font-selection control-last">
+                    <label for="font-select" class="cust-label">
+                        <span class="material-symbols-rounded">nest_clock_farsight_digital</span>
+                        LANG_STYLE
+                    </label>
+                    <select id="font-select">
+                        <option value="Inter" data-lang="Default">LANG_DEFAULT</option>
+                        <option value="Roboto" data-lang="Work">LANG_WORK</option>
+                        <option value="DynaPuff" data-lang="Puffy">LANG_PUFFY</option>
+                        <option value="DM Serif Display" data-lang="Classic">LANG_CLASSIC</option>
+                        <option value="Iansui" data-lang="Strokes">LANG_STROKES</option>
+                        <option value="JetBrains Mono" data-lang="Mono">LANG_MONO</option>z
+                        <option value="DotGothic16" data-lang="Pixel">LANG_PIXEL</option>
+                        <option value="Patrick Hand" data-lang="Written">LANG_WRITTEN</option>
+                        <option value="Rampart One" data-lang="Raised">LANG_RAISED</option>
+                        <option value="Doto" data-lang="Dot">LANG_DOT</option>
+                        <option value="Nunito" data-lang="Round">LANG_ROUND</option>
+                    </select>
                 </div>
             </div>
-            <div class="font-selection control-last">
-                <label for="font-select" class="cust-label">
-                    <span class="material-symbols-rounded">nest_clock_farsight_digital</span>
-                    LANG_STYLE
-                </label>
-                <select id="font-select">
-                    <option value="Inter" data-lang="Default">LANG_DEFAULT</option>
-                    <option value="Roboto" data-lang="Work">LANG_WORK</option>
-                    <option value="DynaPuff" data-lang="Puffy">LANG_PUFFY</option>
-                    <option value="DM Serif Display" data-lang="Classic">LANG_CLASSIC</option>
-                    <option value="Iansui" data-lang="Strokes">LANG_STROKES</option>
-                    <option value="JetBrains Mono" data-lang="Mono">LANG_MONO</option>z
-                    <option value="DotGothic16" data-lang="Pixel">LANG_PIXEL</option>
-                    <option value="Patrick Hand" data-lang="Written">LANG_WRITTEN</option>
-                    <option value="Rampart One" data-lang="Raised">LANG_RAISED</option>
-                    <option value="Doto" data-lang="Dot">LANG_DOT</option>
-                    <option value="Nunito" data-lang="Round">LANG_ROUND</option>
-                </select>
-            </div>
-            <div class="animation-settings control-first">
-                <label for="animation-switch" class="cust-label">
-                    <span class="material-symbols-rounded">animation</span>
-                    LANG_MOTION
-                </label>
-                <input type="checkbox" id="animation-switch" checked>
-            </div>
-            <div class="contrast-settings control-middle">
-                <label for="contrast-switch" class="cust-label">
-                    <span class="material-symbols-rounded">filter_b_and_w</span>
-                    LANG_CONTRAST
-                </label>
-                <input type="checkbox" id="contrast-switch">
-            </div>
-            <div class="clock-hour-settings control-middle">
-                <label for="hour-switch" class="cust-label">
-                    <span class="material-symbols-rounded">search_activity</span>
-                    12hr
-                </label>
-                <input type="checkbox" id="hour-switch">
-            </div>
-            <div class="lang-selection control-middle">
-                <label for="language-switcher" class="cust-label">
-                    <span class="material-symbols-rounded">language</span>
-                    <span id="language-label">LANG_LANGPICK</span>
-                </label>
-                <select id="language-switcher">
-                    <option value="EN">English</option>
-                    <option value="JP">日本語</option>
-                    <option value="DE">Deutsch</option>
-                    <option value="FR">Français</option>
-                    <option value="ES">Español</option>
-                    <option value="KO">한국어</option>
-                    <option value="ZH">中文</option>
-                </select>
-            </div>
-            <div class="reset-settings control-last">
-                <label class="cust-label" for="reset-settings">
-                    <span class="material-symbols-rounded">mop</span>
-                    <span id="reset-label">LANG_RESET</span>
-                </label>
-                <button id="resetButton">RESET_BTN</button>
-            </div>
-            <div class="version-info">
-                <label class="cust-label" for="version-details">
-                    <img src="/assets/14.png" alt="Lithium 14 Icon" style="width: 24px; height: 24px;">
-                    Lithium 14.3
-                </label>
-                <button id="versionButton">LANG_DETAIL_VERS</button>
+            <div class="system-settings">
+                <div class="animation-settings control-first">
+                    <label for="animation-switch" class="cust-label">
+                        <span class="material-symbols-rounded">animation</span>
+                        LANG_MOTION
+                    </label>
+                    <input type="checkbox" id="animation-switch" checked>
+                </div>
+                <div class="contrast-settings control-middle">
+                    <label for="contrast-switch" class="cust-label">
+                        <span class="material-symbols-rounded">filter_b_and_w</span>
+                        LANG_CONTRAST
+                    </label>
+                    <input type="checkbox" id="contrast-switch">
+                </div>
+                <div class="clock-hour-settings control-middle">
+                    <label for="hour-switch" class="cust-label">
+                        <span class="material-symbols-rounded">search_activity</span>
+                        12hr
+                    </label>
+                    <input type="checkbox" id="hour-switch">
+                </div>
+                <div class="lang-selection control-middle">
+                    <label for="language-switcher" class="cust-label">
+                        <span class="material-symbols-rounded">language</span>
+                        <span id="language-label">LANG_LANGPICK</span>
+                    </label>
+                    <select id="language-switcher">
+                        <option value="EN">English</option>
+                        <option value="JP">日本語</option>
+                        <option value="DE">Deutsch</option>
+                        <option value="FR">Français</option>
+                        <option value="ES">Español</option>
+                        <option value="KO">한국어</option>
+                        <option value="ZH">中文</option>
+                    </select>
+                </div>
+                <div class="reset-settings control-last">
+                    <label class="cust-label" for="reset-settings">
+                        <span class="material-symbols-rounded">mop</span>
+                        <span id="reset-label">LANG_RESET</span>
+                    </label>
+                    <button id="resetButton">RESET_BTN</button>
+                </div>
+                <div class="version-info">
+                    <label class="cust-label" for="version-details">
+                        <img src="/assets/14.png" alt="Lithium 14 Icon" style="width: 24px; height: 24px;">
+                        Lithium 14.3
+                    </label>
+                    <button id="versionButton">LANG_DETAIL_VERS</button>
+                </div>
             </div>
         </div>
     </div>
