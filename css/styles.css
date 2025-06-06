@@ -417,6 +417,14 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 10px;
 }
 
+.clock .digit {
+    display: inline-block;
+    width: 1ch;
+    text-align: center;
+    font-size: inherit; /* Ensure digits inherit the responsive font size */
+    line-height: inherit; /* Maintain line height consistency */
+}
+
 .clock::before {
     content: "";
     position: absolute;
@@ -444,12 +452,6 @@ input[type="color"]::-moz-color-swatch {
             transform: scale(0.96);
             transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
         }
-
-.clock .digit {
-    display: inline-block;
-    width: 1ch; /* or a fixed width like 0.6em */
-    text-align: center;
-}
 
         .info {
             display: flex;
