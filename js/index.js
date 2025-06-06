@@ -1861,16 +1861,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Replace with silent version (that does nothing)
             window.showPopup = function(message) {
-                console.log('Silent mode suppressing popup:', message);
+                console.log('Silent ON; suppressing popup:', message);
                 // Do nothing - this effectively hides all popups
             };
-            
-            console.log('Silent mode enabled');
         } else {
             // Restore the original function if we have it stored
             if (window.originalShowPopup) {
                 window.showPopup = window.originalShowPopup;
-                console.log('Silent mode disabled');
             }
         }
     });
@@ -1887,11 +1884,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Replace with silent version
             window.showPopup = function(message) {
-                console.log('Silent mode active, suppressing popup:', message);
+                console.log('Silent ON; suppressing popup:', message);
                 // Do nothing - this effectively hides all popups
             };
-            
-            console.log('Silent mode initialized - popups will be suppressed');
         }
     })();
     
@@ -1909,10 +1904,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Otherwise, open it as usual
         const rect = temperatureControl.getBoundingClientRect();
         temperaturePopup.style.top = `${rect.bottom + 5}px`;
-        temperaturePopup.style.left = `${rect.left + (rect.width / 2) - 155}px`; // Center the popup
-
+        temperaturePopup.style.left = `${rect.left + (rect.width / 2) - (155 / 2)}px`; // Center the popup
         temperaturePopup.style.display = 'block';
-        e.stopPropagation(); // Prevent bubbling to avoid auto-close
     });
     
     document.addEventListener('click', function(e) {
