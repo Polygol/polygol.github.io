@@ -1500,21 +1500,7 @@ input[type="color"]::-moz-color-swatch {
 .display-controls {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    margin-bottom: 20px;
-}
-
-.display-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 15px 15px 20px;
-    background-color: var(--search-background);
-    border-radius: 25px;
-    backdrop-filter: blur(20px);
-    transition: background-color 0.2s, transform 0.1s;
-    height: 38px;
-    border: 1px solid var(--glass-border);
+    margin-top: 20px;
 }
 
 .brightness-slider-container {
@@ -1522,18 +1508,19 @@ input[type="color"]::-moz-color-swatch {
     align-items: center;
     gap: 10px;
     flex-grow: 1;
-    padding-left: 13px;
+    padding-left: 10px;
+    border: 1px solid var(--glass-border);
+    background: var(--search-background);
+    border-radius: 20px;
 }
 
 .brightness-slider {
     -webkit-appearance: none;
     width: 100%;
-    height: 32px;
-    border-radius: 18px;
-    background: rgba(0,0,0,0.1);
+    height: 34px;
+    background: none;
     padding: 0 8px;
     outline: none;
-    border: 1px solid var(--glass-border);
 }
 
 .brightness-slider::-webkit-slider-thumb {
