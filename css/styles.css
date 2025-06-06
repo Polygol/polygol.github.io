@@ -918,6 +918,7 @@ input[type="color"]::-moz-color-swatch {
     display: none;
     position: absolute;
     z-index: 10000;
+    border: 1px solid var(--glass-border);
     background-color: var(--modal-transparent);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     border-radius: 25px;
