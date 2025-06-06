@@ -3563,7 +3563,7 @@ function createFullscreenEmbed(url) {
         embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
         
         // Clear background blur when restoring app
-        document.body.style.filter = 'none';
+        document.querySelector('body::before').style.filter = 'none';
         
         // Trigger the animation
         setTimeout(() => {
@@ -3661,7 +3661,7 @@ function createFullscreenEmbed(url) {
     embedContainer.style.display = 'block';
     
     // Set initial background blur
-    document.body.style.filter = 'blur(5px)';
+    document.querySelector('body::before').style.filter = 'blur(5px)';
     
     // IMPORTANT FIX: Set proper z-index and pointer events
     embedContainer.style.pointerEvents = 'auto';
@@ -3768,7 +3768,7 @@ function createFullscreenEmbed(url) {
         embedContainer.style.transform = 'scale(1)';
         embedContainer.style.opacity = '1';
         embedContainer.style.borderRadius = '0px';
-        document.body.style.filter = 'none';
+        document.querySelector('body::before').style.filter = 'none';
     }, 10);
     
     // Show the swipe overlay when opening an app
@@ -4117,7 +4117,7 @@ function setupDrawerInteractions() {
             openEmbed.style.borderRadius = `${borderRadius}px`;
             
             // Apply blur to body instead of embed
-            document.body.style.filter = `blur(${blurRadius}px)`;
+            document.querySelector('body::before').style.filter = `blur(${blurRadius}px)`;
             
             // Make app drawer transparent when in an app
             appDrawer.style.opacity = '0';
@@ -4146,7 +4146,7 @@ function setupDrawerInteractions() {
             appDrawer.style.opacity = opacity;
             
             // Apply blur to body for drawer instead
-            document.body.style.filter = `blur(${blurRadius}px)`;
+            document.querySelector('body::before').style.filter = `blur(${blurRadius}px)`;
         }
         
         appDrawer.style.bottom = `${newPosition}%`;
@@ -4192,7 +4192,7 @@ function setupDrawerInteractions() {
             openEmbed.style.borderRadius = '25px';
             
             // Apply blur to body when minimizing
-            document.body.style.filter = 'blur(5px)';
+            document.querySelector('body::before').style.filter = 'blur(5px)';
             
             setTimeout(() => {
                 minimizeFullscreenEmbed();
@@ -4210,7 +4210,7 @@ function setupDrawerInteractions() {
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
             interactionBlocker.style.display = 'none';
-            document.body.style.filter = 'none';
+            document.querySelector('body::before').style.filter = 'none';
         } else if (openEmbed) {
             // Reset embed if swipe wasn't enough (removed filter)
             openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
@@ -4219,7 +4219,7 @@ function setupDrawerInteractions() {
             openEmbed.style.borderRadius = '0px';
             
             // Clear background blur when resetting
-            document.body.style.filter = 'none';
+            document.querySelector('body::before').style.filter = 'none';
             
             // Keep app drawer transparent when in an app
             appDrawer.style.opacity = '0';
@@ -4255,7 +4255,7 @@ function setupDrawerInteractions() {
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
-                document.body.style.filter = 'none';
+                document.querySelector('body::before').style.filter = 'none';
             } 
             // Large swipe or flick up - show full drawer
             else if (isSignificantSwipe) {
@@ -4266,7 +4266,7 @@ function setupDrawerInteractions() {
                 appDrawer.classList.add('open');
                 initialDrawerPosition = 0;
                 interactionBlocker.style.display = 'none';
-                document.body.style.filter = 'none';
+                document.querySelector('body::before').style.filter = 'none';
             } 
             // Close everything
             else {
@@ -4277,7 +4277,7 @@ function setupDrawerInteractions() {
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
-                document.body.style.filter = 'blur(5px)';
+                document.querySelector('body::before').style.filter = 'blur(5px)';
             }
             
             // Hide the swipe overlay when not in an app
