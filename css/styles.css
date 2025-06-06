@@ -924,6 +924,7 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 25px;
     padding: 15px;
     backdrop-filter: blur(10px)
+    width: 155px;
 }
 
 .thermostat-popup-header {
