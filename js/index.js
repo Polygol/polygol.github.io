@@ -17,6 +17,7 @@ function applyLanguage(language) {
     document.querySelector('.contrast-settings .cust-label').childNodes[2].textContent = language.CONTRAST;
     document.querySelector('.wallpaper-upload .cust-label').childNodes[2].textContent = language.WALLPAPER;
     document.querySelector('#uploadButton').innerText = language.ADD;
+    document.querySelector('.clock-stack-settings .cust-label').childNodes[2].textContent = language.CLOCK_STACK;
     document.querySelector('.font-selection .cust-label').childNodes[2].textContent = language.STYLE;
     document.getElementById('language-label').textContent = language.LANGPICK;
     document.querySelector('.version-info button#versionButton').textContent = language.GET_DOCS;
@@ -3593,7 +3594,7 @@ function createFullscreenEmbed(url) {
             }, 300);
         });
 
-        const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .font-selection, .weight-slider-container');
+        const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .clock-stack-settings, .font-selection, .weight-slider-container');
         controlElements.forEach(el => {
             // Store ALL relevant original styles
             if (!el.dataset.originalStyles) {
@@ -3721,7 +3722,7 @@ function createFullscreenEmbed(url) {
         }, 300);
     });
 
-    const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .font-selection, .weight-slider-container');
+    const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .clock-stack-settings, .font-selection, .weight-slider-container');
     controlElements.forEach(el => {
         // Store ALL relevant original styles
         if (!el.dataset.originalStyles) {
@@ -3832,7 +3833,7 @@ function minimizeFullscreenEmbed() {
         });
     });
 	
-    const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .font-selection, .weight-slider-container');
+    const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .clock-stack-settings, .font-selection, .weight-slider-container');
     controlElements.forEach(el => {
         // Get original styles from stored data
         let originalStyles = {};
