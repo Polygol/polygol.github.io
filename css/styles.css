@@ -723,6 +723,7 @@ input[type="color"]::-moz-color-swatch {
     border: 1px solid var(--glass-border);
     background: var(--search-background);
     border-radius: 20px;
+    transition: background-color 0.2s, transform 0.1s;
 }
 
 .brightness-slider {
