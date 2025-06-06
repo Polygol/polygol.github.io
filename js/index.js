@@ -4408,9 +4408,10 @@ function setupDrawerInteractions() {
 	
     // Close drawer when clicking outside
     document.addEventListener('click', (e) => {
-        if (appDrawer.classList.contains('open') &&
-            !appDrawer.contains(e.target) &&
-            !appDrawerToggle.contains(e.target)) {
+        if (
+            appDrawer.classList.contains('open') &&
+            !appDrawer.contains(e.target)
+        ) {
             appDrawer.style.transition = 'bottom 0.3s ease';
             appDrawer.style.bottom = '-100%';
             appDrawer.classList.remove('open');
