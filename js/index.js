@@ -4405,20 +4405,6 @@ function setupDrawerInteractions() {
     document.addEventListener('mouseup', () => {
         endDrag();
     });
-	
-    // Close drawer when clicking outside
-    document.addEventListener('click', (e) => {
-        if (
-            appDrawer.classList.contains('open') &&
-            !appDrawer.contains(e.target)
-        ) {
-            appDrawer.style.transition = 'bottom 0.3s ease';
-            appDrawer.style.bottom = '-100%';
-            appDrawer.classList.remove('open');
-            initialDrawerPosition = -100;
-            interactionBlocker.style.display = 'none';
-        }
-    });
 
     document.addEventListener('click', (e) => {
         // First check if a fullscreen embed is open
