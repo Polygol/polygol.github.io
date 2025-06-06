@@ -529,16 +529,38 @@ function updateClockAndDate() {
     displayHours = String(hours).padStart(2, '0');
   }
   
-  clockElement.textContent = showSeconds ? 
-    `${displayHours}:${minutes}:${seconds}${period}` : 
-    `${displayHours}:${minutes}${period}`;
+  // Check if stacked layout is enabled
+  const stackSwitch = document.getElementById('clock-stack-switch');
+  const isStacked = stackSwitch && stackSwitch.checked;
+  
+  if (isStacked) {
+    // Stacked format: each time component on a new line
+    if (showSeconds) {
+      clockElement.innerHTML = `
+        <div>${displayHours}</div>
+        <div>${minutes}</div>
+        <div>${seconds}</div>
+        ${period ? `<div>${period.trim()}</div>` : ''}
+      `;
+    } else {
+      clockElement.innerHTML = `
+        <div>${displayHours}</div>
+        <div>${minutes}</div>
+        ${period ? `<div>${period.trim()}</div>` : ''}
+      `;
+    }
+  } else {
+    // Normal format: standard time display
+    clockElement.textContent = showSeconds ? 
+      `${displayHours}:${minutes}:${seconds}${period}` : 
+      `${displayHours}:${minutes}${period}`;
+  }
     
   let formattedDate = now.toLocaleDateString(undefined, {
     weekday: 'long',
     month: 'long',
     day: 'numeric'
   });
-
   dateElement.textContent = formattedDate;
   if (modalTitle) modalTitle.textContent = formattedDate;
 }
@@ -3368,6 +3390,7 @@ function setupFontSelection() {
     const infoElement = document.querySelector('.info');
     const colorPicker = document.getElementById('clock-color-picker');
     const colorSwitch = document.getElementById('clock-color-switch');
+    const stackSwitch = document.getElementById('clock-stack-switch');
     
     // Get the computed --text-color value for the default
     const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
@@ -3377,11 +3400,13 @@ function setupFontSelection() {
     const savedWeight = localStorage.getItem('clockWeight') || '700';
     const savedColor = localStorage.getItem('clockColor') || defaultColor;
     const colorEnabled = localStorage.getItem('clockColorEnabled') === 'true';
+    const stackEnabled = localStorage.getItem('clockStackEnabled') === 'true';
     
     fontSelect.value = savedFont;
     weightSlider.value = parseInt(savedWeight) / 10;
     colorPicker.value = savedColor;
     colorSwitch.checked = colorEnabled;
+    stackSwitch.checked = stackEnabled;
     
     // Apply font to both elements but weight only to clock
     function applyStyles() {
@@ -3401,6 +3426,15 @@ function setupFontSelection() {
             infoElement.style.color = '';
         }
         
+        // Apply stacked layout if enabled
+        if (stackSwitch.checked) {
+            clockElement.style.flexDirection = 'column';
+            clockElement.style.lineHeight = '0.9';
+        } else {
+            clockElement.style.flexDirection = '';
+            clockElement.style.lineHeight = '';
+        }
+        
         infoElement.style.fontFamily = fontFamily;
     }
     
@@ -3411,7 +3445,8 @@ function setupFontSelection() {
                 font: fontSelect.value,
                 weight: (weightSlider.value * 10).toString(),
                 color: colorPicker.value,
-                colorEnabled: colorSwitch.checked
+                colorEnabled: colorSwitch.checked,
+                stackEnabled: stackSwitch.checked
             };
             
             // Update the current wallpaper's clock styles
@@ -3426,6 +3461,7 @@ function setupFontSelection() {
         localStorage.setItem('clockWeight', (weightSlider.value * 10).toString());
         localStorage.setItem('clockColor', colorPicker.value);
         localStorage.setItem('clockColorEnabled', colorSwitch.checked.toString());
+        localStorage.setItem('clockStackEnabled', stackSwitch.checked.toString());
     }
     
     // Apply initial styles
@@ -3463,6 +3499,12 @@ function setupFontSelection() {
         // Show/hide the color picker based on switch state
         colorPicker.style.display = e.target.checked ? 'inline-block' : 'none';
         colorPicker.disabled = !e.target.checked;
+    });
+    
+    // Handle stack switch toggle
+    stackSwitch.addEventListener('change', (e) => {
+        applyStyles();
+        saveCurrentClockStyles(); // Save to current wallpaper
     });
     
     // Set initial color picker state based on switch
