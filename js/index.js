@@ -3593,30 +3593,41 @@ function createFullscreenEmbed(url) {
             }, 300);
         });
 
-        const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .font-selection, .weight-slider-container');
-        controlElements.forEach(el => {
-            // Store ALL relevant original styles
-            if (!el.dataset.originalStyles) {
-                el.dataset.originalStyles = JSON.stringify({
-                    display: window.getComputedStyle(el).display,
-                    opacity: window.getComputedStyle(el).opacity,
-                    visibility: window.getComputedStyle(el).visibility,
-                    position: window.getComputedStyle(el).position,
-                    transform: window.getComputedStyle(el).transform
-                });
-            }
-            
-            // Add transition for smooth fade
-            el.style.transition = 'opacity 0.3s ease';
-            
-            // Start fade out
-            el.style.opacity = '0';
-            
-            // Hide element after fade out animation completes
-            setTimeout(() => {
-                el.style.display = 'none';
-            }, 300);
-        });
+		const homeSettingsElement = document.querySelector('home-settings');
+		
+		if (homeSettingsElement) {
+		    // Selects only direct child elements
+		    const directChildren = homeSettingsElement.children; // This returns an HTMLCollection
+		
+		    // Iterate over the direct children.
+		    // HTMLCollection isn't a true Array, so we convert it or use Array.from().
+		    Array.from(directChildren).forEach(el => {
+		        // Store ALL relevant original styles for later restoration if needed
+		        if (!el.dataset.originalStyles) {
+		            el.dataset.originalStyles = JSON.stringify({
+		                display: window.getComputedStyle(el).display,
+		                opacity: window.getComputedStyle(el).opacity,
+		                visibility: window.getComputedStyle(el).visibility,
+		                position: window.getComputedStyle(el).position,
+		                transform: window.getComputedStyle(el).transform
+		            });
+		        }
+		        
+		        // Add a CSS transition for a smooth fade effect
+		        el.style.transition = 'opacity 0.3s ease';
+		        
+		        // Start the fade-out by setting opacity to 0
+		        el.style.opacity = '0';
+		        
+		        // Hide the element completely after the fade-out animation finishes (300ms)
+		        setTimeout(() => {
+		            el.style.display = 'none';
+		        }, 300); // This delay should match your transition duration
+		    });
+		} else {
+		    // Log a warning if the <home-settings> element isn't found
+		    console.warn("The <home-settings> element was not found in the document.");
+		}
         
         // Show the swipe overlay when restoring an app
         const swipeOverlay = document.getElementById('swipe-overlay');
@@ -3721,30 +3732,41 @@ function createFullscreenEmbed(url) {
         }, 300);
     });
 
-    const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .font-selection, .weight-slider-container');
-    controlElements.forEach(el => {
-        // Store ALL relevant original styles
-        if (!el.dataset.originalStyles) {
-            el.dataset.originalStyles = JSON.stringify({
-                display: window.getComputedStyle(el).display,
-                opacity: window.getComputedStyle(el).opacity,
-                visibility: window.getComputedStyle(el).visibility,
-                position: window.getComputedStyle(el).position,
-                transform: window.getComputedStyle(el).transform
-            });
-        }
-        
-        // Add transition for smooth fade
-        el.style.transition = 'opacity 0.3s ease';
-        
-        // Start fade out
-        el.style.opacity = '0';
-        
-        // Hide element after fade out animation completes
-        setTimeout(() => {
-            el.style.display = 'none';
-        }, 300);
-    });
+	const homeSettingsElement = document.querySelector('home-settings');
+	
+	if (homeSettingsElement) {
+	    // Selects only direct child elements
+	    const directChildren = homeSettingsElement.children; // This returns an HTMLCollection
+	
+	    // Iterate over the direct children.
+	    // HTMLCollection isn't a true Array, so we convert it or use Array.from().
+	    Array.from(directChildren).forEach(el => {
+	        // Store ALL relevant original styles for later restoration if needed
+	        if (!el.dataset.originalStyles) {
+	            el.dataset.originalStyles = JSON.stringify({
+	                display: window.getComputedStyle(el).display,
+	                opacity: window.getComputedStyle(el).opacity,
+	                visibility: window.getComputedStyle(el).visibility,
+	                position: window.getComputedStyle(el).position,
+	                transform: window.getComputedStyle(el).transform
+	            });
+	        }
+	        
+	        // Add a CSS transition for a smooth fade effect
+	        el.style.transition = 'opacity 0.3s ease';
+	        
+	        // Start the fade-out by setting opacity to 0
+	        el.style.opacity = '0';
+	        
+	        // Hide the element completely after the fade-out animation finishes (300ms)
+	        setTimeout(() => {
+	            el.style.display = 'none';
+	        }, 300); // This delay should match your transition duration
+	    });
+	} else {
+	    // Log a warning if the <home-settings> element isn't found
+	    console.warn("The <home-settings> element was not found in the document.");
+	}
 	
     // Append the container to the DOM
     document.body.appendChild(embedContainer);
@@ -3832,35 +3854,53 @@ function minimizeFullscreenEmbed() {
         });
     });
 	
-    const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .font-selection, .weight-slider-container');
-    controlElements.forEach(el => {
-        // Get original styles from stored data
-        let originalStyles = {};
-        try {
-            if (el.dataset.originalStyles) {
-                originalStyles = JSON.parse(el.dataset.originalStyles);
-            }
-        } catch (e) {
-            console.error('Error parsing original styles', e);
-        }
-        
-        // First set to invisible but in the DOM
-        el.style.opacity = '0';
-        el.style.display = originalStyles.display || 'flex';
-        
-        // Restore any other original properties we've stored
-        if (originalStyles.visibility) el.style.visibility = originalStyles.visibility;
-        if (originalStyles.position) el.style.position = originalStyles.position;
-        if (originalStyles.transform) el.style.transform = originalStyles.transform;
-        
-        // Add transition for smooth fade
-        el.style.transition = 'opacity 0.3s ease';
-        
-        // Trigger fade in animation
-        requestAnimationFrame(() => {
-            el.style.opacity = originalStyles.opacity || '1';
-        });
-    });
+	const homeSettingsElement = document.querySelector('home-settings'); // Select the first <home-settings> element
+	
+	if (homeSettingsElement) {
+	    // Get only the direct children of the <home-settings> element
+	    const directChildren = homeSettingsElement.children; // This returns an HTMLCollection
+	
+	    // Iterate over the direct children using Array.from() to enable forEach
+	    Array.from(directChildren).forEach(el => {
+	        // Initialize originalStyles
+	        let originalStyles = {
+	            display: 'flex', // Default if not stored, common for custom elements
+	            opacity: '1',    // Default if not stored
+	            visibility: 'visible', // Default if not stored
+	            position: 'static', // Default if not stored
+	            transform: 'none' // Default if not stored
+	        };
+	
+	        try {
+	            // Attempt to retrieve and parse original styles from data-original-styles
+	            if (el.dataset.originalStyles) {
+	                const parsedStyles = JSON.parse(el.dataset.originalStyles);
+	                // Merge retrieved styles, overriding defaults
+	                originalStyles = { ...originalStyles, ...parsedStyles };
+	            }
+	        } catch (e) {
+	            console.error('Error parsing original styles for element:', el, e);
+	        }
+	
+	        // --- Prepare for fade-in ---
+	        el.style.opacity = '0';
+	        el.style.display = originalStyles.display;
+	        
+	        // Restore any other original properties we've stored that might have been changed
+	        // (e.g., if you set position: 'absolute' during fade-out process)
+	        el.style.visibility = originalStyles.visibility;
+	        el.style.position = originalStyles.position;
+	        el.style.transform = originalStyles.transform;
+	        el.style.transition = 'opacity 0.3s ease';
+	
+	        // 3. Trigger the fade-in animations.
+	        requestAnimationFrame(() => {
+	            el.style.opacity = originalStyles.opacity;
+	        });
+	    });
+	} else {
+	    console.warn("The <home-settings> element was not found for fade-in.");
+	}
     
     // Hide all fullscreen embeds that are not being displayed
     document.querySelectorAll('.fullscreen-embed:not([style*="display: block"])').forEach(embed => {
