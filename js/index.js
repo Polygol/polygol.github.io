@@ -506,63 +506,75 @@ function setupWeatherToggle() {
 }
 
 function updateClockAndDate() {
-  let clockElement = document.getElementById('clock');
-  let dateElement = document.getElementById('date');
-  let modalTitle = document.querySelector('#customizeModal h2');
-  
-  let now = new Date();
-  
-  let hours = now.getHours();
-  let minutes = String(now.getMinutes()).padStart(2, '0');
-  let seconds = String(now.getSeconds()).padStart(2, '0');
-  
-  let displayHours;
-  let period = '';
-  
-  if (use12HourFormat) {
-    // 12-hour format
-    period = hours >= 12 ? ' PM' : ' AM';
-    displayHours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
-    displayHours = String(displayHours).padStart(2, '0');
-  } else {
-    // 24-hour format
-    displayHours = String(hours).padStart(2, '0');
-  }
-  
-  // Check if stacked layout is enabled
-  const stackSwitch = document.getElementById('clock-stack-switch');
-  const isStacked = stackSwitch && stackSwitch.checked;
-  
-  if (isStacked) {
-    // Stacked format: each time component on a new line
-    if (showSeconds) {
-      clockElement.innerHTML = `
-        <div>${displayHours}</div>
-        <div>${minutes}</div>
-        <div>${seconds}</div>
-        ${period ? `<div>${period.trim()}</div>` : ''}
-      `;
-    } else {
-      clockElement.innerHTML = `
-        <div>${displayHours}</div>
-        <div>${minutes}</div>
-        ${period ? `<div>${period.trim()}</div>` : ''}
-      `;
-    }
-  } else {
-    // Normal format: standard time display
-    clockElement.textContent = showSeconds ? 
-      `${displayHours}:${minutes}:${seconds}${period}` : 
-      `${displayHours}:${minutes}${period}`;
-  }
+    let clockElement = document.getElementById('clock');
+    let dateElement = document.getElementById('date');
+    let modalTitle = document.querySelector('#customizeModal h2');
     
-  let formattedDate = now.toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric'
-  });
-  dateElement.textContent = formattedDate;
-  if (modalTitle) modalTitle.textContent = formattedDate;
+    let now = new Date();
+    
+    let hours = now.getHours();
+    let minutes = String(now.getMinutes()).padStart(2, '0');
+    let seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    let displayHours;
+    let period = '';
+    
+    if (use12HourFormat) {
+        // 12-hour format
+        period = hours >= 12 ? ' PM' : ' AM';
+        displayHours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
+        displayHours = String(displayHours).padStart(2, '0');
+    } else {
+        // 24-hour format
+        displayHours = String(hours).padStart(2, '0');
+    }
+    
+    // Function to wrap each digit in a container for monospacing
+    function wrapDigits(timeString) {
+        return timeString.split('').map(char => {
+            if (/\d/.test(char)) {
+                return `<span class="digit">${char}</span>`;
+            } else {
+                return char;
+            }
+        }).join('');
+    }
+    
+    // Check if stacked layout is enabled
+    const stackSwitch = document.getElementById('clock-stack-switch');
+    const isStacked = stackSwitch && stackSwitch.checked;
+    
+    if (isStacked) {
+        // Stacked format: each time component on a new line with digit containers
+        if (showSeconds) {
+            clockElement.innerHTML = `
+                <div>${wrapDigits(displayHours)}</div>
+                <div>${wrapDigits(minutes)}</div>
+                <div>${wrapDigits(seconds)}</div>
+                ${period ? `<div>${period.trim()}</div>` : ''}
+            `;
+        } else {
+            clockElement.innerHTML = `
+                <div>${wrapDigits(displayHours)}</div>
+                <div>${wrapDigits(minutes)}</div>
+                ${period ? `<div>${period.trim()}</div>` : ''}
+            `;
+        }
+    } else {
+        // Normal format: standard time display with digit containers
+        const timeString = showSeconds ? 
+            `${displayHours}:${minutes}:${seconds}${period}` : 
+            `${displayHours}:${minutes}${period}`;
+        clockElement.innerHTML = wrapDigits(timeString);
+    }
+        
+    let formattedDate = now.toLocaleDateString(undefined, {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+    });
+    dateElement.textContent = formattedDate;
+    if (modalTitle) modalTitle.textContent = formattedDate;
 }
 
 function startSynchronizedClockAndDate() {
