@@ -1895,21 +1895,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     })();
     
-    // Temperature popup functionality - reusing your existing thermostat code
     temperatureControl.addEventListener('click', function(e) {
-        // Position the popup below the temperature control
+        // If the popup is already open, and the click is NOT inside the popup or on the control, close it
+        if (
+            temperaturePopup.style.display === 'block' &&
+            !temperaturePopup.contains(e.target) &&
+            e.target !== temperatureControl
+        ) {
+            temperaturePopup.style.display = 'none';
+            return;
+        }
+
+        // Otherwise, open it as usual
         const rect = temperatureControl.getBoundingClientRect();
         temperaturePopup.style.top = `${rect.bottom + 5}px`;
-        temperaturePopup.style.left = `${rect.left + (rect.width / 2) - 125}px`; // Center the popup
-        
-        // Show the popup
+        temperaturePopup.style.left = `${rect.left + (rect.width / 2) - 155}px`; // Center the popup
+
         temperaturePopup.style.display = 'block';
-        
-        // Prevent propagation to avoid immediate closing
-        e.stopPropagation();
+        e.stopPropagation(); // Prevent bubbling to avoid auto-close
     });
     
-    // Close popup when clicking outside - reusing your existing pattern
     document.addEventListener('click', function(e) {
         if (temperaturePopup.style.display === 'block' && 
             !temperaturePopup.contains(e.target) && 
