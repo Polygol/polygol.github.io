@@ -4066,7 +4066,7 @@ function setupDrawerInteractions() {
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
-                document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+                document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
 	    } 
             // Large swipe or flick up - show full drawer
             else if (isSignificantSwipe) {
