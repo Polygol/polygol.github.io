@@ -1740,7 +1740,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const temperaturePopup = document.getElementById('thermostat-popup');
     const temperatureSlider = document.getElementById('thermostat-control');
     const temperaturePopupValue = document.getElementById('thermostat-popup-value');
-    const closePopupBtn = document.getElementById('close-thermostat-popup');
     
     // Set initial states from localStorage or defaults
     lightModeSwitch.checked = storedLightMode === 'light';
@@ -1909,10 +1908,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Prevent propagation to avoid immediate closing
         e.stopPropagation();
-    });
-    
-    closePopupBtn.addEventListener('click', function() {
-        temperaturePopup.style.display = 'none';
     });
     
     // Close popup when clicking outside - reusing your existing pattern
@@ -4708,15 +4703,6 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('page_brightness', value);
     });
     
-    // Temperature control event listener
-    temperatureSlider.addEventListener('input', function(e) {
-        const value = e.target.value;
-        temperaturePopupValue.textContent = value;
-        temperatureValue.textContent = value;
-        updateTemperature(value);
-        localStorage.setItem('display_temperature', value);
-    });
-    
     // Function to update brightness
     function updateBrightness(value) {
         brightnessValue.textContent = `${value}%`;
@@ -4802,37 +4788,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     `;
     document.head.appendChild(style);
-    
-    // Temperature popup functionality - reusing existing thermostat code
-    const temperatureControl = document.getElementById('temp_control_qc');
-    const temperaturePopup = document.getElementById('thermostat-popup');
-    const closePopupBtn = document.getElementById('close-thermostat-popup');
-    
-    temperatureControl.addEventListener('click', function(e) {
-        // Position the popup below the temperature control
-        const rect = temperatureControl.getBoundingClientRect();
-        temperaturePopup.style.top = `${rect.bottom + 5}px`;
-        temperaturePopup.style.left = `${rect.left + (rect.width / 2) - 125}px`; // Center the popup
-        
-        // Show the popup
-        temperaturePopup.style.display = 'block';
-        
-        // Prevent propagation to avoid immediate closing
-        e.stopPropagation();
-    });
-    
-    closePopupBtn.addEventListener('click', function() {
-        temperaturePopup.style.display = 'none';
-    });
-    
-    // Close popup when clicking outside
-    document.addEventListener('click', function(e) {
-        if (temperaturePopup.style.display === 'block' && 
-            !temperaturePopup.contains(e.target) && 
-            e.target !== temperatureControl) {
-            temperaturePopup.style.display = 'none';
-        }
-    });
     
     // Initialize the temperature display
     updateTemperature(storedTemperature);
