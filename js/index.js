@@ -37,10 +37,9 @@ function applyLanguage(language) {
     fontSelect.querySelector('option[value="Doto"]').textContent = language.DOT;
     fontSelect.querySelector('option[value="Nunito"]').textContent = language.ROUND;
 
-    // Ensuring only the text node is updated
-    const thermostatPopupHeader = document.querySelector('#thermostat-popup .thermostat-popup-header');
-    if (thermostatPopupHeader && thermostatPopupHeader.childNodes.length > 2) {
-        thermostatPopupHeader.childNodes[2].textContent = language.ADJUST;
+    const adjustLabel = document.querySelector('#thermostat-popup .adjust-label');
+    if (adjustLabel) {
+        adjustLabel.textContent = language.ADJUST;
     }
 
     // Update checkWords and closeWords
