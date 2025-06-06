@@ -4210,7 +4210,7 @@ function setupDrawerInteractions() {
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
             interactionBlocker.style.display = 'none';
-            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
 	} else if (openEmbed) {
             // Reset embed if swipe wasn't enough (removed filter)
             openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
