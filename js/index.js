@@ -2449,7 +2449,7 @@ async function applyWallpaper() {
                             URL.revokeObjectURL(existingVideo.src);
                             existingVideo.remove();
                         }
-                        document.body.style.backgroundImage = `url('${imageData.dataUrl}')`;
+                        document.body.style.setProperty('--bg-image', `url('${imageData.dataUrl}')`);
                         document.body.style.backgroundSize = "cover";
                         document.body.style.backgroundPosition = "center";
                         document.body.style.backgroundRepeat = "no-repeat";
@@ -2511,7 +2511,7 @@ async function applyWallpaper() {
                             URL.revokeObjectURL(existingVideo.src);
                             existingVideo.remove();
                         }
-                        document.body.style.backgroundImage = `url('${imageData.dataUrl}')`;
+                        document.body.style.setProperty('--bg-image', `url('${imageData.dataUrl}')`);
                         document.body.style.backgroundSize = "cover";
                         document.body.style.backgroundPosition = "center";
                         document.body.style.backgroundRepeat = "no-repeat";
