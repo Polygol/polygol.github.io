@@ -4142,7 +4142,7 @@ function setupDrawerInteractions() {
         // Only update opacity if no embed is open
         if (!openEmbed) {
             const opacity = (newPosition + 100) / 100;
-            const blurRadius = Math.max(0, Math.min(5, (newPosition / 20)));
+            const blurRadius = Math.max(0, Math.min(5, ((-newPosition) / 20)));
             appDrawer.style.opacity = opacity;
             
             // Apply blur to body for drawer instead
@@ -4266,7 +4266,7 @@ function setupDrawerInteractions() {
                 appDrawer.classList.add('open');
                 initialDrawerPosition = 0;
                 interactionBlocker.style.display = 'none';
-                document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+                document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
 	    } 
             // Close everything
             else {
@@ -4277,7 +4277,7 @@ function setupDrawerInteractions() {
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
-                document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+                document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
 	    }
             
             // Hide the swipe overlay when not in an app
