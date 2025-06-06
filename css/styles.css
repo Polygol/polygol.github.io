@@ -396,9 +396,7 @@ input[type="color"]::-moz-color-swatch {
 
         .container {
             margin: 0 auto;
-            padding: 1rem;
             text-align: center;
-            padding: 20px;
             position: relative;
             transition: color 0.3s;
             user-select: none;
