@@ -4460,7 +4460,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const storedLightMode = localStorage.getItem('theme') || 'dark';
     const storedMinimalMode = localStorage.getItem('minimalMode') === 'true';
     const storedSilentMode = localStorage.getItem('silentMode') === 'true';
-    const storedTemperature = localStorage.getItem('display_temperature') || '0'; // Changed from '30' to '0'
+    const storedTemperature = localStorage.getItem('display_temperature') || '0';
+    const storedBrightness = localStorage.getItem('page_brightness') || '100';
     
     // Get elements using your existing IDs
     const lightModeControl = document.getElementById('light_mode_qc');
@@ -4476,6 +4477,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const temperaturePopup = document.getElementById('thermostat-popup');
     const temperatureSlider = document.getElementById('thermostat-control');
     const temperaturePopupValue = document.getElementById('thermostat-popup-value');
+    
+    // Brightness elements
+    const brightnessSlider = document.getElementById('brightness-control');
+    const brightnessValue = document.getElementById('brightness-value');
+    
+    // Create brightness overlay div if it doesn't exist
+    if (!document.getElementById('brightness-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.id = 'brightness-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.zIndex = '9999999';
+        overlay.style.display = 'block';
+        document.body.appendChild(overlay);
+    }
     
     // Create temperature overlay div if it doesn't exist
     if (!document.getElementById('temperature-overlay')) {
@@ -4493,6 +4513,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(tempOverlay);
     }
     
+    const brightnessOverlay = document.getElementById('brightness-overlay');
     const temperatureOverlay = document.getElementById('temperature-overlay');
     
     // Set temperature slider range
@@ -4509,11 +4530,18 @@ document.addEventListener('DOMContentLoaded', function() {
     silentModeSwitch.checked = storedSilentMode;
     if (silentModeSwitch.checked) silentModeControl.classList.add('active');
     
+    // Initialize temperature
     if (storedTemperature) {
         temperatureSlider.value = storedTemperature;
         temperatureValue.textContent = `${storedTemperature}`;
         temperaturePopupValue.textContent = `${storedTemperature}`;
-        updateTemperature(storedTemperature); // Initialize the temperature overlay
+        updateTemperature(storedTemperature);
+    }
+    
+    // Initialize brightness
+    if (storedBrightness) {
+        brightnessSlider.value = storedBrightness;
+        updateBrightness(storedBrightness);
     }
     
     // Initialize icons based on current states
@@ -4528,9 +4556,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!lightModeIcon) return;
         
         if (isLightMode) {
-            lightModeIcon.textContent = 'radio_button_checked';
+            lightModeIcon.textContent = 'radio_button_checked'; // Light mode ON
         } else {
-            lightModeIcon.textContent = 'radio_button_partial';
+            lightModeIcon.textContent = 'radio_button_partial'; // Light mode OFF (dark mode)
         }
     }
     
@@ -4540,9 +4568,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!minimalModeIcon) return;
         
         if (isMinimalMode) {
-            minimalModeIcon.textContent = 'screen_record';
+            minimalModeIcon.textContent = 'screen_record'; // Minimal mode ON
         } else {
-            minimalModeIcon.textContent = 'filter_tilt_shift';
+            minimalModeIcon.textContent = 'filter_tilt_shift'; // Minimal mode OFF
         }
     }
     
@@ -4552,40 +4580,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!silentModeIcon) return;
         
         if (isSilentMode) {
-            silentModeIcon.textContent = 'notifications_off';
+            silentModeIcon.textContent = 'notifications_off'; // Silent mode ON
         } else {
-            silentModeIcon.textContent = 'notifications';
+            silentModeIcon.textContent = 'notifications'; // Silent mode OFF
         }
-    }
-    
-    // Function to update temperature
-    function updateTemperature(value) {
-        const tempValue = parseInt(value);
-        const intensity = Math.abs(tempValue) / 10 * 0.3; // Reduced intensity for better visibility
-        
-        let r, g, b, a;
-        
-        if (tempValue < 0) {
-            // Cool/blue tint
-            r = 200;
-            g = 220;
-            b = 255;
-            a = intensity;
-        } else if (tempValue > 0) {
-            // Warm/yellow tint
-            r = 255;
-            g = 220;
-            b = 180;
-            a = intensity;
-        } else {
-            // Neutral
-            r = 255;
-            g = 255;
-            b = 255;
-            a = 0;
-        }
-        
-        temperatureOverlay.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${a})`;
     }
     
     // Function to update the temperature icon based on value
@@ -4595,22 +4593,87 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const tempValue = parseInt(value);
         if (tempValue <= -3) {
-            temperatureIcon.textContent = 'thermometer_minus';
+            temperatureIcon.textContent = 'thermometer_minus'; // Cold
         } else if (tempValue >= 3) {
-            temperatureIcon.textContent = 'thermometer_add';
+            temperatureIcon.textContent = 'thermometer_add'; // Hot
         } else {
-            temperatureIcon.textContent = 'thermostat_auto';
+            temperatureIcon.textContent = 'thermostat_auto'; // Neutral
         }
     }
     
-    // Event listeners
+    // Function to update brightness
+    function updateBrightness(value) {
+        brightnessValue.textContent = `${value}%`;
+        
+        // Calculate darkness level (inverse of brightness)
+        const darknessLevel = (100 - value) / 100;
+        
+        // Update the overlay opacity
+        brightnessOverlay.style.backgroundColor = `rgba(0, 0, 0, ${darknessLevel})`;
+        
+        // Update the icon based on brightness level
+        const brightnessIcon = document.querySelector('label[for="brightness-control"] .material-symbols-rounded');
+        
+        if (brightnessIcon) {
+            if (value <= 33) {
+                brightnessIcon.textContent = 'brightness_5'; // Low brightness icon
+            } else if (value <= 66) {
+                brightnessIcon.textContent = 'brightness_6'; // Medium brightness icon
+            } else {
+                brightnessIcon.textContent = 'brightness_7'; // High brightness icon
+            }
+        }
+    }
+    
+    // Function to update temperature
+    function updateTemperature(value) {
+        // Convert to number to ensure proper comparison
+        const tempValue = parseInt(value);
+        
+        // Calculate intensity based on distance from 0
+        const intensity = Math.abs(tempValue) / 10 * 0.3; // Reduced intensity for better visibility
+        
+        // Calculate RGB values for overlay
+        let r, g, b, a;
+        
+        if (tempValue < 0) {
+            // Cool/blue tint (more blue as value decreases)
+            r = 200;
+            g = 220;
+            b = 255;
+            a = intensity;
+        } else if (tempValue > 0) {
+            // Warm/yellow tint (more yellow as value increases)
+            r = 255;
+            g = 220;
+            b = 180;
+            a = intensity;
+        } else {
+            // Neutral (no tint at 0)
+            r = 255;
+            g = 255;
+            b = 255;
+            a = 0;
+        }
+        
+        // Update the overlay color
+        temperatureOverlay.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${a})`;
+    }
+    
+    // Event listener for light mode control
     lightModeControl.addEventListener('click', function() {
         lightModeSwitch.checked = !lightModeSwitch.checked;
         this.classList.toggle('active');
 
         const newTheme = lightModeSwitch.checked ? 'light' : 'dark';
+
+        // Update localStorage
         localStorage.setItem('theme', newTheme);
+
+        // Update current document
         document.body.classList.toggle('light-theme', newTheme === 'light');
+
+        // Update icon
         updateLightModeIcon(lightModeSwitch.checked);
 
         const iframes = document.querySelectorAll('iframe');
@@ -4622,30 +4685,49 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Event listener for minimal mode control
     minimalModeControl.addEventListener('click', function() {
+        // Toggle minimalMode state
         minimalMode = !minimalMode;
+
+        // Save state to localStorage (if needed)
         localStorage.setItem('minimalMode', minimalMode);
+
+        // Update UI based on the new state
         updateMinimalMode();
+
+        // Toggle active class for visual feedback
         this.classList.toggle('active');
+        
+        // Update icon
         updateMinimalModeIcon(minimalMode);
     });
 
+    // Event listener for silent mode control
     silentModeControl.addEventListener('click', function() {
         silentModeSwitch.checked = !silentModeSwitch.checked;
         this.classList.toggle('active');
         
         const silentMode = silentModeSwitch.checked;
         localStorage.setItem('silentMode', silentMode);
+        
+        // Update icon
         updateSilentModeIcon(silentMode);
         
+        // Override the showPopup function based on silent mode state
         if (silentMode) {
+            // Store the original function if not already stored
             if (!window.originalShowPopup) {
                 window.originalShowPopup = window.showPopup;
             }
+            
+            // Replace with silent version (that does nothing)
             window.showPopup = function(message) {
                 console.log('Silent ON; suppressing popup:', message);
+                // Do nothing - this effectively hides all popups
             };
         } else {
+            // Restore the original function if we have it stored
             if (window.originalShowPopup) {
                 window.showPopup = window.originalShowPopup;
             }
@@ -4657,27 +4739,35 @@ document.addEventListener('DOMContentLoaded', function() {
         const silentMode = localStorage.getItem('silentMode') === 'true';
         
         if (silentMode) {
+            // Store the original function if not already stored
             if (!window.originalShowPopup) {
                 window.originalShowPopup = window.showPopup;
             }
+            
+            // Replace with silent version
             window.showPopup = function(message) {
                 console.log('Silent ON; suppressing popup:', message);
+                // Do nothing - this effectively hides all popups
             };
         }
     })();
     
     // Temperature control popup
     temperatureControl.addEventListener('click', function(e) {
-        if (temperaturePopup.style.display === 'block' &&
+        // If the popup is already open, and the click is NOT inside the popup or on the control, close it
+        if (
+            temperaturePopup.style.display === 'block' &&
             !temperaturePopup.contains(e.target) &&
-            e.target !== temperatureControl) {
+            e.target !== temperatureControl
+        ) {
             temperaturePopup.style.display = 'none';
             return;
         }
 
+        // Otherwise, open it as usual
         const rect = temperatureControl.getBoundingClientRect();
         temperaturePopup.style.top = `${rect.bottom + 5}px`;
-        temperaturePopup.style.left = `${rect.left + (rect.width / 2) - (155 / 2)}px`;
+        temperaturePopup.style.left = `${rect.left + (rect.width / 2) - (155 / 2)}px`; // Center the popup
         temperaturePopup.style.display = 'block';
     });
     
@@ -4689,31 +4779,52 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Temperature slider event listener - CONSOLIDATED
+    // Temperature slider event listener
     temperatureSlider.addEventListener('input', function(e) {
         const value = e.target.value;
         temperaturePopupValue.textContent = `${value}`;
         temperatureValue.textContent = `${value}`;
         localStorage.setItem('display_temperature', value);
         updateTemperatureIcon(value);
-        updateTemperature(value); // Update the temperature overlay
+        updateTemperature(value);
+    });
+    
+    // Brightness control event listener
+    brightnessSlider.addEventListener('input', function(e) {
+        const value = e.target.value;
+        updateBrightness(value);
+        localStorage.setItem('page_brightness', value);
     });
     
     // Override showPopup function to respect silent mode
     const originalShowPopup = window.showPopup;
     if (typeof originalShowPopup === 'function') {
         window.showPopup = function(message) {
+            // Check if silent mode is enabled
             if (localStorage.getItem('silentMode') === 'true') {
                 console.log('Silent mode active, suppressing popup:', message);
-                return;
+                return; // Don't show popup if silent mode is enabled
             }
+            
+            // Otherwise, call the original function
             originalShowPopup(message);
         };
     }
     
-    // Add CSS for the temperature overlay
+    // Add CSS for the overlays
     const style = document.createElement('style');
     style.textContent = `
+        #brightness-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999999;
+            display: block !important;
+        }
+        
         #temperature-overlay {
             position: fixed;
             top: 0;
@@ -4721,8 +4832,8 @@ document.addEventListener('DOMContentLoaded', function() {
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 999998;
-            mix-blend-mode: screen;
+            z-index: 9999998;
+            mix-blend-mode: multiply;
             display: block !important;
         }
     `;
