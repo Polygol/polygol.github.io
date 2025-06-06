@@ -96,7 +96,8 @@ const LANG_EN = {
     LARGE_SCR_REQ: "Larger screen is required",
     DONT_CLOSE: "Use Sleep in Controls to turn off",
     CLOCK_COLOR: "Clock Color",
-    N_WALL: "No wallpapers"
+    N_WALL: "No wallpapers",
+    CLOCK_STACK: "Clock Stack"
 };
 
 const LANG_JP = {
@@ -195,7 +196,8 @@ const LANG_JP = {
     LARGE_SCR_REQ: "より大きな画面が必要です",
     DONT_CLOSE: "オフにするにはコントロールでスリープを使用してください",
     CLOCK_COLOR: "時計の色",
-    N_WALL: "壁紙がありません"
+    N_WALL: "壁紙がありません",
+    CLOCK_STACK: "クロックスタック"
 };
 
 const LANG_DE = {
@@ -294,7 +296,8 @@ const LANG_DE = {
     LARGE_SCR_REQ: "Größerer Bildschirm erforderlich",
     DONT_CLOSE: "Verwenden Sie den Schlafmodus in den Steuerelementen, um ihn auszuschalten",
     CLOCK_COLOR: "Uhrenfarbe",
-    N_WALL: "Keine Hintergrundbilder"
+    N_WALL: "Keine Hintergrundbilder",
+    CLOCK_STACK: "Uhr-Stapel"
 };
 
 const LANG_FR = {
@@ -394,6 +397,7 @@ const LANG_FR = {
     DONT_CLOSE: "Utilisez le mode veille dans les commandes pour éteindre",
     CLOCK_COLOR: "Couleur de l'horloge",
     N_WALL: "Pas de fonds d'écran",
+    CLOCK_STACK: "Pile d'horloge"
 };
 
 const LANG_ES = {
@@ -492,7 +496,8 @@ const LANG_ES = {
     LARGE_SCR_REQ: "Se requiere una pantalla más grande",
     DONT_CLOSE: "Utilice el modo de suspensión en los controles para apagar",
     CLOCK_COLOR: "Color del reloj",
-    N_WALL: "Sin fondos de pantalla"
+    N_WALL: "Sin fondos de pantalla",
+    CLOCK_STACK: "Pila de reloj"
 };
 
 const LANG_KO = {
@@ -591,7 +596,8 @@ const LANG_KO = {
     LARGE_SCR_REQ: "더 큰 화면이 필요합니다",
     DONT_CLOSE: "끄려면 컨트롤에서 잠자기를 사용하세요",
     CLOCK_COLOR: "시계 색상",
-    N_WALL: "배경 화면 없음"
+    N_WALL: "배경 화면 없음",
+    CLOCK_STACK: "시계 스택"
 };
 
 const LANG_ZH = {
@@ -690,5 +696,6 @@ const LANG_ZH = {
     LARGE_SCR_REQ: "需要更大的屏幕",
     DONT_CLOSE: "使用控件中的睡眠模式关闭",
     CLOCK_COLOR: "时钟颜色",
-    N_WALL: "没有壁纸"
+    N_WALL: "没有壁纸",
+    CLOCK_STACK: "时钟堆栈"
 };
