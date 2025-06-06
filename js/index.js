@@ -1752,8 +1752,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (storedTemperature) {
         temperatureSlider.value = storedTemperature;
-        temperatureValue.textContent = `${storedTemperature}°`;
-        temperaturePopupValue.textContent = `${storedTemperature}°`;
+        temperatureValue.textContent = `${storedTemperature}`;
+        temperaturePopupValue.textContent = `${storedTemperature}`;
     }
     
     // Initialize icons based on current states
@@ -1920,8 +1920,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     temperatureSlider.addEventListener('input', function(e) {
         const value = e.target.value;
-        temperaturePopupValue.textContent = `${value}°`;
-        temperatureValue.textContent = `${value}°`;
+        temperaturePopupValue.textContent = `${value}`;
+        temperatureValue.textContent = `${value}`;
         localStorage.setItem('display_temperature', value);
         updateTemperatureIcon(value);
     });
