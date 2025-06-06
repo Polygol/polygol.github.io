@@ -76,6 +76,15 @@
                     <span class="material-symbols-rounded" style="font-size: 18px;">power_settings_new</span>
                 </button>
             </div>
+            <div class="display-item">
+                <div class="brightness-slider-container">
+                <label for="brightness-control" class="cust-label">
+                    <span class="material-symbols-rounded">brightness_7</span>
+                </label>
+                <span id="brightness-value">100%</span>
+                <input type="range" min="20" max="100" value="100" class="brightness-slider" id="brightness-control">
+            </div>
+            </div>
             <div class="quick-controls">
                 <div class="qcontrol-item" id="silent_switch_qc">
                     <span class="material-symbols-rounded">notifications_off</span>
@@ -96,17 +105,6 @@
                     <span class="material-symbols-rounded">contrast</span>
                     <span class="qc-label">LANG_DAYLIGHT</span>
                     <input type="checkbox" id="camera-switch" class="qc-switch" hidden>
-                </div>
-            </div>
-            <div class="display-controls">
-                <div class="display-item">
-                    <label for="brightness-control" class="cust-label">
-                        <span class="material-symbols-rounded">brightness_7</span>
-                    </label>
-                    <div class="brightness-slider-container">
-                        <span id="brightness-value">100%</span>
-                        <input type="range" min="20" max="100" value="100" class="brightness-slider" id="brightness-control">
-                    </div>
                 </div>
             </div>
             <div class="notification-shade"></div>
