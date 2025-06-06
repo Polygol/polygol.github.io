@@ -3549,25 +3549,27 @@ function createFullscreenEmbed(url) {
         embedContainer.style.transform = 'scale(0.8)';
         embedContainer.style.opacity = '0';
         embedContainer.style.borderRadius = '25px';
-        embedContainer.style.overflow = 'hidden'; // Ensure border radius works
+        embedContainer.style.overflow = 'hidden';
         embedContainer.style.display = 'block';
         
         // IMPORTANT FIX: Restore proper z-index and pointer events
         embedContainer.style.pointerEvents = 'auto';
-        embedContainer.style.zIndex = '1001'; // Higher than interaction-blocker (999)
+        embedContainer.style.zIndex = '1001';
         
         // Force reflow to apply the immediate style changes
         void embedContainer.offsetWidth;
         
-        // Add transition for all properties
-        embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease';
+        // Add transition for all properties (removed filter)
+        embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+        
+        // Clear background blur when restoring app
+        document.body.style.filter = 'none';
         
         // Trigger the animation
         setTimeout(() => {
             embedContainer.style.transform = 'scale(1)';
             embedContainer.style.opacity = '1';
-            embedContainer.style.borderRadius = '0px'; // Remove border radius when fully opened
-	    embedContainer.style.filter = 'none';
+            embedContainer.style.borderRadius = '0px';
         }, 10);
         
         // Hide container with a smooth fade animation
@@ -3648,22 +3650,22 @@ function createFullscreenEmbed(url) {
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allowfullscreen', '');
     
-    // Create a container for the iframe
     const embedContainer = document.createElement('div');
     embedContainer.className = 'fullscreen-embed';
     
-    // Set initial styles BEFORE adding to DOM
-    // No transitions yet - just set initial values
+    // Set initial styles BEFORE adding to DOM (removed filter)
     embedContainer.style.transform = 'scale(0.8)'; 
     embedContainer.style.opacity = '0';
     embedContainer.style.borderRadius = '25px';
-    embedContainer.style.filter = 'blur(5px)';
-    embedContainer.style.overflow = 'hidden'; // Ensure border radius works with iframe
+    embedContainer.style.overflow = 'hidden';
     embedContainer.style.display = 'block';
+    
+    // Set initial background blur
+    document.body.style.filter = 'blur(5px)';
     
     // IMPORTANT FIX: Set proper z-index and pointer events
     embedContainer.style.pointerEvents = 'auto';
-    embedContainer.style.zIndex = '1001'; // Higher than interaction-blocker (999)
+    embedContainer.style.zIndex = '1001';
     embedContainer.appendChild(iframe);
     
     // Store the URL as a data attribute
@@ -3758,15 +3760,15 @@ function createFullscreenEmbed(url) {
     // Force reflow to ensure the initial styles are applied
     void embedContainer.offsetWidth;
     
-    // Now add the transition AFTER the element is in the DOM with initial styles applied
-    embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease';
+    // Now add the transition AFTER the element is in the DOM (removed filter)
+    embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
     
-    // Trigger the animation in the next event loop
+    // Clear background blur and trigger the animation
     setTimeout(() => {
         embedContainer.style.transform = 'scale(1)';
         embedContainer.style.opacity = '1';
-        embedContainer.style.borderRadius = '0px'; // Remove border radius when fully opened
-	embedContainer.style.filter = 'none';
+        embedContainer.style.borderRadius = '0px';
+        document.body.style.filter = 'none';
     }, 10);
     
     // Show the swipe overlay when opening an app
@@ -4104,16 +4106,18 @@ function setupDrawerInteractions() {
         const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
         
         if (openEmbed && movementPercentage > 25) {
-            // Add transition class for smooth animation
-            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease';
+            // Add transition class for smooth animation (removed filter)
+            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
             openEmbed.style.transform = `scale(${1 - (movementPercentage - 25) / 100})`;
             openEmbed.style.opacity = 1 - ((movementPercentage - 25) / 75);
             
-            // Add dynamic border radius during drag
+            // Add dynamic border radius and background blur during drag
             const borderRadius = Math.min(25, (movementPercentage - 25) * 0.5);
-	    const blurRadius = Math.min(5, (movementPercentage - 25) * 0.5);
+            const blurRadius = Math.min(5, (movementPercentage - 25) * 0.2);
             openEmbed.style.borderRadius = `${borderRadius}px`;
-	    openEmbed.style.filter = `blur(${blurRadius}px)`;
+            
+            // Apply blur to body instead of embed
+            document.body.style.filter = `blur(${blurRadius}px)`;
             
             // Make app drawer transparent when in an app
             appDrawer.style.opacity = '0';
@@ -4138,9 +4142,11 @@ function setupDrawerInteractions() {
         // Only update opacity if no embed is open
         if (!openEmbed) {
             const opacity = (newPosition + 100) / 100;
-	    const blurdr = Math.max(0, Math.min(5, ((-newPosition) / 20)));
+            const blurRadius = Math.max(0, Math.min(5, ((-newPosition) / 20)));
             appDrawer.style.opacity = opacity;
-	    appDrawer.style.filter = `blur(${blurdr}px)`;
+            
+            // Apply blur to body for drawer instead
+            document.body.style.filter = `blur(${blurRadius}px)`;
         }
         
         appDrawer.style.bottom = `${newPosition}%`;
@@ -4179,12 +4185,14 @@ function setupDrawerInteractions() {
         const isFlickUp = avgVelocity > flickVelocityThreshold;
         
         if (openEmbed && (movementPercentage > 10 || isFlickUp)) {
-            // Close embed with animation
-            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease';
+            // Close embed with animation (removed filter)
+            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
             openEmbed.style.transform = 'scale(0.8)';
             openEmbed.style.opacity = '0';
-            openEmbed.style.borderRadius = '25px'; // Fully rounded when minimized
-	    openEmbed.style.filter = 'blur(5px)';
+            openEmbed.style.borderRadius = '25px';
+            
+            // Apply blur to body when minimizing
+            document.body.style.filter = 'blur(5px)';
             
             setTimeout(() => {
                 minimizeFullscreenEmbed();
@@ -4194,26 +4202,27 @@ function setupDrawerInteractions() {
                 swipeOverlay.style.pointerEvents = 'none';
             }, 300);
             
-            // Reset drawer state
+            // Reset drawer state and clear background blur
             dock.classList.remove('show');
             dock.style.boxShadow = 'none';
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
-	    appDrawer.style.filter = 'none';
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
             interactionBlocker.style.display = 'none';
-	} else if (openEmbed) {
-    	    // Reset embed if swipe wasn't enough with explicit transition
-  	    openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease';
- 	    openEmbed.style.transform = 'scale(1)';
- 	    openEmbed.style.opacity = '1';
-  	    openEmbed.style.borderRadius = '0px';
-  	    openEmbed.style.filter = 'none'; // Animate to no blur instead of 'none'
+            document.body.style.filter = 'none';
+        } else if (openEmbed) {
+            // Reset embed if swipe wasn't enough (removed filter)
+            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+            openEmbed.style.transform = 'scale(1)';
+            openEmbed.style.opacity = '1';
+            openEmbed.style.borderRadius = '0px';
+            
+            // Clear background blur when resetting
+            document.body.style.filter = 'none';
             
             // Keep app drawer transparent when in an app
             appDrawer.style.opacity = '0';
-	    appDrawer.style.filter = 'none';
             
             // Handle dock visibility for smaller swipes
             if (movementPercentage > 2.5 && movementPercentage <= 25) {
@@ -4240,35 +4249,35 @@ function setupDrawerInteractions() {
             // Small swipe - show dock
             if (isSmallSwipe && !isFlickUp) {
                 dock.classList.add('show');
-                dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; // Enable box shadow when visible
+                dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
                 appDrawer.style.bottom = '-100%';
                 appDrawer.style.opacity = '0';
-		appDrawer.style.filter = 'none';
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
+                document.body.style.filter = 'none';
             } 
             // Large swipe or flick up - show full drawer
             else if (isSignificantSwipe) {
                 dock.classList.remove('show');
-                dock.style.boxShadow = 'none'; // Disable box shadow when not visible
+                dock.style.boxShadow = 'none';
                 appDrawer.style.bottom = '0%';
                 appDrawer.style.opacity = '1';
-		appDrawer.style.filter = 'none';
                 appDrawer.classList.add('open');
                 initialDrawerPosition = 0;
                 interactionBlocker.style.display = 'none';
+                document.body.style.filter = 'none';
             } 
             // Close everything
             else {
                 dock.classList.remove('show');
-                dock.style.boxShadow = 'none'; // Disable box shadow when not visible
+                dock.style.boxShadow = 'none';
                 appDrawer.style.bottom = '-100%';
                 appDrawer.style.opacity = '0';
-		appDrawer.style.filter = 'blur(5px)';
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
+                document.body.style.filter = 'blur(5px)';
             }
             
             // Hide the swipe overlay when not in an app
