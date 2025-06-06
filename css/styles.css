@@ -1430,54 +1430,6 @@ input[type="color"]::-moz-color-swatch {
   vertical-align: middle; 
 }
 
-.timer-widget {
-    position: relative;
-    font-size: 1.2rem;
-    width: fit-content;
-    font-weight: 400;
-    color: var(--text-color);
-    padding: 8px 18px;
-    background-color: var(--search-background);
-    backdrop-filter: blur(20px);
-    display: none;  /* Hidden by default */
-    align-items: center;
-    justify-content: center;
-    gap: 8px; /* Add gap between text and icon */
-    line-height: 1;
-    cursor: pointer;
-    user-select: none;
-    transition: background-color 0.3s;
-    box-sizing: border-box;
-    border: 1px solid var(--glass-border);
-    border-radius: 50px;
-    height: 52px;
-    transform: scale(1);
-    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
-}
-
-.timer-widget:active {
-    transform: scale(0.96);
-    transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-}
-
-.timer-text {
-    font-size: 1.2rem;
-    font-weight: 400;
-    display: inline-flex;
-    align-items: center;
-    height: 100%;
-    user-select: none;
-    font-variant-numeric: tabular-nums;
-}
-
-.timer-icon {
-    font-size: 1.2rem;
-    display: inline-flex;
-    align-items: center;
-    user-select: none;
-    vertical-align: middle;
-}
-
 .clockwidgets {
     display: flex;
     justify-content: center;
@@ -1497,9 +1449,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
 /* Brightness Control Styles */
-.display-controls {
-    display: flex;
-    flex-direction: column;
+.display-item 
     margin-top: 20px;
 }
 
@@ -1601,7 +1551,7 @@ input[type="color"]::-moz-color-swatch {
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(2, auto);
     gap: 10px;
-    margin: 20px 0 10px;
+    margin: 10px 0 10px;
 }
 
 .qcontrol-item {
@@ -2004,105 +1954,6 @@ input[type="color"]::-moz-color-swatch {
 #font-select option[value="Doto"] { font-family: 'Doto', monospace; }
 #font-select option[value="Nunito"] { font-family: 'Nunito', sans-serif; }
 
-.timer-circle {
-    position: relative;
-    width: 450px;
-    height: 450px;
-    margin: 30px auto;
-}
-
-.timer-display {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 108px;
-    color: var(--text-color);
-    font-weight: 700;
-    cursor: pointer;
-    user-select: none;
-    font-variant-numeric: tabular-nums;
-}
-
-.timer-input {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 108px;
-    color: var(--text-color);
-    background: transparent;
-    border: none;
-    width: 270px;
-    text-align: center;
-    outline: none;
-    display: none;
-    font-family: 'Inter', sans-serif;
-}
-
-.progress-ring {
-    transform: rotate(-90deg);
-    transition: all 0.3s ease;
-    opacity: 0;
-    visibility: hidden;
-}
-
-.progress-ring.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-.progress-ring circle {
-    fill: transparent;
-    stroke-width: 12;
-    stroke: rgba(255,255,255,0.2);
-}
-
-.progress-ring circle.progress {
-    stroke: var(--text-color);
-    transition: all 0.3s ease;
-}
-
-/* Responsive changes for small viewports */
-@media (max-width: 550px) {
-    .timer-circle {
-        width: 100%;
-        height: 80px;
-        margin: 20px auto;
-    }
-    
-    .timer-display {
-        font-size: 48px;
-        top: 50%;
-    }
-    
-    .timer-input {
-        font-size: 48px;
-        top: 50%;
-        width: 120px;
-    }
-    
-    .progress-ring {
-        display: none;
-    }
-    
-    .timer-circle::after {
-        display: none;
-    }
-    
-    .timer-circle::before {
-        display: none;
-    }
-}
-
-.controls {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin: 30px 0;
-    flex-wrap: wrap;
-}
-
 .btn {
     background-color: var(--transparent-color);
     color: var(--text-color);
@@ -2136,25 +1987,6 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 15px;
-}
-
-.action-btn {
-    flex: 1;
-    padding: 18px;
-    border: 1px solid var(--glass-border);
-    border-radius: 36px;
-    cursor: pointer;
-    font-size: 21px;
-    font-weight: 500;
-    color: var(--text-color);
-    transition: all 0.3s ease;
-    font-family: 'Inter', sans-serif;
-    background-color: var(--transparent-color);
 }
 
 /* App Drawer Styles */
