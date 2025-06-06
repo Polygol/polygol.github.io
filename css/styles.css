@@ -445,6 +445,12 @@ input[type="color"]::-moz-color-swatch {
             transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
         }
 
+.clock .digit {
+    display: inline-block;
+    width: 1ch; /* or a fixed width like 0.6em */
+    text-align: center;
+}
+
         .info {
             display: flex;
             justify-content: center;
