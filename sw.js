@@ -6,7 +6,7 @@ const ASSETS_TO_CACHE = [
   '/js/lang.js',
   '/assets/ui/svg/load.svg',
   '/manifest.json',
-  '/assets/img/favi/favicon.png',
+  '/assets/img/favi/regular.png',
   '/assets/img/pwaicon/regular.png',
   '/assets/img/pwaicon/pride.png',
   '/assets/img/ver/14.png',
