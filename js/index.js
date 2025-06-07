@@ -2873,15 +2873,44 @@ async function jumpToWallpaper(index) {
     
     let wallpaper = recentWallpapers[currentWallpaperPosition];
     
-    // Apply clock styles for this wallpaper if they exist
     if (wallpaper.clockStyles) {
-        localStorage.setItem('clockFont', wallpaper.clockStyles.font);
-        localStorage.setItem('clockWeight', wallpaper.clockStyles.weight);
-        localStorage.setItem('clockColor', wallpaper.clockStyles.color);
-        localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled);
+        // Update localStorage
+        localStorage.setItem('clockFont', wallpaper.clockStyles.font || 'Inter');
+        localStorage.setItem('clockWeight', wallpaper.clockStyles.weight || '700');
+        localStorage.setItem('clockColor', wallpaper.clockStyles.color || '#ffffff');
+        localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled || false);
+        localStorage.setItem('clockStackEnabled', wallpaper.clockStyles.stackEnabled || false);
+        localStorage.setItem('showSeconds', wallpaper.clockStyles.showSeconds !== undefined ? wallpaper.clockStyles.showSeconds : true);
+        localStorage.setItem('showWeather', wallpaper.clockStyles.showWeather !== undefined ? wallpaper.clockStyles.showWeather : true);
         
-        // Re-initialize to apply the styles
-        setupFontSelection();
+        // Update UI elements
+        const fontSelect = document.getElementById('font-select');
+        const weightSlider = document.getElementById('weight-slider');
+        const colorPicker = document.getElementById('clock-color-picker');
+        const colorSwitch = document.getElementById('clock-color-switch');
+        const stackSwitch = document.getElementById('clock-stack-switch');
+        const secondsSwitch = document.getElementById('seconds-switch');
+        const weatherSwitch = document.getElementById('weather-switch');
+        
+        if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
+        if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
+        if (colorPicker) colorPicker.value = wallpaper.clockStyles.color || '#ffffff';
+        if (colorSwitch) colorSwitch.checked = wallpaper.clockStyles.colorEnabled || false;
+        if (stackSwitch) stackSwitch.checked = wallpaper.clockStyles.stackEnabled || false;
+        
+        if (secondsSwitch) {
+            secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
+            showSeconds = secondsSwitch.checked;
+        }
+        
+        if (weatherSwitch) {
+            weatherSwitch.checked = wallpaper.clockStyles.showWeather !== false;
+            weatherSwitch.dispatchEvent(new Event('change'));
+        }
+        
+        // Apply the styles
+        applyClockStyles();
+        updateClockAndDate();
     }
         
     clearInterval(slideshowInterval);
