@@ -1260,13 +1260,6 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     align-items: center;
     justify-content: center;
-    transform: scale(1);
-    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
-}
-
-.btn-qc:active {
-    transform: scale(1.04);
-    transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
 
 /* App Drawer Styles */
