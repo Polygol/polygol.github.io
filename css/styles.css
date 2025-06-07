@@ -413,6 +413,7 @@ input[type="color"]::-moz-color-swatch {
     transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
     position: relative;
     border-radius: 10px;
+    line-height: 1;
 }
 
 .clock .digit {
