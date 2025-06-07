@@ -4960,6 +4960,16 @@ blurOverlayControls.addEventListener('click', () => {
     }, 300);
 });
 
+function closeControls() {
+    customizeModal.classList.remove('show'); // Start animation
+    blurOverlayControls.classList.remove('show');
+
+    setTimeout(() => {
+        customizeModal.style.display = 'none'; // Hide after animation
+        blurOverlayControls.style.display = 'none';
+    }, 300);
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     updateGurappsVisibility();
 });
