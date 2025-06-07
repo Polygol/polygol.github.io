@@ -4713,7 +4713,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const brightnessIcon = document.querySelector('label[for="brightness-control"] .material-symbols-rounded');
         
         if (brightnessIcon) {
-            if (value <= 70) {
+            if (value <= 60) {
                 brightnessIcon.textContent = 'wb_sunny'; // Low brightness icon
             } else {
                 brightnessIcon.textContent = 'sunny'; // High brightness icon
