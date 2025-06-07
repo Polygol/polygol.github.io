@@ -3015,18 +3015,28 @@ function switchWallpaper(direction) {
     // Apply clock styles for this wallpaper if they exist
     if (wallpaper.clockStyles) {
         // Update localStorage so all functions can read the values
-        localStorage.setItem('clockFont', wallpaper.clockStyles.font);
-        localStorage.setItem('clockWeight', wallpaper.clockStyles.weight);
-        localStorage.setItem('clockColor', wallpaper.clockStyles.color);
-        localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled);
+        localStorage.setItem('clockFont', wallpaper.clockStyles.font || 'Inter');
+        localStorage.setItem('clockWeight', wallpaper.clockStyles.weight || '700');
+        localStorage.setItem('clockColor', wallpaper.clockStyles.color || '#ffffff');
+        localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled || false);
         localStorage.setItem('clockStackEnabled', wallpaper.clockStyles.stackEnabled || false);
         localStorage.setItem('showSeconds', wallpaper.clockStyles.showSeconds !== undefined ? wallpaper.clockStyles.showSeconds : true);
         localStorage.setItem('showWeather', wallpaper.clockStyles.showWeather !== undefined ? wallpaper.clockStyles.showWeather : true);
         
-        // Update the UI switches
+        // Update the UI elements
+        const fontSelect = document.getElementById('font-select');
+        const weightSlider = document.getElementById('weight-slider');
+        const colorPicker = document.getElementById('clock-color-picker');
+        const colorSwitch = document.getElementById('clock-color-switch');
+        const stackSwitch = document.getElementById('clock-stack-switch');
         const secondsSwitch = document.getElementById('seconds-switch');
         const weatherSwitch = document.getElementById('weather-switch');
-        const stackSwitch = document.getElementById('clock-stack-switch');
+        
+        if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
+        if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
+        if (colorPicker) colorPicker.value = wallpaper.clockStyles.color || '#ffffff';
+        if (colorSwitch) colorSwitch.checked = wallpaper.clockStyles.colorEnabled || false;
+        if (stackSwitch) stackSwitch.checked = wallpaper.clockStyles.stackEnabled || false;
         
         if (secondsSwitch) {
             secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
@@ -3039,12 +3049,8 @@ function switchWallpaper(direction) {
             weatherSwitch.dispatchEvent(new Event('change'));
         }
         
-        if (stackSwitch) {
-            stackSwitch.checked = wallpaper.clockStyles.stackEnabled || false;
-        }
-        
-        // Re-initialize the font selection to apply the new styles
-        setupFontSelection();
+        // Apply the clock styles
+        applyClockStyles();
         
         // Update clock and weather display
         updateClockAndDate();
@@ -3255,14 +3261,14 @@ function setupFontSelection() {
     }
     
     // Apply initial styles
-    applyStyles();
+    applyClockStyles();
     
     // Handle font changes
     fontSelect.addEventListener('change', (e) => {
         const selectedFont = e.target.value;
         // Ensure font is loaded before applying
         document.fonts.load(`16px ${selectedFont}`).then(() => {
-            applyStyles();
+            applyClockStyles();
             saveCurrentClockStyles(); // Save to current wallpaper
         }).catch(() => {
             showPopup(currentLanguage.CLOCK_STYLE_FAILED);
@@ -3271,19 +3277,19 @@ function setupFontSelection() {
     
     // Handle weight changes with the slider
     weightSlider.addEventListener('input', (e) => {
-        applyStyles();
+        applyClockStyles();
         saveCurrentClockStyles(); // Save to current wallpaper
     });
     
     // Handle color changes with the color picker
     colorPicker.addEventListener('input', (e) => {
-        applyStyles();
+        applyClockStyles();
         saveCurrentClockStyles(); // Save to current wallpaper
     });
     
     // Handle color switch toggle
     colorSwitch.addEventListener('change', (e) => {
-        applyStyles();
+        applyClockStyles();
         saveCurrentClockStyles(); // Save to current wallpaper
     
         // Show/hide the color picker based on switch state
@@ -3293,13 +3299,52 @@ function setupFontSelection() {
     
     // Handle stack switch toggle
     stackSwitch.addEventListener('change', (e) => {
-        applyStyles();
+        applyClockStyles();
         saveCurrentClockStyles(); // Save to current wallpaper
     });
     
     // Set initial color picker state based on switch
     colorPicker.style.display = colorSwitch.checked ? 'inline-block' : 'none';
     colorPicker.disabled = !colorSwitch.checked;
+}
+
+function applyClockStyles() {
+    const fontSelect = document.getElementById('font-select');
+    const weightSlider = document.getElementById('weight-slider');
+    const clockElement = document.getElementById('clock');
+    const infoElement = document.querySelector('.info');
+    const colorPicker = document.getElementById('clock-color-picker');
+    const colorSwitch = document.getElementById('clock-color-switch');
+    const stackSwitch = document.getElementById('clock-stack-switch');
+    
+    if (!fontSelect || !weightSlider || !clockElement || !infoElement) return;
+    
+    const fontFamily = fontSelect.value;
+    const fontWeight = weightSlider.value * 10; // Convert slider value to proper font weight
+    
+    clockElement.style.fontFamily = fontFamily;
+    clockElement.style.fontWeight = fontWeight;
+    
+    // Only apply custom color if the switch is enabled
+    if (colorSwitch && colorSwitch.checked) {
+        clockElement.style.color = colorPicker.value;
+        infoElement.style.color = colorPicker.value;
+    } else {
+        // Reset to default theme color
+        clockElement.style.color = ''; // Empty string removes inline style, reverting to CSS
+        infoElement.style.color = '';
+    }
+    
+    // Apply stacked layout if enabled
+    if (stackSwitch && stackSwitch.checked) {
+        clockElement.style.flexDirection = 'column';
+        clockElement.style.lineHeight = '0.9';
+    } else {
+        clockElement.style.flexDirection = '';
+        clockElement.style.lineHeight = '';
+    }
+    
+    infoElement.style.fontFamily = fontFamily;
 }
 
 // Initialize theme and wallpaper on load
