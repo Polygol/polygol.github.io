@@ -730,6 +730,7 @@ input[type="color"]::-moz-color-swatch {
     padding-left: 10px;
     border: 1px solid var(--glass-border);
     background: var(--search-background);
+    backdrop-filter: blur(20px);
     border-radius: 20px;
     transition: background-color 0.2s, transform 0.1s;
 }
