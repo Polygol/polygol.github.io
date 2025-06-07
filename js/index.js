@@ -4568,8 +4568,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const temperatureControl = document.getElementById('temp_control_qc');
     
     const silentModeSwitch = document.getElementById('silent_switch');
-    const minimalModeSwitch = document.getElementById('security-switch');
-    const lightModeSwitch = document.getElementById('camera-switch');
+    const minimalModeSwitch = document.getElementById('focus-switch');
+    const lightModeSwitch = document.getElementById('theme-switch');
     
     const temperatureValue = document.getElementById('thermostat-value');
     const temperaturePopup = document.getElementById('thermostat-popup');
