@@ -500,6 +500,15 @@ function setupWeatherToggle() {
         if (showWeather) {
             updateSmallWeather();
         }
+        
+        // Save to current wallpaper's clock styles
+        if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0 && currentWallpaperPosition < recentWallpapers.length) {
+            if (!recentWallpapers[currentWallpaperPosition].clockStyles) {
+                recentWallpapers[currentWallpaperPosition].clockStyles = {};
+            }
+            recentWallpapers[currentWallpaperPosition].clockStyles.showWeather = showWeather;
+            saveRecentWallpapers();
+        }
     });
     
     updateWeatherVisibility();
@@ -2345,13 +2354,16 @@ function loadRecentWallpapers() {
       recentWallpapers = JSON.parse(savedWallpapers);
     }
     
-    // Migrate existing wallpapers without clock styles
-    const defaultClockStyles = {
-        font: 'Inter',
-        weight: '700',
-        color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
-        colorEnabled: false
-    };
+	// Migrate existing wallpapers without clock styles
+	const defaultClockStyles = {
+	    font: 'Inter',
+	    weight: '700',
+	    color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
+	    colorEnabled: false,
+		stackEnabled: false,
+	    showSeconds: true,
+	    showWeather: true
+	};
     
     let updated = false;
     recentWallpapers.forEach(wallpaper => {
@@ -3002,14 +3014,40 @@ function switchWallpaper(direction) {
     
     // Apply clock styles for this wallpaper if they exist
     if (wallpaper.clockStyles) {
-        // Update localStorage so setupFontSelection can read the values
+        // Update localStorage so all functions can read the values
         localStorage.setItem('clockFont', wallpaper.clockStyles.font);
         localStorage.setItem('clockWeight', wallpaper.clockStyles.weight);
         localStorage.setItem('clockColor', wallpaper.clockStyles.color);
         localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled);
+        localStorage.setItem('clockStackEnabled', wallpaper.clockStyles.stackEnabled || false);
+        localStorage.setItem('showSeconds', wallpaper.clockStyles.showSeconds !== undefined ? wallpaper.clockStyles.showSeconds : true);
+        localStorage.setItem('showWeather', wallpaper.clockStyles.showWeather !== undefined ? wallpaper.clockStyles.showWeather : true);
+        
+        // Update the UI switches
+        const secondsSwitch = document.getElementById('seconds-switch');
+        const weatherSwitch = document.getElementById('weather-switch');
+        const stackSwitch = document.getElementById('clock-stack-switch');
+        
+        if (secondsSwitch) {
+            secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
+            showSeconds = secondsSwitch.checked; // Update the global variable
+        }
+        
+        if (weatherSwitch) {
+            weatherSwitch.checked = wallpaper.clockStyles.showWeather !== false;
+            // Trigger the weather visibility update
+            weatherSwitch.dispatchEvent(new Event('change'));
+        }
+        
+        if (stackSwitch) {
+            stackSwitch.checked = wallpaper.clockStyles.stackEnabled || false;
+        }
         
         // Re-initialize the font selection to apply the new styles
         setupFontSelection();
+        
+        // Update clock and weather display
+        updateClockAndDate();
     }
     
     // Save the position for persistence
@@ -3177,42 +3215,14 @@ function setupFontSelection() {
     const savedColor = localStorage.getItem('clockColor') || defaultColor;
     const colorEnabled = localStorage.getItem('clockColorEnabled') === 'true';
     const stackEnabled = localStorage.getItem('clockStackEnabled') === 'true';
+    const showSeconds = localStorage.getItem('showSeconds') !== 'false'; // Add this
+    const showWeather = localStorage.getItem('showWeather') !== 'false'; // Add this
     
     fontSelect.value = savedFont;
     weightSlider.value = parseInt(savedWeight) / 10;
     colorPicker.value = savedColor;
     colorSwitch.checked = colorEnabled;
     stackSwitch.checked = stackEnabled;
-    
-    // Apply font to both elements but weight only to clock
-    function applyStyles() {
-        const fontFamily = fontSelect.value;
-        const fontWeight = weightSlider.value * 10; // Convert slider value to proper font weight
-        
-        clockElement.style.fontFamily = fontFamily;
-        clockElement.style.fontWeight = fontWeight;
-        
-        // Only apply custom color if the switch is enabled
-        if (colorSwitch.checked) {
-            clockElement.style.color = colorPicker.value;
-            infoElement.style.color = colorPicker.value;
-        } else {
-            // Reset to default theme color
-            clockElement.style.color = ''; // Empty string removes inline style, reverting to CSS
-            infoElement.style.color = '';
-        }
-        
-        // Apply stacked layout if enabled
-        if (stackSwitch.checked) {
-            clockElement.style.flexDirection = 'column';
-            clockElement.style.lineHeight = '0.9';
-        } else {
-            clockElement.style.flexDirection = '';
-            clockElement.style.lineHeight = '';
-        }
-        
-        infoElement.style.fontFamily = fontFamily;
-    }
     
     // Function to save current clock styles to the current wallpaper
     function saveCurrentClockStyles() {
@@ -3222,7 +3232,9 @@ function setupFontSelection() {
                 weight: (weightSlider.value * 10).toString(),
                 color: colorPicker.value,
                 colorEnabled: colorSwitch.checked,
-                stackEnabled: stackSwitch.checked
+                stackEnabled: stackSwitch.checked,
+                showSeconds: document.getElementById('seconds-switch')?.checked || false, // Add this
+                showWeather: document.getElementById('weather-switch')?.checked !== false // Add this
             };
             
             // Update the current wallpaper's clock styles
@@ -3238,6 +3250,8 @@ function setupFontSelection() {
         localStorage.setItem('clockColor', colorPicker.value);
         localStorage.setItem('clockColorEnabled', colorSwitch.checked.toString());
         localStorage.setItem('clockStackEnabled', stackSwitch.checked.toString());
+        localStorage.setItem('showSeconds', document.getElementById('seconds-switch')?.checked.toString() || 'true'); // Add this
+        localStorage.setItem('showWeather', document.getElementById('weather-switch')?.checked.toString() || 'true'); // Add this
     }
     
     // Apply initial styles
@@ -4419,6 +4433,15 @@ secondsSwitch.addEventListener('change', function() {
     showSeconds = this.checked;
     localStorage.setItem('showSeconds', showSeconds);
     updateClockAndDate();
+    
+    // Save to current wallpaper's clock styles
+    if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0 && currentWallpaperPosition < recentWallpapers.length) {
+        if (!recentWallpapers[currentWallpaperPosition].clockStyles) {
+            recentWallpapers[currentWallpaperPosition].clockStyles = {};
+        }
+        recentWallpapers[currentWallpaperPosition].clockStyles.showSeconds = showSeconds;
+        saveRecentWallpapers();
+    }
 });
 
 document.getElementById("versionButton").addEventListener("click", function() {
