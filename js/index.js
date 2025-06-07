@@ -3618,6 +3618,7 @@ function minimizeFullscreenEmbed() {
             minimizedEmbeds[url] = embedContainer;
             
             // After animation completes, actually hide it completely
+	    document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
             embedContainer.style.display = 'none';
             
             // Use a different z-index approach when minimized
