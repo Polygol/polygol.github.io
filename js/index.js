@@ -4713,7 +4713,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const brightnessIcon = document.querySelector('label[for="brightness-control"] .material-symbols-rounded');
         
         if (brightnessIcon) {
-            if (value <= 50) {
+            if (value <= 70) {
                 brightnessIcon.textContent = 'wb_sunny'; // Low brightness icon
             } else {
                 brightnessIcon.textContent = 'sunny'; // High brightness icon
@@ -4727,7 +4727,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const tempValue = parseInt(value);
         
         // Calculate intensity based on distance from 0
-        const intensity = Math.abs(tempValue) / 10 * 0.3; // Reduced intensity for better visibility
+        const intensity = Math.abs(tempValue) / 10;
         
         // Calculate RGB values for overlay
         let r, g, b, a;
