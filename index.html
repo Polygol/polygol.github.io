@@ -68,9 +68,14 @@
         <div class="modal-content">
             <div class="controls-container">
                 <h2 style="margin: 0;">LANG_CONTROLS</h2>
-                <button class="btn-qc" onclick="blackoutScreen()">
-                    <span class="material-symbols-rounded" style="font-size: 18px;">power_settings_new</span>
-                </button>
+                <div style="display: flex; gap: 14px;">
+                    <button class="btn-qc" onclick="blackoutScreen()">
+                        <span class="material-symbols-rounded" style="font-size: 18px;">power_settings_new</span>
+                    </button>
+                    <button class="btn-qc" onclick="closeControls()">
+                        <span class="material-symbols-rounded" style="font-size: 18px;">close</span>
+                    </button>
+                </div>
             </div>
             <div class="display-item">
                 <div class="brightness-slider-container">
