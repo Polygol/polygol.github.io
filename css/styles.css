@@ -175,7 +175,7 @@ body::before {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    transform: scale(1.1); /* Prevents blur edge artifacts */
+    transform: scale(1.01); /* Prevents blur edge artifacts */
     filter: var(--bg-blur, blur(0px)); /* Use the CSS custom property */
 }
 
