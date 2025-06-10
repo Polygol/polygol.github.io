@@ -1369,7 +1369,7 @@ input[type="color"]::-moz-color-swatch {
         .dock {
             position: fixed;
             bottom: -95px;
-            transform: translateX(-50%);
+            transform: translateX(-50%) scale(0.9);
             background: var(--search-background);
             backdrop-filter: blur(50px);
             border: 1px solid var(--transparent-color);
@@ -1378,19 +1378,21 @@ input[type="color"]::-moz-color-swatch {
             display: flex;
             gap: 6px;
             left: 50%;
-            transition: bottom 0.3s ease;
+            transition: all 0.3s cubic-bezier(.3,1.2,.64,1);
             z-index: 9998;
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        }
-
-        #dock {
             transform-origin: bottom;
             will-change: transform, opacity;
-            transition: all 0.3s cubic-bezier(.3,1.2,.64,1);
+            filter: blur(5px);
+            opacity: 0;
         }
 
         .dock.show {
+            transform: translateX(-50%) scale(1);
             bottom: 12px;
+            filter: none;
+            opacity: 1;
+            pointer-events: auto;
         }
         
         .dock-icon {
