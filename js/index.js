@@ -4027,15 +4027,26 @@ function setupDrawerInteractions() {
         }
         
         // Show dock and hide drawer-pill
-        if (movementPercentage > 2.5 && movementPercentage < 25) {
-            dock.classList.add('show');
-            dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; 
-            drawerPill.style.opacity = '0';
-        } else {
-            dock.classList.remove('show');
-            dock.style.boxShadow = 'none'; 
-            drawerPill.style.opacity = '1';
-        }
+		if (movementPercentage > 2.5 && movementPercentage < 25) {
+		    dock.classList.add('show');
+		    dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; 
+		    drawerPill.style.opacity = '0';
+		
+		    // Apply display after a tick to allow transition to work
+		    clearTimeout(dock.hideTimeout); // kill old timeout if any
+		    dock.style.display = 'flex'; // make sure it shows immediately
+		
+		} else {
+		    dock.classList.remove('show');
+		    dock.style.boxShadow = 'none'; 
+		    drawerPill.style.opacity = '1';
+		
+		    // Wait for the transition to finish before setting display to 'none'
+		    clearTimeout(dock.hideTimeout); // kill old timeout if any
+		    dock.hideTimeout = setTimeout(() => {
+		        dock.style.display = 'none';
+		    }, 300);
+		}
     
         const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
         
@@ -4104,6 +4115,7 @@ function setupDrawerInteractions() {
             
             // Reset drawer state and clear background blur
             dock.classList.remove('show');
+			dock.style.display = 'none';
             dock.style.boxShadow = 'none';
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
@@ -4126,15 +4138,29 @@ function setupDrawerInteractions() {
             
             // Handle dock visibility for smaller swipes
             if (movementPercentage > 2.5 && movementPercentage <= 25) {
-                dock.classList.add('show');
-                dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; // Enable box shadow when visible
+				dock.classList.remove('show');
+			    dock.style.boxShadow = 'none'; 
+			    drawerPill.style.opacity = '1';
+			
+			    // Wait for the transition to finish before setting display to 'none'
+			    clearTimeout(dock.hideTimeout); // kill old timeout if any
+			    dock.hideTimeout = setTimeout(() => {
+			        dock.style.display = 'none';
+			    }, 300);
+				
                 appDrawer.style.bottom = '-100%';
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
             } else {
-                dock.classList.remove('show');
-                dock.style.boxShadow = 'none'; // Disable box shadow when not visible
+				dock.classList.add('show');
+			    dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; 
+			    drawerPill.style.opacity = '0';
+			
+			    // Apply display after a tick to allow transition to work
+			    clearTimeout(dock.hideTimeout); // kill old timeout if any
+			    dock.style.display = 'flex'; // make sure it shows immediately
+				
                 appDrawer.style.bottom = '-100%';
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
@@ -4146,39 +4172,65 @@ function setupDrawerInteractions() {
             const isSignificantSwipe = movementPercentage > 25 || isFlickUp;
             const isSmallSwipe = movementPercentage > 2.5 && movementPercentage <= 25;
             
-            // Small swipe - show dock
-            if (isSmallSwipe && !isFlickUp) {
-                dock.classList.add('show');
-                dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
-                appDrawer.style.bottom = '-100%';
-                appDrawer.style.opacity = '0';
-                appDrawer.classList.remove('open');
-                initialDrawerPosition = -100;
-                interactionBlocker.style.display = 'none';
-                document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
-	    } 
-            // Large swipe or flick up - show full drawer
-            else if (isSignificantSwipe) {
-                dock.classList.remove('show');
-                dock.style.boxShadow = 'none';
-                appDrawer.style.bottom = '0%';
-                appDrawer.style.opacity = '1';
-                appDrawer.classList.add('open');
-                initialDrawerPosition = 0;
-                interactionBlocker.style.display = 'none';
-                document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
-	    } 
-            // Close everything
-            else {
-                dock.classList.remove('show');
-                dock.style.boxShadow = 'none';
-                appDrawer.style.bottom = '-100%';
-                appDrawer.style.opacity = '0';
-                appDrawer.classList.remove('open');
-                initialDrawerPosition = -100;
-                interactionBlocker.style.display = 'none';
-                document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
-	    }
+		clearTimeout(dock.hideTimeout);
+		
+		// Small swipe - show dock
+		if (isSmallSwipe && !isFlickUp) {
+		    dock.classList.add('show');
+		    dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
+		    dock.style.display = 'flex'; // show immediately
+		
+		    appDrawer.classList.remove('open');
+		    appDrawer.style.bottom = '-100%';
+		    appDrawer.style.opacity = '0';
+		    // No timeout for appDrawer display
+		    appDrawer.style.display = 'none';
+		
+		    initialDrawerPosition = -100;
+		    interactionBlocker.style.display = 'none';
+		    document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+		}
+		
+		// Large swipe or flick up - show full drawer
+		else if (isSignificantSwipe) {
+		    dock.classList.remove('show');
+		    dock.style.boxShadow = 'none';
+		
+		    // Hide dock with timeout
+		    dock.hideTimeout = setTimeout(() => {
+		        dock.style.display = 'none';
+		    }, 300);
+		
+		    appDrawer.classList.add('open');
+		    appDrawer.style.bottom = '0%';
+		    appDrawer.style.opacity = '1';
+		    appDrawer.style.display = 'block'; // show immediately
+		
+		    initialDrawerPosition = 0;
+		    interactionBlocker.style.display = 'none';
+		    document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+		}
+		
+		// Close everything
+		else {
+		    dock.classList.remove('show');
+		    dock.style.boxShadow = 'none';
+		
+		    // Hide dock with timeout
+		    dock.hideTimeout = setTimeout(() => {
+		        dock.style.display = 'none';
+		    }, 300);
+		
+		    appDrawer.classList.remove('open');
+		    appDrawer.style.bottom = '-100%';
+		    appDrawer.style.opacity = '0';
+		    // No timeout for appDrawer display
+		    appDrawer.style.display = 'none';
+		
+		    initialDrawerPosition = -100;
+		    interactionBlocker.style.display = 'none';
+		    document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+		}
             
             // Hide the swipe overlay when not in an app
             swipeOverlay.style.display = 'none';
