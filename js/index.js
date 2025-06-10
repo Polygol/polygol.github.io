@@ -4026,14 +4026,15 @@ function setupDrawerInteractions() {
             interactionBlocker.style.pointerEvents = 'none';
         }
         
-        // Show dock and hide drawer-pill
-        if (movementPercentage > 2.5 && movementPercentage < 25) {
+		if (movementPercentage > 2.5 && movementPercentage < 25) {
             dock.classList.add('show');
             dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; 
+            dock.style.display = 'flex';
             drawerPill.style.opacity = '0';
         } else {
             dock.classList.remove('show');
             dock.style.boxShadow = 'none'; 
+            setTimeout(() => { dock.style.display = 'none'; }, 300);
             drawerPill.style.opacity = '1';
         }
     
@@ -4150,6 +4151,7 @@ function setupDrawerInteractions() {
             if (isSmallSwipe && !isFlickUp) {
                 dock.classList.add('show');
                 dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
+				dock.style.display = 'flex';
                 appDrawer.style.bottom = '-100%';
                 appDrawer.style.opacity = '0';
                 appDrawer.classList.remove('open');
@@ -4161,6 +4163,7 @@ function setupDrawerInteractions() {
             else if (isSignificantSwipe) {
                 dock.classList.remove('show');
                 dock.style.boxShadow = 'none';
+				setTimeout(() => { dock.style.display = 'none'; }, 300);
                 appDrawer.style.bottom = '0%';
                 appDrawer.style.opacity = '1';
                 appDrawer.classList.add('open');
@@ -4172,6 +4175,7 @@ function setupDrawerInteractions() {
             else {
                 dock.classList.remove('show');
                 dock.style.boxShadow = 'none';
+				setTimeout(() => { dock.style.display = 'none'; }, 300);
                 appDrawer.style.bottom = '-100%';
                 appDrawer.style.opacity = '0';
                 appDrawer.classList.remove('open');
@@ -4320,19 +4324,19 @@ function setupDrawerInteractions() {
         }
     });
 
-document.addEventListener('click', (e) => {
-    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-    
-    // Only execute this logic when an embed is open and the dock is showing
-    if (openEmbed && dock.classList.contains('show')) {
-        // If clicked outside the dock
-        if (!dock.contains(e.target)) {
-            dock.classList.remove('show');
-            dock.style.boxShadow = 'none';
-            drawerPill.style.opacity = '1';
-        }
-    }
-});
+	document.addEventListener('click', (e) => {
+	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    
+	    // Only execute this logic when an embed is open and the dock is showing
+	    if (openEmbed && dock.classList.contains('show')) {
+	        // If clicked outside the dock
+	        if (!dock.contains(e.target)) {
+	            dock.classList.remove('show');
+	            dock.style.boxShadow = 'none';
+	            drawerPill.style.opacity = '1';
+	        }
+	    }
+	});
     
     // Make app drawer transparent when an app is open
     function updateDrawerOpacityForApps() {
