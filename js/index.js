@@ -4027,19 +4027,29 @@ function setupDrawerInteractions() {
             interactionBlocker.style.pointerEvents = 'none';
         }
         
-	if (movementPercentage > 2.5 && movementPercentage < 25) {
-            dock.classList.add('show');
-            dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; 
-            dock.style.display = 'flex';
-            if (dockHideTimeout) clearTimeout(dockHideTimeout);
-            drawerPill.style.opacity = '0';
-        } else {
-            dock.classList.remove('show');
-            dock.style.boxShadow = 'none'; 
-            if (dockHideTimeout) clearTimeout(dockHideTimeout);
-            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
-            drawerPill.style.opacity = '1';
-        }
+	    if (movementPercentage > 2.5 && movementPercentage < 25) {
+	        // Ensure display is block/flex before adding 'show' class for animation
+	        if (dock.style.display === 'none' || dock.style.display === '') {
+	            dock.style.display = 'flex';
+	            // Use requestAnimationFrame to ensure the display change is rendered before adding the class
+	            requestAnimationFrame(() => {
+	                dock.classList.add('show');
+	            });
+	        } else {
+	            dock.classList.add('show');
+	        }
+	        dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
+	        if (dockHideTimeout) clearTimeout(dockHideTimeout);
+	        drawerPill.style.opacity = '0';
+	    } else {
+	        dock.classList.remove('show');
+	        dock.style.boxShadow = 'none';
+	        if (dockHideTimeout) clearTimeout(dockHideTimeout);
+	        dockHideTimeout = setTimeout(() => {
+	            dock.style.display = 'none';
+	        }, 300); // 300ms matches your CSS transition duration
+	        drawerPill.style.opacity = '1';
+	    }
     
         const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
         
@@ -4117,7 +4127,7 @@ function setupDrawerInteractions() {
             initialDrawerPosition = -100;
             interactionBlocker.style.display = 'none';
             document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
-	} else if (openEmbed) {
+		} else if (openEmbed) {
             // Reset embed if swipe wasn't enough (removed filter)
             openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
             openEmbed.style.transform = 'scale(1)';
@@ -4131,23 +4141,23 @@ function setupDrawerInteractions() {
             appDrawer.style.opacity = '0';
             
             // Handle dock visibility for smaller swipes
-            if (movementPercentage > 2.5 && movementPercentage <= 25) {
-                dock.classList.add('show');
-                dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; // Enable box shadow when visible
-		dock.style.display = 'flex';
-                appDrawer.style.bottom = '-100%';
-                appDrawer.classList.remove('open');
-                initialDrawerPosition = -100;
-                interactionBlocker.style.display = 'none';
-            } else {
-                dock.classList.remove('show');
-                dock.style.boxShadow = 'none';
-                if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
-                appDrawer.style.bottom = '-100%';
-                initialDrawerPosition = -100;
-                interactionBlocker.style.display = 'none';
-            }
+		    if (movementPercentage > 2.5 && movementPercentage <= 25) {
+		        // Ensure display is block/flex before adding 'show' class for animation
+		        if (dock.style.display === 'none' || dock.style.display === '') {
+		            dock.style.display = 'flex';
+		            requestAnimationFrame(() => {
+		                dock.classList.add('show');
+		            });
+		        } else {
+		            dock.classList.add('show');
+		        }
+		        dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; // Enable box shadow when visible
+		        appDrawer.style.bottom = '-100%';
+		        appDrawer.classList.remove('open');
+		        initialDrawerPosition = -100;
+		        interactionBlocker.style.display = 'none';
+		        document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+		    }
         } else {
             // Normal drawer behavior when no embed is open
             // Consider both movement percentage and velocity for flick gestures
