@@ -4027,7 +4027,7 @@ function setupDrawerInteractions() {
             interactionBlocker.style.pointerEvents = 'none';
         }
         
-		if (movementPercentage > 2.5 && movementPercentage < 25) {
+	if (movementPercentage > 2.5 && movementPercentage < 25) {
             dock.classList.add('show');
             dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; 
             dock.style.display = 'flex';
@@ -4037,7 +4037,7 @@ function setupDrawerInteractions() {
             dock.classList.remove('show');
             dock.style.boxShadow = 'none'; 
             if (dockHideTimeout) clearTimeout(dockHideTimeout);
-            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
+            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 500);
             drawerPill.style.opacity = '1';
         }
     
@@ -4132,7 +4132,7 @@ function setupDrawerInteractions() {
             if (movementPercentage > 2.5 && movementPercentage <= 25) {
                 dock.classList.add('show');
                 dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; // Enable box shadow when visible
-		        dock.style.display = 'flex';
+		dock.style.display = 'flex';
                 appDrawer.style.bottom = '-100%';
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
@@ -4141,7 +4141,7 @@ function setupDrawerInteractions() {
                 dock.classList.remove('show');
                 dock.style.boxShadow = 'none';
                 if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
+                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 500);
                 appDrawer.style.bottom = '-100%';
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
@@ -4169,7 +4169,7 @@ function setupDrawerInteractions() {
                 dock.classList.remove('show');
                 dock.style.boxShadow = 'none';
                 if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
+                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 500);
                 appDrawer.style.bottom = '0%';
                 appDrawer.style.opacity = '1';
                 appDrawer.classList.add('open');
@@ -4182,7 +4182,7 @@ function setupDrawerInteractions() {
                 dock.classList.remove('show');
                 dock.style.boxShadow = 'none';
                 if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
+                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 500);
                 appDrawer.style.bottom = '-100%';
                 appDrawer.style.opacity = '0';
                 appDrawer.classList.remove('open');
