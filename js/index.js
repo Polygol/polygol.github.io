@@ -4037,7 +4037,7 @@ function setupDrawerInteractions() {
             dock.classList.remove('show');
             dock.style.boxShadow = 'none'; 
             if (dockHideTimeout) clearTimeout(dockHideTimeout);
-            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 500);
+            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
             drawerPill.style.opacity = '1';
         }
     
@@ -4109,6 +4109,8 @@ function setupDrawerInteractions() {
             // Reset drawer state and clear background blur
             dock.classList.remove('show');
             dock.style.boxShadow = 'none';
+	    if (dockHideTimeout) clearTimeout(dockHideTimeout);
+            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
             appDrawer.classList.remove('open');
@@ -4141,7 +4143,7 @@ function setupDrawerInteractions() {
                 dock.classList.remove('show');
                 dock.style.boxShadow = 'none';
                 if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 500);
+                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
                 appDrawer.style.bottom = '-100%';
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
@@ -4169,7 +4171,7 @@ function setupDrawerInteractions() {
                 dock.classList.remove('show');
                 dock.style.boxShadow = 'none';
                 if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 500);
+                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
                 appDrawer.style.bottom = '0%';
                 appDrawer.style.opacity = '1';
                 appDrawer.classList.add('open');
@@ -4182,7 +4184,7 @@ function setupDrawerInteractions() {
                 dock.classList.remove('show');
                 dock.style.boxShadow = 'none';
                 if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 500);
+                dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
                 appDrawer.style.bottom = '-100%';
                 appDrawer.style.opacity = '0';
                 appDrawer.classList.remove('open');
