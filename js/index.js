@@ -3931,7 +3931,7 @@ function createAppIcons() {
 
     const appsArray = Object.entries(apps)
         .map(([appName, appDetails]) => ({ name: appName, details: appDetails, usage: appUsage[appName] || 0 }))
-        .sort((a, b) => b.usage - a.usage);
+        .sort((a, b) => a.name.localeCompare(b.name));
 
     appsArray.forEach((app) => {
         // 1. Create all the elements for one app icon
