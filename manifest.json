@@ -8,7 +8,7 @@
   "theme_color": "#1c1c1c",
   "icons": [
     {
-      "src": "/assets/img/pwaicon/pride.png",
+      "src": "/assets/img/pwaicon/regular.png",
       "sizes": "512x512",
       "type": "image/png"
     }
