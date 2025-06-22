@@ -97,7 +97,18 @@ const LANG_EN = {
     DONT_CLOSE: "Use Sleep in Controls to turn off",
     CLOCK_COLOR: "Clock Color",
     N_WALL: "No wallpapers",
-    CLOCK_STACK: "Clock Stack"
+    CLOCK_STACK: "Clock Stack",
+    GURAPP_OFF: "Gurapps are currently disabled",
+    GURAPP_NOT_INSTALLED: "This app is not installed",
+    GURAPP_OFFLINE_NOT_SUPPORTED: "Offline installation not supported by this browser",
+    GURAPP_INSTALL_FAILED: "Offline installation failed for {appName}",
+    GURAPP_DELETED: "{appName} was deleted",
+    GURAPP_DELETE_FAILED: "Error: Could not find {appName} to delete",
+    GURAPP_DELETE_ASK: "Are you sure you want to delete {appName}?",
+    GURAPP_DELETE_STORE_DENIED: "The App Store cannot be deleted",
+    GURAPP_INSTALLING: "Installing {appName}",
+    GURAPP_INSTALL_EXISTS: "{appName} is already installed",
+    GURAPP_INSTALL_NONSTORE_DENIED: "Error: only the Gurasuraisu App Store can install apps"
 };
 
 const LANG_JP = {
@@ -197,7 +208,19 @@ const LANG_JP = {
     DONT_CLOSE: "オフにするにはコントロールでスリープを使用してください",
     CLOCK_COLOR: "時計の色",
     N_WALL: "壁紙がありません",
-    CLOCK_STACK: "クロックスタック"
+    CLOCK_STACK: "クロックスタック",
+    GURAPP_OFF: "Gurapps は現在無効です",
+    GURAPP_NOT_INSTALLED: "このアプリはインストールされていません",
+    GURAPP_OFFLINE_NOT_SUPPORTED: "このブラウザではオフラインインストールはサポートされていません",
+    GURAPP_INSTALL_FAILED: "{appName} のオフラインインストールに失敗しました",
+    GURAPP_DELETED: "{appName} は削除されました",
+    GURAPP_DELETE_FAILED: "エラー: 削除する {appName} が見つかりませんでした",
+    GURAPP_DELETE_ASK: "{appName} を削除してもよろしいですか？",
+    GURAPP_DELETE_STORE_DENIED: "App Store は削除できません",
+    GURAPP_INSTALLING: "{appName} をインストール中",
+    GURAPP_INSTALL_EXISTS: "{appName} はすでにインストールされています",
+    GURAPP_INSTALL_NONSTORE_DENIED: "エラー: Gurasuraisu App Store のみがアプリをインストールできます"
+};
 };
 
 const LANG_DE = {
@@ -297,7 +320,18 @@ const LANG_DE = {
     DONT_CLOSE: "Verwenden Sie den Schlafmodus in den Steuerelementen, um ihn auszuschalten",
     CLOCK_COLOR: "Uhrenfarbe",
     N_WALL: "Keine Hintergrundbilder",
-    CLOCK_STACK: "Uhr-Stapel"
+    CLOCK_STACK: "Uhr-Stapel",
+    GURAPP_OFF: "Gurapps sind derzeit deaktiviert",
+    GURAPP_NOT_INSTALLED: "Diese App ist nicht installiert",
+    GURAPP_OFFLINE_NOT_SUPPORTED: "Offline-Installation wird von diesem Browser nicht unterstützt",
+    GURAPP_INSTALL_FAILED: "Offline-Installation für {appName} fehlgeschlagen",
+    GURAPP_DELETED: "{appName} wurde gelöscht",
+    GURAPP_DELETE_FAILED: "Fehler: {appName} zum Löschen nicht gefunden",
+    GURAPP_DELETE_ASK: "Möchten Sie {appName} wirklich löschen?",
+    GURAPP_DELETE_STORE_DENIED: "Der App Store kann nicht gelöscht werden",
+    GURAPP_INSTALLING: "Installiere {appName}",
+    GURAPP_INSTALL_EXISTS: "{appName} ist bereits installiert",
+    GURAPP_INSTALL_NONSTORE_DENIED: "Fehler: Nur der Gurasuraisu App Store kann Apps installieren"
 };
 
 const LANG_FR = {
@@ -397,7 +431,18 @@ const LANG_FR = {
     DONT_CLOSE: "Utilisez le mode veille dans les commandes pour éteindre",
     CLOCK_COLOR: "Couleur de l'horloge",
     N_WALL: "Pas de fonds d'écran",
-    CLOCK_STACK: "Pile d'horloge"
+    CLOCK_STACK: "Pile d'horloge",
+    GURAPP_OFF: "Les Gurapps sont actuellement désactivées",
+    GURAPP_NOT_INSTALLED: "Cette application n'est pas installée",
+    GURAPP_OFFLINE_NOT_SUPPORTED: "L'installation hors ligne n'est pas prise en charge par ce navigateur",
+    GURAPP_INSTALL_FAILED: "L'installation hors ligne a échoué pour {appName}",
+    GURAPP_DELETED: "{appName} a été supprimée",
+    GURAPP_DELETE_FAILED: "Erreur : Impossible de trouver {appName} à supprimer",
+    GURAPP_DELETE_ASK: "Êtes-vous sûr de vouloir supprimer {appName} ?",
+    GURAPP_DELETE_STORE_DENIED: "L'App Store ne peut pas être supprimé",
+    GURAPP_INSTALLING: "Installation de {appName}",
+    GURAPP_INSTALL_EXISTS: "{appName} est déjà installé",
+    GURAPP_INSTALL_NONSTORE_DENIED: "Erreur : Seul le Gurasuraisu App Store peut installer des applications"
 };
 
 const LANG_ES = {
@@ -497,7 +542,18 @@ const LANG_ES = {
     DONT_CLOSE: "Utilice el modo de suspensión en los controles para apagar",
     CLOCK_COLOR: "Color del reloj",
     N_WALL: "Sin fondos de pantalla",
-    CLOCK_STACK: "Pila de reloj"
+    CLOCK_STACK: "Pila de reloj",
+    GURAPP_OFF: "Los Gurapps están actualmente deshabilitados",
+    GURAPP_NOT_INSTALLED: "Esta aplicación no está instalada",
+    GURAPP_OFFLINE_NOT_SUPPORTED: "La instalación sin conexión no es compatible con este navegador",
+    GURAPP_INSTALL_FAILED: "La instalación sin conexión falló para {appName}",
+    GURAPP_DELETED: "{appName} fue eliminada",
+    GURAPP_DELETE_FAILED: "Error: No se pudo encontrar {appName} para eliminar",
+    GURAPP_DELETE_ASK: "¿Está seguro de que desea eliminar {appName}?",
+    GURAPP_DELETE_STORE_DENIED: "La App Store no se puede eliminar",
+    GURAPP_INSTALLING: "Instalando {appName}",
+    GURAPP_INSTALL_EXISTS: "{appName} ya está instalada",
+    GURAPP_INSTALL_NONSTORE_DENIED: "Error: Solo la App Store de Gurasuraisu puede instalar aplicaciones"
 };
 
 const LANG_KO = {
@@ -597,7 +653,19 @@ const LANG_KO = {
     DONT_CLOSE: "끄려면 컨트롤에서 잠자기를 사용하세요",
     CLOCK_COLOR: "시계 색상",
     N_WALL: "배경 화면 없음",
-    CLOCK_STACK: "시계 스택"
+    CLOCK_STACK: "시계 스택",
+    GURAPP_OFF: "Gurapps는 현재 비활성화되어 있습니다",
+    GURAPP_NOT_INSTALLED: "이 앱이 설치되지 않았습니다",
+    GURAPP_OFFLINE_NOT_SUPPORTED: "이 브라우저에서는 오프라인 설치가 지원되지 않습니다",
+    GURAPP_INSTALL_FAILED: "{appName} 오프라인 설치 실패",
+    GURAPP_DELETED: "{appName} 이(가) 삭제되었습니다",
+    GURAPP_DELETE_FAILED: "오류: 삭제할 {appName}을(를) 찾을 수 없습니다",
+    GURAPP_DELETE_ASK: "{appName}을(를) 삭제하시겠습니까?",
+    GURAPP_DELETE_STORE_DENIED: "앱 스토어는 삭제할 수 없습니다",
+    GURAPP_INSTALLING: "{appName} 설치 중",
+    GURAPP_INSTALL_EXISTS: "{appName}은(는) 이미 설치되어 있습니다",
+    GURAPP_INSTALL_NONSTORE_DENIED: "오류: Gurasuraisu 앱 스토어만 앱을 설치할 수 있습니다"
+};
 };
 
 const LANG_ZH = {
@@ -697,5 +765,16 @@ const LANG_ZH = {
     DONT_CLOSE: "使用控件中的睡眠模式关闭",
     CLOCK_COLOR: "时钟颜色",
     N_WALL: "没有壁纸",
-    CLOCK_STACK: "时钟堆栈"
+    CLOCK_STACK: "时钟堆栈",
+    GURAPP_OFF: "Gurapps 当前已禁用",
+    GURAPP_NOT_INSTALLED: "此应用程序未安装",
+    GURAPP_OFFLINE_NOT_SUPPORTED: "此浏览器不支持离线安装",
+    GURAPP_INSTALL_FAILED: "{appName} 的离线安装失败",
+    GURAPP_DELETED: "{appName} 已删除",
+    GURAPP_DELETE_FAILED: "错误：找不到要删除的 {appName}",
+    GURAPP_DELETE_ASK: "您确定要删除 {appName} 吗？",
+    GURAPP_DELETE_STORE_DENIED: "App Store 无法删除",
+    GURAPP_INSTALLING: "正在安装 {appName}",
+    GURAPP_INSTALL_EXISTS: "{appName} 已安装",
+    GURAPP_INSTALL_NONSTORE_DENIED: "错误：只有 Gurasuraisu 应用商店才能安装应用"
 };
