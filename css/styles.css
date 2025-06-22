@@ -1326,20 +1326,20 @@ input[type="color"]::-moz-color-swatch {
 /* Styling for the delete button that appears on app icons */
 .app-icon .delete-btn {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 30px;
+    right: 30px;
     background-color: #ff3b30;
     color: white;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    border: 2px solid var(--background-color);
+    width: 30px;
+    height: 30px;
+    border: var(--glass-border);
     display: none; /* Hidden by default */
     align-items: center;
     justify-content: center;
     cursor: pointer;
     z-index: 100;
-    transform: translate(25%, -25%); /* Nudge it to the corner */
+    box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
 }
 
 .app-icon .delete-btn .material-symbols-rounded {
