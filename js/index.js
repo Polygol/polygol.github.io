@@ -3457,6 +3457,23 @@ async function installApp(appData) {
 }
 
 function createFullscreenEmbed(url) {
+    // 1. Check if Gurapps are disabled entirely
+    // This uses the 'gurappsEnabled' variable you already have.
+    if (!gurappsEnabled) {
+        showPopup('Gurapps are currently disabled.');
+        return; // Stop execution immediately
+    }
+
+    // 2. Check if the app is actually in our 'apps' object.
+    // This verifies that the app is "installed" (i.e., its metadata is known).
+    const appEntry = Object.values(apps).find(app => app.url === url);
+    if (!appEntry) {
+        // If the URL doesn't correspond to any known app, it's not installed.
+        showPopup('This app is not installed.');
+        console.warn(`Attempted to open an unknown app URL: ${url}`);
+        return; // Stop execution
+    }
+	
     // Check if we have this URL minimized already
     if (minimizedEmbeds[url]) {
         // Restore the minimized embed
