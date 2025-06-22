@@ -1326,8 +1326,8 @@ input[type="color"]::-moz-color-swatch {
 /* Styling for the delete button that appears on app icons */
 .app-icon .delete-btn {
     position: absolute;
-    top: 30px;
-    right: 30px;
+    top: 15px;
+    right: 15px;
     background-color: #ff3b30;
     color: white;
     border-radius: 50%;
