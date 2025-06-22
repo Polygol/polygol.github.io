@@ -1326,8 +1326,8 @@ input[type="color"]::-moz-color-swatch {
 /* Styling for the delete button that appears on app icons */
 .app-icon .delete-btn {
     position: absolute;
-    top: -5px;
-    right: -5px;
+    top: 0;
+    right: 0;
     background-color: #ff3b30;
     color: white;
     border-radius: 50%;
@@ -1338,7 +1338,8 @@ input[type="color"]::-moz-color-swatch {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 1;
+    z-index: 100;
+    transform: translate(25%, -25%); /* Nudge it to the corner */
 }
 
 .app-icon .delete-btn .material-symbols-rounded {
@@ -1357,7 +1358,7 @@ input[type="color"]::-moz-color-swatch {
     100% { transform: rotate(-1deg); }
 }
 
-#app-drawer.delete-mode .app-icon {
+#app-drawer.delete-mode .app-icon img {
     animation: jiggle 0.2s infinite ease-in-out;
 }
 
@@ -1394,6 +1395,7 @@ input[type="color"]::-moz-color-swatch {
         }
 
         .app-icon {
+            position: relative; 
             display: flex;
             flex-direction: column;
             align-items: center;
