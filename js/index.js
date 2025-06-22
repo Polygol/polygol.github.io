@@ -780,17 +780,19 @@ function showPopup(message) {
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'var(--search-background)';
-    popup.style.backdropFilter = 'blur(20px)';
+    popup.style.backdropFilter = 'blur(10px)';
+    popup.style.pointerEvents = 'none';
     popup.style.color = 'var(--text-color)';
     popup.style.padding = '20px';
     popup.style.borderRadius = '40px';
     popup.style.zIndex = '9999996';
-    popup.style.transition = 'opacity 0.5s';
+    popup.style.transition = 'opacity 0.5s, filter 0.5s, bottom 0.5s ease-out';
     popup.style.display = 'flex';
     popup.style.alignItems = 'center';
     popup.style.gap = '10px';
     popup.style.border = '1px solid var(--glass-border)';
     popup.style.filter = 'none';
+	
 
     // Check for specific words to determine icon
     const checkWords = window.checkWords || ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'successfully', 'accepted', 'accept', 'yes'];
@@ -886,30 +888,38 @@ function showPopup(message) {
     
     // If there are already 2 popups, remove the oldest one
     if (existingPopups.length >= 2) {
+        // Remove oldest one from the DOM
         document.body.removeChild(existingPopups[0]);
     }
-    // Recalculate positions for all popups
-    const remainingPopups = document.querySelectorAll('.popup');
-    remainingPopups.forEach((p, index) => {
-        p.style.bottom = `calc(10vh + ${index * 80}px)`; // Base at 10vh, with 80px spacing between popups
-    });
-    // Position the new popup
-    popup.style.bottom = `calc(10vh + ${remainingPopups.length * 80}px)`;
+
+    // NEW: Centralize the repositioning logic into its own function.
+    function repositionPopups() {
+        const remainingPopups = document.querySelectorAll('.popup');
+        remainingPopups.forEach((p, index) => {
+            // The magic happens here: setting the 'bottom' property will now trigger the CSS transition.
+            p.style.bottom = `calc(10vh + ${index * 80}px)`;
+        });
+    }
+
+    // Set initial position for the new popup before adding it
+    const newPopupIndex = document.querySelectorAll('.popup').length;
+    popup.style.bottom = `calc(10vh + ${newPopupIndex * 80}px)`;
     
     document.body.appendChild(popup);
+    
+    // Auto-dismiss logic
     setTimeout(() => {
         popup.style.opacity = '0';
-	popup.style.filter = 'blur(5px)';
+        popup.style.filter = 'blur(5px)';
+        
+        // After the fade-out animation completes...
         setTimeout(() => {
             if (document.body.contains(popup)) {
                 document.body.removeChild(popup);
-                // Readjust positions of remaining popups
-                const remainingPopups = document.querySelectorAll('.popup');
-                remainingPopups.forEach((p, index) => {
-                    p.style.bottom = `calc(10vh + ${index * 80}px)`;
-                });
+                // NEW: Call the repositioning function to animate the remaining popups.
+                repositionPopups();
             }
-        }, 500);
+        }, 500); // This timeout matches your transition duration.
     }, 3000);
 }
 
