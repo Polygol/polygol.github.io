@@ -3405,7 +3405,7 @@ function loadUserInstalledApps() {
 
 async function installApp(appData) {
     if (apps[appData.name]) {
-        showPopup(`"${appData.name}" is already installed.`);
+        showPopup(currentLanguage.GURAPP_INSTALL_EXISTS.replace('{appName}', appData.name));
         return;
     }
 
@@ -3430,8 +3430,8 @@ async function installApp(appData) {
     // 3. Robustly handle caching with the Service Worker.
     if ('serviceWorker' in navigator) {
         // Show a message that installation has started.
-        showPopup(`Installing "${appData.name}" for offline use...`);
-
+        showPopup(currentLanguage.GURAPP_INSTALLING.replace('{appName}', appData.name));
+	    
         try {
             // navigator.serviceWorker.ready is a promise that resolves when a SW is active.
             const registration = await navigator.serviceWorker.ready;
@@ -3448,11 +3448,11 @@ async function installApp(appData) {
 
         } catch (error) {
             console.error('Service Worker not ready or failed to send message:', error);
-            showPopup(`Offline installation failed for "${appData.name}".`);
+            showPopup(currentLanguage.GURAPP_INSTALL_FAILED.replace('{appName}', appData.name));
         }
 
     } else {
-        showPopup(`Offline installation not supported by this browser.`);
+        showPopup(currentLanguage.GURAPP_OFFLINE_NOT_SUPPORTED);
     }
 }
 
@@ -3461,12 +3461,12 @@ async function deleteApp(appName) {
     // Find the app object to check its URL
     const appToDelete = apps[appName];
     if (appToDelete && appToDelete.url.includes('/appstore/index.html')) {
-        showPopup("The App Store cannot be deleted.");
+        showPopup(currentLanguage.GURAPP_DELETE_STORE_DENIED);
         return; // Stop the function immediately
     }
 
     // Confirmation dialog
-    if (!confirm(`Are you sure you want to delete "${appName}"?`)) {
+    if (!confirm(currentLanguage.GURAPP_DELETE_ASK.replace('{appName}', appName))) {
         return;
     }
 
@@ -3490,10 +3490,9 @@ async function deleteApp(appName) {
         // 4. Refresh the app drawer and dock
         createAppIcons();
         populateDock();
-        showPopup(`"${appName}" was deleted.`);
-        
+        showPopup(currentLanguage.GURAPP_DELETED.replace('{appName}', appName));
     } else {
-        showPopup(`Error: Could not find "${appName}" to delete.`);
+        showPopup(currentLanguage.GURAPP_DELETE_FAILED.replace('{appName}', appName));
     }
 }
 
@@ -3511,7 +3510,7 @@ function createFullscreenEmbed(url) {
     // 1. Check if Gurapps are disabled entirely
     // This uses the 'gurappsEnabled' variable you already have.
     if (!gurappsEnabled) {
-        showPopup('Gurapps are currently disabled.');
+        showPopup(currentLanguage.GURAPP_OFF);
         return; // Stop execution immediately
     }
 
@@ -3520,7 +3519,7 @@ function createFullscreenEmbed(url) {
     const appEntry = Object.values(apps).find(app => app.url === url);
     if (!appEntry) {
         // If the URL doesn't correspond to any known app, it's not installed.
-        showPopup('This app is not installed.');
+        showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
         console.warn(`Attempted to open an unknown app URL: ${url}`);
         return; // Stop execution
     }
@@ -5195,7 +5194,7 @@ window.addEventListener('message', event => {
         // Check if the source URL path ends with the trusted App Store path
         if (!sourceUrl.endsWith('/appstore/index.html')) {
           console.error(`Denied installing application: A script at "${sourceUrl}" attempted to call the 'installApp' function`);
-          showPopup('Error: only the Gurasuraisu App Store can install apps'); // Inform the user
+          showPopup(currentLanguage.GURAPP_INSTALL_NONSTORE_DENIED);
           return; // Stop processing immediately
         }
       } catch (e) {
