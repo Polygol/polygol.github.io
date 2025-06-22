@@ -774,6 +774,21 @@ setInterval(updateSmallWeather, 600000);
 updateSmallWeather();
 
 function showPopup(message) {
+	const MAX_POPUPS = 3;
+
+    const existingPopups = document.querySelectorAll('.popup');
+    if (existingPopups.length >= MAX_POPUPS) {
+        const oldestPopup = existingPopups[0];
+        if (oldestPopup) {
+            // Fade it out before removing
+            oldestPopup.style.opacity = '0';
+            oldestPopup.style.filter = 'blur(5px)';
+            setTimeout(() => {
+                oldestPopup.remove();
+            }, 500); // Wait for fade out to finish
+        }
+    }
+	
     const popup = document.createElement('div');
     popup.style.position = 'fixed';
     popup.style.bottom = '10vh';
@@ -793,6 +808,9 @@ function showPopup(message) {
     popup.style.border = '1px solid var(--glass-border)';
     popup.style.filter = 'none';
 	
+    // Set initial state for fade-in animation
+    popup.style.opacity = '0';
+    popup.style.bottom = 'calc(10vh - 40px)'; // Start from a lower position
 
     // Check for specific words to determine icon
     const checkWords = window.checkWords || ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'successfully', 'accepted', 'accept', 'yes'];
@@ -905,9 +923,26 @@ function showPopup(message) {
     const newPopupIndex = document.querySelectorAll('.popup').length;
     popup.style.bottom = `calc(10vh + ${newPopupIndex * 80}px)`;
     
+    // 3. Add the new popup to the DOM.
     document.body.appendChild(popup);
     
-    // Auto-dismiss logic
+    // 4. Centralized repositioning function.
+    function repositionAllPopups() {
+        const allPopups = document.querySelectorAll('.popup');
+        allPopups.forEach((p, index) => {
+            // Calculate the position for each popup from the bottom up.
+            const newBottom = `calc(10vh + ${index * 80}px)`;
+            p.style.bottom = newBottom;
+            // Also trigger the fade-in for the newest one (which will have opacity 0)
+            p.style.opacity = '1';
+        });
+    }
+
+    // 5. Reposition all popups to smoothly make space for the new one.
+    // Use a tiny timeout to ensure the browser registers the element before starting the transition.
+    setTimeout(repositionAllPopups, 10);
+
+    // 6. Set the auto-dismiss timer for the new popup.
     setTimeout(() => {
         popup.style.opacity = '0';
         popup.style.filter = 'blur(5px)';
@@ -915,11 +950,11 @@ function showPopup(message) {
         // After the fade-out animation completes...
         setTimeout(() => {
             if (document.body.contains(popup)) {
-                document.body.removeChild(popup);
-                // NEW: Call the repositioning function to animate the remaining popups.
-                repositionPopups();
+                popup.remove();
+                // Reposition the remaining popups to fill the gap.
+                repositionAllPopups();
             }
-        }, 500); // This timeout matches your transition duration.
+        }, 500);
     }, 3000);
 }
 
