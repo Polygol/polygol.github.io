@@ -63,6 +63,14 @@ const Gurasuraisu = {
    */
   blackout: function() {
     this._call('blackoutScreen');
+  },
+   
+   /**
+   * Requests the parent Gurasuraisu to install a new Gurapp.
+   * @param {object} appObject - The complete app object with id, url, iconUrl, etc.
+   */
+  installApp: function(appObject) {
+    this._call('installApp', [appObject]);
   }
 };
 
