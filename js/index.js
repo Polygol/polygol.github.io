@@ -3411,18 +3411,21 @@ async function installApp(appData) {
 
     console.log(`Installing app: ${appData.name}`);
 
-    // 1. Add the new app to the in-memory object
+    // This is the most reliable way to get the filename from a local or external URL.
+    const iconFileName = appData.iconUrl.split('/').pop();
+
+    // 1. Add the new app to the in-memory object using the correct icon filename.
     apps[appData.name] = {
         url: appData.url,
-        icon: appData.iconUrl.split('/').pop() // Assumes icon name is the last part of the URL
+        icon: iconFileName
     };
 
-    // 2. Save the app's metadata to localStorage so it's remembered
+    // 2. Save the app's metadata to localStorage so it's remembered after a refresh.
     const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
-    userApps[appData.name] = { url: appData.url, icon: appData.iconUrl.split('/').pop() };
+    userApps[appData.name] = { url: appData.url, icon: iconFileName };
     localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
 
-    // 3. Tell the Service Worker to cache the app's files
+    // 3. Tell the Service Worker to cache the app's files.
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({
             action: 'cache-app',
@@ -3433,7 +3436,7 @@ async function installApp(appData) {
         showPopup(`Could not install offline. Service Worker not active.`);
     }
 
-    // 4. Refresh the UI
+    // 4. Refresh the UI to show the new app.
     createAppIcons();
     populateDock();
 }
