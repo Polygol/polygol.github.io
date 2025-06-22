@@ -3501,7 +3501,6 @@ const deleteModeBtn = document.getElementById('delete-mode-btn');
 const appDrawerForDelete = document.getElementById('app-drawer');
 
 deleteModeBtn.addEventListener('click', () => {
-	e.stopPropagation();
     // Toggle the 'delete-mode' class on the app drawer itself
     appDrawerForDelete.classList.toggle('delete-mode');
     // Also toggle an 'active' class on the button for styling
