@@ -665,7 +665,6 @@ const LANG_KO = {
     GURAPP_INSTALL_EXISTS: "{appName}은(는) 이미 설치되어 있습니다",
     GURAPP_INSTALL_NONSTORE_DENIED: "오류: Gurasuraisu 앱 스토어만 앱을 설치할 수 있습니다"
 };
-};
 
 const LANG_ZH = {
     GREETING: "Gurasuraisu加载成功",
