@@ -97,30 +97,46 @@ self.addEventListener('message', event => {
 
 // FETCH: Serve assets from cache first (Cache-First Strategy).
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(cachedResponse => {
-        // If we have a cached response, return it.
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        // Otherwise, fetch from the network.
-        return fetch(event.request).then(networkResponse => {
-          // And cache the new response for next time.
-          return caches.open(CACHE_NAME).then(cache => {
-            // Be careful caching POST requests or other API calls if they shouldn't be static.
-            if (event.request.method === 'GET') {
-               // Clone the response because it can only be consumed once.
-              cache.put(event.request, networkResponse.clone());
-            }
-            return networkResponse;
-          });
-        });
-      })
-      .catch(error => {
-        // If both cache and network fail, you can provide a fallback page.
-        console.error('[SW] Fetch failed. You are offline, and there is no cache', error);
-        // return caches.match('/offline.html'); // Optional: an offline fallback page
-      })
-  );
+    // For external APIs (like weather), always go to the network.
+    // Do not attempt to cache these dynamic responses.
+    const externalApiUrls = [
+        'api.open-meteo.com',
+        'nominatim.openstreetmap.org'
+    ];
+    if (externalApiUrls.some(url => event.request.url.includes(url))) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
+    // Use the "Stale-While-Revalidate" strategy for all other assets.
+    event.respondWith(
+        caches.open(CACHE_NAME).then(cache => {
+            return cache.match(event.request).then(cachedResponse => {
+                // 1. Make a network request in the background regardless.
+                const fetchPromise = fetch(event.request).then(networkResponse => {
+                    // If the fetch is successful, update the cache.
+                    // We only cache valid GET requests.
+                    if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
+                        cache.put(event.request, networkResponse.clone());
+                    }
+                    return networkResponse;
+                });
+
+                // 2. Return the cached response immediately if it exists.
+                // The user gets a fast response while the cache updates in the background.
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+
+                // 3. If there's no cached response, wait for the network response.
+                return fetchPromise;
+            }).catch(error => {
+                // This catch block handles cases where the initial cache.match fails
+                // or when the user is offline and there's no cache.
+                console.error('[SW] Fetch failed; likely offline and resource is not cached.', error);
+                // You could return a fallback offline page here if you have one.
+                // return caches.match('/offline.html');
+            });
+        })
+    );
 });
