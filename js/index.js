@@ -3501,6 +3501,7 @@ const deleteModeBtn = document.getElementById('delete-mode-btn');
 const appDrawerForDelete = document.getElementById('app-drawer');
 
 deleteModeBtn.addEventListener('click', () => {
+	e.stopPropagation();
     // Toggle the 'delete-mode' class on the app drawer itself
     appDrawerForDelete.classList.toggle('delete-mode');
     // Also toggle an 'active' class on the button for styling
@@ -3928,84 +3929,80 @@ function populateDock() {
 
 // Function to create app icons
 function createAppIcons() {
-    appGrid.innerHTML = '';
-    
+    appGrid.innerHTML = ''; // Clear the grid first
+
     const appsArray = Object.entries(apps)
-        .filter(([appName]) => appName !== "Apps") // Filter out the Apps app
-        .map(([appName, appDetails]) => ({
-            name: appName,
-            details: appDetails,
-            usage: appUsage[appName] || 0
-        }))
+        .map(([appName, appDetails]) => ({ name: appName, details: appDetails, usage: appUsage[appName] || 0 }))
         .sort((a, b) => b.usage - a.usage);
-    
+
     appsArray.forEach((app) => {
+        // 1. Create all the elements for one app icon
         const appIcon = document.createElement('div');
         appIcon.classList.add('app-icon');
         appIcon.dataset.app = app.name;
-        
-        // --- NEW: Add the delete button to each icon ---
+
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-btn';
         deleteBtn.innerHTML = `<span class="material-symbols-rounded">close</span>`;
-        deleteBtn.onclick = (e) => {
-            e.stopPropagation(); // Prevent the app from opening when clicking delete
-            deleteApp(app.name);
-        };
-        
+
         const img = document.createElement('img');
         img.src = `/assets/appicon/${app.details.icon}`;
         img.alt = app.name;
-        img.onerror = () => {
-            img.src = '/assets/appicon/default.png';
-        };
-        
+        img.onerror = () => { img.src = '/assets/appicon/default.png'; };
+
         const label = document.createElement('span');
         label.textContent = app.name;
-        
+
+        // 2. Append all the elements in the correct order
+        appIcon.appendChild(deleteBtn); // The delete button must be added!
         appIcon.appendChild(img);
         appIcon.appendChild(label);
-        
-        const handleAppOpen = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
+
+        // 3. Define the app opening logic in one place
+        const openTheApp = () => {
             try {
-                // Update usage count as before
                 appUsage[app.name] = (appUsage[app.name] || 0) + 1;
                 saveUsageData();
-                
-                // Also save the timestamp when the app was opened
                 appLastOpened[app.name] = Date.now();
                 saveLastOpenedData();
-		populateDock();
-                
+                populateDock();
+
                 if (app.details.url.startsWith('#')) {
-                    switch (app.details.url) {
-                        case '#settings':
-                            showPopup(currentLanguage.OPEN_SETTINGS);
-                            break;
-                        case '#tasks':
-                            showMinimizedEmbeds(); // Add this case to call your new function
-                            break;
-                        default:
-                            showPopup(currentLanguage.APP_OPENED.replace("{app}", app));
-                    }
+                    // Handle special '#' links if you have them
                 } else {
                     createFullscreenEmbed(app.details.url);
                 }
-                
-                appDrawer.classList.remove('open');
+
+                // Close the drawer after opening an app
+                appDrawer.classList.remove('open', 'delete-mode'); // Also exit delete mode
+                deleteModeBtn.classList.remove('active'); // Deactivate delete button
                 appDrawer.style.bottom = '-100%';
                 initialDrawerPosition = -100;
+
             } catch (error) {
-                showPopup(currentLanguage.APP_OPEN_FAIL.replace("{app}", app));
+                showPopup(currentLanguage.APP_OPEN_FAIL.replace("{app}", app.name));
                 console.error(`App open error: ${error}`);
             }
         };
+
+        // 4. Add event listeners with clear, simple logic
         
-        appIcon.addEventListener('click', handleAppOpen);
-        appIcon.addEventListener('touchend', handleAppOpen);
+        // Listener for the delete button
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // VERY IMPORTANT: Prevents the app icon's click from firing
+            deleteApp(app.name);
+        });
+
+        // Listener for the main app icon (to open the app)
+        appIcon.addEventListener('click', () => {
+            // Guard clause: If we are in delete mode, do nothing.
+            if (appDrawer.classList.contains('delete-mode')) {
+                return;
+            }
+            openTheApp();
+        });
+        
+        // 5. Append the completed appIcon to the grid *inside* the loop
         appGrid.appendChild(appIcon);
     });
 }
