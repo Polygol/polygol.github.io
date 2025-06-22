@@ -1290,19 +1290,6 @@ input[type="color"]::-moz-color-swatch {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.drawer-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 24px;
-    height: 72px;
-}
-
-.drawer-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
 .drawer-action-btn {
     position: absolute;
     background: transparent;
