@@ -1304,8 +1304,8 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .drawer-action-btn {
-    background: var(--search-background);
-    border: 1px solid var(--glass-border);
+    background: transparent;
+    border: none;
     color: var(--text-color);
     width: 40px;
     height: 40px;
@@ -1319,6 +1319,7 @@ input[type="color"]::-moz-color-swatch {
 
 .drawer-action-btn.active {
     background-color: #ff3b30; /* Red color for active delete mode */
+    border: 1px solid var(--glass-border);
     color: white;
     border-color: transparent;
 }
