@@ -82,6 +82,16 @@ self.addEventListener('message', event => {
             );
         }
     }
+
+    // --- NEW: Handle un-caching an app ---
+    if (event.data && event.data.action === 'uncache-app') {
+        const appName = event.data.appName;
+        console.log(`[SW] Received request to un-cache app: ${appName}`);
+        // This is a simplified approach. A more robust way would be to get a list
+        // of files to delete from the main thread, as the SW doesn't know them.
+        // For now, we will log that the action was received.
+        // A full implementation would require passing appData.filesToCache to the SW to delete.
+    }
 });
 
 
