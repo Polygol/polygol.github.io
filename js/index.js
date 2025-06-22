@@ -3477,6 +3477,10 @@ let apps = {
     "Camera": {
         url: "/camera/index.html",
         icon: "camera.png"
+    },
+    "App Store": {
+        url: "/appstore/index.html",
+        icon: "appstore.png"
     }
 };
 
