@@ -221,7 +221,6 @@ const LANG_JP = {
     GURAPP_INSTALL_EXISTS: "{appName} はすでにインストールされています",
     GURAPP_INSTALL_NONSTORE_DENIED: "エラー: Gurasuraisu App Store のみがアプリをインストールできます"
 };
-};
 
 const LANG_DE = {
     GREETING: "Gurasuraisu erfolgreich geladen",
