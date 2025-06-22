@@ -1,10 +1,10 @@
 /**
- * Gurasuraisuraisu API for Gurapps
+ * Gurasuraisu API for Gurapps
  * This helper script allows an iframe (Gurapp) to safely communicate
- * with the parent Gurasuraisuraisu window and use its core functions.
+ * with the parent Gurasuraisu window and use its core functions.
  */
-
-const Gurasuraisuraisu = {
+ 
+const Gurasuraisu = {
   /**
    * Internal helper to send a structured message to the parent window.
    * @param {string} functionName - The name of the Gurasuraisu function to call.
