@@ -5024,7 +5024,7 @@ document.addEventListener('DOMContentLoaded', function() {
             clearCookies();
 
             // Use language variable for success alert
-            alert(currentLanguage.RESET_SUCCESS);
+            showPopup(currentLanguage.RESET_SUCCESS);
 
             window.location.reload();
         }
