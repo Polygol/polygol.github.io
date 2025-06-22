@@ -3429,7 +3429,7 @@ function initializeCustomization() {
 }
 
 // App definitions
-const apps = {
+let apps = {
     "Chronos": {
         url: "/chronos/index.html",
         icon: "alarm.png"
@@ -3479,6 +3479,53 @@ const apps = {
         icon: "camera.png"
     }
 };
+
+// NEW function to load user-installed apps and merge them.
+function loadUserInstalledApps() {
+    try {
+        const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
+        // Merge user-installed apps into the main apps object
+        apps = { ...apps, ...userApps };
+        console.log('Loaded and merged user-installed apps.');
+    } catch (e) {
+        console.error('Could not load user-installed apps:', e);
+    }
+}
+
+async function installApp(appData) {
+    if (apps[appData.name]) {
+        showPopup(`"${appData.name}" is already installed.`);
+        return;
+    }
+
+    console.log(`Installing app: ${appData.name}`);
+
+    // 1. Add the new app to the in-memory object
+    apps[appData.name] = {
+        url: appData.url,
+        icon: appData.iconUrl.split('/').pop() // Assumes icon name is the last part of the URL
+    };
+
+    // 2. Save the app's metadata to localStorage so it's remembered
+    const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
+    userApps[appData.name] = { url: appData.url, icon: appData.iconUrl.split('/').pop() };
+    localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
+
+    // 3. Tell the Service Worker to cache the app's files
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+            action: 'cache-app',
+            files: appData.filesToCache
+        });
+        showPopup(`Installing "${appData.name}" for offline use...`);
+    } else {
+        showPopup(`Could not install offline. Service Worker not active.`);
+    }
+
+    // 4. Refresh the UI
+    createAppIcons();
+    populateDock();
+}
 
 function createFullscreenEmbed(url) {
     // Check if we have this URL minimized already
@@ -5134,17 +5181,37 @@ window.addEventListener('message', event => {
 
   const data = event.data;
 
-  // Case 1: A Gurapp wants to call a function in the parent window
-  // This listener checks for the 'callGurasuraisuFunc' action
+  // Check if this is an API call from a Gurapp
   if (data && data.action === 'callGurasuraisuFunc' && data.functionName) {
-    
-    // Whitelist of functions that are safe to be called
+
+    // --- NEW: Security Check for the 'installApp' function ---
+    if (data.functionName === 'installApp') {
+      try {
+        // Get the full URL of the iframe that sent the message
+        const sourceUrl = event.source.location.href;
+
+        // Check if the source URL path ends with the trusted App Store path
+        if (!sourceUrl.endsWith('/appstore/index.html')) {
+          console.error(`Denied installing application: A script at "${sourceUrl}" attempted to call the 'installApp' function`);
+          showPopup('Error: only the Gurasuraisu App Store can install apps'); // Inform the user
+          return; // Stop processing immediately
+        }
+      } catch (e) {
+        // This can happen if the source is from a different origin, but our first `event.origin` check should prevent that.
+        // Still, it's good practice to handle it.
+        console.error("Could not verify the source of the 'installApp' call.", e);
+        return;
+      }
+    }
+	  
+    // If the check passes (or it's not 'installApp'), proceed with the normal whitelist.
     const allowedFunctions = {
       showPopup,
       showNotification,
       minimizeFullscreenEmbed,
       createFullscreenEmbed,
-      blackoutScreen
+      blackoutScreen,
+      installApp
     };
 
     const funcToCall = allowedFunctions[data.functionName];
@@ -5173,6 +5240,7 @@ window.addEventListener('message', event => {
 
     // Initialize app drawer
     function initAppDraw() {
+	loadUserInstalledApps();
         createAppIcons();
         setupDrawerInteractions();
     }
