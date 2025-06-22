@@ -1290,6 +1290,77 @@ input[type="color"]::-moz-color-swatch {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    margin-bottom: 20px;
+}
+
+.drawer-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.drawer-action-btn {
+    background: var(--search-background);
+    border: 1px solid var(--glass-border);
+    color: var(--text-color);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.drawer-action-btn.active {
+    background-color: #ff3b30; /* Red color for active delete mode */
+    color: white;
+    border-color: transparent;
+}
+
+/* Styling for the delete button that appears on app icons */
+.app-icon .delete-btn {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #ff3b30;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--background-color);
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.app-icon .delete-btn .material-symbols-rounded {
+    font-size: 16px;
+}
+
+/* When app drawer is in delete mode, show the buttons */
+#app-drawer.delete-mode .app-icon .delete-btn {
+    display: flex;
+}
+
+/* Also, make the icons jiggle in delete mode for a classic effect */
+@keyframes jiggle {
+    0% { transform: rotate(-1deg); }
+    50% { transform: rotate(1deg); }
+    100% { transform: rotate(-1deg); }
+}
+
+#app-drawer.delete-mode .app-icon {
+    animation: jiggle 0.2s infinite ease-in-out;
+}
+
         .app-drawer.open {
             bottom: 0;
         }
