@@ -901,6 +901,9 @@ function showPopup(message) {
     
     popup.classList.add('popup');
 
+    // Get all existing popups
+    const existingPopups = document.querySelectorAll('.popup');
+    
     // If there are already 2 popups, remove the oldest one
     if (existingPopups.length >= 2) {
         // Remove oldest one from the DOM
