@@ -1,3 +1,5 @@
+const CACHE_NAME = 'gurasuraisu-cache-v1'; // Give your cache a clear name
+
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -53,29 +55,31 @@ const ASSETS_TO_CACHE = [
   '/camera/index.html'
 ];
 
+// INSTALL: Cache all core assets when the SW is first installed.
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open('gurasuraisu-cache')
+    caches.open(CACHE_NAME)
       .then(cache => {
-        // Use individual cache.add() calls that won't fail the entire operation
-        return Promise.allSettled(
-          ASSETS_TO_CACHE.map(url => 
-            cache.add(url).catch(error => {
-              console.warn(`Failed to cache: ${url}`, error);
-              // Continue despite this individual failure
-            })
-          )
-        );
+        console.log('[SW] Caching core assets.');
+        // Use individual cache.add() to prevent one failed request from failing all
+        const promises = ASSETS_TO_CACHE.map(url => {
+          // For external URLs, we need a Request object with no-cors mode
+          // as a fallback if the server doesn't support CORS.
+          const request = new Request(url, { mode: 'no-cors' });
+          return cache.add(request).catch(err => console.warn(`[SW] Failed to cache ${url}`, err));
+        });
+        return Promise.allSettled(promises);
       })
   );
 });
 
+// ACTIVATE: Clean up old caches.
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== 'gurasuraisu-cache') {
+          if (cacheName !== CACHE_NAME) {
             return caches.delete(cacheName);
           }
         })
@@ -84,61 +88,55 @@ self.addEventListener('activate', event => {
   );
 });
 
+// *** NEW & IMPORTANT: Listen for messages from the app ***
+self.addEventListener('message', event => {
+    // Check if the message is an instruction to cache a new app
+    if (event.data && event.data.action === 'cache-app') {
+        const filesToCache = event.data.files;
+        if (filesToCache && filesToCache.length > 0) {
+            console.log(`[SW] Received request to cache app with ${filesToCache.length} files.`);
+            event.waitUntil(
+                caches.open(CACHE_NAME).then(cache => {
+                    // Create requests that can handle cross-origin URLs
+                    const cachePromises = filesToCache.map(url => {
+                        const request = new Request(url, { mode: 'no-cors' });
+                        return cache.add(request).catch(err => console.warn(`[SW] Failed to cache file: ${url}`, err));
+                    });
+                    return Promise.allSettled(cachePromises)
+                        .then(() => console.log('[SW] App caching complete.'));
+                })
+            );
+        }
+    }
+});
+
+
+// FETCH: Serve assets from cache first (Cache-First Strategy).
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
-      .then(async cachedResponse => {
-        try {
-          // Skip API calls
-          if (event.request.url.includes('api.open-meteo.com') || 
-              event.request.url.includes('nominatim.openstreetmap.org')) {
-            return cachedResponse || fetch(event.request);
-          }
-
-          // Fetch network response
-          const networkResponse = await fetch(event.request);
-          const networkResponseClone = networkResponse.clone();
-
-          // Compare responses
-          if (cachedResponse) {
-            const areSame = await compareResponses(cachedResponse.clone(), networkResponseClone);
-
-            if (!areSame) {
-              // Update cache if different
-              const cache = await caches.open('gurasuraisu-cache');
-              await cache.put(event.request, networkResponse.clone());
-              return networkResponse;
-            }
-            return cachedResponse;
-          }
-
-          // If no cached response, add to cache
-          const cache = await caches.open('gurasuraisu-cache');
-          await cache.put(event.request, networkResponse.clone());
-          return networkResponse;
-        } catch (error) {
-          // Fallback to cached response or root
-          return cachedResponse || caches.match('/');
+      .then(cachedResponse => {
+        // If we have a cached response, return it.
+        if (cachedResponse) {
+          return cachedResponse;
         }
+        // Otherwise, fetch from the network.
+        return fetch(event.request).then(networkResponse => {
+          // And cache the new response for next time.
+          return caches.open(CACHE_NAME).then(cache => {
+            // Be careful caching POST requests or other API calls if they shouldn't be static.
+            if (event.request.method === 'GET') {
+               // Clone the response because it can only be consumed once.
+              cache.put(event.request, networkResponse.clone());
+            }
+            return networkResponse;
+          });
+        });
+      })
+      .catch(error => {
+        // If both cache and network fail, you can provide a fallback page.
+        console.error('[SW] Fetch failed. You are offline, and there is no cache', error);
+        // return caches.match('/offline.html'); // Optional: an offline fallback page
       })
   );
 });
-
-async function compareResponses(cachedResponse, networkResponse) {
-  // Compare response types
-  if (cachedResponse.type !== networkResponse.type) return false;
-  
-  // Compare response status
-  if (cachedResponse.status !== networkResponse.status) return false;
-  
-  try {
-    const cachedText = await cachedResponse.text();
-    const networkText = await networkResponse.text();
-    return cachedText === networkText;
-  } catch (error) {
-    // Fallback to header comparison if text comparison fails
-    const cachedHeaders = Object.fromEntries(cachedResponse.headers.entries());
-    const networkHeaders = Object.fromEntries(networkResponse.headers.entries());
-    return JSON.stringify(cachedHeaders) === JSON.stringify(networkHeaders);
-  }
-}
