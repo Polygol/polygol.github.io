@@ -1294,8 +1294,8 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 25px;
-    margin-bottom: 20px;
+    padding: 0 24px;
+    height: 72px;
 }
 
 .drawer-title {
