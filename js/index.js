@@ -5083,6 +5083,48 @@ window.addEventListener('load', checkScreenSize);
 // Check when window is resized
 window.addEventListener('resize', checkScreenSize);
 
+window.addEventListener('message', event => {
+  // Always verify the message origin for security
+  if (event.origin !== window.location.origin) return;
+
+  const data = event.data;
+
+  // Case 1: A Gurapp wants to call a function in the parent window
+  // This listener checks for the 'callGurasuraisuFunc' action
+  if (data && data.action === 'callGurasuraisuFunc' && data.functionName) {
+    
+    // Whitelist of functions that are safe to be called
+    const allowedFunctions = {
+      showPopup,
+      showNotification,
+      minimizeFullscreenEmbed,
+      createFullscreenEmbed,
+      blackoutScreen
+    };
+
+    const funcToCall = allowedFunctions[data.functionName];
+
+    if (typeof funcToCall === 'function') {
+      const args = Array.isArray(data.args) ? data.args : [];
+      funcToCall.apply(window, args);
+    } else {
+      console.warn(`A Gurapp attempted to call a disallowed or non-existent function: "${data.functionName}"`);
+    }
+    return; // Message handled
+  }
+
+  // Case 2: Gurapp-to-Gurapp communication
+  const { targetApp, ...payload } = data;
+  if (targetApp) {
+    const iframe = document.querySelector(`iframe[data-app-id="${targetApp}"]`);
+    if (iframe) {
+      iframe.contentWindow.postMessage(payload, window.location.origin);
+    } else {
+      console.warn(`Message target not found: No iframe for app "${targetApp}"`);
+    }
+    return; // Message handled
+  }
+});
 
     // Initialize app drawer
     function initAppDraw() {
