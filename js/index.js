@@ -3456,6 +3456,57 @@ async function installApp(appData) {
     }
 }
 
+async function deleteApp(appName) {
+    // --- Protection Clause ---
+    // Find the app object to check its URL
+    const appToDelete = apps[appName];
+    if (appToDelete && appToDelete.url.includes('/appstore/index.html')) {
+        showPopup("The App Store cannot be deleted.");
+        return; // Stop the function immediately
+    }
+
+    // Confirmation dialog
+    if (!confirm(`Are you sure you want to delete "${appName}"?`)) {
+        return;
+    }
+
+    if (apps[appName]) {
+        // 1. Remove from the in-memory `apps` object
+        delete apps[appName];
+
+        // 2. Remove from the 'userInstalledApps' in localStorage
+        const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
+        delete userApps[appName];
+        localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
+        
+        // 3. (Optional but Recommended) Un-cache the files from the Service Worker
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+             navigator.serviceWorker.controller.postMessage({
+                action: 'uncache-app',
+                appName: appName // We'll need to know which app files to remove
+            });
+        }
+
+        // 4. Refresh the app drawer and dock
+        createAppIcons();
+        populateDock();
+        showPopup(`"${appName}" was deleted.`);
+        
+    } else {
+        showPopup(`Error: Could not find "${appName}" to delete.`);
+    }
+}
+
+const deleteModeBtn = document.getElementById('delete-mode-btn');
+const appDrawerForDelete = document.getElementById('app-drawer');
+
+deleteModeBtn.addEventListener('click', () => {
+    // Toggle the 'delete-mode' class on the app drawer itself
+    appDrawerForDelete.classList.toggle('delete-mode');
+    // Also toggle an 'active' class on the button for styling
+    deleteModeBtn.classList.toggle('active');
+});
+
 function createFullscreenEmbed(url) {
     // 1. Check if Gurapps are disabled entirely
     // This uses the 'gurappsEnabled' variable you already have.
@@ -3892,6 +3943,15 @@ function createAppIcons() {
         const appIcon = document.createElement('div');
         appIcon.classList.add('app-icon');
         appIcon.dataset.app = app.name;
+        
+        // --- NEW: Add the delete button to each icon ---
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerHTML = `<span class="material-symbols-rounded">close</span>`;
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation(); // Prevent the app from opening when clicking delete
+            deleteApp(app.name);
+        };
         
         const img = document.createElement('img');
         img.src = `/assets/appicon/${app.details.icon}`;
