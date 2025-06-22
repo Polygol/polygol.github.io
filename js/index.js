@@ -3385,54 +3385,6 @@ function initializeCustomization() {
 
 // App definitions
 let apps = {
-    "Chronos": {
-        url: "/chronos/index.html",
-        icon: "alarm.png"
-    },
-    "Ailuator": {
-        url: "/ailuator/index.html",
-        icon: "calculator.png"
-    },
-    "Wordy": {
-        url: "/wordy/index.html",
-        icon: "docs.png"
-    },
-    "Fantaskical": {
-        url: "/fantaskical/index.html",
-        icon: "tasks.png"
-    },
-    "Moments": {
-        url: "/moments/index.html",
-        icon: "photos.png"
-    },
-    "Music": {
-        url: "/music/index.html",
-        icon: "music.png"
-    },
-    "Clapper": {
-        url: "/clapper/index.html",
-        icon: "video.png"
-    },
-    "Waves": {
-        url: "/waves/index.html",
-        icon: "home.png"
-    },
-    "SketchPad": {
-        url: "/sketchpad/index.html",
-        icon: "sketch.png"
-    },
-    "Invitations": {
-        url: "/invitations/index.html",
-        icon: "mail.png"
-    },
-    "Weather": {
-        url: "/weather/index.html",
-        icon: "weather.png"
-    },
-    "Camera": {
-        url: "/camera/index.html",
-        icon: "camera.png"
-    },
     "App Store": {
         url: "/appstore/index.html",
         icon: "appstore.png"
