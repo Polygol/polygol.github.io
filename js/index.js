@@ -3411,34 +3411,49 @@ async function installApp(appData) {
 
     console.log(`Installing app: ${appData.name}`);
 
-    // This is the most reliable way to get the filename from a local or external URL.
     const iconFileName = appData.iconUrl.split('/').pop();
 
-    // 1. Add the new app to the in-memory object using the correct icon filename.
+    // 1. Add the new app to the in-memory object and save to localStorage.
+    // (This part is synchronous and happens immediately)
     apps[appData.name] = {
         url: appData.url,
         icon: iconFileName
     };
-
-    // 2. Save the app's metadata to localStorage so it's remembered after a refresh.
     const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
     userApps[appData.name] = { url: appData.url, icon: iconFileName };
     localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
 
-    // 3. Tell the Service Worker to cache the app's files.
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-            action: 'cache-app',
-            files: appData.filesToCache
-        });
-        showPopup(`Installing "${appData.name}" for offline use...`);
-    } else {
-        showPopup(`Could not install offline. Service Worker not active.`);
-    }
-
-    // 4. Refresh the UI to show the new app.
+    // 2. Refresh the UI immediately so the user sees the app appear.
     createAppIcons();
     populateDock();
+
+    // 3. Robustly handle caching with the Service Worker.
+    if ('serviceWorker' in navigator) {
+        // Show a message that installation has started.
+        showPopup(`Installing "${appData.name}" for offline use...`);
+
+        try {
+            // navigator.serviceWorker.ready is a promise that resolves when a SW is active.
+            const registration = await navigator.serviceWorker.ready;
+            
+            // Now we are sure there is an active service worker to talk to.
+            registration.active.postMessage({
+                action: 'cache-app',
+                files: appData.filesToCache
+            });
+            
+            // Optional: You could listen for a response from the SW to confirm caching.
+            // For now, we assume it works.
+            console.log(`[App] Sent caching request to Service Worker for "${appData.name}".`);
+
+        } catch (error) {
+            console.error('Service Worker not ready or failed to send message:', error);
+            showPopup(`Offline installation failed for "${appData.name}".`);
+        }
+
+    } else {
+        showPopup(`Offline installation not supported by this browser.`);
+    }
 }
 
 function createFullscreenEmbed(url) {
