@@ -5162,10 +5162,26 @@ window.addEventListener('load', checkScreenSize);
 window.addEventListener('resize', checkScreenSize);
 
 window.addEventListener('message', event => {
-    // Always verify the message origin for security.
     if (event.origin !== window.location.origin) return;
 
     const data = event.data;
+
+    // Allow an app to view the currently installed apps
+    // This check should happen BEFORE the main API call router.
+    if (data.action === 'callGurasuraisuFunc' && data.functionName === 'requestInstalledApps') {
+        console.log('An app is requesting the list of installed apps.');
+        
+        // Get the names of all currently installed apps.
+        const installedAppNames = Object.keys(apps);
+        
+        // Send the list back to the specific iframe that asked for it.
+        event.source.postMessage({
+            type: 'installed-apps-list',
+            apps: installedAppNames
+        }, window.location.origin);
+        
+        return; // The request is handled, we can stop here.
+    }
 
     // Check if this is an API call from a Gurapp
     if (data && data.action === 'callGurasuraisuFunc' && data.functionName) {
