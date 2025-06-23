@@ -5162,66 +5162,70 @@ window.addEventListener('load', checkScreenSize);
 window.addEventListener('resize', checkScreenSize);
 
 window.addEventListener('message', event => {
-  // Always verify the message origin for security
-  if (event.origin !== window.location.origin) return;
+    // Always verify the message origin for security.
+    if (event.origin !== window.location.origin) return;
 
-  const data = event.data;
+    const data = event.data;
 
-  // Check if this is an API call from a Gurapp
-  if (data && data.action === 'callGurasuraisuFunc' && data.functionName) {
+    // Check if this is an API call from a Gurapp
+    if (data && data.action === 'callGurasuraisuFunc' && data.functionName) {
 
-    // --- NEW: Security Check for the 'installApp' function ---
-    if (data.functionName === 'installApp') {
-      try {
-        // Get the full URL of the iframe that sent the message
-        const sourceUrl = event.source.location.href;
+        // --- NEW: Security Check for PROTECTED functions ---
+        const protectedFunctions = ['installApp', 'deleteApp'];
 
-        // Check if the source URL path ends with the trusted App Store path
-        if (!sourceUrl.endsWith('/appstore/index.html')) {
-          console.error(`Denied installing application: A script at "${sourceUrl}" attempted to call the 'installApp' function`);
-          showPopup(currentLanguage.GURAPP_INSTALL_NONSTORE_DENIED);
-          return; // Stop processing immediately
+        if (protectedFunctions.includes(data.functionName)) {
+            try {
+                const sourceUrl = event.source.location.href;
+
+                // Check if the source URL path ends with the trusted App Store path
+                if (!sourceUrl.endsWith('/appstore/index.html')) {
+                    const errorMessage = `SECURITY VIOLATION: A script at "${sourceUrl}" attempted to call the protected '${data.functionName}' function. Access denied.`;
+                    console.error(errorMessage);
+                    // Show a generic error to the user
+                    showPopup(currentLanguage.GURAPP_INSTALL_NONSTORE_DENIED);
+                    return; // Stop processing immediately
+                }
+            } catch (e) {
+                console.error(`Could not verify the source of the '${data.functionName}' call.`, e);
+                return;
+            }
         }
-      } catch (e) {
-        // This can happen if the source is from a different origin, but our first `event.origin` check should prevent that.
-        // Still, it's good practice to handle it.
-        console.error("Could not verify the source of the 'installApp' call.", e);
-        return;
-      }
-    }
-	  
-    // If the check passes (or it's not 'installApp'), proceed with the normal whitelist.
-    const allowedFunctions = {
-      showPopup,
-      showNotification,
-      minimizeFullscreenEmbed,
-      createFullscreenEmbed,
-      blackoutScreen,
-      installApp
-    };
+        // --- End of Security Check ---
 
-    const funcToCall = allowedFunctions[data.functionName];
 
-    if (typeof funcToCall === 'function') {
-      const args = Array.isArray(data.args) ? data.args : [];
-      funcToCall.apply(window, args);
-    } else {
-      console.warn(`A Gurapp attempted to call a disallowed or non-existent function: "${data.functionName}"`);
-    }
-    return; // Message handled
-  }
+        // If the check passes (or it's not a protected function), proceed with the normal whitelist.
+        const allowedFunctions = {
+            showPopup,
+            showNotification,
+            minimizeFullscreenEmbed,
+            createFullscreenEmbed,
+            blackoutScreen,
+            installApp,
+            deleteApp // Keep deleteApp in the list so it can be called if the check passes
+        };
 
-  // Case 2: Gurapp-to-Gurapp communication
-  const { targetApp, ...payload } = data;
-  if (targetApp) {
-    const iframe = document.querySelector(`iframe[data-app-id="${targetApp}"]`);
-    if (iframe) {
-      iframe.contentWindow.postMessage(payload, window.location.origin);
-    } else {
-      console.warn(`Message target not found: No iframe for app "${targetApp}"`);
+        const funcToCall = allowedFunctions[data.functionName];
+
+        if (typeof funcToCall === 'function') {
+            const args = Array.isArray(data.args) ? data.args : [];
+            funcToCall.apply(window, args);
+        } else {
+            console.warn(`A Gurapp attempted to call a disallowed or non-existent function: "${data.functionName}"`);
+        }
+        return; // Message handled
     }
-    return; // Message handled
-  }
+
+    // Case 2: Gurapp-to-Gurapp communication
+    const { targetApp, ...payload } = data;
+    if (targetApp) {
+        const iframe = document.querySelector(`iframe[data-app-id="${targetApp}"]`);
+        if (iframe) {
+            iframe.contentWindow.postMessage(payload, window.location.origin);
+        } else {
+            console.warn(`Message target not found: No iframe for app "${targetApp}"`);
+        }
+        return; // Message handled
+    }
 });
 
     // Initialize app drawer
