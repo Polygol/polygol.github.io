@@ -3925,16 +3925,14 @@ function populateDock() {
     const appDrawer = document.getElementById('app-drawer');
     const appGrid = document.getElementById('app-grid');
 
-// Function to create app icons
 function createAppIcons() {
-    appGrid.innerHTML = ''; // Clear the grid first
+    appGrid.innerHTML = '';
 
     const appsArray = Object.entries(apps)
-        .map(([appName, appDetails]) => ({ name: appName, details: appDetails, usage: appUsage[appName] || 0 }))
+        .map(([appName, appDetails]) => ({ name: appName, details: appDetails }))
         .sort((a, b) => a.name.localeCompare(b.name));
 
     appsArray.forEach((app) => {
-        // 1. Create all the elements for one app icon
         const appIcon = document.createElement('div');
         appIcon.classList.add('app-icon');
         appIcon.dataset.app = app.name;
@@ -3951,56 +3949,80 @@ function createAppIcons() {
         const label = document.createElement('span');
         label.textContent = app.name;
 
-        // 2. Append all the elements in the correct order
-        appIcon.appendChild(deleteBtn); // The delete button must be added!
+        appIcon.appendChild(deleteBtn);
         appIcon.appendChild(img);
         appIcon.appendChild(label);
 
-        // 3. Define the app opening logic in one place
+        // --- NEW: Universal Tap Handling Logic ---
+
+        const handleTap = (targetElement) => {
+            // Determine what was tapped and act accordingly
+            if (targetElement.classList.contains('delete-btn') || targetElement.parentElement.classList.contains('delete-btn')) {
+                // If the delete button or its inner icon was tapped
+                deleteApp(app.name);
+            } else {
+                // Otherwise, the main app icon was tapped
+                if (!appDrawer.classList.contains('delete-mode')) {
+                    openTheApp();
+                }
+            }
+        };
+
         const openTheApp = () => {
-            try {
+             try {
+                // Your existing app opening logic is fine
                 appUsage[app.name] = (appUsage[app.name] || 0) + 1;
                 saveUsageData();
                 appLastOpened[app.name] = Date.now();
                 saveLastOpenedData();
                 populateDock();
-
-                if (app.details.url.startsWith('#')) {
-                    // Handle special '#' links if you have them
-                } else {
-                    createFullscreenEmbed(app.details.url);
-                }
-
-                // Close the drawer after opening an app
-                appDrawer.classList.remove('open', 'delete-mode'); // Also exit delete mode
-                deleteModeBtn.classList.remove('active'); // Deactivate delete button
+                createFullscreenEmbed(app.details.url);
+                appDrawer.classList.remove('open', 'delete-mode');
+                deleteModeBtn.classList.remove('active');
                 appDrawer.style.bottom = '-100%';
-                initialDrawerPosition = -100;
-
-            } catch (error) {
+             } catch (error) {
                 showPopup(currentLanguage.APP_OPEN_FAIL.replace("{app}", app.name));
                 console.error(`App open error: ${error}`);
             }
         };
 
-        // 4. Add event listeners with clear, simple logic
+        // Variables to detect a tap vs. a swipe/drag
+        let touchStartX, touchStartY, touchStartTime;
+
+        appIcon.addEventListener('mousedown', () => {
+            // For mouse, we just handle the click directly
+            // No need for complicated logic
+        });
         
-        // Listener for the delete button
-        deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // VERY IMPORTANT: Prevents the app icon's click from firing
-            deleteApp(app.name);
+        appIcon.addEventListener('click', (e) => {
+            // This will primarily handle mouse clicks
+            handleTap(e.target);
         });
 
-        // Listener for the main app icon (to open the app)
-        appIcon.addEventListener('click', () => {
-            // Guard clause: If we are in delete mode, do nothing.
-            if (appDrawer.classList.contains('delete-mode')) {
-                return;
+        appIcon.addEventListener('touchstart', (e) => {
+            // Record the starting point of a touch
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+        }, { passive: true });
+
+        appIcon.addEventListener('touchend', (e) => {
+            // On touchend, check if it was a valid tap
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const touchTime = Date.now() - touchStartTime;
+
+            // Define a "tap" as a short touch with minimal movement
+            const isTap = touchTime < 200 && Math.abs(touchEndX - touchStartX) < 10 && Math.abs(touchEndY - touchStartY) < 10;
+
+            if (isTap) {
+                e.preventDefault(); // Prevent the browser from firing a "ghost" click
+                handleTap(e.target);
             }
-            openTheApp();
         });
         
-        // 5. Append the completed appIcon to the grid *inside* the loop
+        // --- END of Universal Tap Handling Logic ---
+
         appGrid.appendChild(appIcon);
     });
 }
