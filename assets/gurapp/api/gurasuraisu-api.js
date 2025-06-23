@@ -64,11 +64,19 @@ const Gurasuraisu = {
   blackout: function() {
     this._call('blackoutScreen');
   },
-   
+ 
    /**
-   * Requests the parent Gurasuraisu to install a new Gurapp.
-   * @param {object} appObject - The complete app object with id, url, iconUrl, etc.
+   * Asks the parent Gurasuraisu to send back the list of currently installed apps.
+   * The parent will respond with a 'installed-apps-list' message.
    */
+  requestInstalledApps: function() {
+   this._call('requestInstalledApps', []);
+  },
+   
+  /**
+  * Requests the parent Gurasuraisu to install a new Gurapp.
+  * @param {object} appObject - The complete app object with id, url, iconUrl, etc.
+  */
   installApp: function(appObject) {
     this._call('installApp', [appObject]);
   },
@@ -76,14 +84,6 @@ const Gurasuraisu = {
   deleteApp: function(appObject) {
     this._call('deleteApp', [appObject]);
   }
-
-   /**
-   * Asks the parent Gurasuraisu to send back the list of currently installed apps.
-   * The parent will respond with a 'installed-apps-list' message.
-   */
-  requestInstalledApps: function() {
-    this._call('requestInstalledApps', []);
-  },
 };
 
 // --- Event Listener for Messages FROM Gurasuraisu ---
