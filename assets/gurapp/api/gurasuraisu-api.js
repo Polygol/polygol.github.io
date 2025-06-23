@@ -76,6 +76,14 @@ const Gurasuraisu = {
   deleteApp: function(appObject) {
     this._call('deleteApp', [appObject]);
   }
+
+   /**
+   * Asks the parent Gurasuraisu to send back the list of currently installed apps.
+   * The parent will respond with a 'installed-apps-list' message.
+   */
+  requestInstalledApps: function() {
+    this._call('requestInstalledApps', []);
+  },
 };
 
 // --- Event Listener for Messages FROM Gurasuraisu ---
