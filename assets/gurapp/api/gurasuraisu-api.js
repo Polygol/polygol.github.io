@@ -71,6 +71,10 @@ const Gurasuraisu = {
    */
   installApp: function(appObject) {
     this._call('installApp', [appObject]);
+  },
+
+  deleteApp: function(appObject) {
+    this._call('deleteApp', [appObject]);
   }
 };
 
