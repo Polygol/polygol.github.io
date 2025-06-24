@@ -97,45 +97,55 @@ self.addEventListener('message', event => {
 
 // FETCH: Serve assets from cache first (Cache-First Strategy).
 self.addEventListener('fetch', event => {
-    // For external APIs (like weather), always go to the network.
-    // Do not attempt to cache these dynamic responses.
+    const { request } = event;
+    const url = new URL(request.url);
+
+    // --- Strategy 1: Network Only for external APIs ---
     const externalApiUrls = [
         'api.open-meteo.com',
         'nominatim.openstreetmap.org'
     ];
-    if (externalApiUrls.some(url => event.request.url.includes(url))) {
-        event.respondWith(fetch(event.request));
+    if (externalApiUrls.some(apiUrl => url.hostname.includes(apiUrl))) {
+        event.respondWith(fetch(request));
         return;
     }
 
-    // Use the "Stale-While-Revalidate" strategy for all other assets.
+    // --- Strategy 2: Network-First for Gurapp HTML files ---
+    // This ensures the user always gets the latest version of the app if they are online.
+    // It checks if the path ends with a known Gurapp name followed by /index.html.
+    const isGurappHtml = /\/(chronos|ailuator|wordy|fantaskical|moments|music|clapper|waves|sketchpad|invitations|weather|camera|appstore)\/index\.html$/.test(url.pathname);
+
+    if (request.mode === 'navigate' || isGurappHtml) {
+        event.respondWith(
+            fetch(request)
+                .then(networkResponse => {
+                    // If network is successful, cache the new version and return it.
+                    return caches.open(CACHE_NAME).then(cache => {
+                        cache.put(request, networkResponse.clone());
+                        return networkResponse;
+                    });
+                })
+                .catch(() => {
+                    // If network fails (user is offline), serve the app from the cache.
+                    return caches.match(request);
+                })
+        );
+        return;
+    }
+
+    // --- Strategy 3: Stale-While-Revalidate for everything else (CSS, JS, images, fonts) ---
     event.respondWith(
         caches.open(CACHE_NAME).then(cache => {
-            return cache.match(event.request).then(cachedResponse => {
-                // 1. Make a network request in the background regardless.
-                const fetchPromise = fetch(event.request).then(networkResponse => {
-                    // If the fetch is successful, update the cache.
-                    // We only cache valid GET requests.
-                    if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
-                        cache.put(event.request, networkResponse.clone());
+            return cache.match(request).then(cachedResponse => {
+                const fetchPromise = fetch(request).then(networkResponse => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        cache.put(request, networkResponse.clone());
                     }
                     return networkResponse;
                 });
 
-                // 2. Return the cached response immediately if it exists.
-                // The user gets a fast response while the cache updates in the background.
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-
-                // 3. If there's no cached response, wait for the network response.
-                return fetchPromise;
-            }).catch(error => {
-                // This catch block handles cases where the initial cache.match fails
-                // or when the user is offline and there's no cache.
-                console.error('[SW] Fetch failed; likely offline and resource is not cached.', error);
-                // You could return a fallback offline page here if you have one.
-                // return caches.match('/offline.html');
+                // Return cached response immediately if it exists, otherwise wait for network.
+                return cachedResponse || fetchPromise;
             });
         })
     );
