@@ -1890,11 +1890,6 @@ function updateMinimalMode() {
     }
 }
 
-// Initialize minimal mode on page load
-document.addEventListener('DOMContentLoaded', function() {
-    updateMinimalMode();
-});
-
 // Add a CSS rule for minimal mode
 const style = document.createElement('style');
 style.textContent = `
@@ -5047,6 +5042,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     `;
     document.head.appendChild(style);
+	
+    // --- 1. Load ALL data and settings first ---
+    loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
+    loadSavedData();         // Load usage and lastOpened data
+    loadRecentWallpapers();
+    initializeWallpaperTracking();
+
+    // --- 2. Perform initial setup that depends on the loaded data ---
+    firstSetup(); // This handles language
+    
+    // --- 3. Initialize UI components ---
+    initAppDraw(); // Now this will use the fully populated 'apps' object
+    initializeCustomization(); // This sets up theme, wallpaper, fonts
+    setupWeatherToggle();
+    initializeAndApplyWallpaper().catch(error => {
+        console.error("Error initializing wallpaper:", error);
+    });
+    initializePageIndicator();
+    addPageIndicatorStyles();
+    checkWallpaperState();
+    updateGurappsVisibility();
+
+    // --- 4. Add other event listeners ---
+    const languageSwitcher = document.getElementById('language-switcher');
+    if (languageSwitcher) {
+        languageSwitcher.addEventListener('change', function () {
+            selectLanguage(this.value);
+        });
+    }
+    
+    const resetButton = document.getElementById('resetButton');
+    if (resetButton) {
+        resetButton.addEventListener('click', function() {
+            if (confirm(currentLanguage.RESET_CONFIRM)) {
+                localStorage.clear();
+                sessionStorage.clear();
+                // clearCookies(); // Be careful with this, might log you out of other things.
+                showPopup(currentLanguage.RESET_SUCCESS);
+                window.location.reload();
+            }
+        });
+    }
+
+    // --- 5. Final checks and ongoing processes ---
+    preventLeaving();
 });
 
 window.addEventListener('load', checkFullscreen);
@@ -5082,70 +5122,6 @@ function closeControls() {
         blurOverlayControls.style.display = 'none';
     }, 300);
 }
-
-document.addEventListener("DOMContentLoaded", function() {
-    updateGurappsVisibility();
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Perform the initial setup
-    firstSetup();
-
-    // Add event listener to the language switcher
-    const languageSwitcher = document.getElementById('language-switcher');
-    if (languageSwitcher) {
-        languageSwitcher.addEventListener('change', function () {
-            const selectedLanguage = this.value;
-            selectLanguage(selectedLanguage);
-        });
-    }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    const resetButton = document.getElementById('resetButton');
-
-    resetButton.addEventListener('click', function() {
-        // Use language variable for confirmation message
-        const confirmReset = confirm(currentLanguage.RESET_CONFIRM);
-
-        if (confirmReset) {
-            localStorage.clear();
-            sessionStorage.clear();
-            clearCookies();
-
-            // Use language variable for success alert
-            showPopup(currentLanguage.RESET_SUCCESS);
-
-            window.location.reload();
-        }
-    });
-
-    function clearCookies() {
-        const cookies = document.cookie.split(";");
-
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i];
-            const eqPos = cookie.indexOf("=");
-            const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-        }
-    }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize wallpaper tracking
-  initializeWallpaperTracking();
-  
-  // Initialize and prepare to apply the correct wallpaper
-  initializeAndApplyWallpaper().catch(error => {
-      console.error("Error initializing wallpaper:", error);
-  });
-    
-  // Create the initial page indicator
-  initializePageIndicator();
-  addPageIndicatorStyles();
-  checkWallpaperState();
-});
 
 window.addEventListener('load', () => {
     promptToInstallPWA();
@@ -5258,7 +5234,6 @@ window.addEventListener('message', event => {
 
     // Initialize app drawer
     function initAppDraw() {
-	loadUserInstalledApps();
         createAppIcons();
         setupDrawerInteractions();
     }
