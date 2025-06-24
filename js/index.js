@@ -3939,6 +3939,16 @@ function createAppIcons() {
         img.onerror = () => {
             img.src = '/assets/appicon/default.png';
         };
+
+	// Check if the icon path is a full URL or a local filename.
+        const iconSource = app.details.icon;
+        if (iconSource.startsWith('http') || iconSource.startsWith('/')) {
+            // If it's an absolute URL (like https://...) or a root-relative path (/glucose-gurapps/...), use it directly.
+            img.src = iconSource;
+        } else {
+            // Otherwise, assume it's a local filename and prepend the default path.
+            img.src = `/assets/appicon/${iconSource}`;
+        }
         
         const label = document.createElement('span');
         label.textContent = app.name;
