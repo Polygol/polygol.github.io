@@ -35,14 +35,30 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('[SW] Caching core assets.');
-        // Use individual cache.add() to prevent one failed request from failing all
-        const promises = ASSETS_TO_CACHE.map(url => {
-          // For external URLs, we need a Request object with no-cors mode
-          // as a fallback if the server doesn't support CORS.
-          const request = new Request(url, { mode: 'no-cors' });
-          return cache.add(request).catch(err => console.warn(`[SW] Failed to cache ${url}`, err));
+
+        // Separate local assets from cross-origin assets
+        const localAssets = ASSETS_TO_CACHE.filter(url => !url.startsWith('http'));
+        const externalAssets = ASSETS_TO_CACHE.filter(url => url.startsWith('http'));
+
+        // --- Cache local assets using the simple cache.add() ---
+        const localCachePromise = cache.addAll(localAssets).catch(err => {
+            console.warn('[SW] Failed to cache one or more local assets.', err);
         });
-        return Promise.allSettled(promises);
+
+        // --- Cache external assets manually to handle opaque responses ---
+        const externalCachePromises = externalAssets.map(url => {
+            return fetch(url, { mode: 'no-cors' }) // Use no-cors to get the resource
+                .then(response => {
+                    // cache.put() CAN handle opaque responses, unlike cache.add()
+                    return cache.put(url, response);
+                })
+                .catch(err => {
+                    console.warn(`[SW] Failed to fetch and cache external asset: ${url}`, err);
+                });
+        });
+
+        // Wait for all caching operations to complete
+        return Promise.all([localCachePromise, ...externalCachePromises]);
       })
   );
 });
