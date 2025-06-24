@@ -3918,37 +3918,39 @@ function populateDock() {
 // Function to create app icons
 function createAppIcons() {
     appGrid.innerHTML = '';
-    
+
     const appsArray = Object.entries(apps)
-        .filter(([appName]) => appName !== "Apps") // Filter out the Apps app
-        .map(([appName, appDetails]) => ({
-            name: appName,
-            details: appDetails,
-            usage: appUsage[appName] || 0
-        }))
+        .filter(([appName]) => appName !== "Apps")
+        .map(([appName, appDetails]) => ({ name: appName, details: appDetails }))
         .sort((a, b) => a.name.localeCompare(b.name));
-    
+
     appsArray.forEach((app) => {
         const appIcon = document.createElement('div');
         appIcon.classList.add('app-icon');
         appIcon.dataset.app = app.name;
-        
+
         const img = document.createElement('img');
-        img.src = `/assets/appicon/${app.details.icon}`;
         img.alt = app.name;
+        
+        // 1. Get the icon source from the app's details.
+        const iconSource = app.details.icon;
+
+        // 2. Check the source type and set img.src only ONCE.
+        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('/'))) {
+            // If it's an absolute URL or a root-relative path, use it directly.
+            img.src = iconSource;
+        } else if (iconSource) {
+            // Otherwise, assume it's a local filename and prepend the default path.
+            img.src = `/assets/appicon/${iconSource}`;
+        } else {
+            // Fallback for cases where the icon is missing entirely.
+            img.src = '/assets/appicon/default.png';
+        }
+
+        // 3. Set the error handler AFTER defining the initial source.
         img.onerror = () => {
             img.src = '/assets/appicon/default.png';
         };
-
-	// Check if the icon path is a full URL or a local filename.
-        const iconSource = app.details.icon;
-        if (iconSource.startsWith('http') || iconSource.startsWith('/')) {
-            // If it's an absolute URL (like https://...) or a root-relative path (/glucose-gurapps/...), use it directly.
-            img.src = iconSource;
-        } else {
-            // Otherwise, assume it's a local filename and prepend the default path.
-            img.src = `/assets/appicon/${iconSource}`;
-        }
         
         const label = document.createElement('span');
         label.textContent = app.name;
