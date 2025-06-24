@@ -3,6 +3,19 @@
  * This helper script allows an iframe (Gurapp) to safely communicate
  * with the parent Gurasuraisu window and use its core functions.
  */
+
+// Gurasuraisu Cursor Injection
+// This block runs as soon as the script is loaded by the Gurapp.
+(function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        * {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
+        }
+    `;
+    // Append the style to the head of the Gurapp's document.
+    document.head.appendChild(style);
+})();
  
 const Gurasuraisu = {
   /**
