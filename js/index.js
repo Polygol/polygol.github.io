@@ -3417,7 +3417,7 @@ async function installApp(appData) {
     // (This part is synchronous and happens immediately)
     apps[appData.name] = {
         url: appData.url,
-        icon: iconFileName
+        icon: appData.iconUrl // Store the complete URL, e.g., "/glucose-gurapps/example/example.png"
     };
     const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
     userApps[appData.name] = { url: appData.url, icon: iconFileName };
