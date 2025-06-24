@@ -13,6 +13,8 @@ const ASSETS_TO_CACHE = [
   '/assets/img/pwaicon/pride.png',
   '/assets/img/ver/14.png',
   '/assets/marketing/hero3.png',
+  '/appstore/index.html/',
+  '/assets/appicon/appstore.png',
   'https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap',
   'https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap',
