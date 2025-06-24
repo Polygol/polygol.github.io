@@ -3408,14 +3408,18 @@ async function installApp(appData) {
 
     const iconFileName = appData.iconUrl.split('/').pop();
 
-    // 1. Add the new app to the in-memory object and save to localStorage.
-    // (This part is synchronous and happens immediately)
+    // 1. Add the new app to the in-memory object with the full icon URL.
     apps[appData.name] = {
         url: appData.url,
-        icon: appData.iconUrl // Store the complete URL, e.g., "/glucose-gurapps/example/example.png"
+        icon: appData.iconUrl 
     };
+
+    // Also save the app's metadata with the FULL icon URL to localStorage.
     const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
-    userApps[appData.name] = { url: appData.url, icon: iconFileName };
+    userApps[appData.name] = { 
+        url: appData.url, 
+        icon: appData.iconUrl // Use the full URL here, NOT the extracted filename.
+    };
     localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
 
     // 2. Refresh the UI immediately so the user sees the app appear.
