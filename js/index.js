@@ -5248,10 +5248,3 @@ window.addEventListener('message', event => {
         createAppIcons();
         setupDrawerInteractions();
     }
-
-    // Call initialization
-    initializeCustomization();
-    setupWeatherToggle()
-    initAppDraw();
-    updateWeatherVisibility();
-    preventLeaving();
