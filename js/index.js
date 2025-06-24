@@ -5078,11 +5078,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confirm(currentLanguage.RESET_CONFIRM)) {
                 localStorage.clear();
                 sessionStorage.clear();
-                // clearCookies(); // Be careful with this, might log you out of other things.
+                clearCookies();
                 showPopup(currentLanguage.RESET_SUCCESS);
                 window.location.reload();
             }
         });
+    }
+
+    function clearCookies() {
+        const cookies = document.cookie.split(";");
+
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i];
+            const eqPos = cookie.indexOf("=");
+            const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        }
     }
 
     // --- 5. Final checks and ongoing processes ---
