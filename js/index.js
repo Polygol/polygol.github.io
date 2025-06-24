@@ -83,7 +83,7 @@ function consoleLoaded() {
 }
 
 const secondsSwitch = document.getElementById('seconds-switch');
-const appUsage = {};
+let appUsage = {};
 const weatherSwitch = document.getElementById('weather-switch');
 const MAX_RECENT_WALLPAPERS = 10;
 
