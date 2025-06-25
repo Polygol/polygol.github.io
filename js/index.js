@@ -3880,17 +3880,31 @@ function populateDock() {
             lastOpened: appLastOpened[appName] || 0
         }))
         .sort((a, b) => b.lastOpened - a.lastOpened)
-        .slice(0, 4);  // Only take 4 more
+        .slice(0, 6);  // Only take 6 more
     
     sortedApps.forEach(({ name, details }) => {
         const dockIcon = document.createElement('div');
         dockIcon.className = 'dock-icon';
         
         const img = document.createElement('img');
-        img.src = `/assets/appicon/${details.icon}`;
         img.alt = name;
+
+	const iconSource = details.icon;
+        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('/'))) {
+            // If it's a full URL or a root-relative path, use it directly.
+            img.src = iconSource;
+        } else if (iconSource) {
+            // Otherwise, assume it's a local filename and prepend the default path.
+            img.src = `/assets/appicon/${iconSource}`;
+        } else {
+            // Fallback for missing icons.
+            img.src = '/assets/appicon/default.png';
+        }
+
+	img.onerror = () => { img.src = '/assets/appicon/default.png'; };
         
         dockIcon.appendChild(img);
+	 
 	dockIcon.addEventListener('click', async () => {
 	    // Minimize current fullscreen embed if one is open
 	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
