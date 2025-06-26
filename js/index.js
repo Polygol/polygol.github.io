@@ -4103,7 +4103,7 @@ function setupDrawerInteractions() {
         
         currentY = yPosition;
         const deltaY = startY - currentY;
-        const windowHeight = window.innerHeight;
+        const windowHeight = window.innerHeight - 100;
         const movementPercentage = (deltaY / windowHeight) * 100;
     
         // Check if there's an open embed
@@ -4190,7 +4190,7 @@ function setupDrawerInteractions() {
             avgVelocity = velocities.reduce((sum, v) => sum + v, 0) / velocities.length;
         }
         
-        const windowHeight = window.innerHeight;
+        const windowHeight = window.innerHeight - 100;
         const movementPercentage = (deltaY / windowHeight) * 100;
     
         appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
