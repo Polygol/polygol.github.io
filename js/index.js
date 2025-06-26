@@ -4433,16 +4433,30 @@ function setupDrawerInteractions() {
     });
 
     document.addEventListener('click', (e) => {
-        // First check if a fullscreen embed is open
+        if (isDrawerInMotion) return; // Do nothing if an animation is in progress
+
+        const isDrawerOpen = appDrawer.classList.contains('open');
         const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-    
-        if (!isDrawerInMotion && 
-            !dock.contains(e.target) && 
-            !drawerHandle.contains(e.target) && 
-            (openEmbed || !appDrawer.classList.contains('open'))) { // Close dock if embed is open OR drawer is closed
+
+        // --- ADDITION: Close the drawer when clicking outside (on the body) ---
+        // This runs only if the drawer is fully open and no app is active.
+        if (isDrawerOpen && !openEmbed && !appDrawer.contains(e.target) && !drawerHandle.contains(e.target)) {
+            // Animate the drawer closed
+            appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+            appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
+            appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
+            interactionBlocker.style.display = 'none';
+            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+        }
+
+        // --- Logic to hide the bottom dock ---
+        // This runs if the dock is visible and the click was outside of it.
+        if (dock.classList.contains('show') && !dock.contains(e.target)) {
             dock.classList.remove('show');
-            dock.style.boxShadow = 'none'; // Disable box shadow when hiding dock
-            drawerPill.style.opacity = '1'; // Restore drawer-pill opacity when dock is hidden
+            dock.style.boxShadow = 'none';
+            drawerPill.style.opacity = '1';
         }
     });
 
