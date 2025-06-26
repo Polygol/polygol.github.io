@@ -118,6 +118,7 @@ body.high-contrast.light-theme {
 }
 
 * {
+  transition: all 0.3s cubic-bezier(.3,1.2,.64,1) !IMPORTANT; /* Temporary */
   -webkit-tap-highlight-color: transparent;
   cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
 }
@@ -143,6 +144,7 @@ input[type="submit"]:active,
 .clickable:active {
   transform: scale(0.96);
   transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+  filter: brightness(1.5);
 }
 
         body {
@@ -319,6 +321,7 @@ input[type="color"]::-moz-color-swatch {
 .drawer-handle:active {
     transform: scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+    filter: brightness(1.5);
 }
 
 .drawer-pill {
@@ -387,6 +390,7 @@ input[type="color"]::-moz-color-swatch {
 .persistent-clock:active {
     transform: scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+    filter: brightness(1.5);
 }
 
 .persistent-clock.show {
@@ -450,6 +454,7 @@ input[type="color"]::-moz-color-swatch {
         .clock:active {
             transform: scale(0.96);
             transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+            filter: brightness(1.5);
         }
 
         .info {
@@ -499,6 +504,7 @@ input[type="color"]::-moz-color-swatch {
         .date:active {
             transform: scale(0.96);
             transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+            filter: brightness(1.5);
         }
 
         .modal {
@@ -673,6 +679,7 @@ input[type="color"]::-moz-color-swatch {
 .weather-widget:active {
     transform: scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+    filter: brightness(1.5);
 }
 
         .temperature {
@@ -1136,6 +1143,7 @@ input[type="color"]::-moz-color-swatch {
 #font-select:active, #language-switcher:active {
     transform: scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+    filter: brightness(1.5);
 }
 
 #font-select option {
@@ -1427,6 +1435,7 @@ input[type="color"]::-moz-color-swatch {
             width: 75px;
             height: 75px;
             transform: scale(0.96);
+            filter: brightness(1.5);
             transition: transform 0.2s ease, transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
             cursor: pointer;
         }
