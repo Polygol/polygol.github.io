@@ -849,6 +849,7 @@ input[type="color"]::-moz-color-swatch {
 
 .qcontrol-item:active {
     transform: scale(0.98);
+    filter: brightness(1.5);
 }
 
 .qcontrol-item.active {
