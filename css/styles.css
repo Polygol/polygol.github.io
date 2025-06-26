@@ -1279,7 +1279,7 @@ input[type="color"]::-moz-color-swatch {
     bottom: -100%;
     left: 0;
     width: 100%;
-    height: calc(100% - 75px);
+    height: calc(100% - 80px);
     background-color: var(--modal-background); 
     transition: bottom 0.3s ease;
     z-index: 1001;
