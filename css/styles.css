@@ -1427,7 +1427,7 @@ input[type="color"]::-moz-color-swatch {
             height: auto;
             aspect-ratio: 1/1;
             transform: scale(1);
-            transition: transform 0.2s ease, transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+            transition: transform 0.2s ease, transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9) !important;
             cursor: pointer;
         }
 
@@ -1436,7 +1436,7 @@ input[type="color"]::-moz-color-swatch {
             height: 75px;
             transform: scale(0.96);
             filter: brightness(1.5);
-            transition: transform 0.2s ease, transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+            transition: transform 0.2s ease, transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9) !important;
             cursor: pointer;
         }
         
