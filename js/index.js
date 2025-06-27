@@ -3669,7 +3669,7 @@ function createFullscreenEmbed(url) {
             }, 300);
         });
 
-        const controlElements = document.querySelector('.settings-grid.home-settings');
+        const controlElements = document.querySelectorAll('.settings-grid.home-settings');
         controlElements.forEach(el => {
             // Store ALL relevant original styles
             if (!el.dataset.originalStyles) {
@@ -3797,7 +3797,7 @@ function createFullscreenEmbed(url) {
         }, 300);
     });
 
-    const controlElements = document.querySelector('.settings-grid.home-settings');
+    const controlElements = document.querySelectorAll('.settings-grid.home-settings');
     controlElements.forEach(el => {
         // Store ALL relevant original styles
         if (!el.dataset.originalStyles) {
