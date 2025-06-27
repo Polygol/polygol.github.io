@@ -15,10 +15,13 @@ function applyLanguage(language) {
         }
     });
 
-    document.getElementById('language-label').textContent = language.LANGPICK;
-    document.querySelector('.version-info button#versionButton').textContent = language.GET_DOCS;
-    document.getElementById('reset-label').textContent = language.RESET;
-    document.querySelector('.reset-settings button#resetButton').textContent = language.RESET_BTN;
+    // Update other elements safely
+    if (document.querySelector('.version-info button#versionButton')) {
+        document.querySelector('.version-info button#versionButton').textContent = language.GET_DOCS;
+    }
+    if (document.querySelector('.reset-settings button#resetButton')) {
+        document.querySelector('.reset-settings button#resetButton').textContent = language.RESET_BTN;
+    }
 
     // Updating font selection options
     const fontSelect = document.getElementById('font-select');
@@ -175,59 +178,91 @@ function getCurrentTime24() {
 const persistentClock = document.getElementById('persistent-clock');
 
 document.addEventListener('DOMContentLoaded', () => {
-    const connectGridItem = (gridItemId, controlId, action = 'click') => {
+    let activeControlPopup = null;
+
+    function showControlPopup(popupElement, sourceElement) {
+        // Hide any other open popup
+        if (activeControlPopup && activeControlPopup !== popupElement) {
+            activeControlPopup.style.display = 'none';
+        }
+
+        const rect = sourceElement.getBoundingClientRect();
+        document.getElementById('customizeModal').appendChild(popupElement);
+
+        popupElement.style.top = `${rect.bottom + 5}px`;
+        popupElement.style.left = `${rect.left + (rect.width / 2) - (popupElement.offsetWidth / 2)}px`;
+        popupElement.style.display = 'block';
+        activeControlPopup = popupElement;
+    }
+
+    // Close popups when clicking outside
+    document.addEventListener('click', function(e) {
+        if (activeControlPopup && !activeControlPopup.contains(e.target)) {
+            let isSourceClick = false;
+            document.querySelectorAll('.setting-item').forEach(item => {
+                if (item.contains(e.target)) isSourceClick = true;
+            });
+            if (!isSourceClick) {
+                activeControlPopup.style.display = 'none';
+                activeControlPopup = null;
+            }
+        }
+    });
+
+    const connectGridItem = (gridItemId, control) => {
         const gridItem = document.getElementById(gridItemId);
-        const control = document.getElementById(controlId);
         if (!gridItem || !control) return;
 
-        gridItem.addEventListener('click', () => {
-            if (action === 'click') {
-                control.click();
-            } else if (action === 'toggle') {
-                control.checked = !control.checked;
-                control.dispatchEvent(new Event('change'));
-            }
-        });
-
+        // Sync active state for toggles
         if (control.type === 'checkbox') {
             const updateActiveState = () => gridItem.classList.toggle('active', control.checked);
             control.addEventListener('change', updateActiveState);
             updateActiveState(); // Initial sync
         }
+
+        // Handle clicks
+        gridItem.addEventListener('click', () => {
+            switch(control.type) {
+                case 'checkbox':
+                    control.checked = !control.checked;
+                    control.dispatchEvent(new Event('change'));
+                    break;
+                case 'button':
+                case 'file':
+                case 'color':
+                    control.click();
+                    break;
+                case 'select-one': // For <select>
+                    const selectPopup = document.createElement('div');
+                    selectPopup.className = 'control-popup';
+                    selectPopup.appendChild(control);
+                    showControlPopup(selectPopup, gridItem);
+                    break;
+                case 'range': // For sliders
+                    const sliderPopup = document.createElement('div');
+                    sliderPopup.className = 'control-popup';
+                    sliderPopup.style.padding = '15px 25px';
+                    sliderPopup.appendChild(control);
+                    showControlPopup(sliderPopup, gridItem);
+                    break;
+            }
+        });
     };
     
-    // --- Connect HOME settings ---
-    connectGridItem('setting-wallpaper', 'uploadButton');
-    connectGridItem('setting-clock-color', 'clock-color-picker');
-    connectGridItem('setting-seconds', 'seconds-switch', 'toggle');
-    connectGridItem('setting-clock-stack', 'clock-stack-switch', 'toggle');
-    connectGridItem('setting-style', 'font-select');
-    connectGridItem('setting-weather', 'weather-switch', 'toggle');
-    connectGridItem('setting-gurapps', 'gurapps-switch', 'toggle');
-
-    // --- Connect SYSTEM settings ---
-    connectGridItem('setting-animation', 'animation-switch', 'toggle');
-    connectGridItem('setting-contrast', 'contrast-switch', 'toggle');
-    connectGridItem('setting-hour-format', 'hour-switch', 'toggle');
-    connectGridItem('setting-language', 'language-switcher');
-    connectGridItem('setting-reset', 'resetButton');
-
-
-    // Special handling for the weight/thickness slider
-    const weightSetting = document.getElementById('setting-weight');
-    const weightSlider = document.getElementById('weight-slider');
-    if (weightSetting && weightSlider) {
-         // Make the slider visible inside the grid item by moving it
-        weightSetting.innerHTML = ''; // Clear icon and label
-        weightSetting.appendChild(weightSlider);
-        weightSetting.style.padding = '0';
-        weightSetting.style.alignItems = 'stretch';
-        weightSetting.style.justifyContent = 'stretch';
-        weightSlider.style.width = '100%';
-        weightSlider.style.height = '100%';
-        weightSlider.style.margin = '0';
-        weightSlider.style.borderRadius = '24px';
-    }
+    // --- Connect ALL settings ---
+    connectGridItem('setting-wallpaper', document.getElementById('uploadButton'));
+    connectGridItem('setting-clock-color', document.getElementById('clock-color-picker'));
+    connectGridItem('setting-seconds', document.getElementById('seconds-switch'));
+    connectGridItem('setting-clock-stack', document.getElementById('clock-stack-switch'));
+    connectGridItem('setting-style', document.getElementById('font-select'));
+    connectGridItem('setting-weight', document.getElementById('weight-slider'));
+    connectGridItem('setting-weather', document.getElementById('weather-switch'));
+    connectGridItem('setting-gurapps', document.getElementById('gurapps-switch'));
+    connectGridItem('setting-animation', document.getElementById('animation-switch'));
+    connectGridItem('setting-contrast', document.getElementById('contrast-switch'));
+    connectGridItem('setting-hour-format', document.getElementById('hour-switch'));
+    connectGridItem('setting-language', document.getElementById('language-switcher'));
+    connectGridItem('setting-reset', document.getElementById('resetButton'));
 	
     const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
