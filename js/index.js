@@ -185,34 +185,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Function to show and position the popup ---
     function showControlPopup(sourceElement, controlElement) {
-        // If the same popup is already open for this element, hide it.
         if (controlPopup.style.display === 'block' && controlPopup.contains(controlElement)) {
             controlPopup.style.display = 'none';
             return;
         }
-
-        // Clear previous content and append the new control
         controlPopup.innerHTML = '';
         controlPopup.appendChild(controlElement);
-
-        // Position and show
         const rect = sourceElement.getBoundingClientRect();
         controlPopup.style.display = 'block';
-
         const top = rect.bottom + 8;
         const left = rect.left + (rect.width / 2) - (controlPopup.offsetWidth / 2);
-
         controlPopup.style.top = `${top}px`;
         controlPopup.style.left = `${left}px`;
     }
 
     // --- Hide popup when clicking outside ---
     document.addEventListener('click', function(e) {
-        if (controlPopup.style.display === 'block' && !controlPopup.contains(e.target)) {
-            const isTrigger = e.target.closest('.setting-item[data-popup="true"]');
-            if (!isTrigger) {
-                controlPopup.style.display = 'none';
-            }
+        if (controlPopup.style.display === 'block' && !controlPopup.contains(e.target) && !e.target.closest('.setting-item[data-popup="true"]')) {
+            controlPopup.style.display = 'none';
         }
     });
 
@@ -222,13 +212,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const control = document.getElementById(controlId);
         if (!gridItem || !control) return;
 
-        const controlType = control.nodeName.toLowerCase();
-        const needsPopup = controlType === 'select' || control.type === 'range';
-        if (needsPopup) {
+        const isPopupTrigger = control.nodeName === 'SELECT' || control.type === 'range';
+        const isToggle = control.type === 'checkbox';
+
+        if (isPopupTrigger) {
             gridItem.dataset.popup = "true";
         }
         
-        if (control.type === 'checkbox') {
+        if (isToggle) {
             const updateActiveState = () => gridItem.classList.toggle('active', control.checked);
             control.addEventListener('change', updateActiveState);
             updateActiveState();
@@ -236,18 +227,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         gridItem.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (needsPopup) {
+            if (isPopupTrigger) {
                 showControlPopup(gridItem, control);
-            } else if (control.type === 'checkbox') {
+            } else if (isToggle) {
                 control.checked = !control.checked;
                 control.dispatchEvent(new Event('change'));
-            } else {
+            } else { // This handles buttons, color pickers, and file inputs
                 control.click();
             }
         });
     };
 
-    // --- Connect all settings ---
+    // --- Connect ALL settings with the robust logic ---
     connectGridItem('setting-wallpaper', 'uploadButton');
     connectGridItem('setting-clock-color', 'clock-color-picker');
     connectGridItem('setting-reset', 'resetButton');
@@ -3660,7 +3651,7 @@ function createFullscreenEmbed(url) {
             }, 300);
         });
 
-        const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .clock-stack-settings, .font-selection, .weight-slider-container');
+        const controlElements = ddocument.querySelector('.settings-grid.home-settings');
         controlElements.forEach(el => {
             // Store ALL relevant original styles
             if (!el.dataset.originalStyles) {
@@ -3788,7 +3779,7 @@ function createFullscreenEmbed(url) {
         }, 300);
     });
 
-    const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .clock-stack-settings, .font-selection, .weight-slider-container');
+    const controlElements = ddocument.querySelector('.settings-grid.home-settings');
     controlElements.forEach(el => {
         // Store ALL relevant original styles
         if (!el.dataset.originalStyles) {
