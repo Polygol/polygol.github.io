@@ -8,17 +8,13 @@ function applyLanguage(language) {
     document.querySelector('#minimal_mode_qc .qc-label').innerText = language.MINIMAL;
     document.querySelector('#light_mode_qc .qc-label').innerText = language.DAYLIGHT;
 
-    // Updating text content without removing icons
-    document.querySelector('.weather-settings .cust-label').childNodes[2].textContent = language.WEATHER;
-    document.querySelector('.gurapps-optional .cust-label').childNodes[2].textContent = language.GURAPPS;
-    document.querySelector('.clock-color-settings .cust-label').childNodes[2].textContent = language.CLOCK_COLOR;
-    document.querySelector('.clock-settings .cust-label').childNodes[2].textContent = language.SECONDS;
-    document.querySelector('.animation-settings .cust-label').childNodes[2].textContent = language.MOTION;
-    document.querySelector('.contrast-settings .cust-label').childNodes[2].textContent = language.CONTRAST;
-    document.querySelector('.wallpaper-upload .cust-label').childNodes[2].textContent = language.WALLPAPER;
-    document.querySelector('#uploadButton').innerText = language.ADD;
-    document.querySelector('.clock-stack-settings .cust-label').childNodes[2].textContent = language.CLOCK_STACK;
-    document.querySelector('.font-selection .cust-label').childNodes[2].textContent = language.STYLE;
+    document.querySelectorAll('.setting-label[data-lang-key]').forEach(label => {
+        const key = label.getAttribute('data-lang-key');
+        if (language[key]) {
+            label.innerText = language[key];
+        }
+    });
+
     document.getElementById('language-label').textContent = language.LANGPICK;
     document.querySelector('.version-info button#versionButton').textContent = language.GET_DOCS;
     document.getElementById('reset-label').textContent = language.RESET;
@@ -179,6 +175,60 @@ function getCurrentTime24() {
 const persistentClock = document.getElementById('persistent-clock');
 
 document.addEventListener('DOMContentLoaded', () => {
+    const connectGridItem = (gridItemId, controlId, action = 'click') => {
+        const gridItem = document.getElementById(gridItemId);
+        const control = document.getElementById(controlId);
+        if (!gridItem || !control) return;
+
+        gridItem.addEventListener('click', () => {
+            if (action === 'click') {
+                control.click();
+            } else if (action === 'toggle') {
+                control.checked = !control.checked;
+                control.dispatchEvent(new Event('change'));
+            }
+        });
+
+        if (control.type === 'checkbox') {
+            const updateActiveState = () => gridItem.classList.toggle('active', control.checked);
+            control.addEventListener('change', updateActiveState);
+            updateActiveState(); // Initial sync
+        }
+    };
+    
+    // --- Connect HOME settings ---
+    connectGridItem('setting-wallpaper', 'uploadButton');
+    connectGridItem('setting-clock-color', 'clock-color-picker');
+    connectGridItem('setting-seconds', 'seconds-switch', 'toggle');
+    connectGridItem('setting-clock-stack', 'clock-stack-switch', 'toggle');
+    connectGridItem('setting-style', 'font-select');
+    connectGridItem('setting-weather', 'weather-switch', 'toggle');
+    connectGridItem('setting-gurapps', 'gurapps-switch', 'toggle');
+
+    // --- Connect SYSTEM settings ---
+    connectGridItem('setting-animation', 'animation-switch', 'toggle');
+    connectGridItem('setting-contrast', 'contrast-switch', 'toggle');
+    connectGridItem('setting-hour-format', 'hour-switch', 'toggle');
+    connectGridItem('setting-language', 'language-switcher');
+    connectGridItem('setting-reset', 'resetButton');
+
+
+    // Special handling for the weight/thickness slider
+    const weightSetting = document.getElementById('setting-weight');
+    const weightSlider = document.getElementById('weight-slider');
+    if (weightSetting && weightSlider) {
+         // Make the slider visible inside the grid item by moving it
+        weightSetting.innerHTML = ''; // Clear icon and label
+        weightSetting.appendChild(weightSlider);
+        weightSetting.style.padding = '0';
+        weightSetting.style.alignItems = 'stretch';
+        weightSetting.style.justifyContent = 'stretch';
+        weightSlider.style.width = '100%';
+        weightSlider.style.height = '100%';
+        weightSlider.style.margin = '0';
+        weightSlider.style.borderRadius = '24px';
+    }
+	
     const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
