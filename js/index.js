@@ -178,63 +178,74 @@ function getCurrentTime24() {
 const persistentClock = document.getElementById('persistent-clock');
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Create a single, reusable popup element ---
+    // --- Get references to key elements ---
     const controlPopup = document.createElement('div');
     controlPopup.className = 'control-popup';
     document.body.appendChild(controlPopup);
 
+    const hiddenControlsContainer = document.getElementById('hidden-controls-container');
+
+    // --- Function to correctly hide the popup and return the control ---
     function hideActivePopup() {
-        if (controlPopup.style.display === 'block') {
-            document.body.appendChild(controlPopup.firstElementChild); // Move control back to hidden div
+        if (controlPopup.style.display === 'block' && controlPopup.firstElementChild) {
+            // **THE FIX**: Put the control back into its hidden container.
+            hiddenControlsContainer.appendChild(controlPopup.firstElementChild);
             controlPopup.style.display = 'none';
         }
     }
 
+    // --- Function to show and position the popup ---
     function showControlPopup(sourceElement, controlElement) {
-        hideActivePopup(); // Ensure only one is open
+        if (controlPopup.style.display === 'block' && controlPopup.contains(controlElement)) {
+            hideActivePopup();
+            return;
+        }
+        hideActivePopup();
 
         controlPopup.appendChild(controlElement);
         const rect = sourceElement.getBoundingClientRect();
         controlPopup.style.display = 'block';
-        controlPopup.style.top = `${rect.bottom + 8}px`;
-        controlPopup.style.left = `${rect.left + (rect.width / 2) - (controlPopup.offsetWidth / 2)}px`;
+        const top = rect.bottom + 8;
+        const left = rect.left + (rect.width / 2) - (controlPopup.offsetWidth / 2);
+        controlPopup.style.top = `${top}px`;
+        controlPopup.style.left = `${left}px`;
     }
 
-    // --- Hide popup when clicking outside ---
+    // --- Global click listener to hide the popup ---
     document.addEventListener('click', (e) => {
         if (controlPopup.style.display === 'block' && !controlPopup.contains(e.target) && !e.target.closest('.setting-item')) {
             hideActivePopup();
         }
     });
 
-    // --- Connect Grid Items to Controls ---
-    const connectGridItem = (gridItemId, controlId, options = {}) => {
+    // --- Helper to connect grid items to their controls ---
+    const connectGridItem = (gridItemId, controlId) => {
         const gridItem = document.getElementById(gridItemId);
         const control = document.getElementById(controlId);
         if (!gridItem || !control) return;
 
-        // Sync active state for checkboxes
-        if (control.type === 'checkbox') {
+        const isPopupTrigger = control.nodeName === 'SELECT' || control.type === 'range';
+        const isToggle = control.type === 'checkbox';
+
+        if (isToggle) {
             const updateActiveState = () => gridItem.classList.toggle('active', control.checked);
             control.addEventListener('change', updateActiveState);
-            updateActiveState(); // Initial sync
+            updateActiveState();
         }
-
+        
         gridItem.addEventListener('click', (e) => {
             e.stopPropagation();
-            const action = options.action || 'click';
-
-            if (action === 'popup') {
+            if (isPopupTrigger) {
                 showControlPopup(gridItem, control);
-            } else if (action === 'toggle') {
+            } else if (isToggle) {
                 control.checked = !control.checked;
                 control.dispatchEvent(new Event('change'));
-            } else { // 'click'
+            } else {
                 control.click();
             }
         });
     };
-    
+
     // --- Special Handler for Clock Color ---
     const clockColorItem = document.getElementById('setting-clock-color');
     const colorSwitch = document.getElementById('clock-color-switch');
@@ -245,11 +256,12 @@ document.addEventListener('DOMContentLoaded', () => {
         colorSwitch.addEventListener('change', updateColorActiveState);
         updateColorActiveState();
 
-        clockColorItem.addEventListener('click', () => {
+        clockColorItem.addEventListener('click', (e) => {
+            e.stopPropagation();
             colorSwitch.checked = !colorSwitch.checked;
             colorSwitch.dispatchEvent(new Event('change'));
             if (colorSwitch.checked) {
-                // Use a short delay to allow the state to update before clicking the picker
+                hideActivePopup(); // Close other popups before opening the color picker
                 setTimeout(() => colorPicker.click(), 50);
             }
         });
@@ -258,18 +270,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Connect all other settings ---
     connectGridItem('setting-wallpaper', 'uploadButton');
     connectGridItem('setting-reset', 'resetButton');
-    connectGridItem('setting-seconds', 'seconds-switch', { action: 'toggle' });
-    connectGridItem('setting-clock-stack', 'clock-stack-switch', { action: 'toggle' });
-    connectGridItem('setting-weather', 'weather-switch', { action: 'toggle' });
-    connectGridItem('setting-gurapps', 'gurapps-switch', { action: 'toggle' });
-    connectGridItem('setting-animation', 'animation-switch', { action: 'toggle' });
-    connectGridItem('setting-contrast', 'contrast-switch', { action: 'toggle' });
-    connectGridItem('setting-hour-format', 'hour-switch', { action: 'toggle' });
-    
-    // Controls that use popups
-    connectGridItem('setting-style', 'font-select', { action: 'popup' });
-    connectGridItem('setting-weight', 'weight-slider', { action: 'popup' });
-    connectGridItem('setting-language', 'language-switcher', { action: 'popup' });
+    connectGridItem('setting-seconds', 'seconds-switch');
+    connectGridItem('setting-clock-stack', 'clock-stack-switch');
+    connectGridItem('setting-weather', 'weather-switch');
+    connectGridItem('setting-gurapps', 'gurapps-switch');
+    connectGridItem('setting-animation', 'animation-switch');
+    connectGridItem('setting-contrast', 'contrast-switch');
+    connectGridItem('setting-hour-format', 'hour-switch');
+    connectGridItem('setting-style', 'font-select');
+    connectGridItem('setting-weight', 'weight-slider');
+    connectGridItem('setting-language', 'language-switcher');
 	
     const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
