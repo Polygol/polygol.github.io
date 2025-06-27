@@ -8,6 +8,7 @@ function applyLanguage(language) {
     document.querySelector('#minimal_mode_qc .qc-label').innerText = language.MINIMAL;
     document.querySelector('#light_mode_qc .qc-label').innerText = language.DAYLIGHT;
 
+    // Dynamically update labels in the grid
     document.querySelectorAll('.setting-label[data-lang-key]').forEach(label => {
         const key = label.getAttribute('data-lang-key');
         if (language[key]) {
@@ -15,27 +16,26 @@ function applyLanguage(language) {
         }
     });
 
-    // Update other elements safely
-    if (document.querySelector('.version-info button#versionButton')) {
-        document.querySelector('.version-info button#versionButton').textContent = language.GET_DOCS;
-    }
-    if (document.querySelector('.reset-settings button#resetButton')) {
-        document.querySelector('.reset-settings button#resetButton').textContent = language.RESET_BTN;
-    }
-
-    // Updating font selection options
+    // Safely update elements that might not always be visible
+    const versionButton = document.querySelector('.version-info button#versionButton');
+    if (versionButton) versionButton.textContent = language.GET_DOCS;
+    
+    const resetButton = document.getElementById('resetButton');
+    if(resetButton) resetButton.textContent = language.RESET_BTN;
+    
+    // Safely update font dropdown options
     const fontSelect = document.getElementById('font-select');
-    fontSelect.querySelector('option[value="Inter"]').textContent = language.DEFAULT;
-    fontSelect.querySelector('option[value="Roboto"]').textContent = language.WORK;
-    fontSelect.querySelector('option[value="DynaPuff"]').textContent = language.PUFFY;
-    fontSelect.querySelector('option[value="DM Serif Display"]').textContent = language.CLASSIC;
-    fontSelect.querySelector('option[value="Iansui"]').textContent = language.STROKES;
-    fontSelect.querySelector('option[value="JetBrains Mono"]').textContent = language.MONO;
-    fontSelect.querySelector('option[value="DotGothic16"]').textContent = language.PIXEL;
-    fontSelect.querySelector('option[value="Patrick Hand"]').textContent = language.WRITTEN;
-    fontSelect.querySelector('option[value="Rampart One"]').textContent = language.RAISED;
-    fontSelect.querySelector('option[value="Doto"]').textContent = language.DOT;
-    fontSelect.querySelector('option[value="Nunito"]').textContent = language.ROUND;
+    if (fontSelect) {
+        const options = {
+            "Inter": "DEFAULT", "Roboto": "WORK", "DynaPuff": "PUFFY", "DM Serif Display": "CLASSIC",
+            "Iansui": "STROKES", "JetBrains Mono": "MONO", "DotGothic16": "PIXEL",
+            "Patrick Hand": "WRITTEN", "Rampart One": "RAISED", "Doto": "DOT", "Nunito": "ROUND"
+        };
+        for (const [value, langKey] of Object.entries(options)) {
+            const optionEl = fontSelect.querySelector(`option[value="${value}"]`);
+            if (optionEl) optionEl.textContent = language[langKey];
+        }
+    }
 
     const adjustLabel = document.querySelector('#thermostat-popup .adjust-label');
     if (adjustLabel) {
@@ -178,80 +178,98 @@ function getCurrentTime24() {
 const persistentClock = document.getElementById('persistent-clock');
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Create a single, reusable popup and add it to the body ---
+    // --- Create a single, reusable popup element ---
     const controlPopup = document.createElement('div');
     controlPopup.className = 'control-popup';
     document.body.appendChild(controlPopup);
 
-    // --- Function to show and position the popup ---
-    function showControlPopup(sourceElement, controlElement) {
-        if (controlPopup.style.display === 'block' && controlPopup.contains(controlElement)) {
+    function hideActivePopup() {
+        if (controlPopup.style.display === 'block') {
+            document.body.appendChild(controlPopup.firstElementChild); // Move control back to hidden div
             controlPopup.style.display = 'none';
-            return;
         }
-        controlPopup.innerHTML = '';
+    }
+
+    function showControlPopup(sourceElement, controlElement) {
+        hideActivePopup(); // Ensure only one is open
+
         controlPopup.appendChild(controlElement);
         const rect = sourceElement.getBoundingClientRect();
         controlPopup.style.display = 'block';
-        const top = rect.bottom + 8;
-        const left = rect.left + (rect.width / 2) - (controlPopup.offsetWidth / 2);
-        controlPopup.style.top = `${top}px`;
-        controlPopup.style.left = `${left}px`;
+        controlPopup.style.top = `${rect.bottom + 8}px`;
+        controlPopup.style.left = `${rect.left + (rect.width / 2) - (controlPopup.offsetWidth / 2)}px`;
     }
 
     // --- Hide popup when clicking outside ---
-    document.addEventListener('click', function(e) {
-        if (controlPopup.style.display === 'block' && !controlPopup.contains(e.target) && !e.target.closest('.setting-item[data-popup="true"]')) {
-            controlPopup.style.display = 'none';
+    document.addEventListener('click', (e) => {
+        if (controlPopup.style.display === 'block' && !controlPopup.contains(e.target) && !e.target.closest('.setting-item')) {
+            hideActivePopup();
         }
     });
 
-    // --- Helper to connect grid items to their controls ---
-    const connectGridItem = (gridItemId, controlId) => {
+    // --- Connect Grid Items to Controls ---
+    const connectGridItem = (gridItemId, controlId, options = {}) => {
         const gridItem = document.getElementById(gridItemId);
         const control = document.getElementById(controlId);
         if (!gridItem || !control) return;
 
-        const isPopupTrigger = control.nodeName === 'SELECT' || control.type === 'range';
-        const isToggle = control.type === 'checkbox';
-
-        if (isPopupTrigger) {
-            gridItem.dataset.popup = "true";
-        }
-        
-        if (isToggle) {
+        // Sync active state for checkboxes
+        if (control.type === 'checkbox') {
             const updateActiveState = () => gridItem.classList.toggle('active', control.checked);
             control.addEventListener('change', updateActiveState);
-            updateActiveState();
+            updateActiveState(); // Initial sync
         }
 
         gridItem.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (isPopupTrigger) {
+            const action = options.action || 'click';
+
+            if (action === 'popup') {
                 showControlPopup(gridItem, control);
-            } else if (isToggle) {
+            } else if (action === 'toggle') {
                 control.checked = !control.checked;
                 control.dispatchEvent(new Event('change'));
-            } else { // This handles buttons, color pickers, and file inputs
+            } else { // 'click'
                 control.click();
             }
         });
     };
+    
+    // --- Special Handler for Clock Color ---
+    const clockColorItem = document.getElementById('setting-clock-color');
+    const colorSwitch = document.getElementById('clock-color-switch');
+    const colorPicker = document.getElementById('clock-color-picker');
 
-    // --- Connect ALL settings with the robust logic ---
+    if (clockColorItem && colorSwitch && colorPicker) {
+        const updateColorActiveState = () => clockColorItem.classList.toggle('active', colorSwitch.checked);
+        colorSwitch.addEventListener('change', updateColorActiveState);
+        updateColorActiveState();
+
+        clockColorItem.addEventListener('click', () => {
+            colorSwitch.checked = !colorSwitch.checked;
+            colorSwitch.dispatchEvent(new Event('change'));
+            if (colorSwitch.checked) {
+                // Use a short delay to allow the state to update before clicking the picker
+                setTimeout(() => colorPicker.click(), 50);
+            }
+        });
+    }
+
+    // --- Connect all other settings ---
     connectGridItem('setting-wallpaper', 'uploadButton');
-    connectGridItem('setting-clock-color', 'clock-color-picker');
     connectGridItem('setting-reset', 'resetButton');
-    connectGridItem('setting-seconds', 'seconds-switch');
-    connectGridItem('setting-clock-stack', 'clock-stack-switch');
-    connectGridItem('setting-weather', 'weather-switch');
-    connectGridItem('setting-gurapps', 'gurapps-switch');
-    connectGridItem('setting-animation', 'animation-switch');
-    connectGridItem('setting-contrast', 'contrast-switch');
-    connectGridItem('setting-hour-format', 'hour-switch');
-    connectGridItem('setting-style', 'font-select');
-    connectGridItem('setting-weight', 'weight-slider');
-    connectGridItem('setting-language', 'language-switcher');
+    connectGridItem('setting-seconds', 'seconds-switch', { action: 'toggle' });
+    connectGridItem('setting-clock-stack', 'clock-stack-switch', { action: 'toggle' });
+    connectGridItem('setting-weather', 'weather-switch', { action: 'toggle' });
+    connectGridItem('setting-gurapps', 'gurapps-switch', { action: 'toggle' });
+    connectGridItem('setting-animation', 'animation-switch', { action: 'toggle' });
+    connectGridItem('setting-contrast', 'contrast-switch', { action: 'toggle' });
+    connectGridItem('setting-hour-format', 'hour-switch', { action: 'toggle' });
+    
+    // Controls that use popups
+    connectGridItem('setting-style', 'font-select', { action: 'popup' });
+    connectGridItem('setting-weight', 'weight-slider', { action: 'popup' });
+    connectGridItem('setting-language', 'language-switcher', { action: 'popup' });
 	
     const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
