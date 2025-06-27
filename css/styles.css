@@ -806,22 +806,6 @@ input[type="color"]::-moz-color-swatch {
     display: block !important;
 }
 
-/* Common control styles */
-.control-first {
-    border-radius: 25px 25px 10px 10px;
-    margin: 20px 0 5px;
-}
-
-.control-middle {
-    border-radius: 10px;
-    margin: 5px 0 5px;
-}
-
-.control-last {
-    border-radius: 10px 10px 25px 25px;
-    margin: 5px 0 20px;
-}
-
 .settings-grid {
     display: grid !important;
     grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
@@ -883,6 +867,23 @@ input[type="color"]::-moz-color-swatch {
     color: var(--secondary-text-color);
     transition: color 0.2s;
     word-break: break-word;
+}
+
+.control-popup {
+    display: none;
+    position: absolute;
+    z-index: 10001; /* Above the modal */
+    border: 1px solid var(--glass-border);
+    background-color: var(--modal-transparent);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 25px;
+    padding: 15px;
+    backdrop-filter: blur(20px);
+    min-width: 155px;
+}
+
+.control-popup select, .control-popup input {
+    width: 100%;
 }
 
 /* Smart Home Controls Styles */
@@ -1107,18 +1108,6 @@ input[type="color"]::-moz-color-swatch {
             display: none;
         }
 
-.gurapps-optional, .minimal-mode, .font-selection, .lang-selection, .wallpaper-upload, .weather-settings, .clock-color-settings, .clock-hour-settings, .clock-settings, .clock-stack-settings, .theme-toggle, .contrast-settings, .animation-settings, .reset-settings {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 15px 15px 20px;
-    background-color: var(--search-background);
-    backdrop-filter: blur(20px);
-    transition: background-color 0.2s, transform 0.1s;
-    height: 38px;
-    border: 1px solid var(--glass-border);
-}
-
 .version-info, .campaign-info {
     display: flex;
     justify-content: space-between;
@@ -1220,28 +1209,6 @@ input[type="color"]::-moz-color-swatch {
     background-color: var(--background-color);
     color: var(--text-color);
     transition: background-color 0.2s, transform 0.1s;
-}
-
-.weight-slider-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 15px 15px 20px;
-    background-color: var(--search-background);
-    border-radius: 10px;
-    margin: 5px 0 5px;
-    backdrop-filter: blur(20px);
-    transition: background-color 0.2s, transform 0.1s;
-    height: 38px;
-    border: 1px solid var(--glass-border);
-}
-
-.weight-select-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-grow: 1;
-    padding-left: 13px;
 }
 
 .weight-slider {
