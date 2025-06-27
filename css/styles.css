@@ -811,7 +811,7 @@ input[type="color"]::-moz-color-swatch {
     grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
     gap: 10px;
     margin-top: 20px;
-    padding: 10px 5px;
+    padding: 15px 5px;
     backdrop-filter: blur(20px);
     background-color: var(--search-background);
     border: 1px solid var(--glass-border);
@@ -871,7 +871,7 @@ input[type="color"]::-moz-color-swatch {
 
 .control-popup {
     display: none;
-    position: absolute;
+    position: fixed;
     z-index: 10001; /* Above the modal */
     border: 1px solid var(--glass-border);
     background-color: var(--modal-transparent);
