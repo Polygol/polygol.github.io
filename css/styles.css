@@ -848,6 +848,7 @@ input[type="color"]::-moz-color-swatch {
 .setting-item.active .setting-icon-bg {
      background-color: var(--secondary-text-color);
      color: var(--background-color);
+     border-radius: 15px;
 }
 
 .setting-item.active .setting-icon-bg .material-symbols-rounded {
