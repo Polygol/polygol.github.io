@@ -835,28 +835,22 @@ input[type="color"]::-moz-color-swatch {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: var(--overlay-color);
-    border: 1px solid transparent;
-    border-radius: 24px;
-    padding: 10px 5px;
     aspect-ratio: 1 / 1;
     cursor: pointer;
     text-align: center;
     transition: background-color 0.2s, transform 0.1s, border-color 0.2s;
 }
 
-.setting-item.active {
-    background-color: var(--text-color);
-}
 .setting-item.active .setting-icon-bg {
-     background-color: var(--background-color);
-     color: var(--text-color);
+     background-color: var(--secondary-text-color);
+     color: var(--background-color);
 }
+
 .setting-item.active .setting-icon-bg .material-symbols-rounded {
-    color: var(--text-color);
+     color: var(--background-color);
 }
+
 .setting-item.active .setting-label {
-    color: var(--background-color);
     font-weight: 500;
 }
 
@@ -865,12 +859,14 @@ input[type="color"]::-moz-color-swatch {
     height: 44px;
     border-radius: 50%;
     background-color: var(--search-background);
+    backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 8px;
     pointer-events: none;
     transition: background-color 0.2s, color 0.2s;
+    border: 1px solid var(--glass-border);
 }
 
 .setting-label {
