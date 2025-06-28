@@ -96,6 +96,48 @@ const Gurasuraisu = {
 
   deleteApp: function(appObject) {
     this._call('deleteApp', [appObject]);
+  },
+
+  /**
+   * Registers a new media session with the parent.
+   * This will show the media widget in the Gurasu UI.
+   * @param {object} metadata - An object with { title, artist, artwork: [{src}] }.
+   */
+  registerMediaSession: function(metadata) {
+    // We need to tell the parent which app is registering the session.
+    // We can get this from the iframe's dataset if it's set.
+    const appName = document.body.dataset.appName || 'UnknownApp';
+    this._call('registerMediaSession', [appName, metadata]);
+  },
+
+  /**
+   * Updates the parent Gurasu with the current playback state.
+   * @param {object} state - An object, e.g., { playbackState: 'playing' | 'paused', metadata: (optional) }.
+   */
+  updatePlaybackState: function(state) {
+    const appName = document.body.dataset.appName || 'UnknownApp';
+    this._call('updateMediaPlaybackState', [appName, state]);
+  },
+
+  /**
+   * Tells the parent to clear/hide the media widget.
+   */
+  clearMediaSession: function() {
+    const appName = document.body.dataset.appName || 'UnknownApp';
+    this._call('clearMediaSession', [appName]);
+  },
+
+  /**
+   * Sets up listeners for media control actions sent FROM the parent.
+   * @param {object} actions - An object with functions, e.g., { playPause: () => {...}, next: () => {...} }
+   */
+  onMediaControl: function(actions) {
+      window.addEventListener('message', (event) => {
+          if (event.origin !== window.location.origin) return;
+          if (event.data.type === 'media-control' && actions[event.data.action]) {
+              actions[event.data.action]();
+          }
+      });
   }
 };
 
