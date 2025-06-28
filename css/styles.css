@@ -915,13 +915,6 @@ input[type="color"]::-moz-color-swatch {
     width: 100%;
 }
 
-#media-sessions-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 10px 0;
-}
-
 .media-widget {
     display: flex;
     align-items: center;
