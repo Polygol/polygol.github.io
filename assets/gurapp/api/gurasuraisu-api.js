@@ -97,17 +97,17 @@ const Gurasuraisu = {
   deleteApp: function(appObject) {
     this._call('deleteApp', [appObject]);
   },
-
+    
   /**
    * Registers a new media session with the parent.
    * This will show the media widget in the Gurasu UI.
    * @param {object} metadata - An object with { title, artist, artwork: [{src}] }.
+   * @param {string[]} [supportedActions] - An array of supported actions, e.g., ['playPause', 'next', 'prev'].
    */
-  registerMediaSession: function(metadata) {
-    // We need to tell the parent which app is registering the session.
-    // We can get this from the iframe's dataset if it's set.
+  registerMediaSession: function(metadata, supportedActions = ['playPause']) {
     const appName = document.body.dataset.appName || 'UnknownApp';
-    this._call('registerMediaSession', [appName, metadata]);
+    // Pass the new 'supportedActions' array to the parent
+    this._call('registerMediaSession', [appName, metadata, supportedActions]);
   },
 
   /**
