@@ -5210,18 +5210,6 @@ function preventLeaving() {
   });
 }
 
-function checkScreenSize() {
-  if (window.innerWidth < 680) {
-    showPopup(currentLanguage.LARGE_SCR_REQ);
-  }
-}
-
-// Check on page load
-window.addEventListener('load', checkScreenSize);
-
-// Check when window is resized
-window.addEventListener('resize', checkScreenSize);
-
 // --- Media Session Management Functions ---
 
 function showMediaWidget(metadata) {
