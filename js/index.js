@@ -3651,7 +3651,7 @@ function createFullscreenEmbed(url) {
         }, 10);
         
         // Hide all main UI elements
-        document.querySelectorAll('.container, .settings-grid home-settings').forEach(el => {
+        document.querySelectorAll('.container, .settings-grid.home-settings').forEach(el => {
             if (!el.dataset.originalDisplay) {
                 el.dataset.originalDisplay = window.getComputedStyle(el).display;
             }
@@ -3737,7 +3737,7 @@ function createFullscreenEmbed(url) {
     });
     
     // Hide all main UI elements
-    document.querySelectorAll('.container, .settings-grid home-settings').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings').forEach(el => {
         if (!el.dataset.originalDisplay) {
             el.dataset.originalDisplay = window.getComputedStyle(el).display;
         }
@@ -3811,7 +3811,7 @@ function minimizeFullscreenEmbed() {
     }
     
     // Restore all main UI elements
-    document.querySelectorAll('.container, .settings-grid home-settings').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings').forEach(el => {
         if (el.dataset.originalDisplay) {
             // Do not show the modal if it was already closed when app was opened
             if (el.id === 'customizeModal' && el.dataset.originalDisplay === 'none') {
