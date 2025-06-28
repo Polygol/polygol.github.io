@@ -3658,7 +3658,7 @@ function createFullscreenEmbed(url) {
             el.style.transition = 'opacity 0.3s ease';
             el.style.opacity = '0';
             setTimeout(() => {
-                el.style.display = 'none';
+                el.style.display = 'none !important';
             }, 300);
         });
         
@@ -3744,7 +3744,7 @@ function createFullscreenEmbed(url) {
         el.style.transition = 'opacity 0.3s ease';
         el.style.opacity = '0';
         setTimeout(() => {
-            el.style.display = 'none';
+            el.style.display = 'none !important';
         }, 300);
     });
 	
