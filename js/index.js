@@ -5224,49 +5224,91 @@ window.addEventListener('resize', checkScreenSize);
 
 // --- Media Session Management Functions ---
 
-function showMediaWidget(metadata) {
-    const widget = document.getElementById('media-session-widget');
-    if (!widget) return;
+// --- Helper function to create the HTML for a widget ---
+function createMediaWidgetHTML(appName, data) {
+    return `
+        <img class="media-widget-art" src="${data.artworkUrl || '/assets/appicon/default.png'}" alt="Artwork" style="cursor: pointer;">
+        <div class="media-widget-info">
+            <div class="media-widget-title">${data.title || 'Unknown Title'}</div>
+            <div class="media-widget-artist">${data.artist || 'Unknown Artist'}</div>
+        </div>
+	<div id="media-widget-progress-bar-${appName}" class="media-widget-progress-bar">
+            <div id="media-widget-progress-${appName}" class="media-widget-progress"></div>
+        </div>
+        <div class="media-widget-controls">
+            <button class="media-widget-prev"><span class="material-symbols-rounded">skip_previous</span></button>
+            <button class="media-widget-play-pause"><span class="material-symbols-rounded">play_arrow</span></button>
+            <button class="media-widget-next"><span class="material-symbols-rounded">skip_next</span></button>
+        </div>
+    `;
+}
+
+function showMusicWidget(data, supportedActions = ['playPause']) {
+    const appName = data.appName;
+    if (!appName) return;
+
+    const container = document.getElementById('media-sessions-container');
+    let widget = document.querySelector(`.media-widget[data-app-name="${appName}"]`);
+
+    if (!widget) {
+        // If widget doesn't exist, create it
+        widget = document.createElement('div');
+        widget.className = 'media-widget';
+        widget.dataset.appName = appName;
+        container.appendChild(widget);
+
+        // Add event listeners ONCE upon creation
+        widget.addEventListener('click', (e) => {
+            if (e.target.closest('.media-widget-prev')) callApp(appName, 'prev');
+            if (e.target.closest('.media-widget-play-pause')) callApp(appName, 'playPause');
+            if (e.target.closest('.media-widget-next')) callApp(appName, 'next');
+            if (e.target.closest('.media-widget-art')) {
+                const appToOpen = Object.values(apps).find(app => app.name === appName);
+                if (appToOpen) {
+                    closeControls();
+                    createFullscreenEmbed(appToOpen.url);
+                }
+            }
+        });
+    }
     
-    document.getElementById('media-widget-art').src = metadata.artwork[0]?.src || '/assets/appicon/default.png';
-    document.getElementById('media-widget-title').textContent = metadata.title || 'Unknown Title';
-    document.getElementById('media-widget-artist').textContent = metadata.artist || 'Unknown Artist';
+    // Populate the widget with new data
+    widget.innerHTML = createMediaWidgetHTML(appName, data);
+
+    // Enable/disable buttons based on support
+    widget.querySelector('.media-widget-prev').disabled = !supportedActions.includes('prev');
+    widget.querySelector('.media-widget-play-pause').disabled = !supportedActions.includes('playPause');
+    widget.querySelector('.media-widget-next').disabled = !supportedActions.includes('next');
     
+    widget.querySelectorAll('button').forEach(btn => {
+        if (btn.disabled) btn.style.opacity = '0.5';
+    });
+
     widget.style.display = 'flex';
-    // Use a timeout to allow the display property to apply before animating opacity/transform
-    setTimeout(() => {
-        widget.style.opacity = '1';
-        widget.style.transform = 'scale(1)';
-    }, 10);
 }
 
-function hideMediaWidget() {
-    const widget = document.getElementById('media-session-widget');
-    if (!widget) return;
-
-    widget.style.opacity = '0';
-    widget.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-        widget.style.display = 'none';
-	    
-	const prevBtn = document.getElementById('media-widget-prev');
-        const playPauseBtn = document.getElementById('media-widget-play-pause');
-        const nextBtn = document.getElementById('media-widget-next');
-
-        if(prevBtn) { prevBtn.disabled = false; prevBtn.style.opacity = '1'; }
-        if(playPauseBtn) { playPauseBtn.disabled = false; playPauseBtn.style.opacity = '1'; }
-        if(nextBtn) { nextBtn.disabled = false; nextBtn.style.opacity = '1'; }
-    }, 300);
-
-    // Clear actions when the widget is hidden
-    activeMediaSessionApp = null;
-    mediaSessionActions = { playPause: null, next: null, prev: null };
+function hideMusicWidget(appName) {
+    if (!appName) return; // Need to know which app to hide
+    const widget = document.querySelector(`.media-widget[data-app-name="${appName}"]`);
+    if (widget) {
+        widget.remove();
+    }
 }
 
-function updateMediaWidgetState(playbackState) {
-    const playPauseIcon = document.querySelector('#media-widget-play-pause .material-symbols-rounded');
-    if (playPauseIcon) {
-        playPauseIcon.textContent = playbackState === 'playing' ? 'pause' : 'play_arrow';
+function updateMusicWidgetState(appName, state) {
+    const widget = document.querySelector(`.media-widget[data-app-name="${appName}"]`);
+    if (widget) {
+        const playPauseIcon = widget.querySelector('.media-widget-play-pause .material-symbols-rounded');
+        playPauseIcon.textContent = state.playbackState === 'playing' ? 'pause' : 'play_arrow';
+    }
+}
+
+// The function to update a specific widget's progress
+function updateMediaProgress(appName, progressState) {
+    const progressEl = document.getElementById(`media-widget-progress-${appName}`);
+    if (progressEl && progressState.duration > 0) {
+        const percentage = (progressState.currentTime / progressState.duration) * 100;
+        progressEl.style.width = `${percentage}%`;
     }
 }
 
@@ -5333,17 +5375,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'prev');
     });
 });
-
-function updateMediaProgress(appName, progressState) {
-    if (activeMediaSessionApp === appName) {
-        const progressEl = document.getElementById('media-widget-progress');
-        if (progressEl) {
-            // progressState should be an object like { currentTime, duration }
-            const percentage = (progressState.currentTime / progressState.duration) * 100;
-            progressEl.style.width = `${percentage}%`;
-        }
-    }
-}
 
 const Gurasuraisu = {
     // This is the inverse of the API in the child. It allows the parent to call a function *in* a child app.
