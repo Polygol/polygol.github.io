@@ -289,6 +289,20 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-style', 'font-select');
     connectGridItem('setting-weight', 'weight-slider');
     connectGridItem('setting-language', 'language-switcher');
+
+    // Album Art click listener
+    document.getElementById('media-widget-art').addEventListener('click', () => {
+        if (activeMediaSessionApp) {
+            // Find the app's URL from the main 'apps' object
+            const appToOpen = Object.values(apps).find(app => app.name === activeMediaSessionApp);
+            if (appToOpen) {
+                // First, close the settings modal if it's open
+                closeControls();
+                // Then, open the app
+                createFullscreenEmbed(appToOpen.url);
+            }
+        }
+    });
 	
     const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
