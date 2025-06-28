@@ -867,7 +867,6 @@ input[type="color"]::-moz-color-swatch {
     height: 44px;
     border-radius: 50%;
     background-color: var(--transparent-color);
-    backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1195,7 +1194,6 @@ input[type="color"]::-moz-color-swatch {
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s;
     border: 1px solid var(--glass-border);
-    backdrop-filter: 10px;
 }
 
 #font-select, #language-switcher {
