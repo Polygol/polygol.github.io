@@ -3658,7 +3658,7 @@ function createFullscreenEmbed(url) {
             el.style.transition = 'opacity 0.3s ease';
             el.style.opacity = '0';
             setTimeout(() => {
-                el.style.display = 'none !important';
+                el.classList.add('force-hide');
             }, 300);
         });
         
@@ -3744,7 +3744,7 @@ function createFullscreenEmbed(url) {
         el.style.transition = 'opacity 0.3s ease';
         el.style.opacity = '0';
         setTimeout(() => {
-            el.style.display = 'none !important';
+            el.classList.add('force-hide');
         }, 300);
     });
 	
@@ -3812,19 +3812,13 @@ function minimizeFullscreenEmbed() {
     
     // Restore all main UI elements
     document.querySelectorAll('.container, .settings-grid.home-settings').forEach(el => {
-        if (el.dataset.originalDisplay) {
-            // Do not show the modal if it was already closed when app was opened
-            if (el.id === 'customizeModal' && el.dataset.originalDisplay === 'none') {
-                return;
-            }
+	el.classList.remove('force-hide');
+        el.style.display = el.dataset.originalDisplay;
+        el.style.transition = 'opacity 0.3s ease';
 
-            el.style.display = el.dataset.originalDisplay;
-            el.style.transition = 'opacity 0.3s ease';
-
-            requestAnimationFrame(() => {
-                el.style.opacity = '1';
-            });
-        }
+        requestAnimationFrame(() => {
+            el.style.opacity = '1';
+        });
     });
     
     // Hide all fullscreen embeds that are not being displayed
