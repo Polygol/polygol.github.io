@@ -832,6 +832,17 @@ input[type="color"]::-moz-color-swatch {
     transition: background-color 0.2s, transform 0.1s, border-color 0.2s;
 }
 
+.setting-item .setting-icon-bg {
+    transform: scale(1);
+    transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+}
+
+.setting-item:active .setting-icon-bg {
+    transform: scale(0.96);
+    transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+    filter: brightness(1.5);
+}
+
 .setting-item.active .setting-icon-bg {
      background-color: var(--secondary-text-color);
      color: var(--background-color);
