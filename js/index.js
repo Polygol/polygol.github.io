@@ -178,6 +178,8 @@ function getCurrentTime24() {
 const persistentClock = document.getElementById('persistent-clock');
 
 document.addEventListener('DOMContentLoaded', () => {
+    syncUiStates();
+	
     // --- Get references to key elements ---
     const controlPopup = document.createElement('div');
     controlPopup.className = 'control-popup';
@@ -2292,6 +2294,7 @@ async function saveWallpaper(file) {
         currentWallpaperPosition = 0;
         applyWallpaper();
         showPopup(currentLanguage.WALLPAPER_UPDATED);
+	syncUiStates();
     } catch (error) {
         console.error("Error saving wallpaper:", error);
         showPopup(currentLanguage.WALLPAPER_SAVE_FAIL);
@@ -2791,6 +2794,7 @@ async function removeWallpaper(index) {
     showPopup(currentLanguage.WALLPAPER_REMOVE);
     updatePageIndicatorDots(true);
     resetIndicatorTimeout();
+    syncUiStates();
 }
 
 // Handle start of dragging a dot
@@ -3329,6 +3333,28 @@ async function initializeAndApplyWallpaper() {
     }
 }
 
+// Centralized function to sync the visual state of settings items
+function syncUiStates() {
+    // Sync all checkbox-based toggles
+    document.querySelectorAll('.setting-item').forEach(item => {
+        const controlId = item.id.replace('setting-', '');
+        // Construct potential IDs for different control types
+        const switchControl = document.getElementById(controlId + '-switch');
+        const regularControl = document.getElementById(controlId);
+        
+        const control = switchControl || regularControl;
+
+        if (control && control.type === 'checkbox') {
+            item.classList.toggle('active', control.checked);
+        }
+    });
+
+    // Sync items with non-boolean active states
+    document.getElementById('setting-weight').classList.toggle('active', document.getElementById('weight-slider').value !== '70');
+    document.getElementById('setting-style').classList.toggle('active', document.getElementById('font-select').value !== 'Inter');
+    document.getElementById('setting-wallpaper').classList.toggle('active', recentWallpapers.length > 0);
+}
+
 function setupFontSelection() {
     const fontSelect = document.getElementById('font-select');
     const weightSlider = document.getElementById('weight-slider');
@@ -3396,6 +3422,7 @@ function setupFontSelection() {
         document.fonts.load(`16px ${selectedFont}`).then(() => {
             applyClockStyles();
             saveCurrentClockStyles(); // Save to current wallpaper
+	    syncUiStates();
         }).catch(() => {
             showPopup(currentLanguage.CLOCK_STYLE_FAILED);
         });
@@ -3405,6 +3432,7 @@ function setupFontSelection() {
     weightSlider.addEventListener('input', (e) => {
         applyClockStyles();
         saveCurrentClockStyles(); // Save to current wallpaper
+	syncUiStates();
     });
     
     // Handle color changes with the color picker
