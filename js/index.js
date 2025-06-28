@@ -1,3 +1,12 @@
+let activeMediaSessionApp = null; // To track which app controls the media widget
+
+// This object will hold the callback functions sent by the Gurapp
+let mediaSessionActions = {
+    playPause: null,
+    next: null,
+    prev: null
+};
+
 let currentLanguage = LANG_EN; // Default to English
 
 function applyLanguage(language) {
@@ -5198,16 +5207,7 @@ window.addEventListener('load', checkScreenSize);
 // Check when window is resized
 window.addEventListener('resize', checkScreenSize);
 
-let activeMediaSessionApp = null; // To track which app controls the media widget
-
-// This object will hold the callback functions sent by the Gurapp
-let mediaSessionActions = {
-    playPause: null,
-    next: null,
-    prev: null
-};
-
-// --- NEW: Media Session Management Functions ---
+// --- Media Session Management Functions ---
 
 function showMediaWidget(metadata) {
     const widget = document.getElementById('media-session-widget');
