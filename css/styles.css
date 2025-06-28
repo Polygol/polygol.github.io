@@ -932,7 +932,12 @@ input[type="color"]::-moz-color-swatch {
 
 .qcontrol-item.active {
     background-color: var(--secondary-text-color);
-    color: var(--background-color)
+    color: var(--background-color);
+    border-radius: 38px;
+}
+
+.qcontrol-item.active .qc-label {
+    font-weight: 500;
 }
 
 .qcontrol-item .material-symbols-rounded {
