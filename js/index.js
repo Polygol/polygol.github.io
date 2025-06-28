@@ -3231,6 +3231,7 @@ function switchWallpaper(direction) {
     
     updatePageIndicatorDots(false);
     resetIndicatorTimeout();
+    syncUiStates();
 }
 
 // Update handleSwipe to show indicator even if no swipe is detected
@@ -5275,7 +5276,7 @@ function registerMediaSession(appName, metadata) {
 // A function to clear the session, called when an app is closed/minimized
 function clearMediaSession(appName) {
     if (activeMediaSessionApp === appName) {
-        console.log(`[Gurasu] Clearing media session for "${appName}".`);
+        console.log(`[Gurasuraisu] Clearing media session for "${appName}".`);
         hideMediaWidget();
     }
 }
@@ -5320,7 +5321,6 @@ const Gurasuraisu = {
     callApp: (appName, action) => {
         const iframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
         if (iframe) {
-            console.log(`[Gurasuraisu] Calling action '${action}' in app '${appName}'`);
             iframe.contentWindow.postMessage({ type: 'media-control', action: action }, window.location.origin);
         }
     }
