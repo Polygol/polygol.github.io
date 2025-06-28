@@ -915,12 +915,18 @@ input[type="color"]::-moz-color-swatch {
     width: 100%;
 }
 
+#media-sessions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px 0;
+}
+
 .media-widget {
     display: flex;
     align-items: center;
     gap: 15px;
     padding: 12px;
-    margin: 10px 0;
     background-color: var(--search-background);
     border-radius: 25px;
     border: 1px solid var(--glass-border);
