@@ -127,6 +127,11 @@ const Gurasuraisu = {
     this._call('clearMediaSession', [appName]);
   },
 
+  updateMediaProgress: function(progressState) {
+    const appName = document.body.dataset.appName || 'UnknownApp';
+    this._call('updateMediaProgress', [appName, progressState]);
+  },
+
   /**
    * Sets up listeners for media control actions sent FROM the parent.
    * @param {object} actions - An object with functions, e.g., { playPause: () => {...}, next: () => {...} }
