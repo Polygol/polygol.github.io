@@ -1636,6 +1636,7 @@ input[type="color"]::-moz-color-swatch {
             .clock {
                 font-size: clamp(4rem, 20vw, 20rem);
             }
+        }
 
         @media (min-width: 800px) {
             .app-drawer {
@@ -1643,22 +1644,22 @@ input[type="color"]::-moz-color-swatch {
                 width: 90vw;
                 border: 1px solid var(--glass-border);
             }
+        }
             
         @media (max-width: 970px) {
             .app-drawer-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
+        }
 
         @media (max-width: 500px) {
             .app-drawer-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
-
-          .task-switcher-grid {
-                grid-template-columns: repeat(2, 1fr);
-          }
+        }
 
         @media (max-width: 300px) {
             .app-drawer-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+        }
