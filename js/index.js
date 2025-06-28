@@ -5198,6 +5198,98 @@ window.addEventListener('load', checkScreenSize);
 // Check when window is resized
 window.addEventListener('resize', checkScreenSize);
 
+let activeMediaSessionApp = null; // To track which app controls the media widget
+
+// This object will hold the callback functions sent by the Gurapp
+let mediaSessionActions = {
+    playPause: null,
+    next: null,
+    prev: null
+};
+
+// --- NEW: Media Session Management Functions ---
+
+function showMediaWidget(metadata) {
+    const widget = document.getElementById('media-session-widget');
+    if (!widget) return;
+    
+    document.getElementById('media-widget-art').src = metadata.artwork[0]?.src || '/assets/appicon/default.png';
+    document.getElementById('media-widget-title').textContent = metadata.title || 'Unknown Title';
+    document.getElementById('media-widget-artist').textContent = metadata.artist || 'Unknown Artist';
+    
+    widget.style.display = 'flex';
+    // Use a timeout to allow the display property to apply before animating opacity/transform
+    setTimeout(() => {
+        widget.style.opacity = '1';
+        widget.style.transform = 'scale(1)';
+    }, 10);
+}
+
+function hideMediaWidget() {
+    const widget = document.getElementById('media-session-widget');
+    if (!widget) return;
+
+    widget.style.opacity = '0';
+    widget.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        widget.style.display = 'none';
+    }, 300);
+
+    // Clear actions when the widget is hidden
+    activeMediaSessionApp = null;
+    mediaSessionActions = { playPause: null, next: null, prev: null };
+}
+
+function updateMediaWidgetState(playbackState) {
+    const playPauseIcon = document.querySelector('#media-widget-play-pause .material-symbols-rounded');
+    if (playPauseIcon) {
+        playPauseIcon.textContent = playbackState === 'playing' ? 'pause' : 'play_arrow';
+    }
+}
+
+// This is the new function that Gurapps will call
+function registerMediaSession(appName, metadata) {
+    if (!appName) return;
+    console.log(`[Gurasu] App "${appName}" is registering a media session.`);
+    activeMediaSessionApp = appName;
+    showMediaWidget(metadata);
+
+    // Set initial state
+    updateMediaWidgetState('paused'); // Assume it's paused initially
+}
+
+// A function to clear the session, called when an app is closed/minimized
+function clearMediaSession(appName) {
+    if (activeMediaSessionApp === appName) {
+        console.log(`[Gurasu] Clearing media session for "${appName}".`);
+        hideMediaWidget();
+    }
+}
+
+// A function for the Gurapp to update the parent's state
+function updateMediaPlaybackState(appName, state) {
+    if (activeMediaSessionApp === appName) {
+        updateMediaWidgetState(state.playbackState);
+        // We could also update metadata here if it changes (e.g., new song)
+        if (state.metadata) {
+            showMediaWidget(state.metadata);
+        }
+    }
+}
+
+// Add listeners for the new widget's buttons
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('media-widget-play-pause').addEventListener('click', () => {
+        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'playPause');
+    });
+    document.getElementById('media-widget-next').addEventListener('click', () => {
+        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'next');
+    });
+    document.getElementById('media-widget-prev').addEventListener('click', () => {
+        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'prev');
+    });
+});
+
 window.addEventListener('message', event => {
     if (event.origin !== window.location.origin) return;
 
