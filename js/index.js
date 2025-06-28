@@ -3919,7 +3919,7 @@ function minimizeFullscreenEmbed() {
         });
     });
 	
-    const controlElements = document.querySelectorAll('.weather-settings, .gurapps-optional, .clock-color-settings, .clock-settings, .wallpaper-upload, .clock-stack-settings, .font-selection, .weight-slider-container');
+    const controlElements = document.querySelectorAll('.settings-grid.home-settings');
     controlElements.forEach(el => {
         // Get original styles from stored data
         let originalStyles = {};
