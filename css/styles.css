@@ -1641,6 +1641,7 @@ input[type="color"]::-moz-color-swatch {
             .app-drawer {
                 left: 5vw;
                 width: 90vw;
+                border: 1px solid var(--glass-border);
             }
             
         @media (max-width: 970px) {
