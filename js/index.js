@@ -289,34 +289,35 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-style', 'font-select');
     connectGridItem('setting-weight', 'weight-slider');
     connectGridItem('setting-language', 'language-switcher');
-
-    // Album Art click listener
-    document.getElementById('media-widget-art').addEventListener('click', () => {
-        if (activeMediaSessionApp) {
-            // Find the app's URL from the main 'apps' object
-            const appToOpen = Object.values(apps).find(app => app.name === activeMediaSessionApp);
-            if (appToOpen) {
-                // First, close the settings modal if it's open
-                closeControls();
-                // Then, open the app
-                createFullscreenEmbed(appToOpen.url);
-            }
-        }
-    });
-
-    document.getElementById('media-widget-play-pause').addEventListener('click', () => {
-        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'playPause');
-    });
-    document.getElementById('media-widget-next').addEventListener('click', () => {
-        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'next');
-    });
-    document.getElementById('media-widget-prev').addEventListener('click', () => {
-        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'prev');
-    });
 	
-    const appDrawer = document.getElementById('app-drawer');
-    const persistentClock = document.querySelector('.persistent-clock');
-    const customizeModal = document.getElementById('customizeModal');
+    const mediaSessionsContainer = document.getElementById('media-sessions-container');
+
+    if (mediaSessionsContainer) {
+        mediaSessionsContainer.addEventListener('click', (e) => {
+            // Find the parent widget of the clicked element
+            const widget = e.target.closest('.media-widget');
+            if (!widget) return; // Exit if the click was not inside a widget
+
+            // Get the app name from the widget's dataset
+            const appName = widget.dataset.appName;
+            if (!appName) return;
+
+            // Check which button was clicked and call the appropriate function
+            if (e.target.closest('.media-widget-play-pause')) {
+                callApp(appName, 'playPause');
+            } else if (e.target.closest('.media-widget-next')) {
+                callApp(appName, 'next');
+            } else if (e.target.closest('.media-widget-prev')) {
+                callApp(appName, 'prev');
+            } else if (e.target.closest('.media-widget-art')) {
+                const appToOpen = Object.values(apps).find(app => app.name === appName);
+                if (appToOpen) {
+                    closeControls();
+                    createFullscreenEmbed(appToOpen.url);
+                }
+            }
+        });
+    }
     
 function updatePersistentClock() {
   const isModalOpen = 
