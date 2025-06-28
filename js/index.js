@@ -5360,7 +5360,8 @@ window.addEventListener('message', event => {
             deleteApp, // Keep deleteApp in the list so it can be called if the check passes
 	    registerMediaSession,
 	    clearMediaSession,
-	    updateMediaPlaybackState
+	    updateMediaPlaybackState,
+	    updateMediaProgress
         };
 
         const funcToCall = allowedFunctions[data.functionName];
