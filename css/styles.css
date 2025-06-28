@@ -1492,6 +1492,19 @@ input[type="color"]::-moz-color-swatch {
             margin-top: 40px;
         }
 
+        .app-drawer-content::-webkit-scrollbar {
+            width: 8px; /* Thin scrollbar */
+        }
+
+        .app-drawer-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .app-drawer-content::-webkit-scrollbar-thumb {
+            background-color: var(--search-background);
+            border-radius: 50px;
+        }
+
         .app-drawer-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
