@@ -177,9 +177,7 @@ function getCurrentTime24() {
 
 const persistentClock = document.getElementById('persistent-clock');
 
-document.addEventListener('DOMContentLoaded', () => {
-    syncUiStates();
-	
+document.addEventListener('DOMContentLoaded', () => {	
     // --- Get references to key elements ---
     const controlPopup = document.createElement('div');
     controlPopup.className = 'control-popup';
@@ -5097,6 +5095,7 @@ document.addEventListener('DOMContentLoaded', function() {
     addPageIndicatorStyles();
     checkWallpaperState();
     updateGurappsVisibility();
+    syncUiStates();
 
     // --- 4. Add other event listeners ---
     const languageSwitcher = document.getElementById('language-switcher');
