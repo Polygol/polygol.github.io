@@ -1329,13 +1329,13 @@ input[type="color"]::-moz-color-swatch {
     left: 0;
     width: 100%;
     height: calc(100% - 80px);
-    background-color: var(--modal-background); 
+    background-color: var(--search-background); 
     transition: bottom 0.3s ease;
     z-index: 1001;
     overflow: hidden;
     touch-action: none;
     user-select: none;
-    backdrop-filter: blur(50px); /* Apply blur to the background */
+    backdrop-filter: blur(20px); /* Apply blur to the background */
     touch-action: none;
     user-select: none;
     opacity: 0;
@@ -1636,8 +1636,14 @@ input[type="color"]::-moz-color-swatch {
             .clock {
                 font-size: clamp(4rem, 20vw, 20rem);
             }
+
+        @media (min-width: 800px) {
+            .app-drawer {
+                left: 5vw;
+                width: 90vw;
+            }
             
-        @media (max-width: 800px) {
+        @media (max-width: 970px) {
             .app-drawer-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
