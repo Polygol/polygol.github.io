@@ -5248,6 +5248,14 @@ function hideMediaWidget() {
     widget.style.transform = 'scale(0.95)';
     setTimeout(() => {
         widget.style.display = 'none';
+	    
+	const prevBtn = document.getElementById('media-widget-prev');
+        const playPauseBtn = document.getElementById('media-widget-play-pause');
+        const nextBtn = document.getElementById('media-widget-next');
+
+        if(prevBtn) { prevBtn.disabled = false; prevBtn.style.opacity = '1'; }
+        if(playPauseBtn) { playPauseBtn.disabled = false; playPauseBtn.style.opacity = '1'; }
+        if(nextBtn) { nextBtn.disabled = false; nextBtn.style.opacity = '1'; }
     }, 300);
 
     // Clear actions when the widget is hidden
@@ -5263,14 +5271,35 @@ function updateMediaWidgetState(playbackState) {
 }
 
 // This is the new function that Gurapps will call
-function registerMediaSession(appName, metadata) {
+function registerMediaSession(appName, metadata, supportedActions = []) {
     if (!appName) return;
-    console.log(`[Gurasu] App "${appName}" is registering a media session.`);
+    console.log(`[Gurasu] App "${appName}" is registering a media session. Supports:`, supportedActions);
     activeMediaSessionApp = appName;
     showMediaWidget(metadata);
 
-    // Set initial state
-    updateMediaWidgetState('paused'); // Assume it's paused initially
+    // Get references to the control buttons
+    const prevBtn = document.getElementById('media-widget-prev');
+    const playPauseBtn = document.getElementById('media-widget-play-pause');
+    const nextBtn = document.getElementById('media-widget-next');
+
+    // Enable or disable buttons based on the 'supportedActions' array
+    if (prevBtn) {
+        prevBtn.disabled = !supportedActions.includes('prev');
+        prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
+    }
+	
+    if (playPauseBtn) {
+        playPauseBtn.disabled = !supportedActions.includes('playPause');
+        playPauseBtn.style.opacity = playPauseBtn.disabled ? '0.5' : '1';
+    }
+	
+    if (nextBtn) {
+        nextBtn.disabled = !supportedActions.includes('next');
+        nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
+    }
+
+    // 4. Set the initial playback state (usually 'paused')
+    updateMediaWidgetState('paused');
 }
 
 // A function to clear the session, called when an app is closed/minimized
