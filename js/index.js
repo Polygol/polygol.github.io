@@ -303,6 +303,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    document.getElementById('media-widget-play-pause').addEventListener('click', () => {
+        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'playPause');
+    });
+    document.getElementById('media-widget-next').addEventListener('click', () => {
+        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'next');
+    });
+    document.getElementById('media-widget-prev').addEventListener('click', () => {
+        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'prev');
+    });
 	
     const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
@@ -5362,19 +5372,6 @@ function updateMediaPlaybackState(appName, state) {
         }
     }
 }
-
-// Add listeners for the new widget's buttons
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('media-widget-play-pause').addEventListener('click', () => {
-        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'playPause');
-    });
-    document.getElementById('media-widget-next').addEventListener('click', () => {
-        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'next');
-    });
-    document.getElementById('media-widget-prev').addEventListener('click', () => {
-        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'prev');
-    });
-});
 
 const Gurasuraisu = {
     // This is the inverse of the API in the child. It allows the parent to call a function *in* a child app.
