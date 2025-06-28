@@ -4767,6 +4767,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     silentModeSwitch.checked = storedSilentMode;
     if (silentModeSwitch.checked) silentModeControl.classList.add('active');
+
+    if (storedTemperature !== '0') {
+        temperatureControl.classList.add('active');
+    }
     
     // Initialize temperature
     if (storedTemperature) {
@@ -5023,6 +5027,7 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('display_temperature', value);
         updateTemperatureIcon(value);
         updateTemperature(value);
+	temperatureControl.classList.toggle('active', value !== '0');
     });
     
     // Brightness control event listener
