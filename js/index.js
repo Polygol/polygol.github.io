@@ -1,4 +1,5 @@
 let activeMediaSessionApp = null; // To track which app controls the media widget
+let activeMediaSessions = {};
 
 // This object will hold the callback functions sent by the Gurapp
 let mediaSessionActions = {
