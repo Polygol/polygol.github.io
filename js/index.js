@@ -5326,33 +5326,29 @@ function updateMediaProgress(appName, progressState) {
 // This is the new function that Gurapps will call
 function registerMediaSession(appName, metadata, supportedActions = []) {
     if (!appName) return;
-    console.log(`[Gurasu] App "${appName}" is registering a media session. Supports:`, supportedActions);
-    activeMediaSessionApp = appName;
-    showMediaWidget(metadata);
+    
+    const container = document.getElementById('media-sessions-container');
+    let widget = document.querySelector(`.media-widget[data-app-name="${appName}"]`);
 
-    // Get references to the control buttons
-    const prevBtn = document.getElementById('media-widget-prev');
-    const playPauseBtn = document.getElementById('media-widget-play-pause');
-    const nextBtn = document.getElementById('media-widget-next');
-
-    // Enable or disable buttons based on the 'supportedActions' array
-    if (prevBtn) {
-        prevBtn.disabled = !supportedActions.includes('prev');
-        prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
+    if (widget) {
+        // --- THIS IS THE FIX ---
+        // Widget already exists, so we update its content and buttons.
+        console.log(`[Gurasu] Updating media session for "${appName}".`);
+        widget.querySelector('.media-widget-art').src = metadata.artwork[0]?.src || '/assets/appicon/default.png';
+        widget.querySelector('.media-widget-title').textContent = metadata.title || 'Unknown Title';
+        widget.querySelector('.media-widget-artist').textContent = metadata.artist || 'Unknown Artist';
+    } else {
+        // Widget is new, so create it from scratch.
+        console.log(`[Gurasu] Creating new media session for "${appName}".`);
+        widget = createMediaWidgetElement(appName, metadata, supportedActions);
+        container.appendChild(widget);
     }
-	
-    if (playPauseBtn) {
-        playPauseBtn.disabled = !supportedActions.includes('playPause');
-        playPauseBtn.style.opacity = playPauseBtn.disabled ? '0.5' : '1';
-    }
-	
-    if (nextBtn) {
-        nextBtn.disabled = !supportedActions.includes('next');
-        nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
-    }
-
-    // 4. Set the initial playback state (usually 'paused')
-    updateMediaWidgetState('paused');
+    
+    // Store the latest session info
+    activeMediaSessions[appName] = {
+        widgetElement: widget,
+        metadata: metadata
+    };
 }
 
 // A function to clear the session, called when an app is closed/minimized
@@ -5365,11 +5361,20 @@ function clearMediaSession(appName) {
 
 // A function for the Gurapp to update the parent's state
 function updateMediaPlaybackState(appName, state) {
-    if (activeMediaSessionApp === appName) {
-        updateMediaWidgetState(state.playbackState);
-        // We could also update metadata here if it changes (e.g., new song)
+    if (activeMediaSessions[appName]) {
+        const widget = activeMediaSessions[appName].widgetElement;
+        
+        // 1. Update the play/pause icon.
+        const playPauseIcon = widget.querySelector('.media-widget-play-pause .material-symbols-rounded');
+        if (playPauseIcon) {
+            playPauseIcon.textContent = state.playbackState === 'playing' ? 'pause' : 'play_arrow';
+        }
+
+        // 2. If new metadata is included (i.e., new song), update the widget text/art.
         if (state.metadata) {
-            showMediaWidget(state.metadata);
+             widget.querySelector('.media-widget-art').src = state.metadata.artwork[0]?.src || '/assets/appicon/default.png';
+             widget.querySelector('.media-widget-title').textContent = state.metadata.title || 'Unknown Title';
+             widget.querySelector('.media-widget-artist').textContent = state.metadata.artist || 'Unknown Artist';
         }
     }
 }
