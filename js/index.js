@@ -5290,6 +5290,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+const Gurasuraisu = {
+    // This is the inverse of the API in the child. It allows the parent to call a function *in* a child app.
+    callApp: (appName, action) => {
+        const iframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
+        if (iframe) {
+            console.log(`[Gurasuraisu] Calling action '${action}' in app '${appName}'`);
+            iframe.contentWindow.postMessage({ type: 'media-control', action: action }, window.location.origin);
+        }
+    }
+};
+
 window.addEventListener('message', event => {
     if (event.origin !== window.location.origin) return;
 
@@ -5346,7 +5357,10 @@ window.addEventListener('message', event => {
             createFullscreenEmbed,
             blackoutScreen,
             installApp,
-            deleteApp // Keep deleteApp in the list so it can be called if the check passes
+            deleteApp, // Keep deleteApp in the list so it can be called if the check passes
+	    registerMediaSession,
+	    clearMediaSession,
+	    updateMediaPlaybackState
         };
 
         const funcToCall = allowedFunctions[data.functionName];
