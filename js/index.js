@@ -5290,6 +5290,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+function updateMediaProgress(appName, progressState) {
+    if (activeMediaSessionApp === appName) {
+        const progressEl = document.getElementById('media-widget-progress');
+        if (progressEl) {
+            // progressState should be an object like { currentTime, duration }
+            const percentage = (progressState.currentTime / progressState.duration) * 100;
+            progressEl.style.width = `${percentage}%`;
+        }
+    }
+}
+
 const Gurasuraisu = {
     // This is the inverse of the API in the child. It allows the parent to call a function *in* a child app.
     callApp: (appName, action) => {
