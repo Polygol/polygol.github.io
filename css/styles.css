@@ -181,6 +181,10 @@ body::before {
     filter: var(--bg-blur, blur(0px)); /* Use the CSS custom property */
 }
 
+.force-hide {
+    display: none !important;
+}
+
 /* Disabled
 body[style*="background-image"] .clock {
     text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
