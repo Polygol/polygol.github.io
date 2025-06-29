@@ -1522,7 +1522,7 @@ input[type="color"]::-moz-color-swatch {
             cursor: pointer;
             transition: transform 0.2s;
             padding: 15px;
-            border-radius: 20px;
+            border-radius: 25px;
             border: 1px solid transparent;
             user-select: none;
         }
