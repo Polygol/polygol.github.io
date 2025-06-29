@@ -1290,13 +1290,6 @@ function addToNotificationShade(message, options = {}) {
     
     let iconType = 'notifications';
 
-    // Content container
-    const contentContainer = document.createElement('div');
-    contentContainer.style.display = 'flex';
-    contentContainer.style.alignItems = 'center';
-    contentContainer.style.gap = '10px';
-    contentContainer.style.width = '100%';
-
     let iconTypeForShade = 'notifications'; // Default icon
     if (options.icon) { // Prefer explicit icon from options
         iconTypeForShade = options.icon;
@@ -1317,20 +1310,6 @@ function addToNotificationShade(message, options = {}) {
     messageText.style.wordBreak = 'break-word';
     messageText.textContent = message;
     contentContainer.appendChild(messageText);
-
-    // Function to close a notification (defined here to be in scope)
-    function closeNotification(notif) {
-        // Animate out
-        notif.style.opacity = '0';
-        notif.style.transform = 'translateX(50px)';
-        
-        // Remove after animation completes
-        setTimeout(() => {
-            if (shade.contains(notif)) {
-                shade.removeChild(notif);
-            }
-        }, 300);
-    }
     
     // Close button
     const closeBtn = document.createElement('span');
