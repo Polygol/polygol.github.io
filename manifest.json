@@ -4,8 +4,6 @@
   "start_url": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay"],
-  "background_color": "#1c1c1c",
-  "theme_color": "#1c1c1c",
   "icons": [
     {
       "src": "/assets/img/pwaicon/regular.png",
