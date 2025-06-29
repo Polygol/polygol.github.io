@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gurasuraisu Recovery Mode</title>
+    <title>Gurasuraisu - Recovery Mode</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -25,6 +25,18 @@
             border-radius: 8px;
             padding: 2em;
             text-align: center;
+        }
+        .lang-selector-container {
+            margin-bottom: 2em;
+            text-align: right;
+        }
+        #lang-select {
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
         }
         h1 {
             color: #ffcc80; /* Light orange for warning */
@@ -73,30 +85,102 @@
             min-height: 20px;
             font-family: monospace;
             white-space: pre-wrap;
+            text-align: left;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Recovery Mode</h1>
-        <p>Your Gurasuraisu instance may be corrupted or broken. Use these tools to perform a factory reset. These actions are irreversible.</p>
+        <div class="lang-selector-container">
+            <select id="lang-select">
+                <option value="EN">English</option>
+                <option value="JP">日本語</option>
+                <option value="DE">Deutsch</option>
+                <option value="FR">Français</option>
+                <option value="ES">Español</option>
+                <option value="KO">한국어</option>
+                <option value="ZH">中文</option>
+                <option value="HI">हिन्दी</option>
+                <option value="PT">Português</option>
+                <option value="BN">বাংলা</option>
+                <option value="RU">Русский</option>
+                <option value="PA">ਪੰਜਾਬੀ</option>
+                <option value="VI">Tiếng Việt</option>
+                <option value="TR">Türkçe</option>
+                <option value="AR_EG">العربية (مصر)</option>
+                <option value="MR">मराठी</option>
+                <option value="TE">తెలుగు</option>
+                <option value="TA">தமிழ்</option>
+                <option value="UR">اردو</option>
+                <option value="ID">Bahasa Indonesia</option>
+                <option value="JV">Basa Jawa</option>
+                <option value="FA_IR">فارسی</option>
+                <option value="IT">Italiano</option>
+                <option value="HA">Hausa</option>
+                <option value="GU">ગુજરાતી</option>
+                <option value="AR_LEV">العربية (الشامية)</option>
+                <option value="BHO">भोजपुरी</option>
+            </select>
+        </div>
+        
+        <h1 data-lang-key="header">Recovery Mode</h1>
+        <p data-lang-key="description">Your Gurasuraisu instance may be corrupted or broken. Use these tools to perform a factory reset. These actions are irreversible.</p>
         
         <div class="actions">
-            <button id="full-reset" class="btn-destructive">Perform Full System Reset</button>
-            <p>This is the recommended option. It will clear all data, caches, and malicious service workers. This will log you out and restore Gurasuraisu to its original state.</p>
+            <button id="full-reset" class="btn-destructive" data-lang-key="reset_button_text">Perform Full System Reset</button>
+            <p data-lang-key="reset_button_description">This is the recommended option. It will clear all data, caches, IndexedDB, and malicious service workers. This will log you out and restore Gurasuraisu to its original state.</p>
         </div>
 
-        <div id="status">Ready.</div>
+        <div id="status" data-lang-key="status_ready">Ready.</div>
         
         <div class="actions">
-             <button id="return-home" class="btn-safe">Return to Gurasuraisu</button>
+             <button id="return-home" class="btn-safe" data-lang-key="return_button_text">Return to Gurasuraisu</button>
         </div>
     </div>
 
     <script>
+        const translations = {
+            EN: { title: "Gurasuraisu - Recovery Mode", header: "Recovery Mode", description: "Your Gurasuraisu instance may be corrupted or broken. Use these tools to perform a factory reset. These actions are irreversible.", reset_button_text: "Perform Full System Reset", reset_button_description: "This is the recommended option. It will clear all data, caches, IndexedDB, and malicious service workers. This will log you out and restore Gurasuraisu to its original state.", return_button_text: "Return to Gurasuraisu", status_ready: "Ready.", confirm_reset: "ARE YOU SURE?\nThis will permanently delete ALL Gurasuraisu data, settings, and databases." },
+            JP: { title: "Gurasuraisu -リカバリーモード", header: "リカバリーモード", description: "Gurasuraisuインスタンスが破損または故障している可能性があります。これらのツールを使用して工場出荷時リセットを実行してください。この操作は元に戻せません。", reset_button_text: "完全なシステムリセットを実行", reset_button_description: "これは推奨されるオプションです。すべてのデータ、キャッシュ、IndexedDB、および悪意のあるサービスワーカーを消去します。これによりログアウトし、Gurasuraisuを元の状態に復元します。", return_button_text: "Gurasuraisuに戻る", status_ready: "準備完了", confirm_reset: "よろしいですか？\nこれにより、すべてのGurasuraisuのデータ、設定、およびデータベースが永久に削除されます。" },
+            DE: { title: "Gurasuraisu - Wiederherstellungsmodus", header: "Wiederherstellungsmodus", description: "Ihre Gurasuraisu-Instanz ist möglicherweise beschädigt oder defekt. Verwenden Sie diese Tools, um einen Werksreset durchzuführen. Diese Aktionen sind unumkehrbar.", reset_button_text: "Vollständigen System-Reset durchführen", reset_button_description: "Dies ist die empfohlene Option. Es werden alle Daten, Caches, IndexedDB und bösartige Service Worker gelöscht. Sie werden abgemeldet und Gurasuraisu wird in den ursprünglichen Zustand zurückversetzt.", return_button_text: "Zurück zu Gurasuraisu", status_ready: "Bereit.", confirm_reset: "SIND SIE SICHER?\nDadurch werden ALLE Gurasuraisu-Daten, -Einstellungen und -Datenbanken dauerhaft gelöscht." },
+            FR: { title: "Gurasuraisu - Mode de récupération", header: "Mode de récupération", description: "Votre instance Gurasuraisu est peut-être corrompue ou cassée. Utilisez ces outils pour effectuer une réinitialisation d'usine. Ces actions sont irréversibles.", reset_button_text: "Effectuer une réinitialisation complète du système", reset_button_description: "C'est l'option recommandée. Elle effacera toutes les données, caches, IndexedDB et les service workers malveillants. Vous serez déconnecté et Gurasuraisu sera restauré à son état d'origine.", return_button_text: "Retourner à Gurasuraisu", status_ready: "Prêt.", confirm_reset: "ÊTES-VOUS SÛR ?\nCela supprimera définitivement TOUTES les données, paramètres et bases de données de Gurasuraisu." },
+            ES: { title: "Gurasuraisu - Modo de recuperación", header: "Modo de recuperación", description: "Su instancia de Gurasuraisu puede estar corrupta o rota. Utilice estas herramientas para realizar un restablecimiento de fábrica. Estas acciones son irreversibles.", reset_button_text: "Realizar un reinicio completo del sistema", reset_button_description: "Esta es la opción recomendada. Borrará todos los datos, cachés, IndexedDB y service workers maliciosos. Se cerrará su sesión y Gurasuraisu se restaurará a su estado original.", return_button_text: "Volver a Gurasuraisu", status_ready: "Listo.", confirm_reset: "¿ESTÁ SEGURO?\nEsto eliminará permanentemente TODOS los datos, configuraciones y bases de datos de Gurasuraisu." },
+            KO: { title: "Gurasuraisu - 복구 모드", header: "복구 모드", description: "Gurasuraisu 인스턴스가 손상되었거나 깨졌을 수 있습니다. 이 도구를 사용하여 공장 초기화를 수행하십시오. 이 작업은 되돌릴 수 없습니다.", reset_button_text: "전체 시스템 재설정 수행", reset_button_description: "이것이 권장되는 옵션입니다. 모든 데이터, 캐시, IndexedDB 및 악성 서비스 워커를 삭제합니다. 로그아웃되고 Gurasuraisu가 원래 상태로 복원됩니다.", return_button_text: "Gurasuraisu로 돌아가기", status_ready: "준비 완료.", confirm_reset: "확실합니까?\n모든 Gurasuraisu 데이터, 설정 및 데이터베이스가 영구적으로 삭제됩니다." },
+            ZH: { title: "Gurasuraisu - 恢复模式", header: "恢复模式", description: "您的 Gurasuraisu 实例可能已损坏或损坏。使用这些工具执行恢复出厂设置。这些操作是不可逆的。", reset_button_text: "执行完整系统重置", reset_button_description: "这是推荐的选项。它将清除所有数据、缓存、IndexedDB 和恶意服务工作线程。您将注销，Gurasuraisu 将恢复到其原始状态。", return_button_text: "返回 Gurasuraisu", status_ready: "准备就绪。", confirm_reset: "您确定吗？\n这将永久删除所有 Gurasuraisu 数据、设置和数据库。" },
+            HI: { title: "Gurasuraisu - रिकवरी मोड", header: "रिकवरी मोड", description: "आपका Gurasuraisu इंस्टेंस दूषित या टूटा हुआ हो सकता है। फ़ैक्टरी रीसेट करने के लिए इन उपकरणों का उपयोग करें। ये क्रियाएँ अपरिवर्तनीय हैं।", reset_button_text: "पूर्ण सिस्टम रीसेट करें", reset_button_description: "यह अनुशंसित विकल्प है। यह सभी डेटा, कैश, IndexedDB और दुर्भावनापूर्ण सेवा কর্মীদের को साफ़ कर देगा। यह आपको लॉग आउट करेगा और Gurasuraisu को उसकी मूल स्थिति में पुनर्स्थापित करेगा।", return_button_text: "Gurasuraisu पर वापस लौटें", status_ready: "तैयार।", confirm_reset: "क्या आप निश्चित हैं?\nयह सभी Gurasuraisu डेटा, सेटिंग्स और डेटाबेस को स्थायी रूप से हटा देगा।" },
+            PT: { title: "Gurasuraisu - Modo de Recuperação", header: "Modo de Recuperação", description: "Sua instância do Gurasuraisu pode estar corrompida ou quebrada. Use estas ferramentas para realizar uma redefinição de fábrica. Essas ações são irreversíveis.", reset_button_text: "Realizar Redefinição Completa do Sistema", reset_button_description: "Esta é a opção recomendada. Irá limpar todos os dados, caches, IndexedDB e service workers maliciosos. Você será desconectado e o Gurasuraisu será restaurado ao seu estado original.", return_button_text: "Voltar para o Gurasuraisu", status_ready: "Pronto.", confirm_reset: "TEM CERTEZA?\nIsso excluirá permanentemente TODOS os dados, configurações e bancos de dados do Gurasuraisu." },
+            BN: { title: "Gurasuraisu - রিকভারি মোড", header: "রিকভারি মোড", description: "আপনার Gurasuraisu ইনস্ট্যান্সটি দূষিত বা ভাঙা হতে পারে। ফ্যাক্টরি রিসেট করতে এই সরঞ্জামগুলি ব্যবহার করুন। এই ক্রিয়াগুলি অপরিবর্তনীয়।", reset_button_text: "সম্পূর্ণ সিস্টেম রিসেট করুন", reset_button_description: "এটি প্রস্তাবিত বিকল্প। এটি সমস্ত ডেটা, ক্যাশে, IndexedDB এবং ক্ষতিকারক পরিষেবা কর্মীদের পরিষ্কার করবে। এটি আপনাকে লগ আউট করবে এবং Gurasuraisu কে তার আসল অবস্থায় পুনরুদ্ধার করবে।", return_button_text: "Gurasuraisu-তে ফিরে যান", status_ready: "প্রস্তুত।", confirm_reset: "আপনি কি নিশ্চিত?\nএটি স্থায়ীভাবে সমস্ত Gurasuraisu ডেটা, সেটিংস এবং ডেটাবেস মুছে ফেলবে।" },
+            RU: { title: "Gurasuraisu - Режим восстановления", header: "Режим восстановления", description: "Ваш экземпляр Gurasuraisu может быть поврежден или сломан. Используйте эти инструменты для сброса до заводских настроек. Эти действия необратимы.", reset_button_text: "Выполнить полный сброс системы", reset_button_description: "Это рекомендуемый вариант. Он очистит все данные, кеши, IndexedDB и вредоносные сервис-воркеры. Вы выйдете из системы, и Gurasuraisu будет восстановлен до исходного состояния.", return_button_text: "Вернуться в Gurasuraisu", status_ready: "Готово.", confirm_reset: "ВЫ УВЕРЕНЫ?\nЭто навсегда удалит ВСЕ данные, настройки и базы данных Gurasuraisu." },
+            // ... Other translations would follow the same pattern
+        };
+        // Add fallbacks for languages not fully translated yet
+        const allLangs = ["PA","VI","TR","AR_EG","MR","TE","TA","UR","ID","JV","FA_IR","IT","HA","GU","AR_LEV","BHO"];
+        allLangs.forEach(lang => { if (!translations[lang]) translations[lang] = translations.EN; });
+
+
+        const langSelect = document.getElementById('lang-select');
         const fullResetBtn = document.getElementById('full-reset');
         const returnHomeBtn = document.getElementById('return-home');
         const statusDiv = document.getElementById('status');
+        const translatableElements = document.querySelectorAll('[data-lang-key]');
+
+        function updateLanguage(lang) {
+            const langPack = translations[lang] || translations.EN;
+            translatableElements.forEach(el => {
+                const key = el.dataset.langKey;
+                if (langPack[key]) {
+                    el.textContent = langPack[key];
+                }
+            });
+            document.title = langPack.title;
+        }
+
+        langSelect.addEventListener('change', () => {
+            updateLanguage(langSelect.value);
+        });
+
+        // Initial load
+        updateLanguage('EN');
 
         function logStatus(message, isError = false) {
             console.log(message);
@@ -105,26 +189,27 @@
         }
 
         async function performFullReset() {
-            if (!confirm('ARE YOU SURE?\nThis will permanently delete ALL Gurasuraisu data and settings.')) {
+            const currentLang = langSelect.value;
+            const confirmationText = translations[currentLang]?.confirm_reset || translations.EN.confirm_reset;
+            
+            if (!confirm(confirmationText)) {
                 logStatus('Reset cancelled by user.');
                 return;
             }
 
             try {
                 // 1. Clear Storages
-                logStatus('Clearing Local Storage...');
+                logStatus('Clearing Local Storage & Session Storage...');
                 localStorage.clear();
                 sessionStorage.clear();
-                logStatus('Storage cleared.');
+                logStatus('Storages cleared.');
 
                 // 2. Unregister Service Workers
                 if ('serviceWorker' in navigator) {
                     logStatus('Unregistering service workers...');
                     const registrations = await navigator.serviceWorker.getRegistrations();
                     if (registrations.length) {
-                        for (const registration of registrations) {
-                            await registration.unregister();
-                        }
+                        await Promise.all(registrations.map(reg => reg.unregister()));
                         logStatus(`${registrations.length} service worker(s) unregistered.`);
                     } else {
                         logStatus('No active service workers found.');
@@ -136,12 +221,27 @@
                     logStatus('Purging all caches...');
                     const cacheNames = await caches.keys();
                     if (cacheNames.length) {
-                        for (const cacheName of cacheNames) {
-                            await caches.delete(cacheName);
-                        }
+                        await Promise.all(cacheNames.map(name => caches.delete(name)));
                         logStatus(`${cacheNames.length} cache(s) purged.`);
                     } else {
                         logStatus('No caches found.');
+                    }
+                }
+                
+                // 4. Clear IndexedDB
+                if ('indexedDB' in window && window.indexedDB.databases) {
+                    logStatus('Deleting IndexedDB databases...');
+                    const dbs = await window.indexedDB.databases();
+                     if (dbs.length) {
+                        await Promise.all(dbs.map(db => new Promise((resolve, reject) => {
+                            const req = window.indexedDB.deleteDatabase(db.name);
+                            req.onsuccess = resolve;
+                            req.onerror = reject;
+                            req.onblocked = () => console.warn(`IndexedDB ${db.name} is blocked and cannot be deleted right now.`);
+                        })));
+                        logStatus(`${dbs.length} IndexedDB database(s) deleted.`);
+                    } else {
+                        logStatus('No IndexedDB databases found.');
                     }
                 }
 
