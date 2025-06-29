@@ -5145,11 +5145,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (resetButton) {
         resetButton.addEventListener('click', function() {
             if (confirm(currentLanguage.RESET_CONFIRM)) {
-                localStorage.clear();
-                sessionStorage.clear();
-                clearCookies();
-                showPopup(currentLanguage.RESET_SUCCESS);
-                window.location.reload();
+		if (confirm(currentLanguage.RESET_CONFIRM)) {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    clearCookies();
+                    showPopup(currentLanguage.RESET_SUCCESS);
+                    window.location.reload();
+		}
             }
         });
     }
