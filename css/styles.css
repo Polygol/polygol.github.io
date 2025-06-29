@@ -1772,20 +1772,20 @@ input[type="color"]::-moz-color-swatch {
                 grid-template-columns: repeat(4, 1fr);
             }
 
-            .app-icon ing {
+            .app-icon img {
                 width: min(14vw, 175px);
                 height: min(14vw, 175px);
             }
         }
 
-        @media (max-width: 500px) {
+        @media (max-width: 400px) {
             .app-drawer-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
-        @media (max-width: 300px) {
+        @media (max-width: 280px) {
             .app-drawer-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(1, 1fr);
             }
         }
