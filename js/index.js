@@ -1,3 +1,5 @@
+let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
+
 let activeMediaSessionApp = null; // To track which app controls the media widget
 
 // This object will hold the callback functions sent by the Gurapp
@@ -1059,16 +1061,24 @@ function showPopup(message) {
 }
 
 function showNotification(message, options = {}) {
-    // Create both an on-screen popup and a persistent notification in the shade
-    const popupNotification = createOnScreenPopup(message, options);
+    let popupNotification = null;
+    
+    // Only create on-screen popup if silent mode is NOT active
+    if (!isSilentMode) {
+        popupNotification = createOnScreenPopup(message, options);
+    }
+    
+    // Always create persistent notification in the shade
     const shadeNotification = addToNotificationShade(message, options);
     
-    // Return control methods for both notification types
+    // Return control methods
     return {
-        closePopup: popupNotification.close,
+        closePopup: () => {
+            if (popupNotification) popupNotification.close(); // Only call if popup was created
+        },
         closeShade: shadeNotification.close,
         update: (newMessage) => {
-            popupNotification.update(newMessage);
+            if (popupNotification) popupNotification.update(newMessage); // Only update if popup was created
             shadeNotification.update(newMessage);
         }
     };
@@ -4992,48 +5002,41 @@ document.addEventListener('DOMContentLoaded', function() {
         silentModeSwitch.checked = !silentModeSwitch.checked;
         this.classList.toggle('active');
         
-        const silentMode = silentModeSwitch.checked;
-        localStorage.setItem('silentMode', silentMode);
+        isSilentMode = silentModeSwitch.checked; // Update global flag
+        localStorage.setItem('silentMode', isSilentMode); // Save to localStorage
         
         // Update icon
-        updateSilentModeIcon(silentMode);
+        updateSilentModeIcon(isSilentMode);
         
-        // Override the showPopup function based on silent mode state
-        if (silentMode) {
-            // Store the original function if not already stored
+        // Only override showPopup based on silent mode state
+        if (isSilentMode) { // Silent mode is being turned ON
             if (!window.originalShowPopup) {
                 window.originalShowPopup = window.showPopup;
             }
-            
-            // Replace with silent version (that does nothing)
             window.showPopup = function(message) {
                 console.log('Silent ON; suppressing popup:', message);
-                // Do nothing - this effectively hides all popups
             };
-        } else {
-            // Restore the original function if we have it stored
+        } else { // Silent mode is being turned OFF
             if (window.originalShowPopup) {
                 window.showPopup = window.originalShowPopup;
             }
         }
+        // showNotification is handled by its own internal logic, no override needed here.
     });
     
     // Initialize silent mode on page load
     (function initSilentMode() {
-        const silentMode = localStorage.getItem('silentMode') === 'true';
+        isSilentMode = localStorage.getItem('silentMode') === 'true'; // Initialize global flag
         
-        if (silentMode) {
-            // Store the original function if not already stored
+        if (isSilentMode) { // Silent mode is ON on page load
             if (!window.originalShowPopup) {
                 window.originalShowPopup = window.showPopup;
             }
-            
-            // Replace with silent version
             window.showPopup = function(message) {
                 console.log('Silent ON; suppressing popup:', message);
-                // Do nothing - this effectively hides all popups
             };
         }
+        // showNotification is handled by its own internal logic, no override needed here.
     })();
     
     // Temperature control popup
@@ -5080,21 +5083,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateBrightness(value);
         localStorage.setItem('page_brightness', value);
     });
-    
-    // Override showPopup function to respect silent mode
-    const originalShowPopup = window.showPopup;
-    if (typeof originalShowPopup === 'function') {
-        window.showPopup = function(message) {
-            // Check if silent mode is enabled
-            if (localStorage.getItem('silentMode') === 'true') {
-                console.log('Silent mode active, suppressing popup:', message);
-                return; // Don't show popup if silent mode is enabled
-            }
-            
-            // Otherwise, call the original function
-            originalShowPopup(message);
-        };
-    }
     
     // Add CSS for the overlays
     const style = document.createElement('style');
