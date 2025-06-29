@@ -1084,6 +1084,20 @@ function showNotification(message, options = {}) {
     };
 }
 
+    // Function to close a notification
+    function closeNotification(notif) {
+        // Animate out
+        notif.style.opacity = '0';
+        notif.style.transform = 'translateX(50px)';
+        
+        // Remove after animation completes
+        setTimeout(() => {
+            if (shade.contains(notif)) {
+                shade.removeChild(notif);
+            }
+        }, 300);
+    }
+
 // Creates a temporary on-screen popup (similar to original showPopup)
 function createOnScreenPopup(message, options = {}) {
     const popup = document.createElement('div');
@@ -1267,6 +1281,13 @@ function addToNotificationShade(message, options = {}) {
     notification.style.border = '1px solid var(--glass-border)';
     notification.style.pointerEvents = 'auto';
     
+    // Content container
+    const contentContainer = document.createElement('div');
+    contentContainer.style.display = 'flex';
+    contentContainer.style.alignItems = 'center';
+    contentContainer.style.gap = '10px';
+    contentContainer.style.width = '100%';
+    
     let iconType = 'notifications';
 
     // Content container
@@ -1423,20 +1444,6 @@ function addToNotificationShade(message, options = {}) {
         notification.style.opacity = '1';
         notification.style.transform = 'translateX(0)';
     }, 50);
-    
-    // Function to close a notification
-    function closeNotification(notif) {
-        // Animate out
-        notif.style.opacity = '0';
-        notif.style.transform = 'translateX(50px)';
-        
-        // Remove after animation completes
-        setTimeout(() => {
-            if (shade.contains(notif)) {
-                shade.removeChild(notif);
-            }
-        }, 300);
-    }
     
     // Return object with methods for controlling the notification
     return {
