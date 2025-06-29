@@ -5692,7 +5692,7 @@ window.addEventListener('message', event => {
                 const sourceUrl = event.source.location.href;
 
                 // Check if the source URL path ends with the trusted App Store path
-                if (!sourceUrl.endsWith('/appstore/index.html')) {
+		if (!sourceUrl.endsWith('/appstore/index.html') && !sourceUrl.endsWith('/terminal/index.html')) {
                     const errorMessage = `SECURITY VIOLATION: A script at "${sourceUrl}" attempted to call the protected '${data.functionName}' function. Access denied.`;
                     console.error(errorMessage);
                     // Show a generic error to the user
