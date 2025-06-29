@@ -1323,10 +1323,10 @@ function addToNotificationShade(message, options = {}) {
         actionButton.style.padding = '8px 16px';
         actionButton.style.borderRadius = '18px';
         actionButton.style.border = 'none';
-        actionButton.style.backgroundColor = 'var(--accent-color, #0084ff)';
-        actionButton.style.color = 'white';
+        actionButton.style.backgroundColor = 'var(--text-color)';
+        actionButton.style.color = 'var(--background-color)';
         actionButton.style.cursor = 'pointer';
-        actionButton.style.fontFamily = 'inherit';
+        actionButton.style.fontFamily = 'Inter, sans-serif';
         actionButton.style.fontSize = '14px';
         actionButton.style.transition = 'background-color 0.2s';
         
