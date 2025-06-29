@@ -1523,13 +1523,13 @@ input[type="color"]::-moz-color-swatch {
             transition: transform 0.2s;
             padding: 15px;
             border-radius: 20px;
-            border: none;
+            border: 1px solid transparent;
             user-select: none;
         }
 
         .app-icon:active {
             background-color: var(--transparent-color);
-            backdrop-filter: blur(20px);
+            filter: brightness(1.5);
             border: 1px solid var(--glass-border);
             transform: scale(0.95);
         }
