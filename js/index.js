@@ -1325,6 +1325,19 @@ function addToNotificationShade(message, options = {}) {
     closeBtn.style.transition = 'opacity 0.2s';
 	
     contentContainer.appendChild(closeBtn);
+
+    function closeNotification(notif) {
+        // Animate out
+        notif.style.opacity = '0';
+        notif.style.transform = 'translateX(50px)';
+        
+        // Remove after animation completes
+        setTimeout(() => {
+            if (shade.contains(notif)) {
+                shade.removeChild(notif);
+            }
+        }, 300);
+    }
     
     notification.appendChild(contentContainer);
     
