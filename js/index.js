@@ -57,15 +57,35 @@ function applyLanguage(language) {
 }
 
 function selectLanguage(languageCode) {
-    const languageMap = {
-        'EN': LANG_EN,
-        'JP': LANG_JP,
-        'DE': LANG_DE,
-        'FR': LANG_FR,
-        'ES': LANG_ES,
-        'KO': LANG_KO,
-        'ZH': LANG_ZH
-    };
+	const languageMap = {
+	    'EN': LANG_EN,
+	    'JP': LANG_JP,
+	    'DE': LANG_DE,
+	    'FR': LANG_FR,
+	    'ES': LANG_ES,
+	    'KO': LANG_KO,
+	    'ZH': LANG_ZH,
+	    'HI': LANG_HI,
+	    'PT': LANG_PT,
+	    'BN': LANG_BN,
+	    'RU': LANG_RU,
+	    'PA': LANG_PA,
+	    'VI': LANG_VI,
+	    'TR': LANG_TR,
+	    'AR_EG': LANG_AR_EG,
+	    'MR': LANG_MR,
+	    'TE': LANG_TE,
+	    'TA': LANG_TA,
+	    'UR': LANG_UR,
+	    'ID': LANG_ID,
+	    'JV': LANG_JV,
+	    'FA_IR': LANG_FA_IR,
+	    'IT': LANG_IT,
+	    'HA': LANG_HA,
+	    'GU': LANG_GU,
+	    'AR_LEV': LANG_AR_LEV,
+	    'BHO': LANG_BHO
+	};
 
     currentLanguage = languageMap[languageCode] || LANG_EN;
     console.log('Selected language code:', languageCode);
