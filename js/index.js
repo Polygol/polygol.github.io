@@ -1137,9 +1137,9 @@ function createOnScreenPopup(message, options = {}) {
         actionButton.style.marginLeft = '10px';
         actionButton.style.padding = '8px 16px';
         actionButton.style.borderRadius = '18px';
-        actionButton.style.border = 'none';
-        actionButton.style.backgroundColor = 'var(--accent-color, #0084ff)';
-        actionButton.style.color = 'white';
+        actionButton.style.border = '1px solid var(--glass-border)';
+        actionButton.style.backgroundColor = 'var(--text-color)';
+        actionButton.style.color = 'var(--background-color)';
         actionButton.style.cursor = 'pointer';
         
         // Handle local action or Gurapp-specific action
@@ -1322,7 +1322,7 @@ function addToNotificationShade(message, options = {}) {
         actionButton.textContent = options.buttonText;
         actionButton.style.padding = '8px 16px';
         actionButton.style.borderRadius = '18px';
-        actionButton.style.border = 'none';
+        actionButton.style.border = '1px solid var(--glass-border)';
         actionButton.style.backgroundColor = 'var(--text-color)';
         actionButton.style.color = 'var(--background-color)';
         actionButton.style.cursor = 'pointer';
@@ -1330,60 +1330,36 @@ function addToNotificationShade(message, options = {}) {
         actionButton.style.fontSize = '14px';
         actionButton.style.transition = 'background-color 0.2s';
         
-        actionButton.addEventListener('mouseover', () => {
-            actionButton.style.backgroundColor = 'var(--accent-hover-color, #0073e6)';
-        });
-        
-        actionButton.addEventListener('mouseout', () => {
-            actionButton.style.backgroundColor = 'var(--accent-color, #0084ff)';
-        });
-        
-        if (options.buttonAction && typeof options.buttonAction === 'function') {
+        // Handle local action or Gurapp-specific action
+        if (options.buttonAction && typeof options.buttonAction === 'function') { // For parent-local actions
             actionButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 options.buttonAction();
                 closeNotification(notification);
             });
+        } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) { // For Gurapp-specific actions
+            actionButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const { appName, functionName, args } = options.gurappAction;
+                const gurappIframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
+                if (gurappIframe && gurappIframe.contentWindow) {
+                    // Send a message to the specific Gurapp iframe to trigger the function
+                    gurappIframe.contentWindow.postMessage({
+                        type: 'gurapp-action-request',
+                        functionName: functionName,
+                        args: args || []
+                    }, window.location.origin);
+                    console.log(`[Gurasuraisu] Sent action '${functionName}' to Gurapp '${appName}'.`);
+                } else {
+                    console.warn(`[Gurasuraisu] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
+                    showPopup(`Error: Could not perform action for ${appName}.`);
+                }
+                closeNotification(notification); // Close the notification after click
+            });
         }
         
         buttonContainer.appendChild(actionButton);
         notification.appendChild(buttonContainer);
-    }
-    
-    // Add fullscreen button if the message is about fullscreen
-    if (message === (currentLanguage && currentLanguage.NOT_FULLSCREEN)) {
-        const fullscreenBtn = document.createElement('button');
-        fullscreenBtn.style.display = 'flex';
-        fullscreenBtn.style.alignItems = 'center';
-        fullscreenBtn.style.justifyContent = 'center';
-        fullscreenBtn.style.gap = '5px';
-        fullscreenBtn.style.width = '100%';
-        fullscreenBtn.style.padding = '10px';
-        fullscreenBtn.style.borderRadius = '18px';
-        fullscreenBtn.style.border = 'none';
-        fullscreenBtn.style.backgroundColor = 'var(--accent-color, #0084ff)';
-        fullscreenBtn.style.color = 'white';
-        fullscreenBtn.style.cursor = 'pointer';
-        
-        const fsIcon = document.createElement('span');
-        fsIcon.className = 'material-symbols-rounded';
-        fsIcon.textContent = 'fullscreen';
-        
-        const fsText = document.createElement('span');
-        fsText.textContent = (currentLanguage && currentLanguage.FULLSCREEN) || 'Fullscreen';
-        
-        fullscreenBtn.appendChild(fsIcon);
-        fullscreenBtn.appendChild(fsText);
-        
-        fullscreenBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (typeof goFullscreen === 'function') {
-                goFullscreen();
-            }
-            closeNotification(notification);
-        });
-        
-        notification.appendChild(fullscreenBtn);
     }
     
     // Add swipe capability
