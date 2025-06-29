@@ -6,6 +6,7 @@ const ASSETS_TO_CACHE = [
   '/css/styles.css',
   '/js/index.js',
   '/js/lang.js',
+  '/assets/gurapp/api/gurasuraisu-api.js',
   '/assets/ui/svg/load.svg',
   '/manifest.json',
   '/assets/img/favi/regular.png',
