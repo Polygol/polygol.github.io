@@ -40,6 +40,24 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0">
 </head>
 <body>
+    <script>
+      (function() {
+        const onKeyDown = (e) => {
+          // If the F12 key is pressed, immediately redirect to recovery.
+          // This works even if the rest of the page's scripts are broken.
+          if (e.code === 'F12' && !window.location.pathname.includes('/recovery/')) {
+            console.log('F12 detected. Redirecting to Safe Mode...');
+            // Prevent the main app from trying to save any broken state.
+            window.onbeforeunload = null;
+            window.location.href = '/recovery/index.html';
+          }
+        };
+        // Use 'capture: true' to ensure this listener fires before any potentially
+        // broken listeners on the page.
+        window.addEventListener('keydown', onKeyDown, { capture: true });
+      })();
+    </script>
+
     <noscript>You need to enable JavaScript to run Gurasuraisu.<br>Gurasuraisuを実行するにはJavaScriptを有効にする必要があります。<br>Sie müssen JavaScript aktivieren, um Gurasuraisu auszuführen.<br>Vous devez activer JavaScript pour exécuter Gurasuraisu.<br>Necesitas habilitar JavaScript para ejecutar Gurasuraisu.<br>Gurasuraisu를 실행하려면 JavaScript를 활성화해야 합니다.<br>您需要启用JavaScript才能运行Gurasuraisu。<br>गुरासुराइस सफलतापूर्वक लोड हो गया<br>Gurasuraisu carregado com sucesso<br>গুরসুরাইসু সফলভাবে লোড হয়েছে<br>Gurasuraisu успешно загружен<br>ਗੁਰਸੁਰਾਈਸ ਸਫਲਤਾਪੂਰਵਕ ਲੋਡ ਹੋ ਗਿਆ<br>Gurasuraisu đã tải thành công<br>Gurasuraisu başarıyla yüklendi<br>جراسورايسو تم تحميله بنجاح<br>गुरासुराइस यशस्वीरित्या लोड झाले<br>గురసురాయిసు విజయవంతంగా లోడ్ చేయబడింది<br>குரசுரைசு வெற்றிகரமாக ஏற்றப்பட்டது<br>گوراسورائسو کامیابی سے لوڈ ہو گیا<br>Gurasuraisu berhasil dimuat<br>Gurasuraisu kasil dimuat<br>گوراسورایسو با موفقیت بارگذاری شد<br>Gurasuraisu caricato con successo<br>An yi nasarar lodin Gurasuraisu<br>ગુરાસુરૈસુ સફળતાપૂર્વક લોડ થયું<br>جراسورايسو تحملت بنجاح<br>गुरासुराइस सफलतापूर्वक लोड हो गइल बा</noscript>    
 
     <div class="drawer-handle">
