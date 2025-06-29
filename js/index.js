@@ -1061,6 +1061,8 @@ function showPopup(message) {
 }
 
 function showNotification(message, options = {}) {
+	    console.log("[Parent] showNotification received. Message:", message, "Options:", options, "Has gurappAction property:", !!options.gurappAction);
+
     let popupNotification = null;
     
     // Only create on-screen popup if silent mode is NOT active
@@ -1145,13 +1147,11 @@ function createOnScreenPopup(message, options = {}) {
         // Handle local action or Gurapp-specific action
         if (options.buttonAction && typeof options.buttonAction === 'function') { // For parent-local actions
             actionButton.addEventListener('click', (e) => {
-                e.stopPropagation();
                 options.buttonAction();
                 closeNotification(notification);
             });
         } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) { // For Gurapp-specific actions
             actionButton.addEventListener('click', (e) => {
-                e.stopPropagation();
                 const { appName, functionName, args } = options.gurappAction;
                 const gurappIframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
                 if (gurappIframe && gurappIframe.contentWindow) {
@@ -1298,7 +1298,6 @@ function addToNotificationShade(message, options = {}) {
     closeBtn.style.fontSize = '20px';
     closeBtn.style.opacity = '0.7';
     closeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
         closeNotification(notification);
     });
     closeBtn.style.transition = 'opacity 0.2s';
@@ -1333,13 +1332,11 @@ function addToNotificationShade(message, options = {}) {
         // Handle local action or Gurapp-specific action
         if (options.buttonAction && typeof options.buttonAction === 'function') { // For parent-local actions
             actionButton.addEventListener('click', (e) => {
-                e.stopPropagation();
                 options.buttonAction();
                 closeNotification(notification);
             });
         } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) { // For Gurapp-specific actions
             actionButton.addEventListener('click', (e) => {
-                e.stopPropagation();
                 const { appName, functionName, args } = options.gurappAction;
                 const gurappIframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
                 if (gurappIframe && gurappIframe.contentWindow) {
