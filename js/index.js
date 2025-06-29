@@ -5230,6 +5230,302 @@ function preventLeaving() {
   });
 }
 
+// --- Terminal Functions ---
+
+function getLocalStorageItem(key, sourceWindow) {
+    const value = localStorage.getItem(key);
+    if (sourceWindow) {
+        sourceWindow.postMessage({ type: 'localStorageItemValue', key: key, value: value }, window.location.origin);
+    }
+}
+
+function setLocalStorageItem(key, value, sourceWindow) {
+    localStorage.setItem(key, value);
+    // Re-sync UI for common settings immediately
+    if (key === 'page_brightness') updateBrightness(value);
+    if (key === 'theme') {
+         document.body.classList.toggle('light-theme', value === 'light');
+         document.querySelectorAll('iframe').forEach((iframe) => {
+            iframe.contentWindow.postMessage({
+                type: 'themeUpdate',
+                theme: value
+            }, window.location.origin);
+        });
+    }
+    if (key === 'animationsEnabled') {
+        const enabled = value === 'true';
+        document.body.classList.toggle('reduce-animations', !enabled);
+        document.querySelectorAll('iframe').forEach((iframe) => {
+            iframe.contentWindow.postMessage({
+                type: 'animationsUpdate',
+                enabled: enabled
+            }, window.location.origin);
+        });
+    }
+    if (key === 'showSeconds') {
+        showSeconds = value === 'true';
+        updateClockAndDate();
+    }
+    if (key === 'showWeather') {
+        showWeather = value === 'true';
+        // Trigger update to show/hide widget and fetch data
+        const weatherSwitchEl = document.getElementById('weather-switch');
+        if (weatherSwitchEl) {
+            weatherSwitchEl.checked = showWeather;
+            weatherSwitchEl.dispatchEvent(new Event('change')); // Simulate change event
+        }
+    }
+    if (key === 'use12HourFormat') {
+        use12HourFormat = value === 'true';
+        updateClockAndDate();
+    }
+    if (key === 'clockFont' || key === 'clockWeight' || key === 'clockColor' || key === 'clockColorEnabled' || key === 'clockStackEnabled') {
+        applyClockStyles();
+        updateClockAndDate();
+    }
+    if (key === 'highContrast') {
+        document.body.classList.toggle('high-contrast', value === 'true');
+    }
+    if (key === 'gurappsEnabled') {
+        gurappsEnabled = value === 'true';
+        updateGurappsVisibility();
+    }
+    if (key === 'minimalMode') {
+        minimalMode = value === 'true';
+        updateMinimalMode();
+    }
+    if (key === 'silentMode') {
+        // Re-initialize silent mode functionality
+        (function initSilentMode() {
+            const silentModeEnabled = localStorage.getItem('silentMode') === 'true';
+            if (silentModeEnabled) {
+                if (!window.originalShowPopup) {
+                    window.originalShowPopup = window.showPopup;
+                }
+                window.showPopup = function(msg) {
+                    console.log('Silent ON; suppressing popup:', msg);
+                };
+            } else {
+                if (window.originalShowPopup) {
+                    window.showPopup = window.originalShowPopup;
+                }
+            }
+        })();
+    }
+    syncUiStates(); // Update UI for other visual indicators
+
+    if (sourceWindow) {
+        sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Setting '${key}' updated.` }, window.location.origin);
+    }
+}
+
+function removeLocalStorageItem(key, sourceWindow) {
+    localStorage.removeItem(key);
+    if (sourceWindow) {
+        sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Storage key '${key}' removed.` }, window.location.origin);
+    }
+}
+
+function listLocalStorageKeys(sourceWindow) {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        keys.push(localStorage.key(i));
+    }
+    if (sourceWindow) {
+        sourceWindow.postMessage({ type: 'localStorageKeysList', keys: keys }, window.location.origin);
+    }
+}
+
+function clearLocalStorage(sourceWindow) {
+    if (confirm(currentLanguage.RESET_CONFIRM)) { // Use Gurasuraisu's own confirmation
+        localStorage.clear();
+        if (sourceWindow) {
+            sourceWindow.postMessage({ type: 'parentActionSuccess', message: 'All Gurasuraisu localStorage data cleared. Reloading...' }, window.location.origin);
+        }
+        window.location.reload(); // Hard reload might be necessary after clearing all localStorage
+    } else {
+        if (sourceWindow) {
+            sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Operation cancelled.' }, window.location.origin);
+        }
+    }
+}
+
+function listCommonSettings(sourceWindow) {
+    const settings = {
+        'theme': localStorage.getItem('theme'),
+        'minimalMode': localStorage.getItem('minimalMode'),
+        'silentMode': localStorage.getItem('silentMode'),
+        'page_brightness': localStorage.getItem('page_brightness'),
+        'showSeconds': localStorage.getItem('showSeconds'),
+        'showWeather': localStorage.getItem('showWeather'),
+        'gurappsEnabled': localStorage.getItem('gurappsEnabled'),
+        'animationsEnabled': localStorage.getItem('animationsEnabled'),
+        'highContrast': localStorage.getItem('highContrast'),
+        'use12HourFormat': localStorage.getItem('use12HourFormat'),
+        'clockFont': localStorage.getItem('clockFont'),
+        'clockWeight': localStorage.getItem('clockWeight'),
+        'clockColor': localStorage.getItem('clockColor'),
+        'clockColorEnabled': localStorage.getItem('clockColorEnabled'),
+        'clockStackEnabled': localStorage.getItem('clockStackEnabled'),
+        'selectedLanguage': localStorage.getItem('selectedLanguage'),
+        // Add more settings here as needed
+    };
+    if (sourceWindow) {
+        sourceWindow.postMessage({ type: 'commonSettingsList', settings: settings }, window.location.origin);
+    }
+}
+
+function listRecentWallpapers(sourceWindow) {
+    if (sourceWindow) {
+        sourceWindow.postMessage({ type: 'recentWallpapersList', wallpapers: recentWallpapers }, window.location.origin);
+    }
+}
+
+async function removeWallpaperAtIndex(index, sourceWindow) {
+    if (index < 0 || index >= recentWallpapers.length) {
+        if (sourceWindow) {
+            sourceWindow.postMessage({ type: 'parentActionError', message: 'Invalid wallpaper index.' }, window.location.origin);
+        }
+        return;
+    }
+    if (confirm(currentLanguage.WALLPAPER_REMOVE_CONFIRM)) { // Use Gurasuraisu's own confirmation
+        await removeWallpaper(index); // Call existing removeWallpaper logic
+        if (sourceWindow) {
+            sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Wallpaper at index ${index} removed.` }, window.location.origin);
+        }
+    } else {
+        if (sourceWindow) {
+            sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Operation cancelled.' }, window.location.origin);
+        }
+    }
+}
+
+function clearAllWallpapers(sourceWindow) {
+    if (recentWallpapers.length === 0) {
+         if (sourceWindow) {
+            sourceWindow.postMessage({ type: 'parentActionInfo', message: 'No custom wallpapers to clear.' }, window.location.origin);
+        }
+        return;
+    }
+    if (confirm(currentLanguage.WALLPAPER_CLEAR_CONFIRM)) { // Use Gurasuraisu's own confirmation
+        // Clear all from IndexedDB first
+        initDB().then(db => {
+            const transaction = db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            const request = store.clear();
+            request.onsuccess = () => {
+                recentWallpapers = []; // Clear in-memory array
+                localStorage.removeItem("recentWallpapers"); // Clear localStorage record
+                // Reset slideshow/single wallpaper state
+                clearInterval(slideshowInterval);
+                slideshowInterval = null;
+                isSlideshow = false;
+                localStorage.removeItem("wallpapers"); // Remove slideshow indicator
+                localStorage.removeItem("wallpaperOrder"); // Reset order
+                currentWallpaperPosition = 0;
+                localStorage.setItem("wallpaperType", "default"); // Set to default type
+                applyWallpaper(); // Apply default wallpaper
+                updatePageIndicatorDots(true); // Update indicator
+                syncUiStates(); // Update UI settings
+                if (sourceWindow) {
+                    sourceWindow.postMessage({ type: 'parentActionSuccess', message: 'All custom wallpapers cleared. Resetting to default.' }, window.location.origin);
+                }
+            };
+            request.onerror = (e) => {
+                 console.error('Failed to clear IndexedDB:', e.target.error);
+                 if (sourceWindow) {
+                    sourceWindow.postMessage({ type: 'parentActionError', message: 'Failed to clear wallpapers from database.' }, window.location.origin);
+                }
+            };
+        }).catch(e => {
+            console.error('IndexedDB error:', e);
+            if (sourceWindow) {
+                sourceWindow.postMessage({ type: 'parentActionError', message: 'Failed to access wallpaper database.' }, window.location.origin);
+            }
+        });
+    } else {
+        if (sourceWindow) {
+            sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Operation cancelled.' }, window.location.origin);
+        }
+    }
+}
+
+function switchWallpaperParent(directionOrIndex, sourceWindow) {
+    if (typeof directionOrIndex === 'string' && (directionOrIndex === 'left' || directionOrIndex === 'right')) {
+        switchWallpaper(directionOrIndex); // Call existing switchWallpaper logic
+        if (sourceWindow) {
+            sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Switched wallpaper ${directionOrIndex}.` }, window.location.origin);
+        }
+    } else {
+        const index = parseInt(directionOrIndex);
+        if (!isNaN(index)) {
+            jumpToWallpaper(index); // Call existing jumpToWallpaper logic
+            if (sourceWindow) {
+                sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Jumped to wallpaper at index ${index}.` }, window.location.origin);
+            }
+        } else {
+            if (sourceWindow) {
+                sourceWindow.postMessage({ type: 'parentActionError', message: 'Invalid wallpaper switch argument. Use "left", "right", or a numeric index.' }, window.location.origin);
+            }
+        }
+    }
+}
+
+function getCurrentTimeParent(sourceWindow) {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString(); // Formats time based on locale
+    if (sourceWindow) {
+        sourceWindow.postMessage({ type: 'currentTimeValue', time: timeString }, window.location.origin);
+    }
+}
+
+function executeParentJS(code, sourceWindow) {
+    try {
+        // IMPORTANT: eval() is DANGEROUS. Use with extreme caution.
+        // The security check below attempts to restrict its use.
+        const result = eval(code);
+        let resultString;
+        if (typeof result === 'object' && result !== null) {
+            try {
+                resultString = JSON.stringify(result);
+            } catch (e) {
+                resultString = result.toString(); // Fallback for circular structures, DOM elements etc.
+            }
+        } else {
+            resultString = String(result);
+        }
+        if (sourceWindow) {
+            sourceWindow.postMessage({ type: 'commandOutput', result: resultString }, window.location.origin);
+        }
+    } catch (e) {
+        if (sourceWindow) {
+            sourceWindow.postMessage({ type: 'commandError', error: e.message }, window.location.origin);
+        }
+    }
+}
+
+// Global functions exposed for the Terminal (or other Gurapps if needed)
+window.rebootGurasuraisu = function(sourceWindow) {
+    if (confirm(currentLanguage.REBOOT_CONFIRM)) { // Assuming REBOOT_CONFIRM is defined in lang.js
+        if (sourceWindow) {
+            sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Rebooting Gurasuraisu...' }, window.location.origin);
+        }
+        window.location.reload();
+    } else {
+        if (sourceWindow) {
+            sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Reboot cancelled.' }, window.location.origin);
+        }
+    }
+};
+
+window.promptPWAInstall = function(sourceWindow) {
+    // This calls the existing `promptToInstallPWA` which triggers the popup.
+    promptToInstallPWA();
+    if (sourceWindow) {
+        sourceWindow.postMessage({ type: 'parentActionInfo', message: 'PWA installation prompt initiated.' }, window.location.origin);
+    }
+};
+
 // --- Media Session Management Functions ---
 
 function showMediaWidget(metadata) {
@@ -5423,7 +5719,21 @@ window.addEventListener('message', event => {
 	    registerMediaSession,
 	    clearMediaSession,
 	    updateMediaPlaybackState,
-	    updateMediaProgress
+	    updateMediaProgress, 
+            getLocalStorageItem,
+            setLocalStorageItem,
+            removeLocalStorageItem,
+            listLocalStorageKeys,
+            clearLocalStorage,
+            listCommonSettings,
+            listRecentWallpapers,
+            removeWallpaperAtIndex,
+            clearAllWallpapers,
+            switchWallpaperParent,
+            getCurrentTimeParent,
+            rebootGurasuraisu,
+            promptPWAInstall,
+            executeParentJS,
         };
 
         const funcToCall = allowedFunctions[data.functionName];
