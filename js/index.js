@@ -1267,13 +1267,6 @@ function addToNotificationShade(message, options = {}) {
     notification.style.border = '1px solid var(--glass-border)';
     notification.style.pointerEvents = 'auto';
     
-    // Content container
-    const contentContainer = document.createElement('div');
-    contentContainer.style.display = 'flex';
-    contentContainer.style.alignItems = 'center';
-    contentContainer.style.gap = '10px';
-    contentContainer.style.width = '100%';
-    
     let iconType = 'notifications';
 
     // Content container
