@@ -1142,10 +1142,31 @@ function createOnScreenPopup(message, options = {}) {
         actionButton.style.color = 'white';
         actionButton.style.cursor = 'pointer';
         
-        if (options.buttonAction && typeof options.buttonAction === 'function') {
+        // Handle local action or Gurapp-specific action
+        if (options.buttonAction && typeof options.buttonAction === 'function') { // For parent-local actions
             actionButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 options.buttonAction();
+                closeNotification(notification);
+            });
+        } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) { // For Gurapp-specific actions
+            actionButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const { appName, functionName, args } = options.gurappAction;
+                const gurappIframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
+                if (gurappIframe && gurappIframe.contentWindow) {
+                    // Send a message to the specific Gurapp iframe to trigger the function
+                    gurappIframe.contentWindow.postMessage({
+                        type: 'gurapp-action-request',
+                        functionName: functionName,
+                        args: args || []
+                    }, window.location.origin);
+                    console.log(`[Gurasuraisu] Sent action '${functionName}' to Gurapp '${appName}'.`);
+                } else {
+                    console.warn(`[Gurasuraisu] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
+                    showPopup(`Error: Could not perform action for ${appName}.`);
+                }
+                closeNotification(notification); // Close the notification after click
             });
         }
         
