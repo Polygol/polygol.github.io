@@ -1522,12 +1522,15 @@ input[type="color"]::-moz-color-swatch {
             cursor: pointer;
             transition: transform 0.2s;
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 20px;
+            border: none;
             user-select: none;
         }
 
         .app-icon:active {
             background-color: var(--transparent-color);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
             transform: scale(0.95);
         }
 
