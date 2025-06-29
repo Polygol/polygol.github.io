@@ -1771,6 +1771,11 @@ input[type="color"]::-moz-color-swatch {
             .app-drawer-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
+
+            .app-icon ing {
+                width: min(14vw, 175px);
+                height: min(14vw, 175px);
+            }
         }
 
         @media (max-width: 500px) {
