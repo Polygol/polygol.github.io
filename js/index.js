@@ -5685,7 +5685,26 @@ window.addEventListener('message', event => {
     if (data && data.action === 'callGurasuraisuFunc' && data.functionName) {
 
         // --- NEW: Security Check for PROTECTED functions ---
-        const protectedFunctions = ['installApp', 'deleteApp'];
+        const protectedFunctions = [
+	    'createFullscreenEmbed',
+	    'blackoutScreen',
+	    'installApp', 
+            'deleteApp',
+            'getLocalStorageItem',
+            'setLocalStorageItem',
+            'removeLocalStorageItem',
+            'listLocalStorageKeys',
+            'clearLocalStorage',
+            'listCommonSettings',
+            'listRecentWallpapers',
+            'removeWallpaperAtIndex',
+            'clearAllWallpapers',
+            'switchWallpaperParent',
+            'getCurrentTimeParent',
+            'rebootGurasuraisu',
+            'promptPWAInstall',
+            'executeParentJS'
+        ];
 
         if (protectedFunctions.includes(data.functionName)) {
             try {
@@ -5695,8 +5714,6 @@ window.addEventListener('message', event => {
 		if (!sourceUrl.endsWith('/appstore/index.html') && !sourceUrl.endsWith('/terminal/index.html')) {
                     const errorMessage = `SECURITY VIOLATION: A script at "${sourceUrl}" attempted to call the protected '${data.functionName}' function. Access denied.`;
                     console.error(errorMessage);
-                    // Show a generic error to the user
-                    showPopup(currentLanguage.GURAPP_INSTALL_NONSTORE_DENIED);
                     return; // Stop processing immediately
                 }
             } catch (e) {
