@@ -1,4 +1,4 @@
-// EN, JP, DE, FR, ES, KO, ZH translation variables for Gurasuraisu
+// EN, JP, DE, FR, ES, KO, ZH, HI, PT, BN, RU, PA, VI, TR, AR_EG, MR, TE, TA, UR, ID, JV, FA_IR, IT, HA, GU, AR_LEV, BHO translation variables for Gurasuraisu
 
 const LANG_EN = {
     GREETING: "Gurasuraisu loaded successfully",
