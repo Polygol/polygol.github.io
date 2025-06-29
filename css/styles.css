@@ -1055,6 +1055,7 @@ input[type="color"]::-moz-color-swatch {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    width: 0;
 }
 
 #silent_switch_qc {
