@@ -981,7 +981,7 @@ input[type="color"]::-moz-color-swatch {
     width: 0%;
     height: 100%;
     background-color: var(--text-color);
-    border-radius: 3px;
+    border-radius: 6px;
     transition: width 0.2s ease; /* Smooth transition for progress */
 }
 
