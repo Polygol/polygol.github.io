@@ -530,6 +530,7 @@ input[type="color"]::-moz-color-swatch {
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
             overflow-y: auto;
             user-select: none;
+            pointer-events: none;
         }
 
         #customizeModal.modal {
@@ -583,6 +584,7 @@ input[type="color"]::-moz-color-swatch {
         .modal.show {
             transform: translate(-50%) scale(1);
             opacity: 1;
+            pointer-events: auto;
         }
 
         .modal-content {
