@@ -1778,6 +1778,12 @@ input[type="color"]::-moz-color-swatch {
             }
         }
 
+        @media (max-width: 520px) {
+            .app-drawer-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
         @media (max-width: 400px) {
             .app-drawer-grid {
                 grid-template-columns: repeat(2, 1fr);
