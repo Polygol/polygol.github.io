@@ -2,6 +2,7 @@ const CACHE_NAME = 'gurasuraisu-cache-v1'; // Give your cache a clear name
 
 const ASSETS_TO_CACHE = [
   '/',
+  '/recovery/index.html',
   '/index.html',
   '/css/styles.css',
   '/js/index.js',
