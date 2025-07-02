@@ -1788,9 +1788,6 @@ input[type="color"]::-moz-color-swatch {
     margin-bottom: 34px;
     border-radius: 20px;
     padding: 15px 20px;
-    background-color: var(--search-background);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border
     opacity: 0; /* Start hidden */
     transform: translateY(10px); /* Start slightly lower for a subtle lift effect */
     transition: opacity 0.3s ease, transform 0.3s ease;
