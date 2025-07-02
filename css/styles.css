@@ -1904,6 +1904,11 @@ button#ai-send-btn {
                 width: 90vw;
                 border: 1px solid var(--glass-border);
             }
+
+            #ai-chat-area {
+                width: 80vw;
+                margin-left: 10vw;
+            }
         }
             
         @media (max-width: 970px) {
