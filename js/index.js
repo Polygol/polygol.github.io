@@ -1945,6 +1945,8 @@ let minimalMode = localStorage.getItem('minimalMode') === 'true';
 let isAiAssistantEnabled = localStorage.getItem('aiAssistantEnabled') === 'true';
 let geminiApiKey = localStorage.getItem('geminiApiKey');
 let genAI; // Will be initialized if AI is enabled
+let chat; // Will hold the Gemini chat session
+let chatHistory = []; // To store the conversation
 
 // Theme switching functionality
 function setupThemeSwitcher() {
@@ -1992,7 +1994,10 @@ animationSwitch.addEventListener('change', function() {
 });
 
 async function initializeAiAssistant() {
-    if (!isAiAssistantEnabled) return;
+    if (!isAiAssistantEnabled) {
+	syncUiStates();
+	return;
+    }
 
     if (!geminiApiKey) {
         geminiApiKey = prompt(currentLanguage.AI_API_KEY_PROMPT || "Please enter your Google AI API Key:");
@@ -2010,16 +2015,20 @@ async function initializeAiAssistant() {
     }
 
     try {
-        // Use dynamic import() to load the ES module from a reliable CDN.
         const { GoogleGenerativeAI } = await import("https://esm.sh/@google/generative-ai");
+        if (!GoogleGenerativeAI) throw new Error("Failed to import GoogleGenerativeAI module.");
         
-        // Check if the import was successful
-        if (!GoogleGenerativeAI) {
-            throw new Error("Failed to import GoogleGenerativeAI from module.");
-        }
+        const genAI = new GoogleGenerativeAI(geminiApiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         
-        genAI = new GoogleGenerativeAI(geminiApiKey);
-        console.log("AI Assistant initialized successfully.");
+        // Initialize the chat with the existing history
+        chat = model.startChat({
+            history: chatHistory,
+            generationConfig: {
+                maxOutputTokens: 2000,
+            },
+        });
+        console.log("AI Assistant chat session initialized.");
 
     } catch (error) {
         console.error("AI Initialization failed:", error);
@@ -2027,7 +2036,6 @@ async function initializeAiAssistant() {
         isAiAssistantEnabled = false; 
         localStorage.setItem('aiAssistantEnabled', 'false');
         
-        // Revert the UI state
         const aiSwitch = document.getElementById('ai-switch');
         if (aiSwitch) aiSwitch.checked = false;
         syncUiStates();
@@ -2035,10 +2043,12 @@ async function initializeAiAssistant() {
 }
 
 function showAiAssistant() {
-    if (!isAiAssistantEnabled || !genAI) {
-        if (isAiAssistantEnabled) showPopup(currentLanguage.AI_NOT_READY || "AI is not ready.");
-        return;
-    };
+    if (!isAiAssistantEnabled) return;
+    if (!chat && geminiApiKey) { 
+        // If chat isn't initialized but we have a key, try to initialize.
+        // This handles cases where initialization might have failed silently before.
+        initializeAiAssistant();
+    }
     
     const overlay = document.getElementById('ai-assistant-overlay');
     overlay.style.display = 'flex';
@@ -2059,28 +2069,68 @@ function hideAiAssistant() {
 async function handleAiQuery() {
     const input = document.getElementById('ai-input');
     const query = input.value.trim();
-    if (!query) return;
+    if (!query || !chat) return;
 
+    // Disable input and show user message immediately
+    input.value = '';
     input.disabled = true;
-    input.placeholder = "Thinking...";
+    document.getElementById('ai-send-btn').disabled = true;
+    appendMessage(query, 'user');
+
+    // Add thinking indicator
+    const thinkingMessage = appendMessage('', 'thinking');
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(query);
+        const result = await chat.sendMessage(query);
         const response = await result.response;
         const text = response.text();
-        
-        showPopup(`AI: ${text}`);
-        hideAiAssistant();
+
+        // Remove thinking indicator and show AI response
+        thinkingMessage.remove();
+        appendMessage(text, 'ai');
 
     } catch (error) {
         console.error("Error with Gemini API:", error);
-        showPopup(currentLanguage.AI_QUERY_FAIL || "AI query failed.");
+        thinkingMessage.remove();
+        let errorMessage = currentLanguage.AI_QUERY_FAIL || "An error occurred.";
+        if (error.toString().includes('400')) {
+            errorMessage = currentLanguage.AI_TOKEN_LIMIT_REACHED || "Conversation is too long. Please clear the chat to continue.";
+        }
+        appendMessage(errorMessage, 'ai error');
     } finally {
+        // Re-enable input
         input.disabled = false;
-        input.value = '';
-        input.placeholder = "Search or ask";
+        document.getElementById('ai-send-btn').disabled = false;
+        input.focus();
     }
+}
+
+function appendMessage(content, type) {
+    const chatArea = document.getElementById('ai-chat-area');
+    const messageElement = document.createElement('div');
+
+    if (type === 'thinking') {
+        messageElement.className = 'ai-message thinking';
+        messageElement.innerHTML = `<div class="thinking-dots"><span></span><span></span><span></span></div>`;
+    } else {
+        messageElement.className = type === 'user' ? 'user-message' : 'ai-message';
+        messageElement.textContent = content;
+    }
+    
+    chatArea.appendChild(messageElement);
+    // Scroll to the bottom to see the new message
+    chatArea.scrollTop = chatArea.scrollHeight;
+    return messageElement;
+}
+
+function clearAiChat() {
+    document.getElementById('ai-chat-area').innerHTML = '';
+    chatHistory = [];
+    // Re-initialize the chat session with a clean history
+    if(isAiAssistantEnabled && geminiApiKey) {
+        initializeAiAssistant();
+    }
+    showPopup(currentLanguage.AI_CHAT_CLEARED || "Chat cleared.");
 }
 
 // Function to handle Gurapps visibility
@@ -5282,23 +5332,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isAiAssistantEnabled) {
             initializeAiAssistant();
         } else {
-            genAI = null; 
+            chat = null; // Clear the chat session
         }
     });
 
-    const aiOverlay = document.getElementById('ai-assistant-overlay');
-    if (aiOverlay) {
-        aiOverlay.addEventListener('click', (e) => {
-            if (e.target === aiOverlay) {
-                hideAiAssistant();
-            }
-        });
-    }
-
+    document.getElementById('ai-close-chat')?.addEventListener('click', hideAiAssistant);
+    document.getElementById('ai-clear-chat')?.addEventListener('click', clearAiChat);
+    document.getElementById('ai-send-btn')?.addEventListener('click', handleAiQuery);
+    
     const aiInput = document.getElementById('ai-input');
     if (aiInput) {
         aiInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) { // Send on Enter, not on Shift+Enter
+                e.preventDefault(); 
                 handleAiQuery();
             }
             if (e.key === 'Escape') {
