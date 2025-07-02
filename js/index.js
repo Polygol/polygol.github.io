@@ -1991,28 +1991,6 @@ animationSwitch.addEventListener('change', function() {
     });
 });
 
-async function loadGenerativeAiScript() {
-    return new Promise((resolve, reject) => {
-        if (window.google && window.google.generativeai) { // Check if already loaded
-            console.log('Google AI SDK already loaded.');
-            resolve();
-            return;
-        }
-        const script = document.createElement('script');
-        script.src = 'https://sdk.gemini.ai/v1.5/gemini-web.js';
-        script.onload = () => {
-            console.log('Google AI SDK loaded successfully.');
-            resolve();
-        };
-        script.onerror = (e) => {
-            console.error('Failed to load Google AI SDK.', e);
-            showPopup(currentLanguage.AI_SDK_LOAD_FAIL || "Failed to load AI script.");
-            reject(e);
-        };
-        document.head.appendChild(script);
-    });
-}
-
 async function initializeAiAssistant() {
     if (!isAiAssistantEnabled) return;
 
@@ -2032,19 +2010,27 @@ async function initializeAiAssistant() {
     }
 
     try {
-        await loadGenerativeAiScript();
-        if (window.google && window.google.generativeai) {
-             genAI = new window.google.generativeai.GoogleGenerativeAI(geminiApiKey);
-        } else {
-             throw new Error("Google AI SDK not found on window object.");
+        // Use dynamic import() to load the ES module from a reliable CDN.
+        const { GoogleGenerativeAI } = await import("https://esm.sh/@google/generative-ai");
+        
+        // Check if the import was successful
+        if (!GoogleGenerativeAI) {
+            throw new Error("Failed to import GoogleGenerativeAI from module.");
         }
+        
+        genAI = new GoogleGenerativeAI(geminiApiKey);
+        console.log("AI Assistant initialized successfully.");
+
     } catch (error) {
         console.error("AI Initialization failed:", error);
-        showPopup(currentLanguage.AI_INIT_FAIL || "AI initialization failed.");
+        showPopup(currentLanguage.AI_INIT_FAIL || "AI initialization failed. Check API key and network.");
         isAiAssistantEnabled = false; 
         localStorage.setItem('aiAssistantEnabled', 'false');
-        geminiApiKey = null;
-        localStorage.removeItem('geminiApiKey');
+        
+        // Revert the UI state
+        const aiSwitch = document.getElementById('ai-switch');
+        if (aiSwitch) aiSwitch.checked = false;
+        syncUiStates();
     }
 }
 
