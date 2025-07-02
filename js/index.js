@@ -2081,8 +2081,65 @@ async function loadHtml2canvasScript() {
     });
 }
 
+/**
+ * Creates a composite screenshot of the main body and an active iframe.
+ * This works by asking the iframe (via gurasuraisu-api.js) to provide its own screenshot.
+ * @returns {Promise<string>} A promise that resolves with the dataURL of the composite image.
+ */
+function createCompositeScreenshot() {
+    return new Promise(async (resolve, reject) => {
+        const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+        const iframe = activeEmbed ? activeEmbed.querySelector('iframe') : null;
 
-// Map of available functions for the AI to call
+        if (!iframe) {
+            const canvas = await html2canvas(document.body, { useCORS: true, logging: false, ignoreElements: (el) => el.id === 'ai-assistant-overlay' });
+            resolve(canvas.toDataURL('image/jpeg', 0.5));
+            return;
+        }
+
+        const parentCanvas = await html2canvas(document.body, {
+            useCORS: true,
+            logging: false,
+            ignoreElements: (el) => el.id === 'ai-assistant-overlay' || el.tagName === 'IFRAME'
+        });
+
+        const iframeListener = (event) => {
+            if (event.source === iframe.contentWindow && event.data.type === 'screenshot-response') {
+                window.removeEventListener('message', iframeListener);
+
+                const childDataUrl = event.data.screenshotDataUrl;
+
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = window.innerWidth;
+                finalCanvas.height = window.innerHeight;
+                const ctx = finalCanvas.getContext('2d');
+
+                const parentImg = new Image();
+                parentImg.onload = () => {
+                    ctx.drawImage(parentImg, 0, 0);
+
+                    const childImg = new Image();
+                    childImg.onload = () => {
+                        const rect = iframe.getBoundingClientRect();
+                        ctx.drawImage(childImg, rect.left, rect.top, rect.width, rect.height);
+                        resolve(finalCanvas.toDataURL('image/jpeg', 0.5));
+                    };
+                    childImg.src = childDataUrl;
+                };
+                parentImg.src = parentCanvas.toDataURL();
+            }
+        };
+
+        window.addEventListener('message', iframeListener);
+        iframe.contentWindow.postMessage({ type: 'request-screenshot' }, window.location.origin);
+        
+        setTimeout(() => {
+            window.removeEventListener('message', iframeListener);
+            reject(new Error("Screenshot request to iframe timed out. The active app may not support this feature."));
+        }, 3000);
+    });
+}
+
 // Map of available functions for the AI to call
 const availableFunctions = {
     setBrightness: (level) => {
@@ -2130,8 +2187,16 @@ function showAiAssistant() {
         if (isAiAssistantEnabled) showPopup(currentLanguage.AI_NOT_READY || "AI is not ready.");
         return;
     };
-    
+	
     const overlay = document.getElementById('ai-assistant-overlay');
+    const responseArea = document.getElementById('ai-response-area');
+
+    if (responseArea) {
+        responseArea.innerHTML = '';
+        responseArea.style.opacity = '0';
+        responseArea.style.transform = 'translateY(10px)';
+    }
+    
     overlay.style.display = 'flex';
     setTimeout(() => {
         overlay.classList.add('show');
@@ -2155,37 +2220,37 @@ async function handleAiQuery() {
     const responseArea = document.getElementById('ai-response-area');
     const query = input.value.trim();
 
-    if (!responseArea) {
-        console.error("Fatal Error: AI response area not found.");
-        return;
-    }
-    if (!query || !chatSession || input.disabled) return;
+    if (!responseArea || !query || !chatSession || input.disabled) return;
 
-    // --- FIX: Immediately disable UI and show thinking state ---
     input.disabled = true;
     sendBtn.style.pointerEvents = 'none';
     sendBtn.style.opacity = '0.5';
-    input.value = ''; // Clear the input field
+    input.value = '';
     input.placeholder = "Thinking...";
 
-    // Hide the previous response while processing
     responseArea.style.opacity = '0';
-    responseArea.style.transform = 'translateY(10px)';
     setTimeout(() => { responseArea.innerHTML = ''; }, 300);
-    // --- End of FIX ---
 
     try {
         await loadHtml2canvasScript();
-        const canvas = await html2canvas(document.body, {
-            useCORS: true,
-            logging: false,
-            ignoreElements: (element) => element.id === 'ai-assistant-overlay'
-        });
-        const screenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+        
+        const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+        let finalScreenshotDataUrl;
+
+        if (activeEmbed) {
+            finalScreenshotDataUrl = await createCompositeScreenshot();
+        } else {
+            const canvas = await html2canvas(document.body, {
+                useCORS: true,
+                logging: false,
+                ignoreElements: (element) => element.id === 'ai-assistant-overlay'
+            });
+            finalScreenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+        }
 
         const imagePart = {
             inlineData: {
-                data: screenshotDataUrl.split(',')[1],
+                data: finalScreenshotDataUrl.split(',')[1],
                 mimeType: "image/jpeg"
             }
         };
@@ -2203,33 +2268,30 @@ async function handleAiQuery() {
              response = finalResult.response;
         }
 
-        // Display the final response
         responseArea.innerHTML = response.text();
         responseArea.style.opacity = '1';
         responseArea.style.transform = 'translateY(0)';
 
-
     } catch (error) {
-        console.error("Error with Gemini API:", error);
+        console.error("Error processing AI query:", error);
         let errorMessage = "Sorry, something went wrong.";
-        if (error.message && error.message.includes('400')) {
-             errorMessage = "There was an issue with the request, possibly due to token limits. The conversation memory has been reset.";
+        if (error.message.includes('400')) {
+             errorMessage = "There was a request issue, possibly due to token limits. Memory has been reset.";
              initializeAiAssistant();
+        } else if (error.message.includes('timed out')) {
+            errorMessage = "The active app did not respond to the screenshot request.";
         }
         
-        // Display the error
         responseArea.innerHTML = `<p style="color: #ff8a80;">${errorMessage}</p>`;
         responseArea.style.opacity = '1';
         responseArea.style.transform = 'translateY(0)';
 
     } finally {
-        // --- FIX: Reliably re-enable UI after completion or error ---
         input.disabled = false;
         sendBtn.style.pointerEvents = 'auto';
         sendBtn.style.opacity = '1';
         input.placeholder = "Ask, or describe a command...";
         input.focus();
-        // --- End of FIX ---
     }
 }
 
