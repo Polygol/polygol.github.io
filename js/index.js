@@ -2141,6 +2141,12 @@ async function handleAiQuery() {
     const input = document.getElementById('ai-input');
     const responseArea = document.getElementById('ai-response-area');
     const query = input.value.trim();
+
+    if (!responseArea) {
+        console.error("AI response area element with ID 'ai-response-area' was not found in the HTML");
+        return; 
+    }
+	
     if (!query || !chatSession) return;
 
     input.disabled = true;
