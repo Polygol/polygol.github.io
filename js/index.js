@@ -2083,6 +2083,7 @@ async function loadHtml2canvasScript() {
 
 
 // Map of available functions for the AI to call
+// Map of available functions for the AI to call
 const availableFunctions = {
     setBrightness: (level) => {
         level = Math.max(20, Math.min(100, level)); // Clamp value
@@ -2103,11 +2104,22 @@ const availableFunctions = {
         return `Theme changed to ${themeName}.`;
     },
     openApp: (appName) => {
-        const app = Object.values(apps).find(a => a.name.toLowerCase() === appName.toLowerCase());
-        if (app && app.url) {
-            createFullscreenEmbed(app.url);
+        // --- FIX: Use Object.entries to correctly access the app's name (the key) ---
+        const appEntry = Object.entries(apps).find(
+            ([name, details]) => name.toLowerCase() === appName.toLowerCase()
+        );
+
+        // appEntry will be an array like ["Chronos", { url: "..." }] if found
+        if (appEntry) {
+            const appDetails = appEntry[1]; // The app's details object
+            createFullscreenEmbed(appDetails.url);
             return `Opening the ${appName} app.`;
         } else {
+            // Also handle the "App Store" case specifically if needed
+            if (appName.toLowerCase() === 'app store') {
+                 createFullscreenEmbed(apps["App Store"].url);
+                 return `Opening the App Store.`;
+            }
             return `Sorry, I could not find an app named ${appName}.`;
         }
     }
@@ -2143,21 +2155,27 @@ async function handleAiQuery() {
     const query = input.value.trim();
 
     if (!responseArea) {
-        console.error("AI response area element with ID 'ai-response-area' was not found in the HTML");
-        return; 
+        console.error("Fatal Error: AI response area not found.");
+        return;
     }
-	
     if (!query || !chatSession) return;
 
+    // 1. Hide the response area immediately and clear old content after fade-out.
+    responseArea.style.opacity = '0';
+    responseArea.style.transform = 'translateY(10px)';
+    setTimeout(() => { responseArea.innerHTML = ''; }, 300);
+
     input.disabled = true;
-    input.value = '';
     input.placeholder = "Thinking...";
-    responseArea.innerHTML += `<p><strong>You:</strong> ${query}</p><p><strong>AI:</strong> <span class="thinking-indicator">...</span></p>`;
-    responseArea.scrollTop = responseArea.scrollHeight; // Scroll to bottom
 
     try {
+        // 2. Take a screenshot, intelligently ignoring the AI overlay itself.
         await loadHtml2canvasScript();
-        const canvas = await html2canvas(document.body, { useCORS: true, logging: false });
+        const canvas = await html2canvas(document.body, {
+            useCORS: true,
+            logging: false,
+            ignoreElements: (element) => element.id === 'ai-assistant-overlay'
+        });
         const screenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
 
         const imagePart = {
@@ -2167,10 +2185,11 @@ async function handleAiQuery() {
             }
         };
 
+        // 3. Send the prompt with the screenshot to the AI.
         const result = await chatSession.sendMessage([query, imagePart]);
         let response = result.response;
         
-        // Handle function calls if the model requests it
+        // 4. If the AI wants to call a function, execute it and get the final response.
         const functionCalls = response.functionCalls();
         if (functionCalls) {
              const call = functionCalls[0];
@@ -2181,27 +2200,30 @@ async function handleAiQuery() {
              response = finalResult.response;
         }
 
-        const thinkingIndicator = responseArea.querySelector('.thinking-indicator');
-        if (thinkingIndicator) {
-            thinkingIndicator.parentElement.innerHTML = response.text();
-        }
+        // 5. Display the single, final response and make the area visible.
+        responseArea.innerHTML = response.text();
+        responseArea.style.opacity = '1';
+        responseArea.style.transform = 'translateY(0)';
+
 
     } catch (error) {
         console.error("Error with Gemini API:", error);
         let errorMessage = "Sorry, something went wrong.";
         if (error.message && error.message.includes('400')) {
              errorMessage = "There was an issue with the request, possibly due to token limits. The conversation memory has been reset.";
-             initializeAiAssistant(); // Reset the chat session
+             initializeAiAssistant(); // Reset the chat session on token limit errors
         }
-        const thinkingIndicator = responseArea.querySelector('.thinking-indicator');
-        if (thinkingIndicator) {
-             thinkingIndicator.parentElement.innerHTML = `<span style="color: #ff8a80;">${errorMessage}</span>`;
-        }
+        
+        // Display the error message in the response area and make it visible.
+        responseArea.innerHTML = `<p style="color: #ff8a80;">${errorMessage}</p>`;
+        responseArea.style.opacity = '1';
+        responseArea.style.transform = 'translateY(0)';
+
     } finally {
+        // 6. Re-enable the input for the next query.
         input.disabled = false;
         input.placeholder = "Ask, or describe a command...";
         input.focus();
-        responseArea.scrollTop = responseArea.scrollHeight;
     }
 }
 
