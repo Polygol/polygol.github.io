@@ -1783,7 +1783,7 @@ input[type="color"]::-moz-color-swatch {
     justify-content: space-between;
     align-items: center;
     padding: 15px 20px;
-    backdrop-filter: blur(20px);
+    height: 47px;
     flex-shrink: 0;
 }
 
