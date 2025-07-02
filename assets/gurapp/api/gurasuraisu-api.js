@@ -152,8 +152,7 @@ const Gurasuraisu = {
  * Listens for messages from the parent window, such as theme
  * or animation setting changes, and applies them to the Gurapp.
  */
-window.addEventListener('message', (event) => {
-  // Ensure the message is from our own origin for security
+window.addEventListener('message', async (event) => {
   if (event.origin !== window.location.origin) {
     return;
   }
@@ -167,7 +166,28 @@ window.addEventListener('message', (event) => {
       case 'animationsUpdate':
         document.body.classList.toggle('reduce-animations', !data.enabled);
         break;
-      // You can handle other incoming messages from Gurasuraisu here
+      
+      // --- NEW: Handles screenshot requests from the parent ---
+      case 'request-screenshot':
+        try {
+            // Check if html2canvas is loaded in the Gurapp's window
+            if (typeof html2canvas !== 'function') {
+                console.error("html2canvas script not found in this Gurapp. Cannot fulfill screenshot request.");
+                return; 
+            }
+            // Generate the screenshot of the app's content
+            const canvas = await html2canvas(document.body, { useCORS: true, logging: false });
+            const screenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+
+            // Send the generated screenshot data back to the parent
+            window.parent.postMessage({
+                type: 'screenshot-response',
+                screenshotDataUrl: screenshotDataUrl
+            }, window.location.origin);
+        } catch (e) {
+            console.error("This Gurapp failed to generate its screenshot:", e);
+        }
+        break;
     }
   }
 });
