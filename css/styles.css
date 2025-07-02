@@ -1761,8 +1761,9 @@ input[type="color"]::-moz-color-swatch {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--background-color);
-    z-index: 9999;
+    background-color: var(--overlay-color);
+    backdrop-filter: blur(5px);
+    z-index: 9994;
     display: flex;
     flex-direction: column;
     opacity: 0;
@@ -1782,9 +1783,7 @@ input[type="color"]::-moz-color-swatch {
     justify-content: space-between;
     align-items: center;
     padding: 15px 20px;
-    background-color: var(--search-background);
     backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--glass-border);
     flex-shrink: 0;
 }
 
@@ -1805,31 +1804,41 @@ input[type="color"]::-moz-color-swatch {
     flex-grow: 1;
     overflow-y: auto;
     padding: 20px;
+    padding-bottom: 110px;
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
+button#ai-send-btn {
+    border-radius: 34px;
+    width: 45px;
+    height: 34px;
+    border: var(--glass-border);
+    background-color: var(--text-color);
+    color: var(--background-color);
+}
+
 .ai-message, .user-message {
     padding: 10px 15px;
-    border-radius: 20px;
+    border-radius: 22px;
     max-width: 80%;
     line-height: 1.5;
     word-wrap: break-word;
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border)
 }
 
 .user-message {
     background-color: var(--secondary-text-color);
     color: var(--background-color);
     align-self: flex-end;
-    border-bottom-right-radius: 5px;
 }
 
 .ai-message {
     background-color: var(--search-background);
     color: var(--text-color);
     align-self: flex-start;
-    border-bottom-left-radius: 5px;
 }
 
 .ai-message.thinking {
@@ -1855,14 +1864,21 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .ai-input-container {
-    padding: 15px 20px;
-    border-top: 1px solid var(--glass-border);
+    padding: 15px;
+    border: 1px solid var(--glass-border);
     background-color: var(--search-background);
     backdrop-filter: blur(20px);
     display: flex;
     align-items: center;
     gap: 15px;
     flex-shrink: 0;
+    border-radius: 35px;
+    width: 90%;
+    max-width: 500px;
+    position: fixed;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 #ai-input {
@@ -1873,6 +1889,7 @@ input[type="color"]::-moz-color-swatch {
     color: var(--text-color);
     font-size: 1.1rem;
     font-family: 'Inter', sans-serif;
+    margin-left: 12px;
 }
 
         @media (max-width: 800px) {
