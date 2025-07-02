@@ -1945,6 +1945,7 @@ let minimalMode = localStorage.getItem('minimalMode') === 'true';
 let isAiAssistantEnabled = localStorage.getItem('aiAssistantEnabled') === 'true';
 let geminiApiKey = localStorage.getItem('geminiApiKey');
 let genAI; // Will be initialized if AI is enabled
+let chatSession; // For conversational memory
 
 // Theme switching functionality
 function setupThemeSwitcher() {
@@ -2010,29 +2011,107 @@ async function initializeAiAssistant() {
     }
 
     try {
-        // Use dynamic import() to load the ES module from a reliable CDN.
         const { GoogleGenerativeAI } = await import("https://esm.sh/@google/generative-ai");
-        
-        // Check if the import was successful
-        if (!GoogleGenerativeAI) {
-            throw new Error("Failed to import GoogleGenerativeAI from module.");
-        }
-        
         genAI = new GoogleGenerativeAI(geminiApiKey);
-        console.log("AI Assistant initialized successfully.");
+
+        // Define the tools (functions) the AI can call
+        const tools = [{
+            "functionDeclarations": [
+                {
+                    "name": "setBrightness",
+                    "description": "Sets the screen brightness.",
+                    "parameters": {
+                        "type": "OBJECT",
+                        "properties": { "level": { "type": "NUMBER", "description": "Brightness level from 20 to 100" } },
+                        "required": ["level"]
+                    }
+                },
+                {
+                    "name": "changeTheme",
+                    "description": "Change the UI theme.",
+                    "parameters": {
+                        "type": "OBJECT",
+                        "properties": { "themeName": { "type": "STRING", "description": "The name of the theme to switch to, either 'light' or 'dark'." } },
+                        "required": ["themeName"]
+                    }
+                },
+                {
+                    "name": "openApp",
+                    "description": "Opens an installed application by its name.",
+                    "parameters": {
+                        "type": "OBJECT",
+                        "properties": { "appName": { "type": "STRING", "description": "The name of the app to open. e.g., 'App Store'." } },
+                        "required": ["appName"]
+                    }
+                }
+            ]
+        }];
+        
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash",
+            tools: tools,
+        });
+
+        chatSession = model.startChat();
+        console.log("AI Assistant initialized with conversational memory and tools.");
 
     } catch (error) {
         console.error("AI Initialization failed:", error);
-        showPopup(currentLanguage.AI_INIT_FAIL || "AI initialization failed. Check API key and network.");
-        isAiAssistantEnabled = false; 
+        showPopup(currentLanguage.AI_INIT_FAIL || "AI initialization failed.");
+        isAiAssistantEnabled = false;
         localStorage.setItem('aiAssistantEnabled', 'false');
-        
-        // Revert the UI state
         const aiSwitch = document.getElementById('ai-switch');
         if (aiSwitch) aiSwitch.checked = false;
         syncUiStates();
     }
 }
+
+// Function to dynamically load the html2canvas script
+async function loadHtml2canvasScript() {
+    return new Promise((resolve, reject) => {
+        if (window.html2canvas) {
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+
+// Map of available functions for the AI to call
+const availableFunctions = {
+    setBrightness: (level) => {
+        level = Math.max(20, Math.min(100, level)); // Clamp value
+        const brightnessSlider = document.getElementById('brightness-control');
+        brightnessSlider.value = level;
+        updateBrightness(level);
+        localStorage.setItem('page_brightness', level);
+        return `Brightness set to ${level}%.`; // Return confirmation
+    },
+    changeTheme: (themeName) => {
+        if (themeName !== 'light' && themeName !== 'dark') return "Invalid theme.";
+        const lightModeSwitch = document.getElementById('theme-switch');
+        const isLight = themeName === 'light';
+        lightModeSwitch.checked = isLight;
+        document.body.classList.toggle('light-theme', isLight);
+        localStorage.setItem('theme', themeName);
+        updateLightModeIcon(isLight);
+        return `Theme changed to ${themeName}.`;
+    },
+    openApp: (appName) => {
+        const app = Object.values(apps).find(a => a.name.toLowerCase() === appName.toLowerCase());
+        if (app && app.url) {
+            createFullscreenEmbed(app.url);
+            return `Opening the ${appName} app.`;
+        } else {
+            return `Sorry, I could not find an app named ${appName}.`;
+        }
+    }
+};
 
 function showAiAssistant() {
     if (!isAiAssistantEnabled || !genAI) {
@@ -2050,36 +2129,73 @@ function showAiAssistant() {
 
 function hideAiAssistant() {
     const overlay = document.getElementById('ai-assistant-overlay');
+    const responseArea = document.getElementById('ai-response-area');
     overlay.classList.remove('show');
     setTimeout(() => {
         overlay.style.display = 'none';
+        responseArea.innerHTML = ''; // Clear the chat history from view
     }, 300);
 }
 
 async function handleAiQuery() {
     const input = document.getElementById('ai-input');
+    const responseArea = document.getElementById('ai-response-area');
     const query = input.value.trim();
-    if (!query) return;
+    if (!query || !chatSession) return;
 
     input.disabled = true;
+    input.value = '';
     input.placeholder = "Thinking...";
+    responseArea.innerHTML += `<p><strong>You:</strong> ${query}</p><p><strong>AI:</strong> <span class="thinking-indicator">...</span></p>`;
+    responseArea.scrollTop = responseArea.scrollHeight; // Scroll to bottom
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(query);
-        const response = await result.response;
-        const text = response.text();
+        await loadHtml2canvasScript();
+        const canvas = await html2canvas(document.body, { useCORS: true, logging: false });
+        const screenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+
+        const imagePart = {
+            inlineData: {
+                data: screenshotDataUrl.split(',')[1],
+                mimeType: "image/jpeg"
+            }
+        };
+
+        const result = await chatSession.sendMessage([query, imagePart]);
+        let response = result.response;
         
-        showPopup(`AI: ${text}`);
-        hideAiAssistant();
+        // Handle function calls if the model requests it
+        const functionCalls = response.functionCalls();
+        if (functionCalls) {
+             const call = functionCalls[0];
+             const apiResponse = await availableFunctions[call.name](...Object.values(call.args));
+             const finalResult = await chatSession.sendMessage([{
+                 functionResponse: { name: call.name, response: { content: apiResponse } }
+             }]);
+             response = finalResult.response;
+        }
+
+        const thinkingIndicator = responseArea.querySelector('.thinking-indicator');
+        if (thinkingIndicator) {
+            thinkingIndicator.parentElement.innerHTML = response.text();
+        }
 
     } catch (error) {
         console.error("Error with Gemini API:", error);
-        showPopup(currentLanguage.AI_QUERY_FAIL || "AI query failed.");
+        let errorMessage = "Sorry, something went wrong.";
+        if (error.message && error.message.includes('400')) {
+             errorMessage = "There was an issue with the request, possibly due to token limits. The conversation memory has been reset.";
+             initializeAiAssistant(); // Reset the chat session
+        }
+        const thinkingIndicator = responseArea.querySelector('.thinking-indicator');
+        if (thinkingIndicator) {
+             thinkingIndicator.parentElement.innerHTML = `<span style="color: #ff8a80;">${errorMessage}</span>`;
+        }
     } finally {
         input.disabled = false;
-        input.value = '';
-        input.placeholder = "Search or ask";
+        input.placeholder = "Ask, or describe a command...";
+        input.focus();
+        responseArea.scrollTop = responseArea.scrollHeight;
     }
 }
 
@@ -5294,9 +5410,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
+	
     const aiInput = document.getElementById('ai-input');
-    if (aiInput) {
+    const aiSendBtn = document.getElementById('ai-send-btn');
+    if (aiInput && aiSendBtn) {
         aiInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 handleAiQuery();
@@ -5305,6 +5422,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 hideAiAssistant();
             }
         });
+        aiSendBtn.addEventListener('click', handleAiQuery);
     }
     
     const resetButton = document.getElementById('resetButton');
