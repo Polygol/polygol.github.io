@@ -1768,7 +1768,6 @@ input[type="color"]::-moz-color-swatch {
     z-index: 9999;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
     opacity: 0;
     pointer-events: none;
