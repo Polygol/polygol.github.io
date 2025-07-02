@@ -2151,6 +2151,7 @@ function hideAiAssistant() {
 
 async function handleAiQuery() {
     const input = document.getElementById('ai-input');
+    const sendBtn = document.getElementById('ai-send-btn');
     const responseArea = document.getElementById('ai-response-area');
     const query = input.value.trim();
 
@@ -2158,18 +2159,22 @@ async function handleAiQuery() {
         console.error("Fatal Error: AI response area not found.");
         return;
     }
-    if (!query || !chatSession) return;
+    if (!query || !chatSession || input.disabled) return;
 
-    // 1. Hide the response area immediately and clear old content after fade-out.
+    // --- FIX: Immediately disable UI and show thinking state ---
+    input.disabled = true;
+    sendBtn.style.pointerEvents = 'none';
+    sendBtn.style.opacity = '0.5';
+    input.value = ''; // Clear the input field
+    input.placeholder = "Thinking...";
+
+    // Hide the previous response while processing
     responseArea.style.opacity = '0';
     responseArea.style.transform = 'translateY(10px)';
     setTimeout(() => { responseArea.innerHTML = ''; }, 300);
-
-    input.disabled = true;
-    input.placeholder = "Thinking...";
+    // --- End of FIX ---
 
     try {
-        // 2. Take a screenshot, intelligently ignoring the AI overlay itself.
         await loadHtml2canvasScript();
         const canvas = await html2canvas(document.body, {
             useCORS: true,
@@ -2185,11 +2190,9 @@ async function handleAiQuery() {
             }
         };
 
-        // 3. Send the prompt with the screenshot to the AI.
         const result = await chatSession.sendMessage([query, imagePart]);
         let response = result.response;
         
-        // 4. If the AI wants to call a function, execute it and get the final response.
         const functionCalls = response.functionCalls();
         if (functionCalls) {
              const call = functionCalls[0];
@@ -2200,7 +2203,7 @@ async function handleAiQuery() {
              response = finalResult.response;
         }
 
-        // 5. Display the single, final response and make the area visible.
+        // Display the final response
         responseArea.innerHTML = response.text();
         responseArea.style.opacity = '1';
         responseArea.style.transform = 'translateY(0)';
@@ -2211,19 +2214,22 @@ async function handleAiQuery() {
         let errorMessage = "Sorry, something went wrong.";
         if (error.message && error.message.includes('400')) {
              errorMessage = "There was an issue with the request, possibly due to token limits. The conversation memory has been reset.";
-             initializeAiAssistant(); // Reset the chat session on token limit errors
+             initializeAiAssistant();
         }
         
-        // Display the error message in the response area and make it visible.
+        // Display the error
         responseArea.innerHTML = `<p style="color: #ff8a80;">${errorMessage}</p>`;
         responseArea.style.opacity = '1';
         responseArea.style.transform = 'translateY(0)';
 
     } finally {
-        // 6. Re-enable the input for the next query.
+        // --- FIX: Reliably re-enable UI after completion or error ---
         input.disabled = false;
+        sendBtn.style.pointerEvents = 'auto';
+        sendBtn.style.opacity = '1';
         input.placeholder = "Ask, or describe a command...";
         input.focus();
+        // --- End of FIX ---
     }
 }
 
