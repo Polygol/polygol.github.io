@@ -311,6 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-style', 'font-select');
     connectGridItem('setting-weight', 'weight-slider');
     connectGridItem('setting-language', 'language-switcher');
+    connectGridItem('setting-ai', 'ai-switch');
 
     // Album Art click listener
     document.getElementById('media-widget-art').addEventListener('click', () => {
@@ -1941,6 +1942,9 @@ let gurappsEnabled = localStorage.getItem("gurappsEnabled") !== "false";
 let slideshowInterval = null;
 let currentWallpaperIndex = 0;
 let minimalMode = localStorage.getItem('minimalMode') === 'true';
+let isAiAssistantEnabled = localStorage.getItem('aiAssistantEnabled') === 'true';
+let geminiApiKey = localStorage.getItem('geminiApiKey');
+let genAI; // Will be initialized if AI is enabled
 
 // Theme switching functionality
 function setupThemeSwitcher() {
@@ -1986,6 +1990,112 @@ animationSwitch.addEventListener('change', function() {
         }, window.location.origin);
     });
 });
+
+async function loadGenerativeAiScript() {
+    return new Promise((resolve, reject) => {
+        if (window.google && window.google.generativeai) { // Check if already loaded
+            console.log('Google AI SDK already loaded.');
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://sdk.gemini.ai/v1.5/gemini-web.js';
+        script.onload = () => {
+            console.log('Google AI SDK loaded successfully.');
+            resolve();
+        };
+        script.onerror = (e) => {
+            console.error('Failed to load Google AI SDK.', e);
+            showPopup(currentLanguage.AI_SDK_LOAD_FAIL || "Failed to load AI script.");
+            reject(e);
+        };
+        document.head.appendChild(script);
+    });
+}
+
+async function initializeAiAssistant() {
+    if (!isAiAssistantEnabled) return;
+
+    if (!geminiApiKey) {
+        geminiApiKey = prompt(currentLanguage.AI_API_KEY_PROMPT || "Please enter your Google AI API Key:");
+        if (geminiApiKey) {
+            localStorage.setItem('geminiApiKey', geminiApiKey);
+        } else {
+            showPopup(currentLanguage.AI_SETUP_CANCELLED || "AI setup cancelled.");
+            const aiSwitch = document.getElementById('ai-switch');
+            if (aiSwitch) aiSwitch.checked = false;
+            isAiAssistantEnabled = false;
+            localStorage.setItem('aiAssistantEnabled', 'false');
+            syncUiStates();
+            return;
+        }
+    }
+
+    try {
+        await loadGenerativeAiScript();
+        if (window.google && window.google.generativeai) {
+             genAI = new window.google.generativeai.GoogleGenerativeAI(geminiApiKey);
+        } else {
+             throw new Error("Google AI SDK not found on window object.");
+        }
+    } catch (error) {
+        console.error("AI Initialization failed:", error);
+        showPopup(currentLanguage.AI_INIT_FAIL || "AI initialization failed.");
+        isAiAssistantEnabled = false; 
+        localStorage.setItem('aiAssistantEnabled', 'false');
+        geminiApiKey = null;
+        localStorage.removeItem('geminiApiKey');
+    }
+}
+
+function showAiAssistant() {
+    if (!isAiAssistantEnabled || !genAI) {
+        if (isAiAssistantEnabled) showPopup(currentLanguage.AI_NOT_READY || "AI is not ready.");
+        return;
+    };
+    
+    const overlay = document.getElementById('ai-assistant-overlay');
+    overlay.style.display = 'flex';
+    setTimeout(() => {
+        overlay.classList.add('show');
+        document.getElementById('ai-input').focus();
+    }, 10);
+}
+
+function hideAiAssistant() {
+    const overlay = document.getElementById('ai-assistant-overlay');
+    overlay.classList.remove('show');
+    setTimeout(() => {
+        overlay.style.display = 'none';
+    }, 300);
+}
+
+async function handleAiQuery() {
+    const input = document.getElementById('ai-input');
+    const query = input.value.trim();
+    if (!query) return;
+
+    input.disabled = true;
+    input.placeholder = "Thinking...";
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const result = await model.generateContent(query);
+        const response = await result.response;
+        const text = response.text();
+        
+        showPopup(`AI: ${text}`);
+        hideAiAssistant();
+
+    } catch (error) {
+        console.error("Error with Gemini API:", error);
+        showPopup(currentLanguage.AI_QUERY_FAIL || "AI query failed.");
+    } finally {
+        input.disabled = false;
+        input.value = '';
+        input.placeholder = "Search or ask";
+    }
+}
 
 // Function to handle Gurapps visibility
 function updateGurappsVisibility() {
@@ -4106,11 +4216,35 @@ function setupDrawerInteractions() {
     let lastY = 0;
     let velocities = [];
     let dockHideTimeout = null;
+    let longPressTimer;
+    const longPressDuration = 500; // 500ms for a long press
     const flickVelocityThreshold = 0.4;
     const dockThreshold = -2.5; // Threshold for dock appearance
     const openThreshold = -50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
+
+    const startLongPress = (e) => {
+        // Only trigger long press if AI is enabled and not already dragging the drawer
+        if (isAiAssistantEnabled && !isDragging) {
+             longPressTimer = setTimeout(() => {
+                showAiAssistant();
+            }, longPressDuration);
+        }
+    };
+
+    const cancelLongPress = () => {
+        clearTimeout(longPressTimer);
+    };
+
+    if (drawerHandle) {
+        drawerHandle.addEventListener('mousedown', startLongPress);
+        drawerHandle.addEventListener('touchstart', startLongPress);
+        
+        drawerHandle.addEventListener('mouseup', cancelLongPress);
+        drawerHandle.addEventListener('mouseleave', cancelLongPress);
+        drawerHandle.addEventListener('touchend', cancelLongPress);
+    }
         
     // Create interaction blocker overlay
     const interactionBlocker = document.createElement('div');
@@ -5153,6 +5287,39 @@ document.addEventListener('DOMContentLoaded', function() {
             selectLanguage(this.value);
         });
     }
+
+    const aiSwitch = document.getElementById('ai-switch');
+    aiSwitch.checked = isAiAssistantEnabled;
+    aiSwitch.addEventListener('change', function() {
+        isAiAssistantEnabled = this.checked;
+        localStorage.setItem('aiAssistantEnabled', isAiAssistantEnabled);
+        if (isAiAssistantEnabled) {
+            initializeAiAssistant();
+        } else {
+            genAI = null; 
+        }
+    });
+
+    const aiOverlay = document.getElementById('ai-assistant-overlay');
+    if (aiOverlay) {
+        aiOverlay.addEventListener('click', (e) => {
+            if (e.target === aiOverlay) {
+                hideAiAssistant();
+            }
+        });
+    }
+
+    const aiInput = document.getElementById('ai-input');
+    if (aiInput) {
+        aiInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                handleAiQuery();
+            }
+            if (e.key === 'Escape') {
+                hideAiAssistant();
+            }
+        });
+    }
     
     const resetButton = document.getElementById('resetButton');
     if (resetButton) {
@@ -5182,6 +5349,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- 5. Final checks and ongoing processes ---
     preventLeaving();
+
+    // Initialize AI if it was already enabled on page load
+    if (isAiAssistantEnabled) {
+        initializeAiAssistant();
+    }
 });
 
 window.addEventListener('load', checkFullscreen);
