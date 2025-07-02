@@ -1786,9 +1786,10 @@ input[type="color"]::-moz-color-swatch {
     overflow-y: auto;
     color: var(--text-color);
     margin-bottom: 20px;
-    padding: 20px;
-    background: rgba(0,0,0,0.1);
     border-radius: 20px;
+    opacity: 0; /* Start hidden */
+    transform: translateY(10px); /* Start slightly lower for a subtle lift effect */
+    transition: opacity 0.3s ease, transform 0.3s ease;
     scrollbar-width: thin;
     scrollbar-color: var(--transparent-color) transparent;
 }
