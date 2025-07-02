@@ -1754,6 +1754,69 @@ input[type="color"]::-moz-color-swatch {
   font-size: 16px;
 }
 
+/* AI Assistant Overlay Styles */
+.ai-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 30vh;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+.ai-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.ai-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background-color: var(--search-background);
+    padding: 10px 20px;
+    border-radius: 30px;
+    width: 90%;
+    max-width: 600px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+#ai-input {
+    flex-grow: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    font-family: 'Inter', sans-serif;
+}
+
+#ai-input::placeholder {
+    color: var(--secondary-text-color);
+}
+
+.ai-search-bar .material-symbols-rounded {
+    cursor: pointer;
+    color: var(--secondary-text-color);
+    transition: color 0.2s;
+}
+
+.ai-search-bar .material-symbols-rounded:hover {
+    color: var(--text-color);
+}
+
         @media (max-width: 800px) {
             .clock {
                 font-size: clamp(4rem, 20vw, 20rem);
