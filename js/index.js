@@ -4486,8 +4486,6 @@ function setupDrawerInteractions() {
     document.body.appendChild(swipeOverlay);
 
     function startDrag(yPosition) {
-        cancelLongPress();
-
         startY = yPosition;
         lastY = yPosition;
         currentY = yPosition;
