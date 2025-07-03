@@ -4497,6 +4497,8 @@ function setupDrawerInteractions() {
     }
 
     function moveDrawer(yPosition) {
+	cancelLongPress();
+	    
         if (!isDragging) return;
         
         // Calculate and store velocity data
