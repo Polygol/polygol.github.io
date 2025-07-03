@@ -4448,13 +4448,13 @@ function setupDrawerInteractions() {
         clearTimeout(longPressTimer);
     };
 
-    if (drawerHandle) {
-        drawerHandle.addEventListener('mousedown', startLongPress);
-        drawerHandle.addEventListener('touchstart', startLongPress);
+    if (drawerPill) {
+        drawerPill.addEventListener('mousedown', startLongPress);
+        drawerPill.addEventListener('touchstart', startLongPress);
         
-        drawerHandle.addEventListener('mouseup', cancelLongPress);
-        drawerHandle.addEventListener('mouseleave', cancelLongPress);
-        drawerHandle.addEventListener('touchend', cancelLongPress);
+        drawerPill.addEventListener('mouseup', cancelLongPress);
+        drawerPill.addEventListener('mouseleave', cancelLongPress);
+        drawerPill.addEventListener('touchend', cancelLongPress);
     }
         
     // Create interaction blocker overlay
@@ -4496,9 +4496,7 @@ function setupDrawerInteractions() {
         appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
     }
 
-    function moveDrawer(yPosition) {
-	cancelLongPress();
-	    
+    function moveDrawer(yPosition) {	    
         if (!isDragging) return;
         
         // Calculate and store velocity data
