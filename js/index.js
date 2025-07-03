@@ -2267,32 +2267,57 @@ async function handleAiQuery() {
 
     responseArea.style.opacity = '0';
     responseArea.style.transform = 'translateY(10px)';
-
     try {
-        // ... [The screenshot and message sending logic remains the same] ...
         await loadHtml2canvasScript();
-        // ... etc ...
+        
+        const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+        let finalScreenshotDataUrl;
+
+        if (activeEmbed) {
+            finalScreenshotDataUrl = await createCompositeScreenshot();
+        } else {
+            const canvas = await html2canvas(document.body, {
+                useCORS: true,
+                logging: false,
+                ignoreElements: (element) => element.id === 'ai-assistant-overlay'
+            });
+            finalScreenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+        }
+
+        const imagePart = {
+            inlineData: {
+                data: finalScreenshotDataUrl.split(',')[1],
+                mimeType: "image/jpeg"
+            }
+        };
+
         const result = await chatSession.sendMessage([query, imagePart]);
         let response = result.response;
-        // ... [Function calling logic remains the same] ...
-
-        responseArea.innerHTML = response.text();
         
-        // FIX: Use requestAnimationFrame to ensure animation plays reliably
-        requestAnimationFrame(() => {
-            responseArea.style.opacity = '1';
-            responseArea.style.transform = 'translateY(0)';
-        });
+        const functionCalls = response.functionCalls();
+        if (functionCalls) {
+             const call = functionCalls[0];
+             const apiResponse = await availableFunctions[call.name](...Object.values(call.args));
+             const finalResult = await chatSession.sendMessage([{
+                 functionResponse: { name: call.name, response: { content: apiResponse } }
+             }]);
+             response = finalResult.response;
+        }
 
-        // Save the updated history to IndexedDB
-        const fullHistory = await chatSession.getHistory();
-        await saveChatHistory(fullHistory);
+	responseArea.innerHTML = response.text();
+        responseArea.style.opacity = '1';
+        responseArea.style.transform = 'translateY(0)';
 
     } catch (error) {
         console.error("Error processing AI query:", error);
         let errorMessage = "Sorry, something went wrong.";
-        // ... [Error handling logic remains the same] ...
-        
+        if (error.message.includes('400')) {
+             errorMessage = "There was a request issue, possibly due to token limits. Memory has been reset.";
+             initializeAiAssistant();
+        } else if (error.message.includes('timed out')) {
+            errorMessage = "The active app did not respond to the screenshot request.";
+        }
+
         responseArea.innerHTML = `<p style="color: #ff8a80;">${errorMessage}</p>`;
         // Also apply the animation fix for the error message
         requestAnimationFrame(() => {
