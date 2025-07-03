@@ -1763,8 +1763,6 @@ input[type="color"]::-moz-color-swatch {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--overlay-color);
-    backdrop-filter: blur(5px);
     z-index: 9994;
     display: flex;
     flex-direction: column;
