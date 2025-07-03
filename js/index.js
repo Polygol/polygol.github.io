@@ -2071,7 +2071,12 @@ async function initializeAiAssistant() {
             "functionDeclarations": [
                 { "name": "setBrightness", "description": "Sets the screen brightness.", "parameters": { "type": "OBJECT", "properties": { "level": { "type": "NUMBER" } }, "required": ["level"] } },
                 { "name": "changeTheme", "description": "Change the UI theme.", "parameters": { "type": "OBJECT", "properties": { "themeName": { "type": "STRING", "enum": ["light", "dark"] } }, "required": ["themeName"] } },
-                { "name": "openApp", "description": "Opens an installed application by name.", "parameters": { "type": "OBJECT", "properties": { "appName": { "type": "STRING" } }, "required": ["appName"] } }
+                { "name": "openApp", "description": "Opens an installed application by name.", "parameters": { "type": "OBJECT", "properties": { "appName": { "type": "STRING" } }, "required": ["appName"] } },
+                { "name": "toggleSeconds", "description": "Show or hide the seconds on the main clock.", "parameters": { "type": "OBJECT", "properties": { "show": { "type": "BOOLEAN" } }, "required": ["show"] } },
+                { "name": "setClockFont", "description": "Change the font of the main clock.", "parameters": { "type": "OBJECT", "properties": { "fontName": { "type": "STRING", "enum": ["Inter", "Roboto", "DynaPuff", "DM Serif Display", "Iansui", "JetBrains Mono", "DotGothic16", "Patrick Hand", "Rampart One", "Doto", "Nunito"] } }, "required": ["fontName"] } },
+                { "name": "setMinimalMode", "description": "Enable or disable minimal mode to hide extra UI elements.", "parameters": { "type": "OBJECT", "properties": { "enabled": { "type": "BOOLEAN" } }, "required": ["enabled"] } },
+                { "name": "switchWallpaper", "description": "Switch to the next or previous wallpaper in the history.", "parameters": { "type": "OBJECT", "properties": { "direction": { "type": "STRING", "enum": ["next", "previous"] } }, "required": ["direction"] } },
+                { "name": "listApps", "description": "Get a list of all currently installed application names.", "parameters": { "type": "OBJECT", "properties": {} } }
             ]
         }];
         
@@ -2174,28 +2179,31 @@ function createCompositeScreenshot() {
 
 // Map of available functions for the AI to call
 const availableFunctions = {
-    setBrightness: (level) => {
-        level = Math.max(20, Math.min(100, level));
+    setBrightness: ({ level }) => {
         const brightnessSlider = document.getElementById('brightness-control');
-        brightnessSlider.value = level;
-        updateBrightness(level);
-        localStorage.setItem('page_brightness', level);
-        return { status: "success", action: "set brightness", value: level };
+        if (brightnessSlider) {
+            brightnessSlider.value = Math.max(20, Math.min(100, level));
+            // --- FIX: Dispatch an 'input' event to trigger the existing listener ---
+            brightnessSlider.dispatchEvent(new Event('input', { bubbles: true }));
+            return { status: "success", action: "set brightness", value: level };
+        }
+        return { status: "error", reason: "Brightness slider not found." };
     },
-	
-    changeTheme: (themeName) => {
+    changeTheme: ({ themeName }) => {
         if (themeName !== 'light' && themeName !== 'dark') {
             return { status: "error", reason: "Invalid theme name provided." };
         }
-        const lightModeSwitch = document.getElementById('theme-switch');
-        const isLight = themeName === 'light';
-        lightModeSwitch.checked = isLight;
-        document.body.classList.toggle('light-theme', isLight);
-        localStorage.setItem('theme', themeName);
-        updateLightModeIcon(isLight);
+        const lightModeControl = document.getElementById('light_mode_qc');
+        const currentThemeIsLight = document.body.classList.contains('light-theme');
+        const targetIsLight = themeName === 'light';
+
+        // Only click if a change is needed
+        if (currentThemeIsLight !== targetIsLight && lightModeControl) {
+             // --- FIX: Dispatch a 'click' event to trigger the control's listener ---
+             lightModeControl.click();
+        }
         return { status: "success", action: "change theme", value: themeName };
     },
-	
     openApp: (appName) => {
         minimizeFullscreenEmbed();
         const appEntry = Object.entries(apps).find(
@@ -2211,40 +2219,30 @@ const availableFunctions = {
             return { status: "error", reason: `App named '${appName}' not found.` };
         }
     },
-	
     toggleSeconds: ({ show }) => {
         const secondsSwitch = document.getElementById('seconds-switch');
-        if (secondsSwitch) {
-            secondsSwitch.checked = show;
-            secondsSwitch.dispatchEvent(new Event('change'));
-            return { status: "success", action: "toggle seconds", value: show };
+        if (secondsSwitch && secondsSwitch.checked !== show) {
+            secondsSwitch.click(); // Clicking the switch is the most robust way to toggle
         }
-        return { status: "error", reason: "Could not find the seconds toggle switch." };
+        return { status: "success", action: "toggle seconds", value: show };
     },
-
     setClockFont: ({ fontName }) => {
         const fontSelect = document.getElementById('font-select');
         const validFonts = Array.from(fontSelect.options).map(opt => opt.value);
         if (validFonts.includes(fontName)) {
             fontSelect.value = fontName;
-            fontSelect.dispatchEvent(new Event('change'));
+            fontSelect.dispatchEvent(new Event('change', { bubbles: true }));
             return { status: "success", action: "set clock font", value: fontName };
         }
         return { status: "error", reason: `Font '${fontName}' is not a valid option.` };
     },
-
     setMinimalMode: ({ enabled }) => {
         const minimalModeControl = document.getElementById('minimal_mode_qc');
-        if (minimalModeControl) {
-            minimalMode = enabled;
-            localStorage.setItem('minimalMode', minimalMode);
-            updateMinimalMode();
-            minimalModeControl.classList.toggle('active', enabled);
-            return { status: "success", action: "set minimal mode", value: enabled };
+        if (minimalModeControl && minimalMode !== enabled) {
+            minimalModeControl.click();
         }
-        return { status: "error", reason: "Could not find the minimal mode control." };
+        return { status: "success", action: "set minimal mode", value: enabled };
     },
-
     switchWallpaper: ({ direction }) => {
         if (direction === 'next' || direction === 'previous') {
             const navDirection = direction === 'next' ? 'right' : 'left';
@@ -2253,7 +2251,6 @@ const availableFunctions = {
         }
         return { status: "error", reason: "Invalid direction for switching wallpaper." };
     },
-
     listApps: () => {
         const appNames = Object.keys(apps);
         return { status: "success", action: "list apps", value: appNames };
