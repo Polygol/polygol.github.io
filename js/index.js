@@ -2175,42 +2175,88 @@ function createCompositeScreenshot() {
 // Map of available functions for the AI to call
 const availableFunctions = {
     setBrightness: (level) => {
-        level = Math.max(20, Math.min(100, level)); // Clamp value
+        level = Math.max(20, Math.min(100, level));
         const brightnessSlider = document.getElementById('brightness-control');
         brightnessSlider.value = level;
         updateBrightness(level);
         localStorage.setItem('page_brightness', level);
-        return `Brightness set to ${level}%.`; // Return confirmation
+        return { status: "success", action: "set brightness", value: level };
     },
+	
     changeTheme: (themeName) => {
-        if (themeName !== 'light' && themeName !== 'dark') return "Invalid theme.";
+        if (themeName !== 'light' && themeName !== 'dark') {
+            return { status: "error", reason: "Invalid theme name provided." };
+        }
         const lightModeSwitch = document.getElementById('theme-switch');
         const isLight = themeName === 'light';
         lightModeSwitch.checked = isLight;
         document.body.classList.toggle('light-theme', isLight);
         localStorage.setItem('theme', themeName);
         updateLightModeIcon(isLight);
-        return `Theme changed to ${themeName}.`;
+        return { status: "success", action: "change theme", value: themeName };
     },
+	
     openApp: (appName) => {
-        // --- FIX: Use Object.entries to correctly access the app's name (the key) ---
+        minimizeFullscreenEmbed();
         const appEntry = Object.entries(apps).find(
             ([name, details]) => name.toLowerCase() === appName.toLowerCase()
         );
-
-        // appEntry will be an array like ["Chronos", { url: "..." }] if found
         if (appEntry) {
-            const appDetails = appEntry[1]; // The app's details object
-            createFullscreenEmbed(appDetails.url);
-            return `Opening the ${appName} app.`;
+            setTimeout(() => {
+                const appDetails = appEntry[1];
+                createFullscreenEmbed(appDetails.url);
+            }, 300);
+            return { status: "success", action: "open app", value: appName };
         } else {
-            // Also handle the "App Store" case specifically if needed
-            if (appName.toLowerCase() === 'app store') {
-                 createFullscreenEmbed(apps["App Store"].url);
-                 return `Opening the App Store.`;
-            }
-            return `Sorry, I could not find an app named ${appName}.`;
+            return { status: "error", reason: `App named '${appName}' not found.` };
         }
+    },
+	
+    toggleSeconds: ({ show }) => {
+        const secondsSwitch = document.getElementById('seconds-switch');
+        if (secondsSwitch) {
+            secondsSwitch.checked = show;
+            secondsSwitch.dispatchEvent(new Event('change'));
+            return { status: "success", action: "toggle seconds", value: show };
+        }
+        return { status: "error", reason: "Could not find the seconds toggle switch." };
+    },
+
+    setClockFont: ({ fontName }) => {
+        const fontSelect = document.getElementById('font-select');
+        const validFonts = Array.from(fontSelect.options).map(opt => opt.value);
+        if (validFonts.includes(fontName)) {
+            fontSelect.value = fontName;
+            fontSelect.dispatchEvent(new Event('change'));
+            return { status: "success", action: "set clock font", value: fontName };
+        }
+        return { status: "error", reason: `Font '${fontName}' is not a valid option.` };
+    },
+
+    setMinimalMode: ({ enabled }) => {
+        const minimalModeControl = document.getElementById('minimal_mode_qc');
+        if (minimalModeControl) {
+            minimalMode = enabled;
+            localStorage.setItem('minimalMode', minimalMode);
+            updateMinimalMode();
+            minimalModeControl.classList.toggle('active', enabled);
+            return { status: "success", action: "set minimal mode", value: enabled };
+        }
+        return { status: "error", reason: "Could not find the minimal mode control." };
+    },
+
+    switchWallpaper: ({ direction }) => {
+        if (direction === 'next' || direction === 'previous') {
+            const navDirection = direction === 'next' ? 'right' : 'left';
+            switchWallpaper(navDirection);
+            return { status: "success", action: "switch wallpaper", value: direction };
+        }
+        return { status: "error", reason: "Invalid direction for switching wallpaper." };
+    },
+
+    listApps: () => {
+        const appNames = Object.keys(apps);
+        return { status: "success", action: "list apps", value: appNames };
     }
 };
 
