@@ -2064,6 +2064,8 @@ async function initializeAiAssistant() {
         const { GoogleGenerativeAI } = await import("https://esm.sh/@google/generative-ai");
         genAI = new GoogleGenerativeAI(geminiApiKey);
 
+	const systemInstruction = "You are Gurasuraisu AI (GuraAI), a consumer based assistive AI for a web operating system called Gurasuraisu, based on Gemini 2.5 Flash. Your name should always be GuraAI. Try to make your responses short and avoid markdown. Always respond in the user input's language.";
+
         // Define the tools (functions) the AI can call
         const tools = [
             { // Your existing custom functions
@@ -2081,29 +2083,18 @@ async function initializeAiAssistant() {
         const model = genAI.getGenerativeModel({
             model: "gemini-2.5-flash",
             tools: tools,
+            systemInstruction: systemInstruction,
         });
-
-        const systemInstruction = {
-            role: "model",
-            parts: [{ text: "You are Gurasuraisu AI (GuraAI), a consumer based assistive AI for a web operating system called Gurasuraisu, based on Gemini 2.5 Flash. Your name should always be GuraAI. Try to make your responses short and avoid markdown. Always respond in the user input's language." }],
-        };
 
         // Load persisted history from IndexedDB
         let history = await loadChatHistory();
 
-        // Ensure system instruction is always present and at the start.
-        // This also handles the case of an empty database.
-        if (history.length === 0 || !history[0].parts[0].text.startsWith("You are Gurasuraisu AI")) {
-             history = [systemInstruction];
-        }
-
         chatSession = model.startChat({ history });
 
-        console.log("AI Assistant initialized with persistent history.");
+        console.log("AI Assistant initialized with persistent history and system instruction.");
 
     } catch (error) {
         console.error("AI Initialization failed:", error);
-        showPopup(currentLanguage.AI_INIT_FAIL || "AI initialization failed.");
         isAiAssistantEnabled = false;
         localStorage.setItem('aiAssistantEnabled', 'false');
         const aiSwitch = document.getElementById('ai-switch');
