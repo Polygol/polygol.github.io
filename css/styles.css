@@ -1782,8 +1782,8 @@ input[type="color"]::-moz-color-swatch {
     max-height: 70vh; /* Limit height */
     overflow-y: auto;
     color: var(--text-color);
-    margin-bottom: 34px;
-    border-radius: 20px;
+    margin-bottom: 25px;
+    border-radius: 25px;
     padding: 15px 20px;
     opacity: 0; /* Start hidden */
     transform: translateY(10px); /* Start slightly lower for a subtle lift effect */
