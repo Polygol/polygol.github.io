@@ -2085,7 +2085,20 @@ async function initializeAiAssistant() {
                 { "name": "setMinimalMode", "description": "Enable or disable minimal mode to hide extra UI elements.", "parameters": { "type": "OBJECT", "properties": { "enabled": { "type": "BOOLEAN" } }, "required": ["enabled"] } },
                 { "name": "switchWallpaper", "description": "Switch to the next or previous wallpaper in the history.", "parameters": { "type": "OBJECT", "properties": { "direction": { "type": "STRING", "enum": ["next", "previous"] } }, "required": ["direction"] } },
                 { "name": "listApps", "description": "Get a list of all currently installed application names.", "parameters": { "type": "OBJECT", "properties": {} } },
-		{ "name": "initiateGoogleSearch", "description": "Call this function when you need external, real-time information from the internet to answer a user's question. This will perform a Google Search based on the user's most recent prompt.", "parameters": { "type": "OBJECT", "properties": {} } }
+                {
+                    "name": "requestGoogleSearch",
+                    "description": "When you need external, real-time information from the internet to answer a user's question, call this function. You must formulate a search query based on the user's prompt.",
+                    "parameters": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "query": {
+                                "type": "STRING",
+                                "description": "A concise and effective search query string, derived from the user's prompt, to find the required information online. For example, if the user asks 'who is the president', the query should be 'current president'. YOU MUST add the search query to the query parameter when using this function."
+                            }
+                        },
+                        "required": ["query"]
+                    }
+                }
             ]
         }];
         
@@ -2287,21 +2300,23 @@ const availableFunctions = {
         const appNames = Object.keys(apps);
         return { status: "success", action: "list apps", value: appNames };
     },
-    initiateGoogleSearch: async ({ userQuery }) => {
+    requestGoogleSearch: async ({ query }) => {
         try {
-            if (!userQuery || typeof userQuery !== 'string' || userQuery.trim() === "") {
-                return { status: "error", reason: "Cannot perform a search without the user's query." };
+            // Defensive check in case the model still fails to provide a query.
+            if (!query || typeof query !== 'string' || query.trim() === "") {
+                 console.error("AI self-correction: The model decided to search but failed to generate a query term.");
+                 return { status: "error", reason: "I determined a search was needed, but I could not formulate a search query. Please rephrase your request." };
             }
-            console.log(`GuraAI decided to search. Using user query: "${userQuery}"`);
+
+            console.log(`GuraAI generated its own search for: "${query}"`);
             
-            const searchTool = [{ "googleSearch": {} }];
-            
+            const searchTool = [{ "googleSearchRetrieval": {} }];
             const searchModel = genAI.getGenerativeModel({
-                model: "gemini-2.0-flash-lite", 
+                model: "gemini-2.5-flash-lite-preview-06-17",
                 tools: searchTool,
             });
 
-            const result = await searchModel.generateContent(userQuery);
+            const result = await searchModel.generateContent(query);
             const response = await result.response;
             const textResponse = response.text();
 
@@ -2358,7 +2373,7 @@ async function handleAiQuery() {
     sendBtn.style.pointerEvents = 'none';
     sendBtn.style.opacity = '0.5';
     input.value = ''; 
-    input.placeholder = "Thinking...";
+    input.placeholder = "Thinking";
 
     responseArea.style.opacity = '0';
     responseArea.style.transform = 'translateY(10px)';
@@ -2392,7 +2407,7 @@ async function handleAiQuery() {
         const functionCalls = response.functionCalls();
         if (functionCalls) {
              const call = functionCalls[0];
-             const apiResponse = await availableFunctions[call.name]({ ...call.args, userQuery: query });
+             const apiResponse = await availableFunctions[call.name](call.args);
              const finalResult = await chatSession.sendMessage([{
                  functionResponse: { name: call.name, response: { content: apiResponse } }
              }]);
