@@ -2034,7 +2034,16 @@ function loadChatHistory() {
             const transaction = db.transaction(AI_STORE_NAME, 'readonly');
             const store = transaction.objectStore(AI_STORE_NAME);
             const request = store.getAll();
-            request.onsuccess = () => resolve(request.result || []);
+            
+            // Clean the 'id' property from the history objects
+            request.onsuccess = () => {
+                const historyWithIds = request.result || [];
+                // Use .map() and object destructuring to create a new array of objects
+                // that contain every property *except* for 'id'.
+                const cleanedHistory = historyWithIds.map(({ id, ...rest }) => rest);
+                resolve(cleanedHistory);
+            };
+
             request.onerror = () => reject("Error loading chat history.");
         } catch (e) {
             reject(e);
