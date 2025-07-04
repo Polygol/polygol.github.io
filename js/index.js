@@ -2076,7 +2076,7 @@ async function initializeAiAssistant() {
                 { "name": "setMinimalMode", "description": "Enable or disable minimal mode to hide extra UI elements.", "parameters": { "type": "OBJECT", "properties": { "enabled": { "type": "BOOLEAN" } }, "required": ["enabled"] } },
                 { "name": "switchWallpaper", "description": "Switch to the next or previous wallpaper in the history.", "parameters": { "type": "OBJECT", "properties": { "direction": { "type": "STRING", "enum": ["next", "previous"] } }, "required": ["direction"] } },
                 { "name": "listApps", "description": "Get a list of all currently installed application names.", "parameters": { "type": "OBJECT", "properties": {} } },
-		{ "name": "requestGoogleSearch", "description": "When you need external, real-time information from the internet to answer a question, call this function with a concise search query.", "parameters": { "type": "OBJECT", "properties": { "query": { "type": "STRING" } }, "required": ["query"] } }
+		{ "name": "requestGoogleSearch", "description":"Searches Google for real-time information to answer user questions about current events, facts, or topics outside of your internal knowledge. Use this when you cannot answer a question using your other tools.", "parameters": { "type":"OBJECT","properties": { "query": { "type":"STRING", "description":"A concise and effective search query string, derived from the user's prompt, to find the required information online." } } , "required":["query"] } }
             ]
         }];
         
@@ -2257,14 +2257,14 @@ const availableFunctions = {
     },
     requestGoogleSearch: async ({ query }) => {
         try {
-            console.log(`GuraAI requested a Google Search for: "${query}"`);
-
             if (!query || typeof query !== 'string' || query.trim() === "") {
-                return { status: "error", reason: "The AI provided an empty search query." };
+                 console.error("AI self-correction: The model attempted to search but did not generate a query term.");
+                 return { status: "error", reason: "I decided to search for information, but I could not determine what to search for. Please rephrase your question." };
             }
-
+            
+            console.log(`GuraAI requested a Google Search for: "${query}"`);
+            
             const searchTool = [{ "googleSearch": {} }];
-
             const searchModel = genAI.getGenerativeModel({
                 model: "gemini-2.5-flash",
                 tools: searchTool,
