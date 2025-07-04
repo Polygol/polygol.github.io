@@ -2259,21 +2259,14 @@ const availableFunctions = {
         try {
             console.log(`GuraAI requested a Google Search for: "${query}"`);
             
-            const searchTool = [{ "googleSearchRetrieval": {} }];
+            const searchTool = [{ "googleSearch": {} }];
             const searchModel = genAI.getGenerativeModel({
                 model: "gemini-2.5-flash",
                 tools: searchTool,
             });
 
-            // --- FINAL FIX: Manually construct the full, explicit request object ---
-            // This is the most robust way to make the call and avoids all SDK inference issues.
-            const result = await searchModel.generateContent({
-                contents: [{
-                    role: "user", 
-                    parts: [{ text: query }] 
-                }]
-            });
-
+            // --- FIX: Pass the query in the correct format: an array of content parts. ---
+            const result = await searchModel.generateContent([ {text: query} ]);
             const response = await result.response;
             const textResponse = response.text();
 
