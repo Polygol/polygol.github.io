@@ -2264,10 +2264,12 @@ const availableFunctions = {
                 model: "gemini-2.5-flash",
                 tools: searchTool,
             });
-
-            // Use generateContent with the raw query string, which is the correct
-            // method for a single-turn, tool-enabled request with this model.
-            const result = await searchModel.generateContent(query);
+		
+            // Start a temporary Chat Session specifically for this search query
+            const searchChat = searchModel.startChat();
+            
+            // Send the query using the correct format for a Chat Session
+            const result = await searchChat.sendMessage([{ text: query }]);
             const response = await result.response;
             const textResponse = response.text();
 
