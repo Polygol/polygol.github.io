@@ -2084,6 +2084,29 @@ async function initializeAiAssistant() {
             model: "gemini-2.5-flash",
             tools: tools,
             systemInstruction: systemInstruction,
+	    generationConfig: {
+	        'maxOutputTokens': 8192,
+	        'temperature': 1,
+	        'topP': 0.95,
+	    },
+	    safetySettings: [
+	        {
+	            'category': 'HARM_CATEGORY_HATE_SPEECH',
+	            'threshold': 'BLOCK_MEDIUM_AND_ABOVE'
+	        },
+	        {
+	            'category': 'HARM_CATEGORY_DANGEROUS_CONTENT',
+	            'threshold': 'BLOCK_MEDIUM_AND_ABOVE'
+	        },
+	        {
+	            'category': 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+	            'threshold': 'BLOCK_MEDIUM_AND_ABOVE'
+	        },
+	        {
+	            'category': 'HARM_CATEGORY_HARASSMENT',
+	            'threshold': 'BLOCK_MEDIUM_AND_ABOVE'
+	        }
+	    ],
         });
 
         // Load persisted history from IndexedDB
