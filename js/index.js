@@ -2258,21 +2258,19 @@ const availableFunctions = {
     requestGoogleSearch: async ({ query }) => {
         try {
             console.log(`GuraAI requested a Google Search for: "${query}"`);
-
-            // 1. Create a temporary model instance configured ONLY for Google Search
+            
             const searchTool = [{ "googleSearchRetrieval": {} }];
             const searchModel = genAI.getGenerativeModel({
                 model: "gemini-2.5-flash",
                 tools: searchTool,
             });
 
-            // 2. Start a non-persistent chat session and send the query
-            const searchChat = searchModel.startChat();
-            const result = await searchChat.sendMessage(query);
+            // Use generateContent for a direct, single-turn request
+            // This is the correct method for non-chat, one-off queries
+            const result = await searchModel.generateContent(query);
             const response = await result.response;
             const textResponse = response.text();
 
-            // 3. Return the factual answer to the main AI
             return { status: "success", action: "google search", value: textResponse };
 
         } catch (error) {
