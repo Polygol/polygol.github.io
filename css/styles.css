@@ -1763,7 +1763,7 @@ input[type="color"]::-moz-color-swatch {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 9994;
+    z-index: 9996;
     display: flex;
     flex-direction: column;
     align-items: center;
