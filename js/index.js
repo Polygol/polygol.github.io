@@ -2067,22 +2067,18 @@ async function initializeAiAssistant() {
 
         // Define the tools (functions) the AI can call
         const tools = [
-            {
-                "googleSearch": {}
-            },
-            {
-                "functionDeclarations": [
-                    { "name": "setBrightness", "description": "Sets the screen brightness.", "parameters": { "type": "OBJECT", "properties": { "level": { "type": "NUMBER" } }, "required": ["level"] } },
-                    { "name": "changeTheme", "description": "Change the UI theme.", "parameters": { "type": "OBJECT", "properties": { "themeName": { "type": "STRING", "enum": ["light", "dark"] } }, "required": ["themeName"] } },
-                    { "name": "openApp", "description": "Opens an installed application by name.", "parameters": { "type": "OBJECT", "properties": { "appName": { "type": "STRING" } }, "required": ["appName"] } },
-                    { "name": "toggleSeconds", "description": "Show or hide the seconds on the main clock.", "parameters": { "type": "OBJECT", "properties": { "show": { "type": "BOOLEAN" } }, "required": ["show"] } },
-                    { "name": "setClockFont", "description": "Change the font of the main clock.", "parameters": { "type": "OBJECT", "properties": { "fontName": { "type": "STRING", "enum": ["Inter", "Roboto", "DynaPuff", "DM Serif Display", "Iansui", "JetBrains Mono", "DotGothic16", "Patrick Hand", "Rampart One", "Doto", "Nunito"] } }, "required": ["fontName"] } },
-                    { "name": "setMinimalMode", "description": "Enable or disable minimal mode to hide extra UI elements.", "parameters": { "type": "OBJECT", "properties": { "enabled": { "type": "BOOLEAN" } }, "required": ["enabled"] } },
-                    { "name": "switchWallpaper", "description": "Switch to the next or previous wallpaper in the history.", "parameters": { "type": "OBJECT", "properties": { "direction": { "type": "STRING", "enum": ["next", "previous"] } }, "required": ["direction"] } },
-                    { "name": "listApps", "description": "Get a list of all currently installed application names.", "parameters": { "type": "OBJECT", "properties": {} } }
-                ]
-            }
-        ];
+            "functionDeclarations": [
+                { "name": "setBrightness", "description": "Sets the screen brightness.", "parameters": { "type": "OBJECT", "properties": { "level": { "type": "NUMBER" } }, "required": ["level"] } },
+                { "name": "changeTheme", "description": "Change the UI theme.", "parameters": { "type": "OBJECT", "properties": { "themeName": { "type": "STRING", "enum": ["light", "dark"] } }, "required": ["themeName"] } },
+                { "name": "openApp", "description": "Opens an installed application by name.", "parameters": { "type": "OBJECT", "properties": { "appName": { "type": "STRING" } }, "required": ["appName"] } },
+                { "name": "toggleSeconds", "description": "Show or hide the seconds on the main clock.", "parameters": { "type": "OBJECT", "properties": { "show": { "type": "BOOLEAN" } }, "required": ["show"] } },
+                { "name": "setClockFont", "description": "Change the font of the main clock.", "parameters": { "type": "OBJECT", "properties": { "fontName": { "type": "STRING", "enum": ["Inter", "Roboto", "DynaPuff", "DM Serif Display", "Iansui", "JetBrains Mono", "DotGothic16", "Patrick Hand", "Rampart One", "Doto", "Nunito"] } }, "required": ["fontName"] } },
+                { "name": "setMinimalMode", "description": "Enable or disable minimal mode to hide extra UI elements.", "parameters": { "type": "OBJECT", "properties": { "enabled": { "type": "BOOLEAN" } }, "required": ["enabled"] } },
+                { "name": "switchWallpaper", "description": "Switch to the next or previous wallpaper in the history.", "parameters": { "type": "OBJECT", "properties": { "direction": { "type": "STRING", "enum": ["next", "previous"] } }, "required": ["direction"] } },
+                { "name": "listApps", "description": "Get a list of all currently installed application names.", "parameters": { "type": "OBJECT", "properties": {} } },
+		{ "name": "requestGoogleSearch", "description": "When you need external, real-time information from the internet to answer a question, call this function with a concise search query.", "parameters": { "type": "OBJECT", "properties": { "query": { "type": "STRING" } }, "required": ["query"] } }
+            ]
+        }];
         
         const model = genAI.getGenerativeModel({
             model: "gemini-2.5-flash",
@@ -2258,6 +2254,31 @@ const availableFunctions = {
     listApps: () => {
         const appNames = Object.keys(apps);
         return { status: "success", action: "list apps", value: appNames };
+    },
+    requestGoogleSearch: async ({ query }) => {
+        try {
+            console.log(`GuraAI requested a Google Search for: "${query}"`);
+
+            // 1. Create a temporary model instance configured ONLY for Google Search
+            const searchTool = [{ "googleSearchRetrieval": {} }];
+            const searchModel = genAI.getGenerativeModel({
+                model: "gemini-2.5-flash",
+                tools: searchTool,
+            });
+
+            // 2. Start a non-persistent chat session and send the query
+            const searchChat = searchModel.startChat();
+            const result = await searchChat.sendMessage(query);
+            const response = await result.response;
+            const textResponse = response.text();
+
+            // 3. Return the factual answer to the main AI
+            return { status: "success", action: "google search", value: textResponse };
+
+        } catch (error) {
+            console.error("Error during dynamic Google Search call:", error);
+            return { status: "error", reason: "The search could not be completed." };
+        }
     }
 };
 
