@@ -2265,10 +2265,9 @@ const availableFunctions = {
                 tools: searchTool,
             });
 
-            // Use a temporary Chat Session for the search query
-            const searchChat = searchModel.startChat();
-            // Pass the query in the correct format for a Chat Session
-            const result = await searchChat.sendMessage([{ text: query }]);
+            // Use generateContent with the raw query string, which is the correct
+            // method for a single-turn, tool-enabled request with this model.
+            const result = await searchModel.generateContent(query);
             const response = await result.response;
             const textResponse = response.text();
 
