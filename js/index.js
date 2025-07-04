@@ -2265,9 +2265,8 @@ const availableFunctions = {
                 tools: searchTool,
             });
 
-            // Use generateContent for a direct, single-turn request
-            // This is the correct method for non-chat, one-off queries
-            const result = await searchModel.generateContent(query);
+            // --- FIX: Pass the query in the correct format: an array of content parts. ---
+            const result = await searchModel.generateContent([ {text: query} ]);
             const response = await result.response;
             const textResponse = response.text();
 
