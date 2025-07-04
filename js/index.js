@@ -2265,9 +2265,15 @@ const availableFunctions = {
                 tools: searchTool,
             });
 
-            // --- FINAL FIX: Pass the raw query string directly to generateContent. ---
-            // The SDK will correctly format this simple string into the required request payload.
-            const result = await searchModel.generateContent(query);
+            // --- FINAL FIX: Manually construct the full, explicit request object ---
+            // This is the most robust way to make the call and avoids all SDK inference issues.
+            const result = await searchModel.generateContent({
+                contents: [{
+                    role: "user", 
+                    parts: [{ text: query }] 
+                }]
+            });
+
             const response = await result.response;
             const textResponse = response.text();
 
