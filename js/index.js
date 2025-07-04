@@ -2373,6 +2373,24 @@ async function handleAiQuery() {
         responseArea.style.opacity = '1';
         responseArea.style.transform = 'translateY(0)';
 
+	const responseText = response.text();
+        const fallbackTriggers = ["cannot access", "don't have access to the internet", "as an ai language model", "unable to provide real-time"];
+
+        // Check if the AI's response indicates it couldn't answer.
+        if (fallbackTriggers.some(phrase => responseText.toLowerCase().includes(phrase))) {
+            await performSearchFallback(query, responseArea);
+        } else {
+            responseArea.innerHTML = responseText;
+        }
+
+        requestAnimationFrame(() => {
+            responseArea.style.opacity = '1';
+            responseArea.style.transform = 'translateY(0)';
+        });
+        
+        const fullHistory = await chatSession.getHistory();
+        await saveChatHistory(fullHistory);
+
     } catch (error) {
         console.error("Error processing AI query:", error);
         let errorMessage = "Sorry, something went wrong.";
