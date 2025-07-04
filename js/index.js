@@ -2312,7 +2312,7 @@ const availableFunctions = {
             
             const searchTool = [{ "googleSearch": {} }];
             const searchModel = genAI.getGenerativeModel({
-                model: "gemini-2.5-flash-lite-preview-06-17",
+                model: "gemini-2.5-flash",
                 tools: searchTool,
             });
 
