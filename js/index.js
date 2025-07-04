@@ -2265,8 +2265,10 @@ const availableFunctions = {
                 tools: searchTool,
             });
 
-            // --- FIX: Pass the query in the correct format: an array of content parts. ---
-            const result = await searchModel.generateContent([ {text: query} ]);
+            // Use a temporary Chat Session for the search query
+            const searchChat = searchModel.startChat();
+            // Pass the query in the correct format for a Chat Session
+            const result = await searchChat.sendMessage([{ text: query }]);
             const response = await result.response;
             const textResponse = response.text();
 
