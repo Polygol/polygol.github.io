@@ -2076,7 +2076,7 @@ async function initializeAiAssistant() {
                 { "name": "setMinimalMode", "description": "Enable or disable minimal mode to hide extra UI elements.", "parameters": { "type": "OBJECT", "properties": { "enabled": { "type": "BOOLEAN" } }, "required": ["enabled"] } },
                 { "name": "switchWallpaper", "description": "Switch to the next or previous wallpaper in the history.", "parameters": { "type": "OBJECT", "properties": { "direction": { "type": "STRING", "enum": ["next", "previous"] } }, "required": ["direction"] } },
                 { "name": "listApps", "description": "Get a list of all currently installed application names.", "parameters": { "type": "OBJECT", "properties": {} } },
-		{ "name": "requestGoogleSearch", "description":"Searches Google for real-time information to answer user questions about current events, facts, or topics outside of your internal knowledge. Use this when you cannot answer a question using your other tools.", "parameters": { "type":"OBJECT","properties": { "query": { "type":"STRING", "description":"A concise and effective search query string, derived from the user's prompt, to find the required information online." } } , "required":["query"] } }
+		{ "name": "initiateGoogleSearch", "description": "Call this function when you need external, real-time information from the internet to answer a user's question. This will perform a Google Search based on the user's most recent prompt.", "parameters": { "type": "OBJECT", "properties": {} } }
             ]
         }];
         
@@ -2255,22 +2255,21 @@ const availableFunctions = {
         const appNames = Object.keys(apps);
         return { status: "success", action: "list apps", value: appNames };
     },
-    requestGoogleSearch: async ({ query }) => {
+    initiateGoogleSearch: async ({ userQuery }) => {
         try {
-            if (!query || typeof query !== 'string' || query.trim() === "") {
-                 console.error("AI self-correction: The model attempted to search but did not generate a query term.");
-                 return { status: "error", reason: "I decided to search for information, but I could not determine what to search for. Please rephrase your question." };
+            if (!userQuery || typeof userQuery !== 'string' || userQuery.trim() === "") {
+                return { status: "error", reason: "Cannot perform a search without the user's query." };
             }
-            
-            console.log(`GuraAI requested a Google Search for: "${query}"`);
+            console.log(`GuraAI decided to search. Using user query: "${userQuery}"`);
             
             const searchTool = [{ "googleSearch": {} }];
+            
             const searchModel = genAI.getGenerativeModel({
-                model: "gemini-2.5-pro",
+                model: "gemini-2.5-flash", 
                 tools: searchTool,
             });
 
-            const result = await searchModel.generateContent(query);
+            const result = await searchModel.generateContent(userQuery);
             const response = await result.response;
             const textResponse = response.text();
 
@@ -2361,7 +2360,7 @@ async function handleAiQuery() {
         const functionCalls = response.functionCalls();
         if (functionCalls) {
              const call = functionCalls[0];
-             const apiResponse = await availableFunctions[call.name](...Object.values(call.args));
+             const apiResponse = await availableFunctions[call.name]({ ...call.args, userQuery: query });
              const finalResult = await chatSession.sendMessage([{
                  functionResponse: { name: call.name, response: { content: apiResponse } }
              }]);
