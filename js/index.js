@@ -2258,18 +2258,19 @@ const availableFunctions = {
     requestGoogleSearch: async ({ query }) => {
         try {
             console.log(`GuraAI requested a Google Search for: "${query}"`);
-            
+
+            if (!query || typeof query !== 'string' || query.trim() === "") {
+                return { status: "error", reason: "The AI provided an empty search query." };
+            }
+
             const searchTool = [{ "googleSearch": {} }];
+
             const searchModel = genAI.getGenerativeModel({
                 model: "gemini-2.5-flash",
                 tools: searchTool,
             });
-		
-            // Start a temporary Chat Session specifically for this search query
-            const searchChat = searchModel.startChat();
-            
-            // Send the query using the correct format for a Chat Session
-            const result = await searchChat.sendMessage([{ text: query }]);
+
+            const result = await searchModel.generateContent(query);
             const response = await result.response;
             const textResponse = response.text();
 
