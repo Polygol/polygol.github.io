@@ -2265,8 +2265,9 @@ const availableFunctions = {
                 tools: searchTool,
             });
 
-            // --- FIX: Pass the query in the correct format: an array of content parts. ---
-            const result = await searchModel.generateContent([ {text: query} ]);
+            // --- FINAL FIX: Pass the raw query string directly to generateContent. ---
+            // The SDK will correctly format this simple string into the required request payload.
+            const result = await searchModel.generateContent(query);
             const response = await result.response;
             const textResponse = response.text();
 
