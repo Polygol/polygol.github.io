@@ -2249,7 +2249,7 @@ const availableFunctions = {
         }
         return { status: "success", action: "change theme", value: themeName };
     },
-    openApp: (appName) => {
+    openApp: ({ appName }) => {
         minimizeFullscreenEmbed();
         const appEntry = Object.entries(apps).find(
             ([name, details]) => name.toLowerCase() === appName.toLowerCase()
