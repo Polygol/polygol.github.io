@@ -1946,6 +1946,8 @@ let isAiAssistantEnabled = localStorage.getItem('aiAssistantEnabled') === 'true'
 let geminiApiKey = localStorage.getItem('geminiApiKey');
 let genAI; // Will be initialized if AI is enabled
 let chatSession; // For conversational memory
+const AI_ICON_THINKING_SVG = `<svg width="24" height="24" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--text-color);"><style>.spinner_V8m1{transform-origin:center;animation:spinner_zKoa 2s linear infinite}.spinner_V8m1 circle{stroke-linecap:round;animation:spinner_YpZS 1.5s ease-in-out infinite}@keyframes spinner_zKoa{100%{transform:rotate(360deg)}}@keyframes spinner_YpZS{0%{stroke-dasharray:0 150;stroke-dashoffset:0}47.5%{stroke-dasharray:42 150;stroke-dashoffset:-16}95%,100%{stroke-dasharray:42 150;stroke-dashoffset:-59}}</style><g class="spinner_V8m1"><circle cx="12" cy="12" r="9.5" fill="none" stroke-width="3"></circle></g></svg>`;
+const AI_ICON_DEFAULT = 'auto_awesome';
 
 // Theme switching functionality
 function setupThemeSwitcher() {
@@ -2365,6 +2367,7 @@ async function handleAiQuery() {
     const input = document.getElementById('ai-input');
     const sendBtn = document.getElementById('ai-send-btn');
     const responseArea = document.getElementById('ai-response-area');
+    const aiIcon = document.getElementById('ai-icon');
     const query = input.value.trim();
 
     if (!responseArea || !query || !chatSession || input.disabled) return;
@@ -2374,6 +2377,7 @@ async function handleAiQuery() {
     sendBtn.style.opacity = '0.5';
     input.value = ''; 
     input.placeholder = "Thinking";
+    if (aiIcon) aiIcon.innerHTML = AI_ICON_THINKING_SVG; // Set icon to spinner
 
     responseArea.style.opacity = '0';
     responseArea.style.transform = 'translateY(10px)';
@@ -2440,6 +2444,7 @@ async function handleAiQuery() {
         sendBtn.style.opacity = '1';
         input.placeholder = "Ask, or describe a command";
         input.focus();
+        if (aiIcon) aiIcon.innerHTML = AI_ICON_DEFAULT; // Set icon back to default
     }
 }
 
