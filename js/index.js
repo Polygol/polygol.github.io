@@ -4373,7 +4373,6 @@ function minimizeFullscreenEmbed() {
             // After animation completes, actually hide it completely
 	    document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
             embedContainer.style.display = 'none';
-	    persistentClock.style.opacity = '1';
             
             // Use a different z-index approach when minimized
             embedContainer.style.pointerEvents = 'none';
@@ -4391,6 +4390,8 @@ function minimizeFullscreenEmbed() {
             el.style.opacity = '1';
         });
     });
+
+    persistentClock.style.opacity = '1';
     
     // Hide all fullscreen embeds that are not being displayed
     document.querySelectorAll('.fullscreen-embed:not([style*="display: block"])').forEach(embed => {
