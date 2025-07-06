@@ -360,12 +360,13 @@ function updatePersistentClock() {
     
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
-	customizeModal.style.display = 'block';
-	blurOverlayControls.style.display = 'block';
-        setTimeout(() => {
-	    customizeModal.classList.add('show');
-            blurOverlayControls.classList.add('show');
-        }, 10);
+		persistentClock.style.opacity = '0';
+		customizeModal.style.display = 'block';
+		blurOverlayControls.style.display = 'block';
+	        setTimeout(() => {
+		        customizeModal.classList.add('show');
+	            blurOverlayControls.classList.add('show');
+	        }, 10);
     });
     
     // Setup observer to watch for embed visibility changes to update clock immediately
@@ -5744,6 +5745,7 @@ blurOverlayControls.addEventListener('click', () => {
     setTimeout(() => {
         customizeModal.style.display = 'none'; // Hide after animation
         blurOverlayControls.style.display = 'none';
+		persistentClock.style.opacity = '1';
     }, 300);
 });
 
