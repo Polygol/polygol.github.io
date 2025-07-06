@@ -230,13 +230,17 @@
                 // 2. Gather IndexedDB data
                 const indexedDbData = {};
                 for (const dbName of DB_NAMES) {
-                    logStatus(`Accessing IndexedDB: ${dbName}...`);
-                    const db = await openDb(dbName);
-                    indexedDbData[dbName] = {};
-                    for (const storeName of db.objectStoreNames) {
-                        indexedDbData[dbName][storeName] = await getStoreData(db, storeName);
+                    try {
+                        logStatus(`Accessing IndexedDB: ${dbName}...`);
+                        const db = await openDb(dbName);
+                        indexedDbData[dbName] = {};
+                        for (const storeName of db.objectStoreNames) {
+                            indexedDbData[dbName][storeName] = await getStoreData(db, storeName);
+                        }
+                        db.close();
+                    } catch (dbError) {
+                        logStatus(`Could not access DB: ${dbName}. It may not exist. Skipping.`, true);
                     }
-                    db.close();
                 }
                 logStatus('IndexedDB data collected.');
 
@@ -293,15 +297,23 @@
                     logStatus('Clearing current system data...');
                     localStorage.clear();
                     for (const dbName of DB_NAMES) {
-                        const db = await openDb(dbName);
-                        for (const storeName of db.objectStoreNames) {
-                           await new Promise((resolve, reject) => {
-                                const tx = db.transaction(storeName, 'readwrite');
-                                tx.objectStore(storeName).clear().onsuccess = resolve;
-                                tx.onerror = reject;
-                           });
+                         try {
+                            const db = await openDb(dbName);
+                            // Only clear if the DB has stores
+                            if (db.objectStoreNames.length > 0) {
+                                const tx = db.transaction(db.objectStoreNames, 'readwrite');
+                                for (const storeName of db.objectStoreNames) {
+                                    tx.objectStore(storeName).clear();
+                                }
+                                await new Promise((resolve, reject) => {
+                                    tx.oncomplete = resolve;
+                                    tx.onerror = () => reject(tx.error);
+                                });
+                            }
+                            db.close();
+                        } catch(clearError) {
+                            logStatus(`Could not clear DB: ${dbName}. It may not exist. Skipping.`, true);
                         }
-                        db.close();
                     }
                     logStatus('Current data cleared.');
 
@@ -315,9 +327,14 @@
                     // 3. Restore IndexedDB
                     logStatus('Restoring databases...');
                     for (const dbName in idbData) {
+                        if (!Object.keys(idbData[dbName]).length) continue; // Skip empty DB entries in backup
                         const db = await openDb(dbName);
-                        const tx = db.transaction(db.objectStoreNames, 'readwrite');
+                        
+                        // --- START OF FIX ---
+                        // Instead of one big transaction, do one for each store.
+                        // This avoids the error if the DB shell exists but is empty.
                         for (const storeName in idbData[dbName]) {
+                            const tx = db.transaction(storeName, 'readwrite');
                             const store = tx.objectStore(storeName);
                             const records = idbData[dbName][storeName];
                             
@@ -334,8 +351,13 @@
                                     store.put(record);
                                 }
                             }
+                            await new Promise((resolve, reject) => {
+                                tx.oncomplete = resolve;
+                                tx.onerror = () => reject(tx.error);
+                            });
                         }
-                        await new Promise(res => tx.oncomplete = res);
+                        // --- END OF FIX ---
+
                         db.close();
                     }
                     logStatus('Databases restored.');
@@ -353,7 +375,7 @@
             reader.onerror = () => logStatus('Failed to read the file.', true);
             reader.readAsText(file);
         }
-
+        
         // --- Event Listeners ---
         exportBtn.addEventListener('click', handleExport);
         importBtn.addEventListener('click', handleImport);
