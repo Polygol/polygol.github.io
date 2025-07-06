@@ -318,12 +318,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check if the click happened specifically on the album art
         if (e.target.id === 'media-widget-art') {
             if (activeMediaSessionApp) {
-                // Find the app's URL from the main 'apps' object
-                const appToOpen = Object.values(apps).find(app => app.name === activeMediaSessionApp);
+                // Directly get the app details using the name as the key.
+                const appToOpen = apps[activeMediaSessionApp]; 
                 if (appToOpen) {
                     // First, close the settings modal if it's open
                     closeControls();
-		            minimizeFullscreenEmbed();
+		    minimizeFullscreenEmbed();
                     // Then, open the app
                     createFullscreenEmbed(appToOpen.url);
                 }
