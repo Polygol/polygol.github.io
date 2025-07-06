@@ -4216,14 +4216,14 @@ function createFullscreenEmbed(url) {
         return; // Stop execution immediately
     }
 
-    // 2. Check if the app is actually in our 'apps' object.
-    // This verifies that the app is "installed" (i.e., its metadata is known).
-    const appEntry = Object.values(apps).find(app => app.url === url);
-    if (!appEntry) {
-        // If the URL doesn't correspond to any known app, it's not installed.
+    // 2. Find the app's name from the URL. This also validates that the app is "installed".
+    const appName = Object.keys(apps).find(name => apps[name].url === url);
+
+    // If the app is not found in our list, show an error and stop.
+    if (!appName) {
         showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
         console.warn(`Attempted to open an unknown app URL: ${url}`);
-        return; // Stop execution
+        return;
     }
 
     // 3. Since the app is valid, perform the tracking.
