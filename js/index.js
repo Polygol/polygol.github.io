@@ -2509,17 +2509,12 @@ gurappsSwitch.addEventListener("change", function() {
 });
 
 function updateVolumeUI(value) {
-    // Only proceed if the DOM elements have been found and assigned.
-    if (!volumeSlider) {
-        return; // Exit if the DOM isn't ready yet.
+    if (volumeSlider) { // This check is still good practice.
+        volumeSlider.value = value;
     }
-    
-    volumeSlider.value = value;
-    
     if (volumeValue) {
         volumeValue.textContent = `${value}%`;
     }
-    
     if (volumeIcon) {
         const numericValue = Number(value);
         if (numericValue === 0) {
@@ -2536,18 +2531,15 @@ function updateSystemVolume(newVolume, source = 'parent') {
     newVolume = Math.max(0, Math.min(100, newVolume));
     systemVolume = newVolume;
     localStorage.setItem('system_volume', systemVolume);
-
-    // Call the dedicated UI update function
     updateVolumeUI(newVolume);
 
-    // If the change was made by the parent UI, send the update to the active child app
     const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
     if (source === 'parent' && activeEmbed) {
         const iframe = activeEmbed.querySelector('iframe');
         if (iframe) {
             iframe.contentWindow.postMessage({
                 type: 'set-volume',
-                volume: newVolume / 100 // Convert to 0.0-1.0 range
+                volume: newVolume / 100
             }, window.location.origin);
         }
     }
@@ -5341,10 +5333,8 @@ document.addEventListener('DOMContentLoaded', function() {
     volumeValue = document.getElementById('volume-value');
     volumeIcon = document.querySelector('#volume-slider-container .material-symbols-rounded');
     
-    // Brightness & Volume elements
+    // Brightness elements
     const brightnessSlider = document.getElementById('brightness-control');
-    const volumeSlider = document.getElementById('volume-control');
-    const volumeIcon = document.querySelector('#volume-slider-container .material-symbols-rounded');
     
     // Create brightness overlay div if it doesn't exist
     if (!document.getElementById('brightness-overlay')) {
@@ -5415,11 +5405,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize the UI's state from the global variable on page load
     updateVolumeUI(systemVolume);
 
-    // Event listener for when the user moves the slider
     if (volumeSlider) {
         volumeSlider.addEventListener('input', function() {
             // When the user interacts, just call the central state management function.
-            // It will handle updating the UI and notifying the child app.
             updateSystemVolume(this.value, 'parent');
         });
     }
