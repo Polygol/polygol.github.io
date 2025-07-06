@@ -712,18 +712,6 @@ input[type="color"]::-moz-color-swatch {
   vertical-align: middle; 
 }
 
-#music-widget-art {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
-}
-
-#music-widget-play-pause .material-symbols-rounded {
-    font-size: 20px;
-}
-
 .clockwidgets {
     display: flex;
     justify-content: center;
