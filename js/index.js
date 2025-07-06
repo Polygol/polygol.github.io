@@ -2509,14 +2509,21 @@ gurappsSwitch.addEventListener("change", function() {
 });
 
 function updateVolumeUI(value) {
-    // Check if the DOM elements have been found and assigned yet
-    if (volumeSlider) volumeSlider.value = value;
-    if (volumeValue) volumeValue.textContent = `${value}%`;
+    // Only proceed if the DOM elements have been found and assigned.
+    if (!volumeSlider) {
+        return; // Exit if the DOM isn't ready yet.
+    }
+    
+    volumeSlider.value = value;
+    
+    if (volumeValue) {
+        volumeValue.textContent = `${value}%`;
+    }
     
     if (volumeIcon) {
         const numericValue = Number(value);
         if (numericValue === 0) {
-            volumeIcon.textContent = 'volume_mute';
+            volumeIcon.textContent = 'volume_off';
         } else if (numericValue < 50) {
             volumeIcon.textContent = 'volume_down';
         } else {
@@ -6274,18 +6281,17 @@ window.addEventListener('message', event => {
     // A Gurapp reports its internal volume has changed.
     if (data.type === 'volume-update-from-child') {
         const newVolumePercent = Math.round(data.volume * 100);
-        // Just call the central state management function. It will update the UI.
         updateSystemVolume(newVolumePercent, 'child');
-        return; // Message handled
+        return;
     }
 
     // A newly loaded Gurapp requests the current system volume.
     if (data.type === 'request-initial-volume') {
         event.source.postMessage({
             type: 'set-volume',
-            volume: systemVolume / 100 // Send as 0.0-1.0
+            volume: systemVolume / 100
         }, window.location.origin);
-        return; // Message handled
+        return;
     }
 
     // Allow an app to view the currently installed apps
