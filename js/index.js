@@ -2508,38 +2508,41 @@ gurappsSwitch.addEventListener("change", function() {
     updateGurappsVisibility();
 });
 
-function updateVolumeUI(value) {
-    if (volumeSlider) { // This check is still good practice.
-        volumeSlider.value = value;
-    }
-    if (volumeValue) {
-        volumeValue.textContent = `${value}%`;
-    }
-    if (volumeIcon) {
-        const numericValue = Number(value);
+function updateSystemVolume(newVolume, source = 'parent') {
+    // --- State Management ---
+    const clampedVolume = Math.max(0, Math.min(100, newVolume));
+    systemVolume = clampedVolume;
+    localStorage.setItem('system_volume', systemVolume);
+
+    // --- Direct UI Update (This is the key fix) ---
+    // Find the elements directly every time. This is robust and avoids initialization errors.
+    const slider = document.getElementById('volume-control');
+    const valueDisplay = document.getElementById('volume-value');
+    const iconDisplay = document.querySelector('#volume-slider-container .material-symbols-rounded');
+
+    if (slider) slider.value = clampedVolume;
+    if (valueDisplay) valueDisplay.textContent = `${clampedVolume}%`;
+    
+    if (iconDisplay) {
+        const numericValue = Number(clampedVolume);
         if (numericValue === 0) {
-            volumeIcon.textContent = 'volume_off';
+            iconDisplay.textContent = 'volume_off';
         } else if (numericValue < 50) {
-            volumeIcon.textContent = 'volume_down';
+            iconDisplay.textContent = 'volume_down';
         } else {
-            volumeIcon.textContent = 'volume_up';
+            iconDisplay.textContent = 'volume_up';
         }
     }
-}
 
-function updateSystemVolume(newVolume, source = 'parent') {
-    newVolume = Math.max(0, Math.min(100, newVolume));
-    systemVolume = newVolume;
-    localStorage.setItem('system_volume', systemVolume);
-    updateVolumeUI(newVolume);
-
+    // --- Communication ---
+    // If the change was made by the parent UI, notify the child app.
     const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
     if (source === 'parent' && activeEmbed) {
         const iframe = activeEmbed.querySelector('iframe');
         if (iframe) {
             iframe.contentWindow.postMessage({
                 type: 'set-volume',
-                volume: newVolume / 100
+                volume: clampedVolume / 100
             }, window.location.origin);
         }
     }
@@ -5335,6 +5338,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Brightness elements
     const brightnessSlider = document.getElementById('brightness-control');
+    const volumeSlider = document.getElementById('volume-control');
     
     // Create brightness overlay div if it doesn't exist
     if (!document.getElementById('brightness-overlay')) {
@@ -5402,12 +5406,11 @@ document.addEventListener('DOMContentLoaded', function() {
         updateBrightness(storedBrightness);
     }
 
-    // Initialize the UI's state from the global variable on page load
-    updateVolumeUI(systemVolume);
+    updateSystemVolume(systemVolume, 'init');
 
     if (volumeSlider) {
         volumeSlider.addEventListener('input', function() {
-            // When the user interacts, just call the central state management function.
+            // When the user interacts, simply call the central function.
             updateSystemVolume(this.value, 'parent');
         });
     }
@@ -6269,12 +6272,14 @@ window.addEventListener('message', event => {
     // A Gurapp reports its internal volume has changed.
     if (data.type === 'volume-update-from-child') {
         const newVolumePercent = Math.round(data.volume * 100);
+        // Just call the central function.
         updateSystemVolume(newVolumePercent, 'child');
         return;
     }
 
     // A newly loaded Gurapp requests the current system volume.
     if (data.type === 'request-initial-volume') {
+        // We can use the global state variable directly here.
         event.source.postMessage({
             type: 'set-volume',
             volume: systemVolume / 100
