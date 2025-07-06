@@ -5291,7 +5291,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Brightness elements
     const brightnessSlider = document.getElementById('brightness-control');
-    const brightnessValue = document.getElementById('brightness-value');
     
     // Create brightness overlay div if it doesn't exist
     if (!document.getElementById('brightness-overlay')) {
@@ -5417,9 +5416,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Function to update brightness
-    function updateBrightness(value) {
-        brightnessValue.textContent = `${value}%`;
-        
+    function updateBrightness(value) {        
         // Calculate darkness level (inverse of brightness)
         const darknessLevel = (100 - value) / 100;
         
