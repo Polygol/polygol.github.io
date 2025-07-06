@@ -1,5 +1,8 @@
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
-let systemVolume = localStorage.getItem('system_volume') || 100; // Global volume state
+let systemVolume = localStorage.getItem('system_volume') || 100;
+let volumeSlider = null;
+let volumeValue = null;
+let volumeIcon = null;
 let activeMediaSessionApp = null; // To track which app controls the media widget
 
 // This object will hold the callback functions sent by the Gurapp
@@ -2505,21 +2508,39 @@ gurappsSwitch.addEventListener("change", function() {
     updateGurappsVisibility();
 });
 
+function updateVolumeUI(value) {
+    // Check if the DOM elements have been found and assigned yet
+    if (volumeSlider) volumeSlider.value = value;
+    if (volumeValue) volumeValue.textContent = `${value}%`;
+    
+    if (volumeIcon) {
+        const numericValue = Number(value);
+        if (numericValue === 0) {
+            volumeIcon.textContent = 'volume_mute';
+        } else if (numericValue < 50) {
+            volumeIcon.textContent = 'volume_down';
+        } else {
+            volumeIcon.textContent = 'volume_up';
+        }
+    }
+}
+
 function updateSystemVolume(newVolume, source = 'parent') {
-    // Clamp volume between 0 and 100
     newVolume = Math.max(0, Math.min(100, newVolume));
     systemVolume = newVolume;
     localStorage.setItem('system_volume', systemVolume);
 
-    // If the change was initiated by the parent UI, send the update to the active child app.
-    // This prevents an endless loop if the child initiated the change.
+    // Call the dedicated UI update function
+    updateVolumeUI(newVolume);
+
+    // If the change was made by the parent UI, send the update to the active child app
     const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
     if (source === 'parent' && activeEmbed) {
         const iframe = activeEmbed.querySelector('iframe');
         if (iframe) {
             iframe.contentWindow.postMessage({
                 type: 'set-volume',
-                volume: newVolume / 100 // Convert to 0.0-1.0 range for HTMLMediaElement
+                volume: newVolume / 100 // Convert to 0.0-1.0 range
             }, window.location.origin);
         }
     }
@@ -5308,6 +5329,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const temperaturePopup = document.getElementById('thermostat-popup');
     const temperatureSlider = document.getElementById('thermostat-control');
     const temperaturePopupValue = document.getElementById('thermostat-popup-value');
+
+    volumeSlider = document.getElementById('volume-control');
+    volumeValue = document.getElementById('volume-value');
+    volumeIcon = document.querySelector('#volume-slider-container .material-symbols-rounded');
     
     // Brightness & Volume elements
     const brightnessSlider = document.getElementById('brightness-control');
@@ -5380,32 +5405,14 @@ document.addEventListener('DOMContentLoaded', function() {
         updateBrightness(storedBrightness);
     }
 
-    function updateVolumeUI(value) {
-        if (volumeValue) volumeValue.textContent = `${value}%`;
-        if (volumeSlider) volumeSlider.value = value;
-
-        // Update the icon based on volume level
-        if (volumeIcon) {
-            const numericValue = Number(value);
-            if (numericValue === 0) {
-                volumeIcon.textContent = 'volume_mute';
-            } else if (numericValue < 50) {
-                volumeIcon.textContent = 'volume_down';
-            } else {
-                volumeIcon.textContent = 'volume_up';
-            }
-        }
-    }
-
-    // Initialize the slider's state from the global variable on load
+    // Initialize the UI's state from the global variable on page load
     updateVolumeUI(systemVolume);
 
     // Event listener for when the user moves the slider
     if (volumeSlider) {
         volumeSlider.addEventListener('input', function() {
-            // 1. Update the UI immediately
-            updateVolumeUI(this.value);
-            // 2. Update the central state and notify the child app
+            // When the user interacts, just call the central state management function.
+            // It will handle updating the UI and notifying the child app.
             updateSystemVolume(this.value, 'parent');
         });
     }
@@ -6264,29 +6271,15 @@ window.addEventListener('message', event => {
 
     const data = event.data;
 
-    // A Gurapp is reporting its internal volume has changed.
+    // A Gurapp reports its internal volume has changed.
     if (data.type === 'volume-update-from-child') {
         const newVolumePercent = Math.round(data.volume * 100);
-        // Update the global state
+        // Just call the central state management function. It will update the UI.
         updateSystemVolume(newVolumePercent, 'child');
-        // Update the UI (find the function to do this)
-        const volumeUIUpdater = () => {
-             const vSlider = document.getElementById('volume-control');
-             const vValue = document.getElementById('volume-value');
-             const vIcon = document.querySelector('#volume-slider-container .material-symbols-rounded');
-             if (vSlider) vSlider.value = newVolumePercent;
-             if (vValue) vValue.textContent = `${newVolumePercent}%`;
-             if (vIcon) {
-                if (newVolumePercent === 0) vIcon.textContent = 'volume_mute';
-                else if (newVolumePercent < 50) vIcon.textContent = 'volume_down';
-                else vIcon.textContent = 'volume_up';
-             }
-        };
-        volumeUIUpdater();
         return; // Message handled
     }
 
-    // A newly loaded Gurapp is requesting the current system volume.
+    // A newly loaded Gurapp requests the current system volume.
     if (data.type === 'request-initial-volume') {
         event.source.postMessage({
             type: 'set-volume',
