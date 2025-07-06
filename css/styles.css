@@ -738,8 +738,13 @@ input[type="color"]::-moz-color-swatch {
 .qc-sliders {
     margin-top: 20px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 10px;
+    padding: 7.5px;
+    backdrop-filter: blur(20px);
+    background-color: var(--search-background);
+    border: 1px solid var(--glass-border);
+    border-radius: 30px;
 }
 
 .brightness-slider-container {
