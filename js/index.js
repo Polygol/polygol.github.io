@@ -4752,10 +4752,10 @@ function setupDrawerInteractions() {
         }
     }
 
-    function endDrag() {
-		persistentClock.style.opacity = '1';
-		
+    function endDrag() {		
         if (!isDragging) return;
+
+	persistentClock.style.opacity = '1';
     
         const deltaY = startY - currentY;
         const deltaTime = Date.now() - dragStartTime;
