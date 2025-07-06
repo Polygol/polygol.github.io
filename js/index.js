@@ -5739,14 +5739,7 @@ window.addEventListener('load', () => {
 
 // Close customizeModal when clicking outside
 blurOverlayControls.addEventListener('click', () => {
-    customizeModal.classList.remove('show'); // Start animation
-    blurOverlayControls.classList.remove('show');
-
-    setTimeout(() => {
-        customizeModal.style.display = 'none'; // Hide after animation
-        blurOverlayControls.style.display = 'none';
-		persistentClock.style.opacity = '1';
-    }, 300);
+    closeControls();
 });
 
 function closeControls() {
@@ -5756,6 +5749,7 @@ function closeControls() {
     setTimeout(() => {
         customizeModal.style.display = 'none'; // Hide after animation
         blurOverlayControls.style.display = 'none';
+		persistentClock.style.opacity = '1';
     }, 300);
 }
 
