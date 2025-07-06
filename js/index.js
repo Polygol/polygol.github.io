@@ -406,12 +406,26 @@ function updatePersistentClock() {
     });
     
     bodyObserver.observe(document.body, { childList: true, subtree: true });
-    
-    // Update clock
-    setInterval(updatePersistentClock, 30000);
-    
-    // Initial update
-    updatePersistentClock();
+
+	// Update clock to be precise to the minute, saving power
+	function synchronizePersistentClock() {
+	    const now = new Date();
+	    // Calculate milliseconds until the next minute starts
+	    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+	
+	    // Set a timeout to run precisely at the start of the next minute
+	    setTimeout(() => {
+	        updatePersistentClock();
+	        // Now that we're synchronized, update every 60 seconds
+	        setInterval(updatePersistentClock, 60000);
+	    }, msUntilNextMinute);
+	}
+	
+	// Initial call to display the clock immediately
+	updatePersistentClock();
+	
+	// Start the synchronized interval
+	synchronizePersistentClock();
 }); 
 
 // Function to update the document title
