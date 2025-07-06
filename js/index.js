@@ -2556,7 +2556,7 @@ style.textContent = `
     }
     
     body.minimal-active .clock {
-    	font-size: clamp(6rem, 20vw, 20rem);
+    	font-size: clamp(6rem, 20vw, 20rem) !important;
     }
     
     body.minimal-active .drawer-pill {
