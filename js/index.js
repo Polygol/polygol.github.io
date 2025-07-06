@@ -1,8 +1,5 @@
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
 let systemVolume = localStorage.getItem('system_volume') || 100;
-let volumeSlider = null;
-let volumeValue = null;
-let volumeIcon = null;
 let activeMediaSessionApp = null; // To track which app controls the media widget
 
 // This object will hold the callback functions sent by the Gurapp
