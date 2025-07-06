@@ -1176,9 +1176,9 @@ function createOnScreenPopup(message, options = {}) {
                         functionName: functionName,
                         args: args || []
                     }, window.location.origin);
-                    console.log(`[Gurasuraisu] Sent action '${functionName}' to Gurapp '${appName}'.`);
+                    console.log(`[raisu] Sent action '${functionName}' to Gurapp '${appName}'.`);
                 } else {
-                    console.warn(`[Gurasuraisu] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
+                    console.warn(`[raisu] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
                     showPopup(`Error: Could not perform action for ${appName}.`);
                 }
                 closeNotification(notification); // Close the notification after click
@@ -6104,7 +6104,6 @@ function updateMediaWidgetState(playbackState) {
 // This is the new function that Gurapps will call
 function registerMediaSession(appName, metadata, supportedActions = []) {
     if (!appName) return;
-    console.log(`[Gurasu] App "${appName}" is registering a media session. Supports:`, supportedActions);
     activeMediaSessionApp = appName;
     showMediaWidget(metadata);
 
