@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gurasuraisu-cache-v1'; // Give your cache a clear name
+const CACHE_NAME = 'gurasuraisu-cache-v2';
 
 const ASSETS_TO_CACHE = [
   '/',
