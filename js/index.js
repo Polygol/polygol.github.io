@@ -313,16 +313,20 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
 
-    // Album Art click listener
-    document.getElementById('media-widget-art').addEventListener('click', () => {
-        if (activeMediaSessionApp) {
-            // Find the app's URL from the main 'apps' object
-            const appToOpen = Object.values(apps).find(app => app.name === activeMediaSessionApp);
-            if (appToOpen) {
-                // First, close the settings modal if it's open
-                closeControls();
-                // Then, open the app
-                createFullscreenEmbed(appToOpen.url);
+    // Album Art click listener (using event delegation for reliability)
+    document.getElementById('media-session-widget').addEventListener('click', (e) => {
+        // Check if the click happened specifically on the album art
+        if (e.target.id === 'media-widget-art') {
+            if (activeMediaSessionApp) {
+                // Find the app's URL from the main 'apps' object
+                const appToOpen = Object.values(apps).find(app => app.name === activeMediaSessionApp);
+                if (appToOpen) {
+                    // First, close the settings modal if it's open
+                    closeControls();
+		            minimizeFullscreenEmbed();
+                    // Then, open the app
+                    createFullscreenEmbed(appToOpen.url);
+                }
             }
         }
     });
