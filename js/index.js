@@ -2511,29 +2511,10 @@ function updateSystemVolume(newVolume, source = 'parent') {
     systemVolume = newVolume;
     localStorage.setItem('system_volume', systemVolume);
 
-    // Update the UI elements
-    const volumeSlider = document.getElementById('volume-control');
-    const volumeValue = document.getElementById('volume-value');
-    const volumeIcon = document.querySelector('#volume-slider-container .material-symbols-rounded');
-
-    if (volumeSlider) volumeSlider.value = newVolume;
-    if (volumeValue) volumeValue.textContent = `${newVolume}%`;
-
-    // Update the icon based on volume level
-    if (volumeIcon) {
-        if (newVolume == 0) {
-            volumeIcon.textContent = 'volume_off';
-        } else if (newVolume < 50) {
-            volumeIcon.textContent = 'volume_down';
-        } else {
-            volumeIcon.textContent = 'volume_up';
-        }
-    }
-
-    // If the change was made by the parent UI, send the update to the active child app
-    // This prevents an echo loop if the child initiated the change.
+    // If the change was initiated by the parent UI, send the update to the active child app.
+    // This prevents an endless loop if the child initiated the change.
     const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-    if (source !== 'child' && activeEmbed) {
+    if (source === 'parent' && activeEmbed) {
         const iframe = activeEmbed.querySelector('iframe');
         if (iframe) {
             iframe.contentWindow.postMessage({
@@ -5331,6 +5312,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Brightness & Volume elements
     const brightnessSlider = document.getElementById('brightness-control');
     const volumeSlider = document.getElementById('volume-control');
+    const volumeIcon = document.querySelector('#volume-slider-container .material-symbols-rounded');
     
     // Create brightness overlay div if it doesn't exist
     if (!document.getElementById('brightness-overlay')) {
@@ -5398,9 +5380,34 @@ document.addEventListener('DOMContentLoaded', function() {
         updateBrightness(storedBrightness);
     }
 
+    function updateVolumeUI(value) {
+        if (volumeValue) volumeValue.textContent = `${value}%`;
+        if (volumeSlider) volumeSlider.value = value;
+
+        // Update the icon based on volume level
+        if (volumeIcon) {
+            const numericValue = Number(value);
+            if (numericValue === 0) {
+                volumeIcon.textContent = 'volume_mute';
+            } else if (numericValue < 50) {
+                volumeIcon.textContent = 'volume_down';
+            } else {
+                volumeIcon.textContent = 'volume_up';
+            }
+        }
+    }
+
+    // Initialize the slider's state from the global variable on load
+    updateVolumeUI(systemVolume);
+
+    // Event listener for when the user moves the slider
     if (volumeSlider) {
-        const initialVolume = localStorage.getItem('system_volume') || 100;
-        updateSystemVolume(initialVolume, 'init');
+        volumeSlider.addEventListener('input', function() {
+            // 1. Update the UI immediately
+            updateVolumeUI(this.value);
+            // 2. Update the central state and notify the child app
+            updateSystemVolume(this.value, 'parent');
+        });
     }
     
     // Initialize icons based on current states
@@ -6259,18 +6266,31 @@ window.addEventListener('message', event => {
 
     // A Gurapp is reporting its internal volume has changed.
     if (data.type === 'volume-update-from-child') {
-        // The child sends volume as 0.0-1.0, so convert back to 0-100 for our system
         const newVolumePercent = Math.round(data.volume * 100);
+        // Update the global state
         updateSystemVolume(newVolumePercent, 'child');
+        // Update the UI (find the function to do this)
+        const volumeUIUpdater = () => {
+             const vSlider = document.getElementById('volume-control');
+             const vValue = document.getElementById('volume-value');
+             const vIcon = document.querySelector('#volume-slider-container .material-symbols-rounded');
+             if (vSlider) vSlider.value = newVolumePercent;
+             if (vValue) vValue.textContent = `${newVolumePercent}%`;
+             if (vIcon) {
+                if (newVolumePercent === 0) vIcon.textContent = 'volume_mute';
+                else if (newVolumePercent < 50) vIcon.textContent = 'volume_down';
+                else vIcon.textContent = 'volume_up';
+             }
+        };
+        volumeUIUpdater();
         return; // Message handled
     }
 
-    // A newly loaded Gurapp is requesting the current system volume to sync itself.
+    // A newly loaded Gurapp is requesting the current system volume.
     if (data.type === 'request-initial-volume') {
-        const currentSystemVolume = localStorage.getItem('system_volume') || 100;
         event.source.postMessage({
             type: 'set-volume',
-            volume: currentSystemVolume / 100 // Send as 0.0-1.0
+            volume: systemVolume / 100 // Send as 0.0-1.0
         }, window.location.origin);
         return; // Message handled
     }
