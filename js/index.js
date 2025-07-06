@@ -1,5 +1,5 @@
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
-let systemVolume = localStorage.getItem('system_volume') || 100;
+
 let activeMediaSessionApp = null; // To track which app controls the media widget
 
 // This object will hold the callback functions sent by the Gurapp
@@ -364,13 +364,13 @@ function updatePersistentClock() {
     
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
-	persistentClock.style.opacity = '0';
-	customizeModal.style.display = 'block';
-	blurOverlayControls.style.display = 'block';
-	setTimeout(() => {
-	    customizeModal.classList.add('show');
-	    blurOverlayControls.classList.add('show');
-	}, 10);
+		persistentClock.style.opacity = '0';
+		customizeModal.style.display = 'block';
+		blurOverlayControls.style.display = 'block';
+	        setTimeout(() => {
+		        customizeModal.classList.add('show');
+	            blurOverlayControls.classList.add('show');
+	        }, 10);
     });
     
     // Setup observer to watch for embed visibility changes to update clock immediately
@@ -2505,46 +2505,6 @@ gurappsSwitch.addEventListener("change", function() {
     updateGurappsVisibility();
 });
 
-function updateSystemVolume(newVolume, source = 'parent') {
-    // --- State Management ---
-    const clampedVolume = Math.max(0, Math.min(100, newVolume));
-    systemVolume = clampedVolume;
-    localStorage.setItem('system_volume', systemVolume);
-
-    // --- Direct UI Update (This is the key fix) ---
-    // Find the elements directly every time. This is robust and avoids initialization errors.
-    const slider = document.getElementById('volume-control');
-    const valueDisplay = document.getElementById('volume-value');
-    const iconDisplay = document.querySelector('#volume-slider-container .material-symbols-rounded');
-
-    if (slider) slider.value = clampedVolume;
-    if (valueDisplay) valueDisplay.textContent = `${clampedVolume}%`;
-    
-    if (iconDisplay) {
-        const numericValue = Number(clampedVolume);
-        if (numericValue === 0) {
-            iconDisplay.textContent = 'volume_off';
-        } else if (numericValue < 50) {
-            iconDisplay.textContent = 'volume_down';
-        } else {
-            iconDisplay.textContent = 'volume_up';
-        }
-    }
-
-    // --- Communication ---
-    // If the change was made by the parent UI, notify the child app.
-    const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-    if (source === 'parent' && activeEmbed) {
-        const iframe = activeEmbed.querySelector('iframe');
-        if (iframe) {
-            iframe.contentWindow.postMessage({
-                type: 'set-volume',
-                volume: clampedVolume / 100
-            }, window.location.origin);
-        }
-    }
-}
-
 function updateMinimalMode() {
     const elementsToHide = [
         document.getElementById('weather'),
@@ -4217,14 +4177,14 @@ function createFullscreenEmbed(url) {
         return; // Stop execution immediately
     }
 
-    // 2. Find the app's name from the URL. This also validates that the app is "installed".
-    const appName = Object.keys(apps).find(name => apps[name].url === url);
-
-    // If the app is not found in our list, show an error and stop.
-    if (!appName) {
+    // 2. Check if the app is actually in our 'apps' object.
+    // This verifies that the app is "installed" (i.e., its metadata is known).
+    const appEntry = Object.values(apps).find(app => app.url === url);
+    if (!appEntry) {
+        // If the URL doesn't correspond to any known app, it's not installed.
         showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
         console.warn(`Attempted to open an unknown app URL: ${url}`);
-        return;
+        return; // Stop execution
     }
 
     // 3. Since the app is valid, perform the tracking.
@@ -5328,14 +5288,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const temperaturePopup = document.getElementById('thermostat-popup');
     const temperatureSlider = document.getElementById('thermostat-control');
     const temperaturePopupValue = document.getElementById('thermostat-popup-value');
-
-    volumeSlider = document.getElementById('volume-control');
-    volumeValue = document.getElementById('volume-value');
-    volumeIcon = document.querySelector('#volume-slider-container .material-symbols-rounded');
     
     // Brightness elements
     const brightnessSlider = document.getElementById('brightness-control');
-    const volumeSlider = document.getElementById('volume-control');
     
     // Create brightness overlay div if it doesn't exist
     if (!document.getElementById('brightness-overlay')) {
@@ -5397,19 +5352,10 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTemperature(storedTemperature);
     }
     
-    // Initialize brightness & volume
+    // Initialize brightness
     if (storedBrightness) {
         brightnessSlider.value = storedBrightness;
         updateBrightness(storedBrightness);
-    }
-
-    updateSystemVolume(systemVolume, 'init');
-
-    if (volumeSlider) {
-        volumeSlider.addEventListener('input', function() {
-            // When the user interacts, simply call the central function.
-            updateSystemVolume(this.value, 'parent');
-        });
     }
     
     // Initialize icons based on current states
@@ -5653,14 +5599,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateBrightness(value);
         localStorage.setItem('page_brightness', value);
     });
-
-    // Volume control
-    if(volumeSlider) {
-        volumeSlider.addEventListener('input', function(e) {
-            const value = e.target.value;
-            updateSystemVolume(value, 'parent');
-        });
-    }
     
     // Add CSS for the overlays
     const style = document.createElement('style');
@@ -6265,24 +6203,6 @@ window.addEventListener('message', event => {
     if (event.origin !== window.location.origin) return;
 
     const data = event.data;
-
-    // A Gurapp reports its internal volume has changed.
-    if (data.type === 'volume-update-from-child') {
-        const newVolumePercent = Math.round(data.volume * 100);
-        // Just call the central function.
-        updateSystemVolume(newVolumePercent, 'child');
-        return;
-    }
-
-    // A newly loaded Gurapp requests the current system volume.
-    if (data.type === 'request-initial-volume') {
-        // We can use the global state variable directly here.
-        event.source.postMessage({
-            type: 'set-volume',
-            volume: systemVolume / 100
-        }, window.location.origin);
-        return;
-    }
 
     // Allow an app to view the currently installed apps
     // This check should happen BEFORE the main API call router.
