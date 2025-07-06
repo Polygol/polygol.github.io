@@ -4187,6 +4187,16 @@ function createFullscreenEmbed(url) {
         return; // Stop execution
     }
 
+    // 3. Since the app is valid, perform the tracking.
+    appUsage[appName] = (appUsage[appName] || 0) + 1;
+    saveUsageData();
+
+    appLastOpened[appName] = Date.now();
+    saveLastOpenedData();
+
+    // Refresh the dock to reflect the newly opened app.
+    populateDock();
+
     persistentClock.style.opacity = '1';
 	
     // Check if we have this URL minimized already
@@ -4461,10 +4471,6 @@ function populateDock() {
 	        minimizeFullscreenEmbed();
 	    }
 	
-	    // Update the last opened timestamp for this app
-	    appLastOpened[name] = Date.now();
-	    saveLastOpenedData();
-	
 	    // Open the new app
 	    createFullscreenEmbed(details.url);
 	    populateDock(); // Refresh the dock
@@ -4524,16 +4530,7 @@ function createAppIcons() {
             e.preventDefault();
             e.stopPropagation();
             
-            try {
-                // Update usage count as before
-                appUsage[app.name] = (appUsage[app.name] || 0) + 1;
-                saveUsageData();
-                
-                // Also save the timestamp when the app was opened
-                appLastOpened[app.name] = Date.now();
-                saveLastOpenedData();
-		populateDock();
-                
+            try {      
                 if (app.details.url.startsWith('#')) {
                     switch (app.details.url) {
                         case '#settings':
