@@ -4641,6 +4641,7 @@ function setupDrawerInteractions() {
     document.body.appendChild(swipeOverlay);
 
     function startDrag(yPosition) {
+		persistentClock.style.opacity = '0';
         startY = yPosition;
         lastY = yPosition;
         currentY = yPosition;
@@ -4745,6 +4746,8 @@ function setupDrawerInteractions() {
     }
 
     function endDrag() {
+		persistentClock.style.opacity = '1';
+		
         if (!isDragging) return;
     
         const deltaY = startY - currentY;
