@@ -1321,7 +1321,7 @@ input[type="color"]::-moz-color-swatch {
 
 .weight-slider {
     -webkit-appearance: none;
-    width: 100%;
+    width: unset !important;
     height: 32px;
     border-radius: 18px;
     background: rgba(0,0,0,0.1);
