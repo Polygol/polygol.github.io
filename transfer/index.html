@@ -132,8 +132,11 @@
         const statusDiv = document.getElementById('status');
         const returnHomeBtn = document.getElementById('return-home');
 
-        const DB_NAMES = ['WallpaperDB', 'GuraAIDB'];
-
+        const DB_SCHEMAS = {
+            'WallpaperDB': { version: 1, stores: ['wallpapers'] },
+            'GuraAIDB': { version: 1, stores: [{ name: 'ChatHistory', options: { keyPath: 'id', autoIncrement: true } }] }
+        };
+        
         function logStatus(message, isError = false) {
             console.log(message);
             statusDiv.textContent = `> ${message}`;
@@ -174,12 +177,29 @@
         }
 
         // --- IndexedDB Utilities ---
-        function openDb(dbName) {
+        function initDb(dbName) {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open(dbName, 1);
+                const schema = DB_SCHEMAS[dbName];
+                if (!schema) return reject(`No schema found for DB: ${dbName}`);
+
+                const request = indexedDB.open(dbName, schema.version);
                 request.onerror = () => reject(request.error);
                 request.onsuccess = () => resolve(request.result);
-                // No onupgradeneeded, we are just reading/writing, not creating.
+                request.onupgradeneeded = event => {
+                    logStatus(`Upgrading/creating DB: ${dbName}`);
+                    const db = event.target.result;
+                    schema.stores.forEach(storeInfo => {
+                        if (typeof storeInfo === 'string') {
+                            if (!db.objectStoreNames.contains(storeInfo)) {
+                                db.createObjectStore(storeInfo);
+                            }
+                        } else {
+                             if (!db.objectStoreNames.contains(storeInfo.name)) {
+                                db.createObjectStore(storeInfo.name, storeInfo.options);
+                            }
+                        }
+                    });
+                };
             });
         }
 
@@ -229,10 +249,10 @@
 
                 // 2. Gather IndexedDB data
                 const indexedDbData = {};
-                for (const dbName of DB_NAMES) {
+                for (const dbName of Object.keys(DB_SCHEMAS)) {
                     try {
                         logStatus(`Accessing IndexedDB: ${dbName}...`);
-                        const db = await openDb(dbName);
+                        const db = await initDb(dbName);
                         indexedDbData[dbName] = {};
                         for (const storeName of db.objectStoreNames) {
                             indexedDbData[dbName][storeName] = await getStoreData(db, storeName);
@@ -293,27 +313,17 @@
                     
                     const { localStorage: lsData, indexedDB: idbData } = transferData.data;
 
-                    // 1. Clear existing data
+                    // 1. Clear existing localStorage and IndexedDB data
                     logStatus('Clearing current system data...');
                     localStorage.clear();
-                    for (const dbName of DB_NAMES) {
-                         try {
-                            const db = await openDb(dbName);
-                            // Only clear if the DB has stores
-                            if (db.objectStoreNames.length > 0) {
-                                const tx = db.transaction(db.objectStoreNames, 'readwrite');
-                                for (const storeName of db.objectStoreNames) {
-                                    tx.objectStore(storeName).clear();
-                                }
-                                await new Promise((resolve, reject) => {
-                                    tx.oncomplete = resolve;
-                                    tx.onerror = () => reject(tx.error);
-                                });
-                            }
-                            db.close();
-                        } catch(clearError) {
-                            logStatus(`Could not clear DB: ${dbName}. It may not exist. Skipping.`, true);
-                        }
+                    // This now also deletes the entire DB, ensuring a clean slate.
+                    for (const dbName of Object.keys(DB_SCHEMAS)) {
+                        await new Promise((resolve, reject) => {
+                           const req = indexedDB.deleteDatabase(dbName);
+                           req.onsuccess = resolve;
+                           req.onerror = reject;
+                           req.onblocked = () => logStatus(`Deletion of ${dbName} is blocked. Please close other Gurasuraisu tabs.`);
+                        });
                     }
                     logStatus('Current data cleared.');
 
@@ -327,19 +337,15 @@
                     // 3. Restore IndexedDB
                     logStatus('Restoring databases...');
                     for (const dbName in idbData) {
-                        if (!Object.keys(idbData[dbName]).length) continue; // Skip empty DB entries in backup
-                        const db = await openDb(dbName);
+                        // Use the corrected initDb to ensure schema is created
+                        const db = await initDb(dbName); 
                         
-                        // --- START OF FIX ---
-                        // Instead of one big transaction, do one for each store.
-                        // This avoids the error if the DB shell exists but is empty.
                         for (const storeName in idbData[dbName]) {
                             const tx = db.transaction(storeName, 'readwrite');
                             const store = tx.objectStore(storeName);
                             const records = idbData[dbName][storeName];
                             
                             for (const record of records) {
-                                // Special handling for WallpaperDB blobs
                                 if (dbName === 'WallpaperDB' && storeName === 'wallpapers') {
                                     let valueToStore = record.value;
                                     if (valueToStore.base64) {
@@ -351,13 +357,11 @@
                                     store.put(record);
                                 }
                             }
-                            await new Promise((resolve, reject) => {
+                             await new Promise((resolve, reject) => {
                                 tx.oncomplete = resolve;
                                 tx.onerror = () => reject(tx.error);
                             });
                         }
-                        // --- END OF FIX ---
-
                         db.close();
                     }
                     logStatus('Databases restored.');
