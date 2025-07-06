@@ -5743,13 +5743,13 @@ blurOverlayControls.addEventListener('click', () => {
 });
 
 function closeControls() {
+	persistentClock.style.opacity = '1';
     customizeModal.classList.remove('show'); // Start animation
     blurOverlayControls.classList.remove('show');
 
     setTimeout(() => {
         customizeModal.style.display = 'none'; // Hide after animation
         blurOverlayControls.style.display = 'none';
-		persistentClock.style.opacity = '1';
     }, 300);
 }
 
