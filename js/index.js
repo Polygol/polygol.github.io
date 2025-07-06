@@ -719,9 +719,11 @@ function updateClockAndDate() {
     // Check if stacked layout is enabled
     const stackSwitch = document.getElementById('clock-stack-switch');
     const isStacked = stackSwitch && stackSwitch.checked;
+    const clock = document.querySelector('.clock');
     
     if (isStacked) {
         // Stacked format: each time component on a new line with digit containers
+	document.querySelector('.clock').style.fontSize = 'clamp(10rem, 12vw, 12rem)';
         if (showSeconds) {
             clockElement.innerHTML = `
                 <div>${wrapDigits(displayHours)}</div>
@@ -738,6 +740,7 @@ function updateClockAndDate() {
         }
     } else {
         // Normal format: standard time display with digit containers
+	document.querySelector('.clock').style.fontSize = '';
         const timeString = showSeconds ? 
             `${displayHours}:${minutes}:${seconds}${period}` : 
             `${displayHours}:${minutes}${period}`;
