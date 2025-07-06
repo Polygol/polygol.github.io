@@ -1,5 +1,5 @@
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
-
+let systemVolume = localStorage.getItem('system_volume') || 100; // Global volume state
 let activeMediaSessionApp = null; // To track which app controls the media widget
 
 // This object will hold the callback functions sent by the Gurapp
@@ -364,13 +364,13 @@ function updatePersistentClock() {
     
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
-		persistentClock.style.opacity = '0';
-		customizeModal.style.display = 'block';
-		blurOverlayControls.style.display = 'block';
-	        setTimeout(() => {
-		        customizeModal.classList.add('show');
-	            blurOverlayControls.classList.add('show');
-	        }, 10);
+	persistentClock.style.opacity = '0';
+	customizeModal.style.display = 'block';
+	blurOverlayControls.style.display = 'block';
+	setTimeout(() => {
+	    customizeModal.classList.add('show');
+	    blurOverlayControls.classList.add('show');
+	}, 10);
     });
     
     // Setup observer to watch for embed visibility changes to update clock immediately
@@ -2504,6 +2504,45 @@ gurappsSwitch.addEventListener("change", function() {
     localStorage.setItem("gurappsEnabled", gurappsEnabled);
     updateGurappsVisibility();
 });
+
+function updateSystemVolume(newVolume, source = 'parent') {
+    // Clamp volume between 0 and 100
+    newVolume = Math.max(0, Math.min(100, newVolume));
+    systemVolume = newVolume;
+    localStorage.setItem('system_volume', systemVolume);
+
+    // Update the UI elements
+    const volumeSlider = document.getElementById('volume-control');
+    const volumeValue = document.getElementById('volume-value');
+    const volumeIcon = document.querySelector('#volume-slider-container .material-symbols-rounded');
+
+    if (volumeSlider) volumeSlider.value = newVolume;
+    if (volumeValue) volumeValue.textContent = `${newVolume}%`;
+
+    // Update the icon based on volume level
+    if (volumeIcon) {
+        if (newVolume == 0) {
+            volumeIcon.textContent = 'volume_off';
+        } else if (newVolume < 50) {
+            volumeIcon.textContent = 'volume_down';
+        } else {
+            volumeIcon.textContent = 'volume_up';
+        }
+    }
+
+    // If the change was made by the parent UI, send the update to the active child app
+    // This prevents an echo loop if the child initiated the change.
+    const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+    if (source !== 'child' && activeEmbed) {
+        const iframe = activeEmbed.querySelector('iframe');
+        if (iframe) {
+            iframe.contentWindow.postMessage({
+                type: 'set-volume',
+                volume: newVolume / 100 // Convert to 0.0-1.0 range for HTMLMediaElement
+            }, window.location.origin);
+        }
+    }
+}
 
 function updateMinimalMode() {
     const elementsToHide = [
@@ -5289,8 +5328,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const temperatureSlider = document.getElementById('thermostat-control');
     const temperaturePopupValue = document.getElementById('thermostat-popup-value');
     
-    // Brightness elements
+    // Brightness & Volume elements
     const brightnessSlider = document.getElementById('brightness-control');
+    const volumeSlider = document.getElementById('volume-control');
     
     // Create brightness overlay div if it doesn't exist
     if (!document.getElementById('brightness-overlay')) {
@@ -5352,10 +5392,15 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTemperature(storedTemperature);
     }
     
-    // Initialize brightness
+    // Initialize brightness & volume
     if (storedBrightness) {
         brightnessSlider.value = storedBrightness;
         updateBrightness(storedBrightness);
+    }
+
+    if (volumeSlider) {
+        const initialVolume = localStorage.getItem('system_volume') || 100;
+        updateSystemVolume(initialVolume, 'init');
     }
     
     // Initialize icons based on current states
@@ -5599,6 +5644,14 @@ document.addEventListener('DOMContentLoaded', function() {
         updateBrightness(value);
         localStorage.setItem('page_brightness', value);
     });
+
+    // Volume control
+    if(volumeSlider) {
+        volumeSlider.addEventListener('input', function(e) {
+            const value = e.target.value;
+            updateSystemVolume(value, 'parent');
+        });
+    }
     
     // Add CSS for the overlays
     const style = document.createElement('style');
@@ -6203,6 +6256,24 @@ window.addEventListener('message', event => {
     if (event.origin !== window.location.origin) return;
 
     const data = event.data;
+
+    // A Gurapp is reporting its internal volume has changed.
+    if (data.type === 'volume-update-from-child') {
+        // The child sends volume as 0.0-1.0, so convert back to 0-100 for our system
+        const newVolumePercent = Math.round(data.volume * 100);
+        updateSystemVolume(newVolumePercent, 'child');
+        return; // Message handled
+    }
+
+    // A newly loaded Gurapp is requesting the current system volume to sync itself.
+    if (data.type === 'request-initial-volume') {
+        const currentSystemVolume = localStorage.getItem('system_volume') || 100;
+        event.source.postMessage({
+            type: 'set-volume',
+            volume: currentSystemVolume / 100 // Send as 0.0-1.0
+        }, window.location.origin);
+        return; // Message handled
+    }
 
     // Allow an app to view the currently installed apps
     // This check should happen BEFORE the main API call router.
