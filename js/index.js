@@ -4182,6 +4182,8 @@ function createFullscreenEmbed(url) {
         console.warn(`Attempted to open an unknown app URL: ${url}`);
         return; // Stop execution
     }
+
+    persistentClock.style.opacity = '1';
 	
     // Check if we have this URL minimized already
     if (minimizedEmbeds[url]) {
@@ -4371,6 +4373,7 @@ function minimizeFullscreenEmbed() {
             // After animation completes, actually hide it completely
 	    document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
             embedContainer.style.display = 'none';
+	    persistentClock.style.opacity = '1';
             
             // Use a different z-index approach when minimized
             embedContainer.style.pointerEvents = 'none';
