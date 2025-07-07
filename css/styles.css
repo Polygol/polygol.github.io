@@ -953,13 +953,13 @@ input[type="color"]::-moz-color-swatch {
 }
 
 #media-widget-progress-bar {
-    width: 90%;
+    width: 88%;
     height: 2px;
     border-radius: 6px;
     overflow: hidden;
     position: absolute;
-    bottom: 0.5px;
-    left: 5%;
+    bottom: 0;
+    left: 6%;
 }
 
 #media-widget-progress {
