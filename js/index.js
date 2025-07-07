@@ -1,7 +1,4 @@
-let profiles = [];
-let currentProfileId = 'default';
-
-let isSilentMode = getProfileItem('silentMode') === 'true'; // Global flag to track silent mode state
+let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
 
 let activeMediaSessionApp = null; // To track which app controls the media widget
 
@@ -11,477 +8,6 @@ let mediaSessionActions = {
     next: null,
     prev: null
 };
-
-function consoleLoaded() {
-    console.log(currentLanguage.LOAD_SUCCESS);
-}
-
-/**
- * Creates a unique key for the current profile's localStorage item.
- * @param {string} key The base key (e.g., 'theme').
- * @returns {string} The profile-specific key (e.g., 'profile_default_theme').
- */
-function getProfileKey(key) {
-    // The master list of profiles and the last active profile are global, not per-profile.
-    if (key === 'gurasuraisu_profiles' || key === 'gurasuraisu_last_active_profile') {
-        return key;
-    }
-    return `profile_${currentProfileId}_${key}`;
-}
-
-/**
- * Creates a unique name for the current profile's IndexedDB database.
- * @param {string} baseName The base name of the DB (e.g., 'WallpaperDB').
- * @returns {string} The profile-specific DB name (e.g., 'WallpaperDB_profile_default').
- */
-function getProfileDbName(baseName) {
-    return `${baseName}_profile_${currentProfileId}`;
-}
-
-// Wrappers for localStorage
-function getProfileItem(key) {
-    return localStorage.getItem(getProfileKey(key));
-}
-
-function setProfileItem(key, value) {
-    localStorage.setItem(getProfileKey(key), value);
-}
-
-function removeProfileItem(key) {
-    localStorage.removeItem(getProfileKey(key));
-}
-
-// Profile Management
-
-/**
- * Hashes a PIN string using SHA-256. Returns null for empty input.
- * @param {string} pin The PIN to hash.
- * @returns {Promise<string|null>} The hashed PIN as a hex string or null.
- */
-async function hashPin(pin) {
-    if (!pin) return null;
-    const encoder = new TextEncoder();
-    const data = encoder.encode(pin);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-/**
- * Saves the master list of profiles to global localStorage.
- */
-function saveProfiles() {
-    localStorage.setItem('gurasuraisu_profiles', JSON.stringify(profiles));
-}
-
-/**
- * Initializes the profile system on application startup.
- */
-function initProfiles() {
-    const rawProfiles = localStorage.getItem('gurasuraisu_profiles');
-    if (rawProfiles) {
-        profiles = JSON.parse(rawProfiles);
-    }
-
-    if (profiles.length === 0) {
-        profiles = [{ id: 'default', name: 'Main', icon: '/assets/img/profiles/default.png', pinHash: null }];
-        saveProfiles();
-    }
-    
-    currentProfileId = localStorage.getItem('gurasuraisu_last_active_profile') || profiles[0].id;
-    
-    const currentProfile = profiles.find(p => p.id === currentProfileId);
-    if (currentProfile) {
-        const profileImg = document.getElementById('current-profile-img');
-        if (profileImg) profileImg.src = currentProfile.icon;
-    } else {
-        // If last active profile was deleted, fall back to default
-        currentProfileId = 'default';
-        localStorage.setItem('gurasuraisu_last_active_profile', currentProfileId);
-    }
-}
-
-/**
- * Opens the main profile switcher modal.
- */
-function openProfileSwitcher() {
-    renderProfileSwitcher();
-    document.getElementById('profileSwitcherModal').classList.add('show');
-    // Ensure the main customize modal is hidden, but keep the blur overlay
-    document.getElementById('customizeModal').classList.remove('show');
-    document.getElementById('blurOverlayControls').classList.add('show');
-}
-
-/**
- * Closes any open profile-related modal.
- */
-function closeAllProfileModals() {
-    document.getElementById('profileSwitcherModal').classList.remove('show');
-    document.getElementById('pinEntryModal').classList.remove('show');
-    document.getElementById('editProfileModal').classList.remove('show');
-    document.getElementById('blurOverlayControls').classList.remove('show');
-}
-
-/**
- * Renders the list of profiles in the switcher modal.
- */
-function renderProfileSwitcher() {
-    const list = document.getElementById('profile-list');
-    list.innerHTML = '';
-    profiles.forEach(profile => {
-        const isActive = profile.id === currentProfileId;
-        const li = document.createElement('li');
-        li.className = `profile-item ${isActive ? 'active' : ''}`;
-        li.innerHTML = `
-            <div class="profile-item-info" onclick="switchProfile('${profile.id}')">
-                <img src="${profile.icon || '/assets/img/profiles/default.png'}" alt="${profile.name}">
-                <span class="profile-item-name">
-                    ${profile.name}
-                    ${profile.pinHash ? '<span class="material-symbols-rounded">lock</span>' : ''}
-                    ${isActive ? `<span style="font-weight: normal; font-size: 0.8em; color: var(--secondary-text-color);"> (${currentLanguage.CURRENT_PROFILE || 'Current'})</span>` : ''}
-                </span>
-            </div>
-            <div class="profile-item-actions">
-                <button onclick="openEditProfile('${profile.id}')" title="${currentLanguage.EDIT_PROFILE || 'Edit'}"><span class="material-symbols-rounded">edit</span></button>
-                <button onclick="exportProfile('${profile.id}')" title="${currentLanguage.EXPORT_PROFILE || 'Export'}"><span class="material-symbols-rounded">download</span></button>
-                ${profile.id !== 'default' ? `<button onclick="deleteProfile('${profile.id}')" title="${currentLanguage.DELETE_PROFILE || 'Delete'}"><span class="material-symbols-rounded">delete</span></button>` : ''}
-            </div>
-        `;
-        list.appendChild(li);
-    });
-}
-
-function checkProfileLock() {
-    const profile = profiles.find(p => p.id === currentProfileId);
-    if (!profile || !profile.pinHash) return; // No PIN set, do nothing.
-
-    const isUnlocked = sessionStorage.getItem('gurasuraisu_profile_unlocked') === 'true';
-    if (isUnlocked) return; // Already unlocked in this session.
-
-    // If we reach here, the profile is locked. Block the UI.
-    const pinModal = document.getElementById('pinEntryModal');
-    const pinTitle = document.getElementById('pin-entry-title');
-    const pinInput = document.getElementById('pin-input');
-    const pinSubmit = document.getElementById('pin-submit-btn');
-
-    // Hide the normal close button when a lock is forced
-    pinModal.querySelector('.close-modal').style.display = 'none';
-
-    pinTitle.textContent = (currentLanguage.ENTER_PIN || "Enter PIN for {profileName}").replace('{profileName}', profile.name);
-    pinInput.value = '';
-    
-    // Block all other content
-    pinModal.style.backgroundColor = 'var(--background-color)';
-    pinModal.classList.add('show');
-    
-    pinSubmit.onclick = async () => {
-        const enteredPinHash = await hashPin(pinInput.value);
-        if (enteredPinHash === profile.pinHash) {
-            // Unlock for this session
-            sessionStorage.setItem('gurasuraisu_profile_unlocked', 'true');
-            pinModal.classList.remove('show');
-            pinModal.style.backgroundColor = '';
-        } else {
-            showPopup(currentLanguage.INCORRECT_PIN || 'Incorrect PIN.');
-            pinInput.value = '';
-            pinInput.focus();
-        }
-    };
-    pinInput.focus();
-}
-
-
-/**
- * Handles the logic for switching to a different profile.
- * @param {string} profileId The ID of the profile to switch to.
- */
-async function switchProfile(profileId) {
-    if (profileId === currentProfileId) {
-        closeAllProfileModals();
-        return;
-    };
-
-    const profile = profiles.find(p => p.id === profileId);
-    if (!profile) return;
-
-    if (profile.pinHash) {
-        const pinModal = document.getElementById('pinEntryModal');
-        const pinTitle = document.getElementById('pin-entry-title');
-        const pinInput = document.getElementById('pin-input');
-        const pinSubmit = document.getElementById('pin-submit-btn');
-
-        pinTitle.textContent = (currentLanguage.ENTER_PIN || "Enter PIN for {profileName}").replace('{profileName}', profile.name);
-        pinInput.value = '';
-        
-        pinSubmit.onclick = async () => {
-            const enteredPinHash = await hashPin(pinInput.value);
-            if (enteredPinHash === profile.pinHash) {
-                localStorage.setItem('gurasuraisu_last_active_profile', profileId);
-                window.location.reload();
-            } else {
-                showPopup(currentLanguage.INCORRECT_PIN || 'Incorrect PIN.');
-                pinInput.value = '';
-                pinInput.focus();
-            }
-        };
-        // Close other modals and show the PIN one
-        closeAllProfileModals();
-        document.getElementById('blurOverlayControls').classList.add('show');
-        pinModal.classList.add('show');
-        pinInput.focus();
-
-    } else {
-        if (confirm(currentLanguage.PROFILE_SWITCH_PROMPT)) {
-            localStorage.setItem('gurasuraisu_last_active_profile', profileId);
-            window.location.reload();
-        }
-    }
-}
-
-/**
- * Adds a new profile.
- */
-function addProfile() {
-    const name = prompt(currentLanguage.NEW_PROFILE_NAME || "New Profile Name:");
-    if (name) {
-        const newProfile = {
-            id: `profile_${Date.now()}`,
-            name: name,
-            icon: '/assets/img/profiles/default.png',
-            pinHash: null
-        };
-        profiles.push(newProfile);
-        saveProfiles();
-        showPopup((currentLanguage.PROFILE_ADD_SUCCESS || "Profile '{profileName}' added.").replace('{profileName}', name));
-        switchProfile(newProfile.id);
-    }
-}
-
-/**
- * Deletes a profile and all its associated data.
- * @param {string} profileId The ID of the profile to delete.
- */
-async function deleteProfile(profileId) {
-    if (profileId === 'default') {
-        showPopup(currentLanguage.DEFAULT_PROFILE_DELETE_ERROR || "The default profile cannot be deleted.");
-        return;
-    }
-    const profile = profiles.find(p => p.id === profileId);
-    if (!profile) return;
-
-    if (confirm((currentLanguage.DELETE_PROFILE_CONFIRM || "Delete '{profileName}'?").replace('{profileName}', profile.name))) {
-        // Remove from profiles array
-        profiles = profiles.filter(p => p.id !== profileId);
-        saveProfiles();
-
-        // Delete its localStorage data
-        Object.keys(localStorage)
-            .filter(key => key.startsWith(`profile_${profileId}_`))
-            .forEach(key => localStorage.removeItem(key));
-
-        // Delete its IndexedDBs
-        await Promise.all([
-            indexedDB.deleteDatabase(`WallpaperDB_profile_${profileId}`),
-            indexedDB.deleteDatabase(`GuraAIDB_profile_${profileId}`)
-        ]);
-
-        // If it was the current profile, switch to default
-        if (currentProfileId === profileId) {
-            localStorage.setItem('gurasuraisu_last_active_profile', 'default');
-            window.location.reload();
-        } else {
-            renderProfileSwitcher(); // Re-render the list
-        }
-    }
-}
-
-function resetCurrentProfile() {
-    if (confirm(currentLanguage.RESET_CONFIRM)) {
-        if (confirm(currentLanguage.RESET_CONFIRM)) {
-            // Delete all keys for the current profile from localStorage
-            Object.keys(localStorage)
-                .filter(key => key.startsWith(`profile_${currentProfileId}_`))
-                .forEach(key => localStorage.removeItem(key));
-
-            // Delete the profile's IndexedDBs
-            const dbsToDelete = [getProfileDbName('WallpaperDB'), getProfileDbName('GuraAIDB')];
-            Promise.all(dbsToDelete.map(dbName =>
-                new Promise(resolve => {
-                    const req = indexedDB.deleteDatabase(dbName);
-                    req.onsuccess = resolve;
-                    req.onerror = resolve; // Continue even if one fails
-                })
-            )).then(() => {
-                showPopup(currentLanguage.RESET_SUCCESS);
-                // We just reload, the profile will be fresh
-                window.location.reload();
-            });
-        }
-    }
-}
-
-function openEditProfile(profileId) {
-    const profile = profiles.find(p => p.id === profileId);
-    if (!profile) return;
-
-    const modal = document.getElementById('editProfileModal');
-    const nameInput = document.getElementById('edit-profile-name');
-    const pinInput = document.getElementById('edit-profile-pin');
-    const saveBtn = document.getElementById('save-profile-btn');
-    const removePinBtn = document.getElementById('remove-pin-btn');
-
-    nameInput.value = profile.name;
-    pinInput.value = '';
-    removePinBtn.style.display = profile.pinHash ? 'block' : 'none';
-
-    saveBtn.onclick = () => saveProfileChanges(profileId);
-    removePinBtn.onclick = () => removeProfilePin(profileId);
-
-    closeAllProfileModals();
-    document.getElementById('blurOverlayControls').classList.add('show');
-    modal.classList.add('show');
-}
-
-async function saveProfileChanges(profileId) {
-    const profile = profiles.find(p => p.id === profileId);
-    if (!profile) return;
-
-    const newName = document.getElementById('edit-profile-name').value;
-    const newPin = document.getElementById('edit-profile-pin').value;
-
-    if (newName) profile.name = newName;
-    if (newPin) profile.pinHash = await hashPin(newPin);
-    
-    saveProfiles();
-    closeAllProfileModals();
-    showPopup(currentLanguage.PROFILE_EDIT_SUCCESS || "Profile updated.");
-    // Update current profile pic if it was the one edited
-    if (profileId === currentProfileId) {
-        document.getElementById('current-profile-img').src = profile.icon;
-    }
-}
-
-function removeProfilePin(profileId) {
-    const profile = profiles.find(p => p.id === profileId);
-    if (profile) {
-        profile.pinHash = null;
-        saveProfiles();
-        closeAllProfileModals();
-        showPopup((currentLanguage.PIN_REMOVED_SUCCESS || "PIN removed for {profileName}.").replace('{profileName}', profile.name));
-    }
-}
-
-// Import/Export Profiles
-
-async function exportProfile(profileId) {
-    const profile = profiles.find(p => p.id === profileId);
-    if (!profile) return;
-
-    showPopup(`Exporting ${profile.name}...`);
-    try {
-        const localStorageData = {};
-        Object.keys(localStorage)
-            .filter(key => key.startsWith(`profile_${profileId}_`))
-            .forEach(key => {
-                const cleanKey = key.replace(`profile_${profileId}_`, '');
-                localStorageData[cleanKey] = localStorage.getItem(key);
-            });
-
-        const indexedDbData = {};
-        const dbNames = { 
-            WallpaperDB: getProfileDbName('WallpaperDB'), 
-            GuraAIDB: getProfileDbName('GuraAIDB') 
-        };
-
-        for (const [baseName, profileDbName] of Object.entries(dbNames)) {
-            try {
-                const db = await indexedDB.open(profileDbName);
-                indexedDbData[baseName] = {};
-                for (const storeName of db.result.objectStoreNames) {
-                     // Simplified version of the complex export logic from transfer.html
-                    const tx = db.result.transaction(storeName, 'readonly');
-                    const store = tx.objectStore(storeName);
-                    const records = await new Promise(r => store.getAll().onsuccess = e => r(e.target.result));
-                    indexedDbData[baseName][storeName] = records;
-                }
-                db.result.close();
-            } catch (e) { /* DB might not exist, skip */ }
-        }
-        
-        const transferData = {
-            gurasuraisu_transfer_version: "1.1-profile",
-            export_timestamp: new Date().toISOString(),
-            profile: { name: profile.name, icon: profile.icon },
-            data: { localStorage: localStorageData, indexedDB: indexedDbData },
-        };
-
-        const fileName = `gurasuraisu_profile_${profile.name.replace(/\s/g, '_')}.guradata`;
-        const blob = new Blob([JSON.stringify(transferData)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(a.href);
-        showPopup((currentLanguage.PROFILE_EXPORT_SUCCESS || "Exported {profileName}").replace('{profileName}', profile.name));
-    } catch (e) {
-        console.error("Export failed:", e);
-        showPopup(currentLanguage.PROFILE_EXPORT_FAIL || "Export failed.");
-    }
-}
-
-function importProfile() {
-    const input = document.getElementById('profile-import-input');
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            try {
-                const transferData = JSON.parse(event.target.result);
-                if (transferData.gurasuraisu_transfer_version !== "1.1-profile") {
-                    throw new Error("Invalid profile file version.");
-                }
-                
-                const newProfile = {
-                    id: `profile_${Date.now()}`,
-                    name: transferData.profile.name || 'Imported Profile',
-                    icon: transferData.profile.icon || '/assets/img/profiles/default.png',
-                    pinHash: null // PIN is not imported for security
-                };
-                profiles.push(newProfile);
-                saveProfiles();
-
-                // Restore localStorage
-                for (const key in transferData.data.localStorage) {
-                    setProfileItem(key, transferData.data.localStorage[key]);
-                }
-
-                // Restore IndexedDB
-                for (const baseName in transferData.data.indexedDB) {
-                    const db = await initDB(baseName); // Use our new profile-aware init
-                    for (const storeName in transferData.data.indexedDB[baseName]) {
-                        const tx = db.transaction(storeName, 'readwrite');
-                        const store = tx.objectStore(storeName);
-                        for(const record of transferData.data.indexedDB[baseName][storeName]) {
-                            store.put(record);
-                        }
-                    }
-                    db.close();
-                }
-
-                showPopup((currentLanguage.PROFILE_IMPORT_SUCCESS || "Imported {profileName}").replace('{profileName}', newProfile.name));
-                switchProfile(newProfile.id);
-
-            } catch (error) {
-                console.error("Import failed:", error);
-                showPopup(currentLanguage.PROFILE_IMPORT_FAIL || "Import failed.");
-            }
-        };
-        reader.readAsText(file);
-    };
-    input.click();
-}
 
 let currentLanguage = LANG_EN; // Default to English
 
@@ -567,7 +93,7 @@ function selectLanguage(languageCode) {
     console.log('Selected language code:', languageCode);
     console.log('Current language object:', currentLanguage);
 
-    setProfileItem('selectedLanguage', languageCode);
+    localStorage.setItem('selectedLanguage', languageCode);
     applyLanguage(currentLanguage);
 
     const languageSwitcher = document.getElementById('language-switcher');
@@ -580,15 +106,19 @@ function consoleLicense() {
     console.info(currentLanguage.LICENCE);
 }
 
-consoleLicense();
+consoleLicense()
+
+function consoleLoaded() {
+    console.log(currentLanguage.LOAD_SUCCESS);
+}
 
 const secondsSwitch = document.getElementById('seconds-switch');
 let appUsage = {};
 const weatherSwitch = document.getElementById('weather-switch');
 const MAX_RECENT_WALLPAPERS = 10;
 
-let showSeconds = getProfileItem('showSeconds') !== 'false'; // defaults to true
-let showWeather = getProfileItem('showWeather') !== 'false'; // defaults to true
+let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults to true
+let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults to true
 let recentWallpapers = [];
 let currentWallpaperPosition = 0;
 let isSlideshow = false;
@@ -599,20 +129,20 @@ secondsSwitch.checked = showSeconds;
 
 function loadSavedData() {
     // Load existing data if available
-    const savedLastOpened = getProfileItem('appLastOpened');
+    const savedLastOpened = localStorage.getItem('appLastOpened');
     if (savedLastOpened) {
         appLastOpened = JSON.parse(savedLastOpened);
     }
     
     // Load other existing data as before
-    const savedUsage = getProfileItem('appUsage');
+    const savedUsage = localStorage.getItem('appUsage');
     if (savedUsage) {
         appUsage = JSON.parse(savedUsage);
     }
 }
 
 function saveLastOpenedData() {
-    setProfileItem('appLastOpened', JSON.stringify(appLastOpened));
+    localStorage.setItem('appLastOpened', JSON.stringify(appLastOpened));
 }
 
 // IndexedDB setup for video storage
@@ -620,9 +150,7 @@ const dbName = "WallpaperDB", storeName = "wallpapers", version = 1, VIDEO_VERSI
 
 function initDB() {
     return new Promise((resolve, reject) => {
-        // Use profile-specific DB name
-        const dbProfileName = getProfileDbName("WallpaperDB");
-        let request = indexedDB.open(dbProfileName, 1);
+        let request = indexedDB.open("WallpaperDB", 1);
         request.onerror = () => reject(request.error);
         request.onsuccess = () => resolve(request.result);
         request.onupgradeneeded = event => {
@@ -649,14 +177,14 @@ function checkIfPWA() {
 }
 
 function promptToInstallPWA() {
-    if (!getProfileItem('pwaPromptShown') && !checkIfPWA()) {
+    if (!localStorage.getItem('pwaPromptShown') && !checkIfPWA()) {
         showPopup(currentLanguage.INSTALL_PROMPT);
-        setProfileItem('pwaPromptShown', 'true');
+        localStorage.setItem('pwaPromptShown', 'true');
     }
 }
 
 // Add 12/24 hour format functionality
-let use12HourFormat = getProfileItem('use12HourFormat') === 'true'; // Default to 24-hour format if not set
+let use12HourFormat = localStorage.getItem('use12HourFormat') === 'true'; // Default to 24-hour format if not set
 
 // Setup the hour format toggle
 const hourFormatSwitch = document.getElementById('hour-switch');
@@ -665,7 +193,7 @@ hourFormatSwitch.checked = use12HourFormat; // Initialize the switch state
 // Add event listener for the hour format toggle
 hourFormatSwitch.addEventListener('change', function() {
   use12HourFormat = this.checked;
-  setProfileItem('use12HourFormat', use12HourFormat);
+  localStorage.setItem('use12HourFormat', use12HourFormat);
   updateClockAndDate(); // Update clock immediately after change
 });
 
@@ -930,7 +458,7 @@ function updateTitle() {
     `${displayHours}:${minutes}${period}`;
 
   // Check if weather is enabled
-  const showWeather = getProfileItem('showWeather') !== 'false';
+  const showWeather = localStorage.getItem('showWeather') !== 'false';
 
   let weatherString = '';
   if (showWeather) {
@@ -1110,7 +638,7 @@ function setupWeatherToggle() {
     const weatherSwitch = document.getElementById('weather-switch');
     if (!weatherSwitch) return;
     
-    let showWeather = getProfileItem('showWeather') !== 'false';
+    let showWeather = localStorage.getItem('showWeather') !== 'false';
     
     weatherSwitch.checked = showWeather;
     
@@ -1134,7 +662,7 @@ function setupWeatherToggle() {
     
     weatherSwitch.addEventListener('change', function() {
         showWeather = this.checked;
-        setProfileItem('showWeather', showWeather);
+        localStorage.setItem('showWeather', showWeather);
         updateWeatherVisibility();
         if (showWeather) {
             updateSmallWeather();
@@ -1317,7 +845,7 @@ async function fetchLocationAndWeather() {
                     hourlyForecast: hourlyForecastData.hourly
                 };
  
-                setProfileItem('lastWeatherData', JSON.stringify(weatherData));
+                localStorage.setItem('lastWeatherData', JSON.stringify(weatherData));
                 resolve(weatherData);
                 
             } catch (error) {
@@ -1326,7 +854,7 @@ async function fetchLocationAndWeather() {
                     showPopup(currentLanguage.OFFLINE);
                 }
                 // Return cached data if available
-                const cachedData = getProfileItem('lastWeatherData');
+                const cachedData = localStorage.getItem('lastWeatherData');
                 if (cachedData) {
                     resolve(JSON.parse(cachedData));
                     return;
@@ -1355,7 +883,7 @@ function getHourString(dateString) {
 }
 
 async function updateSmallWeather() {
-    const showWeather = getProfileItem('showWeather') !== 'false';
+    const showWeather = localStorage.getItem('showWeather') !== 'false';
     if (!showWeather) return;
     
     try {
@@ -1971,11 +1499,11 @@ function checkFullscreen() {
 
 function firstSetup() {
     // Check if it's the first visit
-    const hasVisitedBefore = getProfileItem('hasVisitedBefore');
+    const hasVisitedBefore = localStorage.getItem('hasVisitedBefore');
 
     // Get the selected language, defaulting to 'EN'
-    const selectedLanguage = getProfileItem('selectedLanguage') || 'EN';
-    console.log('First setup for profile ' + currentProfileId + ': selected language:', selectedLanguage);
+    const selectedLanguage = localStorage.getItem('selectedLanguage') || 'EN';
+    console.log('First setup: selected language:', selectedLanguage);
 
     // Select and apply the language
     selectLanguage(selectedLanguage);
@@ -1986,7 +1514,7 @@ function firstSetup() {
     }
 
     // Mark that the user has visited before
-    setProfileItem('hasVisitedBefore', 'true');
+    localStorage.setItem('hasVisitedBefore', 'true');
 }
 
 function createSetupScreen() {
@@ -2291,7 +1819,7 @@ function createSetupScreen() {
                 // Handle click events based on option type
                 if (pageData.title === "SETUP_SELECT_LANGUAGE") {
                     optionElement.addEventListener('click', () => {
-                        setProfileItem('selectedLanguage', option.value);
+                        localStorage.setItem('selectedLanguage', option.value);
                         selectLanguage(option.value);
                         updateSetup();
                     });
@@ -2329,16 +1857,16 @@ function createSetupScreen() {
                         // Save the selection
                         switch (pageData.title) {
                             case "SETUP_CANNIBALIZE":
-                                setProfileItem('theme', option.value);
+                                localStorage.setItem('theme', option.value);
                                 document.body.classList.toggle('light-theme', option.value === 'light');
                                 break;
                             case "SETUP_CLOCK_FORMAT":
-                                setProfileItem('showSeconds', option.value);
+                                localStorage.setItem('showSeconds', option.value);
                                 showSeconds = option.value;
                                 updateClockAndDate();
                                 break;
                             case "SETUP_SHOW_WEATHER":
-                                setProfileItem('showWeather', option.value);
+                                localStorage.setItem('showWeather', option.value);
                                 showWeather = option.value;
                                 document.getElementById('weather').style.display = option.value ? 'block' : 'none';
                                 if (option.value) updateSmallWeather();
@@ -2366,7 +1894,7 @@ function createSetupScreen() {
         nextButton.addEventListener('click', () => {
             if (currentPage === setupPages.length - 1) {
                 // Complete setup
-                setProfileItem('hasVisitedBefore', 'true');
+                localStorage.setItem('hasVisitedBefore', 'true');
                 setupContainer.style.opacity = '0';
                 setTimeout(() => {
                     setupContainer.remove();
@@ -2432,12 +1960,12 @@ const SLIDESHOW_INTERVAL = 600000; // 10 minutes in milliseconds
 const gurappsSwitch = document.getElementById("gurapps-switch");
 const contrastSwitch = document.getElementById('contrast-switch');
 const animationSwitch = document.getElementById('animation-switch');
-let gurappsEnabled = getProfileItem("gurappsEnabled") !== "false";
+let gurappsEnabled = localStorage.getItem("gurappsEnabled") !== "false";
 let slideshowInterval = null;
 let currentWallpaperIndex = 0;
-let minimalMode = getProfileItem('minimalMode') === 'true';
-let isAiAssistantEnabled = getProfileItem('aiAssistantEnabled') === 'true';
-let geminiApiKey = getProfileItem('geminiApiKey');
+let minimalMode = localStorage.getItem('minimalMode') === 'true';
+let isAiAssistantEnabled = localStorage.getItem('aiAssistantEnabled') === 'true';
+let geminiApiKey = localStorage.getItem('geminiApiKey');
 let genAI; // Will be initialized if AI is enabled
 let chatSession; // For conversational memory
 const AI_ICON_THINKING_SVG = `<svg width="24" height="24" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--text-color);"><style>.spinner_V8m1{transform-origin:center;animation:spinner_zKoa 2s linear infinite}.spinner_V8m1 circle{stroke-linecap:round;animation:spinner_YpZS 1.5s ease-in-out infinite}@keyframes spinner_zKoa{100%{transform:rotate(360deg)}}@keyframes spinner_YpZS{0%{stroke-dasharray:0 150;stroke-dashoffset:0}47.5%{stroke-dasharray:42 150;stroke-dashoffset:-16}95%,100%{stroke-dasharray:42 150;stroke-dashoffset:-59}}</style><g class="spinner_V8m1"><circle cx="12" cy="12" r="9.5" fill="none" stroke-width="3"></circle></g></svg>`;
@@ -2446,12 +1974,12 @@ const AI_ICON_DEFAULT = 'auto_awesome';
 // Theme switching functionality
 function setupThemeSwitcher() {
     // Check and set initial theme
-    const currentTheme = getProfileItem('theme') || 'dark';
+    const currentTheme = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('light-theme', currentTheme === 'light');
 }
 
 // Load saved preference
-const highContrastEnabled = getProfileItem('highContrast') === 'true';
+const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
 contrastSwitch.checked = highContrastEnabled;
 
 // Apply high contrast if enabled (initial state)
@@ -2462,12 +1990,12 @@ if (highContrastEnabled) {
 // Event listener for contrast toggle
 contrastSwitch.addEventListener('change', function() {
     const highContrast = this.checked;
-    setProfileItem('highContrast', highContrast);
+    localStorage.setItem('highContrast', highContrast);
     document.body.classList.toggle('high-contrast', highContrast);
 });
 
 // Load saved preference (default to true/on if not set)
-const animationsEnabled = getProfileItem('animationsEnabled') !== 'false';
+const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
 animationSwitch.checked = animationsEnabled;
 // Apply initial state
 if (!animationsEnabled) {
@@ -2476,7 +2004,7 @@ if (!animationsEnabled) {
 // Event listener for animation toggle
 animationSwitch.addEventListener('change', function() {
     const enableAnimations = this.checked;
-    setProfileItem('animationsEnabled', enableAnimations);
+    localStorage.setItem('animationsEnabled', enableAnimations);
     document.body.classList.toggle('reduce-animations', !enableAnimations);
     
     const iframes = document.querySelectorAll('iframe');
@@ -2493,8 +2021,7 @@ const AI_STORE_NAME = 'ChatHistory';
 
 function initAiDb() {
     return new Promise((resolve, reject) => {
-        const dbProfileName = getProfileDbName(AI_DB_NAME);
-        const request = indexedDB.open(dbProfileName, 1);
+        const request = indexedDB.open(AI_DB_NAME, 1);
         request.onerror = () => reject("Error opening AI DB.");
         request.onsuccess = () => resolve(request.result);
         request.onupgradeneeded = (event) => {
@@ -2554,12 +2081,12 @@ async function initializeAiAssistant() {
     if (!geminiApiKey) {
         geminiApiKey = prompt(currentLanguage.AI_API_KEY_PROMPT || "Please enter your Google AI API Key:");
         if (geminiApiKey) {
-            setProfileItem('geminiApiKey', geminiApiKey);
+            localStorage.setItem('geminiApiKey', geminiApiKey);
         } else {
             const aiSwitch = document.getElementById('ai-switch');
             if (aiSwitch) aiSwitch.checked = false;
             isAiAssistantEnabled = false;
-            setProfileItem('aiAssistantEnabled', 'false');
+            localStorage.setItem('aiAssistantEnabled', 'false');
             syncUiStates();
             return;
         }
@@ -2638,7 +2165,7 @@ async function initializeAiAssistant() {
     } catch (error) {
         console.error("AI Initialization failed:", error);
         isAiAssistantEnabled = false;
-        setProfileItem('aiAssistantEnabled', 'false');
+        localStorage.setItem('aiAssistantEnabled', 'false');
         const aiSwitch = document.getElementById('ai-switch');
         if (aiSwitch) aiSwitch.checked = false;
         syncUiStates();
@@ -2977,7 +2504,7 @@ function updateGurappsVisibility() {
 gurappsSwitch.checked = gurappsEnabled;
 gurappsSwitch.addEventListener("change", function() {
     gurappsEnabled = this.checked;
-    setProfileItem("gurappsEnabled", gurappsEnabled);
+    localStorage.setItem("gurappsEnabled", gurappsEnabled);
     updateGurappsVisibility();
 });
 
@@ -2999,7 +2526,7 @@ function updateMinimalMode() {
         // Show elements
         if (document.getElementById('weather')) {
             document.getElementById('weather').style.display = 
-                getProfileItem('showWeather') !== 'false' ? 'block' : 'none';
+                localStorage.getItem('showWeather') !== 'false' ? 'block' : 'none';
         }
             
         if (document.querySelector('.info'))
@@ -3164,13 +2691,13 @@ wallpaperInput.addEventListener("change", async event => {
 	    if (processedWallpapers.length > 0) {
 	        // Get current clock styles for the slideshow
 	        const currentClockStyles = {
-	            font: getProfileItem('clockFont') || 'Inter',
-	            weight: getProfileItem('clockWeight') || '700',
-	            color: getProfileItem('clockColor') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
-	            colorEnabled: getProfileItem('clockColorEnabled') === 'true'
+	            font: localStorage.getItem('clockFont') || 'Inter',
+	            weight: localStorage.getItem('clockWeight') || '700',
+	            color: localStorage.getItem('clockColor') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
+	            colorEnabled: localStorage.getItem('clockColorEnabled') === 'true'
 	        };
 	    
-	        setProfileItem("wallpapers", JSON.stringify(processedWallpapers));
+	        localStorage.setItem("wallpapers", JSON.stringify(processedWallpapers));
 	        currentWallpaperIndex = 0;
 	        isSlideshow = true;
 	    
@@ -3201,7 +2728,7 @@ wallpaperInput.addEventListener("change", async event => {
 // Function to check storage availability
 function checkStorageQuota(data) {
     try {
-        setProfileItem('quotaTest', data);
+        localStorage.setItem('quotaTest', data);
         localStorage.removeItem('quotaTest');
         return true;
     } catch (e) {
@@ -3265,10 +2792,10 @@ async function saveWallpaper(file) {
         
         // Get current clock styles
         const currentClockStyles = {
-            font: getProfileItem('clockFont') || 'Inter',
-            weight: getProfileItem('clockWeight') || '700',
-            color: getProfileItem('clockColor') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
-            colorEnabled: getProfileItem('clockColorEnabled') === 'true'
+            font: localStorage.getItem('clockFont') || 'Inter',
+            weight: localStorage.getItem('clockWeight') || '700',
+            color: localStorage.getItem('clockColor') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
+            colorEnabled: localStorage.getItem('clockColorEnabled') === 'true'
         };
         
         if (file.type.startsWith("video/")) {
@@ -3321,7 +2848,7 @@ async function saveWallpaper(file) {
 }
 
 async function applyWallpaper() {
-    let slideshowWallpapers = JSON.parse(getProfileItem("wallpapers"));
+    let slideshowWallpapers = JSON.parse(localStorage.getItem("wallpapers"));
     if (slideshowWallpapers && slideshowWallpapers.length > 0) {
         async function displaySlideshow() {
             let wallpaper = slideshowWallpapers[currentWallpaperIndex];
@@ -3468,7 +2995,7 @@ observer.observe(document.body, { childList: true });
 // Load recent wallpapers from localStorage on startup
 function loadRecentWallpapers() {
   try {
-    const savedWallpapers = getProfileItem('recentWallpapers');
+    const savedWallpapers = localStorage.getItem('recentWallpapers');
     if (savedWallpapers) {
       recentWallpapers = JSON.parse(savedWallpapers);
     }
@@ -3497,13 +3024,13 @@ function loadRecentWallpapers() {
     }
     
     // Check if we're in slideshow mode
-    const wallpapers = JSON.parse(getProfileItem('wallpapers'));
+    const wallpapers = JSON.parse(localStorage.getItem('wallpapers'));
     isSlideshow = wallpapers && wallpapers.length > 0;
     
     // If using a single wallpaper, add it to recent wallpapers if not already there
     if (!isSlideshow) {
-      const wallpaperType = getProfileItem('wallpaperType');
-      const customWallpaper = getProfileItem('customWallpaper');
+      const wallpaperType = localStorage.getItem('wallpaperType');
+      const customWallpaper = localStorage.getItem('customWallpaper');
       
       if (wallpaperType && customWallpaper) {
         // Create an entry for the current wallpaper
@@ -3546,7 +3073,7 @@ function loadRecentWallpapers() {
 // Save recent wallpapers to localStorage
 function saveRecentWallpapers() {
   try {
-    setProfileItem('recentWallpapers', JSON.stringify(recentWallpapers));
+    localStorage.setItem('recentWallpapers', JSON.stringify(recentWallpapers));
   } catch (error) {
     console.error('Error saving recent wallpapers:', error);
     showPopup(currentLanguage.WALLPAPER_HISTORY_FAIL);
@@ -3575,8 +3102,8 @@ function initializeWallpaperTracking() {
   }
   
   // Store the actual order in local storage
-  if (!getProfileItem('wallpaperOrder')) {
-    setProfileItem('wallpaperOrder', JSON.stringify({
+  if (!localStorage.getItem('wallpaperOrder')) {
+    localStorage.setItem('wallpaperOrder', JSON.stringify({
       position: currentWallpaperPosition,
       timestamp: Date.now()
     }));
@@ -3693,14 +3220,14 @@ function updatePageIndicator() {
 }
 
 function saveCurrentPosition() {
-  setProfileItem('wallpaperOrder', JSON.stringify({
+  localStorage.setItem('wallpaperOrder', JSON.stringify({
     position: currentWallpaperPosition,
     timestamp: Date.now()
   }));
 }
 
 function loadSavedPosition() {
-  const savedOrder = getProfileItem('wallpaperOrder');
+  const savedOrder = localStorage.getItem('wallpaperOrder');
   if (savedOrder) {
     try {
       const orderData = JSON.parse(savedOrder);
@@ -3785,7 +3312,7 @@ async function removeWallpaper(index) {
     }
     
     recentWallpapers.splice(index, 1);
-    setProfileItem("recentWallpapers", JSON.stringify(recentWallpapers));
+    localStorage.setItem("recentWallpapers", JSON.stringify(recentWallpapers));
     
     if (recentWallpapers.length === 0) {
         clearInterval(slideshowInterval);
@@ -3794,7 +3321,7 @@ async function removeWallpaper(index) {
         localStorage.removeItem("wallpapers");
         localStorage.removeItem("wallpaperOrder");
         currentWallpaperPosition = 0;
-        setProfileItem("wallpaperType", "default");
+        localStorage.setItem("wallpaperType", "default");
         applyWallpaper();
         showPopup(currentLanguage.ALL_WALLPAPER_REMOVE);
         updatePageIndicatorDots(true);
@@ -3936,7 +3463,7 @@ function handleDotDragEnd(e) {
     recentWallpapers.splice(newIndex, 0, movedWallpaper);
     
     // Update local storage
-    setProfileItem('recentWallpapers', JSON.stringify(recentWallpapers));
+    localStorage.setItem('recentWallpapers', JSON.stringify(recentWallpapers));
     
     // Update current position if needed
     if (currentWallpaperPosition === dragIndex) {
@@ -3995,13 +3522,13 @@ async function jumpToWallpaper(index) {
     
     if (wallpaper.clockStyles) {
         // Update localStorage
-        setProfileItem('clockFont', wallpaper.clockStyles.font || 'Inter');
-        setProfileItem('clockWeight', wallpaper.clockStyles.weight || '700');
-        setProfileItem('clockColor', wallpaper.clockStyles.color || '#ffffff');
-        setProfileItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled || false);
-        setProfileItem('clockStackEnabled', wallpaper.clockStyles.stackEnabled || false);
-        setProfileItem('showSeconds', wallpaper.clockStyles.showSeconds !== undefined ? wallpaper.clockStyles.showSeconds : true);
-        setProfileItem('showWeather', wallpaper.clockStyles.showWeather !== undefined ? wallpaper.clockStyles.showWeather : true);
+        localStorage.setItem('clockFont', wallpaper.clockStyles.font || 'Inter');
+        localStorage.setItem('clockWeight', wallpaper.clockStyles.weight || '700');
+        localStorage.setItem('clockColor', wallpaper.clockStyles.color || '#ffffff');
+        localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled || false);
+        localStorage.setItem('clockStackEnabled', wallpaper.clockStyles.stackEnabled || false);
+        localStorage.setItem('showSeconds', wallpaper.clockStyles.showSeconds !== undefined ? wallpaper.clockStyles.showSeconds : true);
+        localStorage.setItem('showWeather', wallpaper.clockStyles.showWeather !== undefined ? wallpaper.clockStyles.showWeather : true);
         
         // Update UI elements
         const fontSelect = document.getElementById('font-select');
@@ -4038,9 +3565,9 @@ async function jumpToWallpaper(index) {
     
     if (wallpaper.isSlideshow) {
         isSlideshow = true;
-        let slideshowData = JSON.parse(getProfileItem("wallpapers"));
+        let slideshowData = JSON.parse(localStorage.getItem("wallpapers"));
         if (slideshowData && slideshowData.length > 0) {
-            setProfileItem("wallpapers", JSON.stringify(slideshowData));
+            localStorage.setItem("wallpapers", JSON.stringify(slideshowData));
             currentWallpaperIndex = 0;
             applyWallpaper();
             showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
@@ -4125,7 +3652,7 @@ function addPageIndicatorStyles() {
 function checkWallpaperState() {
   // If no wallpapers in history, set to default
   if (!recentWallpapers || recentWallpapers.length === 0) {
-    setProfileItem('wallpaperType', 'default');
+    localStorage.setItem('wallpaperType', 'default');
     localStorage.removeItem('customWallpaper');
     localStorage.removeItem('wallpapers');
     isSlideshow = false;
@@ -4164,13 +3691,13 @@ function switchWallpaper(direction) {
     // Apply clock styles for this wallpaper if they exist
     if (wallpaper.clockStyles) {
         // Update localStorage so all functions can read the values
-        setProfileItem('clockFont', wallpaper.clockStyles.font || 'Inter');
-        setProfileItem('clockWeight', wallpaper.clockStyles.weight || '700');
-        setProfileItem('clockColor', wallpaper.clockStyles.color || '#ffffff');
-        setProfileItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled || false);
-        setProfileItem('clockStackEnabled', wallpaper.clockStyles.stackEnabled || false);
-        setProfileItem('showSeconds', wallpaper.clockStyles.showSeconds !== undefined ? wallpaper.clockStyles.showSeconds : true);
-        setProfileItem('showWeather', wallpaper.clockStyles.showWeather !== undefined ? wallpaper.clockStyles.showWeather : true);
+        localStorage.setItem('clockFont', wallpaper.clockStyles.font || 'Inter');
+        localStorage.setItem('clockWeight', wallpaper.clockStyles.weight || '700');
+        localStorage.setItem('clockColor', wallpaper.clockStyles.color || '#ffffff');
+        localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled || false);
+        localStorage.setItem('clockStackEnabled', wallpaper.clockStyles.stackEnabled || false);
+        localStorage.setItem('showSeconds', wallpaper.clockStyles.showSeconds !== undefined ? wallpaper.clockStyles.showSeconds : true);
+        localStorage.setItem('showWeather', wallpaper.clockStyles.showWeather !== undefined ? wallpaper.clockStyles.showWeather : true);
         
         // Update the UI elements
         const fontSelect = document.getElementById('font-select');
@@ -4214,9 +3741,9 @@ function switchWallpaper(direction) {
     
     if (wallpaper.isSlideshow) {
         isSlideshow = true;
-        const wallpapers = JSON.parse(getProfileItem('wallpapers'));
+        const wallpapers = JSON.parse(localStorage.getItem('wallpapers'));
         if (wallpapers && wallpapers.length > 0) {
-            setProfileItem('wallpapers', JSON.stringify(wallpapers));
+            localStorage.setItem('wallpapers', JSON.stringify(wallpapers));
             currentWallpaperIndex = 0;
             applyWallpaper();
             showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
@@ -4311,16 +3838,16 @@ async function initializeAndApplyWallpaper() {
         
         // Apply clock styles for the current wallpaper if they exist
         if (wallpaper.clockStyles) {
-            setProfileItem('clockFont', wallpaper.clockStyles.font);
-            setProfileItem('clockWeight', wallpaper.clockStyles.weight);
-            setProfileItem('clockColor', wallpaper.clockStyles.color);
-            setProfileItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled);
+            localStorage.setItem('clockFont', wallpaper.clockStyles.font);
+            localStorage.setItem('clockWeight', wallpaper.clockStyles.weight);
+            localStorage.setItem('clockColor', wallpaper.clockStyles.color);
+            localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled);
         }
         
         if (wallpaper.isSlideshow) {
             isSlideshow = true;
             // Keep the existing wallpapers array in localStorage for slideshow
-            let slideshowData = JSON.parse(getProfileItem("wallpapers"));
+            let slideshowData = JSON.parse(localStorage.getItem("wallpapers"));
             if (slideshowData && slideshowData.length > 0) {
                 currentWallpaperIndex = 0;
             }
@@ -4332,11 +3859,11 @@ async function initializeAndApplyWallpaper() {
             // The applyWallpaper() function will fetch data directly from IndexedDB
             if (wallpaper.isVideo) {
                 // Video wallpaper - data will be fetched from IndexedDB by applyWallpaper()
-                setProfileItem('wallpaperType', wallpaper.type);
+                localStorage.setItem('wallpaperType', wallpaper.type);
                 localStorage.removeItem('customWallpaper'); // Clean up old localStorage data
             } else {
                 // Image wallpaper - data will be fetched from IndexedDB by applyWallpaper()
-                setProfileItem('wallpaperType', wallpaper.type);
+                localStorage.setItem('wallpaperType', wallpaper.type);
                 localStorage.removeItem('customWallpaper'); // Clean up old localStorage data
             }
         }
@@ -4346,7 +3873,7 @@ async function initializeAndApplyWallpaper() {
     } else {
         // No wallpapers available, set to default
         isSlideshow = false;
-        setProfileItem('wallpaperType', 'default');
+        localStorage.setItem('wallpaperType', 'default');
         localStorage.removeItem('customWallpaper');
         localStorage.removeItem('wallpapers');
         currentWallpaperPosition = 0;
@@ -4388,13 +3915,13 @@ function setupFontSelection() {
     const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
     
     // Load saved preferences
-    const savedFont = getProfileItem('clockFont') || 'Inter';
-    const savedWeight = getProfileItem('clockWeight') || '700';
-    const savedColor = getProfileItem('clockColor') || defaultColor;
-    const colorEnabled = getProfileItem('clockColorEnabled') === 'true';
-    const stackEnabled = getProfileItem('clockStackEnabled') === 'true';
-    const showSeconds = getProfileItem('showSeconds') !== 'false'; // Add this
-    const showWeather = getProfileItem('showWeather') !== 'false'; // Add this
+    const savedFont = localStorage.getItem('clockFont') || 'Inter';
+    const savedWeight = localStorage.getItem('clockWeight') || '700';
+    const savedColor = localStorage.getItem('clockColor') || defaultColor;
+    const colorEnabled = localStorage.getItem('clockColorEnabled') === 'true';
+    const stackEnabled = localStorage.getItem('clockStackEnabled') === 'true';
+    const showSeconds = localStorage.getItem('showSeconds') !== 'false'; // Add this
+    const showWeather = localStorage.getItem('showWeather') !== 'false'; // Add this
     
     fontSelect.value = savedFont;
     weightSlider.value = parseInt(savedWeight) / 10;
@@ -4423,13 +3950,13 @@ function setupFontSelection() {
         }
         
         // Also update localStorage for immediate use
-        setProfileItem('clockFont', fontSelect.value);
-        setProfileItem('clockWeight', (weightSlider.value * 10).toString());
-        setProfileItem('clockColor', colorPicker.value);
-        setProfileItem('clockColorEnabled', colorSwitch.checked.toString());
-        setProfileItem('clockStackEnabled', stackSwitch.checked.toString());
-        setProfileItem('showSeconds', document.getElementById('seconds-switch')?.checked.toString() || 'true'); // Add this
-        setProfileItem('showWeather', document.getElementById('weather-switch')?.checked.toString() || 'true'); // Add this
+        localStorage.setItem('clockFont', fontSelect.value);
+        localStorage.setItem('clockWeight', (weightSlider.value * 10).toString());
+        localStorage.setItem('clockColor', colorPicker.value);
+        localStorage.setItem('clockColorEnabled', colorSwitch.checked.toString());
+        localStorage.setItem('clockStackEnabled', stackSwitch.checked.toString());
+        localStorage.setItem('showSeconds', document.getElementById('seconds-switch')?.checked.toString() || 'true'); // Add this
+        localStorage.setItem('showWeather', document.getElementById('weather-switch')?.checked.toString() || 'true'); // Add this
     }
     
     // Apply initial styles
@@ -4539,7 +4066,7 @@ let apps = {
 // NEW function to load user-installed apps and merge them.
 function loadUserInstalledApps() {
     try {
-        const userApps = JSON.parse(getProfileItem('userInstalledApps')) || {};
+        const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
         // Merge user-installed apps into the main apps object
         apps = { ...apps, ...userApps };
         console.log('Loaded and merged user-installed apps.');
@@ -4565,12 +4092,12 @@ async function installApp(appData) {
     };
 
     // Also save the app's metadata with the FULL icon URL to localStorage.
-    const userApps = JSON.parse(getProfileItem('userInstalledApps')) || {};
+    const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
     userApps[appData.name] = { 
         url: appData.url, 
         icon: appData.iconUrl // Use the full URL here, NOT the extracted filename.
     };
-    setProfileItem('userInstalledApps', JSON.stringify(userApps));
+    localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
 
     // 2. Refresh the UI immediately so the user sees the app appear.
     createAppIcons();
@@ -4624,9 +4151,9 @@ async function deleteApp(appName) {
         delete apps[appName];
 
         // 2. Remove from the 'userInstalledApps' in localStorage
-        const userApps = JSON.parse(getProfileItem('userInstalledApps')) || {};
+        const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
         delete userApps[appName];
-        setProfileItem('userInstalledApps', JSON.stringify(userApps));
+        localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
         
         // 3. (Optional but Recommended) Un-cache the files from the Service Worker
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -4674,10 +4201,6 @@ function createFullscreenEmbed(url) {
     populateDock();
 
     persistentClock.style.opacity = '1';
-
-    // Append profileId to the URL
-    const urlWithProfile = new URL(url, window.location.origin);
-    urlWithProfile.searchParams.set('profileId', currentProfileId);
 	
     // Check if we have this URL minimized already
     if (minimizedEmbeds[url]) {
@@ -4744,7 +4267,7 @@ function createFullscreenEmbed(url) {
     
     // Create new embed if not already minimized
     const iframe = document.createElement('iframe');
-    iframe.src = urlWithProfile.toString();
+    iframe.src = url;
     const appId = Object.keys(apps).find(k => apps[k].url === url);
     iframe.dataset.appId = appId;
     iframe.setAttribute('frameborder', '0');
@@ -4752,8 +4275,6 @@ function createFullscreenEmbed(url) {
     
     const embedContainer = document.createElement('div');
     embedContainer.className = 'fullscreen-embed';
-
-    embedContainer.dataset.embedUrl = url;
     
     // Set initial styles BEFORE adding to DOM (removed filter)
     embedContainer.style.transform = 'scale(0.8)'; 
@@ -5048,14 +4569,14 @@ Object.keys(apps).forEach(appName => {
 });
 
 // Load saved usage data from localStorage
-const savedUsage = getProfileItem('appUsage');
+const savedUsage = localStorage.getItem('appUsage');
 if (savedUsage) {
     Object.assign(appUsage, JSON.parse(savedUsage));
 }
 
 // Save usage data whenever an app is opened
 function saveUsageData() {
-    setProfileItem('appUsage', JSON.stringify(appUsage));
+    localStorage.setItem('appUsage', JSON.stringify(appUsage));
 }
 
 function setupDrawerInteractions() {
@@ -5597,16 +5118,14 @@ appDrawerObserver.observe(appDrawer, {
 });
 
 function blackoutScreen() {
-  sessionStorage.removeItem('gurasuraisu_profile_unlocked');
-
   // Get the brightness overlay element
   const brightnessOverlay = document.getElementById('brightness-overlay');
   
   // Store the current brightness value
-  const currentBrightness = getProfileItem('page_brightness') || '100';
+  const currentBrightness = localStorage.getItem('page_brightness') || '100';
   
   // Save the current brightness value for later restoration
-  setProfileItem('previous_brightness', currentBrightness);
+  localStorage.setItem('previous_brightness', currentBrightness);
   
   // Set brightness to 0 (completely dark)
   brightnessOverlay.style.backgroundColor = 'rgba(0, 0, 0, 1)';
@@ -5664,7 +5183,7 @@ function blackoutScreen() {
   // Function to handle the event and cleanup
   function restoreScreenAndMinimize() {
     // Restore previous brightness
-    const previousBrightness = getProfileItem('previous_brightness') || '100';
+    const previousBrightness = localStorage.getItem('previous_brightness') || '100';
     brightnessOverlay.style.backgroundColor = `rgba(0, 0, 0, ${(100-previousBrightness)/100})`;
     
     // Remove power save mode
@@ -5702,7 +5221,7 @@ function blackoutScreen() {
 
 secondsSwitch.addEventListener('change', function() {
     showSeconds = this.checked;
-    setProfileItem('showSeconds', showSeconds);
+    localStorage.setItem('showSeconds', showSeconds);
     updateClockAndDate();
     
     // Save to current wallpaper's clock styles
@@ -5750,35 +5269,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadRecentWallpapers();
 });
 
-function runPreLockInitialization() {
-     // This part runs no matter what, setting up the bare essentials.
-    initProfiles(); 
-
-    // Wire up the new profile UI buttons
-    const profileSwitcherBtn = document.getElementById('profile-switcher-btn');
-    if (profileSwitcherBtn) profileSwitcherBtn.addEventListener('click', openProfileSwitcher);
-    document.getElementById('add-profile-btn').addEventListener('click', addProfile);
-    document.getElementById('import-profile-btn').addEventListener('click', importProfile);
-
-    // Add close handlers for modal close buttons
-    document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', closeAllProfileModals));
-}
-
-function runPostLockInitialization() {
-    // This part runs ONLY after the user has successfully unlocked the profile.
-    console.log(`Starting post-lock initialization for profile: ${currentProfileId}`);
-
-    // Add close handlers for modals
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', closeAllProfileModals);
-    });
-	
+document.addEventListener('DOMContentLoaded', function() {
     // Initialize control states
-    const storedLightMode = getProfileItem('theme') || 'dark';
-    const storedMinimalMode = getProfileItem('minimalMode') === 'true';
-    const storedSilentMode = getProfileItem('silentMode') === 'true';
-    const storedTemperature = getProfileItem('display_temperature') || '0';
-    const storedBrightness = getProfileItem('page_brightness') || '100';
+    const storedLightMode = localStorage.getItem('theme') || 'dark';
+    const storedMinimalMode = localStorage.getItem('minimalMode') === 'true';
+    const storedSilentMode = localStorage.getItem('silentMode') === 'true';
+    const storedTemperature = localStorage.getItem('display_temperature') || '0';
+    const storedBrightness = localStorage.getItem('page_brightness') || '100';
     
     // Get elements using your existing IDs
     const lightModeControl = document.getElementById('light_mode_qc');
@@ -5984,7 +5481,7 @@ function runPostLockInitialization() {
         const newTheme = lightModeSwitch.checked ? 'light' : 'dark';
 
         // Update localStorage
-        setProfileItem('theme', newTheme);
+        localStorage.setItem('theme', newTheme);
 
         // Update current document
         document.body.classList.toggle('light-theme', newTheme === 'light');
@@ -6007,7 +5504,7 @@ function runPostLockInitialization() {
         minimalMode = !minimalMode;
 
         // Save state to localStorage (if needed)
-        setProfileItem('minimalMode', minimalMode);
+        localStorage.setItem('minimalMode', minimalMode);
 
         // Update UI based on the new state
         updateMinimalMode();
@@ -6025,7 +5522,7 @@ function runPostLockInitialization() {
         this.classList.toggle('active');
         
         isSilentMode = silentModeSwitch.checked; // Update global flag
-        setProfileItem('silentMode', isSilentMode); // Save to localStorage
+        localStorage.setItem('silentMode', isSilentMode); // Save to localStorage
         
         // Update icon
         updateSilentModeIcon(isSilentMode);
@@ -6048,7 +5545,7 @@ function runPostLockInitialization() {
     
     // Initialize silent mode on page load
     (function initSilentMode() {
-        isSilentMode = getProfileItem('silentMode') === 'true'; // Initialize global flag
+        isSilentMode = localStorage.getItem('silentMode') === 'true'; // Initialize global flag
         
         if (isSilentMode) { // Silent mode is ON on page load
             if (!window.originalShowPopup) {
@@ -6093,7 +5590,7 @@ function runPostLockInitialization() {
         const value = e.target.value;
         temperaturePopupValue.textContent = `${value}`;
         temperatureValue.textContent = `${value}`;
-        setProfileItem('display_temperature', value);
+        localStorage.setItem('display_temperature', value);
         updateTemperatureIcon(value);
         updateTemperature(value);
 	temperatureControl.classList.toggle('active', value !== '0');
@@ -6103,7 +5600,7 @@ function runPostLockInitialization() {
     brightnessSlider.addEventListener('input', function(e) {
         const value = e.target.value;
         updateBrightness(value);
-        setProfileItem('page_brightness', value);
+        localStorage.setItem('page_brightness', value);
     });
     
     // Add CSS for the overlays
@@ -6168,7 +5665,7 @@ function runPostLockInitialization() {
     aiSwitch.checked = isAiAssistantEnabled;
     aiSwitch.addEventListener('change', function() {
         isAiAssistantEnabled = this.checked;
-        setProfileItem('aiAssistantEnabled', isAiAssistantEnabled);
+        localStorage.setItem('aiAssistantEnabled', isAiAssistantEnabled);
         if (isAiAssistantEnabled) {
             initializeAiAssistant();
         } else {
@@ -6201,7 +5698,17 @@ function runPostLockInitialization() {
     
     const resetButton = document.getElementById('resetButton');
     if (resetButton) {
-        resetButton.addEventListener('click', resetCurrentProfile);
+        resetButton.addEventListener('click', function() {
+            if (confirm(currentLanguage.RESET_CONFIRM)) {
+		if (confirm(currentLanguage.RESET_CONFIRM)) {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    clearCookies();
+                    showPopup(currentLanguage.RESET_SUCCESS);
+                    window.location.reload();
+		}
+            }
+        });
     }
 
     function clearCookies() {
@@ -6222,57 +5729,7 @@ function runPostLockInitialization() {
     if (isAiAssistantEnabled) {
         initializeAiAssistant();
     }
-}
-
-function checkProfileLock() {
-    const profile = profiles.find(p => p.id === currentProfileId);
-    if (!profile || !profile.pinHash) {
-        // No pin, proceed with initialization immediately.
-        console.log("Profile has no PIN. Proceeding.");
-        runPostLockInitialization();
-        return;
-    }
-
-    const isUnlocked = sessionStorage.getItem('gurasuraisu_profile_unlocked') === 'true';
-    if (isUnlocked) {
-        // Unlocked in this session, proceed.
-        console.log("Profile is unlocked for this session. Proceeding.");
-        runPostLockInitialization();
-        return;
-    }
-    
-    // Profile is locked. Show modal and wait for input.
-    console.log("Profile is locked. Awaiting PIN.");
-    const pinModal = document.getElementById('pinEntryModal');
-    const pinTitle = document.getElementById('pin-entry-title');
-    const pinInput = document.getElementById('pin-input');
-    const pinSubmit = document.getElementById('pin-submit-btn');
-
-    pinModal.querySelector('.close-modal').style.display = 'none'; // Cannot close a forced lock
-    
-    document.body.style.filter = "blur(10px)";
-    pinModal.classList.add('show');
-    
-    pinTitle.textContent = (currentLanguage.ENTER_PIN || "Enter PIN for {profileName}").replace('{profileName}', profile.name);
-    pinInput.value = '';
-
-    pinSubmit.onclick = async () => {
-        if (!pinInput.value) return;
-        const enteredPinHash = await hashPin(pinInput.value);
-        if (enteredPinHash === profile.pinHash) {
-            sessionStorage.setItem('gurasuraisu_profile_unlocked', 'true');
-            pinModal.classList.remove('show');
-            document.body.style.filter = "none";
-            // Now that we are unlocked, run the rest of the app's initialization.
-            runPostLockInitialization();
-        } else {
-            showPopup(currentLanguage.INCORRECT_PIN || 'Incorrect PIN.');
-            pinInput.value = '';
-            pinInput.focus();
-        }
-    };
-    pinInput.focus();
-}
+});
 
 window.addEventListener('load', checkFullscreen);
 
@@ -6320,14 +5777,14 @@ function preventLeaving() {
 // --- Terminal Functions ---
 
 function getLocalStorageItem(key, sourceWindow) {
-    const value = getProfileItem(key);
+    const value = localStorage.getItem(key);
     if (sourceWindow) {
         sourceWindow.postMessage({ type: 'localStorageItemValue', key: key, value: value }, window.location.origin);
     }
 }
 
 function setLocalStorageItem(key, value, sourceWindow) {
-    setProfileItem(key, value);
+    localStorage.setItem(key, value);
     // Re-sync UI for common settings immediately
     if (key === 'page_brightness') updateBrightness(value);
     if (key === 'theme') {
@@ -6384,7 +5841,7 @@ function setLocalStorageItem(key, value, sourceWindow) {
     if (key === 'silentMode') {
         // Re-initialize silent mode functionality
         (function initSilentMode() {
-            const silentModeEnabled = getProfileItem('silentMode') === 'true';
+            const silentModeEnabled = localStorage.getItem('silentMode') === 'true';
             if (silentModeEnabled) {
                 if (!window.originalShowPopup) {
                     window.originalShowPopup = window.showPopup;
@@ -6439,22 +5896,22 @@ function clearLocalStorage(sourceWindow) {
 
 function listCommonSettings(sourceWindow) {
     const settings = {
-        'theme': getProfileItem('theme'),
-        'minimalMode': getProfileItem('minimalMode'),
-        'silentMode': getProfileItem('silentMode'),
-        'page_brightness': getProfileItem('page_brightness'),
-        'showSeconds': getProfileItem('showSeconds'),
-        'showWeather': getProfileItem('showWeather'),
-        'gurappsEnabled': getProfileItem('gurappsEnabled'),
-        'animationsEnabled': getProfileItem('animationsEnabled'),
-        'highContrast': getProfileItem('highContrast'),
-        'use12HourFormat': getProfileItem('use12HourFormat'),
-        'clockFont': getProfileItem('clockFont'),
-        'clockWeight': getProfileItem('clockWeight'),
-        'clockColor': getProfileItem('clockColor'),
-        'clockColorEnabled': getProfileItem('clockColorEnabled'),
-        'clockStackEnabled': getProfileItem('clockStackEnabled'),
-        'selectedLanguage': getProfileItem('selectedLanguage'),
+        'theme': localStorage.getItem('theme'),
+        'minimalMode': localStorage.getItem('minimalMode'),
+        'silentMode': localStorage.getItem('silentMode'),
+        'page_brightness': localStorage.getItem('page_brightness'),
+        'showSeconds': localStorage.getItem('showSeconds'),
+        'showWeather': localStorage.getItem('showWeather'),
+        'gurappsEnabled': localStorage.getItem('gurappsEnabled'),
+        'animationsEnabled': localStorage.getItem('animationsEnabled'),
+        'highContrast': localStorage.getItem('highContrast'),
+        'use12HourFormat': localStorage.getItem('use12HourFormat'),
+        'clockFont': localStorage.getItem('clockFont'),
+        'clockWeight': localStorage.getItem('clockWeight'),
+        'clockColor': localStorage.getItem('clockColor'),
+        'clockColorEnabled': localStorage.getItem('clockColorEnabled'),
+        'clockStackEnabled': localStorage.getItem('clockStackEnabled'),
+        'selectedLanguage': localStorage.getItem('selectedLanguage'),
         // Add more settings here as needed
     };
     if (sourceWindow) {
@@ -6510,7 +5967,7 @@ function clearAllWallpapers(sourceWindow) {
                 localStorage.removeItem("wallpapers"); // Remove slideshow indicator
                 localStorage.removeItem("wallpaperOrder"); // Reset order
                 currentWallpaperPosition = 0;
-                setProfileItem("wallpaperType", "default"); // Set to default type
+                localStorage.setItem("wallpaperType", "default"); // Set to default type
                 applyWallpaper(); // Apply default wallpaper
                 updatePageIndicatorDots(true); // Update indicator
                 syncUiStates(); // Update UI settings
@@ -6868,9 +6325,3 @@ window.addEventListener('message', event => {
         createAppIcons();
         setupDrawerInteractions();
     }
-
-window.addEventListener('DOMContentLoaded', () => {
-    runPreLockInitialization();
-    // This check is now the main gatekeeper for the rest of the application.
-    checkProfileLock();
-});
