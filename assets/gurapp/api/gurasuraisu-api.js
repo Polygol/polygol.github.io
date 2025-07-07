@@ -4,18 +4,25 @@
  * with the parent Gurasuraisu window and use its core functions.
  */
 
-// Gurasuraisu Cursor Injection
-// This block runs as soon as the script is loaded by the Gurapp.
+// Get profile ID from the URL as soon as the script loads
+const _urlParams = new URL(window.location.href).searchParams;
+const GURASURAISU_PROFILE_ID = _urlParams.get('profileId') || 'default';
+
+// Inject the cursor immediately.
 (function() {
     const style = document.createElement('style');
     style.textContent = `
-        * {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
-        }
+        * { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important; }
     `;
-    // Append the style to the head of the Gurapp's document.
     document.head.appendChild(style);
 })();
+
+/**
+ * Helper to get the correct localStorage key for the Gurapp's current profile.
+ */
+function _getProfileKeyForApi(baseKey) {
+   return `profile_${GURASURAISU_PROFILE_ID}_${baseKey}`;
+}
  
 const Gurasuraisu = {
   /**
@@ -278,7 +285,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // to ensure it's in sync from the start.
     if (window.parent && window.parent !== window) {
         window.parent.postMessage({
-            type: 'request-initial-volume'
+            action: 'requestInitialSettings'
+            // The parent will receive this message, check its *own* state for the current 
+            // profile, and send back a 'themeUpdate' message, which the listener above will catch.
         }, window.location.origin);
     }
 });
