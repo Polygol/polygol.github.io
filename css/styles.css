@@ -717,7 +717,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .profile-modal .modal-title {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 500;
     margin: 0;
 }
@@ -810,8 +810,8 @@ input[type="color"]::-moz-color-swatch {
 
 .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; }
 .form-label { font-size: 0.9rem; color: var(--secondary-text-color); }
-.form-input { padding: 10px 15px; border-radius: 10px; border: 1px solid var(--glass-border); background-color: var(--search-background); color: var(--text-color); font-size: 1rem; }
-.submit-btn { background-color: var(--text-color); color: var(--background-color); border: none; border-radius: 25px; padding: 12px; cursor: pointer; font-weight: 500; margin-top: 10px; width: 100%; }
+.form-input { padding: 10px 15px; border-radius: 10px; border: 1px solid var(--glass-border); background-color: var(--search-background); color: var(--text-color); width: -webkit-fill-available; font-family: 'Inter', sans-serif; }
+.submit-btn { background-color: var(--text-color); color: var(--background-color); border: 1px solid var(--glass-border); border-radius: 25px; padding: 12px; cursor: pointer; font-weight: 500; margin-top: 10px; width: 100%; }
 
 .weather-widget {
     position: relative;
