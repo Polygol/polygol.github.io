@@ -658,6 +658,159 @@ input[type="color"]::-moz-color-swatch {
         }
 
 
+/* Profile Switcher Button */
+#profile-switcher-btn {
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    background-color: transparent !important;
+}
+
+#profile-switcher-btn img {
+    transition: transform 0.2s ease;
+}
+
+#profile-switcher-btn:active img {
+    transform: scale(0.9);
+}
+
+/* Profile Modals General */
+.profile-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    z-index: 10001;
+    width: clamp(300px, 90vw, 500px);
+    max-height: 80vh;
+    background: var(--modal-background);
+    backdrop-filter: blur(50px);
+    border-radius: 25px;
+    padding: 20px;
+    color: var(--text-color);
+    border: 1px solid var(--glass-border);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    display: none; /* Initially hidden */
+}
+
+.profile-modal.show {
+    display: block;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+}
+
+.profile-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.profile-modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.profile-modal-close {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 24px;
+    cursor: pointer;
+}
+
+#profile-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.profile-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 15px;
+    transition: background-color 0.2s;
+}
+
+.profile-item.active {
+    background-color: var(--transparent-color);
+    border: 1px solid var(--glass-border);
+}
+
+.profile-item-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-grow: 1;
+    cursor: pointer;
+}
+
+.profile-item img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.profile-item-name {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.profile-item-name .material-symbols-rounded {
+    font-size: 1rem;
+    vertical-align: middle;
+}
+
+.profile-item-actions button {
+    background: none;
+    border: 1px solid var(--glass-border);
+    color: var(--text-color);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-left: 5px;
+    cursor: pointer;
+}
+.profile-item-actions button:hover {
+    background-color: var(--transparent-color);
+}
+
+.profile-modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+.profile-modal-actions button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 20px;
+    background-color: var(--transparent-color);
+    border: 1px solid var(--glass-border);
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.profile-modal input[type="text"], .profile-modal input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    background-color: var(--transparent-color);
+    color: var(--text-color);
+    box-sizing: border-box;
+}
+
 .weather-widget {
     position: relative;
     font-size: 1.2rem;
