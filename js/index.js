@@ -4674,6 +4674,10 @@ function createFullscreenEmbed(url) {
     populateDock();
 
     persistentClock.style.opacity = '1';
+
+    // Append profileId to the URL
+    const urlWithProfile = new URL(url, window.location.origin);
+    urlWithProfile.searchParams.set('profileId', currentProfileId);
 	
     // Check if we have this URL minimized already
     if (minimizedEmbeds[url]) {
@@ -4740,7 +4744,7 @@ function createFullscreenEmbed(url) {
     
     // Create new embed if not already minimized
     const iframe = document.createElement('iframe');
-    iframe.src = url;
+    iframe.src = urlWithProfile.toString();
     const appId = Object.keys(apps).find(k => apps[k].url === url);
     iframe.dataset.appId = appId;
     iframe.setAttribute('frameborder', '0');
@@ -4748,6 +4752,8 @@ function createFullscreenEmbed(url) {
     
     const embedContainer = document.createElement('div');
     embedContainer.className = 'fullscreen-embed';
+
+    embedContainer.dataset.embedUrl = url;
     
     // Set initial styles BEFORE adding to DOM (removed filter)
     embedContainer.style.transform = 'scale(0.8)'; 
@@ -5744,16 +5750,23 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadRecentWallpapers();
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    initProfiles();
-    checkProfileLock();
+function runPreLockInitialization() {
+     // This part runs no matter what, setting up the bare essentials.
+    initProfiles(); 
 
+    // Wire up the new profile UI buttons
     const profileSwitcherBtn = document.getElementById('profile-switcher-btn');
-    if (profileSwitcherBtn) {
-        profileSwitcherBtn.addEventListener('click', openProfileSwitcher);
-    }
+    if (profileSwitcherBtn) profileSwitcherBtn.addEventListener('click', openProfileSwitcher);
     document.getElementById('add-profile-btn').addEventListener('click', addProfile);
     document.getElementById('import-profile-btn').addEventListener('click', importProfile);
+
+    // Add close handlers for modal close buttons
+    document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', closeAllProfileModals));
+}
+
+function runPostLockInitialization() {
+    // This part runs ONLY after the user has successfully unlocked the profile.
+    console.log(`Starting post-lock initialization for profile: ${currentProfileId}`);
 
     // Add close handlers for modals
     document.querySelectorAll('.close-modal').forEach(btn => {
@@ -6209,7 +6222,57 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isAiAssistantEnabled) {
         initializeAiAssistant();
     }
-});
+}
+
+function checkProfileLock() {
+    const profile = profiles.find(p => p.id === currentProfileId);
+    if (!profile || !profile.pinHash) {
+        // No pin, proceed with initialization immediately.
+        console.log("Profile has no PIN. Proceeding.");
+        runPostLockInitialization();
+        return;
+    }
+
+    const isUnlocked = sessionStorage.getItem('gurasuraisu_profile_unlocked') === 'true';
+    if (isUnlocked) {
+        // Unlocked in this session, proceed.
+        console.log("Profile is unlocked for this session. Proceeding.");
+        runPostLockInitialization();
+        return;
+    }
+    
+    // Profile is locked. Show modal and wait for input.
+    console.log("Profile is locked. Awaiting PIN.");
+    const pinModal = document.getElementById('pinEntryModal');
+    const pinTitle = document.getElementById('pin-entry-title');
+    const pinInput = document.getElementById('pin-input');
+    const pinSubmit = document.getElementById('pin-submit-btn');
+
+    pinModal.querySelector('.close-modal').style.display = 'none'; // Cannot close a forced lock
+    
+    document.body.style.filter = "blur(10px)";
+    pinModal.classList.add('show');
+    
+    pinTitle.textContent = (currentLanguage.ENTER_PIN || "Enter PIN for {profileName}").replace('{profileName}', profile.name);
+    pinInput.value = '';
+
+    pinSubmit.onclick = async () => {
+        if (!pinInput.value) return;
+        const enteredPinHash = await hashPin(pinInput.value);
+        if (enteredPinHash === profile.pinHash) {
+            sessionStorage.setItem('gurasuraisu_profile_unlocked', 'true');
+            pinModal.classList.remove('show');
+            document.body.style.filter = "none";
+            // Now that we are unlocked, run the rest of the app's initialization.
+            runPostLockInitialization();
+        } else {
+            showPopup(currentLanguage.INCORRECT_PIN || 'Incorrect PIN.');
+            pinInput.value = '';
+            pinInput.focus();
+        }
+    };
+    pinInput.focus();
+}
 
 window.addEventListener('load', checkFullscreen);
 
@@ -6805,3 +6868,9 @@ window.addEventListener('message', event => {
         createAppIcons();
         setupDrawerInteractions();
     }
+
+window.addEventListener('DOMContentLoaded', () => {
+    runPreLockInitialization();
+    // This check is now the main gatekeeper for the rest of the application.
+    checkProfileLock();
+});
