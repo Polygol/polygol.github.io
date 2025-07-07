@@ -4,25 +4,18 @@
  * with the parent Gurasuraisu window and use its core functions.
  */
 
-// Get profile ID from the URL as soon as the script loads
-const _urlParams = new URL(window.location.href).searchParams;
-const GURASURAISU_PROFILE_ID = _urlParams.get('profileId') || 'default';
-
-// Inject the cursor immediately.
+// Gurasuraisu Cursor Injection
+// This block runs as soon as the script is loaded by the Gurapp.
 (function() {
     const style = document.createElement('style');
     style.textContent = `
-        * { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important; }
+        * {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
+        }
     `;
+    // Append the style to the head of the Gurapp's document.
     document.head.appendChild(style);
 })();
-
-/**
- * Helper to get the correct localStorage key for the Gurapp's current profile.
- */
-function _getProfileKeyForApi(baseKey) {
-   return `profile_${GURASURAISU_PROFILE_ID}_${baseKey}`;
-}
  
 const Gurasuraisu = {
   /**
@@ -62,31 +55,6 @@ const Gurasuraisu = {
     // The parent window handles all actions.
     this._call('showNotification', [message, options]);
   },
-
-    /**
-     * Explicitly sets the volume for all media elements in the Gurapp.
-     * Also updates the parent Gurasuraisu volume slider.
-     * @param {number} volumeLevel - A value between 0.0 and 1.0.
-     */
-    setVolume: function(volumeLevel) {
-        const clampedVolume = Math.max(0, Math.min(1, volumeLevel));
-        document.querySelectorAll('audio, video').forEach(media => {
-            if (media.volume !== clampedVolume) {
-                media.volume = clampedVolume;
-            }
-        });
-        // This will automatically trigger the 'volumechange' event,
-        // which then notifies the parent.
-    },
-    
-    /**
-     * Gets the volume of the first found media element.
-     * @returns {number} The volume level (0.0 to 1.0), or -1 if no media is found.
-     */
-    getVolume: function() {
-        const firstMedia = document.querySelector('audio, video');
-        return firstMedia ? firstMedia.volume : -1;
-    },
 
   /**
    * Requests the parent window to minimize the current Gurapp.
@@ -198,14 +166,6 @@ window.addEventListener('message', async (event) => {
       case 'animationsUpdate':
         document.body.classList.toggle('reduce-animations', !data.enabled);
         break;
-      case 'set-volume':
-        document.querySelectorAll('audio, video').forEach(media => {
-            // Only change if different to avoid triggering a 'volumechange' event loop.
-            if (media.volume !== data.volume) {
-                media.volume = data.volume;
-            }
-        });
-        break;
       
       // --- NEW: Handles screenshot requests from the parent ---
       case 'request-screenshot':
@@ -245,49 +205,5 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('reduce-animations', !animationsEnabled);
     } catch (e) {
         console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
-    }
-    
-    // This function finds all media elements and sets up two-way binding.
-    function manageMediaElements() {
-        const mediaElements = document.querySelectorAll('audio, video');
-
-        // This function is called whenever a media element's volume changes *within* the app.
-        // It reports the new volume to the parent Gurasuraisu.
-        const sendVolumeUpdateToParent = (event) => {
-            // Prevent muted state from reporting volume as 0
-            if (event.target.muted) return;
-            
-            window.parent.postMessage({
-                type: 'volume-update-from-child',
-                volume: event.target.volume // This is a value from 0.0 to 1.0
-            }, window.location.origin);
-        };
-
-        // Attach the listener to every audio/video tag.
-        mediaElements.forEach(media => {
-            // Check if the listener is already attached to avoid duplicates.
-            if (!media.dataset.volumeManaged) {
-                media.addEventListener('volumechange', sendVolumeUpdateToParent);
-                media.dataset.volumeManaged = 'true';
-            }
-        });
-    }
-
-    // Run the media manager function once the DOM is ready.
-    manageMediaElements();
-
-    // Also, use a MutationObserver to automatically manage any media elements
-    // that are added to the page *after* the initial load.
-    const observer = new MutationObserver(manageMediaElements);
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // When the Gurapp first loads, ask the parent for the current system volume
-    // to ensure it's in sync from the start.
-    if (window.parent && window.parent !== window) {
-        window.parent.postMessage({
-            action: 'requestInitialSettings'
-            // The parent will receive this message, check its *own* state for the current 
-            // profile, and send back a 'themeUpdate' message, which the listener above will catch.
-        }, window.location.origin);
     }
 });
