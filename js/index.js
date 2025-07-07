@@ -171,8 +171,7 @@ function checkProfileLock() {
     pinInput.value = '';
     
     // Block all other content
-    document.body.style.filter = 'blur(10px)';
-    pinModal.style.backdropFilter = 'none'; // Don't double-blur
+    pinModal.style.backgroundColor = 'var(--background-color)';
     pinModal.classList.add('show');
     
     pinSubmit.onclick = async () => {
@@ -181,7 +180,7 @@ function checkProfileLock() {
             // Unlock for this session
             sessionStorage.setItem('gurasuraisu_profile_unlocked', 'true');
             pinModal.classList.remove('show');
-            document.body.style.filter = 'none';
+            pinModal.style.backgroundColor = '';
         } else {
             showPopup(currentLanguage.INCORRECT_PIN || 'Incorrect PIN.');
             pinInput.value = '';
