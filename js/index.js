@@ -151,6 +151,47 @@ function renderProfileSwitcher() {
     });
 }
 
+function checkProfileLock() {
+    const profile = profiles.find(p => p.id === currentProfileId);
+    if (!profile || !profile.pinHash) return; // No PIN set, do nothing.
+
+    const isUnlocked = sessionStorage.getItem('gurasuraisu_profile_unlocked') === 'true';
+    if (isUnlocked) return; // Already unlocked in this session.
+
+    // If we reach here, the profile is locked. Block the UI.
+    const pinModal = document.getElementById('pinEntryModal');
+    const pinTitle = document.getElementById('pin-entry-title');
+    const pinInput = document.getElementById('pin-input');
+    const pinSubmit = document.getElementById('pin-submit-btn');
+
+    // Hide the normal close button when a lock is forced
+    pinModal.querySelector('.close-modal').style.display = 'none';
+
+    pinTitle.textContent = (currentLanguage.ENTER_PIN || "Enter PIN for {profileName}").replace('{profileName}', profile.name);
+    pinInput.value = '';
+    
+    // Block all other content
+    document.body.style.filter = 'blur(10px)';
+    pinModal.style.backdropFilter = 'none'; // Don't double-blur
+    pinModal.classList.add('show');
+    
+    pinSubmit.onclick = async () => {
+        const enteredPinHash = await hashPin(pinInput.value);
+        if (enteredPinHash === profile.pinHash) {
+            // Unlock for this session
+            sessionStorage.setItem('gurasuraisu_profile_unlocked', 'true');
+            pinModal.classList.remove('show');
+            document.body.style.filter = 'none';
+        } else {
+            showPopup(currentLanguage.INCORRECT_PIN || 'Incorrect PIN.');
+            pinInput.value = '';
+            pinInput.focus();
+        }
+    };
+    pinInput.focus();
+}
+
+
 /**
  * Handles the logic for switching to a different profile.
  * @param {string} profileId The ID of the profile to switch to.
@@ -5551,6 +5592,8 @@ appDrawerObserver.observe(appDrawer, {
 });
 
 function blackoutScreen() {
+  sessionStorage.removeItem('gurasuraisu_profile_unlocked');
+
   // Get the brightness overlay element
   const brightnessOverlay = document.getElementById('brightness-overlay');
   
@@ -5704,11 +5747,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('DOMContentLoaded', function() {
     initProfiles();
+    checkProfileLock();
 
     const profileSwitcherBtn = document.getElementById('profile-switcher-btn');
     if (profileSwitcherBtn) {
         profileSwitcherBtn.addEventListener('click', openProfileSwitcher);
     }
+    document.getElementById('add-profile-btn').addEventListener('click', addProfile);
+    document.getElementById('import-profile-btn').addEventListener('click', importProfile);
+
+    // Add close handlers for modals
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', closeAllProfileModals);
+    });
 	
     // Initialize control states
     const storedLightMode = getProfileItem('theme') || 'dark';
