@@ -352,7 +352,7 @@ input[type="color"]::-moz-color-swatch {
     color: var(--text-color);
     background-color: transparent;
     transition: color 0.3s;
-    padding: 8px 14px;
+    padding: 8px 10px;
     border-radius: 50px;
     z-index: 9995;
     opacity: 1;
