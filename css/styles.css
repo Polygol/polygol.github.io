@@ -1413,18 +1413,71 @@ input[type="color"]::-moz-color-swatch {
     left: 0;
     width: 100%;
     height: calc(100% - 80px);
-    background-color: var(--search-background); 
+    background-color: var(--search-background);
     transition: bottom 0.3s ease;
     z-index: 1001;
     overflow: hidden;
     touch-action: none;
     user-select: none;
-    backdrop-filter: blur(20px); /* Apply blur to the background */
-    touch-action: none;
-    user-select: none;
+    backdrop-filter: blur(20px);
     opacity: 0;
     border-top: 1px solid var(--glass-border);
     border-radius: 25px 25px 0 0;
+    /* Add position: relative to act as a container for the overlays */
+    position: relative; 
+}
+
+/* Keep your existing .app-drawer-content as is */
+.app-drawer-content {
+    display: flex;
+    align-items: flex-start;
+    height: calc(100% - 42px);
+    overflow-y: auto;
+    user-select: none;
+    padding: 0 20px;
+    margin-top: 42px;
+}
+
+
+/* New styles for the top gradient and blur effect */
+.app-drawer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    /* This height includes the handle area and a bit more */
+    height: 70px; 
+    z-index: 1; /* Position it above the content */
+    pointer-events: none; /* Allows click-through */
+
+    /* The gradient from your variable to transparent */
+    background: linear-gradient(
+        to bottom, 
+        var(--overlay-color) 30%, 
+        transparent 100%
+    );
+
+    /* The 5px blur effect */
+    backdrop-filter: blur(5px);
+}
+
+/* New styles for the bottom 1px blur */
+.app-drawer::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    /* The height of the blur effect area */
+    height: 1px; 
+    z-index: 1;
+    pointer-events: none;
+    
+    /* The 1px blur effect */
+    backdrop-filter: blur(1px);
+    /* Optional: add a subtle color to the blur if needed */
+    /* background-color: rgba(0, 0, 0, 0.05); */
 }
 
 #app-drawer {
