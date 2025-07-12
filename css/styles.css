@@ -1420,11 +1420,44 @@ input[type="color"]::-moz-color-swatch {
     touch-action: none;
     user-select: none;
     backdrop-filter: blur(20px); /* Apply blur to the background */
-    touch-action: none;
-    user-select: none;
     opacity: 0;
     border-top: 1px solid var(--glass-border);
     border-radius: 25px 25px 0 0;
+}
+
+/* This new pseudo-element creates the fading blur and gradient effect */
+.app-drawer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 90px; /* Controls the height of the fade effect */
+    pointer-events: none; /* Allows clicks to pass through */
+    z-index: 0;
+
+    /* 1. Add the color gradient from your variable to transparent */
+    background: linear-gradient(
+        to bottom,
+        var(--overlay-color) 0%, 
+        transparent 100%
+    );
+
+    /* 2. Apply the max blur value (5px) */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+
+    /* 3. Use a mask to fade the effect out, creating a "gradient" blur */
+    mask-image: linear-gradient(
+        to bottom,
+        rgba(0,0,0,1) 0%,   /* Fully visible at the top */
+        rgba(0,0,0,0) 100%  /* Fades to invisible at the bottom */
+    );
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        rgba(0,0,0,1) 0%,
+        rgba(0,0,0,0) 100%
+    );
 }
 
 #app-drawer {
@@ -1432,7 +1465,6 @@ input[type="color"]::-moz-color-swatch {
     will-change: transform, opacity, bottom;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .drawer-action-btn {
     position: absolute;
     background: transparent;
