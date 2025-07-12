@@ -288,7 +288,6 @@ input[type="color"]::-moz-color-swatch {
     z-index: 9996;
     touch-action: none;
     user-select: none;
-    transform: scale(1);
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
     position: relative;
 }
@@ -322,7 +321,7 @@ input[type="color"]::-moz-color-swatch {
     );
 }
 
-.drawer-handle:active {
+.drawer-handle:active .drawer-pill {
     transform: scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
@@ -332,7 +331,7 @@ input[type="color"]::-moz-color-swatch {
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
-    transition: opacity 0.3s ease, background-color 0.3s, width 0.3s;
+    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9), opacity 0.3s ease, background-color 0.3s, width 0.3s;
     width: 50%;
     height: 5px;
     background-color: var(--secondary-text-color);
@@ -341,6 +340,7 @@ input[type="color"]::-moz-color-swatch {
     max-width: 400px;
     box-shadow: 0 0 0 1px var(--glass-border);
     backdrop-filter: blur(10px);
+    transform: scale(1);
 }
 
 .persistent-clock {
