@@ -1423,21 +1423,7 @@ input[type="color"]::-moz-color-swatch {
     opacity: 0;
     border-top: 1px solid var(--glass-border);
     border-radius: 25px 25px 0 0;
-    /* Add position: relative to act as a container for the overlays */
-    position: relative; 
 }
-
-/* Keep your existing .app-drawer-content as is */
-.app-drawer-content {
-    display: flex;
-    align-items: flex-start;
-    height: calc(100% - 42px);
-    overflow-y: auto;
-    user-select: none;
-    padding: 0 20px;
-    margin-top: 42px;
-}
-
 
 /* New styles for the top gradient and blur effect */
 .app-drawer::before {
@@ -1476,8 +1462,7 @@ input[type="color"]::-moz-color-swatch {
     
     /* The 1px blur effect */
     backdrop-filter: blur(1px);
-    /* Optional: add a subtle color to the blur if needed */
-    /* background-color: rgba(0, 0, 0, 0.05); */
+    background-color: transparent
 }
 
 #app-drawer {
