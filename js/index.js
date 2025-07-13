@@ -4703,7 +4703,7 @@ function setupDrawerInteractions() {
     document.body.appendChild(swipeOverlay);
 
     function startDrag(yPosition) {
-	persistentClock.style.opacity = '0';
+	    persistentClock.style.opacity = '0';
         startY = yPosition;
         lastY = yPosition;
         currentY = yPosition;
@@ -4717,7 +4717,6 @@ function setupDrawerInteractions() {
 	function moveDrawer(yPosition) {
 	    if (!isDragging) return;
 	
-	    // --- Velocity and position calculation (from original) ---
 	    const now = Date.now();
 	    const deltaTime = now - dragStartTime;
 	    if (deltaTime > 0) {
@@ -4732,13 +4731,12 @@ function setupDrawerInteractions() {
 	    const deltaY = startY - currentY; // Positive for upward swipe
 	    const windowHeight = window.innerHeight;
 	    const movementPercentage = (deltaY / windowHeight) * 100;
-	    // --- End of original block ---
 	
 	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
 	
 	    if (openEmbed) {
 	        // LOGIC FOR DRAGGING AN OPEN APP
-	        openEmbed.style.transition = 'none'; // No transitions during drag for instant response
+	        openEmbed.style.transition = 'none !important'; // No transitions during drag for instant response
 	
 	        // Start effect after a small deadzone (e.g., 10px swipe up)
 	        if (deltaY > 10) {
