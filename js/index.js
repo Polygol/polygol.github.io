@@ -48,10 +48,18 @@ function applyLanguage(language) {
         }
     }
 
+    const alignmentSelect = document.getElementById('alignment-select');
+    if (alignmentSelect) {
+        const options = { "center": "ALIGN_CENTER", "left": "ALIGN_LEFT", "right": "ALIGN_RIGHT" };
+        for (const [value, langKey] of Object.entries(options)) {
+            const optionEl = alignmentSelect.querySelector(`option[value="${value}"]`);
+            if (optionEl) optionEl.textContent = language[langKey];
+        }
+    }
+
     const adjustLabel = document.querySelector('#thermostat-popup .adjust-label');
     if (adjustLabel) {
         adjustLabel.textContent = language.ADJUST;
-    }
 
     // Update checkWords and closeWords
     window.checkWords = language.CHECK_WORDS;
@@ -310,6 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-hour-format', 'hour-switch');
     connectGridItem('setting-style', 'font-select');
     connectGridItem('setting-weight', 'weight-slider');
+    connectGridItem('setting-alignment', 'alignment-select');
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
 
@@ -2507,6 +2516,16 @@ gurappsSwitch.addEventListener("change", function() {
     localStorage.setItem("gurappsEnabled", gurappsEnabled);
     updateGurappsVisibility();
 });
+	
+function applyAlignment(alignment) {
+    const container = document.querySelector('.container');
+    if (!container) return;
+    // Remove all possible alignment classes
+    container.classList.remove('align-left', 'align-center', 'align-right');
+    if (alignment === 'left' || alignment === 'right') {
+        container.classList.add(`align-${alignment}`);
+    }
+}
 
 function updateMinimalMode() {
     const elementsToHide = [
@@ -3006,9 +3025,10 @@ function loadRecentWallpapers() {
 	    weight: '700',
 	    color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
 	    colorEnabled: false,
-		stackEnabled: false,
+	    stackEnabled: false,
 	    showSeconds: true,
-	    showWeather: true
+	    showWeather: true,
+            alignment: 'center'
 	};
     
     let updated = false;
@@ -3555,9 +3575,14 @@ async function jumpToWallpaper(index) {
             weatherSwitch.dispatchEvent(new Event('change'));
         }
         
-        // Apply the styles
+        // Apply the clock styles
         applyClockStyles();
         updateClockAndDate();
+
+        const alignment = wallpaper.clockStyles.alignment || 'center';
+        localStorage.setItem('clockAlignment', alignment);
+        if (alignmentSelect) alignmentSelect.value = alignment;
+        applyAlignment(alignment);
     }
         
     clearInterval(slideshowInterval);
@@ -3728,6 +3753,12 @@ function switchWallpaper(direction) {
         // Apply the clock styles
         applyClockStyles();
         
+        const alignmentSelect = document.getElementById('alignment-select');
+        const alignment = wallpaper.clockStyles.alignment || 'center';
+        localStorage.setItem('clockAlignment', alignment);
+        if(alignmentSelect) alignmentSelect.value = alignment;
+        applyAlignment(alignment);
+
         // Update clock and weather display
         updateClockAndDate();
     }
@@ -3735,7 +3766,6 @@ function switchWallpaper(direction) {
     // Save the position for persistence
     saveCurrentPosition();
     
-    // Rest of the existing wallpaper switching logic...
     clearInterval(slideshowInterval);
     slideshowInterval = null;
     
@@ -3884,8 +3914,11 @@ async function initializeAndApplyWallpaper() {
 function syncUiStates() {
     // Sync all checkbox-based toggles
     document.querySelectorAll('.setting-item').forEach(item => {
-        const controlId = item.id.replace('setting-', '');
+        // Exclude alignment from this generic check since it's a select
+        if (item.id === 'setting-alignment') return;
+        
         // Construct potential IDs for different control types
+        const controlId = item.id.replace('setting-', '');
         const switchControl = document.getElementById(controlId + '-switch');
         const regularControl = document.getElementById(controlId);
         
@@ -3900,6 +3933,7 @@ function syncUiStates() {
     document.getElementById('setting-weight').classList.toggle('active', document.getElementById('weight-slider').value !== '70');
     document.getElementById('setting-style').classList.toggle('active', document.getElementById('font-select').value !== 'Inter');
     document.getElementById('setting-wallpaper').classList.toggle('active', recentWallpapers.length > 0);
+    document.getElementById('setting-alignment').classList.toggle('active', document.getElementById('alignment-select').value !== 'center');
 }
 
 function setupFontSelection() {
@@ -3910,6 +3944,7 @@ function setupFontSelection() {
     const colorPicker = document.getElementById('clock-color-picker');
     const colorSwitch = document.getElementById('clock-color-switch');
     const stackSwitch = document.getElementById('clock-stack-switch');
+    const alignmentSelect = document.getElementById('alignment-select');
     
     // Get the computed --text-color value for the default
     const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
@@ -3920,8 +3955,9 @@ function setupFontSelection() {
     const savedColor = localStorage.getItem('clockColor') || defaultColor;
     const colorEnabled = localStorage.getItem('clockColorEnabled') === 'true';
     const stackEnabled = localStorage.getItem('clockStackEnabled') === 'true';
-    const showSeconds = localStorage.getItem('showSeconds') !== 'false'; // Add this
-    const showWeather = localStorage.getItem('showWeather') !== 'false'; // Add this
+    const showSeconds = localStorage.getItem('showSeconds') !== 'false'; 
+    const showWeather = localStorage.getItem('showWeather') !== 'false'; 
+    const savedAlignment = localStorage.getItem('clockAlignment') || 'center';
     
     fontSelect.value = savedFont;
     weightSlider.value = parseInt(savedWeight) / 10;
@@ -3955,8 +3991,9 @@ function setupFontSelection() {
         localStorage.setItem('clockColor', colorPicker.value);
         localStorage.setItem('clockColorEnabled', colorSwitch.checked.toString());
         localStorage.setItem('clockStackEnabled', stackSwitch.checked.toString());
-        localStorage.setItem('showSeconds', document.getElementById('seconds-switch')?.checked.toString() || 'true'); // Add this
-        localStorage.setItem('showWeather', document.getElementById('weather-switch')?.checked.toString() || 'true'); // Add this
+        localStorage.setItem('showSeconds', document.getElementById('seconds-switch')?.checked.toString() || 'true'); 
+        localStorage.setItem('showWeather', document.getElementById('weather-switch')?.checked.toString() || 'true'); 
+	localStorage.setItem('clockAlignment', alignmentSelect.value);
     }
     
     // Apply initial styles
@@ -3973,6 +4010,13 @@ function setupFontSelection() {
         }).catch(() => {
             showPopup(currentLanguage.CLOCK_STYLE_FAILED);
         });
+    });
+
+    // Handle alignment changes
+    alignmentSelect.addEventListener('change', (e) => {
+        applyAlignment(e.target.value);
+        saveCurrentClockStyles();
+        syncUiStates();
     });
     
     // Handle weight changes with the slider
