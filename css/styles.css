@@ -1316,7 +1316,7 @@ input[type="color"]::-moz-color-swatch {
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
 
-#font-select:active, #language-switcher:active {
+#font-select:active, #language-switcher:active, #alignment-select:active {
     transform: scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
     filter: brightness(1.5);
@@ -1329,6 +1329,12 @@ input[type="color"]::-moz-color-swatch {
 }
 
 #language-switcher option {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+#alignment-select option {
     background-color: var(--background-color);
     color: var(--text-color);
     transition: background-color 0.2s, transform 0.1s;
