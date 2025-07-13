@@ -4431,42 +4431,201 @@ createFullscreenEmbed = function(url) {
 };
 
 function minimizeFullscreenEmbed() {
+    // IMPORTANT FIX: Be more specific about which embed to minimize
+    // Only get embeds that are currently visible with display: block
     const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
     
     if (embedContainer) {
+        // Get the URL before hiding it
         const url = embedContainer.dataset.embedUrl;
         if (url) {
             // Store the embed in our minimized embeds object
             minimizedEmbeds[url] = embedContainer;
-
-            // Prepare the embed for being a thumbnail:
-            // - No transitions when it's just a thumbnail.
-            // - Make it non-interactive so the switcher card is clickable.
-            // - Hide it until the switcher is ready to show it.
-            embedContainer.style.transition = 'none';
-            embedContainer.style.pointerEvents = 'none'; 
+            
+            // After animation completes, actually hide it completely
+	        document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
             embedContainer.style.display = 'none';
+			persistentClock.style.opacity = '1';
+            
+            // Use a different z-index approach when minimized
+            embedContainer.style.pointerEvents = 'none';
             embedContainer.style.zIndex = '0';
         }
     }
     
     // Restore all main UI elements
-    persistentClock.style.opacity = '1';
-    document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
     document.querySelectorAll('.container, .settings-grid.home-settings').forEach(el => {
-        el.classList.remove('force-hide');
-        el.style.display = el.dataset.originalDisplay || '';
+	el.classList.remove('force-hide');
+        el.style.display = el.dataset.originalDisplay;
+        el.style.transition = 'opacity 0.3s ease';
+
         requestAnimationFrame(() => {
             el.style.opacity = '1';
         });
     });
     
-    // Hide the swipe overlay
+    // Hide all fullscreen embeds that are not being displayed
+    document.querySelectorAll('.fullscreen-embed:not([style*="display: block"])').forEach(embed => {
+        embed.style.pointerEvents = 'none';
+        embed.style.zIndex = '0';
+    });
+    
+    // Hide the swipe overlay when minimizing
     const swipeOverlay = document.getElementById('swipe-overlay');
     if (swipeOverlay) {
         swipeOverlay.style.display = 'none';
         swipeOverlay.style.pointerEvents = 'none';
     }
+    
+    // Reset interaction blocker to default state
+    const interactionBlocker = document.getElementById('interaction-blocker');
+    if (interactionBlocker) {
+        interactionBlocker.style.pointerEvents = 'auto';
+    }
+}
+
+function showMinimizedEmbeds() {
+    // Prevent opening if it's already open
+    if (document.getElementById('task-switcher-container')) return;
+
+    // 1. Create the main container and grid
+    const container = document.createElement('div');
+    container.id = 'task-switcher-container';
+    
+    const grid = document.createElement('div');
+    grid.id = 'task-grid';
+
+    // Add a click listener to the background to hide the switcher
+    container.addEventListener('click', (e) => {
+        if (e.target === container) {
+            hideTaskSwitcher();
+        }
+    });
+
+    // 2. Collect all apps that are currently running (minimized)
+    const runningApps = Object.entries(minimizedEmbeds);
+
+    // Handle the case where no apps are running
+    if (runningApps.length === 0) {
+        showPopup(currentLanguage.NO_RUNNING_APPS || "No running apps");
+        return;
+    }
+
+    // 3. Populate the grid with a card for each running app
+    runningApps.forEach(([url, embedContainer], index) => {
+        const appName = Object.keys(apps).find(name => apps[name].url === url) || "Unknown App";
+
+        const card = document.createElement('div');
+        card.className = 'task-card';
+
+        // Restore/Open app on click
+        card.addEventListener('click', () => {
+            restoreAppFromSwitcher(url, card);
+        });
+
+        // Add the "live" app preview by moving the actual embed element
+        embedContainer.style.display = 'block'; // Ensure it's visible inside the card
+        card.appendChild(embedContainer);
+
+        // Add App Name Label
+        const label = document.createElement('div');
+        label.className = 'task-card-label';
+        label.textContent = appName;
+        card.appendChild(label);
+
+        // Add Close Button
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'task-card-close-btn';
+        closeBtn.innerHTML = '✕'; // A simple 'X'
+        closeBtn.onclick = (e) => {
+            e.stopPropagation(); // Prevent card click event from firing
+            closeAppFromSwitcher(url, card);
+        };
+        card.appendChild(closeBtn);
+        
+        grid.appendChild(card);
+    });
+
+    container.appendChild(grid);
+    document.body.appendChild(container);
+
+    // 4. Animate the switcher and cards into view
+    requestAnimationFrame(() => {
+        container.style.opacity = '1';
+        document.querySelectorAll('.task-card').forEach((card, index) => {
+            setTimeout(() => {
+                card.style.transform = 'scale(1)';
+                card.style.opacity = '1';
+            }, index * 50); // Staggered animation
+        });
+    });
+}
+
+function hideTaskSwitcher() {
+    const container = document.getElementById('task-switcher-container');
+    if (!container) return;
+
+    // Animate out
+    container.style.opacity = '0';
+    document.querySelectorAll('.task-card').forEach(card => {
+        card.style.transform = 'scale(0.9)';
+        card.style.opacity = '0';
+    });
+
+    // Clean up DOM after animation
+    setTimeout(() => {
+        container.remove();
+    }, 300);
+}
+
+function restoreAppFromSwitcher(url, cardElement) {
+    const embedContainer = minimizedEmbeds[url];
+    if (!embedContainer) return;
+    
+    // Temporarily move the embed out of the card and back to the body
+    document.body.appendChild(embedContainer);
+
+    // Start the hide animation for the switcher
+    hideTaskSwitcher();
+
+    // Animate the selected app to fullscreen
+    setTimeout(() => {
+        // Re-use the logic from your createFullscreenEmbed function
+        embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+        embedContainer.style.transform = 'scale(1)';
+        embedContainer.style.opacity = '1';
+        embedContainer.style.borderRadius = '0px';
+        embedContainer.style.pointerEvents = 'auto'; // Make it interactive again
+        
+        // Show swipe overlay
+        const swipeOverlay = document.getElementById('swipe-overlay');
+        if (swipeOverlay) swipeOverlay.style.display = 'block';
+        
+        document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+    }, 100); // Small delay to let hide animation start
+}
+
+function closeAppFromSwitcher(url, cardElement) {
+    // Animate the card out
+    cardElement.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+    cardElement.style.transform = 'scale(0.8)';
+    cardElement.style.opacity = '0';
+
+    setTimeout(() => {
+        cardElement.remove(); // Remove the card from the grid
+
+        // Fully remove the app
+        const embedContainer = minimizedEmbeds[url];
+        if (embedContainer) embedContainer.remove();
+        delete minimizedEmbeds[url];
+
+        populateDock(); // Refresh the dock to remove the app if it was there
+
+        // If no apps are left, close the switcher
+        if (Object.keys(minimizedEmbeds).length === 0) {
+            hideTaskSwitcher();
+        }
+    }, 200);
 }
 
 function populateDock() {
@@ -4620,343 +4779,512 @@ function saveUsageData() {
 }
 
 function setupDrawerInteractions() {
-    // --- State Variables ---
-    let startY = 0, currentY = 0, lastY = 0;
+    let startY = 0;
+    let currentY = 0;
     let initialDrawerPosition = -100;
     let isDragging = false;
     let isDrawerInMotion = false;
     let dragStartTime = 0;
+    let lastY = 0;
     let velocities = [];
     let dockHideTimeout = null;
     let longPressTimer;
-    let dragHoldTimer = null;
-    let isAppSwitcherActive = false;
-
-    // --- Constants ---
-    const longPressDuration = 500;
+	let dragHoldTimer = null; // Timer for the "hold to multitask" gesture
+	let isAppSwitcherActive = false; // Flag to check if the switcher was just opened
+	const dragHoldDuration = 700; // 700ms to trigger app switcher
+	const dragHoldThreshold = 20; // Max pixels you can move before canceling the hold
+    const longPressDuration = 500; // 500ms for a long press
     const flickVelocityThreshold = 0.4;
-    const dragHoldDuration = 700;
-    const dragHoldThreshold = 20;
-
-    // --- Element References ---
+    const dockThreshold = -2.5; // Threshold for dock appearance
+    const openThreshold = -50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
-    const appDrawer = document.getElementById('app-drawer');
-    const interactionBlocker = document.getElementById('interaction-blocker');
-    const swipeOverlay = document.getElementById('swipe-overlay');
-    
-    // ===================================================================
-    //  App Switcher (Task View) Functions
-    // ===================================================================
-    
-    function showMinimizedEmbeds() {
-        if (document.getElementById('task-switcher-container')) return;
 
-        // First, ensure any currently visible app is in the minimized state
-        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (openEmbed) {
-            minimizeFullscreenEmbed();
-        }
-        
-        const runningApps = Object.entries(minimizedEmbeds);
-        if (runningApps.length === 0) {
-            showPopup(currentLanguage.NO_RUNNING_APPS || "No running apps");
-            persistentClock.style.opacity = '1';
-            return;
-        }
-
-        const container = document.createElement('div');
-        container.id = 'task-switcher-container';
-        container.onclick = (e) => { if (e.target === container) hideTaskSwitcher(); };
-
-        const grid = document.createElement('div');
-        grid.id = 'task-grid';
-
-        runningApps.forEach(([url, embedContainer]) => {
-            const appName = Object.keys(apps).find(name => apps[name].url === url) || "Unknown App";
-            const card = document.createElement('div');
-            card.className = 'task-card';
-
-            card.onclick = () => restoreAppFromSwitcher(url);
-
-            embedContainer.style.display = 'block';
-            card.appendChild(embedContainer);
-
-            const label = document.createElement('div');
-            label.className = 'task-card-label';
-            label.textContent = appName;
-            card.appendChild(label);
-
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'task-card-close-btn';
-            closeBtn.innerHTML = '✕';
-            closeBtn.onclick = (e) => {
-                e.stopPropagation();
-                closeAppFromSwitcher(url, card);
-            };
-            card.appendChild(closeBtn);
-            grid.appendChild(card);
-        });
-
-        container.appendChild(grid);
-        document.body.appendChild(container);
-
-        requestAnimationFrame(() => {
-            container.style.opacity = '1';
-            document.querySelectorAll('.task-card').forEach((card, index) => {
-                setTimeout(() => {
-                    card.style.transform = 'scale(1)';
-                    card.style.opacity = '1';
-                }, index * 50);
-            });
-        });
-    }
-
-    function hideTaskSwitcher() {
-        const container = document.getElementById('task-switcher-container');
-        if (!container) return;
-
-        container.style.opacity = '0';
-        
-        // Before removing, re-hide all embed containers properly
-        const cards = container.querySelectorAll('.task-card');
-        cards.forEach(card => {
-            const embed = card.querySelector('.fullscreen-embed');
-            if (embed) {
-                document.body.appendChild(embed); // Move back to body
-                embed.style.display = 'none';      // Hide it
-            }
-        });
-
-        setTimeout(() => container.remove(), 300);
-    }
-
-    function restoreAppFromSwitcher(url) {
-        const embedContainer = minimizedEmbeds[url];
-        if (!embedContainer) return;
-
-        // It's no longer "minimized"
-        delete minimizedEmbeds[url];
-
-        document.body.appendChild(embedContainer);
-        hideTaskSwitcher();
-
-        setTimeout(() => {
-            embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
-            embedContainer.style.pointerEvents = 'auto'; // Make it interactive
-            embedContainer.style.transform = 'scale(1)';
-            embedContainer.style.opacity = '1';
-            embedContainer.style.borderRadius = '0px';
-            if (swipeOverlay) swipeOverlay.style.display = 'block';
-            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
-        }, 100);
-    }
-
-    function closeAppFromSwitcher(url, cardElement) {
-        cardElement.style.transform = 'scale(0.8)';
-        cardElement.style.opacity = '0';
-
-        setTimeout(() => {
-            const embedContainer = minimizedEmbeds[url];
-            if (embedContainer) embedContainer.remove();
-            delete minimizedEmbeds[url];
-            cardElement.remove();
-            populateDock();
-
-            if (Object.keys(minimizedEmbeds).length === 0) {
-                hideTaskSwitcher();
-            }
-        }, 200);
-    }
-
-    // ===================================================================
-    //  Drawer and Drag Interaction Functions
-    // ===================================================================
-    
-    function startDrag(yPosition) {
-        persistentClock.style.opacity = '0';
-        startY = yPosition;
-        lastY = yPosition;
-        currentY = yPosition;
-        isDragging = true;
-        isDrawerInMotion = true;
-        dragStartTime = Date.now();
-        velocities = [];
-        
-        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (openEmbed) {
-            clearTimeout(dragHoldTimer);
-            dragHoldTimer = setTimeout(() => {
-                isAppSwitcherActive = true;
-                isDragging = false;
-                velocities = [];
-                showMinimizedEmbeds();
-            }, dragHoldDuration);
-        }
-    }
-
-    function moveDrawer(yPosition) {
-        if (!isDragging) return;
-
-        currentY = yPosition;
-        const deltaY = startY - currentY;
-        
-        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (openEmbed) {
-            if (Math.abs(deltaY) > dragHoldThreshold && dragHoldTimer) {
-                clearTimeout(dragHoldTimer);
-                dragHoldTimer = null;
-            }
-            openEmbed.style.transition = 'none';
-            const windowHeight = window.innerHeight;
-            const progress = Math.min(1, Math.max(0, deltaY) / (windowHeight * 0.4));
-            const translateY = -deltaY;
-            const scale = 1 - (progress * 0.2);
-            const borderRadius = progress * 25;
-            const blurRadius = 5 - (progress * 5);
-            openEmbed.style.border = deltaY > 10 ? '1px solid var(--glass-border)' : 'none';
-            openEmbed.style.transform = `translateY(${translateY}px) scale(${scale})`;
-            openEmbed.style.opacity = 1 - (progress * 0.5);
-            openEmbed.style.borderRadius = `${borderRadius}px`;
-            document.querySelector('body').style.setProperty('--bg-blur', `blur(${blurRadius}px)`);
-        } else {
-            // Original drawer logic
-            const windowHeight = window.innerHeight;
-            const movementPercentage = (deltaY / windowHeight) * 100;
-
-            if (movementPercentage > 2.5 && movementPercentage < 25) {
-                if (dock.style.display === 'none' || dock.style.display === '') {
-                    dock.style.display = 'flex';
-                    requestAnimationFrame(() => dock.classList.add('show'));
-                } else {
-                    dock.classList.add('show');
-                }
-                if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                drawerPill.style.opacity = '0';
-            } else {
-                dock.classList.remove('show');
-                if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                dockHideTimeout = setTimeout(() => {
-                    if (!dock.classList.contains('show')) dock.style.display = 'none';
-                }, 300);
-                drawerPill.style.opacity = '1';
-            }
-
-            const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-            const opacity = (newPosition + 100) / 100;
-            const blurRadius = Math.max(0, Math.min(5, ((-newPosition) / 20)));
-            appDrawer.style.opacity = opacity;
-            document.querySelector('body').style.setProperty('--bg-blur', `blur(${5 - blurRadius}px)`);
-            appDrawer.style.bottom = `${newPosition}%`;
-            interactionBlocker.style.display = (newPosition > -100 && newPosition < 0) ? 'block' : 'none';
-        }
-    }
-
-    function endDrag() {
-        clearTimeout(dragHoldTimer);
-        dragHoldTimer = null;
-        if (isAppSwitcherActive) {
-            isAppSwitcherActive = false;
-            isDragging = false;
-            return;
-        }
-        if (!isDragging) return;
-
-        persistentClock.style.opacity = '1';
-        const deltaY = startY - currentY;
-        let avgVelocity = velocities.length > 0 ? velocities.reduce((s, v) => s + v, 0) / velocities.length : 0;
-        const windowHeight = window.innerHeight;
-        const movementPercentage = (deltaY / windowHeight) * 100;
-        const isFlickUp = avgVelocity > flickVelocityThreshold;
-        
-        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (openEmbed) {
-            openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
-            if (movementPercentage > 20 || isFlickUp) {
-                openEmbed.style.transform = 'translateY(0px) scale(0.8)';
-                openEmbed.style.opacity = '0';
-                setTimeout(() => {
-                    minimizeFullscreenEmbed();
-                }, 300);
-            } else {
-                openEmbed.style.transform = 'translateY(0px) scale(1)';
-                openEmbed.style.opacity = '1';
-                openEmbed.style.borderRadius = '0px';
-                openEmbed.style.border = 'none';
-                document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
-            }
-        } else {
-            // Original drawer logic
-            appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-            const isSignificantSwipe = movementPercentage > 25 || isFlickUp;
-            if (isSignificantSwipe) {
-                appDrawer.style.bottom = '0%';
-                appDrawer.style.opacity = '1';
-                appDrawer.classList.add('open');
-                initialDrawerPosition = 0;
-                document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
-            } else {
-                appDrawer.style.bottom = '-100%';
-                appDrawer.style.opacity = '0';
-                appDrawer.classList.remove('open');
-                initialDrawerPosition = -100;
-                document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
-            }
-        }
-
-        isDragging = false;
-        setTimeout(() => isDrawerInMotion = false, 300);
-    }
-    
-    // ===================================================================
-    //  Event Listeners
-    // ===================================================================
-
-    // Long press for AI
     const startLongPress = (e) => {
+        // Only trigger long press if AI is enabled and not already dragging the drawer
         if (isAiAssistantEnabled && !isDragging) {
-            longPressTimer = setTimeout(showAiAssistant, longPressDuration);
+             longPressTimer = setTimeout(() => {
+                showAiAssistant();
+            }, longPressDuration);
         }
     };
-    const cancelLongPress = () => clearTimeout(longPressTimer);
+
+    const cancelLongPress = () => {
+        clearTimeout(longPressTimer);
+    };
+
     if (drawerPill) {
         drawerPill.addEventListener('mousedown', startLongPress);
         drawerPill.addEventListener('touchstart', startLongPress);
+        
         drawerPill.addEventListener('mouseup', cancelLongPress);
         drawerPill.addEventListener('mouseleave', cancelLongPress);
         drawerPill.addEventListener('touchend', cancelLongPress);
     }
+        
+    // Create interaction blocker overlay
+    const interactionBlocker = document.createElement('div');
+    interactionBlocker.id = 'interaction-blocker';
+    interactionBlocker.style.position = 'fixed';
+    interactionBlocker.style.top = '0';
+    interactionBlocker.style.left = '0';
+    interactionBlocker.style.width = '100%';
+    interactionBlocker.style.height = '100%';
+    interactionBlocker.style.zIndex = '999'; // Below the drawer but above other content
+    interactionBlocker.style.display = 'none';
+    interactionBlocker.style.background = 'transparent';
+    document.body.appendChild(interactionBlocker);
+    
+    populateDock();
+    
+    // Create transparent overlay for app swipe detection
+    const swipeOverlay = document.createElement('div');
+    swipeOverlay.id = 'swipe-overlay';
+    swipeOverlay.style.position = 'fixed';
+    swipeOverlay.style.bottom = '0';
+    swipeOverlay.style.left = '0';
+    swipeOverlay.style.width = '100%';
+    swipeOverlay.style.height = '15%'; // Bottom 15% of screen for swipe detection
+    swipeOverlay.style.zIndex = '1000';
+    swipeOverlay.style.display = 'none';
+    swipeOverlay.style.pointerEvents = 'none'; // Start with no interaction
+    document.body.appendChild(swipeOverlay);
 
-    // Generic drag listeners
+	function startDrag(yPosition) {
+	    persistentClock.style.opacity = '0';
+	    startY = yPosition;
+	    lastY = yPosition;
+	    currentY = yPosition;
+	    isDragging = true;
+	    isDrawerInMotion = true;
+	    dragStartTime = Date.now();
+	    velocities = [];
+	    appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
+	
+	    // START HOLD TIMER FOR APP SWITCHER
+	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    if (openEmbed) {
+	        clearTimeout(dragHoldTimer); // Clear any old timer
+	        dragHoldTimer = setTimeout(() => {
+	            isAppSwitcherActive = true; // Set flag to prevent endDrag from running
+	            isDragging = false;         // Stop the drag
+	            velocities = [];
+	            
+	            // Check for a function to show minimized apps (task switcher)
+	            if (typeof showMinimizedEmbeds === 'function') {
+	                showMinimizedEmbeds();
+	            } else {
+	                console.warn('showMinimizedEmbeds function not found for app switcher.');
+	            }
+	        }, dragHoldDuration);
+	    }
+	}
+
+	function moveDrawer(yPosition) {
+	    if (!isDragging) return;
+	
+	    // --- Velocity and position calculation ---
+	    const now = Date.now();
+	    const deltaTime = now - dragStartTime;
+	    if (deltaTime > 0) {
+	        const velocity = (lastY - yPosition) / deltaTime;
+	        velocities.push(velocity);
+	        if (velocities.length > 5) {
+	            velocities.shift();
+	        }
+	    }
+	    lastY = yPosition;
+	    currentY = yPosition;
+	    const deltaY = startY - currentY; // Positive for upward swipe
+	    const windowHeight = window.innerHeight;
+	    const movementPercentage = (deltaY / windowHeight) * 100;
+	    
+	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+	
+	    if (openEmbed) {
+	        // --- NEW: CANCEL HOLD TIMER ON MOVEMENT ---
+	        if (Math.abs(deltaY) > dragHoldThreshold && dragHoldTimer) {
+	            clearTimeout(dragHoldTimer);
+	            dragHoldTimer = null;
+	        }
+	
+	        // --- Dragging an open app logic (from previous step) ---
+	        openEmbed.style.transition = 'none'; 
+	        if (deltaY > 10) {
+	            const progress = Math.min(1, deltaY / (windowHeight * 0.4));
+	            const translateY = -deltaY;
+	            const scale = 1 - (progress * 0.2);
+	            const borderRadius = progress * 25;
+	            openEmbed.style.border = '1px solid var(--glass-border)';
+	            openEmbed.style.transform = `translateY(${translateY}px) scale(${scale})`;
+	            openEmbed.style.opacity = 1 - (progress * 0.5); 
+	            openEmbed.style.borderRadius = `${borderRadius}px`;
+	            const blurRadius = 5 - (progress * 5);
+	            document.querySelector('body').style.setProperty('--bg-blur', `blur(${blurRadius}px)`);
+	        } else {
+	            openEmbed.style.transform = 'translateY(0px) scale(1)';
+	            openEmbed.style.opacity = '1';
+	            openEmbed.style.borderRadius = '0px';
+	            openEmbed.style.border = 'none';
+	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+	        }
+	        appDrawer.style.opacity = '0';
+	        interactionBlocker.style.pointerEvents = 'none';
+	
+	    } else {
+	        // --- Original logic for dragging the drawer ---
+	        if (movementPercentage > 2.5 && movementPercentage < 25) {
+	            if (dock.style.display === 'none' || dock.style.display === '') {
+	                dock.style.display = 'flex';
+	                requestAnimationFrame(() => dock.classList.add('show'));
+	            } else {
+	                dock.classList.add('show');
+	            }
+	            dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
+	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
+	            drawerPill.style.opacity = '0';
+	        } else {
+	            dock.classList.remove('show');
+	            dock.style.boxShadow = 'none';
+	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
+	            dockHideTimeout = setTimeout(() => {
+	                if (!dock.classList.contains('show')) dock.style.display = 'none';
+	            }, 300);
+	            drawerPill.style.opacity = '1';
+	        }
+	
+	        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+	        const opacity = (newPosition + 100) / 100;
+	        const blurRadius = Math.max(0, Math.min(5, ((-newPosition) / 20)));
+	        appDrawer.style.opacity = opacity;
+	        document.querySelector('body').style.setProperty('--bg-blur', `blur(${5 - blurRadius}px)`);
+	        appDrawer.style.bottom = `${newPosition}%`;
+	        
+	        if (newPosition > -100 && newPosition < 0) {
+	            interactionBlocker.style.display = 'block';
+	            interactionBlocker.style.pointerEvents = openEmbed ? 'none' : 'auto';
+	        } else {
+	            interactionBlocker.style.display = 'none';
+	        }
+	    }
+	}
+	
+	function endDrag() {
+	    // --- NEW: CANCEL TIMER and CHECK SWITCHER STATE ---
+	    clearTimeout(dragHoldTimer);
+	    dragHoldTimer = null;
+	
+	    if (isAppSwitcherActive) {
+	        isAppSwitcherActive = false; // Reset flag
+	        isDragging = false;          // Ensure drag state is false
+	        return; // Exit immediately, switcher is already active
+	    }
+	
+	    if (!isDragging) return;
+	
+	    // --- Setup variables ---
+	    persistentClock.style.opacity = '1';
+	    const deltaY = startY - currentY;
+	    const deltaTime = Date.now() - dragStartTime;
+	    let avgVelocity = 0;
+	    if (velocities.length > 0) {
+	        avgVelocity = velocities.reduce((sum, v) => sum + v, 0) / velocities.length;
+	    }
+	    const windowHeight = window.innerHeight;
+	    const movementPercentage = (deltaY / windowHeight) * 100;
+	    const isFlickUp = avgVelocity > flickVelocityThreshold;
+	    
+	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    
+	    if (openEmbed) {
+	        // --- Finishing an app drag logic (from previous step) ---
+	        openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
+	
+	        if (movementPercentage > 20 || isFlickUp) {
+	            openEmbed.style.transform = 'translateY(0px) scale(0.8)';
+	            openEmbed.style.opacity = '0';
+	            openEmbed.style.borderRadius = '25px';
+	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+	
+	            setTimeout(() => {
+	                minimizeFullscreenEmbed();
+	                swipeOverlay.style.display = 'none';
+	                swipeOverlay.style.pointerEvents = 'none';
+	                openEmbed.style.border = 'none';
+	            }, 300);
+	            
+	            dock.classList.remove('show');
+	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
+	            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
+	            appDrawer.style.bottom = '-100%';
+	            initialDrawerPosition = -100;
+	            interactionBlocker.style.display = 'none';
+	        } else {
+	            openEmbed.style.transform = 'translateY(0px) scale(1)';
+	            openEmbed.style.opacity = '1';
+	            openEmbed.style.borderRadius = '0px';
+	            openEmbed.style.border = 'none';
+	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+	            appDrawer.style.opacity = '0';
+	        }
+	
+	    } else {
+	        // --- Finishing a drawer drag logic (unchanged) ---
+	        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+	        const isSignificantSwipe = movementPercentage > 25 || isFlickUp;
+	        const isSmallSwipe = movementPercentage > 2.5 && movementPercentage <= 25;
+	        
+	        if (isSmallSwipe && !isFlickUp) {
+	            dock.style.display = 'flex';
+	            requestAnimationFrame(() => {
+	                dock.classList.add('show');
+	                dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
+	            });
+	            appDrawer.style.bottom = '-100%';
+	            appDrawer.classList.remove('open');
+	            initialDrawerPosition = -100;
+	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+	        } else if (isSignificantSwipe) {
+	            dock.classList.remove('show');
+	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
+	            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
+	            appDrawer.style.bottom = '0%';
+	            appDrawer.style.opacity = '1';
+	            appDrawer.classList.add('open');
+	            initialDrawerPosition = 0;
+	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+	        } else {
+	            dock.classList.remove('show');
+	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
+	            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
+	            appDrawer.style.bottom = '-100%';
+	            appDrawer.classList.remove('open');
+	            initialDrawerPosition = -100;
+	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+	        }
+	        
+	        swipeOverlay.style.display = 'none';
+	        swipeOverlay.style.pointerEvents = 'none';
+	    }
+	
+	    isDragging = false;
+	    setTimeout(() => {
+	        isDrawerInMotion = false;
+	    }, 300);
+	}
+
+    // Add initial swipe detection in app
+    function setupAppSwipeDetection() {
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        let isInSwipeMode = false;
+        
+        swipeOverlay.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+        }, { passive: true });
+        
+        swipeOverlay.addEventListener('touchmove', (e) => {
+            const currentY = e.touches[0].clientY;
+            const deltaY = touchStartY - currentY;
+            
+            if (deltaY > 25 && !isInSwipeMode) { // Detected upward swipe
+                isInSwipeMode = true;
+                startDrag(touchStartY);
+                // Capture all further events
+                swipeOverlay.style.pointerEvents = 'auto';
+            }
+            
+            if (isInSwipeMode) {
+                moveDrawer(currentY);
+                e.preventDefault(); // Prevent default scrolling when in swipe mode
+            }
+        }, { passive: false });
+        
+        swipeOverlay.addEventListener('touchend', () => {
+            if (isInSwipeMode) {
+                endDrag();
+                isInSwipeMode = false;
+            }
+            // Return to passive mode
+            swipeOverlay.style.pointerEvents = 'none';
+        });
+        
+        // Similar handling for mouse events
+        swipeOverlay.addEventListener('mousedown', (e) => {
+            touchStartY = e.clientY;
+            touchStartTime = Date.now();
+        });
+        
+        swipeOverlay.addEventListener('mousemove', (e) => {
+            if (e.buttons !== 1) return; // Only proceed if left mouse button is pressed
+            
+            const deltaY = touchStartY - e.clientY;
+            
+            if (deltaY > 25 && !isInSwipeMode) {
+                isInSwipeMode = true;
+                startDrag(touchStartY);
+                swipeOverlay.style.pointerEvents = 'auto';
+            }
+            
+            if (isInSwipeMode) {
+                moveDrawer(e.clientY);
+            }
+        });
+        
+        swipeOverlay.addEventListener('mouseup', () => {
+            if (isInSwipeMode) {
+                endDrag();
+                isInSwipeMode = false;
+            }
+            swipeOverlay.style.pointerEvents = 'none';
+        });
+    }
+    
+    setupAppSwipeDetection();
+
+    // Touch Events for regular drawer interaction
     document.addEventListener('touchstart', (e) => {
-        const element = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-        if (drawerHandle.contains(element)) { startDrag(e.touches[0].clientY); e.preventDefault(); }
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Check if touch is on handle area or if drawer is already open
+        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+            startDrag(touch.clientY);
+            e.preventDefault();
+        }
     }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+        if (isDragging) {
+            e.preventDefault();
+            moveDrawer(e.touches[0].clientY);
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchend', () => {
+        endDrag();
+    });
+
+    // Mouse Events for regular drawer interaction
     document.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         const element = document.elementFromPoint(e.clientX, e.clientY);
-        if (drawerHandle.contains(element)) { startDrag(e.clientY); }
+        
+        // Check if click is on handle area or if drawer is already open
+        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+            startDrag(e.clientY);
+        }
     });
-    document.addEventListener('touchmove', (e) => { if (isDragging) { e.preventDefault(); moveDrawer(e.touches[0].clientY); } }, { passive: false });
-    document.addEventListener('mousemove', (e) => { if (isDragging) moveDrawer(e.clientY); });
-    document.addEventListener('touchend', endDrag);
-    document.addEventListener('mouseup', endDrag);
 
-    // In-app swipe detection
-    function setupAppSwipeDetection() {
-        let touchStartY = 0, isInSwipeMode = false;
-        swipeOverlay.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; }, { passive: true });
-        swipeOverlay.addEventListener('touchmove', (e) => {
-            const deltaY = touchStartY - e.touches[0].clientY;
-            if (!isInSwipeMode && deltaY > 10) {
-                isInSwipeMode = true;
-                startDrag(touchStartY);
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            moveDrawer(e.clientY);
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        endDrag();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (isDrawerInMotion) return; // Do nothing if an animation is in progress
+
+        const isDrawerOpen = appDrawer.classList.contains('open');
+        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+
+        // Close the drawer when clicking outside (on the body)
+        if (isDrawerOpen && !openEmbed && !appDrawer.contains(e.target) && !drawerHandle.contains(e.target)) {
+            appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+            appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
+            appDrawer.classList.remove('open');
+            initialDrawerPosition = -100;
+            interactionBlocker.style.display = 'none';
+            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+        }
+
+        // Hide the bottom dock if it's visible and the click was outside of it
+        if (dock.classList.contains('show') && !dock.contains(e.target)) {
+            dock.classList.remove('show');
+            dock.style.boxShadow = 'none';
+            drawerPill.style.opacity = '1';
+            
+            // This is the crucial fix: ensure display is set to 'none' after the animation
+            if (dockHideTimeout) clearTimeout(dockHideTimeout);
+            dockHideTimeout = setTimeout(() => {
+                dock.style.display = 'none';
+            }, 300); // Match CSS transition duration
+        }
+    });
+
+	document.addEventListener('click', (e) => {
+	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    
+	    // Only execute this logic when an embed is open and the dock is showing
+	    if (openEmbed && dock.classList.contains('show')) {
+	        // If clicked outside the dock
+	        if (!dock.contains(e.target)) {
+	            dock.classList.remove('show');
+	            dock.style.boxShadow = 'none';
+	            drawerPill.style.opacity = '1';
+	        }
+	    }
+	});
+    
+    // Make app drawer transparent when an app is open
+    function updateDrawerOpacityForApps() {
+        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (openEmbed) {
+            appDrawer.style.opacity = '0';
+            
+            // Show the swipe overlay when an app is open
+            swipeOverlay.style.display = 'block';
+            
+            // IMPORTANT FIX: Set pointer-events to none when an embed is open
+            interactionBlocker.style.pointerEvents = 'none';
+        } else {
+            // Only update opacity if drawer is open
+            if (appDrawer.classList.contains('open')) {
+                appDrawer.style.opacity = '1';
             }
-            if (isInSwipeMode) moveDrawer(e.touches[0].clientY);
-        }, { passive: false });
-        swipeOverlay.addEventListener('touchend', () => { if (isInSwipeMode) { endDrag(); isInSwipeMode = false; } });
+            
+            // Hide the swipe overlay when no app is open
+            swipeOverlay.style.display = 'none';
+            swipeOverlay.style.pointerEvents = 'none';
+            
+            // IMPORTANT FIX: Reset pointer-events when no embed is open
+            if (appDrawer.classList.contains('open')) {
+                interactionBlocker.style.pointerEvents = 'auto';
+            }
+        }
     }
-    setupAppSwipeDetection();
+    
+    // Monitor for opened apps
+    const bodyObserver = new MutationObserver(() => {
+        updateDrawerOpacityForApps();
+    });
+    
+    bodyObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+    
+    // Initial check
+    updateDrawerOpacityForApps();
+    
+    // Ensure box shadow is disabled initially
+    dock.style.boxShadow = 'none';
+    
+    // Add interaction blocker click handler to close drawer on click outside
+    interactionBlocker.addEventListener('click', () => {
+        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+        appDrawer.style.bottom = '-100%';
+        appDrawer.style.opacity = '0';
+        appDrawer.classList.remove('open');
+        initialDrawerPosition = -100;
+        interactionBlocker.style.display = 'none';
+    });
 }
 
 const appDrawerObserver = new MutationObserver((mutations) => {
