@@ -1573,7 +1573,7 @@ input[type="color"]::-moz-color-swatch {
 
         .dock {
             position: fixed;
-            bottom: -95px;
+            bottom: -32px;
             transform: translateX(-50%) scale(0.6);
             background: var(--search-background);
             backdrop-filter: blur(10px);
