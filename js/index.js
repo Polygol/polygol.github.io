@@ -4653,7 +4653,10 @@ function setupDrawerInteractions() {
     const drawerHandle = document.querySelector('.drawer-handle');
 
     const startLongPress = (e) => {
-        // Only trigger long press if AI is enabled and not already dragging the drawer
+        // Prevent this event from bubbling up and interfering with other listeners.
+        e.stopPropagation(); 
+    
+        // Only trigger long press if AI is enabled and not already dragging the drawer.
         if (isAiAssistantEnabled && !isDragging) {
              longPressTimer = setTimeout(() => {
                 showAiAssistant();
@@ -4712,10 +4715,11 @@ function setupDrawerInteractions() {
         velocities = [];
         appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
     }
-
+	
 	function moveDrawer(yPosition) {
 	    if (!isDragging) return;
 	
+	    // --- Position & Velocity Calculations (unchanged) ---
 	    const now = Date.now();
 	    const deltaTime = now - dragStartTime;
 	    if (deltaTime > 0) {
@@ -4730,95 +4734,75 @@ function setupDrawerInteractions() {
 	    const deltaY = startY - currentY; // Positive for upward swipe
 	    const windowHeight = window.innerHeight;
 	    const movementPercentage = (deltaY / windowHeight) * 100;
+	    
+	    // --- Combined Dock Logic (Runs in ALL contexts) ---
+	    if (movementPercentage > 2.5 && movementPercentage < 25) {
+	        if (dock.style.display !== 'flex') {
+	            dock.style.display = 'flex';
+	            requestAnimationFrame(() => {
+	                dock.classList.add('show');
+	            });
+	        }
+	        dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
+	        if (dockHideTimeout) clearTimeout(dockHideTimeout);
+	        drawerPill.style.opacity = '0';
+	    } else {
+	        dock.classList.remove('show');
+	        dock.style.boxShadow = 'none';
+	        if (dockHideTimeout) clearTimeout(dockHideTimeout);
+	        dockHideTimeout = setTimeout(() => {
+	            if (!dock.classList.contains('show')) {
+	                dock.style.display = 'none';
+	            }
+	        }, 300);
+	        drawerPill.style.opacity = '1';
+	    }
 	
 	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
 	
 	    if (openEmbed) {
-	        // LOGIC FOR DRAGGING AN OPEN APP
-	        openEmbed.style.transition = 'none !important'; // No transitions during drag for instant response
+	        // --- LOGIC FOR DRAGGING AN OPEN APP ---
+	        persistentClock.style.opacity = '0';
+	        openEmbed.style.transition = 'none'; // Instant response
 	
-	        // Start effect after a small deadzone (e.g., 10px swipe up)
-	        if (deltaY > 10) {
-		    persistentClock.style.opacity = '0';
-			
-	            // Progress is how far along the "close" gesture we are. 
-	            // A 20% screen height swipe is considered the full gesture.
-	            const progress = Math.min(1, deltaY / (windowHeight * 0.2));
-	
-	            // Move the card up as you swipe, making it feel like you're pushing it away
-	            const translateY = -deltaY;
-	
-	            // Scale down from 1 to 0.8 as you drag
-	            const scale = 1 - (progress * 0.2);
-	
-	            // Add border radius up to 25px
+	        if (movementPercentage > 10) { // Start app shrink animation after a deadzone
+	            const progress = Math.min(1, (movementPercentage - 10) / 40); // Progress from 0 to 1 over a 40% swipe
+	            const scale = 1 - (progress * 0.2); // Scale from 1 down to 0.8
 	            const borderRadius = progress * 25;
-	
-	            // Apply the border now that we're dragging
-	            openEmbed.style.border = '1px solid var(--glass-border)';
-	
-	            // Set the new styles
-	            openEmbed.style.transform = `translateY(${translateY}px) scale(${scale})`;
-	            openEmbed.style.opacity = 1 - (progress * 0.5); // Fade out slightly
-	            openEmbed.style.borderRadius = `${borderRadius}px`;
-	
-	            // Animate background blur from 5px (blurry) to 0px (clear)
 	            const blurRadius = 5 - (progress * 5);
+	
+	            openEmbed.style.transform = `scale(${scale})`; // Only scale, don't translate
+	            openEmbed.style.opacity = 1 - progress;
+	            openEmbed.style.borderRadius = `${borderRadius}px`;
+	            openEmbed.style.border = '1px solid var(--glass-border)';
 	            document.querySelector('body').style.setProperty('--bg-blur', `blur(${blurRadius}px)`);
 	        } else {
 	            // If dragging back down below the deadzone, reset to initial state
-	            openEmbed.style.transform = 'translateY(0px) scale(1)';
+	            openEmbed.style.transform = 'scale(1)';
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
 	            openEmbed.style.border = 'none';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
-		    persistentClock.style.opacity = '1';
 	        }
-	
-	        // Ensure the drawer UI is not visible
+	        // Ensure app drawer is hidden and non-interactive when dragging an app
 	        appDrawer.style.opacity = '0';
-	        interactionBlocker.style.pointerEvents = 'none';
+	        if(interactionBlocker) interactionBlocker.style.display = 'none';
 	
 	    } else {
-	        // LOGIC FOR DRAGGING THE DRAWER (NO APP OPEN)
-	        if (movementPercentage > 2.5 && movementPercentage < 25) {
-	            if (dock.style.display === 'none' || dock.style.display === '') {
-	                dock.style.display = 'flex';
-	                requestAnimationFrame(() => {
-	                    dock.classList.add('show');
-	                });
-	            } else {
-	                dock.classList.add('show');
-	            }
-	            dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
-	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
-	            drawerPill.style.opacity = '0';
-	        } else {
-	            dock.classList.remove('show');
-	            dock.style.boxShadow = 'none';
-	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
-	            dockHideTimeout = setTimeout(() => {
-	                if (!dock.classList.contains('show')) {
-	                    dock.style.display = 'none';
-	                }
-	            }, 300);
-	            drawerPill.style.opacity = '1';
-	        }
-
-		persistentClock.style.opacity = '0';
-	
-	        const newPosition = Math.max(-142, Math.min(0, initialDrawerPosition + movementPercentage));
+	        // --- LOGIC FOR DRAGGING THE DRAWER (Home Screen) ---
+	        persistentClock.style.opacity = '0';
 	        
+	        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
 	        const opacity = (newPosition + 100) / 100;
 	        const blurRadius = Math.max(0, Math.min(5, ((-newPosition) / 20)));
+	
 	        appDrawer.style.opacity = opacity;
 	        document.querySelector('body').style.setProperty('--bg-blur', `blur(${5 - blurRadius}px)`);
-	        
 	        appDrawer.style.bottom = `${newPosition}%`;
-	        
+	
 	        if (newPosition > -100 && newPosition < 0) {
 	            interactionBlocker.style.display = 'block';
-	            interactionBlocker.style.pointerEvents = openEmbed ? 'none' : 'auto';
+	            interactionBlocker.style.pointerEvents = 'auto';
 	        } else {
 	            interactionBlocker.style.display = 'none';
 	        }
