@@ -1669,9 +1669,8 @@ input[type="color"]::-moz-color-swatch {
     position: fixed;
     inset: 0;
     z-index: 9997; /* Below dock, above drawer handle */
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: var(--overlay-color);
     backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     opacity: 0;
     transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
     display: flex;
@@ -1697,8 +1696,7 @@ input[type="color"]::-moz-color-swatch {
 .task-card {
     position: relative;
     aspect-ratio: 9 / 16;
-    border-radius: 20px;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+    border-radius: 25px;
     transition: transform 0.3s ease, opacity 0.3s ease;
     cursor: pointer;
     overflow: hidden; /* Important for containing the embed */
