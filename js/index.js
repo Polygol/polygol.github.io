@@ -4484,6 +4484,150 @@ function minimizeFullscreenEmbed() {
     }
 }
 
+function showMinimizedEmbeds() {
+    // Prevent opening if it's already open
+    if (document.getElementById('task-switcher-container')) return;
+
+    // 1. Create the main container and grid
+    const container = document.createElement('div');
+    container.id = 'task-switcher-container';
+    
+    const grid = document.createElement('div');
+    grid.id = 'task-grid';
+
+    // Add a click listener to the background to hide the switcher
+    container.addEventListener('click', (e) => {
+        if (e.target === container) {
+            hideTaskSwitcher();
+        }
+    });
+
+    // 2. Collect all apps that are currently running (minimized)
+    const runningApps = Object.entries(minimizedEmbeds);
+
+    // Handle the case where no apps are running
+    if (runningApps.length === 0) {
+        showPopup(currentLanguage.NO_RUNNING_APPS || "No running apps");
+        return;
+    }
+
+    // 3. Populate the grid with a card for each running app
+    runningApps.forEach(([url, embedContainer], index) => {
+        const appName = Object.keys(apps).find(name => apps[name].url === url) || "Unknown App";
+
+        const card = document.createElement('div');
+        card.className = 'task-card';
+
+        // Restore/Open app on click
+        card.addEventListener('click', () => {
+            restoreAppFromSwitcher(url, card);
+        });
+
+        // Add the "live" app preview by moving the actual embed element
+        embedContainer.style.display = 'block'; // Ensure it's visible inside the card
+        card.appendChild(embedContainer);
+
+        // Add App Name Label
+        const label = document.createElement('div');
+        label.className = 'task-card-label';
+        label.textContent = appName;
+        card.appendChild(label);
+
+        // Add Close Button
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'task-card-close-btn';
+        closeBtn.innerHTML = '✕'; // A simple 'X'
+        closeBtn.onclick = (e) => {
+            e.stopPropagation(); // Prevent card click event from firing
+            closeAppFromSwitcher(url, card);
+        };
+        card.appendChild(closeBtn);
+        
+        grid.appendChild(card);
+    });
+
+    container.appendChild(grid);
+    document.body.appendChild(container);
+
+    // 4. Animate the switcher and cards into view
+    requestAnimationFrame(() => {
+        container.style.opacity = '1';
+        document.querySelectorAll('.task-card').forEach((card, index) => {
+            setTimeout(() => {
+                card.style.transform = 'scale(1)';
+                card.style.opacity = '1';
+            }, index * 50); // Staggered animation
+        });
+    });
+}
+
+function hideTaskSwitcher() {
+    const container = document.getElementById('task-switcher-container');
+    if (!container) return;
+
+    // Animate out
+    container.style.opacity = '0';
+    document.querySelectorAll('.task-card').forEach(card => {
+        card.style.transform = 'scale(0.9)';
+        card.style.opacity = '0';
+    });
+
+    // Clean up DOM after animation
+    setTimeout(() => {
+        container.remove();
+    }, 300);
+}
+
+function restoreAppFromSwitcher(url, cardElement) {
+    const embedContainer = minimizedEmbeds[url];
+    if (!embedContainer) return;
+    
+    // Temporarily move the embed out of the card and back to the body
+    document.body.appendChild(embedContainer);
+
+    // Start the hide animation for the switcher
+    hideTaskSwitcher();
+
+    // Animate the selected app to fullscreen
+    setTimeout(() => {
+        // Re-use the logic from your createFullscreenEmbed function
+        embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+        embedContainer.style.transform = 'scale(1)';
+        embedContainer.style.opacity = '1';
+        embedContainer.style.borderRadius = '0px';
+        embedContainer.style.pointerEvents = 'auto'; // Make it interactive again
+        
+        // Show swipe overlay
+        const swipeOverlay = document.getElementById('swipe-overlay');
+        if (swipeOverlay) swipeOverlay.style.display = 'block';
+        
+        document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+    }, 100); // Small delay to let hide animation start
+}
+
+function closeAppFromSwitcher(url, cardElement) {
+    // Animate the card out
+    cardElement.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+    cardElement.style.transform = 'scale(0.8)';
+    cardElement.style.opacity = '0';
+
+    setTimeout(() => {
+        cardElement.remove(); // Remove the card from the grid
+
+        // Fully remove the app
+        const embedContainer = minimizedEmbeds[url];
+        if (embedContainer) embedContainer.remove();
+        delete minimizedEmbeds[url];
+
+        populateDock(); // Refresh the dock to remove the app if it was there
+
+        // If no apps are left, close the switcher
+        if (Object.keys(minimizedEmbeds).length === 0) {
+            hideTaskSwitcher();
+        }
+    }, 200);
+}
+
 function populateDock() {
     // Clear only the app icons
     const appIcons = dock.querySelectorAll('.dock-icon');
@@ -4645,6 +4789,10 @@ function setupDrawerInteractions() {
     let velocities = [];
     let dockHideTimeout = null;
     let longPressTimer;
+	let dragHoldTimer = null; // Timer for the "hold to multitask" gesture
+	let isAppSwitcherActive = false; // Flag to check if the switcher was just opened
+	const dragHoldDuration = 700; // 700ms to trigger app switcher
+	const dragHoldThreshold = 20; // Max pixels you can move before canceling the hold
     const longPressDuration = 500; // 500ms for a long press
     const flickVelocityThreshold = 0.4;
     const dockThreshold = -2.5; // Threshold for dock appearance
@@ -4702,21 +4850,40 @@ function setupDrawerInteractions() {
     swipeOverlay.style.pointerEvents = 'none'; // Start with no interaction
     document.body.appendChild(swipeOverlay);
 
-    function startDrag(yPosition) {
+	function startDrag(yPosition) {
 	    persistentClock.style.opacity = '0';
-        startY = yPosition;
-        lastY = yPosition;
-        currentY = yPosition;
-        isDragging = true;
-        isDrawerInMotion = true;
-        dragStartTime = Date.now();
-        velocities = [];
-        appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
-    }
+	    startY = yPosition;
+	    lastY = yPosition;
+	    currentY = yPosition;
+	    isDragging = true;
+	    isDrawerInMotion = true;
+	    dragStartTime = Date.now();
+	    velocities = [];
+	    appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
+	
+	    // START HOLD TIMER FOR APP SWITCHER
+	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    if (openEmbed) {
+	        clearTimeout(dragHoldTimer); // Clear any old timer
+	        dragHoldTimer = setTimeout(() => {
+	            isAppSwitcherActive = true; // Set flag to prevent endDrag from running
+	            isDragging = false;         // Stop the drag
+	            velocities = [];
+	            
+	            // Check for a function to show minimized apps (task switcher)
+	            if (typeof showMinimizedEmbeds === 'function') {
+	                showMinimizedEmbeds();
+	            } else {
+	                console.warn('showMinimizedEmbeds function not found for app switcher.');
+	            }
+	        }, dragHoldDuration);
+	    }
+	}
 
 	function moveDrawer(yPosition) {
 	    if (!isDragging) return;
 	
+	    // --- Velocity and position calculation ---
 	    const now = Date.now();
 	    const deltaTime = now - dragStartTime;
 	    if (deltaTime > 0) {
@@ -4731,61 +4898,45 @@ function setupDrawerInteractions() {
 	    const deltaY = startY - currentY; // Positive for upward swipe
 	    const windowHeight = window.innerHeight;
 	    const movementPercentage = (deltaY / windowHeight) * 100;
-	
+	    
 	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
 	
 	    if (openEmbed) {
-	        // LOGIC FOR DRAGGING AN OPEN APP
-	        openEmbed.style.transition = 'none !important'; // No transitions during drag for instant response
+	        // --- NEW: CANCEL HOLD TIMER ON MOVEMENT ---
+	        if (Math.abs(deltaY) > dragHoldThreshold && dragHoldTimer) {
+	            clearTimeout(dragHoldTimer);
+	            dragHoldTimer = null;
+	        }
 	
-	        // Start effect after a small deadzone (e.g., 10px swipe up)
+	        // --- Dragging an open app logic (from previous step) ---
+	        openEmbed.style.transition = 'none'; 
 	        if (deltaY > 10) {
-	            // Progress is how far along the "close" gesture we are. 
-	            // A 40% screen height swipe is considered the full gesture.
 	            const progress = Math.min(1, deltaY / (windowHeight * 0.4));
-	
-	            // Move the card up as you swipe, making it feel like you're pushing it away
 	            const translateY = -deltaY;
-	
-	            // Scale down from 1 to 0.8 as you drag
 	            const scale = 1 - (progress * 0.2);
-	
-	            // Add border radius up to 25px
 	            const borderRadius = progress * 25;
-	
-	            // Apply the border now that we're dragging
 	            openEmbed.style.border = '1px solid var(--glass-border)';
-	
-	            // Set the new styles
 	            openEmbed.style.transform = `translateY(${translateY}px) scale(${scale})`;
-	            openEmbed.style.opacity = 1 - (progress * 0.5); // Fade out slightly
+	            openEmbed.style.opacity = 1 - (progress * 0.5); 
 	            openEmbed.style.borderRadius = `${borderRadius}px`;
-	
-	            // Animate background blur from 5px (blurry) to 0px (clear)
 	            const blurRadius = 5 - (progress * 5);
 	            document.querySelector('body').style.setProperty('--bg-blur', `blur(${blurRadius}px)`);
-	
 	        } else {
-	            // If dragging back down below the deadzone, reset to initial state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
 	            openEmbed.style.border = 'none';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
 	        }
-	
-	        // Ensure the drawer UI is not visible
 	        appDrawer.style.opacity = '0';
 	        interactionBlocker.style.pointerEvents = 'none';
 	
 	    } else {
-	        // LOGIC FOR DRAGGING THE DRAWER (NO APP OPEN)
+	        // --- Original logic for dragging the drawer ---
 	        if (movementPercentage > 2.5 && movementPercentage < 25) {
 	            if (dock.style.display === 'none' || dock.style.display === '') {
 	                dock.style.display = 'flex';
-	                requestAnimationFrame(() => {
-	                    dock.classList.add('show');
-	                });
+	                requestAnimationFrame(() => dock.classList.add('show'));
 	            } else {
 	                dock.classList.add('show');
 	            }
@@ -4797,20 +4948,16 @@ function setupDrawerInteractions() {
 	            dock.style.boxShadow = 'none';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
 	            dockHideTimeout = setTimeout(() => {
-	                if (!dock.classList.contains('show')) {
-	                    dock.style.display = 'none';
-	                }
+	                if (!dock.classList.contains('show')) dock.style.display = 'none';
 	            }, 300);
 	            drawerPill.style.opacity = '1';
 	        }
 	
 	        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-	        
 	        const opacity = (newPosition + 100) / 100;
 	        const blurRadius = Math.max(0, Math.min(5, ((-newPosition) / 20)));
 	        appDrawer.style.opacity = opacity;
 	        document.querySelector('body').style.setProperty('--bg-blur', `blur(${5 - blurRadius}px)`);
-	        
 	        appDrawer.style.bottom = `${newPosition}%`;
 	        
 	        if (newPosition > -100 && newPosition < 0) {
@@ -4821,12 +4968,23 @@ function setupDrawerInteractions() {
 	        }
 	    }
 	}
-
+	
 	function endDrag() {
+	    // --- NEW: CANCEL TIMER and CHECK SWITCHER STATE ---
+	    clearTimeout(dragHoldTimer);
+	    dragHoldTimer = null;
+	
+	    if (isAppSwitcherActive) {
+	        isAppSwitcherActive = false; // Reset flag
+	        isDragging = false;          // Ensure drag state is false
+	        return; // Exit immediately, switcher is already active
+	    }
+	
 	    if (!isDragging) return;
 	
+	    // --- Setup variables ---
 	    persistentClock.style.opacity = '1';
-	    const deltaY = startY - currentY; // Positive for upward swipe
+	    const deltaY = startY - currentY;
 	    const deltaTime = Date.now() - dragStartTime;
 	    let avgVelocity = 0;
 	    if (velocities.length > 0) {
@@ -4835,18 +4993,15 @@ function setupDrawerInteractions() {
 	    const windowHeight = window.innerHeight;
 	    const movementPercentage = (deltaY / windowHeight) * 100;
 	    const isFlickUp = avgVelocity > flickVelocityThreshold;
-	
+	    
 	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
 	    
 	    if (openEmbed) {
-	        // LOGIC FOR FINISHING AN APP DRAG
-	        // Add transitions for the snap-back or close animation
+	        // --- Finishing an app drag logic (from previous step) ---
 	        openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
 	
-	        // Condition to close: swipe up more than 20% of the screen OR a fast flick up
 	        if (movementPercentage > 20 || isFlickUp) {
-	            // Animate to a shrunken state and then minimize
-	            openEmbed.style.transform = 'translateY(0px) scale(0.8)'; // Center and shrink
+	            openEmbed.style.transform = 'translateY(0px) scale(0.8)';
 	            openEmbed.style.opacity = '0';
 	            openEmbed.style.borderRadius = '25px';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
@@ -4855,33 +5010,27 @@ function setupDrawerInteractions() {
 	                minimizeFullscreenEmbed();
 	                swipeOverlay.style.display = 'none';
 	                swipeOverlay.style.pointerEvents = 'none';
-	                openEmbed.style.border = 'none'; // Clean up border after animation
+	                openEmbed.style.border = 'none';
 	            }, 300);
-	
-	            // Reset drawer & dock state
+	            
 	            dock.classList.remove('show');
-	            dock.style.boxShadow = 'none';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
 	            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
 	            appDrawer.style.bottom = '-100%';
-	            appDrawer.style.opacity = '0';
-	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
 	        } else {
-	            // Animate back to the original fullscreen state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
-	            openEmbed.style.border = 'none'; // Animate border removal
+	            openEmbed.style.border = 'none';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
 	            appDrawer.style.opacity = '0';
 	        }
 	
 	    } else {
-	        // LOGIC FOR FINISHING A DRAWER DRAG (NO APP OPEN)
+	        // --- Finishing a drawer drag logic (unchanged) ---
 	        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-	
 	        const isSignificantSwipe = movementPercentage > 25 || isFlickUp;
 	        const isSmallSwipe = movementPercentage > 2.5 && movementPercentage <= 25;
 	        
@@ -4892,32 +5041,25 @@ function setupDrawerInteractions() {
 	                dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
 	            });
 	            appDrawer.style.bottom = '-100%';
-	            appDrawer.style.opacity = '0';
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
-	            interactionBlocker.style.display = 'none';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
 	        } else if (isSignificantSwipe) {
 	            dock.classList.remove('show');
-	            dock.style.boxShadow = 'none';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
 	            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
 	            appDrawer.style.bottom = '0%';
 	            appDrawer.style.opacity = '1';
 	            appDrawer.classList.add('open');
 	            initialDrawerPosition = 0;
-	            interactionBlocker.style.display = 'none';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
 	        } else {
 	            dock.classList.remove('show');
-	            dock.style.boxShadow = 'none';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
 	            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
 	            appDrawer.style.bottom = '-100%';
-	            appDrawer.style.opacity = '0';
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
-	            interactionBlocker.style.display = 'none';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
 	        }
 	        
