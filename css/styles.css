@@ -1467,7 +1467,7 @@ input[type="color"]::-moz-color-swatch {
 
         .app-drawer-content {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             height: calc(100% - 42px);
             overflow-y: auto;
             user-select: none;
