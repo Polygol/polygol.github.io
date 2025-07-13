@@ -4739,9 +4739,11 @@ function setupDrawerInteractions() {
 	
 	        // Start effect after a small deadzone (e.g., 10px swipe up)
 	        if (deltaY > 10) {
+		    persistentClock.style.opacity = '0';
+			
 	            // Progress is how far along the "close" gesture we are. 
-	            // A 40% screen height swipe is considered the full gesture.
-	            const progress = Math.min(1, deltaY / (windowHeight * 0.4));
+	            // A 20% screen height swipe is considered the full gesture.
+	            const progress = Math.min(1, deltaY / (windowHeight * 0.2));
 	
 	            // Move the card up as you swipe, making it feel like you're pushing it away
 	            const translateY = -deltaY;
@@ -4759,7 +4761,6 @@ function setupDrawerInteractions() {
 	            openEmbed.style.transform = `translateY(${translateY}px) scale(${scale})`;
 	            openEmbed.style.opacity = 1 - (progress * 0.5); // Fade out slightly
 	            openEmbed.style.borderRadius = `${borderRadius}px`;
-		    persistentClock.style.opacity = '0';
 	
 	            // Animate background blur from 5px (blurry) to 0px (clear)
 	            const blurRadius = 5 - (progress * 5);
@@ -4806,7 +4807,7 @@ function setupDrawerInteractions() {
 
 		persistentClock.style.opacity = '0';
 	
-	        const newPosition = Math.max(-78, Math.min(0, initialDrawerPosition + movementPercentage));
+	        const newPosition = Math.max(-142, Math.min(0, initialDrawerPosition + movementPercentage));
 	        
 	        const opacity = (newPosition + 100) / 100;
 	        const blurRadius = Math.max(0, Math.min(5, ((-newPosition) / 20)));
