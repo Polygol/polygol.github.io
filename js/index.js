@@ -4653,9 +4653,6 @@ function setupDrawerInteractions() {
     const drawerHandle = document.querySelector('.drawer-handle');
 
     const startLongPress = (e) => {
-        // Prevent this event from bubbling up and interfering with other listeners.
-        e.stopPropagation(); 
-    
         // Only trigger long press if AI is enabled and not already dragging the drawer.
         if (isAiAssistantEnabled && !isDragging) {
              longPressTimer = setTimeout(() => {
@@ -4742,6 +4739,7 @@ function setupDrawerInteractions() {
 	
 	        // Start effect after a small deadzone (e.g., 10px swipe up)
 	        if (deltaY > 10) {
+		    cancelLongPress();
 		    persistentClock.style.opacity = '0';
 			
 	            // Progress is how far along the "close" gesture we are. 
@@ -4769,6 +4767,7 @@ function setupDrawerInteractions() {
 	            const blurRadius = 5 - (progress * 5);
 	            document.querySelector('body').style.setProperty('--bg-blur', `blur(${blurRadius}px)`);
 	        } else {
+		    cancelLongPress();
 	            // If dragging back down below the deadzone, reset to initial state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
@@ -4807,10 +4806,11 @@ function setupDrawerInteractions() {
 	            }, 300);
 	            drawerPill.style.opacity = '1';
 	        }
-
+		    
+		cancelLongPress();
 		persistentClock.style.opacity = '0';
 	
-	        const newPosition = Math.max(-142, Math.min(0, initialDrawerPosition + movementPercentage));
+	        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
 	        
 	        const opacity = (newPosition + 100) / 100;
 	        const blurRadius = Math.max(0, Math.min(5, ((-newPosition) / 20)));
