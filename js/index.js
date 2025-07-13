@@ -4943,6 +4943,20 @@ function setupDrawerInteractions() {
         let touchStartY = 0;
         let touchStartTime = 0;
         let isInSwipeMode = false;
+
+	swipeOverlay.addEventListener('touchstart', (e) => {
+            // Stop this event from bubbling up to the general document listener.
+            // This ensures that when the overlay is active, it takes priority
+            // and prevents a double-drag initiation.
+            e.stopPropagation(); 
+        
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+        
+            // We also need to start the long-press timer here for the in-app context
+            startLongPress(e); 
+
+        }, { passive: true });
         
         swipeOverlay.addEventListener('touchstart', (e) => {
             touchStartY = e.touches[0].clientY;
@@ -4967,6 +4981,8 @@ function setupDrawerInteractions() {
         }, { passive: false });
         
         swipeOverlay.addEventListener('touchend', () => {
+	    cancelLongPress();
+		
             if (isInSwipeMode) {
                 endDrag();
                 isInSwipeMode = false;
@@ -4977,12 +4993,16 @@ function setupDrawerInteractions() {
         
         // Similar handling for mouse events
         swipeOverlay.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
             touchStartY = e.clientY;
             touchStartTime = Date.now();
+            startLongPress(e);
         });
         
         swipeOverlay.addEventListener('mousemove', (e) => {
             if (e.buttons !== 1) return; // Only proceed if left mouse button is pressed
+
+	    cancelLongPress();
             
             const deltaY = touchStartY - e.clientY;
             
@@ -4998,6 +5018,8 @@ function setupDrawerInteractions() {
         });
         
         swipeOverlay.addEventListener('mouseup', () => {
+            cancelLongPress();
+		
             if (isInSwipeMode) {
                 endDrag();
                 isInSwipeMode = false;
