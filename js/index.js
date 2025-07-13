@@ -60,6 +60,7 @@ function applyLanguage(language) {
     const adjustLabel = document.querySelector('#thermostat-popup .adjust-label');
     if (adjustLabel) {
         adjustLabel.textContent = language.ADJUST;
+    }
 
     // Update checkWords and closeWords
     window.checkWords = language.CHECK_WORDS;
