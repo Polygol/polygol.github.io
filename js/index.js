@@ -4693,7 +4693,7 @@ function setupDrawerInteractions() {
     document.body.appendChild(swipeOverlay);
 
     function startDrag(yPosition) {
-		persistentClock.style.opacity = '0';
+	persistentClock.style.opacity = '0';
         startY = yPosition;
         lastY = yPosition;
         currentY = yPosition;
@@ -4707,13 +4707,11 @@ function setupDrawerInteractions() {
     function moveDrawer(yPosition) {	    
         if (!isDragging) return;
         
-        // Calculate and store velocity data
         const now = Date.now();
         const deltaTime = now - dragStartTime;
         if (deltaTime > 0) {
             const velocity = (lastY - yPosition) / deltaTime;
             velocities.push(velocity);
-            // Keep only the last 5 velocity measurements
             if (velocities.length > 5) {
                 velocities.shift();
             }
@@ -4725,35 +4723,23 @@ function setupDrawerInteractions() {
         const windowHeight = window.innerHeight;
         const movementPercentage = (deltaY / windowHeight) * 100;
     
-        // Check if there's an open embed
         const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
         
         if (openEmbed && movementPercentage > 25) {
-            // Add transition class for smooth animation (removed filter)
             openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
             openEmbed.style.transform = `scale(${1 - (movementPercentage - 25) / 100})`;
             openEmbed.style.opacity = 1 - ((movementPercentage - 25) / 75);
-            
-            // Add dynamic border radius and background blur during drag
             const borderRadius = Math.min(25, (movementPercentage - 25) * 0.5);
             const blurRadius = Math.min(5, (movementPercentage - 25) * 0.2);
             openEmbed.style.borderRadius = `${borderRadius}px`;
-            
-            // Apply blur to body instead of embed
             document.querySelector('body').style.setProperty('--bg-blur', `blur(${5 - blurRadius}px)`);
-		
-            // Make app drawer transparent when in an app
             appDrawer.style.opacity = '0';
-            
-            // IMPORTANT FIX: Set pointer-events to none when an embed is open
             interactionBlocker.style.pointerEvents = 'none';
         }
         
 	    if (movementPercentage > 2.5 && movementPercentage < 25) {
-	        // Ensure display is block/flex before adding 'show' class for animation
 	        if (dock.style.display === 'none' || dock.style.display === '') {
 	            dock.style.display = 'flex';
-	            // Use requestAnimationFrame to ensure the display change is rendered before adding the class
 	            requestAnimationFrame(() => {
 	                dock.classList.add('show');
 	            });
@@ -4768,29 +4754,26 @@ function setupDrawerInteractions() {
 	        dock.style.boxShadow = 'none';
 	        if (dockHideTimeout) clearTimeout(dockHideTimeout);
 	        dockHideTimeout = setTimeout(() => {
-	            dock.style.display = 'none';
-	        }, 300); // 300ms matches your CSS transition duration
+	            if (!dock.classList.contains('show')) { // Double-check it wasn't re-opened
+                    dock.style.display = 'none';
+                }
+	        }, 300);
 	        drawerPill.style.opacity = '1';
 	    }
     
         const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
         
-        // Only update opacity if no embed is open
         if (!openEmbed) {
             const opacity = (newPosition + 100) / 100;
             const blurRadius = Math.max(0, Math.min(5, ((-newPosition) / 20)));
             appDrawer.style.opacity = opacity;
-            
-            // Apply blur to body for drawer instead
             document.querySelector('body').style.setProperty('--bg-blur', `blur(${5 - blurRadius}px)`);
-	}
+	    }
         
         appDrawer.style.bottom = `${newPosition}%`;
         
-        // Show interaction blocker if drawer is partially visible (not at 0% or -100%)
         if (newPosition > -100 && newPosition < 0) {
             interactionBlocker.style.display = 'block';
-            // IMPORTANT FIX: Only capture pointer events if no embed is open
             interactionBlocker.style.pointerEvents = openEmbed ? 'none' : 'auto';
         } else {
             interactionBlocker.style.display = 'none';
@@ -4800,12 +4783,11 @@ function setupDrawerInteractions() {
     function endDrag() {		
         if (!isDragging) return;
 
-	persistentClock.style.opacity = '1';
+	    persistentClock.style.opacity = '1';
     
         const deltaY = startY - currentY;
         const deltaTime = Date.now() - dragStartTime;
         
-        // Calculate average velocity from the stored values
         let avgVelocity = 0;
         if (velocities.length > 0) {
             avgVelocity = velocities.reduce((sum, v) => sum + v, 0) / velocities.length;
@@ -4816,34 +4798,26 @@ function setupDrawerInteractions() {
     
         appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
     
-        // IMPORTANT FIX: Be specific about which embed is open
         const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
         
-        // Handle flick gesture to close app
         const isFlickUp = avgVelocity > flickVelocityThreshold;
         
         if (openEmbed && (movementPercentage > 10 || isFlickUp)) {
-            // Close embed with animation (removed filter)
             openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
             openEmbed.style.transform = 'scale(0.8)';
             openEmbed.style.opacity = '0';
             openEmbed.style.borderRadius = '25px';
-            
-            // Apply blur to body when minimizing
             document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
 		
             setTimeout(() => {
                 minimizeFullscreenEmbed();
-                
-                // Hide the swipe overlay
                 swipeOverlay.style.display = 'none';
                 swipeOverlay.style.pointerEvents = 'none';
             }, 300);
             
-            // Reset drawer state and clear background blur
             dock.classList.remove('show');
             dock.style.boxShadow = 'none';
-	    if (dockHideTimeout) clearTimeout(dockHideTimeout);
+	        if (dockHideTimeout) clearTimeout(dockHideTimeout);
             dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
@@ -4851,22 +4825,16 @@ function setupDrawerInteractions() {
             initialDrawerPosition = -100;
             interactionBlocker.style.display = 'none';
             document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+
 		} else if (openEmbed) {
-            // Reset embed if swipe wasn't enough (removed filter)
             openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
             openEmbed.style.transform = 'scale(1)';
             openEmbed.style.opacity = '1';
             openEmbed.style.borderRadius = '0px';
-            
-            // Clear background blur when resetting
             document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
-		
-            // Keep app drawer transparent when in an app
             appDrawer.style.opacity = '0';
             
-            // Handle dock visibility for smaller swipes
 		    if (movementPercentage > 2.5 && movementPercentage <= 25) {
-		        // Ensure display is block/flex before adding 'show' class for animation
 		        if (dock.style.display === 'none' || dock.style.display === '') {
 		            dock.style.display = 'flex';
 		            requestAnimationFrame(() => {
@@ -4875,7 +4843,7 @@ function setupDrawerInteractions() {
 		        } else {
 		            dock.classList.add('show');
 		        }
-		        dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)'; // Enable box shadow when visible
+		        dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
 		        appDrawer.style.bottom = '-100%';
 		        appDrawer.classList.remove('open');
 		        initialDrawerPosition = -100;
@@ -4883,25 +4851,25 @@ function setupDrawerInteractions() {
 		        document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
 		    }
         } else {
-            // Normal drawer behavior when no embed is open
-            // Consider both movement percentage and velocity for flick gestures
             const isSignificantSwipe = movementPercentage > 25 || isFlickUp;
             const isSmallSwipe = movementPercentage > 2.5 && movementPercentage <= 25;
             
-            // Small swipe - show dock
             if (isSmallSwipe && !isFlickUp) {
-                dock.classList.add('show');
-                dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
-		dock.style.display = 'flex';
+                // FIX 1: Correctly animate the dock opening
+                dock.style.display = 'flex'; // Set display first
+                requestAnimationFrame(() => { // Then add class in the next frame
+                    dock.classList.add('show');
+                    dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
+                });
+
                 appDrawer.style.bottom = '-100%';
                 appDrawer.style.opacity = '0';
                 appDrawer.classList.remove('open');
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
                 document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
-	    } 
-            // Large swipe or flick up - show full drawer
-            else if (isSignificantSwipe) {
+
+	        } else if (isSignificantSwipe) {
                 dock.classList.remove('show');
                 dock.style.boxShadow = 'none';
                 if (dockHideTimeout) clearTimeout(dockHideTimeout);
@@ -4912,9 +4880,8 @@ function setupDrawerInteractions() {
                 initialDrawerPosition = 0;
                 interactionBlocker.style.display = 'none';
                 document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
-	    } 
-            // Close everything
-            else {
+
+	        } else {
                 dock.classList.remove('show');
                 dock.style.boxShadow = 'none';
                 if (dockHideTimeout) clearTimeout(dockHideTimeout);
@@ -4925,9 +4892,8 @@ function setupDrawerInteractions() {
                 initialDrawerPosition = -100;
                 interactionBlocker.style.display = 'none';
                 document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
-	    }
+	        }
             
-            // Hide the swipe overlay when not in an app
             swipeOverlay.style.display = 'none';
             swipeOverlay.style.pointerEvents = 'none';
         }
@@ -4936,7 +4902,7 @@ function setupDrawerInteractions() {
     
         setTimeout(() => {
             isDrawerInMotion = false;
-        }, 300); // 300ms matches the transition duration in the CSS
+        }, 300);
     }
 
     // Add initial swipe detection in app
@@ -5059,10 +5025,8 @@ function setupDrawerInteractions() {
         const isDrawerOpen = appDrawer.classList.contains('open');
         const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
 
-        // --- ADDITION: Close the drawer when clicking outside (on the body) ---
-        // This runs only if the drawer is fully open and no app is active.
+        // Close the drawer when clicking outside (on the body)
         if (isDrawerOpen && !openEmbed && !appDrawer.contains(e.target) && !drawerHandle.contains(e.target)) {
-            // Animate the drawer closed
             appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
@@ -5072,12 +5036,17 @@ function setupDrawerInteractions() {
             document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
         }
 
-        // --- Logic to hide the bottom dock ---
-        // This runs if the dock is visible and the click was outside of it.
+        // Hide the bottom dock if it's visible and the click was outside of it
         if (dock.classList.contains('show') && !dock.contains(e.target)) {
             dock.classList.remove('show');
             dock.style.boxShadow = 'none';
             drawerPill.style.opacity = '1';
+            
+            // This is the crucial fix: ensure display is set to 'none' after the animation
+            if (dockHideTimeout) clearTimeout(dockHideTimeout);
+            dockHideTimeout = setTimeout(() => {
+                dock.style.display = 'none';
+            }, 300); // Match CSS transition duration
         }
     });
 
