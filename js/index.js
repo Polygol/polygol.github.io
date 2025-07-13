@@ -4737,8 +4737,8 @@ function setupDrawerInteractions() {
 	        // LOGIC FOR DRAGGING AN OPEN APP
 	        openEmbed.style.transition = 'none !important'; // No transitions during drag for instant response
 	
-	        // Start effect after a small deadzone (e.g., 10px swipe up)
-	        if (deltaY > 10) {
+	        // Start effect after a small deadzone
+	        if (deltaY > 15) {
 		    cancelLongPress();
 		    persistentClock.style.opacity = '0';
 			
