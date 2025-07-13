@@ -4828,7 +4828,6 @@ function setupDrawerInteractions() {
 	function endDrag() {
 	    if (!isDragging) return;
 	
-	    persistentClock.style.opacity = '1';
 	    const deltaY = startY - currentY; // Positive for upward swipe
 	    const deltaTime = Date.now() - dragStartTime;
 	    let avgVelocity = 0;
@@ -4879,10 +4878,12 @@ function setupDrawerInteractions() {
 	            openEmbed.style.border = 'none'; // Animate border removal
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
 	            appDrawer.style.opacity = '0';
+				persistentClock.style.opacity = '1';
 	        }
 	
 	    } else {
 	        // LOGIC FOR FINISHING A DRAWER DRAG (NO APP OPEN)
+			persistentClock.style.opacity = '1';
 	        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
 	
 	        const isSignificantSwipe = movementPercentage > 25 || isFlickUp;
