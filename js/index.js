@@ -4703,7 +4703,6 @@ function setupDrawerInteractions() {
     document.body.appendChild(swipeOverlay);
 
     function startDrag(yPosition) {
-	    persistentClock.style.opacity = '0';
         startY = yPosition;
         lastY = yPosition;
         currentY = yPosition;
@@ -4760,11 +4759,11 @@ function setupDrawerInteractions() {
 	            openEmbed.style.transform = `translateY(${translateY}px) scale(${scale})`;
 	            openEmbed.style.opacity = 1 - (progress * 0.5); // Fade out slightly
 	            openEmbed.style.borderRadius = `${borderRadius}px`;
+		    persistentClock.style.opacity = '0';
 	
 	            // Animate background blur from 5px (blurry) to 0px (clear)
 	            const blurRadius = 5 - (progress * 5);
 	            document.querySelector('body').style.setProperty('--bg-blur', `blur(${blurRadius}px)`);
-	
 	        } else {
 	            // If dragging back down below the deadzone, reset to initial state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
@@ -4772,6 +4771,7 @@ function setupDrawerInteractions() {
 	            openEmbed.style.borderRadius = '0px';
 	            openEmbed.style.border = 'none';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+		    persistentClock.style.opacity = '1';
 	        }
 	
 	        // Ensure the drawer UI is not visible
@@ -4803,8 +4803,10 @@ function setupDrawerInteractions() {
 	            }, 300);
 	            drawerPill.style.opacity = '1';
 	        }
+
+		persistentClock.style.opacity = '0';
 	
-	        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+	        const newPosition = Math.max(-78, Math.min(0, initialDrawerPosition + movementPercentage));
 	        
 	        const opacity = (newPosition + 100) / 100;
 	        const blurRadius = Math.max(0, Math.min(5, ((-newPosition) / 20)));
