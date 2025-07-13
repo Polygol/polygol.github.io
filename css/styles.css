@@ -1572,6 +1572,7 @@ input[type="color"]::-moz-color-swatch {
         }
 
         .dock {
+            display: none;
             position: fixed;
             bottom: -32px;
             transform: translateX(-50%) scale(0.6);
@@ -1580,7 +1581,6 @@ input[type="color"]::-moz-color-swatch {
             border: 1px solid var(--glass-border);
             border-radius: 36px;
             padding: 8px 10px;
-            display: flex;
             gap: 6px;
             left: 50%;
             transition: all 0.3s cubic-bezier(.3,1.2,.64,1);
@@ -1594,6 +1594,7 @@ input[type="color"]::-moz-color-swatch {
         }
 
         .dock.show {
+            display: flex;
             transform: translateX(-50%) scale(1);
             bottom: 10px;
             filter: none;
