@@ -4,7 +4,7 @@
   "categories": ["productivity", "utilities", "lifestyle", "entertainment", "business", "personalization"],
   "scope": "/",
   "start_url": "/",
-  "id": "index.html"
+  "id": "index.html",
   "display": "standalone",
   "display_override": ["window-controls-overlay"],
   "launch_handler": "navigate-existing",
