@@ -4738,13 +4738,13 @@ function setupDrawerInteractions() {
 	        openEmbed.style.transition = 'none !important'; // No transitions during drag for instant response
 	
 	        // Start effect after a small deadzone
-	        if (deltaY > 15) {
+	        if (deltaY > 10) {
 		    cancelLongPress();
 		    persistentClock.style.opacity = '0';
 			
 	            // Progress is how far along the "close" gesture we are. 
-	            // A 5% screen height swipe is considered the full gesture.
-	            const progress = Math.min(1, deltaY / (windowHeight * 0.05));
+	            // A 20% screen height swipe is considered the full gesture.
+	            const progress = Math.min(1, deltaY / (windowHeight * 0.2));
 	
 	            // Move the card up as you swipe, making it feel like you're pushing it away
 	            const translateY = -deltaY;
