@@ -4867,7 +4867,7 @@ function setupDrawerInteractions() {
 	            dock.classList.remove('show');
 	            dock.style.boxShadow = 'none';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
-	            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
+	            dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
 	            appDrawer.style.bottom = '-100%';
 	            appDrawer.style.opacity = '0';
 	            appDrawer.classList.remove('open');
@@ -4908,7 +4908,7 @@ function setupDrawerInteractions() {
 	            dock.classList.remove('show');
 	            dock.style.boxShadow = 'none';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
-	            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
+	            dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
 	            appDrawer.style.bottom = '0%';
 	            appDrawer.style.opacity = '1';
 	            appDrawer.classList.add('open');
@@ -4919,7 +4919,7 @@ function setupDrawerInteractions() {
 	            dock.classList.remove('show');
 	            dock.style.boxShadow = 'none';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
-	            dockHideTimeout = setTimeout(() => { dock.style.display = 'none'; }, 300);
+	            dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
 	            appDrawer.style.bottom = '-100%';
 	            appDrawer.style.opacity = '0';
 	            appDrawer.classList.remove('open');
@@ -5100,7 +5100,10 @@ function setupDrawerInteractions() {
             // This is the crucial fix: ensure display is set to 'none' after the animation
             if (dockHideTimeout) clearTimeout(dockHideTimeout);
             dockHideTimeout = setTimeout(() => {
-                dock.style.display = 'none';
+                // Check if the dock is still supposed to be hidden before changing display property
+                if (!dock.classList.contains('show')) {
+                    dock.style.display = 'none';
+                }
             }, 300); // Match CSS transition duration
         }
     });
