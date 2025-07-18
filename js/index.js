@@ -960,7 +960,7 @@ function showPopup(message) {
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'var(--search-background)';
-    popup.style.backdropFilter = 'blur(10px)';
+    popup.style.backdropFilter = 'blur(5px) var(--edge-refraction-filter)';
     popup.style.color = 'var(--text-color)';
     popup.style.padding = '20px';
     popup.style.borderRadius = '40px';
@@ -1014,7 +1014,7 @@ function showPopup(message) {
         fullscreenBtn.style.borderRadius = '25px';
         fullscreenBtn.style.border = 'var(--glass-border)';
         fullscreenBtn.style.backgroundColor = 'var(--search-background)';
-        fullscreenBtn.style.backdropFilter = 'blur(20px)';
+        fullscreenBtn.style.backdropFilter = 'blur(5px) var(--edge-refraction-filter)';
         fullscreenBtn.style.color = 'var(--text-color)';
         fullscreenBtn.style.cursor = 'pointer';
         fullscreenBtn.style.display = 'flex';
@@ -1140,7 +1140,7 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'var(--modal-background)';
-    popup.style.backdropFilter = 'blur(50px)';
+    popup.style.backdropFilter = 'blur(10px) var(--edge-refraction-filter)';
     popup.style.color = 'var(--text-color)';
     popup.style.padding = '16px';
     popup.style.borderRadius = '25px';
@@ -1300,7 +1300,7 @@ function addToNotificationShade(message, options = {}) {
     const notification = document.createElement('div');
     notification.className = 'shade-notification';
     notification.style.backgroundColor = 'var(--search-background)';
-    notification.style.backdropFilter = 'blur(20px)';
+    notification.style.backdropFilter = 'blur(5px) var(--edge-refraction-filter)';
     notification.style.color = 'var(--text-color)';
     notification.style.padding = '18px';
     notification.style.borderRadius = '25px';
@@ -1530,149 +1530,6 @@ function firstSetup() {
 function createSetupScreen() {
     const setupContainer = document.createElement('div');
     setupContainer.className = 'setup-screen';
-    
-    const style = document.createElement('style');
-    style.textContent = `
-        .setup-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--background-color);
-            backdrop-filter: blur(50px);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-color);
-            transition: opacity 0.5s ease;
-        }
-
-        .setup-page {
-            max-width: 600px;
-            padding: 2rem;
-            text-align: center;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-	    max-height: 100vh;
-	    overflow: auto;
-        }
-
-        .setup-page.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .setup-title {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        .setup-description {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.8;
-        }
-
-        .option-content {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 4px;
-        }
-        
-        .option-title {
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
-        
-        .option-description {
-            font-size: 0.9rem;
-            opacity: 0.7;
-        }
-
-        .setup-option {
-            background: var(--search-background);
-            border: 2px solid transparent;
-            border-radius: 25px;
-            padding: 1rem;
-            margin: 1rem 0;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .setup-option:hover {
-            transform: scale(1.02);
-        }
-
-        .setup-buttons {
-            margin-top: 2rem;
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .setup-button {
-            padding: 0.8rem 2rem;
-            border-radius: 25px;
-            border: none;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: opacity 0.2s ease;
-        }
-
-        .setup-button.primary {
-            background: var(--search-background);
-            color: var(--text-color);
-        }
-
-        .setup-button.secondary {
-            background: var(--search-background);
-            color: var(--text-color);
-        }
-
-        .setup-progress {
-            position: fixed;
-            bottom: 2rem;
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .progress-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text-color);
-            opacity: 0.3;
-            transition: opacity 0.3s ease;
-        }
-
-        .progress-dot.active {
-            opacity: 1;
-        }
-
-        .setup-option.selected {
-            border-color: var(--text-color);
-        }
-
-        .setup-option .material-symbols-rounded {
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-
-        .setup-option.selected .material-symbols-rounded {
-            opacity: 1;
-        }
-    `;
-    document.head.appendChild(style);
 
     const setupPages = [
         {
@@ -2559,31 +2416,6 @@ function updateMinimalMode() {
         document.body.classList.remove('minimal-active');
     }
 }
-
-// Add a CSS rule for minimal mode
-const style = document.createElement('style');
-style.textContent = `
-    body.minimal-active .drawer-pill,
-    body.minimal-active .drawer-handle,
-    body.minimal-active #date,
-    body.minimal-active .persistent-clock {
-        opacity: 0.5;
-        transition: opacity 0.3s ease, width 0.3s ease;
-    }
-
-    body.minimal-active .blur-overlay {
-    	backdrop-filter: blur(50px);
-    }
-    
-    body.minimal-active .clock {
-    	font-size: clamp(6rem, 20vw, 20rem) !important;
-    }
-    
-    body.minimal-active .drawer-pill {
-        width: 10%;
-    }
-`;
-document.head.appendChild(style);
 
 // Wallpaper upload functionality
 uploadButton.addEventListener("click", () => {
@@ -3613,72 +3445,6 @@ async function jumpToWallpaper(index) {
     
     updatePageIndicatorDots(false);
     resetIndicatorTimeout();
-}
-
-// Add CSS to the head
-function addPageIndicatorStyles() {
-  const style = document.createElement('style');
-  style.textContent = `
-    .page-indicator {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-      z-index: 50;
-      transition: all 0.5s;
-      opacity: 1;
-      background-color: var(--search-background);
-      backdrop-filter: blur(10px);
-      padding: 5px 6px;
-      border: 1px solid var(--glass-border);
-      border-radius: 10px;
-      filter: none;
-    }
-
-    .page-indicator.empty {
-      padding: 5px 12px;
-    }
-    
-    .empty-indicator, .info-indicator {
-      color: var(--text-color);
-      opacity: 0.7;
-      font-size: 12px;
-    }
-    
-    .info-indicator {
-      margin-left: 8px;
-      font-size: 10px;
-    }
-
-    .indicator-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: rgba(255, 255, 255, 0.5);
-      transition: all 0.3s;
-    }
-    
-    .indicator-dot.active {
-      background-color: var(--text-color);
-      transform: scale(1.3);
-    }
-
-    .indicator-dot.dragging {
-      z-index: 2;
-      transition: none;
-      background-color: var(--text-color);
-      transform: scale(1.8);
-    }
-    
-    .fade-out {
-      opacity: 0;
-      pointer-events: none;
-      filter: blur(5px);
-    }
-  `;
-  document.head.appendChild(style);
 }
 
 // Add a function to check if we need to load or restore default wallpaper
@@ -5720,7 +5486,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error("Error initializing wallpaper:", error);
     });
     initializePageIndicator();
-    addPageIndicatorStyles();
     checkWallpaperState();
     updateGurappsVisibility();
     syncUiStates();
