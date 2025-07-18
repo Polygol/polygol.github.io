@@ -26,6 +26,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap');
 
 :root {
+    /* Liquid Glass */
+    --liquid-glass-filter: url('#liquid-glass-filter');
+    
     /* Dark Theme (Default) Variables */
     --background-color-dark: #1c1c1c;
     --text-color-dark: #f9f9f9;
@@ -338,7 +341,7 @@ input[type="color"]::-moz-color-swatch {
     opacity: 1;
     max-width: 400px;
     box-shadow: 0 0 0 1px var(--glass-border);
-    backdrop-filter: blur(10px);
+    backdrop-filter: var(--liquid-glass-filter) blur(10px);
 }
 
 .persistent-clock {
@@ -370,7 +373,7 @@ input[type="color"]::-moz-color-swatch {
     position: absolute;
     inset: 0;
     z-index: -1;
-    backdrop-filter: blur(1px);
+    backdrop-filter: var(--liquid-glass-filter) blur(1px);
     border-radius: inherit;
 }
 
@@ -382,7 +385,7 @@ input[type="color"]::-moz-color-swatch {
     top: 10%;
     left: 10%;
     z-index: -2;
-    backdrop-filter: blur(10px);
+    backdrop-filter: var(--liquid-glass-filter) blur(10px);
     border-radius: inherit;
     mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 70%);
     -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 70%);
@@ -538,7 +541,7 @@ input[type="color"]::-moz-color-swatch {
             width: clamp(280px, 90%, 800px);
             max-height: 90vh;
             background-color: var(--search-background);
-            backdrop-filter: blur(50px);
+            backdrop-filter: var(--liquid-glass-filter) blur(50px);
             color: var(--text-color);
             padding: 20px;
             border-radius: 45px;
@@ -684,7 +687,7 @@ input[type="color"]::-moz-color-swatch {
     color: var(--text-color);
     padding: 8px 18px;
     background-color: var(--search-background);
-    backdrop-filter: blur(20px);
+    backdrop-filter: var(--liquid-glass-filter) blur(20px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -753,7 +756,7 @@ input[type="color"]::-moz-color-swatch {
     padding-left: 10px;
     border: 1px solid var(--glass-border);
     background: var(--search-background);
-    backdrop-filter: blur(20px);
+    backdrop-filter: var(--liquid-glass-filter) blur(20px);
     border-radius: 20px;
     transition: background-color 0.2s, transform 0.1s;
 }
@@ -821,7 +824,7 @@ input[type="color"]::-moz-color-swatch {
     grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
     gap: 10px;
     padding: 15px 5px;
-    backdrop-filter: blur(20px);
+    backdrop-filter: var(--liquid-glass-filter) blur(20px);
     background-color: var(--search-background);
     border: 1px solid var(--glass-border);
     border-radius: 25px;
@@ -901,7 +904,7 @@ input[type="color"]::-moz-color-swatch {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     border-radius: 25px;
     padding: 15px;
-    backdrop-filter: blur(20px);
+    backdrop-filter: var(--liquid-glass-filter) blur(20px);
     min-width: 155px;
 }
 
@@ -918,7 +921,7 @@ input[type="color"]::-moz-color-swatch {
     background-color: var(--search-background);
     border-radius: 25px;
     border: 1px solid var(--glass-border);
-    backdrop-filter: blur(20px);
+    backdrop-filter: var(--liquid-glass-filter) blur(20px);
     overflow: hidden;
     transition: all 0.3s ease;
 }
@@ -1028,7 +1031,7 @@ input[type="color"]::-moz-color-swatch {
     position: relative;
     min-height: 32px;
     height: 32px;
-    backdrop-filter: blur(20px);
+    backdrop-filter: var(--liquid-glass-filter) blur(20px);
     border: 1px solid var(--glass-border);
 }
 
@@ -1128,7 +1131,7 @@ input[type="color"]::-moz-color-swatch {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     border-radius: 25px;
     padding: 15px;
-    backdrop-filter: blur(10px);
+    backdrop-filter: var(--liquid-glass-filter) blur(10px);
     width: 155px;
 }
 
@@ -1238,7 +1241,7 @@ input[type="color"]::-moz-color-swatch {
     margin-top: 10px;
     padding: 15px 13px 15px 20px;
     background-color: var(--search-background);
-    backdrop-filter: blur(20px);
+    backdrop-filter: var(--liquid-glass-filter) blur(20px);
     border-radius: 25px;
     transition: background-color 0.2s, transform 0.1s;
     height: 32px;
@@ -1421,7 +1424,7 @@ input[type="color"]::-moz-color-swatch {
 .btn-qc {
     background-color: var(--overlay-color);
     color: var(--text-color);
-    backdrop-filter: blur(20px);
+    backdrop-filter: var(--liquid-glass-filter) blur(20px);
     border-radius: 32px;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -1446,7 +1449,7 @@ input[type="color"]::-moz-color-swatch {
     overflow: hidden;
     touch-action: none;
     user-select: none;
-    backdrop-filter: blur(20px); /* Apply blur to the background */
+    backdrop-filter: var(--liquid-glass-filter) blur(20px); /* Apply blur to the background */
     touch-action: none;
     user-select: none;
     opacity: 0;
@@ -1577,7 +1580,7 @@ input[type="color"]::-moz-color-swatch {
             bottom: -32px;
             transform: translateX(-50%) scale(0.6);
             background: var(--search-background);
-            backdrop-filter: blur(10px);
+            backdrop-filter: var(--liquid-glass-filter) blur(10px);
             border: 1px solid var(--glass-border);
             border-radius: 36px;
             padding: 8px 10px;
@@ -1701,7 +1704,7 @@ input[type="color"]::-moz-color-swatch {
     scrollbar-width: thin;
     scrollbar-color: var(--transparent-color) transparent;
     background-color: var(--search-background);
-    backdrop-filter: blur(20px);
+    backdrop-filter: var(--liquid-glass-filter) blur(20px);
     border: 1px solid var(--glass-border);
 }
 
@@ -1729,7 +1732,7 @@ input[type="color"]::-moz-color-swatch {
     align-items: center;
     gap: 15px;
     background-color: var(--search-background);
-    backdrop-filter: blur(20px);
+    backdrop-filter: var(--liquid-glass-filter) blur(20px);
     padding: 15px 20px;
     border-radius: 40px;
     width: 80%;
