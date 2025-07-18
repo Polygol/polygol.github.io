@@ -59,29 +59,23 @@
     </script>
 
     <svg style="display: none">
-      <filter id="liquid-glass-filter" color-interpolation-filters="linearRGB">
-        <!-- 1. Generate turbulence noise for the entire area -->
-        <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" seed="2" result="turbulence" />
-    
-        <!-- 2. Create a smaller "inner" shape by eroding the original element's shape.
-             The 'radius' controls the thickness of the edge border. -->
-        <feMorphology in="SourceGraphic" operator="erode" radius="5" result="eroded" />
-    
-        <!-- 3. Create the border mask by subtracting the smaller inner shape from the original shape.
-             The result is an outline of the original shape. -->
-        <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border" />
-    
-        <!-- 4. Use the border mask to clip the turbulence pattern, so the noise now only exists at the edges. -->
-        <feComposite in="turbulence" in2="border" operator="in" result="edge_turbulence" />
-    
-        <!-- 5. Displace the original graphic using the turbulence that is now only at the edges.
-             The center remains undistorted because the turbulence map is transparent there. -->
-        <feDisplacementMap in="SourceGraphic" in2="edge_turbulence" scale="30" xChannelSelector="R" yChannelSelector="G" result="displaced_edges" />
-    
-        <!-- 6. Apply a final, uniform blur to the entire result. This blurs both the
-             distorted edges and the clear center, tying the whole effect together. -->
-        <feGaussianBlur in="displaced_edges" stdDeviation="4" result="final_blur" />
-      </filter>
+        <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
+            <!-- 1. Generate turbulence for distortion -->
+            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" seed="2" result="turbulence"/>
+            
+            <!-- 2. Erode the element's shape to create the inner boundary of our border.
+                 The 'radius' controls the thickness of the refractive edge. -->
+            <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"/>
+            
+            <!-- 3. Subtract the eroded shape from the original to create a border mask. -->
+            <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border"/>
+            
+            <!-- 4. Mask the turbulence so the noise only exists at the edges. -->
+            <feComposite in="turbulence" in2="border" operator="in" result="edge_turbulence"/>
+        
+            <!-- 5. Use the edge-only turbulence to displace the graphic. The center remains untouched. This is the final output of our filter. -->
+            <feDisplacementMap in="SourceGraphic" in2="edge_turbulence" scale="20" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
     </svg>
 
     <noscript>You need to enable JavaScript to run Gurasuraisu.<br>Gurasuraisuを実行するにはJavaScriptを有効にする必要があります。<br>Sie müssen JavaScript aktivieren, um Gurasuraisu auszuführen.<br>Vous devez activer JavaScript pour exécuter Gurasuraisu.<br>Necesitas habilitar JavaScript para ejecutar Gurasuraisu.<br>Gurasuraisu를 실행하려면 JavaScript를 활성화해야 합니다.<br>您需要启用JavaScript才能运行Gurasuraisu。<br>गुरासुराइस सफलतापूर्वक लोड हो गया<br>Gurasuraisu carregado com sucesso<br>গুরসুরাইসু সফলভাবে লোড হয়েছে<br>Gurasuraisu успешно загружен<br>ਗੁਰਸੁਰਾਈਸ ਸਫਲਤਾਪੂਰਵਕ ਲੋਡ ਹੋ ਗਿਆ<br>Gurasuraisu đã tải thành công<br>Gurasuraisu başarıyla yüklendi<br>جراسورايسو تم تحميله بنجاح<br>गुरासुराइस यशस्वीरित्या लोड झाले<br>గురసురాయిసు విజయవంతంగా లోడ్ చేయబడింది<br>குரசுரைசு வெற்றிகரமாக ஏற்றப்பட்டது<br>گوراسورائسو کامیابی سے لوڈ ہو گیا<br>Gurasuraisu berhasil dimuat<br>Gurasuraisu kasil dimuat<br>گوراسورایسو با موفقیت بارگذاری شد<br>Gurasuraisu caricato con successo<br>An yi nasarar lodin Gurasuraisu<br>ગુરાસુરૈસુ સફળતાપૂર્વક લોડ થયું<br>جراسورايسو تحملت بنجاح<br>गुरासुराइस सफलतापूर्वक लोड हो गइल बा</noscript>    
