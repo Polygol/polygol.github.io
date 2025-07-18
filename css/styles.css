@@ -654,7 +654,7 @@ input[type="color"]::-moz-color-swatch {
             left: 0;
             right: 0;
             bottom: 0;
-            backdrop-filter: blur(2.5px);
+            backdrop-filter: blur(1px);
             z-index: 100;
             opacity: 0;
             transition: all 0.3s ease;
