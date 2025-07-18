@@ -27,7 +27,7 @@
 
 :root {
     /* Liquid Glass */
-    --liquid-glass-filter: url('#liquid-glass-filter');
+    --liquid-refraction-filter: url(#filter); 
     
     /* Dark Theme (Default) Variables */
     --background-color-dark: #1c1c1c;
