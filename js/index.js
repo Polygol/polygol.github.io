@@ -4530,7 +4530,7 @@ function setupDrawerInteractions() {
 	            openEmbed.style.borderRadius = `${borderRadius}px`;
 	
 	            // Animate background blur from 1px (blurry) to 0px (clear)
-	            const blurRadius = 5 - (progress * 5);
+	            const blurRadius = 1 - progress;
 	            document.querySelector('body').style.setProperty('--bg-blur', `blur(${blurRadius}px)`);
 	        } else {
 		    cancelLongPress();
@@ -4579,9 +4579,9 @@ function setupDrawerInteractions() {
 	        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
 	        
 	        const opacity = (newPosition + 100) / 100;
-	        const blurRadius = Math.max(0, Math.min(5, ((-newPosition) / 20)));
+	        const blurRadius = Math.max(0, Math.min(1, ((-newPosition) / 50)));
 	        appDrawer.style.opacity = opacity;
-	        document.querySelector('body').style.setProperty('--bg-blur', `blur(${5 - blurRadius}px)`);
+	        document.querySelector('body').style.setProperty('--bg-blur', `blur(${blurRadius}px)`);
 	        
 	        appDrawer.style.bottom = `${newPosition}%`;
 	        
