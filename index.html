@@ -60,21 +60,21 @@
 
     <svg style="display: none">
         <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
-            <!-- 1. Generate turbulence for distortion -->
+            <!-- STEPS 1-4: Create the turbulence pattern that exists only at the edges -->
             <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" seed="2" result="turbulence"/>
-            
-            <!-- 2. Erode the element's shape to create the inner boundary of our border.
-                 The 'radius' controls the thickness of the refractive edge. -->
             <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"/>
-            
-            <!-- 3. Subtract the eroded shape from the original to create a border mask. -->
             <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border"/>
-            
-            <!-- 4. Mask the turbulence so the noise only exists at the edges. -->
             <feComposite in="turbulence" in2="border" operator="in" result="edge_turbulence"/>
         
-            <!-- 5. Use the edge-only turbulence to displace the graphic. The center remains untouched. This is the final output of our filter. -->
-            <feDisplacementMap in="SourceGraphic" in2="edge_turbulence" scale="20" xChannelSelector="R" yChannelSelector="G"/>
+            <!-- NEW STEP 5: Create a solid color fill of 50% gray. This is the neutral, "zero-displacement" color. -->
+            <feFlood flood-color="#808080" result="neutral_fill" />
+        
+            <!-- NEW STEP 6: Layer the edge turbulence ON TOP of the neutral gray background.
+                 The result is a map that is 50% gray in the center and has the turbulence pattern at the edges. -->
+            <feComposite in="edge_turbulence" in2="neutral_fill" operator="over" result="final_displacement_map" />
+            
+            <!-- STEP 7: Apply the displacement. The center will now be perfectly still, and only the edges will distort. -->
+            <feDisplacementMap in="SourceGraphic" in2="final_displacement_map" scale="20" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
     </svg>
 
