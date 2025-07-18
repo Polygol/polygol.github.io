@@ -57,11 +57,30 @@
         window.addEventListener('keydown', onKeyDown, { capture: true });
       })();
     </script>
-    
+
     <svg style="display: none">
-      <filter id="liquid-glass-filter" color-interpolation-filters="linearRGB" filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse">
-        <feDisplacementMap in="SourceGraphic" in2="SourceGraphic" scale="20" xChannelSelector="R" yChannelSelector="B" x="0%" y="0%" width="100%" height="100%" result="displacementMap" />
-        <feGaussianBlur stdDeviation="3 3" x="0%" y="0%" width="100%" height="100%" in="displacementMap" edgeMode="none" result="blur" />
+      <filter id="liquid-glass-filter" color-interpolation-filters="linearRGB">
+        <!-- 1. Generate turbulence noise for the entire area -->
+        <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" seed="2" result="turbulence" />
+    
+        <!-- 2. Create a smaller "inner" shape by eroding the original element's shape.
+             The 'radius' controls the thickness of the edge border. -->
+        <feMorphology in="SourceGraphic" operator="erode" radius="5" result="eroded" />
+    
+        <!-- 3. Create the border mask by subtracting the smaller inner shape from the original shape.
+             The result is an outline of the original shape. -->
+        <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border" />
+    
+        <!-- 4. Use the border mask to clip the turbulence pattern, so the noise now only exists at the edges. -->
+        <feComposite in="turbulence" in2="border" operator="in" result="edge_turbulence" />
+    
+        <!-- 5. Displace the original graphic using the turbulence that is now only at the edges.
+             The center remains undistorted because the turbulence map is transparent there. -->
+        <feDisplacementMap in="SourceGraphic" in2="edge_turbulence" scale="30" xChannelSelector="R" yChannelSelector="G" result="displaced_edges" />
+    
+        <!-- 6. Apply a final, uniform blur to the entire result. This blurs both the
+             distorted edges and the clear center, tying the whole effect together. -->
+        <feGaussianBlur in="displaced_edges" stdDeviation="4" result="final_blur" />
       </filter>
     </svg>
 
