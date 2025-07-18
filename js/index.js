@@ -4049,7 +4049,7 @@ function createFullscreenEmbed(url) {
         embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
         
         // Clear background blur when restoring app
-        document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+        document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
 	    
         // Trigger the animation
         setTimeout(() => {
@@ -4170,7 +4170,7 @@ function createFullscreenEmbed(url) {
         embedContainer.style.transform = 'scale(1)';
         embedContainer.style.opacity = '1';
         embedContainer.style.borderRadius = '0px';
-        document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+        document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
     }, 10);
     
     // Show the swipe overlay when opening an app
@@ -4529,7 +4529,7 @@ function setupDrawerInteractions() {
 	            openEmbed.style.opacity = 1 - (progress * 0.5); // Fade out slightly
 	            openEmbed.style.borderRadius = `${borderRadius}px`;
 	
-	            // Animate background blur from 5px (blurry) to 0px (clear)
+	            // Animate background blur from 1px (blurry) to 0px (clear)
 	            const blurRadius = 5 - (progress * 5);
 	            document.querySelector('body').style.setProperty('--bg-blur', `blur(${blurRadius}px)`);
 	        } else {
@@ -4539,7 +4539,7 @@ function setupDrawerInteractions() {
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
 	            openEmbed.style.border = 'none';
-	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
 		    persistentClock.style.opacity = '1';
 	        }
 	
@@ -4645,7 +4645,7 @@ function setupDrawerInteractions() {
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
 	            openEmbed.style.border = 'none'; // Animate border removal
-	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
 	            appDrawer.style.opacity = '0';
 				persistentClock.style.opacity = '1';
 	        }
@@ -4680,7 +4680,7 @@ function setupDrawerInteractions() {
 	            appDrawer.classList.add('open');
 	            initialDrawerPosition = 0;
 	            interactionBlocker.style.display = 'none';
-	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(5px)');
+	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
 	        } else {
 	            dock.classList.remove('show');
 	            dock.style.boxShadow = 'none';
