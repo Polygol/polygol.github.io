@@ -60,33 +60,27 @@
 
     <svg style="display: none">
         <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
-            <!-- Part 1: Generate the turbulence noise for the edges -->
+            <!-- Part 1: Generate the turbulence noise for distortion -->
             <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"/>
         
-            <!-- Part 2: Create a mask from the ELEMENT'S SHAPE (SourceGraphic) that is only opaque at the edges. -->
+            <!-- Part 2: Create a mask of the element's edges using its own shape (SourceGraphic) -->
             <feMorphology in="SourceGraphic" operator="erode" radius="5" result="eroded"/>
             <feComposite in="SourceGraphic" in2="eroded" operator="out" result="edge_mask"/>
         
-            <!-- Part 3: Create the final, neutral displacement map -->
-            <!-- First, use the edge mask to cut out the turbulence. The center is now transparent. -->
+            <!-- Part 3: Create the final displacement map that is neutral (50% gray) in the center -->
             <feComposite in="turbulence" in2="edge_mask" operator="in" result="edge_turbulence"/>
-            
-            <!-- Next, create a neutral 50% gray background. -->
             <feFlood flood-color="#808080" result="neutral_base"/>
-        
-            <!-- Finally, merge the edge turbulence ON TOP of the neutral gray.
-                 The result is a map that is perfectly neutral in the center and has distortion at the edges. -->
-            <feMerge>
+            <feMerge result="displacement_map"> <!-- This output is now correctly NAMED -->
               <feMergeNode in="neutral_base"/>
               <feMergeNode in="edge_turbulence"/>
             </feMerge>
         
             <!-- 
               Part 4: Apply the map.
-              Critically, the 'in' attribute is now 'BackgroundImage', which is what backdrop-filter uses.
-              This displaces the blurred background content, not the element itself.
+              'in' correctly targets the BACKGROUND.
+              'in2' correctly targets the NAMED RESULT from our merge operation.
             -->
-            <feDisplacementMap in="BackgroundImage" in2="previousresult" scale="25" xChannelSelector="R" yChannelSelector="G"/>
+            <feDisplacementMap in="BackgroundImage" in2="displacement_map" scale="25" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
     </svg>
 
