@@ -60,28 +60,28 @@
 
     <svg style="display: none">
         <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
-            <!-- 1. Generate the base turbulence noise -->
-            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"/>
+            <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="turbulence"/>
+            <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="40" xChannelSelector="R" yChannelSelector="G" result="distorted_graphic"/>
         
-            <!-- 
-              2. THE SOLUTION: Re-center the turbulence noise.
-              This shifts the color values from the [0, 1] range to a [-0.5, 0.5] range.
-              In this new range, 0 means "no displacement", which is what we want for the center.
-            -->
-            <feComponentTransfer in="turbulence" result="centered_turbulence">
-                <feFuncR type="linear" slope="1" intercept="-0.5"/>
-                <feFuncG type="linear" slope="1" intercept="-0.5"/>
-            </feComponentTransfer>
+            <!-- Part 2: Create a mask for the CENTER of the element -->
+            <!-- 'radius' controls the thickness of the edge that will be refracted. -->
+            <feMorphology in="SourceGraphic" operator="erode" radius="5" result="center_mask"/>
+            
+            <!-- Part 3: Create a mask for the EDGES by subtracting the center from the original shape -->
+            <feComposite in="SourceGraphic" in2="center_mask" operator="out" result="edge_mask"/>
+            
+            <!-- Part 4: Build the final image -->
+            <!-- First, take the clean, untouched center from the ORIGINAL graphic -->
+            <feComposite in="SourceGraphic" in2="center_mask" operator="in" result="clean_center"/>
+            
+            <!-- Next, take the wobbly, distorted edges from the FULLY DISTORTED graphic -->
+            <feComposite in="distorted_graphic" in2="edge_mask" operator="in" result="distorted_edges"/>
         
-            <!-- 3. Create the edge mask exactly as before -->
-            <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"/>
-            <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"/>
-        
-            <!-- 4. Mask our new, centered turbulence with the edge mask -->
-            <feComposite in="centered_turbulence" in2="border_mask" operator="in" result="final_displacement_map"/>
-        
-            <!-- 5. Apply the displacement. The result will now be perfectly centered by default. -->
-            <feDisplacementMap in="SourceGraphic" in2="final_displacement_map" scale="40" xChannelSelector="R" yChannelSelector="G"/>
+            <!-- Finally, merge the two pieces. The clean center is drawn first, and the distorted edges are layered perfectly on top. -->
+            <feMerge>
+                <feMergeNode in="clean_center"/>
+                <feMergeNode in="distorted_edges"/>
+            </feMerge>
         </filter>
     </svg>
 
