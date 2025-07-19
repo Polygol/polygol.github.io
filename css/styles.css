@@ -1755,16 +1755,18 @@ input[type="color"]::-moz-color-swatch {
             user-select: none;
         }
 
-        .app-icon:active app-icon img {
-            filter: brightness(1.5);
-            transform: scale(0.95);
-        }
-
         .app-icon img {
             width: min(10vw, 128px);
             height: min(10vw, 128px);
             margin-bottom: 10px;
             object-fit: contain;
+	    transform: scale(1);
+	    transition: filter 0.2s transform 0.2s;
+        }
+
+        .app-icon:active img {
+            filter: brightness(1.5);
+            transform: scale(0.95);
         }
 
         .app-icon span {
