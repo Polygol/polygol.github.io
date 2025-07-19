@@ -1758,6 +1758,7 @@ input[type="color"]::-moz-color-swatch {
         .app-icon:active {
             background-color: var(--transparent-color);
             filter: brightness(1.5);
+	    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
             border: 1px solid var(--glass-border);
             transform: scale(0.95);
         }
