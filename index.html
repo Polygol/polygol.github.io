@@ -81,6 +81,8 @@
         
             <!-- Part 4: Apply the final, perfectly centered displacement map -->
             <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="40" xChannelSelector="R" yChannelSelector="G"/>
+
+            <feOffset in="displaced_image" dx="-20" dy="-20" />
         </filter>
     </svg>
 
