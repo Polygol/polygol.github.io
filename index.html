@@ -59,27 +59,28 @@
     </script>
 
     <svg style="display: none">
-        <filter id="edge-refraction-only" color-interpolation-filters="linearRGB" x="-10%" y="-10%" width="120%" height="120%">
-            <!-- Part 1 & 2: Create the edge-only turbulence mask -->
+        <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
+            <!-- Part 1: Create the turbulence that will only be used at the edges -->
             <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"/>
+        
+            <!-- Part 2: Create a mask that is only opaque at the edges -->
             <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"/>
             <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"/>
             <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"/>
         
             <!-- Part 3: Create the final displacement map -->
+            <!-- First, create the 50% gray neutral background -->
             <feFlood flood-color="#808080" result="neutral_base"/>
+            
+            <!-- Next, use feMerge to explicitly stack the edge turbulence ON TOP of the gray base.
+                 This is the key step that prevents the center from shifting. -->
             <feMerge result="displacement_map">
                 <feMergeNode in="neutral_base"/>
                 <feMergeNode in="edge_turbulence"/>
             </feMerge>
         
-            <!-- Part 4: Apply the displacement map. -->
-            <!-- SOLUTION for Strength: Restore the scale to 40 -->
-            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="40" xChannelSelector="R" yChannelSelector="G" result="displaced_image"/>
-    
-            <!-- PART 5: THE SOLUTION for Centering -->
-            <!-- Update the offset to be negative half of the new scale -->
-            <feOffset in="displaced_image" dx="-20" dy="-20" />
+            <!-- Part 4: Apply the final, perfectly centered displacement map -->
+            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="40" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
     </svg>
 
