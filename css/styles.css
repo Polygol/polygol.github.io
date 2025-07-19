@@ -582,38 +582,6 @@ input[type="color"]::-moz-color-swatch {
             opacity: 1;
             filter: none;
         }
-
-	#customizeModal .qc-sliders,
-	#customizeModal .quick-controls,
-	#customizeModal .media-widget,
-	#customizeModal .settings-grid,
-	#customizeModal .version-info {
-	    position: relative; /* Essential for positioning the pseudo-element */
-	    isolation: isolate; /* Creates a new stacking context. This is crucial. */
-	    
-	    /* Move background properties FROM the element TO its pseudo-element */
-	    background-color: transparent; 
-	    backdrop-filter: none;
-	}
-
-	#customizeModal .qc-sliders::before,
-	#customizeModal .quick-controls::before,
-	#customizeModal .media-widget::before,
-	#customizeModal .settings-grid::before,
-	#customizeModal .version-info::before {
-	    content: '';
-	    position: absolute;
-	    z-index: -1; /* Place it behind the element's content */
-	    inset: 0; /* Make it the exact same size as the parent */
-	    pointer-events: none; /* Make it unclickable */
-	    
-	    /* Inherit the border-radius from the parent element */
-	    border-radius: inherit; 
-	    
-	    /* Apply the background color and the perfect backdrop filter HERE */
-	    background-color: var(--search-background);
-	    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-	}
         
         .modal, .modal-content {
             scrollbar-width: thin; /* For Firefox */
