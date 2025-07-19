@@ -1755,10 +1755,8 @@ input[type="color"]::-moz-color-swatch {
             user-select: none;
         }
 
-        .app-icon:active {
-            background-color: var(--transparent-color);
+        .app-icon:active app-icon img {
             filter: brightness(1.5);
-            border: 1px solid var(--glass-border);
             transform: scale(0.95);
         }
 
