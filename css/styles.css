@@ -588,7 +588,12 @@ input[type="color"]::-moz-color-swatch {
             border: none;
             border-radius: 10px;
             backdrop-filter: none;
+	    	scrollbar-width: none;
         }
+
+		#customizeModal.modal::-webkit-scrollbar {
+   			display: none; /* Chrome, Safari, Edge */
+		}
 
         #customizeModal.modal.show {
             transform: scale(1);
