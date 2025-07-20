@@ -889,7 +889,7 @@ input[type="color"]::-moz-color-swatch {
     font-weight: 400;
     pointer-events: none;
     line-height: 1.2;
-    color: var(--secondary-text-color);
+    color: var(--text-color);
     transition: color 0.2s;
     word-break: break-word;
 }
