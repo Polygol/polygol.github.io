@@ -125,6 +125,19 @@ body.high-contrast.light-theme {
   cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
 }
 
+*::-webkit-scrollbar {
+    width: 8px; /* Thin scrollbar */
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+	background-color: var(--search-background);
+	border-radius: 50px;
+}
+
 /* For all clickable elements */
 [onclick], 
 button, 
@@ -586,19 +599,6 @@ input[type="color"]::-moz-color-swatch {
         .modal, .modal-content {
             scrollbar-width: thin; /* For Firefox */
             scrollbar-color: var(--transparent-color) transparent; /* For Firefox */
-        }
-
-        .modal::-webkit-scrollbar, .modal-content::-webkit-scrollbar {
-            width: 8px; /* Thin scrollbar */
-        }
-
-        .modal::-webkit-scrollbar-track, .modal-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .modal::-webkit-scrollbar-thumb, .modal-content::-webkit-scrollbar-thumb {
-            background-color: var(--transparent-color);
-            border-radius: 50px;
         }
 
         .modal.show {
@@ -1721,19 +1721,6 @@ input[type="color"]::-moz-color-swatch {
             margin-top: 42px;
         }
 
-        .app-drawer-content::-webkit-scrollbar {
-            width: 8px; /* Thin scrollbar */
-        }
-
-        .app-drawer-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .app-drawer-content::-webkit-scrollbar-thumb {
-            background-color: var(--search-background);
-            border-radius: 50px;
-        }
-
         .app-drawer-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -1920,15 +1907,6 @@ input[type="color"]::-moz-color-swatch {
     background-color: var(--search-background);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
     border: 1px solid var(--glass-border);
-}
-
-#ai-response-area::-webkit-scrollbar {
-    width: 5px;
-}
-
-#ai-response-area::-webkit-scrollbar-thumb {
-    background-color: var(--transparent-color);
-    border-radius: 10px;
 }
 
 #ai-response-area p:first-child { margin-top: 0; }
