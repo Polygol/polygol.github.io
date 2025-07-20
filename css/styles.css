@@ -974,6 +974,7 @@ input[type="color"]::-moz-color-swatch {
     position: absolute;
     bottom: 0;
     left: 6%;
+    background-color: var(--search-background);
 }
 
 #media-widget-progress {
