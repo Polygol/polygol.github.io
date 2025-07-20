@@ -595,11 +595,6 @@ input[type="color"]::-moz-color-swatch {
             opacity: 1;
             filter: none;
         }
-        
-        .modal, .modal-content {
-            scrollbar-width: thin; /* For Firefox */
-            scrollbar-color: var(--transparent-color) transparent; /* For Firefox */
-        }
 
         .modal.show {
             transform: translate(-50%) scale(1);
