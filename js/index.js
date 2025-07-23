@@ -4476,7 +4476,7 @@ function setupDrawerInteractions() {
         isDrawerInMotion = true;
         dragStartTime = Date.now();
         velocities = [];
-        appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
+        appDrawer.style.transition = 'opacity 0.3s';
     }
 
 	function moveDrawer(yPosition) {
@@ -4596,6 +4596,8 @@ function setupDrawerInteractions() {
 
 	function endDrag() {
 	    if (!isDragging) return;
+
+		appDrawer.style.transition = '';
 	
 	    const deltaY = startY - currentY; // Positive for upward swipe
 	    const deltaTime = Date.now() - dragStartTime;
