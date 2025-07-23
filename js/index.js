@@ -4476,7 +4476,7 @@ function setupDrawerInteractions() {
         isDrawerInMotion = true;
         dragStartTime = Date.now();
         velocities = [];
-        appDrawer.style.transition = 'opacity 0.3s';
+        appDrawer.style.transition = 'opacity 0.3s !important';
     }
 
 	function moveDrawer(yPosition) {
