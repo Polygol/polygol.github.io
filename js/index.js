@@ -4096,25 +4096,6 @@ function createFullscreenEmbed(url) {
         
         // Clear background blur when restoring app
         document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
-	    
-        // Trigger the animation
-        setTimeout(() => {
-            embedContainer.style.transform = 'scale(1)';
-            embedContainer.style.opacity = '1';
-            embedContainer.style.borderRadius = '0px';
-        }, 10);
-        
-        // Hide all main UI elements
-        document.querySelectorAll('.container, .settings-grid.home-settings').forEach(el => {
-            if (!el.dataset.originalDisplay) {
-                el.dataset.originalDisplay = window.getComputedStyle(el).display;
-            }
-            el.style.transition = 'opacity 0.3s ease';
-            el.style.opacity = '0';
-            setTimeout(() => {
-                el.classList.add('force-hide');
-            }, 300);
-        });
         
         // Show the swipe overlay when restoring an app
         const swipeOverlay = document.getElementById('swipe-overlay');
@@ -4253,21 +4234,26 @@ function minimizeFullscreenEmbed() {
     const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
     
     if (embedContainer) {
-        // Get the URL before hiding it
         const url = embedContainer.dataset.embedUrl;
-        if (url) {
-            // Store the embed in our minimized embeds object
-            minimizedEmbeds[url] = embedContainer;
-            
-            // After animation completes, actually hide it completely
-	        document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+        
+        // --- FIX: Add closing animation directly here ---
+        embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+        embedContainer.style.transform = 'scale(0.8)';
+        embedContainer.style.opacity = '0';
+        embedContainer.style.borderRadius = '25px';
+        document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+
+        setTimeout(() => {
+            // After animation, hide and store the embed
+            if (url) {
+                minimizedEmbeds[url] = embedContainer;
+            }
             embedContainer.style.display = 'none';
-			persistentClock.style.opacity = '1';
-            
-            // Use a different z-index approach when minimized
             embedContainer.style.pointerEvents = 'none';
             embedContainer.style.zIndex = '0';
-        }
+        }, 300); // Wait for animation to complete
+
+		persistentClock.style.opacity = '1';
     }
     
     // Restore all main UI elements
