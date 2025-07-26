@@ -1,5 +1,12 @@
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
 
+let originalFaviconUrl = '';
+
+const initialFaviconLink = document.querySelector("link[rel='icon']") || document.querySelector("link[rel='shortcut icon']");
+if (initialFaviconLink) {
+    originalFaviconUrl = initialFaviconLink.href;
+}
+
 let activeMediaSessionApp = null; // To track which app controls the media widget
 
 // This object will hold the callback functions sent by the Gurapp
@@ -3896,6 +3903,31 @@ function loadUserInstalledApps() {
     }
 }
 
+// Function to dynamically update the document's favicon
+function updateFavicon(url) {
+    let link = document.querySelector("link[rel='icon']");
+    if (!link) {
+        link = document.querySelector("link[rel='shortcut icon']");
+    }
+
+    if (link) {
+        link.href = url;
+    } else {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        link.href = url;
+        // Simple type detection
+        if (url.endsWith('.png')) {
+            link.type = 'image/png';
+        } else if (url.endsWith('.ico')) {
+            link.type = 'image/x-icon';
+        } else if (url.endsWith('.svg')) {
+            link.type = 'image/svg+xml';
+        }
+        document.getElementsByTagName('head')[0].appendChild(link);
+    }
+}
+
 async function installApp(appData) {
     if (apps[appData.name]) {
         showPopup(currentLanguage.GURAPP_INSTALL_EXISTS.replace('{appName}', appData.name));
@@ -4009,6 +4041,20 @@ function createFullscreenEmbed(url) {
         showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
         console.warn(`Attempted to open an unknown app URL: ${url}`);
         return;
+    }
+
+    // Update the favicon to the app's icon
+    const appDetails = apps[appName];
+    if (appDetails && appDetails.icon) {
+        let iconUrl = appDetails.icon;
+        if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/'))) {
+            // If it's a local filename, prepend the path
+            iconUrl = `/assets/appicon/${iconUrl}`;
+        }
+        updateFavicon(iconUrl);
+    } else {
+        // Fallback to a default icon if the app has no icon defined
+        updateFavicon('/assets/appicon/default.png');
     }
 
     // 3. Since the app is valid, perform the tracking.
@@ -4197,6 +4243,11 @@ createFullscreenEmbed = function(url) {
 };
 
 function minimizeFullscreenEmbed() {
+    // Restore the original favicon when minimizing an app
+    if (originalFaviconUrl) {
+        updateFavicon(originalFaviconUrl);
+    }
+	
     // IMPORTANT FIX: Be more specific about which embed to minimize
     // Only get embeds that are currently visible with display: block
     const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
