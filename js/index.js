@@ -265,6 +265,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- Add scroll listener to hide the popup ---
+    if (customizeModal) {
+        customizeModal.addEventListener('scroll', hideActivePopup);
+    }
+
     // --- Helper to connect grid items to their controls ---
     const connectGridItem = (gridItemId, controlId) => {
         const gridItem = document.getElementById(gridItemId);
