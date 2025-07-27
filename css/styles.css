@@ -1995,3 +1995,9 @@ input[type="color"]::-moz-color-swatch {
                 grid-template-columns: repeat(1, 1fr);
             }
         }
+
+	@media (max-height: 700px) {
+	    .app-drawer-content {
+	        align-items: flex-start;
+	    }
+	}
