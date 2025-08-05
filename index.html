@@ -59,37 +59,29 @@
     </script>
 
     <svg style="display: none">
-        <filter id="edge-refraction-only" color-interpolation-filters="linearRGB"
-                x="-50%" y="-50%" width="200%" height="200%">
-            <!-- Part 1: Create the turbulence that will only be used at the edges -->
-            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"/>
+        <filter id="edge-refraction-only"
+                x="-20" y="-20" width="calc(100% + 40px)" height="calc(100% + 40px)"
+                color-interpolation-filters="linearRGB">
     
-            <!-- Part 2: Create a mask that is only opaque at the edges -->
+            <!-- Part 1: Create turbulence that is only visible at the element's edges. -->
+            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"/>
             <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"/>
             <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"/>
             <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"/>
     
-            <!-- 
-              Part 2.5: Pad the edge turbulence.
-              This is the key addition. It gives the displacement map extra pixels to work with
-              at the boundaries, preventing the "pulling from nothing" effect that causes hard edges.
-              The `edgeMode="duplicate"` extends the image by repeating the edge pixels.
-            -->
-            <fePad in="edge_turbulence" dx="20" dy="20" dx2="20" dy2="20"
-                   edgeMode="duplicate" result="padded_turbulence" />
+            <!-- Part 2: Create a neutral 50% gray background that has the exact same shape as the source element. -->
+            <feFlood flood-color="#808080" result="neutral_flood"/>
+            <feComposite in="neutral_flood" in2="SourceAlpha" operator="in" result="neutral_background"/>
     
-            <!-- Part 3: Create the final displacement map -->
-            <feFlood flood-color="#808080" result="neutral_base"/>
-            
-            <!-- Use the new padded turbulence -->
-            <feMerge result="displacement_map">
-                <feMergeNode in="neutral_base"/>
-                <feMergeNode in="padded_turbulence"/>
-            </feMerge>
-        
-            <!-- Part 4: Apply the final, perfectly centered displacement map -->
-            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="40"
-                             xChannelSelector="R" yChannelSelector="G"/>
+            <!-- Part 3: Layer the edge turbulence ON TOP of the neutral background.
+                 The 'over' operator is key: it places the first input (turbulence) over the second (background).
+                 Where the turbulence is transparent (in the middle), the gray background shows through.
+                 This creates a perfectly aligned and centered displacement map. -->
+            <feComposite in="edge_turbulence" in2="neutral_background" operator="over" result="displacementMap"/>
+    
+            <!-- Part 4: Apply the displacement map.
+                 The input is the original SourceGraphic. -->
+            <feDisplacementMap in="SourceGraphic" in2="displacementMap" scale="40" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
     </svg>
 
