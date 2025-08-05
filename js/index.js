@@ -4023,11 +4023,7 @@ async function deleteApp(appName) {
     }
 }
 
-let isSplitViewActive = false;
-let splitScreenApps = { left: null, right: null };
-let currentlyDraggedApp = null;
-
-function createFullscreenEmbed(url, isForSplitView = false) {
+function createFullscreenEmbed(url) {
     // 1. Check if Gurapps are disabled entirely
     // This uses the 'gurappsEnabled' variable you already have.
     if (!gurappsEnabled) {
@@ -4043,11 +4039,6 @@ function createFullscreenEmbed(url, isForSplitView = false) {
         showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
         console.warn(`Attempted to open an unknown app URL: ${url}`);
         return;
-    }
-
-    // If this is not for a split view, and a split view is active, exit the split view first.
-    if (!isForSplitView && isSplitViewActive) {
-        exitSplitView();
     }
 
     // Update the favicon to the app's icon
@@ -4136,7 +4127,7 @@ function createFullscreenEmbed(url, isForSplitView = false) {
             interactionBlocker.style.display = 'none';
         }
         
-        return embedContainer; // Return the created container
+        return;
     }
     
     // Create new embed if not already minimized
@@ -4250,13 +4241,6 @@ createFullscreenEmbed = function(url) {
 };
 
 function minimizeFullscreenEmbed() {
-    // If we are in split view, exiting is different.
-    if (isSplitViewActive) {
-        document.querySelectorAll('.fullscreen-embed').forEach(embed => embed.remove());
-        isSplitViewActive = false;
-        splitScreenApps = { left: null, right: null };
-    }
-
     // Restore the original favicon when minimizing an app
     if (originalFaviconUrl) {
         updateFavicon(originalFaviconUrl);
@@ -4315,37 +4299,6 @@ function minimizeFullscreenEmbed() {
     }
 }
 
-function createSplitView(leftAppName, rightAppName) {
-    exitSplitView(); // Clear any existing view first
-
-    isSplitViewActive = true;
-
-    // Create left app
-    if (leftAppName) {
-        const leftEmbed = createFullscreenEmbed(apps[leftAppName].url, true);
-        if (leftEmbed) {
-            leftEmbed.classList.add('split-left');
-        }
-    }
-
-    // Create right app
-    if (rightAppName) {
-        const rightEmbed = createFullscreenEmbed(apps[rightAppName].url, true);
-        if (rightEmbed) {
-            rightEmbed.classList.add('split-right');
-        }
-    }
-}
-
-function exitSplitView() {
-    document.querySelectorAll('.fullscreen-embed.split-left, .fullscreen-embed.split-right').forEach(embed => {
-        embed.remove();
-    });
-    isSplitViewActive = false;
-    splitScreenApps = { left: null, right: null };
-    minimizeFullscreenEmbed(); // This will restore the main UI
-}
-
 function populateDock() {
     // Clear only the app icons
     const appIcons = dock.querySelectorAll('.dock-icon');
@@ -4364,13 +4317,6 @@ function populateDock() {
     sortedApps.forEach(({ name, details }) => {
         const dockIcon = document.createElement('div');
         dockIcon.className = 'dock-icon';
-
-	dockIcon.draggable = true; // Make the icon draggable
-        dockIcon.addEventListener('dragstart', (e) => {
-            currentlyDraggedApp = name;
-            document.body.classList.add('dragging-for-split');
-            e.dataTransfer.setData('text/plain', name);
-        });
         
         const img = document.createElement('img');
         img.alt = name;
@@ -5571,51 +5517,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     `;
     document.head.appendChild(style);
-
-    const dropZoneLeft = document.getElementById('split-drop-zone-left');
-    const dropZoneRight = document.getElementById('split-drop-zone-right');
-
-    document.body.addEventListener('dragover', (e) => {
-        e.preventDefault(); // This is necessary to allow dropping
-    });
-
-    document.body.addEventListener('dragend', () => {
-        document.body.classList.remove('dragging-for-split');
-        currentlyDraggedApp = null;
-    });
-
-    const handleDrop = (position, appName) => {
-        if (!isSplitViewActive) {
-            // Start a new split view
-            splitScreenApps[position] = appName;
-            // For the other side, you might want a placeholder or a specific app picker
-            // For now, we'll just open the one app and wait for another to be dropped
-            showPopup(`Drop another app on the other side to start split-screen.`);
-        }
-        createSplitView(splitScreenApps.left, splitScreenApps.right);
-    };
-
-    dropZoneLeft.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const appName = e.dataTransfer.getData('text/plain');
-        splitScreenApps.left = appName;
-        if (splitScreenApps.right) {
-            createSplitView(splitScreenApps.left, splitScreenApps.right);
-        } else {
-            showPopup('Drop another app on the right side.');
-        }
-    });
-
-    dropZoneRight.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const appName = e.dataTransfer.getData('text/plain');
-        splitScreenApps.right = appName;
-        if (splitScreenApps.left) {
-            createSplitView(splitScreenApps.left, splitScreenApps.right);
-        } else {
-            showPopup('Drop an app on the left side.');
-        }
-    });
 	
     // --- 1. Load ALL data and settings first ---
     loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
