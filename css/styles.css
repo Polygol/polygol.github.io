@@ -407,8 +407,7 @@ input[type="color"]::-moz-color-swatch {
     transform: scale(1.04);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
     filter: brightness(1.5);
-    border: 1px solid var(--glass-border);
-    background-color: var(--search-background);
+    background-color: var(--overlay-color);
     backdrop-filter: blur(2.5px) saturate(2) var(--edge-refraction-filter);
 }
 
