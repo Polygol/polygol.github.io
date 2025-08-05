@@ -59,35 +59,34 @@
     </script>
 
     <svg style="display: none">
-        <filter id="edge-refraction-only"
+        <filter id="edge-refraction-final"
                 color-interpolation-filters="linearRGB">
     
-            <!-- Step 1: Tile the SourceGraphic. This creates a repeating pattern of the element,
-                 providing an "infinite" canvas. Now when the displacement map tries to pull
-                 pixels from outside the original boundary, it has pixels to grab. -->
-            <feTile in="SourceGraphic" result="tiledSource"/>
-    
-            <!-- Step 2: Create the displacement map. This part of the logic is the same:
-                 a neutral gray background with turbulence only at the edges. Since its inputs
-                 (SourceGraphic and SourceAlpha) are from the *original* non-tiled source,
-                 the map is the correct size and alignment. -->
+            <!-- Step 1: Create the Displacement Map. This logic remains the same as it correctly
+                 creates a map that is aligned with the source element's shape, featuring
+                 turbulence only at the border. -->
             <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"/>
-            <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"/>
-            <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"/>
+            <feMorphology in="SourceAlpha" operator="erode" radius="4" result="eroded"/>
+            <feComposite in="SourceAlpha" in2="eroded" operator="out" result="border_mask"/>
             <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"/>
             <feFlood flood-color="#808080" result="neutral_flood"/>
             <feComposite in="neutral_flood" in2="SourceAlpha" operator="in" result="neutral_background"/>
             <feComposite in="edge_turbulence" in2="neutral_background" operator="over" result="displacementMap"/>
     
-            <!-- Step 3: Apply the displacement map to the TILED source. This is the crucial change.
-                 We are distorting the infinite tiled version, not the original. -->
-            <feDisplacementMap in="tiledSource" in2="displacementMap" scale="40"
-                             xChannelSelector="R" yChannelSelector="G" result="displacedImage"/>
+            <!-- Step 2: Pad the BackdropImage. This is the crucial new step.
+                 We apply a minimal Gaussian Blur to the BackdropImage. This "smears" the pixels
+                 at the edges, effectively creating a small amount of padding. This gives the
+                 displacement map valid data to pull from, preventing the hard clipping. -->
+            <feGaussianBlur in="BackdropImage" stdDeviation="2" result="padded_backdrop"/>
     
-            <!-- Step 4: Crop the result. The displaced image is now infinite. We need to crop it
-                 back to the original element's shape and position. We do this by using the
-                 original SourceGraphic's alpha channel as a mask. -->
-            <feComposite in="displacedImage" in2="SourceGraphic" operator="in"/>
+            <!-- Step 3: Apply the displacement to the padded backdrop. -->
+            <feDisplacementMap in="padded_backdrop" in2="displacementMap" scale="40"
+                             xChannelSelector="R" yChannelSelector="G" result="displaced_image"/>
+    
+            <!-- Step 4: Crop the result back to the original element's shape using the
+                 original, crisp SourceAlpha as a mask. This removes the blurriness everywhere
+                 except where the displacement pulls from, resulting in a clean final image. -->
+            <feComposite in="displaced_image" in2="SourceAlpha" operator="in"/>
     
         </filter>
     </svg>
