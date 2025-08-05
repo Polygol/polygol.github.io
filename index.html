@@ -59,35 +59,40 @@
     </script>
 
     <svg style="display: none">
-        <filter id="edge-refraction-final"
-                color-interpolation-filters="linearRGB">
+        <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
+            <!-- Part 1: Pad the source graphic by blurring it. This creates pixel data outside the
+                 original bounds for the displacement map to pull from, preventing clipping. -->
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="padded_source"/>
     
-            <!-- Step 1: Create the Displacement Map. This logic remains the same as it correctly
-                 creates a map that is aligned with the source element's shape, featuring
-                 turbulence only at the border. -->
+            <!-- Part 2: Create the displacement map and the border mask. This is your original, correct logic. -->
             <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"/>
-            <feMorphology in="SourceAlpha" operator="erode" radius="4" result="eroded"/>
-            <feComposite in="SourceAlpha" in2="eroded" operator="out" result="border_mask"/>
+            <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"/>
+            <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"/>
             <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"/>
-            <feFlood flood-color="#808080" result="neutral_flood"/>
-            <feComposite in="neutral_flood" in2="SourceAlpha" operator="in" result="neutral_background"/>
-            <feComposite in="edge_turbulence" in2="neutral_background" operator="over" result="displacementMap"/>
+            <feFlood flood-color="#808080" result="neutral_base"/>
+            <feMerge result="displacement_map">
+                <feMergeNode in="neutral_base"/>
+                <feMergeNode in="edge_turbulence"/>
+            </feMerge>
     
-            <!-- Step 2: Pad the BackdropImage. This is the crucial new step.
-                 We apply a minimal Gaussian Blur to the BackdropImage. This "smears" the pixels
-                 at the edges, effectively creating a small amount of padding. This gives the
-                 displacement map valid data to pull from, preventing the hard clipping. -->
-            <feGaussianBlur in="BackdropImage" stdDeviation="2" result="padded_backdrop"/>
+            <!-- Part 3: Apply the displacement map to the padded source from Part 1.
+                 The result is a blurry, distorted image. -->
+            <feDisplacementMap in="padded_source" in2="displacement_map" scale="40"
+                             xChannelSelector="R" yChannelSelector="G" result="displaced_blurry_image"/>
     
-            <!-- Step 3: Apply the displacement to the padded backdrop. -->
-            <feDisplacementMap in="padded_backdrop" in2="displacementMap" scale="40"
-                             xChannelSelector="R" yChannelSelector="G" result="displaced_image"/>
+            <!-- Part 4: Isolate just the refracted, blurry edge using the border_mask from Part 2. -->
+            <feComposite in="displaced_blurry_image" in2="border_mask" operator="in" result="displaced_edge_only"/>
     
-            <!-- Step 4: Crop the result back to the original element's shape using the
-                 original, crisp SourceAlpha as a mask. This removes the blurriness everywhere
-                 except where the displacement pulls from, resulting in a clean final image. -->
-            <feComposite in="displaced_image" in2="SourceAlpha" operator="in"/>
+            <!-- Part 5: Isolate the original, sharp center of the image. We use the 'out' operator
+                 with the border_mask to cut a hole where the border effect will go. -->
+            <feComposite in="SourceGraphic" in2="border_mask" operator="out" result="sharp_center_only"/>
     
+            <!-- Part 6: Merge the sharp center and the refracted edge back together
+                 into the final, seamless image. -->
+            <feMerge>
+                <feMergeNode in="sharp_center_only"/>
+                <feMergeNode in="displaced_edge_only"/>
+            </feMerge>
         </filter>
     </svg>
 
