@@ -406,12 +406,6 @@ input[type="color"]::-moz-color-swatch {
 .persistent-clock:active {
     transform: scale(1.04);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-    filter: brightness(1.5);
-    background-color: var(--overlay-color);
-}
-
-.persistent-clock:active .persistent-clock::before, .persistent-clock::after {
-    display: none;
 }
 
 .persistent-clock.show {
