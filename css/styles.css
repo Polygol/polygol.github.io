@@ -408,7 +408,6 @@ input[type="color"]::-moz-color-swatch {
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
     filter: brightness(1.5);
     background-color: var(--overlay-color);
-    backdrop-filter: blur(2.5px) saturate(2) var(--edge-refraction-filter);
 }
 
 .persistent-clock:active .persistent-clock::before, .persistent-clock::after {
