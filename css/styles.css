@@ -404,7 +404,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .persistent-clock:active {
-    transform: scale(0.96);
+    transform: scale(1.04);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
     filter: brightness(1.5);
 }
@@ -489,7 +489,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
         .clock:active {
-            transform: scale(0.96);
+            transform: scale(1.04);
             transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
             filter: brightness(1.5);
         }
@@ -539,7 +539,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
         .date:active {
-            transform: scale(0.96);
+            transform: scale(1.04);
             transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
             filter: brightness(1.5);
         }
@@ -703,7 +703,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .weather-widget:active {
-    transform: scale(0.96);
+    transform: scale(1.04);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
     filter: brightness(1.5);
 }
@@ -940,7 +940,7 @@ input[type="color"]::-moz-color-swatch {
 #media-widget-art:active {
     transform: scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-    filter: brightness(1.5);
+    filter: brightness(1.04);
 }
 
 .media-widget-info {
@@ -1753,7 +1753,7 @@ input[type="color"]::-moz-color-swatch {
 
         .app-icon:active img {
             filter: brightness(1.5);
-            transform: scale(0.95);
+            transform: scale(1.04);
         }
 
         .app-icon span {
@@ -1819,7 +1819,7 @@ input[type="color"]::-moz-color-swatch {
         }
 
         .dock-icon:active {
-            transform: scale(0.96);
+            transform: scale(1.04);
             filter: brightness(1.5);
             transition: filter 0.2s transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9) !important;
             cursor: pointer;
