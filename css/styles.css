@@ -404,9 +404,16 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .persistent-clock:active {
-    transform: scale(1.2);
+    transform: scale(1.04);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
     filter: brightness(1.5);
+    border: 1px solid var(--glass-border);
+    background-color: var(--search-background);
+    backdrop-filter: blur(2.5px) saturate(2) var(--edge-refraction-filter);
+}
+
+.persistent-clock:active .persistent-clock::before, .persistent-clock::after {
+    display: none;
 }
 
 .persistent-clock.show {
