@@ -1953,6 +1953,143 @@ input[type="color"]::-moz-color-swatch {
     color: var(--text-color);
 }
 
+/* --- Home Screen Editing Mode --- */
+
+/* Style for the body when in editing mode */
+body.edit-mode-active {
+    --widget-outline-color: rgba(255, 255, 255, 0.7);
+}
+
+body.edit-mode-active.light-theme {
+    --widget-outline-color: rgba(0, 0, 0, 0.6);
+}
+
+/* General styling for all widgets when editing mode is active */
+.edit-mode-active .clock,
+.edit-mode-active .date,
+.edit-mode-active .weather-widget {
+    cursor: grab;
+    outline: 2px dashed var(--widget-outline-color);
+    outline-offset: 8px;
+    transition: outline 0.2s ease;
+    z-index: 10; /* Ensure widgets are on top of other elements */
+}
+
+/* Style for the currently selected widget */
+.edit-mode-active .selected-widget {
+    outline: 2px solid var(--text-color);
+    outline-offset: 8px;
+    cursor: grabbing;
+}
+
+/* Main toolbar container */
+#edit-mode-toolbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--search-background);
+    backdrop-filter: blur(10px) saturate(2) var(--edge-refraction-filter);
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    gap: 20px;
+    z-index: 99999;
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    pointer-events: none;
+}
+
+/* Show the toolbar when editing mode is active */
+.edit-mode-active #edit-mode-toolbar {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Container for contextual controls (sliders, selects) */
+.contextual-options {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-grow: 1;
+    min-width: 0; /* Prevents flex items from overflowing */
+}
+
+.contextual-options .cust-label {
+    color: var(--secondary-text-color);
+}
+
+/* Container for Done/Revert buttons */
+.main-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Styling for buttons within the toolbar */
+.edit-mode-btn {
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background-color 0.2s, color 0.2s, transform 0.1s;
+}
+
+.edit-mode-btn.primary {
+    background-color: var(--text-color);
+    color: var(--background-color);
+}
+
+.edit-mode-btn:not(.primary) {
+    background-color: var(--overlay-color);
+    color: var(--text-color);
+}
+
+.edit-mode-btn:active {
+    transform: scale(0.96);
+}
+
+/* A placeholder message for the contextual area */
+#edit-mode-placeholder {
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+}
+
+/* New Wallpaper Add Button */
+#add-wallpaper-btn {
+    position: fixed;
+    bottom: 30px; /* Aligns with page indicator */
+    left: calc(50% + 50px); /* Position it to the right of the indicator */
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--search-background);
+    backdrop-filter: saturate(2) var(--edge-refraction-filter) blur(5px);
+    border: 1px solid var(--glass-border);
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 51; /* Above the indicator */
+    transition: opacity 0.3s, transform 0.3s;
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8);
+    pointer-events: none;
+}
+
+.edit-mode-active #add-wallpaper-btn {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+    pointer-events: auto;
+}
+
         @media (max-width: 800px) {
             .clock {
                 font-size: clamp(4rem, 20vw, 20rem);
