@@ -4023,6 +4023,10 @@ async function deleteApp(appName) {
     }
 }
 
+let isSplitViewActive = false;
+let splitScreenApps = { left: null, right: null };
+let currentlyDraggedApp = null;
+
 function createFullscreenEmbed(url, isForSplitView = false) {
     // 1. Check if Gurapps are disabled entirely
     // This uses the 'gurappsEnabled' variable you already have.
