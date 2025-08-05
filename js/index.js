@@ -16,11 +16,6 @@ let mediaSessionActions = {
     prev: null
 };
 
-let isEditingMode = false;
-let initialWidgetStates = {};
-let selectedWidget = null;
-const editableWidgets = ['.clock', '.date', '.weather-widget'];
-
 let currentLanguage = LANG_EN; // Default to English
 
 function applyLanguage(language) {
@@ -297,6 +292,43 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     };
+
+    // --- Special Handler for Clock Color ---
+    const clockColorItem = document.getElementById('setting-clock-color');
+    const colorSwitch = document.getElementById('clock-color-switch');
+    const colorPicker = document.getElementById('clock-color-picker');
+
+    if (clockColorItem && colorSwitch && colorPicker) {
+        const updateColorActiveState = () => clockColorItem.classList.toggle('active', colorSwitch.checked);
+        colorSwitch.addEventListener('change', updateColorActiveState);
+        updateColorActiveState();
+
+        clockColorItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            colorSwitch.checked = !colorSwitch.checked;
+            colorSwitch.dispatchEvent(new Event('change'));
+            if (colorSwitch.checked) {
+                hideActivePopup(); // Close other popups before opening the color picker
+                setTimeout(() => colorPicker.click(), 50);
+            }
+        });
+    }
+
+    // --- Connect all other settings ---
+    connectGridItem('setting-wallpaper', 'uploadButton');
+    connectGridItem('setting-reset', 'resetButton');
+    connectGridItem('setting-seconds', 'seconds-switch');
+    connectGridItem('setting-clock-stack', 'clock-stack-switch');
+    connectGridItem('setting-weather', 'weather-switch');
+    connectGridItem('setting-gurapps', 'gurapps-switch');
+    connectGridItem('setting-animation', 'animation-switch');
+    connectGridItem('setting-contrast', 'contrast-switch');
+    connectGridItem('setting-hour-format', 'hour-switch');
+    connectGridItem('setting-style', 'font-select');
+    connectGridItem('setting-weight', 'weight-slider');
+    connectGridItem('setting-alignment', 'alignment-select');
+    connectGridItem('setting-language', 'language-switcher');
+    connectGridItem('setting-ai', 'ai-switch');
 
     // Album Art click listener (using event delegation for reliability)
     document.getElementById('media-session-widget').addEventListener('click', (e) => {
@@ -3842,248 +3874,6 @@ function applyClockStyles() {
     infoElement.style.fontFamily = fontFamily;
 }
 
-/**
- * Enters the Home Screen Editing Mode.
- */
-function enterEditingMode() {
-    if (isEditingMode) return;
-    isEditingMode = true;
-    console.log("Entering Editing Mode");
-
-    document.body.classList.add('edit-mode-active');
-
-    // Capture initial state for the "Revert" functionality
-    initialWidgetStates = {};
-    editableWidgets.forEach(selector => {
-        const el = document.querySelector(selector);
-        if (el) {
-            const rect = el.getBoundingClientRect();
-            initialWidgetStates[selector] = {
-                top: el.style.top,
-                left: el.style.left,
-                width: el.style.width,
-                height: el.style.height,
-                // Store other relevant style properties if they are made editable
-            };
-
-            // Prepare elements for absolute positioning
-            el.style.position = 'absolute';
-            el.style.top = `${rect.top}px`;
-            el.style.left = `${rect.left}px`;
-            el.style.width = `${rect.width}px`;
-        }
-    });
-
-    updateToolbar();
-    makeWidgetsEditable();
-    showAddWallpaperButton();
-}
-
-/**
- * Exits the Home Screen Editing Mode.
- * @param {boolean} shouldRevert - If true, all changes will be discarded.
- */
-function exitEditingMode(shouldRevert) {
-    if (!isEditingMode) return;
-
-    if (shouldRevert) {
-        console.log("Reverting changes.");
-        editableWidgets.forEach(selector => {
-            const el = document.querySelector(selector);
-            if (el && initialWidgetStates[selector]) {
-                const initialState = initialWidgetStates[selector];
-                el.style.position = 'relative'; // Revert positioning
-                el.style.top = initialState.top || '';
-                el.style.left = initialState.left || '';
-                el.style.width = initialState.width || '';
-                el.style.height = initialState.height || '';
-            }
-        });
-        // Also revert any settings changes here if they were made editable
-
-    } else {
-        console.log("Saving changes.");
-        // Here you would save the new positions/sizes to localStorage
-        editableWidgets.forEach(selector => {
-            const el = document.querySelector(selector);
-            if (el) {
-                // Example saving (can be expanded)
-                localStorage.setItem(`${selector}_pos`, JSON.stringify({ top: el.style.top, left: el.style.left }));
-                // Revert to relative positioning after saving
-                el.style.position = 'relative';
-                el.style.top = '';
-                el.style.left = '';
-                el.style.width = '';
-            }
-        });
-    }
-
-    document.body.classList.remove('edit-mode-active');
-    makeWidgetsUneditable();
-    hideAddWallpaperButton();
-    if (selectedWidget) {
-        selectedWidget.classList.remove('selected-widget');
-        selectedWidget = null;
-    }
-    isEditingMode = false;
-}
-
-/**
- * Updates the content of the bottom toolbar based on the selected widget.
- */
-function updateToolbar() {
-    const container = document.getElementById('contextual-options-container');
-    container.innerHTML = ''; // Clear previous options
-
-    if (!selectedWidget) {
-        container.innerHTML = `<span id="edit-mode-placeholder">Select a widget to configure it</span>`;
-        return;
-    }
-
-    // Move controls from the hidden container to the toolbar
-    const hiddenControls = document.getElementById('hidden-controls-container');
-
-    switch (selectedWidget.id) {
-        case 'clock':
-            container.appendChild(document.getElementById('font-select'));
-            container.appendChild(document.getElementById('weight-slider'));
-            container.appendChild(document.getElementById('alignment-select'));
-            container.appendChild(document.getElementById('seconds-switch'));
-            container.appendChild(document.getElementById('clock-stack-switch'));
-            container.appendChild(document.getElementById('clock-color-switch'));
-            container.appendChild(document.getElementById('clock-color-picker'));
-            break;
-        case 'weather':
-             container.appendChild(document.getElementById('weather-switch'));
-            break;
-        default:
-             container.innerHTML = `<span id="edit-mode-placeholder">This widget has no options</span>`;
-            break;
-    }
-}
-
-/**
- * Adds event listeners to make widgets draggable and selectable.
- */
-function makeWidgetsEditable() {
-    editableWidgets.forEach(selector => {
-        const el = document.querySelector(selector);
-        if (!el) return;
-
-        // --- Selection Logic ---
-        el.addEventListener('click', handleWidgetSelect);
-
-        // --- Dragging Logic ---
-        let offsetX, offsetY, isDragging = false;
-
-        const onDragStart = (e) => {
-            if (!isEditingMode) return;
-            isDragging = true;
-            el.classList.add('selected-widget'); // Highlight while dragging
-            el.style.cursor = 'grabbing';
-            
-            const eventPos = e.type === 'touchstart' ? e.touches[0] : e;
-            offsetX = eventPos.clientX - el.getBoundingClientRect().left;
-            offsetY = eventPos.clientY - el.getBoundingClientRect().top;
-
-            document.addEventListener('mousemove', onDragMove);
-            document.addEventListener('touchmove', onDragMove, { passive: false });
-            document.addEventListener('mouseup', onDragEnd);
-            document.addEventListener('touchend', onDragEnd);
-        };
-
-        const onDragMove = (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            const eventPos = e.type === 'touchmove' ? e.touches[0] : e;
-            el.style.left = `${eventPos.clientX - offsetX}px`;
-            el.style.top = `${eventPos.clientY - offsetY}px`;
-        };
-
-        const onDragEnd = () => {
-            isDragging = false;
-            el.style.cursor = 'grab';
-            el.classList.remove('selected-widget'); // Stop highlighting after drag
-            document.removeEventListener('mousemove', onDragMove);
-            document.removeEventListener('touchmove', onDragMove);
-            document.removeEventListener('mouseup', onDragEnd);
-            document.removeEventListener('touchend', onDragEnd);
-        };
-
-        el.addEventListener('mousedown', onDragStart);
-        el.addEventListener('touchstart', onDragStart, { passive: true });
-    });
-}
-
-/**
- * Removes event listeners added during editing mode.
- */
-function makeWidgetsUneditable() {
-    // This is complex to do perfectly without cloning nodes.
-    // For now, we rely on the `isEditingMode` flag to control behavior.
-    // A full implementation would involve `el.replaceWith(el.cloneNode(true))` to remove all listeners.
-    const container = document.getElementById('contextual-options-container');
-    const hiddenControls = document.getElementById('hidden-controls-container');
-    // Move all controls back to the hidden container
-    while (container.firstChild) {
-        hiddenControls.appendChild(container.firstChild);
-    }
-}
-
-/**
- * Handles the selection of a widget in editing mode.
- * @param {Event} e - The click event.
- */
-function handleWidgetSelect(e) {
-    if (!isEditingMode) return;
-    
-    // Prevent click from propagating and doing something else
-    e.stopPropagation();
-    e.preventDefault();
-
-    const newSelectedWidget = e.currentTarget;
-
-    // Deselect if it's already selected
-    if (selectedWidget === newSelectedWidget) {
-        selectedWidget.classList.remove('selected-widget');
-        selectedWidget = null;
-    } else {
-        // Deselect the old one
-        if (selectedWidget) {
-            selectedWidget.classList.remove('selected-widget');
-        }
-        // Select the new one
-        selectedWidget = newSelectedWidget;
-        selectedWidget.classList.add('selected-widget');
-    }
-    
-    updateToolbar();
-}
-
-/**
- * Creates and shows the '+' button for adding a new wallpaper.
- */
-function showAddWallpaperButton() {
-    if (document.getElementById('add-wallpaper-btn')) return; // Already exists
-
-    const addButton = document.createElement('button');
-    addButton.id = 'add-wallpaper-btn';
-    addButton.innerHTML = `<span class="material-symbols-rounded">add</span>`;
-    addButton.onclick = () => document.getElementById('wallpaperInput').click();
-
-    document.body.appendChild(addButton);
-}
-
-/**
- * Hides and removes the '+' button for adding a new wallpaper.
- */
-function hideAddWallpaperButton() {
-    const addButton = document.getElementById('add-wallpaper-btn');
-    if (addButton) {
-        addButton.remove();
-    }
-}
-
 // Initialize theme and wallpaper on load
 function initializeCustomization() {
     setupThemeSwitcher();
@@ -5744,42 +5534,19 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeAndApplyWallpaper().catch(error => {
         console.error("Error initializing wallpaper:", error);
     });
+    initializePageIndicator();
     checkWallpaperState();
     updateGurappsVisibility();
     syncUiStates();
 
-    let longPressTimer;
-    const bodyEl = document.body;
+    // --- 4. Add other event listeners ---
+    const languageSwitcher = document.getElementById('language-switcher');
+    if (languageSwitcher) {
+        languageSwitcher.addEventListener('change', function () {
+            selectLanguage(this.value);
+        });
+    }
 
-    const startLongPress = (e) => {
-        // Only activate on empty space, not on interactive elements
-        if (e.target === bodyEl || e.target.id === 'background-video') {
-            longPressTimer = setTimeout(() => {
-                if (!isEditingMode) {
-                    enterEditingMode();
-                }
-            }, 600); // 600ms for a long press
-        }
-    };
-
-    const cancelLongPress = () => {
-        clearTimeout(longPressTimer);
-    };
-
-    bodyEl.addEventListener('mousedown', startLongPress);
-    bodyEl.addEventListener('touchstart', startLongPress, { passive: true });
-
-    bodyEl.addEventListener('mouseup', cancelLongPress);
-    bodyEl.addEventListener('touchend', cancelLongPress);
-    bodyEl.addEventListener('mousemove', cancelLongPress); // Cancel if mouse moves
-    bodyEl.addEventListener('touchmove', cancelLongPress); // Cancel if finger moves
-
-    const doneBtn = document.getElementById('done-editing-btn');
-    const revertBtn = document.getElementById('revert-changes-btn');
-
-    doneBtn.addEventListener('click', () => exitEditingMode(false));
-    revertBtn.addEventListener('click', () => exitEditingMode(true));
-	
     const aiSwitch = document.getElementById('ai-switch');
     aiSwitch.checked = isAiAssistantEnabled;
     aiSwitch.addEventListener('change', function() {
