@@ -57,14 +57,20 @@
         window.addEventListener('keydown', onKeyDown, { capture: true });
       })();
     </script>
-
+    
     <svg style="display: none">
         <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
-            <!-- Part 1: Pad the source graphic by blurring it. This creates pixel data outside the
-                 original bounds for the displacement map to pull from, preventing clipping. -->
-            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="padded_source"/>
     
-            <!-- Part 2: Create the displacement map and the border mask. This is your original, correct logic. -->
+            <!-- Step 1: Create a "padded" source graphic by applying a slight blur.
+                 This is the key step. This new source, 'paddedSource', is slightly larger
+                 than the original element, giving the displacement map extra pixels to
+                 work with at the boundaries. -->
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="paddedSource"/>
+    
+            <!-- Step 2: Create the displacement map itself. This logic is your original,
+                 proven method. It creates the turbulence and masks it to the border area.
+                 Crucially, it is still based on the original, crisp SourceGraphic, so it
+                 remains perfectly aligned and does not cause a shift. -->
             <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"/>
             <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"/>
             <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"/>
@@ -75,24 +81,17 @@
                 <feMergeNode in="edge_turbulence"/>
             </feMerge>
     
-            <!-- Part 3: Apply the displacement map to the padded source from Part 1.
-                 The result is a blurry, distorted image. -->
-            <feDisplacementMap in="padded_source" in2="displacement_map" scale="40"
-                             xChannelSelector="R" yChannelSelector="G" result="displaced_blurry_image"/>
+            <!-- Step 3: Apply the displacement map to the PADDED source.
+                 Instead of displacing the original SourceGraphic (which causes clipping),
+                 we displace the slightly larger 'paddedSource'. -->
+            <feDisplacementMap in="paddedSource" in2="displacement_map" scale="40"
+                             xChannelSelector="R" yChannelSelector="G" result="displaced_image"/>
     
-            <!-- Part 4: Isolate just the refracted, blurry edge using the border_mask from Part 2. -->
-            <feComposite in="displaced_blurry_image" in2="border_mask" operator="in" result="displaced_edge_only"/>
-    
-            <!-- Part 5: Isolate the original, sharp center of the image. We use the 'out' operator
-                 with the border_mask to cut a hole where the border effect will go. -->
-            <feComposite in="SourceGraphic" in2="border_mask" operator="out" result="sharp_center_only"/>
-    
-            <!-- Part 6: Merge the sharp center and the refracted edge back together
-                 into the final, seamless image. -->
-            <feMerge>
-                <feMergeNode in="sharp_center_only"/>
-                <feMergeNode in="displaced_edge_only"/>
-            </feMerge>
+            <!-- Step 4: Crop the result. The 'displaced_image' now has the correct
+                 refractions on all sides, but its edges are blurry from Step 1.
+                 We use the original, crisp SourceGraphic's alpha channel as a mask
+                 to trim the result back to the element's original shape. -->
+            <feComposite in="displaced_image" in2="SourceGraphic" operator="in"/>
         </filter>
     </svg>
 
