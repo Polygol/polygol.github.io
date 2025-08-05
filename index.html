@@ -60,28 +60,35 @@
 
     <svg style="display: none">
         <filter id="edge-refraction-only"
-                x="-20" y="-20" width="calc(100% + 40px)" height="calc(100% + 40px)"
                 color-interpolation-filters="linearRGB">
     
-            <!-- Part 1: Create turbulence that is only visible at the element's edges. -->
+            <!-- Step 1: Tile the SourceGraphic. This creates a repeating pattern of the element,
+                 providing an "infinite" canvas. Now when the displacement map tries to pull
+                 pixels from outside the original boundary, it has pixels to grab. -->
+            <feTile in="SourceGraphic" result="tiledSource"/>
+    
+            <!-- Step 2: Create the displacement map. This part of the logic is the same:
+                 a neutral gray background with turbulence only at the edges. Since its inputs
+                 (SourceGraphic and SourceAlpha) are from the *original* non-tiled source,
+                 the map is the correct size and alignment. -->
             <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"/>
             <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"/>
             <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"/>
             <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"/>
-    
-            <!-- Part 2: Create a neutral 50% gray background that has the exact same shape as the source element. -->
             <feFlood flood-color="#808080" result="neutral_flood"/>
             <feComposite in="neutral_flood" in2="SourceAlpha" operator="in" result="neutral_background"/>
-    
-            <!-- Part 3: Layer the edge turbulence ON TOP of the neutral background.
-                 The 'over' operator is key: it places the first input (turbulence) over the second (background).
-                 Where the turbulence is transparent (in the middle), the gray background shows through.
-                 This creates a perfectly aligned and centered displacement map. -->
             <feComposite in="edge_turbulence" in2="neutral_background" operator="over" result="displacementMap"/>
     
-            <!-- Part 4: Apply the displacement map.
-                 The input is the original SourceGraphic. -->
-            <feDisplacementMap in="SourceGraphic" in2="displacementMap" scale="40" xChannelSelector="R" yChannelSelector="G"/>
+            <!-- Step 3: Apply the displacement map to the TILED source. This is the crucial change.
+                 We are distorting the infinite tiled version, not the original. -->
+            <feDisplacementMap in="tiledSource" in2="displacementMap" scale="40"
+                             xChannelSelector="R" yChannelSelector="G" result="displacedImage"/>
+    
+            <!-- Step 4: Crop the result. The displaced image is now infinite. We need to crop it
+                 back to the original element's shape and position. We do this by using the
+                 original SourceGraphic's alpha channel as a mask. -->
+            <feComposite in="displacedImage" in2="SourceGraphic" operator="in"/>
+    
         </filter>
     </svg>
 
