@@ -449,7 +449,6 @@ input[type="color"]::-moz-color-swatch {
     cursor: pointer;
     user-select: none;
     font-variant-numeric: tabular-nums;
-    width: fit-content;
     transform: scale(1);
     transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
     position: relative;
