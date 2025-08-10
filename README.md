@@ -15,7 +15,7 @@ Assets: You must edit the directory path in the code, since every path assumes t
 https://kirbindustries.gitbook.io/polygol
 
 # Credits
-Gurapp Icons: kirbIndustries
+Application Icons: kirbIndustries
 Timer Sound: Google
 
 ---
