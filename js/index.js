@@ -2061,7 +2061,7 @@ async function loadHtml2canvasScript() {
 
 /**
  * Creates a composite screenshot of the main body and an active iframe.
- * This works by asking the iframe (via polygol-api.js) to provide its own screenshot.
+ * This works by asking the iframe (via gurasuraisu-api.js) to provide its own screenshot.
  * @returns {Promise<string>} A promise that resolves with the dataURL of the composite image.
  */
 function createCompositeScreenshot() {
@@ -5935,7 +5935,7 @@ function executeParentJS(code, sourceWindow) {
 }
 
 // Global functions exposed for the Terminal (or other Gurapps if needed)
-window.rebootPolygol = function(sourceWindow) {
+window.rebootGurasuraisu = function(sourceWindow) {
     if (confirm(currentLanguage.REBOOT_CONFIRM)) { // Assuming REBOOT_CONFIRM is defined in lang.js
         if (sourceWindow) {
             sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Rebooting Polygol...' }, window.location.origin);
@@ -6057,13 +6057,13 @@ function updateMediaPlaybackState(appName, state) {
 // Add listeners for the new widget's buttons
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('media-widget-play-pause').addEventListener('click', () => {
-        if (activeMediaSessionApp) Polygol.callApp(activeMediaSessionApp, 'playPause');
+        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'playPause');
     });
     document.getElementById('media-widget-next').addEventListener('click', () => {
-        if (activeMediaSessionApp) Polygol.callApp(activeMediaSessionApp, 'next');
+        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'next');
     });
     document.getElementById('media-widget-prev').addEventListener('click', () => {
-        if (activeMediaSessionApp) Polygol.callApp(activeMediaSessionApp, 'prev');
+        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'prev');
     });
 });
 
@@ -6078,7 +6078,7 @@ function updateMediaProgress(appName, progressState) {
     }
 }
 
-const Polygol = {
+const Gurasuraisu = {
     // This is the inverse of the API in the child. It allows the parent to call a function *in* a child app.
     callApp: (appName, action) => {
         const iframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
@@ -6095,7 +6095,7 @@ window.addEventListener('message', event => {
 
     // Allow an app to view the currently installed apps
     // This check should happen BEFORE the main API call router.
-    if (data.action === 'callPolygolFunc' && data.functionName === 'requestInstalledApps') {
+    if (data.action === 'callGurasuraisuFunc' && data.functionName === 'requestInstalledApps') {
         console.log('An app is requesting the list of installed apps.');
         
         // Get the names of all currently installed apps.
@@ -6111,7 +6111,7 @@ window.addEventListener('message', event => {
     }
 
     // Check if this is an API call from a Gurapp
-    if (data && data.action === 'callPolygolFunc' && data.functionName) {
+    if (data && data.action === 'callGurasuraisuFunc' && data.functionName) {
 
         // --- NEW: Security Check for PROTECTED functions ---
         const protectedFunctions = [
@@ -6130,7 +6130,7 @@ window.addEventListener('message', event => {
             'clearAllWallpapers',
             'switchWallpaperParent',
             'getCurrentTimeParent',
-            'rebootPolygol',
+            'rebootGurasuraisu',
             'promptPWAInstall',
             'executeParentJS'
         ];
@@ -6177,7 +6177,7 @@ window.addEventListener('message', event => {
             clearAllWallpapers,
             switchWallpaperParent,
             getCurrentTimeParent,
-            rebootPolygol,
+            rebootGurasuraisu,
             promptPWAInstall,
             executeParentJS,
         };
