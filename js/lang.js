@@ -1,9 +1,9 @@
-// EN, JP, DE, FR, ES, KO, ZH, HI, PT, BN, RU, PA, VI, TR, AR_EG, MR, TE, TA, UR, ID, JV, FA_IR, IT, HA, GU, AR_LEV, BHO translation variables for Gurasuraisu
+// EN, JP, DE, FR, ES, KO, ZH, HI, PT, BN, RU, PA, VI, TR, AR_EG, MR, TE, TA, UR, ID, JV, FA_IR, IT, HA, GU, AR_LEV, BHO translation variables for Polygol
 
 const LANG_EN = {
-    GREETING: "Gurasuraisu loaded successfully",
-    LICENCE: "Gurasuraisu is made by kirbIndustries, and is licensed under the GNU General Public License, Version 2.0 (GPL-2.0)",
-    WELCOME_MESSAGE: "Hello, welcome to Gurasuraisu!",
+    GREETING: "Polygol loaded successfully",
+    LICENCE: "Polygol is made by kirbIndustries, and is licensed under the GNU General Public License, Version 2.0 (GPL-2.0)",
+    WELCOME_MESSAGE: "Hello, welcome to Polygol!",
     PLACEHOLDER_MESSAGE: "Type your message",
     SEND: "Send",
     VOICE: "Voice",
@@ -49,7 +49,7 @@ const LANG_EN = {
     WALLPAPER_HISTORY_FAIL: "Failed to save wallpaper history",
     ALL_WALLPAPER_REMOVE: "All wallpapers removed",
     WALLPAPER_REMOVE: "Wallpaper removed",
-    LOAD_SUCCESS: "Gurasuraisu loaded successfully",
+    LOAD_SUCCESS: "Polygol loaded successfully",
     NOT_FULLSCREEN: "Not fullscreen",
     CLOCK_STYLE_FAILED: "Failed to load Clock Style",
     CHECK_WORDS: ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'successfully', 'accepted', 'accept', 'yes'],
@@ -74,12 +74,12 @@ const LANG_EN = {
     SETUP_OPEN_PRIVATE_DESC: "Your data stays on device at all times. No user data is transferred to any of our services.",
     SETUP_ALLOW_PERMISSIONS: "Allow Permissions",
     SETUP_BASIC_ACCESS: "Basic access",
-    SETUP_BASIC_ACCESS_DESC: "Enables Gurasuraisu to work properly",
+    SETUP_BASIC_ACCESS_DESC: "Enables Polygol to work properly",
     SETUP_LOCATION_ACCESS: "Location Access",
     SETUP_LOCATION_ACCESS_DESC: "Enables Weather and personalized results",
     SETUP_NOTIFICATIONS: "Notifications",
     SETUP_NOTIFICATIONS_DESC: "Enables updates and timer alerts",
-    SETUP_CANNIBALIZE: "Cannibalize your Gurasuraisu",
+    SETUP_CANNIBALIZE: "Cannibalize your Polygol",
     SETUP_CLOCK_FORMAT: "Clock Format",
     SETUP_SHOW_SECONDS: "Show Seconds",
     SETUP_HIDE_SECONDS: "Hide Seconds",
@@ -113,13 +113,13 @@ const LANG_EN = {
     GURAPP_DELETE_STORE_DENIED: "The App Store cannot be deleted",
     GURAPP_INSTALLING: "Installing {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} is already installed",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Error: only the Gurasuraisu App Store can install apps"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Error: only the Polygol App Store can install apps"
 };
 
 const LANG_JP = {
-    GREETING: "Gurasuraisu を正常に読み込みました。",
-    LICENCE: "Gurasuraisu は kirbIndustries によって作成され、GNU General Public License, Version 2.0 (GPL-2.0) の下でライセンスされています。",
-    WELCOME_MESSAGE: "こんにちは、ぐらすりすへようこそ！",
+    GREETING: "Polygol を正常に読み込みました。",
+    LICENCE: "Polygol は kirbIndustries によって作成され、GNU General Public License, Version 2.0 (GPL-2.0) の下でライセンスされています。",
+    WELCOME_MESSAGE: "こんにちは、Polygolへようこそ！",
     PLACEHOLDER_MESSAGE: "メッセージを入力してください",
     SEND: "送信",
     VOICE: "音声",
@@ -190,12 +190,12 @@ const LANG_JP = {
     SETUP_OPEN_PRIVATE_DESC: "あなたのデータは常にデバイス上に保持されます。ユーザーデータは当社のサービスに転送されません。",
     SETUP_ALLOW_PERMISSIONS: "許可を与える",
     SETUP_BASIC_ACCESS: "基本アクセス",
-    SETUP_BASIC_ACCESS_DESC: "Gurasuraisuが適切に動作するようにします",
+    SETUP_BASIC_ACCESS_DESC: "Polygolが適切に動作するようにします",
     SETUP_LOCATION_ACCESS: "位置情報アクセス",
     SETUP_LOCATION_ACCESS_DESC: "天気とパーソナライズされた結果を有効にします",
     SETUP_NOTIFICATIONS: "通知",
     SETUP_NOTIFICATIONS_DESC: "更新とタイマーアラートを有効にします",
-    SETUP_CANNIBALIZE: "Gurasuraisuをカスタマイズ",
+    SETUP_CANNIBALIZE: "Polygolをカスタマイズ",
     SETUP_CLOCK_FORMAT: "時計の形式",
     SETUP_SHOW_SECONDS: "秒を表示",
     SETUP_HIDE_SECONDS: "秒を非表示",
@@ -229,13 +229,13 @@ const LANG_JP = {
     GURAPP_DELETE_STORE_DENIED: "App Store は削除できません",
     GURAPP_INSTALLING: "{appName} をインストール中",
     GURAPP_INSTALL_EXISTS: "{appName} はすでにインストールされています",
-    GURAPP_INSTALL_NONSTORE_DENIED: "エラー: Gurasuraisu App Store のみがアプリをインストールできます"
+    GURAPP_INSTALL_NONSTORE_DENIED: "エラー: Polygol App Store のみがアプリをインストールできます"
 };
 
 const LANG_DE = {
-    GREETING: "Gurasuraisu erfolgreich geladen",
-    LICENCE: "Gurasuraisu wird von kirbIndustries erstellt und ist unter der GNU General Public License, Version 2.0 (GPL-2.0) lizenziert.",
-    WELCOME_MESSAGE: "Hallo, willkommen bei Gurasuraisu!",
+    GREETING: "Polygol erfolgreich geladen",
+    LICENCE: "Polygol wird von kirbIndustries erstellt und ist unter der GNU General Public License, Version 2.0 (GPL-2.0) lizenziert.",
+    WELCOME_MESSAGE: "Hallo, willkommen bei Polygol!",
     PLACEHOLDER_MESSAGE: "Geben Sie Ihre Nachricht ein",
     SEND: "Senden",
     VOICE: "Sprache",
@@ -281,7 +281,7 @@ const LANG_DE = {
     WALLPAPER_HISTORY_FAIL: "Hintergrundbildverlauf konnte nicht gespeichert werden",
     ALL_WALLPAPER_REMOVE: "Alle Hintergrundbilder entfernt",
     WALLPAPER_REMOVE: "Hintergrundbild entfernt",
-    LOAD_SUCCESS: "Gurasuraisu erfolgreich geladen",
+    LOAD_SUCCESS: "Polygol erfolgreich geladen",
     NOT_FULLSCREEN: "Nicht im Vollbildmodus",
     CLOCK_STYLE_FAILED: "Uhrstil konnte nicht geladen werden",
     CHECK_WORDS: ['aktualisiert', 'abgeschlossen', 'fertig', 'erfolg', 'erfolgreich', 'akzeptiert', 'akzeptieren', 'ja'],
@@ -306,12 +306,12 @@ const LANG_DE = {
     SETUP_OPEN_PRIVATE_DESC: "Ihre Daten bleiben jederzeit auf dem Gerät. Es werden keine Benutzerdaten an unsere Dienste übertragen.",
     SETUP_ALLOW_PERMISSIONS: "Berechtigungen zulassen",
     SETUP_BASIC_ACCESS: "Grundlegender Zugriff",
-    SETUP_BASIC_ACCESS_DESC: "Ermöglicht das ordnungsgemäße Funktionieren von Gurasuraisu",
+    SETUP_BASIC_ACCESS_DESC: "Ermöglicht das ordnungsgemäße Funktionieren von Polygol",
     SETUP_LOCATION_ACCESS: "Standortzugriff",
     SETUP_LOCATION_ACCESS_DESC: "Ermöglicht Wetter und personalisierte Ergebnisse",
     SETUP_NOTIFICATIONS: "Benachrichtigungen",
     SETUP_NOTIFICATIONS_DESC: "Ermöglicht Updates und Timer-Benachrichtigungen",
-    SETUP_CANNIBALIZE: "Gurasuraisu anpassen",
+    SETUP_CANNIBALIZE: "Polygol anpassen",
     SETUP_CLOCK_FORMAT: "Uhrenformat",
     SETUP_SHOW_SECONDS: "Sekunden anzeigen",
     SETUP_HIDE_SECONDS: "Sekunden ausblenden",
@@ -345,13 +345,13 @@ const LANG_DE = {
     GURAPP_DELETE_STORE_DENIED: "Der App Store kann nicht gelöscht werden",
     GURAPP_INSTALLING: "Installiere {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} ist bereits installiert",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Fehler: Nur der Gurasuraisu App Store kann Apps installieren"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Fehler: Nur der Polygol App Store kann Apps installieren"
 };
 
 const LANG_FR = {
-    GREETING: "Gurasuraisu chargé avec succès",
-    LICENCE: "Gurasuraisu est créé par kirbIndustries, et est sous licence GNU General Public License, Version 2.0 (GPL-2.0)",
-    WELCOME_MESSAGE: "Bonjour, bienvenue sur Gurasuraisu !",
+    GREETING: "Polygol chargé avec succès",
+    LICENCE: "Polygol est créé par kirbIndustries, et est sous licence GNU General Public License, Version 2.0 (GPL-2.0)",
+    WELCOME_MESSAGE: "Bonjour, bienvenue sur Polygol!",
     PLACEHOLDER_MESSAGE: "Tapez votre message",
     SEND: "Envoyer",
     VOICE: "Voix",
@@ -397,7 +397,7 @@ const LANG_FR = {
     WALLPAPER_HISTORY_FAIL: "Impossible de sauvegarder l'historique des fonds d'écran",
     ALL_WALLPAPER_REMOVE: "Tous les fonds d'écran supprimés",
     WALLPAPER_REMOVE: "Fond d'écran supprimé",
-    LOAD_SUCCESS: "Gurasuraisu chargé avec succès",
+    LOAD_SUCCESS: "Polygolchargé avec succès",
     NOT_FULLSCREEN: "Pas en plein écran",
     CLOCK_STYLE_FAILED: "Impossible de charger le style d'horloge",
     CHECK_WORDS: ['mis à jour', 'terminé', 'fait', 'succès', 'complété', 'prêt', 'avec succès', 'accepté', 'accepter', 'oui'],
@@ -422,12 +422,12 @@ const LANG_FR = {
     SETUP_OPEN_PRIVATE_DESC: "Vos données restent sur l'appareil à tout moment. Aucune donnée utilisateur n'est transférée à nos services.",
     SETUP_ALLOW_PERMISSIONS: "Autoriser les permissions",
     SETUP_BASIC_ACCESS: "Accès de base",
-    SETUP_BASIC_ACCESS_DESC: "Permet à Gurasuraisu de fonctionner correctement",
+    SETUP_BASIC_ACCESS_DESC: "Permet à Polygolde fonctionner correctement",
     SETUP_LOCATION_ACCESS: "Accès à la localisation",
     SETUP_LOCATION_ACCESS_DESC: "Permet la météo et les résultats personnalisés",
     SETUP_NOTIFICATIONS: "Notifications",
     SETUP_NOTIFICATIONS_DESC: "Permet les mises à jour et les alertes de minuterie",
-    SETUP_CANNIBALIZE: "Personnaliser votre Gurasuraisu",
+    SETUP_CANNIBALIZE: "Personnaliser votre Polygol",
     SETUP_CLOCK_FORMAT: "Format de l'horloge",
     SETUP_SHOW_SECONDS: "Afficher les secondes",
     SETUP_HIDE_SECONDS: "Masquer les secondes",
@@ -461,13 +461,13 @@ const LANG_FR = {
     GURAPP_DELETE_STORE_DENIED: "L'App Store ne peut pas être supprimé",
     GURAPP_INSTALLING: "Installation de {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} est déjà installé",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Erreur : Seul le Gurasuraisu App Store peut installer des applications"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Erreur : Seul le PolygolApp Store peut installer des applications"
 };
 
 const LANG_ES = {
-    GREETING: "Gurasuraisu cargado con éxito",
-    LICENCE: "Gurasuraisu es creado por kirbIndustries y está licenciado bajo la Licencia Pública General de GNU, Versión 2.0 (GPL-2.0).",
-    WELCOME_MESSAGE: "¡Hola, bienvenido a Gurasuraisu!",
+    GREETING: "Polygolcargado con éxito",
+    LICENCE: "Polygoles creado por kirbIndustries y está licenciado bajo la Licencia Pública General de GNU, Versión 2.0 (GPL-2.0).",
+    WELCOME_MESSAGE: "¡Hola, bienvenido a Polygol!",
     PLACEHOLDER_MESSAGE: "Escriba su mensaje",
     SEND: "Enviar",
     VOICE: "Voz",
@@ -513,7 +513,7 @@ const LANG_ES = {
     WALLPAPER_HISTORY_FAIL: "No se pudo guardar el historial del fondo de pantalla",
     ALL_WALLPAPER_REMOVE: "Todos los fondos de pantalla eliminados",
     WALLPAPER_REMOVE: "Fondo de pantalla eliminado",
-    LOAD_SUCCESS: "Gurasuraisu cargado con éxito",
+    LOAD_SUCCESS: "Polygol cargado con éxito",
     NOT_FULLSCREEN: "No está en pantalla completa",
     CLOCK_STYLE_FAILED: "No se pudo cargar el estilo del reloj",
     CHECK_WORDS: ['actualizado', 'completo', 'listo', 'éxito', 'exitosamente', 'aceptado', 'aceptar', 'sí'],
@@ -538,12 +538,12 @@ const LANG_ES = {
     SETUP_OPEN_PRIVATE_DESC: "Tus datos permanecen en el dispositivo en todo momento. No se transfieren datos de usuario a nuestros servicios.",
     SETUP_ALLOW_PERMISSIONS: "Permitir permisos",
     SETUP_BASIC_ACCESS: "Acceso básico",
-    SETUP_BASIC_ACCESS_DESC: "Permite que Gurasuraisu funcione correctamente",
+    SETUP_BASIC_ACCESS_DESC: "Permite que Polygol funcione correctamente",
     SETUP_LOCATION_ACCESS: "Acceso a la ubicación",
     SETUP_LOCATION_ACCESS_DESC: "Permite el clima y los resultados personalizados",
     SETUP_NOTIFICATIONS: "Notificaciones",
     SETUP_NOTIFICATIONS_DESC: "Permite actualizaciones y alertas de temporizador",
-    SETUP_CANNIBALIZE: "Personaliza tu Gurasuraisu",
+    SETUP_CANNIBALIZE: "Personaliza tu Polygol",
     SETUP_CLOCK_FORMAT: "Formato del reloj",
     SETUP_SHOW_SECONDS: "Mostrar segundos",
     SETUP_HIDE_SECONDS: "Ocultar segundos",
@@ -577,13 +577,13 @@ const LANG_ES = {
     GURAPP_DELETE_STORE_DENIED: "La App Store no se puede eliminar",
     GURAPP_INSTALLING: "Instalando {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} ya está instalada",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Error: Solo la App Store de Gurasuraisu puede instalar aplicaciones"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Error: Solo la App Store de Polygol puede instalar aplicaciones"
 };
 
 const LANG_KO = {
-    GREETING: "Gurasuraisu가 성공적으로 로드되었습니다",
-    LICENCE: "Gurasuraisu는 kirbIndustries에서 제작되었으며 GNU General Public License, Version 2.0 (GPL-2.0)에 따라 라이선스가 부여됩니다.",
-    WELCOME_MESSAGE: "안녕하세요, Gurasuraisu에 오신 것을 환영합니다!",
+    GREETING: "Polygol가 성공적으로 로드되었습니다",
+    LICENCE: "Polygol는 kirbIndustries에서 제작되었으며 GNU General Public License, Version 2.0 (GPL-2.0)에 따라 라이선스가 부여됩니다.",
+    WELCOME_MESSAGE: "안녕하세요, Polygol에 오신 것을 환영합니다!",
     PLACEHOLDER_MESSAGE: "메시지를 입력하세요",
     SEND: "보내기",
     VOICE: "음성",
@@ -629,7 +629,7 @@ const LANG_KO = {
     WALLPAPER_HISTORY_FAIL: "배경 화면 기록 저장에 실패했습니다",
     ALL_WALLPAPER_REMOVE: "모든 배경 화면이 제거되었습니다",
     WALLPAPER_REMOVE: "배경 화면이 제거되었습니다",
-    LOAD_SUCCESS: "Gurasuraisu가 성공적으로 로드되었습니다",
+    LOAD_SUCCESS: "Polygol가 성공적으로 로드되었습니다",
     NOT_FULLSCREEN: "전체 화면이 아닙니다",
     CLOCK_STYLE_FAILED: "시계 스타일 로드에 실패했습니다",
     CHECK_WORDS: ['업데이트됨', '완료됨', '완료', '성공', '성공적으로', '수락됨', '수락', '예'],
@@ -654,12 +654,12 @@ const LANG_KO = {
     SETUP_OPEN_PRIVATE_DESC: "사용자 데이터는 항상 장치에 보관됩니다. 사용자 데이터는 서비스로 전송되지 않습니다.",
     SETUP_ALLOW_PERMISSIONS: "권한 허용",
     SETUP_BASIC_ACCESS: "기본 액세스",
-    SETUP_BASIC_ACCESS_DESC: "Gurasuraisu가 제대로 작동하도록 합니다.",
+    SETUP_BASIC_ACCESS_DESC: "Polygol가 제대로 작동하도록 합니다.",
     SETUP_LOCATION_ACCESS: "위치 정보 액세스",
     SETUP_LOCATION_ACCESS_DESC: "날씨 및 맞춤형 결과를 활성화합니다.",
     SETUP_NOTIFICATIONS: "알림",
     SETUP_NOTIFICATIONS_DESC: "업데이트 및 타이머 알림을 활성화합니다.",
-    SETUP_CANNIBALIZE: "Gurasuraisu를 사용자 정의",
+    SETUP_CANNIBALIZE: "Polygol를 사용자 정의",
     SETUP_CLOCK_FORMAT: "시계 형식",
     SETUP_SHOW_SECONDS: "초 표시",
     SETUP_HIDE_SECONDS: "초 숨기기",
@@ -693,13 +693,13 @@ const LANG_KO = {
     GURAPP_DELETE_STORE_DENIED: "앱 스토어는 삭제할 수 없습니다",
     GURAPP_INSTALLING: "{appName} 설치 중",
     GURAPP_INSTALL_EXISTS: "{appName}은(는) 이미 설치되어 있습니다",
-    GURAPP_INSTALL_NONSTORE_DENIED: "오류: Gurasuraisu 앱 스토어만 앱을 설치할 수 있습니다"
+    GURAPP_INSTALL_NONSTORE_DENIED: "오류: Polygol 앱 스토어만 앱을 설치할 수 있습니다"
 };
 
 const LANG_ZH = {
-    GREETING: "Gurasuraisu加载成功",
-    LICENCE: "Gurasuraisu由kirbIndustries制作，并根据GNU通用公共许可证，版本2.0（GPL-2.0）获得许可",
-    WELCOME_MESSAGE: "你好，欢迎来到Gurasuraisu！",
+    GREETING: "Polygol加载成功",
+    LICENCE: "Polygol由kirbIndustries制作，并根据GNU通用公共许可证，版本2.0（GPL-2.0）获得许可",
+    WELCOME_MESSAGE: "你好，欢迎来到Polygol！",
     PLACEHOLDER_MESSAGE: "输入您的消息",
     SEND: "发送",
     VOICE: "语音",
@@ -745,7 +745,7 @@ const LANG_ZH = {
     WALLPAPER_HISTORY_FAIL: "无法保存壁纸历史记录",
     ALL_WALLPAPER_REMOVE: "所有壁纸已删除",
     WALLPAPER_REMOVE: "壁纸已删除",
-    LOAD_SUCCESS: "Gurasuraisu加载成功",
+    LOAD_SUCCESS: "Polygol加载成功",
     NOT_FULLSCREEN: "不是全屏",
     CLOCK_STYLE_FAILED: "无法加载时钟样式",
     CHECK_WORDS: ['已更新', '完成', '完成', '成功', '成功地', '已接受', '接受', '是'],
@@ -770,12 +770,12 @@ const LANG_ZH = {
     SETUP_OPEN_PRIVATE_DESC: "您的数据始终保留在设备上。用户数据不会传输到我们的任何服务。",
     SETUP_ALLOW_PERMISSIONS: "允许权限",
     SETUP_BASIC_ACCESS: "基本访问",
-    SETUP_BASIC_ACCESS_DESC: "使Gurasuraisu正常工作",
+    SETUP_BASIC_ACCESS_DESC: "使Polygol正常工作",
     SETUP_LOCATION_ACCESS: "位置访问",
     SETUP_LOCATION_ACCESS_DESC: "启用天气和个性化结果",
     SETUP_NOTIFICATIONS: "通知",
     SETUP_NOTIFICATIONS_DESC: "启用更新和计时器提醒",
-    SETUP_CANNIBALIZE: "自定义您的Gurasuraisu",
+    SETUP_CANNIBALIZE: "自定义您的Polygol",
     SETUP_CLOCK_FORMAT: "时钟格式",
     SETUP_SHOW_SECONDS: "显示秒数",
     SETUP_HIDE_SECONDS: "隐藏秒数",
@@ -809,7 +809,7 @@ const LANG_ZH = {
     GURAPP_DELETE_STORE_DENIED: "App Store 无法删除",
     GURAPP_INSTALLING: "正在安装 {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} 已安装",
-    GURAPP_INSTALL_NONSTORE_DENIED: "错误：只有 Gurasuraisu 应用商店才能安装应用"
+    GURAPP_INSTALL_NONSTORE_DENIED: "错误：只有 Polygol 应用商店才能安装应用"
 };
 
 const LANG_HI = {
@@ -929,9 +929,9 @@ const LANG_HI = {
 };
 
 const LANG_PT = {
-    GREETING: "Gurasuraisu carregado com sucesso",
-    LICENCE: "Gurasuraisu é feito por kirbIndustries e está licenciado sob a Licença Pública Geral GNU, Versão 2.0 (GPL-2.0)",
-    WELCOME_MESSAGE: "Olá, bem-vindo ao Gurasuraisu!",
+    GREETING: "Polygol carregado com sucesso",
+    LICENCE: "Polygol é feito por kirbIndustries e está licenciado sob a Licença Pública Geral GNU, Versão 2.0 (GPL-2.0)",
+    WELCOME_MESSAGE: "Olá, bem-vindo ao Polygol!",
     PLACEHOLDER_MESSAGE: "Digite sua mensagem",
     SEND: "Enviar",
     VOICE: "Voz",
@@ -977,7 +977,7 @@ const LANG_PT = {
     WALLPAPER_HISTORY_FAIL: "Falha ao salvar histórico de papel de parede",
     ALL_WALLPAPER_REMOVE: "Todos os papéis de parede removidos",
     WALLPAPER_REMOVE: "Papel de parede removido",
-    LOAD_SUCCESS: "Gurasuraisu carregado com sucesso",
+    LOAD_SUCCESS: "Polygol carregado com sucesso",
     NOT_FULLSCREEN: "Não está em tela cheia",
     CLOCK_STYLE_FAILED: "Falha ao carregar o estilo do relógio",
     CHECK_WORDS: ['atualizado', 'completo', 'feito', 'sucesso', 'concluído', 'pronto', 'com sucesso', 'aceito', 'aceitar', 'sim'],
@@ -1002,12 +1002,12 @@ const LANG_PT = {
     SETUP_OPEN_PRIVATE_DESC: "Seus dados permanecem no dispositivo o tempo todo. Nenhum dado do usuário é transferido para nenhum de nossos serviços.",
     SETUP_ALLOW_PERMISSIONS: "Permitir Permissões",
     SETUP_BASIC_ACCESS: "Acesso Básico",
-    SETUP_BASIC_ACCESS_DESC: "Permite que o Gurasuraisu funcione corretamente",
+    SETUP_BASIC_ACCESS_DESC: "Permite que o Polygol funcione corretamente",
     SETUP_LOCATION_ACCESS: "Acesso à Localização",
     SETUP_LOCATION_ACCESS_DESC: "Ativa o tempo e resultados personalizados",
     SETUP_NOTIFICATIONS: "Notificações",
     SETUP_NOTIFICATIONS_DESC: "Ativa atualizações e alertas de temporizador",
-    SETUP_CANNIBALIZE: "Canibalizar seu Gurasuraisu",
+    SETUP_CANNIBALIZE: "Canibalizar seu Polygol",
     SETUP_CLOCK_FORMAT: "Formato do Relógio",
     SETUP_SHOW_SECONDS: "Mostrar Segundos",
     SETUP_HIDE_SECONDS: "Ocultar Segundos",
@@ -1041,7 +1041,7 @@ const LANG_PT = {
     GURAPP_DELETE_STORE_DENIED: "A App Store não pode ser excluída",
     GURAPP_INSTALLING: "Instalando {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} já está instalado",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Erro: apenas a App Store Gurasuraisu pode instalar aplicativos"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Erro: apenas a App Store Polygol pode instalar aplicativos"
 };
 
 const LANG_BN = {
@@ -1161,9 +1161,9 @@ const LANG_BN = {
 };
 
 const LANG_RU = {
-    GREETING: "Gurasuraisu успешно загружен",
-    LICENCE: "Gurasuraisu создан kirbIndustries и лицензирован под Стандартной общественной лицензией GNU, версия 2.0 (GPL-2.0)",
-    WELCOME_MESSAGE: "Здравствуйте, добро пожаловать в Gurasuraisu!",
+    GREETING: "Polygol успешно загружен",
+    LICENCE: "Polygol создан kirbIndustries и лицензирован под Стандартной общественной лицензией GNU, версия 2.0 (GPL-2.0)",
+    WELCOME_MESSAGE: "Здравствуйте, добро пожаловать в Polygol!",
     PLACEHOLDER_MESSAGE: "Введите ваше сообщение",
     SEND: "Отправить",
     VOICE: "Голос",
@@ -1209,7 +1209,7 @@ const LANG_RU = {
     WALLPAPER_HISTORY_FAIL: "Не удалось сохранить историю обоев",
     ALL_WALLPAPER_REMOVE: "Все обои удалены",
     WALLPAPER_REMOVE: "Обои удалены",
-    LOAD_SUCCESS: "Gurasuraisu успешно загружен",
+    LOAD_SUCCESS: "Polygol успешно загружен",
     NOT_FULLSCREEN: "Не полноэкранный",
     CLOCK_STYLE_FAILED: "Не удалось загрузить стиль часов",
     CHECK_WORDS: ['обновлено', 'завершено', 'готово', 'успех', 'выполнено', 'готово', 'успешно', 'принято', 'принять', 'да'],
@@ -1234,12 +1234,12 @@ const LANG_RU = {
     SETUP_OPEN_PRIVATE_DESC: "Ваши данные всегда остаются на устройстве. Пользовательские данные не передаются ни в один из наших сервисов.",
     SETUP_ALLOW_PERMISSIONS: "Разрешить доступ",
     SETUP_BASIC_ACCESS: "Базовый доступ",
-    SETUP_BASIC_ACCESS_DESC: "Позволяет Gurasuraisu правильно работать",
+    SETUP_BASIC_ACCESS_DESC: "Позволяет Polygol правильно работать",
     SETUP_LOCATION_ACCESS: "Доступ к местоположению",
     SETUP_LOCATION_ACCESS_DESC: "Включает погоду и персонализированные результаты",
     SETUP_NOTIFICATIONS: "Уведомления",
     SETUP_NOTIFICATIONS_DESC: "Включает обновления и оповещения таймера",
-    SETUP_CANNIBALIZE: "Каннибализируйте свой Gurasuraisu",
+    SETUP_CANNIBALIZE: "Каннибализируйте свой Polygol",
     SETUP_CLOCK_FORMAT: "Формат часов",
     SETUP_SHOW_SECONDS: "Показывать секунды",
     SETUP_HIDE_SECONDS: "Скрыть секунды",
@@ -1273,7 +1273,7 @@ const LANG_RU = {
     GURAPP_DELETE_STORE_DENIED: "Магазин приложений не может быть удален",
     GURAPP_INSTALLING: "Установка {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} уже установлен",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Ошибка: только Gurasuraisu App Store может устанавливать приложения"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Ошибка: только Polygol App Store может устанавливать приложения"
 };
 
 const LANG_PA = {
@@ -1393,9 +1393,9 @@ const LANG_PA = {
 };
 
 const LANG_VI = {
-    GREETING: "Gurasuraisu đã tải thành công",
-    LICENCE: "Gurasuraisu được tạo bởi kirbIndustries và được cấp phép theo Giấy phép Công cộng GNU, Phiên bản 2.0 (GPL-2.0)",
-    WELCOME_MESSAGE: "Xin chào, chào mừng bạn đến với Gurasuraisu!",
+    GREETING: "Polygol đã tải thành công",
+    LICENCE: "Polygol được tạo bởi kirbIndustries và được cấp phép theo Giấy phép Công cộng GNU, Phiên bản 2.0 (GPL-2.0)",
+    WELCOME_MESSAGE: "Xin chào, chào mừng bạn đến với Polygol!",
     PLACEHOLDER_MESSAGE: "Nhập tin nhắn của bạn",
     SEND: "Gửi",
     VOICE: "Giọng nói",
@@ -1441,7 +1441,7 @@ const LANG_VI = {
     WALLPAPER_HISTORY_FAIL: "Không thể lưu lịch sử hình nền",
     ALL_WALLPAPER_REMOVE: "Tất cả hình nền đã bị xóa",
     WALLPAPER_REMOVE: "Hình nền đã bị xóa",
-    LOAD_SUCCESS: "Gurasuraisu đã tải thành công",
+    LOAD_SUCCESS: "Polygol đã tải thành công",
     NOT_FULLSCREEN: "Không toàn màn hình",
     CLOCK_STYLE_FAILED: "Không thể tải Kiểu đồng hồ",
     CHECK_WORDS: ['đã cập nhật', 'hoàn tất', 'xong', 'thành công', 'đã hoàn thành', 'sẵn sàng', 'thành công', 'đã chấp nhận', 'chấp nhận', 'có'],
@@ -1466,12 +1466,12 @@ const LANG_VI = {
     SETUP_OPEN_PRIVATE_DESC: "Dữ liệu của bạn luôn nằm trên thiết bị. Không có dữ liệu người dùng nào được chuyển đến bất kỳ dịch vụ nào của chúng tôi.",
     SETUP_ALLOW_PERMISSIONS: "Cho phép Quyền",
     SETUP_BASIC_ACCESS: "Truy cập cơ bản",
-    SETUP_BASIC_ACCESS_DESC: "Cho phép Gurasuraisu hoạt động đúng cách",
+    SETUP_BASIC_ACCESS_DESC: "Cho phép Polygol hoạt động đúng cách",
     SETUP_LOCATION_ACCESS: "Truy cập vị trí",
     SETUP_LOCATION_ACCESS_DESC: "Cho phép Thời tiết và kết quả cá nhân hóa",
     SETUP_NOTIFICATIONS: "Thông báo",
     SETUP_NOTIFICATIONS_DESC: "Cho phép cập nhật và cảnh báo hẹn giờ",
-    SETUP_CANNIBALIZE: "Tiêu thụ Gurasuraisu của bạn",
+    SETUP_CANNIBALIZE: "Tiêu thụ Polygol của bạn",
     SETUP_CLOCK_FORMAT: "Định dạng đồng hồ",
     SETUP_SHOW_SECONDS: "Hiển thị Giây",
     SETUP_HIDE_SECONDS: "Ẩn Giây",
@@ -1505,13 +1505,13 @@ const LANG_VI = {
     GURAPP_DELETE_STORE_DENIED: "Không thể xóa Cửa hàng ứng dụng",
     GURAPP_INSTALLING: "Đang cài đặt {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} đã được cài đặt",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Lỗi: chỉ Cửa hàng ứng dụng Gurasuraisu mới có thể cài đặt ứng dụng"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Lỗi: chỉ Cửa hàng ứng dụng Polygol mới có thể cài đặt ứng dụng"
 };
 
 const LANG_TR = {
-    GREETING: "Gurasuraisu başarıyla yüklendi",
-    LICENCE: "Gurasuraisu, kirbIndustries tarafından yapılmıştır ve GNU Genel Kamu Lisansı, Sürüm 2.0 (GPL-2.0) altında lisanslanmıştır",
-    WELCOME_MESSAGE: "Merhaba, Gurasuraisu'ya hoş geldiniz!",
+    GREETING: "Polygol başarıyla yüklendi",
+    LICENCE: "Polygol, kirbIndustries tarafından yapılmıştır ve GNU Genel Kamu Lisansı, Sürüm 2.0 (GPL-2.0) altında lisanslanmıştır",
+    WELCOME_MESSAGE: "Merhaba, Polygol'ya hoş geldiniz!",
     PLACEHOLDER_MESSAGE: "Mesajınızı yazın",
     SEND: "Gönder",
     VOICE: "Ses",
@@ -1557,7 +1557,7 @@ const LANG_TR = {
     WALLPAPER_HISTORY_FAIL: "Duvar kağıdı geçmişi kaydedilemedi",
     ALL_WALLPAPER_REMOVE: "Tüm duvar kağıtları kaldırıldı",
     WALLPAPER_REMOVE: "Duvar kağıdı kaldırıldı",
-    LOAD_SUCCESS: "Gurasuraisu başarıyla yüklendi",
+    LOAD_SUCCESS: "Polygol başarıyla yüklendi",
     NOT_FULLSCREEN: "Tam ekran değil",
     CLOCK_STYLE_FAILED: "Saat Stili yüklenemedi",
     CHECK_WORDS: ['güncellendi', 'tamamlandı', 'bitti', 'başarı', 'tamamlandı', 'hazır', 'başarıyla', 'kabul edildi', 'kabul et', 'evet'],
@@ -1582,12 +1582,12 @@ const LANG_TR = {
     SETUP_OPEN_PRIVATE_DESC: "Verileriniz her zaman cihazda kalır. Hiçbir kullanıcı verisi hizmetlerimize aktarılmaz.",
     SETUP_ALLOW_PERMISSIONS: "İzinleri Ver",
     SETUP_BASIC_ACCESS: "Temel Erişim",
-    SETUP_BASIC_ACCESS_DESC: "Gurasuraisu'nun düzgün çalışmasını sağlar",
+    SETUP_BASIC_ACCESS_DESC: "Polygol'nun düzgün çalışmasını sağlar",
     SETUP_LOCATION_ACCESS: "Konum Erişimi",
     SETUP_LOCATION_ACCESS_DESC: "Hava durumu ve kişiselleştirilmiş sonuçları etkinleştirir",
     SETUP_NOTIFICATIONS: "Bildirimler",
     SETUP_NOTIFICATIONS_DESC: "Güncellemeleri ve zamanlayıcı uyarılarını etkinleştirir",
-    SETUP_CANNIBALIZE: "Gurasuraisu'nuzu yamyamlaştırın",
+    SETUP_CANNIBALIZE: "Polygol'nuzu yamyamlaştırın",
     SETUP_CLOCK_FORMAT: "Saat Biçimi",
     SETUP_SHOW_SECONDS: "Saniyeleri Göster",
     SETUP_HIDE_SECONDS: "Saniyeleri Gizle",
@@ -1621,7 +1621,7 @@ const LANG_TR = {
     GURAPP_DELETE_STORE_DENIED: "Uygulama Mağazası silinemez",
     GURAPP_INSTALLING: "{appName} yükleniyor",
     GURAPP_INSTALL_EXISTS: "{appName} zaten yüklü",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Hata: yalnızca Gurasuraisu App Store uygulama yükleyebilir"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Hata: yalnızca Polygol App Store uygulama yükleyebilir"
 };
 
 const LANG_AR_EG = { // Egyptian Arabic (ar-EG)
@@ -2205,9 +2205,9 @@ const LANG_UR = {
 };
 
 const LANG_ID = {
-    GREETING: "Gurasuraisu berhasil dimuat",
-    LICENCE: "Gurasuraisu dibuat oleh kirbIndustries, dan dilisensikan di bawah GNU General Public License, Versi 2.0 (GPL-2.0)",
-    WELCOME_MESSAGE: "Halo, selamat datang di Gurasuraisu!",
+    GREETING: "Polygol berhasil dimuat",
+    LICENCE: "Polygol dibuat oleh kirbIndustries, dan dilisensikan di bawah GNU General Public License, Versi 2.0 (GPL-2.0)",
+    WELCOME_MESSAGE: "Halo, selamat datang di Polygol!",
     PLACEHOLDER_MESSAGE: "Ketik pesan Anda",
     SEND: "Kirim",
     VOICE: "Suara",
@@ -2253,7 +2253,7 @@ const LANG_ID = {
     WALLPAPER_HISTORY_FAIL: "Gagal menyimpan riwayat wallpaper",
     ALL_WALLPAPER_REMOVE: "Semua wallpaper dihapus",
     WALLPAPER_REMOVE: "Wallpaper dihapus",
-    LOAD_SUCCESS: "Gurasuraisu berhasil dimuat",
+    LOAD_SUCCESS: "Polygol berhasil dimuat",
     NOT_FULLSCREEN: "Tidak layar penuh",
     CLOCK_STYLE_FAILED: "Gagal memuat Gaya Jam",
     CHECK_WORDS: ['diperbarui', 'lengkap', 'selesai', 'berhasil', 'selesai', 'siap', 'berhasil', 'diterima', 'terima', 'ya'],
@@ -2278,12 +2278,12 @@ const LANG_ID = {
     SETUP_OPEN_PRIVATE_DESC: "Data Anda tetap di perangkat setiap saat. Tidak ada data pengguna yang ditransfer ke layanan kami.",
     SETUP_ALLOW_PERMISSIONS: "Izinkan Izin",
     SETUP_BASIC_ACCESS: "Akses Dasar",
-    SETUP_BASIC_ACCESS_DESC: "Memungkinkan Gurasuraisu berfungsi dengan baik",
+    SETUP_BASIC_ACCESS_DESC: "Memungkinkan Polygol berfungsi dengan baik",
     SETUP_LOCATION_ACCESS: "Akses Lokasi",
     SETUP_LOCATION_ACCESS_DESC: "Memungkinkan Cuaca dan hasil yang dipersonalisasi",
     SETUP_NOTIFICATIONS: "Notifikasi",
     SETUP_NOTIFICATIONS_DESC: "Mengaktifkan pembaruan dan peringatan pengatur waktu",
-    SETUP_CANNIBALIZE: "Kanibalisasi Gurasuraisu Anda",
+    SETUP_CANNIBALIZE: "Kanibalisasi Polygol Anda",
     SETUP_CLOCK_FORMAT: "Format Jam",
     SETUP_SHOW_SECONDS: "Tampilkan Detik",
     SETUP_HIDE_SECONDS: "Sembunyikan Detik",
@@ -2317,13 +2317,13 @@ const LANG_ID = {
     GURAPP_DELETE_STORE_DENIED: "App Store tidak dapat dihapus",
     GURAPP_INSTALLING: "Menginstal {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} sudah terinstal",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Kesalahan: hanya Gurasuraisu App Store yang dapat menginstal aplikasi"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Kesalahan: hanya Polygol App Store yang dapat menginstal aplikasi"
 };
 
 const LANG_JV = {
-    GREETING: "Gurasuraisu kasil dimuat",
-    LICENCE: "Gurasuraisu digawe dening kirbIndustries, lan dilisensi miturut Lisensi Umum Publik GNU, Versi 2.0 (GPL-2.0)",
-    WELCOME_MESSAGE: "Halo, sugeng rawuh ing Gurasuraisu!",
+    GREETING: "Polygol kasil dimuat",
+    LICENCE: "Polygol digawe dening kirbIndustries, lan dilisensi miturut Lisensi Umum Publik GNU, Versi 2.0 (GPL-2.0)",
+    WELCOME_MESSAGE: "Halo, sugeng rawuh ing Polygol!",
     PLACEHOLDER_MESSAGE: "Ketik pesen sampeyan",
     SEND: "Kirim",
     VOICE: "Swara",
@@ -2369,7 +2369,7 @@ const LANG_JV = {
     WALLPAPER_HISTORY_FAIL: "Gagal nyimpen riwayat wallpaper",
     ALL_WALLPAPER_REMOVE: "Kabeh wallpaper dibusak",
     WALLPAPER_REMOVE: "Wallpaper dibusak",
-    LOAD_SUCCESS: "Gurasuraisu kasil dimuat",
+    LOAD_SUCCESS: "Polygol kasil dimuat",
     NOT_FULLSCREEN: "Ora layar penuh",
     CLOCK_STYLE_FAILED: "Gagal ngemot Gaya Jam",
     CHECK_WORDS: ['dianyari', 'rampung', 'wis rampung', 'sukses', 'rampung', 'siap', 'kasil', 'ditampa', 'nampa', 'ya'],
@@ -2394,12 +2394,12 @@ const LANG_JV = {
     SETUP_OPEN_PRIVATE_DESC: "Data sampeyan tetep ana ing piranti kabeh wektu. Ora ana data pangguna sing ditransfer menyang layanan kita.",
     SETUP_ALLOW_PERMISSIONS: "Ngaparingi Ijin",
     SETUP_BASIC_ACCESS: "Akses Dasar",
-    SETUP_BASIC_ACCESS_DESC: "Ngaktifake Gurasuraisu bisa digunakake kanthi bener",
+    SETUP_BASIC_ACCESS_DESC: "Ngaktifake Polygol bisa digunakake kanthi bener",
     SETUP_LOCATION_ACCESS: "Akses Lokasi",
     SETUP_LOCATION_ACCESS_DESC: "Ngaktifake Cuaca lan asil pribadi",
     SETUP_NOTIFICATIONS: "Notifikasi",
     SETUP_NOTIFICATIONS_DESC: "Ngaktifake nganyari lan tandha wektu",
-    SETUP_CANNIBALIZE: "Kanibalisasi Gurasuraisu sampeyan",
+    SETUP_CANNIBALIZE: "Kanibalisasi Polygol sampeyan",
     SETUP_CLOCK_FORMAT: "Format Jam",
     SETUP_SHOW_SECONDS: "Tampilake Detik",
     SETUP_HIDE_SECONDS: "Nyamar Detik",
@@ -2433,7 +2433,7 @@ const LANG_JV = {
     GURAPP_DELETE_STORE_DENIED: "App Store ora bisa dibusak",
     GURAPP_INSTALLING: "Nginstal {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} wis diinstal",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Error: mung Gurasuraisu App Store sing bisa nginstal aplikasi"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Error: mung Polygol App Store sing bisa nginstal aplikasi"
 };
 
 const LANG_FA_IR = { // Iranian Persian (fa-IR)
@@ -2549,13 +2549,13 @@ const LANG_FA_IR = { // Iranian Persian (fa-IR)
     GURAPP_DELETE_STORE_DENIED: "فروشگاه برنامه قابل حذف نیست",
     GURAPP_INSTALLING: "در حال نصب {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} از قبل نصب شده است",
-    GURAPP_INSTALL_NONSTORE_DENIED: "خطا: فقط Gurasuraisu App Store می‌تواند برنامه‌ها را نصب کند"
+    GURAPP_INSTALL_NONSTORE_DENIED: "خطا: فقط Polygol App Store می‌تواند برنامه‌ها را نصب کند"
 };
 
 const LANG_IT = {
-    GREETING: "Gurasuraisu caricato con successo",
-    LICENCE: "Gurasuraisu è realizzato da kirbIndustries ed è concesso in licenza sotto la GNU General Public License, Versione 2.0 (GPL-2.0)",
-    WELCOME_MESSAGE: "Ciao, benvenuto in Gurasuraisu!",
+    GREETING: "Polygol caricato con successo",
+    LICENCE: "Polygol è realizzato da kirbIndustries ed è concesso in licenza sotto la GNU General Public License, Versione 2.0 (GPL-2.0)",
+    WELCOME_MESSAGE: "Ciao, benvenuto in Polygol!",
     PLACEHOLDER_MESSAGE: "Digita il tuo messaggio",
     SEND: "Invia",
     VOICE: "Voce",
@@ -2601,7 +2601,7 @@ const LANG_IT = {
     WALLPAPER_HISTORY_FAIL: "Impossibile salvare la cronologia dello sfondo",
     ALL_WALLPAPER_REMOVE: "Tutti gli sfondi rimossi",
     WALLPAPER_REMOVE: "Sfondo rimosso",
-    LOAD_SUCCESS: "Gurasuraisu caricato con successo",
+    LOAD_SUCCESS: "Polygol caricato con successo",
     NOT_FULLSCREEN: "Non a schermo intero",
     CLOCK_STYLE_FAILED: "Impossibile caricare lo Stile Orologio",
     CHECK_WORDS: ['aggiornato', 'completo', 'fatto', 'successo', 'completato', 'pronto', 'con successo', 'accettato', 'accetta', 'sì'],
@@ -2626,12 +2626,12 @@ const LANG_IT = {
     SETUP_OPEN_PRIVATE_DESC: "I tuoi dati rimangono sul dispositivo in ogni momento. Nessun dato utente viene trasferito a nessuno dei nostri servizi.",
     SETUP_ALLOW_PERMISSIONS: "Consenti autorizzazioni",
     SETUP_BASIC_ACCESS: "Accesso base",
-    SETUP_BASIC_ACCESS_DESC: "Permette a Gurasuraisu di funzionare correttamente",
+    SETUP_BASIC_ACCESS_DESC: "Permette a Polygol di funzionare correttamente",
     SETUP_LOCATION_ACCESS: "Accesso alla posizione",
     SETUP_LOCATION_ACCESS_DESC: "Abilita meteo e risultati personalizzati",
     SETUP_NOTIFICATIONS: "Notifiche",
     SETUP_NOTIFICATIONS_DESC: "Abilita aggiornamenti e avvisi timer",
-    SETUP_CANNIBALIZE: "Cannibalizza il tuo Gurasuraisu",
+    SETUP_CANNIBALIZE: "Cannibalizza il tuo Polygol",
     SETUP_CLOCK_FORMAT: "Formato orologio",
     SETUP_SHOW_SECONDS: "Mostra Secondi",
     SETUP_HIDE_SECONDS: "Nascondi Secondi",
@@ -2665,13 +2665,13 @@ const LANG_IT = {
     GURAPP_DELETE_STORE_DENIED: "L'App Store non può essere eliminato",
     GURAPP_INSTALLING: "Installazione {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} è già installata",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Errore: solo Gurasuraisu App Store può installare app"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Errore: solo Polygol App Store può installare app"
 };
 
 const LANG_HA = {
-    GREETING: "An yi nasarar lodin Gurasuraisu",
-    LICENCE: "KirbIndustries ne ya yi Gurasuraisu, kuma yana da lasisin GNU General Public License, Shafin 2.0 (GPL-2.0)",
-    WELCOME_MESSAGE: "Sannu, maraba da zuwa Gurasuraisu!",
+    GREETING: "An yi nasarar lodin Polygol",
+    LICENCE: "KirbIndustries ne ya yi Polygol, kuma yana da lasisin GNU General Public License, Shafin 2.0 (GPL-2.0)",
+    WELCOME_MESSAGE: "Sannu, maraba da zuwa Polygol!",
     PLACEHOLDER_MESSAGE: "Rubuta saƙon ka",
     SEND: "Aika",
     VOICE: "Murya",
@@ -2717,7 +2717,7 @@ const LANG_HA = {
     WALLPAPER_HISTORY_FAIL: "An kasa adana tarihin bangon waya",
     ALL_WALLPAPER_REMOVE: "An cire dukkan bangon waya",
     WALLPAPER_REMOVE: "An cire bangon waya",
-    LOAD_SUCCESS: "An yi nasarar lodin Gurasuraisu",
+    LOAD_SUCCESS: "An yi nasarar lodin Polygol",
     NOT_FULLSCREEN: "Ba cikakken allo ba",
     CLOCK_STYLE_FAILED: "An kasa lodin Salon Agogo",
     CHECK_WORDS: ['an sabunta', 'cika', 'an gama', 'nasara', 'an kammala', 'a shirye', 'cikin nasara', 'an karɓa', 'karɓa', 'eh'],
@@ -2742,12 +2742,12 @@ const LANG_HA = {
     SETUP_OPEN_PRIVATE_DESC: "Bayananka suna kan na'urar koyaushe. Ba a tura bayanan mai amfani zuwa kowane sabis ɗinmu ba.",
     SETUP_ALLOW_PERMISSIONS: "Bada Izini",
     SETUP_BASIC_ACCESS: "Samun damar asali",
-    SETUP_BASIC_ACCESS_DESC: "Yana ba Gurasuraisu damar aiki yadda ya kamata",
+    SETUP_BASIC_ACCESS_DESC: "Yana ba Polygol damar aiki yadda ya kamata",
     SETUP_LOCATION_ACCESS: "Samun Damar Wuri",
     SETUP_LOCATION_ACCESS_DESC: "Yana ba da damar yanayi da sakamako na musamman",
     SETUP_NOTIFICATIONS: "Sanarwa",
     SETUP_NOTIFICATIONS_DESC: "Yana ba da damar sabuntawa da faɗakarwar lokaci",
-    SETUP_CANNIBALIZE: "Cinye Gurasuraisu ɗinka",
+    SETUP_CANNIBALIZE: "Cinye Polygol ɗinka",
     SETUP_CLOCK_FORMAT: "Tsarin Agogo",
     SETUP_SHOW_SECONDS: "Nuna Dakika",
     SETUP_HIDE_SECONDS: "Boye Dakika",
@@ -2781,7 +2781,7 @@ const LANG_HA = {
     GURAPP_DELETE_STORE_DENIED: "Ba za a iya share App Store ba",
     GURAPP_INSTALLING: "Ana shigar da {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} an riga an shigar da shi",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Kuskure: Gurasuraisu App Store ne kawai zai iya shigar da apps"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Kuskure: Polygol App Store ne kawai zai iya shigar da apps"
 };
 
 const LANG_GU = {
