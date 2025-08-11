@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gurasuraisu-cache-v2';
+const CACHE_NAME = 'polygol-cache-v2';
 
 const ASSETS_TO_CACHE = [
   '/',
@@ -12,9 +12,9 @@ const ASSETS_TO_CACHE = [
   '/manifest.json',
   '/assets/img/favi/regular.png',
   '/assets/img/pwaicon/regular.png',
-  '/assets/img/pwaicon/pride.png',
-  '/assets/img/ver/14.png',
-  '/assets/marketing/hero3.png',
+  '/assets/img/pwaicon/coloricon.png',
+  '/assets/img/pwaicon/monochrome.png',
+  '/assets/img/ver/15.png',
   '/transfer/index.html',
   '/appstore/index.html',
   '/assets/appicon/appstore.png',
