@@ -18,3 +18,5 @@ Timer Sound: Google
 ---
 
 Made by kirbIndustries
+
+AI Notice: Some sections of code are generated with various AI models. However, AI is not used at all for visual assets, such as Gurapp Icons.
