@@ -28,5 +28,12 @@
       "type": "image/png",
       "purpose": "monochrome maskable"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "/marketing/hero2.png",
+      "sizes": "1200x630",
+      "type": "image/png"
+    }
   ]
 }
