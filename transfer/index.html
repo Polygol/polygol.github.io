@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gurasuraisu - System Transfer</title>
+    <title>Polygol - System Transfer</title>
     <link rel="icon" href="/assets/appicon/transfer.png" type="image/png">
     <style>
         body {
@@ -100,7 +100,7 @@
 <body>
     <div class="container">
         <h1>System Transfer</h1>
-        <p>Use this tool to export your Gurasuraisu data to a file, or import it on a new device or browser.</p>
+        <p>Use this tool to export your Polygol data to a file, or import it on a new device or browser.</p>
 
         <div class="card">
             <h2>Export Data</h2>
@@ -120,7 +120,7 @@
         <div id="status">Ready.</div>
         
         <div class="actions">
-             <button id="return-home" class="btn-safe">Return to Gurasuraisu</button>
+             <button id="return-home" class="btn-safe">Return to Polygol</button>
         </div>
     </div>
 
@@ -293,7 +293,7 @@
                 return;
             }
 
-            if (!confirm("ARE YOU SURE?\n\nThis will permanently delete ALL current Gurasuraisu data on this device and replace it with the data from the file.") ||
+            if (!confirm("ARE YOU SURE?\n\nThis will permanently delete ALL current Polygol data on this device and replace it with the data from the file.") ||
                 !confirm("LAST CHANCE!\n\nThis action cannot be undone. Proceed with import?")) {
                 logStatus('Import cancelled by user.');
                 return;
@@ -322,7 +322,7 @@
                            const req = indexedDB.deleteDatabase(dbName);
                            req.onsuccess = resolve;
                            req.onerror = reject;
-                           req.onblocked = () => logStatus(`Deletion of ${dbName} is blocked. Please close other Gurasuraisu tabs.`);
+                           req.onblocked = () => logStatus(`Deletion of ${dbName} is blocked. Please close other Polygol tabs.`);
                         });
                     }
                     logStatus('Current data cleared.');
