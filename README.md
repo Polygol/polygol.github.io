@@ -1,6 +1,5 @@
 <img width="1200" height="630" alt="hero2" src="https://github.com/user-attachments/assets/80472d9e-976b-45e9-8988-2cf2ea18d2f0" />
 
-# Polygol
 Ambient OS-like dashboard with clock, weather and advanced features without tracking you or displaying ads.
 
 # Gurapp Applications
