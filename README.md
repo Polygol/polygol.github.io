@@ -1,8 +1,5 @@
-![favicon](https://github.com/user-attachments/assets/48c1a6bc-4e8c-4c77-9126-12146139b667)
-# Polygol (Made for GitHub Pages)
-Ambient display with clock, weather and advanced features without tracking you or displaying ads.
-
-**Visit at https://polygol.github.io**
+# Polygol
+Ambient OS-like dashboard with clock, weather and advanced features without tracking you or displaying ads.
 
 # Gurapp Applications
 Gurapp can extend your Gurasuraisu experience. The GitHub repository for each application are seperate from the `polygol.github.io` GitHub repository.
@@ -19,7 +16,5 @@ Application Icons: kirbIndustries
 Timer Sound: Google
 
 ---
-
-![kicxs](https://github.com/user-attachments/assets/9df7e24d-2cc7-44bb-b359-ef35c296248f)
 
 Made by kirbIndustries
