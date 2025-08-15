@@ -45,7 +45,7 @@ function applyLanguage(language) {
     const fontSelect = document.getElementById('font-select');
     if (fontSelect) {
         const options = {
-            "Inter": "DEFAULT", "Roboto": "WORK", "DynaPuff": "PUFFY", "DM Serif Display": "CLASSIC",
+            "Inter": "DEFAULT", "Open Runde": "WORK", "DynaPuff": "PUFFY", "DM Serif Display": "CLASSIC",
             "Iansui": "STROKES", "JetBrains Mono": "MONO", "DotGothic16": "PIXEL",
             "Patrick Hand": "WRITTEN", "Rampart One": "RAISED", "Doto": "DOT", "Nunito": "ROUND"
         };
@@ -1977,7 +1977,7 @@ async function initializeAiAssistant() {
                 { "name": "changeTheme", "description": "Change the UI theme.", "parameters": { "type": "OBJECT", "properties": { "themeName": { "type": "STRING", "enum": ["light", "dark"] } }, "required": ["themeName"] } },
                 { "name": "openApp", "description": "Opens an installed application by name.", "parameters": { "type": "OBJECT", "properties": { "appName": { "type": "STRING" } }, "required": ["appName"] } },
                 { "name": "toggleSeconds", "description": "Show or hide the seconds on the main clock.", "parameters": { "type": "OBJECT", "properties": { "show": { "type": "BOOLEAN" } }, "required": ["show"] } },
-                { "name": "setClockFont", "description": "Change the font of the main clock.", "parameters": { "type": "OBJECT", "properties": { "fontName": { "type": "STRING", "enum": ["Inter", "Roboto", "DynaPuff", "DM Serif Display", "Iansui", "JetBrains Mono", "DotGothic16", "Patrick Hand", "Rampart One", "Doto", "Nunito"] } }, "required": ["fontName"] } },
+                { "name": "setClockFont", "description": "Change the font of the main clock.", "parameters": { "type": "OBJECT", "properties": { "fontName": { "type": "STRING", "enum": ["Inter", "Open Runde", "DynaPuff", "DM Serif Display", "Iansui", "JetBrains Mono", "DotGothic16", "Patrick Hand", "Rampart One", "Doto", "Nunito"] } }, "required": ["fontName"] } },
                 { "name": "setMinimalMode", "description": "Enable or disable minimal mode to hide extra UI elements.", "parameters": { "type": "OBJECT", "properties": { "enabled": { "type": "BOOLEAN" } }, "required": ["enabled"] } },
                 { "name": "switchWallpaper", "description": "Switch to the next or previous wallpaper in the history.", "parameters": { "type": "OBJECT", "properties": { "direction": { "type": "STRING", "enum": ["next", "previous"] } }, "required": ["direction"] } },
                 { "name": "listApps", "description": "Get a list of all currently installed application names.", "parameters": { "type": "OBJECT", "properties": {} } },
