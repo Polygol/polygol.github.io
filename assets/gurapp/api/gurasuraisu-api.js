@@ -41,6 +41,10 @@
         * {
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
         }
+
+        h1, h2, h3, h4, h5, h6 {
+        	font-family: 'Open Runde', sans-serif;
+        }
     `;
     // Append the style to the head of the Gurapp's document.
     document.head.appendChild(style);
