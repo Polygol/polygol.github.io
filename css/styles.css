@@ -35,28 +35,28 @@
   font-family: 'Open Runde';
   font-style: normal;
   font-weight: 400;
-  src: url('https://github.com/lauridskern/open-runde/raw/main/src/web/OpenRunde-Regular.woff2') format('woff2');
+  src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Regular.woff2') format('woff2');
 }
 
 @font-face {
   font-family: 'Open Runde';
   font-style: normal;
   font-weight: 500;
-  src: url('https://github.com/lauridskern/open-runde/raw/main/src/web/OpenRunde-Medium.woff2') format('woff2');
+  src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Medium.woff2') format('woff2');
 }
 
 @font-face {
   font-family: 'Open Runde';
   font-style: normal;
   font-weight: 600;
-  src: url('https://github.com/lauridskern/open-runde/raw/main/src/web/OpenRunde-Semibold.woff2') format('woff2');
+  src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Semibold.woff2') format('woff2');
 }
 
 @font-face {
   font-family: 'Open Runde';
   font-style: normal;
   font-weight: 700;
-  src: url('https://github.com/lauridskern/open-runde/raw/main/src/web/OpenRunde-Bold.woff2') format('woff2');
+  src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Bold.woff2') format('woff2');
 }
 
 :root {
