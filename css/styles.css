@@ -416,6 +416,7 @@ input[type="color"]::-moz-color-swatch {
     cursor: pointer;
     transform: scale(1);
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+	font-weight: 500;
 }
 
 .persistent-clock::before {
