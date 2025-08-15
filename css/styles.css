@@ -904,6 +904,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .setting-item.active .setting-label {
+	font-family: 'Open Runde';
     font-weight: 500;
 }
 
@@ -1079,6 +1080,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .qcontrol-item.active .qc-label {
+	font-family: 'Open Runde';
     font-weight: 500;
 }
 
