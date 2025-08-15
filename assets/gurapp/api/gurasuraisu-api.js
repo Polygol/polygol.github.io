@@ -4,11 +4,40 @@
  * with the parent Gurasuraisu window and use its core functions.
  */
 
-// Gurasuraisu Cursor Injection
+// Gurasuraisu Font and Cursor Injection
 // This block runs as soon as the script is loaded by the Gurapp.
 (function() {
     const style = document.createElement('style');
     style.textContent = `
+        /* Inject Open Runde Font Faces via jsDelivr CDN */
+        @font-face {
+          font-family: 'Open Runde';
+          font-style: normal;
+          font-weight: 400;
+          src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Regular.woff2') format('woff2');
+        }
+
+        @font-face {
+          font-family: 'Open Runde';
+          font-style: normal;
+          font-weight: 500;
+          src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Medium.woff2') format('woff2');
+        }
+
+        @font-face {
+          font-family: 'Open Runde';
+          font-style: normal;
+          font-weight: 600;
+          src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Semibold.woff2') format('woff2');
+        }
+
+        @font-face {
+          font-family: 'Open Runde';
+          font-style: normal;
+          font-weight: 700;
+          src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Bold.woff2') format('woff2');
+        }
+
         * {
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
         }
