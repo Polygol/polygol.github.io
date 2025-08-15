@@ -1,29 +1,63 @@
+/* --- Styling fonts --- */
+
+/* Roboto */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap');
 
-/* DynaPuff: variable font, full range */
+/* DynaPuff */
 @import url('https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&display=swap');
 
-/* DM Serif Display: only has regular (400) and italic – no bold! */
+/* DM Serif Display (400) */
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap');
 
-/* Iansui: only supports regular (400) */
+/* Iansui (400) */
 @import url('https://fonts.googleapis.com/css2?family=Iansui&display=swap');
 
+/* JetBrains Mono */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap');
 
-/* DotGothic16: only supports regular (400) */
+/* DotGothic16 (400) */
 @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
 
-/* Patrick Hand: only regular (400) */
+/* Patrick Hand (400) */
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
 
-/* Rampart One: only regular (400) */
+/* Rampart One (400) */
 @import url('https://fonts.googleapis.com/css2?family=Rampart+One&display=swap');
 
-/* Doto: regular and bold */
+/* Doto */
 @import url('https://fonts.googleapis.com/css2?family=Doto:wght@400;700&display=swap'); 
 
+/* Nunito */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap');
+
+/* Open Runde */
+@font-face {
+  font-family: 'Open Runde';
+  font-style: normal;
+  font-weight: 400;
+  src: url('https://github.com/lauridskern/open-runde/raw/main/src/web/OpenRunde-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Open Runde';
+  font-style: normal;
+  font-weight: 500;
+  src: url('https://github.com/lauridskern/open-runde/raw/main/src/web/OpenRunde-Medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Open Runde';
+  font-style: normal;
+  font-weight: 600;
+  src: url('https://github.com/lauridskern/open-runde/raw/main/src/web/OpenRunde-Semibold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Open Runde';
+  font-style: normal;
+  font-weight: 700;
+  src: url('https://github.com/lauridskern/open-runde/raw/main/src/web/OpenRunde-Bold.woff2') format('woff2');
+}
 
 :root {
     --edge-refraction-filter: url('#edge-refraction-only');
