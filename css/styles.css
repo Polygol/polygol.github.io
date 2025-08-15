@@ -262,6 +262,10 @@ body.light-theme[style*="background-image"] .info {
   'opsz' 24;
   vertical-align: middle;
 }
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: 'Open Runde', sans-serif;
+}
  
 /* When animations are disabled */
 .reduce-animations * {
