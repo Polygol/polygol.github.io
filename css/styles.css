@@ -991,6 +991,7 @@ input[type="color"]::-moz-color-swatch {
 
 .media-widget-info .title {
     font-weight: bold;
+	font-family: 'Open Runde';
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
