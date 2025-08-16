@@ -23,18 +23,18 @@
           font-weight: 500;
           src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Medium.woff2') format('woff2');
         }
-
+        
         @font-face {
           font-family: 'Open Runde';
           font-style: normal;
-          font-weight: 600;
+          font-weight: 700;
           src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Semibold.woff2') format('woff2');
         }
 
         @font-face {
           font-family: 'Open Runde';
           font-style: normal;
-          font-weight: 700;
+          font-weight: 800;
           src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Bold.woff2') format('woff2');
         }
 
