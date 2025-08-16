@@ -418,6 +418,7 @@ input[type="color"]::-moz-color-swatch {
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
 	font-weight: 500;
 	transform-origin: top;
+	text-shadow: 0 0 2px var(--search-background);
 }
 
 .persistent-clock::before {
