@@ -7,7 +7,7 @@ Ambient OS-like dashboard with clock, weather and advanced features without trac
 You can access Polygol right now at https://polygol.github.io/
 
 # Gurapp Applications
-Gurapp can extend your Gurasuraisu experience. The GitHub repository for each application are seperate from the `polygol.github.io` GitHub repository.
+Gurapp can extend your Polygol experience. The GitHub repository for each application are seperate from the `polygol.github.io` GitHub repository.
 
 # Running Locally
 Applications: You must download the Gurapps from each GitHub repository and place them in the root directory in order for Gurapps to work correctly with Gurasuraisu locally.
