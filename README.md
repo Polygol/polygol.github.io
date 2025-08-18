@@ -10,7 +10,7 @@ You can access Polygol right now at https://polygol.github.io/
 Gurapp can extend your Polygol experience. The GitHub repository for each application are seperate from the `polygol.github.io` GitHub repository.
 
 # Running Locally
-Applications: You must download the Gurapps from each GitHub repository and place them in the root directory in order for Gurapps to work correctly with Gurasuraisu locally.
+Applications: You must download the Gurapps from each GitHub repository and place them in the root directory in order for Gurapps to work correctly with Polygol locally.
 Assets: You must edit the directory path in the code, since every path assumes that the asset is in root.
 
 # Documentation
