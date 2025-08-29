@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>App Store only works with Polygol.</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --edge-refraction-filter: url('#edge-refraction-only');
+            
+            /* Dark Theme (Default) Variables */
+            --background-color-dark: #1c1c1c;
+            --text-color-dark: #f9f9f9;
+            --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
+            --modal-background-dark: rgba(51, 51, 51, 0.8);
+            --modal-transparent-dark: rgba(51, 51, 51, 0.7);
+            --search-background-dark: rgba(51, 51, 51, 0.5);
+            --dark-overlay: rgba(51, 51, 51, 0.2);
+            --dark-transparent: rgba(255, 255, 255, 0.1); 
+            --glass-border-dark: rgba(100, 100, 100, 0.2);
+            
+            /* Light Theme Variables */
+            --background-color-light: #f0f0f0;
+            --text-color-light: #333333;
+            --secondary-text-color-light: rgba(0, 0, 0, 0.7);
+            --modal-background-light: rgba(220, 220, 220, 0.8);
+            --modal-transparent-light: rgba(240, 240, 240, 0.7);
+            --search-background-light: rgba(220, 220, 220, 0.5);
+            --light-overlay: rgba(220, 220, 220, 0.2);
+            --light-transparent: rgba(255, 255, 255, 0.1);
+            --glass-border-light: rgba(200, 200, 200, 0.2);
+            
+            /* Default to Dark Theme */
+            --background-color: var(--background-color-dark);
+            --text-color: var(--text-color-dark);
+            --secondary-text-color: var(--secondary-text-color-dark);
+            --modal-background: var(--modal-background-dark);
+            --modal-transparent: var(--modal-transparent-dark);
+            --search-background: var(--search-background-dark);
+            --overlay-color: var(--dark-overlay);
+            --transparent-color: var(--dark-transparent);
+            --glass-border: var(--glass-border-dark);
+        }
+        
+        body.light-theme {
+            --background-color: var(--background-color-light);
+            --text-color: var(--text-color-light);
+            --secondary-text-color: var(--secondary-text-color-light);
+            --modal-background: var(--modal-background-light);
+            --modal-transparent: var(--modal-transparent-light);
+            --search-background: var(--search-background-light);
+            --overlay-color: var(--light-overlay);
+            --transparent-color: var(--light-transparent);
+            --glass-border: var(--glass-border-light);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            font-variant-numeric: tabular-nums;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
+        }
+
+        body {
+            background-color: var(--background-color);
+            min-height: 100vh;
+            padding: 20px;
+            padding-top: 80px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            user-select: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background-color: var(--search-background);
+            border-radius: 50px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+            gap: 10px;
+            padding: 15px 20px;
+            background-color: transparent;
+            border: none;
+            position: fixed;
+            top: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            transition: top 0.3s ease;
+            width: 100%;
+            flex-wrap: wrap;
+            height: 80px;
+        }
+
+        .toolbar::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+        }
+
+        .toolbar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            backdrop-filter: blur(2.5px);
+            mask-image: linear-gradient(
+                to bottom,
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 90%,
+                rgba(0, 0, 0, 0) 100%
+            );
+            -webkit-mask-image: linear-gradient(
+                to bottom,
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 90%,
+                rgba(0, 0, 0, 0) 100%
+            );
+        }
+
+        .tab-btn {
+            background-color: var(--search-background);
+            color: transparent;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 9px 10px 18px;
+            font-size: 0;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(.3,1.2,.64,1) !IMPORTANT;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+            border: 1px solid var(--glass-border);
+        }
+
+        .tab-btn.active {
+            background-color: var(--secondary-text-color);
+            color: var(--background-color);
+            border-radius: 15px;
+            font-family: 'Open Runde';
+            font-weight: 500;
+            padding: 10px 18px 10px 16px;
+            font-size: revert;
+        }
+
+        .toolbar .tab-btn .material-symbols-rounded {
+            transition: color 0.3s;
+            color: var(--text-color);
+            font-size: 20px;
+        }
+
+        .toolbar .tab-btn.active .material-symbols-rounded {
+            color: var(--background-color) !important;
+        }
+
+        .search-input {
+            background-color: var(--search-background);
+            border-radius: 25px;
+            color: var(--text-color);
+            padding: 8px 15px;
+            height: 41px;
+            display: flex;
+            align-items: center;
+            backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+            border: 1px solid var(--glass-border);
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            min-width: 150px;
+            max-width: 250px;
+        }
+
+        .search-input::placeholder {
+            color: var(--secondary-text-color);
+        }
+
+        .content {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .app-card {
+            background-color: var(--search-background);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            flex-shrink: 0;
+            border: 1px solid var(--glass-border);
+        }
+
+        .app-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .app-name {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 16px;
+            font-family: 'Open Runde';
+        }
+
+        .app-developer {
+            color: var(--secondary-text-color);
+            font-size: 14px;
+        }
+
+        .app-rating {
+            color: var(--text-color);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .install-btn {
+            width: 100%;
+            background-color: var(--text-color);
+            color: var(--background-color);
+            border: 1px solid var(--text-color);
+            border-radius: 25px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transform: scale(1);
+        }
+        
+        .install-btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .install-btn:disabled {
+            background-color: var(--search-background);
+            color: var(--secondary-text-color);
+            border-color: var(--glass-border);
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+        
+        /* Add this new rule to your <style> block */
+        .uninstall-btn {
+            width: 100%;
+            background-color: transparent;
+            color: #ff453a; /* A standard 'destructive action' red */
+            border: 1px solid #ff453a;
+            border-radius: 25px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transform: scale(1);
+        }
+
+        .uninstall-btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .material-symbols-rounded {
+            font-size: 24px;
+            color: var(--text-color);
+        }
+
+        .loading-message, .no-apps-message {
+            text-align: center;
+            color: var(--secondary-text-color);
+            font-size: 16px;
+            padding: 40px;
+            grid-column: 1 / -1;
+        }
+
+        /* For clickable elements */
+        button, 
+        .tab-btn {
+            transform: scale(1);
+            transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+
+        /* Active effect */
+        button:active, 
+        .tab-btn:active {
+            transform: scale(0.96);
+            transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+            filter: brightness(1.5);
+        }
+
+        .create-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--overlay-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s linear 0.25s, opacity 0.25s linear;
+        }
+
+        .create-modal.show {
+            visibility: visible;
+            opacity: 1;
+            transition-delay: 0s;
+        }
+
+        .modal-content {
+            background-color: var(--search-background);
+            border-radius: 40px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px) saturate(2) var(--edge-refraction-filter);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background-color: var(--search-background);
+            border-radius: 50px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--secondary-text-color);
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            background-color: var(--search-background);
+            color: var(--text-color);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .submit-btn {
+            background-color: var(--text-color);
+            color: var(--background-color);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1rem;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 860px) {
+            .toolbar {
+                justify-content: flex-start;
+            }
+
+            .search-input {
+                max-width: 77px;
+                min-width: 77px;
+                height: 46px;
+            }
+
+            .tab-btn {
+                font-size: 0;
+                padding: 12px 11px 12px 20px;
+            }
+
+            .tab-btn.active {
+                font-size: 0;
+                padding: 12px 11px 12px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <svg style="display: none">
+        <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
+            <!-- Part 1: Create the turbulence that will only be used at the edges -->
+            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"/>
+        
+            <!-- Part 2: Create a mask that is only opaque at the edges -->
+            <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"/>
+            <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"/>
+            <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"/>
+        
+            <!-- Part 3: Create the final displacement map -->
+            <!-- First, create the 50% gray neutral background -->
+            <feFlood flood-color="#808080" result="neutral_base"/>
+            
+            <!-- Next, use feMerge to explicitly stack the edge turbulence ON TOP of the gray base.
+                 This is the key step that prevents the center from shifting. -->
+            <feMerge result="displacement_map">
+                <feMergeNode in="neutral_base"/>
+                <feMergeNode in="edge_turbulence"/>
+            </feMerge>
+        
+            <!-- Part 4: Apply the final, perfectly centered displacement map -->
+            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="40" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+    </svg>
+    
+    <div class="content">
+        <div class="toolbar">
+            <input type="text" class="search-input" placeholder="Search">
+            <button class="tab-btn active" data-category="All">
+                <span class="material-symbols-rounded">grid_view</span>
+                All
+            </button>
+            <button class="tab-btn" data-category="Tools">
+                <span class="material-symbols-rounded">automation</span>
+                Tools
+            </button>
+            <button class="tab-btn" data-category="Community">
+                <span class="material-symbols-rounded">group</span>
+                Social
+            </button>
+            <button class="tab-btn" data-category="Entertainment">
+                <span class="material-symbols-rounded">attractions</span>
+                Play
+            </button>
+            <button class="tab-btn" data-category="Other">
+                <span class="material-symbols-rounded">category</span>
+                Other
+            </button>
+            <button class="tab-btn" id="addStoreBtn">
+                <span class="material-symbols-rounded">add</span>
+                Add Store
+            </button>
+        </div>
+
+        <div class="app-grid" id="appGrid">
+            <!-- Apps will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- Add Store Modal -->
+    <div class="create-modal" id="addStoreModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add External App Store</h2>
+                <button class="close-modal" id="closeModal">×</button>
+            </div>
+            <div style="margin-bottom: 20px;">Using an unverified external App Store is at your own risk. It is recommended to only use kirbIndustries <a href="https://kirbindustries.gitbook.io/polygol/gurapps/verified-external-app-stores" target="_blank">verified stores</a>.</div>
+            <div class="form-group">
+                <label class="form-label">App Store URL</label>
+                <input type="url" class="form-input" id="storeUrlInput" placeholder="Add a valid Polygol App Store inventory URL" required>
+            </div>
+            <button class="submit-btn" id="submitStore">Add Store</button>
+        </div>
+    </div>
+
+    <script>
+        const appGrid = document.getElementById('appGrid');
+        const searchInput = document.querySelector('.search-input');
+        const categoryBtns = document.querySelectorAll('.tab-btn[data-category]');
+        const addStoreBtn = document.getElementById('addStoreBtn');
+        const addStoreModal = document.getElementById('addStoreModal');
+        const closeModal = document.getElementById('closeModal');
+        const submitStore = document.getElementById('submitStore');
+        const storeUrlInput = document.getElementById('storeUrlInput');
+    
+        let appStoreInventory = [];
+        let alreadyInstalledApps = [];
+        let currentCategory = 'All';
+    
+        let storeSources = JSON.parse(localStorage.getItem('appStoreSources')) || [
+            "/appstore/inventories/default/inventory.json",
+            "/glucose-gurapps/inventory.json"
+        ];
+
+        // Modal functionality
+        addStoreBtn.addEventListener('click', () => {
+            addStoreModal.classList.add('show');
+        });
+
+        closeModal.addEventListener('click', () => {
+            addStoreModal.classList.remove('show');
+        });
+
+        addStoreModal.addEventListener('click', (e) => {
+            if (e.target === addStoreModal) {
+                addStoreModal.classList.remove('show');
+            }
+        });
+
+        submitStore.addEventListener('click', () => {
+            const newUrl = storeUrlInput.value.trim();
+            if (newUrl && !storeSources.includes(newUrl)) {
+                storeSources.push(newUrl);
+                saveStoreSources();
+                loadAllInventories();
+                storeUrlInput.value = '';
+                addStoreModal.classList.remove('show');
+                if (window.Gurasuraisu) {
+                    Gurasuraisu.showPopup('App store added successfully');
+                }
+            }
+        });
+
+        // Handle enter key in modal
+        storeUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitStore.click();
+            }
+        });
+    
+        async function fetchInventory(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log(`Successfully fetched inventory from ${url}`, data);
+                return data;
+            } catch (error) {
+                console.error(`Failed to fetch or parse inventory from ${url}:`, error);
+                if (window.Gurasuraisu) {
+                    Gurasuraisu.showPopup(`Error loading store: ${url}`);
+                }
+                return [];
+            }
+        }
+    
+        async function loadAllInventories() {
+            appGrid.innerHTML = `<div class="loading-message"><svg width="24" height="24" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--text-color);"><style>.spinner_V8m1{transform-origin:center;animation:spinner_zKoa 2s linear infinite}.spinner_V8m1 circle{stroke-linecap:round;animation:spinner_YpZS 1.5s ease-in-out infinite}@keyframes spinner_zKoa{100%{transform:rotate(360deg)}}@keyframes spinner_YpZS{0%{stroke-dasharray:0 150;stroke-dashoffset:0}47.5%{stroke-dasharray:42 150;stroke-dashoffset:-16}95%,100%{stroke-dasharray:42 150;stroke-dashoffset:-59}}</style><g class="spinner_V8m1"><circle cx="12" cy="12" r="9.5" fill="none" stroke-width="3"></circle></g></svg></div>`;
+            const allFetchPromises = storeSources.map(url => fetchInventory(url));
+            const allInventories = await Promise.all(allFetchPromises);
+            appStoreInventory = allInventories.flatMap(inventory => (inventory && inventory.apps) ? inventory.apps : []);
+            filterAndRender();
+        }
+        
+        function saveStoreSources() {
+            localStorage.setItem('appStoreSources', JSON.stringify(storeSources));
+        }
+
+        function initializeStore() {
+            // 1. First, request the list of installed apps from the parent.
+            // The parent will respond with a 'message' event, which our listener above will catch.
+            if (window.Gurasuraisu) {
+                Gurasuraisu.requestInstalledApps();
+            }
+    
+            // 2. In parallel, start loading the app inventories.
+            loadAllInventories();
+        }
+    
+        function createAppCard(app) {
+            const isInstalled = alreadyInstalledApps.includes(app.name);
+        
+            // Provide a fallback icon path. 
+            const icon = app.iconUrl || '/assets/appicon/default.png'; 
+        
+            const buttonHtml = isInstalled
+                ? `<button class="uninstall-btn" data-name="${app.name}">
+                       <span class="material-symbols-rounded">delete</span>
+                       Uninstall
+                   </button>`
+                : `<button class="install-btn" data-id="${app.id}">
+                       <span class="material-symbols-rounded">download</span>
+                       Install
+                   </button>`;
+        
+            return `
+                <div class="app-card" data-app-name="${app.name}">
+                    <div class="app-header">
+                        <img src="${icon}" alt="${app.name}" class="app-icon" crossorigin="anonymous" referrerpolicy="no-referrer">
+                        <div class="app-info">
+                            <div class="app-name">${app.name}</div>
+                            <div class="app-developer">${app.developer || 'Unknown Developer'}</div>
+                        </div>
+                    </div>
+                    ${buttonHtml}
+                </div>
+            `;
+        }
+    
+        function filterAndRender() {
+            const searchTerm = searchInput.value.toLowerCase();
+            let filteredApps = appStoreInventory;
+    
+            if (searchTerm) {
+                filteredApps = filteredApps.filter(app => 
+                    app.name.toLowerCase().includes(searchTerm) || 
+                    app.developer.toLowerCase().includes(searchTerm)
+                );
+            }
+    
+            if (currentCategory !== 'All') {
+                filteredApps = filteredApps.filter(app => app.category === currentCategory);
+            }
+            
+            if(filteredApps.length > 0) {
+                 appGrid.innerHTML = filteredApps.map(app => createAppCard(app)).join('');
+            } else {
+                 appGrid.innerHTML = `<div class="no-apps-message">No apps found</div>`;
+            }
+        }
+    
+        window.addEventListener('message', (event) => {
+            if (event.origin !== window.location.origin) return;
+            if (event.data.type === 'installed-apps-list') {
+                alreadyInstalledApps = event.data.apps;
+                filterAndRender(); // Re-render now that we know what's installed
+            }
+        });
+    
+        appGrid.addEventListener('click', (e) => {
+            const installBtn = e.target.closest('.install-btn');
+            const uninstallBtn = e.target.closest('.uninstall-btn');
+    
+            if (installBtn && !installBtn.disabled) {
+                const appId = installBtn.dataset.id;
+                const appToInstall = appStoreInventory.find(app => app.id === appId);
+                if (appToInstall) {
+                    Gurasuraisu.installApp(appToInstall);
+                    
+                    // Immediately update UI for responsiveness
+                    alreadyInstalledApps.push(appToInstall.name);
+                    filterAndRender(); // Re-render to show the change
+                }
+            } else if (uninstallBtn) {
+                const appName = uninstallBtn.dataset.name;
+                if (appName) {
+                    // Call the new API function
+                    Gurasuraisu.deleteApp(appName);
+    
+                    // Immediately update UI for responsiveness
+                    alreadyInstalledApps = alreadyInstalledApps.filter(name => name !== appName);
+                    filterAndRender(); // Re-render to show the change
+                }
+            }
+        });
+    
+        searchInput.addEventListener('input', filterAndRender);
+    
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                categoryBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCategory = btn.dataset.category;
+                filterAndRender();
+            });
+        });
+    
+        initializeStore();
+    </script>
+</body>
+</html>
