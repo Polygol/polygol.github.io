@@ -13,12 +13,16 @@ Gurapp can extend your Polygol experience. The GitHub repository for each applic
 Applications: You must download the Gurapps from each GitHub repository and place them in the root directory in order for Gurapps to work correctly with Polygol locally.
 Assets: You must edit the directory path in the code, since every path assumes that the asset is in root.
 
+# I HATE MISSING ASSETS
+If you see images of Fanny BFDI, the assets could not be found. If you are running locally, make sure you have followed the steps.
+
 # Documentation
 https://kirbindustries.gitbook.io/polygol
 
-# Credits
+# Acknowledgements 
 Application Icons: kirbIndustries
 Timer Sound: Google
+Fallback Fanny: jacknjellify
 
 ---
 
