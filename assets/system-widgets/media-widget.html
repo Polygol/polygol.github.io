@@ -16,6 +16,10 @@
             --secondary-text-color: rgba(0, 0, 0, 0.7);
         }
         * { box-sizing: border-box; }
+        html {
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 100%);
+        }
         body {
             margin: 0;
             padding: 15px;
@@ -66,7 +70,7 @@
             position: fixed;
             top: 0;
             left: 0;
-            z-index: -1;
+            z-index: -2;
         }
         .info {
             overflow: hidden;
