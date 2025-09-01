@@ -957,7 +957,7 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 18px 12px 13.25px;
+    padding: 12px 18px 12px 13.4px;
     margin: 10px 0;
     background-color: var(--search-background);
     border-radius: 25px;
