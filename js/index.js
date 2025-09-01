@@ -316,6 +316,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Connect all other settings ---
     connectGridItem('setting-wallpaper', 'uploadButton');
+    connectGridItem('setting-wallpaper-blur', 'wallpaper-blur-slider');
+    connectGridItem('setting-wallpaper-brightness', 'wallpaper-brightness-slider');
+    connectGridItem('setting-wallpaper-contrast-fx', 'wallpaper-contrast-slider');
     connectGridItem('setting-reset', 'resetButton');
     connectGridItem('setting-seconds', 'seconds-switch');
     connectGridItem('setting-clock-stack', 'clock-stack-switch');
@@ -2866,7 +2869,10 @@ function loadRecentWallpapers() {
 	    stackEnabled: false,
 	    showSeconds: true,
 	    showWeather: true,
-        alignment: 'center'
+        alignment: 'center',
+        wallpaperBlur: '0',
+        wallpaperBrightness: '100',
+        wallpaperContrast: '100'
 	};
     
     let updated = false;
@@ -2878,6 +2884,18 @@ function loadRecentWallpapers() {
         // Add alignment property to older wallpapers that don't have it
         if (wallpaper.clockStyles.alignment === undefined) {
             wallpaper.clockStyles.alignment = 'center';
+            updated = true;
+        }
+        if (wallpaper.clockStyles.wallpaperBlur === undefined) {
+            wallpaper.clockStyles.wallpaperBlur = '0';
+            updated = true;
+        }
+        if (wallpaper.clockStyles.wallpaperBrightness === undefined) {
+            wallpaper.clockStyles.wallpaperBrightness = '100';
+            updated = true;
+        }
+        if (wallpaper.clockStyles.wallpaperContrast === undefined) {
+            wallpaper.clockStyles.wallpaperContrast = '100';
             updated = true;
         }
     });
@@ -3403,6 +3421,9 @@ async function jumpToWallpaper(index) {
         const secondsSwitch = document.getElementById('seconds-switch');
         const weatherSwitch = document.getElementById('weather-switch');
         const alignmentSelect = document.getElementById('alignment-select');
+        const blurSlider = document.getElementById('wallpaper-blur-slider');
+        const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
+        const contrastSlider = document.getElementById('wallpaper-contrast-slider');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
         if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
@@ -3424,8 +3445,13 @@ async function jumpToWallpaper(index) {
             alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
         }
 
+        if (blurSlider) blurSlider.value = wallpaper.clockStyles.wallpaperBlur || '0';
+        if (brightnessSlider) brightnessSlider.value = wallpaper.clockStyles.wallpaperBrightness || '100';
+        if (contrastSlider) contrastSlider.value = wallpaper.clockStyles.wallpaperContrast || '100';
+
         // Apply the styles
         applyClockStyles();
+        applyWallpaperEffects();
         applyAlignment(wallpaper.clockStyles.alignment || 'center');
         updateClockAndDate();
     }
@@ -3512,6 +3538,9 @@ function switchWallpaper(direction) {
         const secondsSwitch = document.getElementById('seconds-switch');
         const weatherSwitch = document.getElementById('weather-switch');
         const alignmentSelect = document.getElementById('alignment-select');
+        const blurSlider = document.getElementById('wallpaper-blur-slider');
+        const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
+        const contrastSlider = document.getElementById('wallpaper-contrast-slider');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
         if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
@@ -3533,9 +3562,14 @@ function switchWallpaper(direction) {
         if (alignmentSelect) {
             alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
         }
+
+        if (blurSlider) blurSlider.value = wallpaper.clockStyles.wallpaperBlur || '0';
+        if (brightnessSlider) brightnessSlider.value = wallpaper.clockStyles.wallpaperBrightness || '100';
+        if (contrastSlider) contrastSlider.value = wallpaper.clockStyles.wallpaperContrast || '100';
         
         // Apply the styles
         applyClockStyles();
+        applyWallpaperEffects();
         applyAlignment(wallpaper.clockStyles.alignment || 'center');
 
         // Update clock and weather display
@@ -3713,6 +3747,9 @@ function syncUiStates() {
     document.getElementById('setting-style').classList.toggle('active', document.getElementById('font-select').value !== 'Inter');
     document.getElementById('setting-wallpaper').classList.toggle('active', recentWallpapers.length > 0);
     document.getElementById('setting-alignment').classList.toggle('active', document.getElementById('alignment-select').value !== 'center');
+    document.getElementById('setting-wallpaper-blur').classList.toggle('active', document.getElementById('wallpaper-blur-slider').value !== '0');
+    document.getElementById('setting-wallpaper-brightness').classList.toggle('active', document.getElementById('wallpaper-brightness-slider').value !== '100');
+    document.getElementById('setting-wallpaper-contrast-fx').classList.toggle('active', document.getElementById('wallpaper-contrast-slider').value !== '100');
 }
 
 function setupFontSelection() {
@@ -3724,6 +3761,9 @@ function setupFontSelection() {
     const colorSwitch = document.getElementById('clock-color-switch');
     const stackSwitch = document.getElementById('clock-stack-switch');
     const alignmentSelect = document.getElementById('alignment-select');
+    const blurSlider = document.getElementById('wallpaper-blur-slider');
+    const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
+    const contrastSlider = document.getElementById('wallpaper-contrast-slider');
     
     // Get the computed --text-color value for the default
     const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
@@ -3744,11 +3784,11 @@ function setupFontSelection() {
     colorSwitch.checked = colorEnabled;
     stackSwitch.checked = stackEnabled;
     alignmentSelect.value = savedAlignment;
-    
+
     // Function to save current clock styles to the current wallpaper
-    function saveCurrentClockStyles() {
+    function saveCurrentWallpaperSettings() {
         if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0 && currentWallpaperPosition < recentWallpapers.length) {
-            const currentClockStyles = {
+            const currentWallpaperSettings = {
                 font: fontSelect.value,
                 weight: (weightSlider.value * 10).toString(),
                 color: colorPicker.value,
@@ -3756,11 +3796,14 @@ function setupFontSelection() {
                 stackEnabled: stackSwitch.checked,
                 showSeconds: document.getElementById('seconds-switch')?.checked || false,
                 showWeather: document.getElementById('weather-switch')?.checked !== false,
-                alignment: alignmentSelect.value
+                alignment: alignmentSelect.value,
+                wallpaperBlur: blurSlider ? blurSlider.value : '0',
+                wallpaperBrightness: brightnessSlider ? brightnessSlider.value : '100',
+                wallpaperContrast: contrastSlider ? contrastSlider.value : '100'
             };
             
             // Update the current wallpaper's clock styles
-            recentWallpapers[currentWallpaperPosition].clockStyles = currentClockStyles;
+            recentWallpapers[currentWallpaperPosition].clockStyles = currentWallpaperSettings;
             
             // Save to localStorage
             saveRecentWallpapers();
@@ -3787,7 +3830,7 @@ function setupFontSelection() {
         // Ensure font is loaded before applying
         document.fonts.load(`16px ${selectedFont}`).then(() => {
             applyClockStyles();
-            saveCurrentClockStyles(); // Save to current wallpaper
+            saveCurrentWallpaperSettings(); // Save to current wallpaper
 	        syncUiStates();
         }).catch(() => {
             showPopup(currentLanguage.CLOCK_STYLE_FAILED);
@@ -3797,27 +3840,37 @@ function setupFontSelection() {
     // Handle alignment changes
     alignmentSelect.addEventListener('change', (e) => {
         applyAlignment(e.target.value);
-        saveCurrentClockStyles();
+        saveCurrentWallpaperSettings();
         syncUiStates();
     });
     
     // Handle weight changes with the slider
     weightSlider.addEventListener('input', (e) => {
         applyClockStyles();
-        saveCurrentClockStyles(); // Save to current wallpaper
+        saveCurrentWallpaperSettings(); // Save to current wallpaper
 	    syncUiStates();
+    });
+
+    [blurSlider, brightnessSlider, contrastSlider].forEach(slider => {
+        if (slider) {
+            slider.addEventListener('input', () => {
+                applyWallpaperEffects();
+                saveCurrentWallpaperSettings();
+                syncUiStates();
+            });
+        }
     });
     
     // Handle color changes with the color picker
     colorPicker.addEventListener('input', (e) => {
         applyClockStyles();
-        saveCurrentClockStyles(); // Save to current wallpaper
+        saveCurrentWallpaperSettings(); // Save to current wallpaper
     });
     
     // Handle color switch toggle
     colorSwitch.addEventListener('change', (e) => {
         applyClockStyles();
-        saveCurrentClockStyles(); // Save to current wallpaper
+        saveCurrentWallpaperSettings(); // Save to current wallpaper
     
         // Show/hide the color picker based on switch state
         colorPicker.style.display = e.target.checked ? 'inline-block' : 'none';
@@ -3827,7 +3880,7 @@ function setupFontSelection() {
     // Handle stack switch toggle
     stackSwitch.addEventListener('change', (e) => {
         applyClockStyles();
-        saveCurrentClockStyles(); // Save to current wallpaper
+        saveCurrentWallpaperSettings(); // Save to current wallpaper
     });
     
     // Set initial color picker state based on switch
