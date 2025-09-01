@@ -1286,7 +1286,7 @@ input[type="color"]::-moz-color-swatch {
     border: 1px solid var(--glass-border);
 }
 
-input[type="checkbox"] { {
+input[type="checkbox"] {
     appearance: none;
     width: 50px;
     height: 32px;
