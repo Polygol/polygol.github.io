@@ -309,25 +309,34 @@ function renderWidgets() {
             snapLineV.style.display = 'none';
             snapLineH.style.display = 'none';
             instance.classList.remove('is-dragging');
+            instance.style.transform = ''; // Remove scaling effect
 
             if (isDragging) {
-                // Save the new position
+                // --- CORRECTED POSITION SAVING LOGIC ---
                 const widgetToUpdate = activeWidgets[index];
-                widgetToUpdate.snapX = instance.dataset.snapX;
-                widgetToUpdate.snapY = instance.dataset.snapY;
+                const finalRect = instance.getBoundingClientRect(); // Get the final visual position
 
+                widgetToUpdate.snapX = instance.dataset.snapX || 'left';
+                widgetToUpdate.snapY = instance.dataset.snapY || 'top';
+                
+                // Calculate the correct offset based on the snap anchor
                 if (widgetToUpdate.snapX === 'right') {
-                    widgetToUpdate.x = window.innerWidth - parseFloat(instance.dataset.finalX) - instance.offsetWidth;
+                    widgetToUpdate.x = window.innerWidth - finalRect.right;
                 } else {
-                    widgetToUpdate.x = parseFloat(instance.dataset.finalX);
+                    widgetToUpdate.x = finalRect.left;
                 }
 
                 if (widgetToUpdate.snapY === 'bottom') {
-                    widgetToUpdate.y = window.innerHeight - parseFloat(instance.dataset.finalY) - instance.offsetHeight;
+                    widgetToUpdate.y = window.innerHeight - finalRect.bottom;
                 } else {
-                    widgetToUpdate.y = parseFloat(instance.dataset.finalY);
+                    widgetToUpdate.y = finalRect.top;
                 }
+                
                 saveWidgets();
+                // We re-render to ensure the CSS snaps from the saved values perfectly.
+                renderWidgets(); 
+                // --- END OF FIX ---
+
             } else {
                  // It was a tap, open the app
                 const widgetData = availableWidgets[activeWidgets[index].appName].find(w => w.widgetId === activeWidgets[index].widgetId);
@@ -336,7 +345,7 @@ function renderWidgets() {
                 if (openUrl) createFullscreenEmbed(openUrl);
             }
         };
-
+		
         overlay.addEventListener('mousedown', onDragStart);
         overlay.addEventListener('touchstart', onDragStart, { passive: false });
     });
