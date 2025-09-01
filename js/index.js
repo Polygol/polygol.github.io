@@ -1,7 +1,7 @@
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
 
-let availableWidgets = {}; // Stores info about all possible widgets from apps
-let activeWidgets = []; // Stores the user's current layout
+let availableWidgets; // Stores info about all possible widgets from apps
+let activeWidgets; // Stores the user's current layout
 
 let originalFaviconUrl = '';
 
@@ -149,9 +149,7 @@ function saveAvailableWidgets() {
 
 function loadAvailableWidgets() {
     const saved = localStorage.getItem('availableWidgets');
-    if (saved) {
-        availableWidgets = JSON.parse(saved);
-    }
+    availableWidgets = saved ? JSON.parse(saved) : {};
 }
 
 function saveWidgets() {
@@ -269,9 +267,7 @@ function renderWidgetGrid() {
 
 function loadWidgets() {
     const saved = localStorage.getItem('activeWidgets');
-    if (saved) {
-        activeWidgets = JSON.parse(saved);
-    }
+    activeWidgets = saved ? JSON.parse(saved) : [];
     renderWidgetGrid();
 }
 
