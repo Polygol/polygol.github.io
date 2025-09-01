@@ -2082,6 +2082,17 @@ input[type="checkbox"]:checked::before {
     z-index: 2; /* Sits on top of the iframe */
 }
 
+.widget-instance-overlay:active {
+    background: rgba(255, 255, 255, 0.1);
+    transition: background-color 0.1s ease;
+}
+
+.widget-instance.dragging {
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    z-index: 100;
+    cursor: grabbing;
+}
 
 /* --- Widget Picker Drawer Styles --- */
 .widget-drawer {
