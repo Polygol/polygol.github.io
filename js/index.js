@@ -2554,7 +2554,10 @@ wallpaperInput.addEventListener("change", async event => {
 	            font: localStorage.getItem('clockFont') || 'Inter',
 	            weight: localStorage.getItem('clockWeight') || '700',
 	            color: localStorage.getItem('clockColor') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
-	            colorEnabled: localStorage.getItem('clockColorEnabled') === 'true'
+	            colorEnabled: localStorage.getItem('clockColorEnabled') === 'true',
+                wallpaperBlur: document.getElementById('wallpaper-blur-slider')?.value || '0',
+                wallpaperBrightness: document.getElementById('wallpaper-brightness-slider')?.value || '100',
+                wallpaperContrast: document.getElementById('wallpaper-contrast-slider')?.value || '100'
 	        };
 	    
 	        localStorage.setItem("wallpapers", JSON.stringify(processedWallpapers));
@@ -2650,12 +2653,15 @@ async function saveWallpaper(file) {
     try {
         const wallpaperId = `wallpaper_${Date.now()}`;
         
-        // Get current clock styles
+        // Get current clock AND wallpaper effect styles
         const currentClockStyles = {
             font: localStorage.getItem('clockFont') || 'Inter',
             weight: localStorage.getItem('clockWeight') || '700',
             color: localStorage.getItem('clockColor') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
-            colorEnabled: localStorage.getItem('clockColorEnabled') === 'true'
+            colorEnabled: localStorage.getItem('clockColorEnabled') === 'true',
+            wallpaperBlur: document.getElementById('wallpaper-blur-slider')?.value || '0',
+            wallpaperBrightness: document.getElementById('wallpaper-brightness-slider')?.value || '100',
+            wallpaperContrast: document.getElementById('wallpaper-contrast-slider')?.value || '100'
         };
         
         if (file.type.startsWith("video/")) {
@@ -2668,7 +2674,7 @@ async function saveWallpaper(file) {
                 type: file.type,
                 isVideo: true,
                 timestamp: Date.now(),
-                clockStyles: currentClockStyles // Store current clock styles
+                clockStyles: currentClockStyles // Store current settings
             });
         } else {
             let compressedData = await compressMedia(file);
@@ -2681,7 +2687,7 @@ async function saveWallpaper(file) {
                 type: file.type,
                 isVideo: false,
                 timestamp: Date.now(),
-                clockStyles: currentClockStyles // Store current clock styles
+                clockStyles: currentClockStyles // Store current settings
             });
         }
         
@@ -3679,17 +3685,20 @@ async function initializeAndApplyWallpaper() {
         
         const wallpaper = recentWallpapers[currentWallpaperPosition];
         
-        // Apply clock styles for the current wallpaper if they exist
+        // Apply styles for the current wallpaper if they exist
         if (wallpaper.clockStyles) {
+            // Update localStorage (important for other functions)
             localStorage.setItem('clockFont', wallpaper.clockStyles.font);
             localStorage.setItem('clockWeight', wallpaper.clockStyles.weight);
             localStorage.setItem('clockColor', wallpaper.clockStyles.color);
             localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled);
+            localStorage.setItem('wallpaperBlur', wallpaper.clockStyles.wallpaperBlur || '0');
+            localStorage.setItem('wallpaperBrightness', wallpaper.clockStyles.wallpaperBrightness || '100');
+            localStorage.setItem('wallpaperContrast', wallpaper.clockStyles.wallpaperContrast || '100');
         }
         
         if (wallpaper.isSlideshow) {
             isSlideshow = true;
-            // Keep the existing wallpapers array in localStorage for slideshow
             let slideshowData = JSON.parse(localStorage.getItem("wallpapers"));
             if (slideshowData && slideshowData.length > 0) {
                 currentWallpaperIndex = 0;
@@ -3697,21 +3706,9 @@ async function initializeAndApplyWallpaper() {
         } else {
             isSlideshow = false;
             localStorage.removeItem('wallpapers');
-            
-            // Since we're now using IndexedDB, we don't need to set localStorage values
-            // The applyWallpaper() function will fetch data directly from IndexedDB
-            if (wallpaper.isVideo) {
-                // Video wallpaper - data will be fetched from IndexedDB by applyWallpaper()
-                localStorage.setItem('wallpaperType', wallpaper.type);
-                localStorage.removeItem('customWallpaper'); // Clean up old localStorage data
-            } else {
-                // Image wallpaper - data will be fetched from IndexedDB by applyWallpaper()
-                localStorage.setItem('wallpaperType', wallpaper.type);
-                localStorage.removeItem('customWallpaper'); // Clean up old localStorage data
-            }
         }
         
-        // Apply the wallpaper now that everything is set up
+        // Apply the wallpaper image/video
         await applyWallpaper();
     } else {
         // No wallpapers available, set to default
@@ -5224,7 +5221,28 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadRecentWallpapers();
 });
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // --- Load ALL data and settings first ---
+    loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
+    loadSavedData();         // Load usage and lastOpened data
+    loadRecentWallpapers();
+    initializeWallpaperTracking();
+
+    // --- Perform initial setup that depends on the loaded data ---
+    firstSetup(); // This handles language
+    
+    // --- Initialize UI components ---
+    initAppDraw(); // Now this will use the fully populated 'apps' object
+    initializeCustomization(); // This sets up theme, wallpaper, fonts
+    setupWeatherToggle();
+    initializeAndApplyWallpaper().catch(error => {
+        console.error("Error initializing wallpaper:", error);
+    });
+    initializePageIndicator();
+    checkWallpaperState();
+    updateGurappsVisibility();
+    syncUiStates();
+	
     // Initialize control states
     const storedLightMode = localStorage.getItem('theme') || 'dark';
     const storedMinimalMode = localStorage.getItem('minimalMode') === 'true';
@@ -5585,29 +5603,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     `;
     document.head.appendChild(style);
-	
-    // --- 1. Load ALL data and settings first ---
-    loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
-    loadSavedData();         // Load usage and lastOpened data
-    loadRecentWallpapers();
-    initializeWallpaperTracking();
 
-    // --- 2. Perform initial setup that depends on the loaded data ---
-    firstSetup(); // This handles language
-    
-    // --- 3. Initialize UI components ---
-    initAppDraw(); // Now this will use the fully populated 'apps' object
-    initializeCustomization(); // This sets up theme, wallpaper, fonts
-    setupWeatherToggle();
-    initializeAndApplyWallpaper().catch(error => {
-        console.error("Error initializing wallpaper:", error);
-    });
-    initializePageIndicator();
-    checkWallpaperState();
-    updateGurappsVisibility();
-    syncUiStates();
-
-    // --- 4. Add other event listeners ---
+    // --- Add other event listeners ---
     const languageSwitcher = document.getElementById('language-switcher');
     if (languageSwitcher) {
         languageSwitcher.addEventListener('change', function () {
