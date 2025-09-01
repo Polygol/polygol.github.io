@@ -2047,9 +2047,8 @@ input[type="checkbox"]:checked::before {
 }
 
 .widget-instance.is-dragging {
-    transition: none; /* Disable transitions while dragging */
+    transition: none !imporant; /* Disable transitions while dragging */
     z-index: 1000;
-    transform: scale(1.05);
     box-shadow: 0 8px 30px rgba(0,0,0,0.2);
     cursor: grabbing;
 }
