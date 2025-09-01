@@ -230,12 +230,28 @@
                     <div class="setting-icon-bg"><span class="material-symbols-rounded">filter_vintage</span></div>
                     <span class="setting-label" data-lang-key="WALLPAPER"></span>
                 </div>
+                <div class="setting-item" id="setting-wallpaper-blur">
+                    <div class="setting-icon-bg"><span class="material-symbols-rounded">blur_on</span></div>
+                    <span class="setting-label" data-lang-key="BLUR">Blur</span>
+                </div>
+                <div class="setting-item" id="setting-wallpaper-brightness">
+                    <div class="setting-icon-bg"><span class="material-symbols-rounded">brightness_6</span></div>
+                    <span class="setting-label" data-lang-key="BRIGHTNESS">Brightness</span>
+                </div>
+                <div class="setting-item" id="setting-wallpaper-contrast-fx">
+                    <div class="setting-icon-bg"><span class="material-symbols-rounded">contrast</span></div>
+                    <span class="setting-label" data-lang-key="CONTRAST_FX">Contrast</span>
+                </div>
             </div>
 
             <!-- All original controls are moved here and hidden -->
             <div id="hidden-controls-container" style="display: none;">
                 <input type="file" id="wallpaperInput" accept=".png, .jpeg, .jpg, .webp, .gif, .mp4" multiple>
                 <button id="uploadButton">Add</button>
+                <input type="range" min="0" max="20" value="0" class="wallpaper-effect-slider" id="wallpaper-blur-slider">
+                <input type="range" min="50" max="150" value="100" class="wallpaper-effect-slider" id="wallpaper-brightness-slider">
+                <input type="range" min="50" max="150" value="100" class="wallpaper-effect-slider" id="wallpaper-contrast-slider">
+                <input type="range" min="20" max="100" value="100" class="weight-slider" id="weight-slider">
                 <input type="range" min="20" max="100" value="100" class="weight-slider" id="weight-slider">
                 <input type="color" id="clock-color-picker">
                 <input type="checkbox" id="clock-color-switch" checked>
