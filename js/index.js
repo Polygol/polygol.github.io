@@ -3469,6 +3469,20 @@ function loadSavedPosition() {
   }
 }
 
+function syncSettingsFromActiveWallpaper() {
+    if (recentWallpapers.length > 0 && currentWallpaperPosition < recentWallpapers.length) {
+        const currentWallpaper = recentWallpapers[currentWallpaperPosition];
+        const styles = currentWallpaper.clockStyles;
+
+        if (styles) {
+            // Write every saved style to its corresponding localStorage key
+            Object.keys(styles).forEach(key => {
+                localStorage.setItem(key, styles[key]);
+            });
+        }
+    }
+}
+
 // Create a new function to manage the indicator timeout
 function resetIndicatorTimeout() {
   // Clear any existing timeout
@@ -3744,6 +3758,15 @@ async function jumpToWallpaper(index) {
     
     currentWallpaperPosition = index;
     saveCurrentPosition();
+
+    // CRITICAL: Sync settings from the new wallpaper BEFORE applying them
+    syncSettingsFromActiveWallpaper();
+
+    // Now apply all styles from the newly synced localStorage
+    applyClockStyles();
+    applyWallpaperEffects();
+    applyAlignment(localStorage.getItem('clockAlignment') || 'center');
+    updateClockAndDate();
     
     let wallpaper = recentWallpapers[currentWallpaperPosition];
     
@@ -3794,13 +3817,6 @@ async function jumpToWallpaper(index) {
         if (shadowColorPicker) shadowColorPicker.value = wallpaper.clockStyles.shadowColor || '#000000';
         if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
         if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
-
-
-        // Apply the styles
-        applyClockStyles();
-        applyWallpaperEffects();
-        applyAlignment(wallpaper.clockStyles.alignment || 'center');
-        updateClockAndDate();
     }
         
     clearInterval(slideshowInterval);
@@ -3823,6 +3839,7 @@ async function jumpToWallpaper(index) {
     
     updatePageIndicatorDots(false);
     resetIndicatorTimeout();
+    syncUiStates();
 }
 
 // Add a function to check if we need to load or restore default wallpaper
@@ -3840,23 +3857,26 @@ function checkWallpaperState() {
 function switchWallpaper(direction) {
     if (recentWallpapers.length === 0) return;
     
-    // Calculate new position (existing logic)
     let newPosition = currentWallpaperPosition;
-    
     if (direction === 'right') {
-        newPosition++;
-        if (newPosition >= recentWallpapers.length) {
-            newPosition = recentWallpapers.length - 1;
-            return;
-        }
+        newPosition = (currentWallpaperPosition + 1) % recentWallpapers.length;
     } else if (direction === 'left') {
-        newPosition--;
-        if (newPosition < 0) {
-            newPosition = 0;
-            return;
-        }
+        newPosition = (currentWallpaperPosition - 1 + recentWallpapers.length) % recentWallpapers.length;
     }
     
+    if (newPosition !== currentWallpaperPosition || direction === 'none') {
+        currentWallpaperPosition = newPosition;
+    }
+    
+    saveCurrentPosition();
+    syncSettingsFromActiveWallpaper(); // Sync settings for the new wallpaper
+
+    // Apply all visual changes
+    applyClockStyles();
+    applyWallpaperEffects();
+    applyAlignment(localStorage.getItem('clockAlignment') || 'center');
+    updateClockAndDate();
+	
     // Only proceed if position actually changed or we're reapplying
     if (newPosition !== currentWallpaperPosition && direction !== 'none') {
         currentWallpaperPosition = newPosition;
@@ -3913,14 +3933,6 @@ function switchWallpaper(direction) {
         if (shadowColorPicker) shadowColorPicker.value = wallpaper.clockStyles.shadowColor || '#000000';
         if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
         if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
-        
-        // Apply the styles
-        applyClockStyles();
-        applyWallpaperEffects();
-        applyAlignment(wallpaper.clockStyles.alignment || 'center');
-
-        // Update clock and weather display
-        updateClockAndDate();
     }
     
     // Save the position for persistence
@@ -4014,52 +4026,6 @@ document.addEventListener('mouseup', (e) => {
     handleSwipe();
   }
 }, false);
-
-async function initializeAndApplyWallpaper() {
-    loadSavedPosition();
-    
-    if (recentWallpapers.length > 0) {
-        if (currentWallpaperPosition >= recentWallpapers.length) {
-            currentWallpaperPosition = recentWallpapers.length - 1;
-            saveCurrentPosition();
-        }
-        
-        const wallpaper = recentWallpapers[currentWallpaperPosition];
-        
-        // Apply styles for the current wallpaper if they exist
-        if (wallpaper.clockStyles) {
-            // Update localStorage (important for other functions)
-            localStorage.setItem('clockFont', wallpaper.clockStyles.font);
-            localStorage.setItem('clockWeight', wallpaper.clockStyles.weight);
-            localStorage.setItem('clockColor', wallpaper.clockStyles.color);
-            localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled);
-            localStorage.setItem('wallpaperBlur', wallpaper.clockStyles.wallpaperBlur || '0');
-            localStorage.setItem('wallpaperBrightness', wallpaper.clockStyles.wallpaperBrightness || '100');
-            localStorage.setItem('wallpaperContrast', wallpaper.clockStyles.wallpaperContrast || '100');
-        }
-        
-        if (wallpaper.isSlideshow) {
-            isSlideshow = true;
-            let slideshowData = JSON.parse(localStorage.getItem("wallpapers"));
-            if (slideshowData && slideshowData.length > 0) {
-                currentWallpaperIndex = 0;
-            }
-        } else {
-            isSlideshow = false;
-            localStorage.removeItem('wallpapers');
-        }
-        
-        // Apply the wallpaper image/video
-        await applyWallpaper();
-    } else {
-        // No wallpapers available, set to default
-        isSlideshow = false;
-        localStorage.setItem('wallpaperType', 'default');
-        localStorage.removeItem('customWallpaper');
-        localStorage.removeItem('wallpapers');
-        currentWallpaperPosition = 0;
-    }
-}
 
 // Centralized function to sync the visual state of settings items
 function syncUiStates() {
@@ -5584,6 +5550,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadSavedData();         // Load usage and lastOpened data
     loadRecentWallpapers();
     loadAvailableWidgets(); 
+	syncSettingsFromActiveWallpaper();
     initializeWallpaperTracking();
 
     // --- Perform initial setup that depends on the loaded data ---
@@ -5593,9 +5560,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     initAppDraw(); // Now this will use the fully populated 'apps' object
     initializeCustomization(); // This sets up theme, wallpaper, fonts
     setupWeatherToggle();
-    initializeAndApplyWallpaper().catch(error => {
-        console.error("Error initializing wallpaper:", error);
-    });
     initializePageIndicator();
 	loadWidgets();
     checkWallpaperState();
