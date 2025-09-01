@@ -42,48 +42,46 @@
         .album-art {
             width: 100vw;
             height: 100vh;
-            object-fit: cover;
+            /* Added background properties for the div */
+            background-size: cover;
+            background-position: center;
             flex-shrink: 0;
             position: fixed;
             top: 0;
             left: 0;
             z-index: -2;
-            /* Added mask-image for the specified opacity gradient */
-            -webkit-mask-image: linear-gradient(to top, 
-                rgba(0,0,0,0) 25%, 
+            /* Flipped opacity mask */
+            -webkit-mask-image: linear-gradient(to bottom, 
+                rgba(0,0,0,1) 25%, 
                 rgba(0,0,0,0.75) 50%, 
-                rgba(0,0,0,1) 100%
+                rgba(0,0,0,0) 100%
             );
-            mask-image: linear-gradient(to top, 
-                rgba(0,0,0,0) 25%, 
+            mask-image: linear-gradient(to bottom, 
+                rgba(0,0,0,1) 25%, 
                 rgba(0,0,0,0.75) 50%, 
-                rgba(0,0,0,1) 100%
+                rgba(0,0,0,0) 100%
             );
         }
-        .album-art::before,
+        /* New pseudo-element for the gradient blur effect */
         .album-art::after {
-            content: "";
+            content: '';
             position: absolute;
-            left: 0;
-            right: 0;
-            z-index: 1;
-            pointer-events: none; /* Ensure the pseudo-elements don't block interactions */
-        }
-        /* Apply blur at the top (before) */
-        .album-art::before {
-            top: 0;
-            height: 50%;
-            backdrop-filter: blur(0px); /* No blur at the top initially */
-            filter: blur(0px); /* No blur at the top initially */
-        }
-        /* Apply blur at the bottom (after) */
-        .album-art::after {
-            bottom: 0;
-            height: 50%;
-            backdrop-filter: blur(5px); /* Stronger blur at the bottom */
-            filter: blur(5px); /* Stronger blur at the bottom */
-            mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%); /* Gradual fade */
-            -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+            inset: 0;
+            /* Inherits the background from the parent .album-art div */
+            background: inherit;
+            /* Applies the maximum blur */
+            filter: blur(5px);
+            /* Mask to control the visibility of the blur */
+            -webkit-mask-image: linear-gradient(to bottom,
+                rgba(0,0,0,0) 0%,      /* 0% of 5px blur at the top */
+                rgba(0,0,0,0.75) 50%,  /* 75% of 5px blur at the middle (3.75px) */
+                rgba(0,0,0,1) 100%     /* 100% of 5px blur at the bottom */
+            );
+            mask-image: linear-gradient(to bottom,
+                rgba(0,0,0,0) 0%,
+                rgba(0,0,0,0.75) 50%,
+                rgba(0,0,0,1) 100%
+            );
         }
         .info {
             overflow: hidden;
@@ -120,13 +118,26 @@
             const container = document.getElementById('widget-container');
 
             function displayMetadata(metadata) {
+                let albumArtEl = document.querySelector('.album-art');
+
                 if (!metadata || !metadata.title) {
                     container.innerHTML = `<span class="placeholder">Nothing Playing</span>`;
+                    if (albumArtEl) albumArtEl.remove(); // Remove art if nothing is playing
                     return;
                 }
+
+                if (!albumArtEl) {
+                    // Create a <div> instead of an <img>
+                    albumArtEl = document.createElement('div');
+                    albumArtEl.className = 'album-art';
+                    document.body.prepend(albumArtEl);
+                }
+                
                 const artwork = metadata.artwork[0]?.src || '/assets/appicon/default.png';
+                // Set the background-image style instead of the src attribute
+                albumArtEl.style.backgroundImage = `url('${artwork}')`;
+
                 container.innerHTML = `
-                    <img src="${artwork}" class="album-art" alt="Album Art">
                     <div class="info">
                         <div class="title">${metadata.title}</div>
                         <div class="artist">${metadata.artist}</div>
