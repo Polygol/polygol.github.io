@@ -154,15 +154,19 @@ function renderWidgetGrid() {
 
     activeWidgets.forEach((widget, index) => {
         let widgetData;
-        for (const app in availableWidgets) {
-            const found = availableWidgets[app].find(w => w.widgetId === widget.widgetId);
+        let appData;
+
+        // Find the full data for the active widget
+        for (const appName in availableWidgets) {
+            const found = availableWidgets[appName].find(w => w.widgetId === widget.widgetId);
             if (found) {
                 widgetData = found;
+                appData = apps[appName];
                 break;
             }
         }
 
-        if (!widgetData) return;
+        if (!widgetData) return; // Don't render if the source widget isn't available
 
         const instance = document.createElement('div');
         instance.className = 'widget-instance';
@@ -179,6 +183,73 @@ function renderWidgetGrid() {
         const overlay = document.createElement('div');
         overlay.className = 'widget-instance-overlay';
 
+        // --- Interaction Logic ---
+        let longPressTimer;
+        let isDragging = false;
+        let startX, startY;
+        const longPressDuration = 500; // 500ms for long press
+        const dragThreshold = 10; // Pixels to move before it's a drag
+
+        const handleMouseDown = (e) => {
+            startX = e.clientX;
+            startY = e.clientY;
+            isDragging = false;
+            
+            longPressTimer = setTimeout(() => {
+                removeWidget(index);
+            }, longPressDuration);
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        };
+
+        const handleMouseMove = (e) => {
+            if (Math.abs(e.clientX - startX) > dragThreshold || Math.abs(e.clientY - startY) > dragThreshold) {
+                clearTimeout(longPressTimer); // It's a drag, not a long press
+                isDragging = true;
+                instance.classList.add('dragging');
+            }
+
+            if (isDragging) {
+                const rect = grid.getBoundingClientRect();
+                const x = e.clientX - rect.left - (instance.offsetWidth / 2);
+                const y = e.clientY - rect.top - (instance.offsetHeight / 2);
+                instance.style.transform = `translate(${x}px, ${y}px) scale(1.05)`;
+            }
+        };
+
+        const handleMouseUp = (e) => {
+            clearTimeout(longPressTimer);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+
+            if (isDragging) {
+                // Logic for what to do when drag ends. For now, we'll use it to remove.
+                // A more advanced implementation would handle reordering here.
+                instance.classList.remove('dragging');
+                instance.style.transform = ''; // Snap back
+                
+                // Example: Remove if dragged far enough
+                if (Math.abs(e.clientY - startY) > 100) {
+                     activeWidgets.splice(index, 1);
+                     renderWidgetGrid();
+                     saveWidgets();
+                }
+
+            } else {
+                // This was a tap. Open the app.
+                const openUrl = widgetData.openUrl || appData?.url;
+                if (openUrl) {
+                    createFullscreenEmbed(openUrl);
+                }
+            }
+            isDragging = false;
+        };
+
+        overlay.addEventListener('mousedown', handleMouseDown);
+        // Add touch equivalents for mobile
+        overlay.addEventListener('touchstart', (e) => handleMouseDown(e.touches[0]), { passive: true });
+        
         instance.appendChild(iframe);
         instance.appendChild(overlay);
         grid.appendChild(instance);
@@ -201,6 +272,14 @@ function addWidget(widgetData) {
     });
     renderWidgetGrid();
     saveWidgets();
+}
+
+function removeWidget(index) {
+    if (confirm('Remove this widget?')) {
+        activeWidgets.splice(index, 1);
+        renderWidgetGrid();
+        saveWidgets();
+    }
 }
 
 function openWidgetPicker() {
