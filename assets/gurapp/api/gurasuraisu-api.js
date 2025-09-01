@@ -259,3 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
 });
+
+// Announce that the API is ready
+const readyEvent = new CustomEvent('GurasuraisuReady');
+window.dispatchEvent(readyEvent);
