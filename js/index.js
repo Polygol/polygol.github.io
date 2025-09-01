@@ -4028,14 +4028,11 @@ async function initializeAndApplyWallpaper() {
         
         // Apply styles for the current wallpaper if they exist
         if (wallpaper.clockStyles) {
-            // Update localStorage (important for other functions)
-            localStorage.setItem('clockFont', wallpaper.clockStyles.font);
-            localStorage.setItem('clockWeight', wallpaper.clockStyles.weight);
-            localStorage.setItem('clockColor', wallpaper.clockStyles.color);
-            localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled);
-            localStorage.setItem('wallpaperBlur', wallpaper.clockStyles.wallpaperBlur || '0');
-            localStorage.setItem('wallpaperBrightness', wallpaper.clockStyles.wallpaperBrightness || '100');
-            localStorage.setItem('wallpaperContrast', wallpaper.clockStyles.wallpaperContrast || '100');
+            // Iterate over all saved styles for the current wallpaper and update localStorage.
+            // This ensures all settings are correctly loaded before the UI is rendered.
+            for (const [key, value] of Object.entries(wallpaper.clockStyles)) {
+                localStorage.setItem(key, value);
+            }
         }
         
         if (wallpaper.isSlideshow) {
