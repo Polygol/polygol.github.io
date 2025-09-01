@@ -130,6 +130,24 @@ const Gurasuraisu = {
   deleteApp: function(appObject) {
     this._call('deleteApp', [appObject]);
   },
+
+  /**
+   * Registers a widget with the Polygol dashboard.
+   * Apps should call this for each widget they provide.
+   * @param {object} widgetData - An object describing the widget.
+   * @param {string} widgetData.appName - The name of the app providing the widget.
+   * @param {string} widgetData.widgetId - A unique ID for the widget (e.g., 'weather-current').
+   * @param {string} widgetData.title - A user-friendly title (e.g., 'Current Weather').
+   * @param {string} widgetData.url - The URL of the widget's content.
+   * @param {Array<number>} widgetData.defaultSize - The default [width, height] in grid units (e.g., [1, 1]).
+   */
+  registerWidget: function(widgetData) {
+    if (!widgetData || !widgetData.appName || !widgetData.widgetId || !widgetData.url || !widgetData.title) {
+      console.error('[Gurasuraisu API] registerWidget requires appName, widgetId, url, and title.');
+      return;
+    }
+    this._call('registerWidget', [widgetData]);
+  },
     
   /**
    * Registers a new media session with the parent.
@@ -170,12 +188,12 @@ const Gurasuraisu = {
    * @param {object} actions - An object with functions, e.g., { playPause: () => {...}, next: () => {...} }
    */
   onMediaControl: function(actions) {
-      window.addEventListener('message', (event) => {
-          if (event.origin !== window.location.origin) return;
-          if (event.data.type === 'media-control' && actions[event.data.action]) {
-              actions[event.data.action]();
-          }
-      });
+    window.addEventListener('message', (event) => {
+      if (event.origin !== window.location.origin) return;
+        if (event.data.type === 'media-control' && actions[event.data.action]) {
+          actions[event.data.action]();
+        }
+    });
   }
 };
 
@@ -230,13 +248,13 @@ window.addEventListener('message', async (event) => {
  * in localStorage for a seamless appearance.
  */
 document.addEventListener('DOMContentLoaded', () => {
-    try {
-        const storedTheme = localStorage.getItem('theme') || 'dark';
-        document.body.classList.toggle('light-theme', storedTheme === 'light');
+  try {
+    const storedTheme = localStorage.getItem('theme') || 'dark';
+    document.body.classList.toggle('light-theme', storedTheme === 'light');
 
-        const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
-        document.body.classList.toggle('reduce-animations', !animationsEnabled);
-    } catch (e) {
-        console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
-    }
+    const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
+    document.body.classList.toggle('reduce-animations', !animationsEnabled);
+  } catch (e) {
+    console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
+  }
 });
