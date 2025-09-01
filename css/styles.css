@@ -943,7 +943,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .control-popup select, .control-popup input {
-    width: 100%;
+    /* width: 100%; */
 }
 
 .media-widget {
@@ -1286,7 +1286,7 @@ input[type="color"]::-moz-color-swatch {
     border: 1px solid var(--glass-border);
 }
 
-#theme-switch, #seconds-switch, #weather-switch, #minimal-switch, #gurapps-switch, #contrast-switch, #animation-switch, #clock-color-switch, #hour-switch, #clock-stack-switch {
+input[type="checkbox"] { {
     appearance: none;
     width: 50px;
     height: 32px;
@@ -1299,9 +1299,7 @@ input[type="color"]::-moz-color-swatch {
     cursor: pointer;
 }
 
-#theme-switch::before, #seconds-switch::before, 
-#weather-switch::before, #minimal-switch::before, 
-#gurapps-switch::before, #contrast-switch::before, #animation-switch::before, #clock-color-switch::before, #hour-switch::before, #clock-stack-switch::before {
+input[type="checkbox"]::before {
     content: '';
     position: absolute;
     width: 18px;
@@ -1315,15 +1313,11 @@ input[type="color"]::-moz-color-swatch {
     border: 1px solid var(--glass-border);
 }
 
-#theme-switch:checked, #seconds-switch:checked, 
-#weather-switch:checked, #minimal-switch:checked, 
-#gurapps-switch:checked, #contrast-switch:checked, #animation-switch:checked, #clock-color-switch:checked, #hour-switch:checked, #clock-stack-switch:checked {
+input[type="checkbox"]:checked {
     background-color: var(--secondary-text-color);
 }
 
-#theme-switch:checked::before, #seconds-switch:checked::before, 
-#weather-switch:checked::before, #minimal-switch:checked::before, 
-#gurapps-switch:checked::before, #contrast-switch:checked::before, #animation-switch:checked::before, #clock-color-switch:checked::before, #hour-switch:checked::before, #clock-stack-switch:checked::before {
+input[type="checkbox"]:checked::before {
     width: 22px;
     height: 22px;
     background-color: var(--background-color);
