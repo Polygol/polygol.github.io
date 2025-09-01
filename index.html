@@ -234,11 +234,24 @@
                     <div class="setting-icon-bg"><span class="material-symbols-rounded">filter_vintage</span></div>
                     <span class="setting-label" data-lang-key="WALLPAPER"></span>
                 </div>
+                <div class="setting-item" id="setting-wallpaper-blur">
+                    <div class="setting-icon-bg"><span class="material-symbols-rounded">blur_on</span></div>
+                    <span class="setting-label" data-lang-key="BLUR">Blur</span>
+                </div>
+                <div class="setting-item" id="setting-wallpaper-brightness">
+                    <div class="setting-icon-bg"><span class="material-symbols-rounded">brightness_6</span></div>
+                    <span class="setting-label" data-lang-key="BRIGHTNESS">Brightness</span>
+                </div>
+                <div class="setting-item" id="setting-wallpaper-contrast-fx">
+                    <div class="setting-icon-bg"><span class="material-symbols-rounded">contrast</span></div>
+                    <span class="setting-label" data-lang-key="CONTRAST_FX">Contrast</span>
+                </div>
             </div>
 
             <!-- All original controls are moved here and hidden -->
             <div id="hidden-controls-container" style="display: none;">
                 <input type="file" id="wallpaperInput" accept=".png, .jpeg, .jpg, .webp, .gif, .mp4" multiple>
+                <button id="uploadButton">Add</button>
                 <input type="range" min="0" max="20" value="0" class="wallpaper-effect-slider" id="wallpaper-blur-slider">
                 <input type="range" min="50" max="150" value="100" class="wallpaper-effect-slider" id="wallpaper-brightness-slider">
                 <input type="range" min="50" max="150" value="100" class="wallpaper-effect-slider" id="wallpaper-contrast-slider">
@@ -321,21 +334,6 @@
                     <option value="BHO">भोजपुरी</option>
                 </select>
                 <button id="resetButton">RESET_BTN</button>
-                <div id="wallpaper-controls-popup" class="control-popup-content">
-                    <button id="uploadButton">Add</button>
-                    <div class="popup-control-row">
-                        <label for="wallpaper-blur-slider">Blur</label>
-                        <input type="range" min="0" max="20" value="0" class="wallpaper-effect-slider" id="wallpaper-blur-slider">
-                    </div>
-                    <div class="popup-control-row">
-                        <label for="wallpaper-brightness-slider">Brightness</label>
-                        <input type="range" min="50" max="150" value="100" class="wallpaper-effect-slider" id="wallpaper-brightness-slider">
-                    </div>
-                     <div class="popup-control-row">
-                        <label for="wallpaper-contrast-slider">Contrast</label>
-                        <input type="range" min="50" max="150" value="100" class="wallpaper-effect-slider" id="wallpaper-contrast-slider">
-                    </div>
-                </div>
                 <select id="alignment-select">
                     <option value="center" data-lang-key="ALIGN_CENTER">Center</option>
                     <option value="left" data-lang-key="ALIGN_LEFT">Left</option>
