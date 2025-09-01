@@ -204,9 +204,11 @@ function addWidget(widgetData) {
 }
 
 function openWidgetPicker() {
-    const modal = document.getElementById('widget-picker-modal');
+    const drawer = document.getElementById('widget-picker-drawer');
     const grid = document.getElementById('widget-picker-grid');
     const blurOverlay = document.getElementById('blurOverlayControls');
+    if (!drawer || !grid || !blurOverlay) return;
+    
     grid.innerHTML = ''; // Clear old items
 
     // Check if there are any available widgets
@@ -232,21 +234,21 @@ function openWidgetPicker() {
         }
     }
     
-    modal.style.display = 'block';
     blurOverlay.style.display = 'block';
+    drawer.classList.add('open');
     setTimeout(() => {
-        modal.classList.add('show');
         blurOverlay.classList.add('show');
     }, 10);
 }
 
 function closeWidgetPicker() {
-    const modal = document.getElementById('widget-picker-modal');
+    const drawer = document.getElementById('widget-picker-drawer');
     const blurOverlay = document.getElementById('blurOverlayControls');
-    modal.classList.remove('show');
+    if (!drawer || !blurOverlay) return;
+
+    drawer.classList.remove('open');
     blurOverlay.classList.remove('show');
     setTimeout(() => {
-        modal.style.display = 'none';
         blurOverlay.style.display = 'none';
     }, 300);
 }
@@ -453,19 +455,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (widgetPickerItem) {
         widgetPickerItem.addEventListener('click', (e) => {
             e.stopPropagation();
-            closeControls(); // Close the main settings
-            setTimeout(openWidgetPicker, 150); // Open picker after a short delay
+            openWidgetPicker();
         });
     }
-
-    // --- NEW: Add event listener to close the picker ---
-    const widgetPickerModal = document.getElementById('widget-picker-modal');
-    if(widgetPickerModal) {
-        widgetPickerModal.addEventListener('click', (e) => {
-            if (e.target === widgetPickerModal) {
-                closeWidgetPicker();
-            }
-        });
+	
+    // --- NEW: Add event listeners to close the widget drawer ---
+    const widgetDrawer = document.getElementById('widget-picker-drawer');
+    const widgetDrawerHandle = document.querySelector('.widget-drawer-handle');
+    if (widgetDrawer && widgetDrawerHandle) {
+        widgetDrawerHandle.addEventListener('click', closeWidgetPicker);
+        blurOverlayControls.addEventListener('click', closeWidgetPicker);
     }
 
     // Album Art click listener (using event delegation for reliability)
