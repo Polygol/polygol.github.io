@@ -293,35 +293,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- Special handler for Clock Color & Gradient Popup ---
-    const clockColorItem = document.getElementById('setting-clock-color');
-    const clockColorPopup = document.getElementById('clock-color-popup');
-    if (clockColorItem && clockColorPopup) {
-        clockColorItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showControlPopup(clockColorItem, clockColorPopup);
-        });
-    }
+    // --- Special handler for complex popups ---
+    const setupComplexPopup = (itemId, popupId) => {
+        const item = document.getElementById(itemId);
+        const popup = document.getElementById(popupId);
+        if (item && popup) {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showControlPopup(item, popup);
+            });
+        }
+    };
 
-    // --- Special handler for Clock Shadow Popup ---
-    const clockShadowItem = document.getElementById('setting-clock-shadow');
-    const shadowControlsPopup = document.getElementById('shadow-controls-popup');
-    if (clockShadowItem && shadowControlsPopup) {
-        clockShadowItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showControlPopup(clockShadowItem, shadowControlsPopup);
-        });
-    }
-
-    // --- Special handler for Wallpaper Popup ---
-    const wallpaperItem = document.getElementById('setting-wallpaper');
-    const wallpaperControlsPopup = document.getElementById('wallpaper-controls-popup');
-    if (wallpaperItem && wallpaperControlsPopup) {
-        wallpaperItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showControlPopup(wallpaperItem, wallpaperControlsPopup);
-        });
-    }
+    setupComplexPopup('setting-clock-color', 'clock-color-popup');
+    setupComplexPopup('setting-clock-shadow', 'shadow-controls-popup');
+    setupComplexPopup('setting-wallpaper', 'wallpaper-controls-popup');
 
     // --- Connect all other settings ---
     connectGridItem('setting-reset', 'resetButton');
