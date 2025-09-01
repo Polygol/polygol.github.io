@@ -313,11 +313,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Special handler for Wallpaper Popup ---
+    const wallpaperItem = document.getElementById('setting-wallpaper');
+    const wallpaperControlsPopup = document.getElementById('wallpaper-controls-popup');
+    if (wallpaperItem && wallpaperControlsPopup) {
+        wallpaperItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlPopup(wallpaperItem, wallpaperControlsPopup);
+        });
+    }
+
     // --- Connect all other settings ---
-    connectGridItem('setting-wallpaper', 'uploadButton');
-    connectGridItem('setting-wallpaper-blur', 'wallpaper-blur-slider');
-    connectGridItem('setting-wallpaper-brightness', 'wallpaper-brightness-slider');
-    connectGridItem('setting-wallpaper-contrast-fx', 'wallpaper-contrast-slider');
     connectGridItem('setting-reset', 'resetButton');
     connectGridItem('setting-seconds', 'seconds-switch');
     connectGridItem('setting-clock-stack', 'clock-stack-switch');
@@ -3740,8 +3746,8 @@ async function initializeAndApplyWallpaper() {
 function syncUiStates() {
     // Sync all checkbox-based toggles
     document.querySelectorAll('.setting-item').forEach(item => {
-        // Exclude alignment from this generic check since it's a select
-        if (item.id === 'setting-alignment' || item.id === 'setting-clock-color' || item.id === 'setting-clock-shadow') return;
+        // Exclude complex items from this generic check
+        if (['setting-alignment', 'setting-clock-color', 'setting-clock-shadow', 'setting-wallpaper'].includes(item.id)) return;
         
         // Construct potential IDs for different control types
         const controlId = item.id.replace('setting-', '');
@@ -3758,16 +3764,19 @@ function syncUiStates() {
     // Sync items with non-boolean active states
     document.getElementById('setting-weight').classList.toggle('active', document.getElementById('weight-slider').value !== '70');
     document.getElementById('setting-style').classList.toggle('active', document.getElementById('font-select').value !== 'Inter');
-    document.getElementById('setting-wallpaper').classList.toggle('active', recentWallpapers.length > 0);
     document.getElementById('setting-alignment').classList.toggle('active', document.getElementById('alignment-select').value !== 'center');
-    document.getElementById('setting-wallpaper-blur').classList.toggle('active', document.getElementById('wallpaper-blur-slider').value !== '0');
-    document.getElementById('setting-wallpaper-brightness').classList.toggle('active', document.getElementById('wallpaper-brightness-slider').value !== '100');
-    document.getElementById('setting-wallpaper-contrast-fx').classList.toggle('active', document.getElementById('wallpaper-contrast-slider').value !== '100');
-
+    
     // Sync special items
     const isColorActive = document.getElementById('clock-color-switch').checked || document.getElementById('clock-gradient-switch').checked;
     document.getElementById('setting-clock-color').classList.toggle('active', isColorActive);
     document.getElementById('setting-clock-shadow').classList.toggle('active', document.getElementById('clock-shadow-switch').checked);
+
+    // Sync wallpaper item based on effects
+    const isWallpaperCustomized = 
+        document.getElementById('wallpaper-blur-slider').value !== '0' ||
+        document.getElementById('wallpaper-brightness-slider').value !== '100' ||
+        document.getElementById('wallpaper-contrast-slider').value !== '100';
+    document.getElementById('setting-wallpaper').classList.toggle('active', isWallpaperCustomized);
 }
 
 function applyWallpaperEffects() {
