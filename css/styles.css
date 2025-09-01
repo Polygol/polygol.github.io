@@ -995,7 +995,7 @@ input[type="color"]::-moz-color-swatch {
     flex-grow: 1;
     min-width: 0;
     display: flex;
-    gap: 4px;
+    gap: 6px;
     flex-direction: column;
 	margin-left: 8px;
 }
