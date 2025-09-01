@@ -3780,25 +3780,42 @@ function setupFontSelection() {
     // Get the computed --text-color value for the default
     const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
     
-    // Load saved preferences
+    // Load saved preferences from localStorage
     const savedFont = localStorage.getItem('clockFont') || 'Inter';
     const savedWeight = localStorage.getItem('clockWeight') || '700';
     const savedColor = localStorage.getItem('clockColor') || defaultColor;
     const colorEnabled = localStorage.getItem('clockColorEnabled') === 'true';
     const stackEnabled = localStorage.getItem('clockStackEnabled') === 'true';
-    const showSeconds = localStorage.getItem('showSeconds') !== 'false'; 
-    const showWeather = localStorage.getItem('showWeather') !== 'false'; 
     const savedAlignment = localStorage.getItem('clockAlignment') || 'center';
+    const savedBlur = localStorage.getItem('wallpaperBlur') || '0';
+    const savedBrightness = localStorage.getItem('wallpaperBrightness') || '100';
+    const savedContrast = localStorage.getItem('wallpaperContrast') || '100';
     
+    // Set UI control values from loaded preferences
     fontSelect.value = savedFont;
     weightSlider.value = parseInt(savedWeight) / 10;
     colorPicker.value = savedColor;
     colorSwitch.checked = colorEnabled;
     stackSwitch.checked = stackEnabled;
     alignmentSelect.value = savedAlignment;
-
-    // Function to save current clock styles to the current wallpaper
+    if (blurSlider) blurSlider.value = savedBlur;
+    if (brightnessSlider) brightnessSlider.value = savedBrightness;
+    if (contrastSlider) contrastSlider.value = savedContrast;
+    
+    // Function to save current settings
     function saveCurrentWallpaperSettings() {
+        // Update individual localStorage items for immediate persistence
+        localStorage.setItem('clockFont', fontSelect.value);
+        localStorage.setItem('clockWeight', (weightSlider.value * 10).toString());
+        localStorage.setItem('clockColor', colorPicker.value);
+        localStorage.setItem('clockColorEnabled', colorSwitch.checked.toString());
+        localStorage.setItem('clockStackEnabled', stackSwitch.checked.toString());
+        localStorage.setItem('clockAlignment', alignmentSelect.value);
+        localStorage.setItem('wallpaperBlur', blurSlider ? blurSlider.value : '0');
+        localStorage.setItem('wallpaperBrightness', brightnessSlider ? brightnessSlider.value : '100');
+        localStorage.setItem('wallpaperContrast', contrastSlider ? contrastSlider.value : '100');
+
+        // Update the settings object for the current wallpaper in the history array
         if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0 && currentWallpaperPosition < recentWallpapers.length) {
             const currentWallpaperSettings = {
                 font: fontSelect.value,
@@ -3813,36 +3830,22 @@ function setupFontSelection() {
                 wallpaperBrightness: brightnessSlider ? brightnessSlider.value : '100',
                 wallpaperContrast: contrastSlider ? contrastSlider.value : '100'
             };
-            
-            // Update the current wallpaper's clock styles
             recentWallpapers[currentWallpaperPosition].clockStyles = currentWallpaperSettings;
-            
-            // Save to localStorage
-            saveRecentWallpapers();
+            saveRecentWallpapers(); // Save the updated history array to localStorage
         }
-        
-        // Also update localStorage for immediate use
-        localStorage.setItem('clockFont', fontSelect.value);
-        localStorage.setItem('clockWeight', (weightSlider.value * 10).toString());
-        localStorage.setItem('clockColor', colorPicker.value);
-        localStorage.setItem('clockColorEnabled', colorSwitch.checked.toString());
-        localStorage.setItem('clockStackEnabled', stackSwitch.checked.toString());
-        localStorage.setItem('showSeconds', document.getElementById('seconds-switch')?.checked.toString() || 'true'); 
-        localStorage.setItem('showWeather', document.getElementById('weather-switch')?.checked.toString() || 'true'); 
-	    localStorage.setItem('clockAlignment', alignmentSelect.value);
     }
     
-    // Apply initial styles
+    // Apply initial styles from loaded preferences
     applyClockStyles();
     applyAlignment(savedAlignment);
+    applyWallpaperEffects();
     
     // Handle font changes
     fontSelect.addEventListener('change', (e) => {
         const selectedFont = e.target.value;
-        // Ensure font is loaded before applying
         document.fonts.load(`16px ${selectedFont}`).then(() => {
             applyClockStyles();
-            saveCurrentWallpaperSettings(); // Save to current wallpaper
+            saveCurrentWallpaperSettings();
 	        syncUiStates();
         }).catch(() => {
             showPopup(currentLanguage.CLOCK_STYLE_FAILED);
@@ -3856,13 +3859,14 @@ function setupFontSelection() {
         syncUiStates();
     });
     
-    // Handle weight changes with the slider
+    // Handle weight changes
     weightSlider.addEventListener('input', (e) => {
         applyClockStyles();
-        saveCurrentWallpaperSettings(); // Save to current wallpaper
+        saveCurrentWallpaperSettings();
 	    syncUiStates();
     });
 
+    // Handle wallpaper effect slider changes
     [blurSlider, brightnessSlider, contrastSlider].forEach(slider => {
         if (slider) {
             slider.addEventListener('input', () => {
@@ -3873,18 +3877,16 @@ function setupFontSelection() {
         }
     });
     
-    // Handle color changes with the color picker
+    // Handle color changes
     colorPicker.addEventListener('input', (e) => {
         applyClockStyles();
-        saveCurrentWallpaperSettings(); // Save to current wallpaper
+        saveCurrentWallpaperSettings();
     });
     
     // Handle color switch toggle
     colorSwitch.addEventListener('change', (e) => {
         applyClockStyles();
-        saveCurrentWallpaperSettings(); // Save to current wallpaper
-    
-        // Show/hide the color picker based on switch state
+        saveCurrentWallpaperSettings();
         colorPicker.style.display = e.target.checked ? 'inline-block' : 'none';
         colorPicker.disabled = !e.target.checked;
     });
@@ -3892,7 +3894,7 @@ function setupFontSelection() {
     // Handle stack switch toggle
     stackSwitch.addEventListener('change', (e) => {
         applyClockStyles();
-        saveCurrentWallpaperSettings(); // Save to current wallpaper
+        saveCurrentWallpaperSettings();
     });
     
     // Set initial color picker state based on switch
