@@ -873,9 +873,9 @@ input[type="color"]::-moz-color-swatch {
     margin-top: 10px;
 	display: flex;
 	gap: 10px;
-	padding: none;
+	padding: 0;
 	backdrop-filter: none;
-	background-color: none;
+	background-color: transparent;
 	border: none;
 }
 
