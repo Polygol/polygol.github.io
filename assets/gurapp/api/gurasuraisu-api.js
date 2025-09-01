@@ -140,11 +140,12 @@ const Gurasuraisu = {
    * @param {string} widgetData.title - A user-friendly title (e.g., 'Current Weather').
    * @param {string} widgetData.url - The URL of the widget's content.
    * @param {Array<number>} widgetData.defaultSize - The default [width, height] in grid units (e.g., [1, 1]).
+   * @param {string} [widgetData.openUrl] - Optional. The URL to open when the widget is tapped. Defaults to the app's main URL.
    */
   registerWidget: function(widgetData) {
     if (!widgetData || !widgetData.appName || !widgetData.widgetId || !widgetData.url || !widgetData.title) {
       console.error('[Gurasuraisu API] registerWidget requires appName, widgetId, url, and title.');
-      return;
+        return;
     }
     this._call('registerWidget', [widgetData]);
   },
