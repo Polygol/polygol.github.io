@@ -852,7 +852,8 @@ function updateClockAndDate() {
     if (use12HourFormat) {
         // 12-hour format
         period = hours >= 12 ? ' PM' : ' AM';
-        displayHours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
+        // FIX: Convert the result to a string immediately
+        displayHours = String(hours % 12 || 12); 
     } else {
         // 24-hour format
         displayHours = String(hours).padStart(2, '0');
