@@ -41,9 +41,6 @@ function applyLanguage(language) {
     const versionButton = document.querySelector('.version-info button#versionButton');
     if (versionButton) versionButton.textContent = language.GET_DOCS;
     
-    const resetButton = document.getElementById('resetButton');
-    if(resetButton) resetButton.textContent = language.RESET_BTN;
-    
     // Safely update font dropdown options
     const fontSelect = document.getElementById('font-select');
     if (fontSelect) {
@@ -438,7 +435,6 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-wallpaper-blur', 'wallpaper-blur-slider');
     connectGridItem('setting-wallpaper-brightness', 'wallpaper-brightness-slider');
     connectGridItem('setting-wallpaper-contrast-fx', 'wallpaper-contrast-slider');
-    connectGridItem('setting-reset', 'resetButton');
     connectGridItem('setting-seconds', 'seconds-switch');
     connectGridItem('setting-clock-stack', 'clock-stack-switch');
     connectGridItem('setting-weather', 'weather-switch');
@@ -5807,21 +5803,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         });
         aiSendBtn.addEventListener('click', handleAiQuery);
-    }
-    
-    const resetButton = document.getElementById('resetButton');
-    if (resetButton) {
-        resetButton.addEventListener('click', function() {
-            if (confirm(currentLanguage.RESET_CONFIRM)) {
-		if (confirm(currentLanguage.RESET_CONFIRM)) {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    clearCookies();
-                    showPopup(currentLanguage.RESET_SUCCESS);
-                    window.location.reload();
-		}
-            }
-        });
     }
 
     function clearCookies() {
