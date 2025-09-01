@@ -143,214 +143,6 @@ let appLastOpened = {};
 
 secondsSwitch.checked = showSeconds;
 
-// NEW: Core function to render all widgets based on the activeWidgets array
-function renderWidgets() {
-    const gridContainer = document.getElementById('widget-grid');
-    if (!gridContainer) return;
-    gridContainer.innerHTML = '';
-
-    const clockContainer = document.querySelector('.container');
-    const MARGIN = 10;
-
-    // A map to keep track of the widget elements for interaction
-    const widgetElements = new Map();
-
-    // 1. Create and position all widget elements
-    activeWidgets.forEach((widget, index) => {
-        // If the widget is missing its appName or its definition doesn't exist, skip it.
-        if (!widget.appName || !availableWidgets[widget.appName]) {
-            console.warn(`Could not find definition for widget from app: ${widget.appName}. Skipping.`);
-            return; // This is like 'continue' in a forEach loop
-        }
-        
-        const widgetData = availableWidgets[widget.appName].find(w => w.widgetId === widget.widgetId);
-        const appData = apps[widget.appName];
-
-        // If the specific widget can't be found (e.g., app was updated and widget removed), skip.
-        if (!widgetData) {
-            console.warn(`Could not find specific widget definition for ID: ${widget.widgetId}. Skipping.`);
-            return; 
-        }
-		
-        const instance = document.createElement('div');
-        instance.className = 'widget-instance';
-        instance.dataset.widgetIndex = index;
-        instance.style.width = `${widget.w}px`;
-        instance.style.height = `${widget.h}px`;
-        
-        // Calculate position based on snap anchors
-        if (widget.snapX === 'left') {
-            instance.style.left = `${widget.x}px`;
-        } else if (widget.snapX === 'right') {
-            instance.style.right = `${widget.x}px`;
-        } else { // Center
-            instance.style.left = `calc(50% + ${widget.x}px)`;
-        }
-
-        if (widget.snapY === 'top') {
-            instance.style.top = `${widget.y}px`;
-        } else if (widget.snapY === 'bottom') {
-            instance.style.bottom = `${widget.y}px`;
-        } else { // Center
-            instance.style.top = `calc(50% + ${widget.y}px)`;
-        }
-
-        const iframe = document.createElement('iframe');
-        iframe.src = availableWidgets[widget.appName].find(w => w.widgetId === widget.widgetId).url;
-        
-        const overlay = document.createElement('div');
-        overlay.className = 'widget-instance-overlay';
-
-        instance.appendChild(iframe);
-        instance.appendChild(overlay);
-        gridContainer.appendChild(instance);
-        widgetElements.set(index, instance);
-    });
-
-    // 2. Add interaction listeners to all widgets
-    widgetElements.forEach((instance, index) => {
-        const overlay = instance.querySelector('.widget-instance-overlay');
-        let longPressTimer;
-        let isDragging = false;
-        let offsetX, offsetY;
-        const SNAP_DISTANCE = 20;
-
-        const snapLineV = document.getElementById('snap-line-v');
-        const snapLineH = document.getElementById('snap-line-h');
-
-        const onDragStart = (e) => {
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            
-            isDragging = false;
-            instance.classList.add('is-dragging');
-            const rect = instance.getBoundingClientRect();
-            offsetX = clientX - rect.left;
-            offsetY = clientY - rect.top;
-
-            longPressTimer = setTimeout(() => {
-                instance.classList.remove('is-dragging');
-                removeWidget(index);
-                document.removeEventListener('mousemove', onDragMove);
-                document.removeEventListener('mouseup', onDragEnd);
-                document.removeEventListener('touchmove', onDragMove);
-                document.removeEventListener('touchend', onDragEnd);
-            }, 500);
-
-            document.addEventListener('mousemove', onDragMove);
-            document.addEventListener('mouseup', onDragEnd);
-            document.addEventListener('touchmove', onDragMove);
-            document.addEventListener('touchend', onDragEnd);
-        };
-        
-        const onDragMove = (e) => {
-            clearTimeout(longPressTimer);
-            isDragging = true;
-            snapLineV.style.display = 'none';
-            snapLineH.style.display = 'none';
-
-            let newLeft = (e.touches ? e.touches[0].clientX : e.clientX) - offsetX;
-            let newTop = (e.touches ? e.touches[0].clientY : e.clientY) - offsetY;
-            let newRight = newLeft + instance.offsetWidth;
-            let newBottom = newTop + instance.offsetHeight;
-
-            let snapX = null, snapY = null;
-            let finalX = newLeft, finalY = newTop;
-            
-            const clockRect = clockContainer.getBoundingClientRect();
-            
-            // --- Snapping Logic ---
-            // Screen snapping
-            if (Math.abs(newLeft - MARGIN) < SNAP_DISTANCE) { finalX = MARGIN; snapX = 'left'; snapLineV.style.left = `${MARGIN}px`; snapLineV.style.display = 'block'; }
-            if (Math.abs(newRight - (window.innerWidth - MARGIN)) < SNAP_DISTANCE) { finalX = MARGIN; snapX = 'right'; snapLineV.style.left = `${window.innerWidth - MARGIN}px`; snapLineV.style.display = 'block';}
-            if (Math.abs(newTop - MARGIN) < SNAP_DISTANCE) { finalY = MARGIN; snapY = 'top'; snapLineH.style.top = `${MARGIN}px`; snapLineH.style.display = 'block';}
-            if (Math.abs(newBottom - (window.innerHeight - MARGIN)) < SNAP_DISTANCE) { finalY = MARGIN; snapY = 'bottom'; snapLineH.style.top = `${window.innerHeight - MARGIN}px`; snapLineH.style.display = 'block';}
-            
-            // Widget-to-widget snapping
-            widgetElements.forEach((otherInstance, otherIndex) => {
-                if (index === otherIndex) return;
-                const otherRect = otherInstance.getBoundingClientRect();
-
-                // Horizontal
-                if (Math.abs(newRight - (otherRect.left - MARGIN)) < SNAP_DISTANCE) { finalX = otherRect.left - instance.offsetWidth - MARGIN; snapX = 'left'; snapLineV.style.left = `${otherRect.left - MARGIN/2}px`; snapLineV.style.display = 'block'; }
-                if (Math.abs(newLeft - (otherRect.right + MARGIN)) < SNAP_DISTANCE) { finalX = otherRect.right + MARGIN; snapX = 'left'; snapLineV.style.left = `${otherRect.right + MARGIN/2}px`; snapLineV.style.display = 'block';}
-
-                // Vertical
-                if (Math.abs(newBottom - (otherRect.top - MARGIN)) < SNAP_DISTANCE) { finalY = otherRect.top - instance.offsetHeight - MARGIN; snapY = 'top'; snapLineH.style.top = `${otherRect.top - MARGIN/2}px`; snapLineH.style.display = 'block';}
-                if (Math.abs(newTop - (otherRect.bottom + MARGIN)) < SNAP_DISTANCE) { finalY = otherRect.bottom + MARGIN; snapY = 'top'; snapLineH.style.top = `${otherRect.bottom + MARGIN/2}px`; snapLineH.style.display = 'block';}
-            });
-
-            // Prevent dragging into clock area
-            if (finalX < clockRect.right && (finalX + instance.offsetWidth) > clockRect.left && finalY < clockRect.bottom && (finalY + instance.offsetHeight) > clockRect.top) {
-                // Don't update position if it would overlap
-                return;
-            }
-
-            // Apply new position based on snap
-            if (snapX === 'right') { instance.style.left = 'auto'; instance.style.right = `${window.innerWidth - finalX - instance.offsetWidth}px`; } 
-            else { instance.style.right = 'auto'; instance.style.left = `${finalX}px`; }
-
-            if (snapY === 'bottom') { instance.style.top = 'auto'; instance.style.bottom = `${window.innerHeight - finalY - instance.offsetHeight}px`; } 
-            else { instance.style.top = `${finalY}px`; instance.style.bottom = 'auto'; }
-
-            // Store snap for saving on mouseup
-            instance.dataset.snapX = snapX || 'left';
-            instance.dataset.snapY = snapY || 'top';
-            instance.dataset.finalX = finalX;
-            instance.dataset.finalY = finalY;
-        };
-
-        const onDragEnd = (e) => {
-            clearTimeout(longPressTimer);
-            document.removeEventListener('mousemove', onDragMove);
-            document.removeEventListener('mouseup', onDragEnd);
-            document.removeEventListener('touchmove', onDragMove);
-            document.removeEventListener('touchend', onDragEnd);
-            snapLineV.style.display = 'none';
-            snapLineH.style.display = 'none';
-            instance.classList.remove('is-dragging');
-            instance.style.transform = ''; // Remove scaling effect
-
-            if (isDragging) {
-                // --- CORRECTED POSITION SAVING LOGIC ---
-                const widgetToUpdate = activeWidgets[index];
-                const finalRect = instance.getBoundingClientRect(); // Get the final visual position
-
-                widgetToUpdate.snapX = instance.dataset.snapX || 'left';
-                widgetToUpdate.snapY = instance.dataset.snapY || 'top';
-                
-                // Calculate the correct offset based on the snap anchor
-                if (widgetToUpdate.snapX === 'right') {
-                    widgetToUpdate.x = window.innerWidth - finalRect.right;
-                } else {
-                    widgetToUpdate.x = finalRect.left;
-                }
-
-                if (widgetToUpdate.snapY === 'bottom') {
-                    widgetToUpdate.y = window.innerHeight - finalRect.bottom;
-                } else {
-                    widgetToUpdate.y = finalRect.top;
-                }
-                
-                saveWidgets();
-                // We re-render to ensure the CSS snaps from the saved values perfectly.
-                renderWidgets(); 
-                // --- END OF FIX ---
-
-            } else {
-                 // It was a tap, open the app
-                const widgetData = availableWidgets[activeWidgets[index].appName].find(w => w.widgetId === activeWidgets[index].widgetId);
-                const appData = apps[activeWidgets[index].appName];
-                const openUrl = widgetData.openUrl || appData?.url;
-                if (openUrl) createFullscreenEmbed(openUrl);
-            }
-        };
-		
-        overlay.addEventListener('mousedown', onDragStart);
-        overlay.addEventListener('touchstart', onDragStart, { passive: false });
-    });
-}
-
 function saveAvailableWidgets() {
     localStorage.setItem('availableWidgets', JSON.stringify(availableWidgets));
 }
@@ -373,13 +165,12 @@ function loadWidgets() {
 function addWidget(widgetData) {
     activeWidgets.push({
         widgetId: widgetData.widgetId,
-        appName: widgetData.appName, // Store the appName for easier lookup
-        w: 150, // Static size for now
+        appName: widgetData.appName,
+        w: 150,
         h: 150,
-        x: 10 + (activeWidgets.length % 5) * 20, // Cascade new widgets
-        y: 80 + (activeWidgets.length % 5) * 20,
-        snapX: 'left',
-        snapY: 'top'
+        // Place new widgets in the top-left, avoiding the clock area
+        x: 10,
+        y: 80, 
     });
     renderWidgets();
     saveWidgets();
@@ -391,6 +182,160 @@ function removeWidget(index) {
         renderWidgets();
         saveWidgets();
     }
+}
+
+function renderWidgets() {
+    const gridContainer = document.getElementById('widget-grid');
+    if (!gridContainer) return;
+    gridContainer.innerHTML = '';
+
+    const MARGIN = 10;
+    const SNAP_DISTANCE = 15;
+    const widgetElements = new Map();
+
+    // 1. Create and position all widget elements from the activeWidgets array
+    activeWidgets.forEach((widget, index) => {
+        const widgetDef = availableWidgets[widget.appName]?.find(w => w.widgetId === widget.widgetId);
+        if (!widgetDef) return; // Skip rendering if definition is missing
+
+        const instance = document.createElement('div');
+        instance.className = 'widget-instance';
+        instance.dataset.widgetIndex = index;
+        instance.style.width = `${widget.w}px`;
+        instance.style.height = `${widget.h}px`;
+        instance.style.left = `${widget.x}px`;
+        instance.style.top = `${widget.y}px`;
+
+        const iframe = document.createElement('iframe');
+        iframe.src = widgetDef.url;
+        const overlay = document.createElement('div');
+        overlay.className = 'widget-instance-overlay';
+
+        instance.appendChild(iframe);
+        instance.appendChild(overlay);
+        gridContainer.appendChild(instance);
+        widgetElements.set(index.toString(), instance);
+    });
+
+    // 2. Add interaction listeners to all newly created widgets
+    widgetElements.forEach((instance, indexKey) => {
+        const index = parseInt(indexKey);
+        const overlay = instance.querySelector('.widget-instance-overlay');
+        
+        let isDragging = false, longPressTimer;
+        let initialMouseX, initialMouseY, initialWidgetX, initialWidgetY;
+        const snapLineV = document.getElementById('snap-line-v');
+        const snapLineH = document.getElementById('snap-line-h');
+
+        const onDragStart = (e) => {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            isDragging = false;
+            initialMouseX = clientX;
+            initialMouseY = clientY;
+            initialWidgetX = instance.offsetLeft;
+            initialWidgetY = instance.offsetTop;
+
+            longPressTimer = setTimeout(() => {
+                removeWidget(index);
+            }, 500);
+
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchmove', onDragMove, { passive: false });
+            document.addEventListener('touchend', onDragEnd);
+        };
+
+        const onDragMove = (e) => {
+            e.preventDefault();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            if (!isDragging && (Math.abs(clientX - initialMouseX) > 5 || Math.abs(clientY - initialMouseY) > 5)) {
+                isDragging = true;
+                clearTimeout(longPressTimer);
+                instance.classList.add('is-dragging');
+            }
+
+            if (!isDragging) return;
+
+            let newX = initialWidgetX + (clientX - initialMouseX);
+            let newY = initialWidgetY + (clientY - initialMouseY);
+
+            // --- NEW: Snap-to-Grid Alignment Logic ---
+            snapLineV.style.display = 'none';
+            snapLineH.style.display = 'none';
+
+            let snapXPoints = [MARGIN, window.innerWidth / 2, window.innerWidth - MARGIN];
+            let snapYPoints = [MARGIN, window.innerHeight / 2, window.innerHeight - MARGIN];
+
+            widgetElements.forEach((otherInstance, otherIndexKey) => {
+                if (indexKey === otherIndexKey) return;
+                const r = otherInstance.getBoundingClientRect();
+                snapXPoints.push(r.left, r.right + MARGIN, r.left - instance.offsetWidth - MARGIN);
+                snapYPoints.push(r.top, r.bottom + MARGIN, r.top - instance.offsetHeight - MARGIN);
+            });
+
+            // Find closest snap points
+            for (const p of snapXPoints) {
+                if (Math.abs(newX - p) < SNAP_DISTANCE) {
+                    newX = p;
+                    snapLineV.style.left = `${p + (p > window.innerWidth / 2 ? instance.offsetWidth : 0)}px`;
+                    snapLineV.style.display = 'block';
+                    break;
+                }
+            }
+             for (const p of snapYPoints) {
+                if (Math.abs(newY - p) < SNAP_DISTANCE) {
+                    newY = p;
+                    snapLineH.style.top = `${p}px`;
+                    snapLineH.style.display = 'block';
+                    break;
+                }
+            }
+
+            // Boundary and Clock Collision Check
+            const clockRect = document.querySelector('.container').getBoundingClientRect();
+            newX = Math.max(MARGIN, Math.min(newX, window.innerWidth - instance.offsetWidth - MARGIN));
+            newY = Math.max(MARGIN, Math.min(newY, window.innerHeight - instance.offsetHeight - MARGIN));
+
+            const widgetRect = { left: newX, top: newY, right: newX + instance.offsetWidth, bottom: newY + instance.offsetHeight };
+            if (!(widgetRect.right < clockRect.left || widgetRect.left > clockRect.right || widgetRect.bottom < clockRect.top || widgetRect.top > clockRect.bottom)) {
+                // Collision with clock, do not update position
+            } else {
+                instance.style.left = `${newX}px`;
+                instance.style.top = `${newY}px`;
+            }
+        };
+
+        const onDragEnd = () => {
+            clearTimeout(longPressTimer);
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('touchend', onDragEnd);
+            snapLineV.style.display = 'none';
+            snapLineH.style.display = 'none';
+
+            if (isDragging) {
+                instance.classList.remove('is-dragging');
+                const widgetToUpdate = activeWidgets[index];
+                widgetToUpdate.x = instance.offsetLeft;
+                widgetToUpdate.y = instance.offsetTop;
+                saveWidgets();
+            } else {
+                const widgetData = availableWidgets[activeWidgets[index].appName].find(w => w.widgetId === activeWidgets[index].widgetId);
+                const appData = apps[activeWidgets[index].appName];
+                const openUrl = widgetData.openUrl || appData?.url;
+                if (openUrl) createFullscreenEmbed(openUrl);
+            }
+            isDragging = false;
+        };
+        
+        overlay.addEventListener('mousedown', onDragStart);
+        overlay.addEventListener('touchstart', onDragStart, { passive: false });
+    });
 }
 
 function openWidgetPicker() {
