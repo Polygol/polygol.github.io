@@ -367,10 +367,12 @@ function renderWidgets() {
                 // Handle special system widget actions
                 if (widgetData.openUrl === '#open-last-media-app') {
                     const lastApp = localStorage.getItem('lastMediaSessionApp');
+                    // Check if a last app is stored AND if that app is still installed
                     if (lastApp && apps[lastApp]) {
                         createFullscreenEmbed(apps[lastApp].url);
                     } else {
-                        showPopup("No recent media app to open.");
+                        // SENSIBLE FALLBACK: If no app is found, open Music
+                        createFullscreenEmbed('/music/index.html');
                     }
                 } else {
                     // Standard app widget behavior
