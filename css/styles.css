@@ -2022,50 +2022,42 @@ input[type="checkbox"]:checked::before {
 }
 /* --- Widget System Styles --- */
 .widget-grid {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 15px;
-    width: 100%;
-    max-width: 900px; /* Max width of the grid */
-    padding: 15px;
-    box-sizing: border-box;
-    margin-top: 180px; /* Push it down from the clock */
-    z-index: 10;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 5; /* Below the main UI but above the background */
+    pointer-events: none; /* The grid itself is not interactive */
 }
-
-.container.align-left ~ .widget-grid {
-    left: calc(5vw + 450px); /* 450px is half of max-width */
-    right: auto;
-    transform: translate(0, -50%);
-}
-
-.container.align-right ~ .widget-grid {
-    left: auto;
-    right: calc(5vw + 450px);
-    transform: translate(0, -50%);
-}
-
 
 .widget-instance {
-    position: relative;
+    position: absolute;
     background: var(--search-background);
     border-radius: 25px;
     overflow: hidden;
-    transform: scale(1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    aspect-ratio: 1 / 1; /* Default to square */
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+    width: 150px; /* Default size, can be overridden */
+    height: 150px;
+    pointer-events: auto; /* Widgets are interactive */
+    touch-action: none; /* Prevent page scroll on mobile */
+}
+
+.widget-instance.is-dragging {
+    transition: none; /* Disable transitions while dragging */
+    z-index: 1000;
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    cursor: grabbing;
 }
 
 .widget-instance iframe {
     width: 100%;
     height: 100%;
     border: none;
+    border-radius: 25px; /* Ensure iframe respects the border radius */
 }
 
 .widget-instance-overlay {
@@ -2074,20 +2066,39 @@ input[type="checkbox"]:checked::before {
     left: 0;
     width: 100%;
     height: 100%;
-    cursor: pointer;
+    cursor: grab;
     z-index: 2; /* Sits on top of the iframe */
 }
 
 .widget-instance-overlay:active {
-    background: rgba(255, 255, 255, 0.1);
-    transition: background-color 0.1s ease;
+    cursor: grabbing;
 }
 
-.widget-instance.dragging {
-    transform: scale(1.05);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-    z-index: 100;
-    cursor: grabbing;
+/* --- Snap Line Indicators --- */
+.snap-line {
+    position: fixed;
+    background-color: rgba(0, 122, 255, 0.8);
+    display: none; /* Hidden by default */
+    z-index: 9999;
+}
+.snap-line-v {
+    width: 2px;
+    height: 100%;
+    top: 0;
+}
+.snap-line-h {
+    height: 2px;
+    width: 100%;
+    left: 0;
+}
+.widget-instance-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 2; /* Sits on top of the iframe */
 }
 
 /* --- Widget Picker Drawer Styles --- */
