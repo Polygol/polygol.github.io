@@ -247,13 +247,9 @@ function closeWidgetPicker() {
     if (!drawer || !blurOverlay) return;
 
     drawer.classList.remove('open');
-    // The blur overlay is handled by a shared listener, so we don't manipulate its class here.
     blurOverlay.classList.remove('show');
     setTimeout(() => {
-        // Only hide the overlay if the main settings aren't also open
-        if (!customizeModal.classList.contains('show')) {
-            blurOverlay.style.display = 'none';
-        }
+        blurOverlay.style.display = 'none';
     }, 300);
 }
 
@@ -453,6 +449,24 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-alignment', 'alignment-select');
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
+
+    // --- NEW: Special Handler for Widget Picker ---
+    const widgetPickerItem = document.getElementById('setting-widgets');
+    if (widgetPickerItem) {
+        widgetPickerItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+			closeControls();
+            openWidgetPicker();
+        });
+    }
+	
+    // --- NEW: Add event listeners to close the widget drawer ---
+    const widgetDrawer = document.getElementById('widget-picker-drawer');
+    const widgetDrawerHandle = document.querySelector('.widget-drawer-handle');
+    if (widgetDrawer && widgetDrawerHandle) {
+        widgetDrawerHandle.addEventListener('click', closeWidgetPicker);
+        blurOverlayControls.addEventListener('click', closeWidgetPicker);
+    }
 
     // Album Art click listener (using event delegation for reliability)
     document.getElementById('media-session-widget').addEventListener('click', (e) => {
@@ -4658,62 +4672,6 @@ function saveUsageData() {
     localStorage.setItem('appUsage', JSON.stringify(appUsage));
 }
 
-// NEW WIDGET DRAWER INTERACTION FUNCTION
-function setupWidgetDrawerInteractions() {
-    const drawer = document.getElementById('widget-picker-drawer');
-    const handle = document.querySelector('.widget-drawer-handle');
-    const blurOverlay = document.getElementById('blurOverlayControls');
-
-    let startY = 0;
-    let currentY = 0;
-    let initialDrawerPosition = -100;
-    let isDragging = false;
-
-    function startDrag(yPosition) {
-        if (!drawer) return;
-        isDragging = true;
-        startY = yPosition;
-        const currentBottom = parseFloat(drawer.style.bottom || '-100');
-        initialDrawerPosition = currentBottom;
-        drawer.style.transition = 'none';
-    }
-
-    function moveDrawer(yPosition) {
-        if (!isDragging || !drawer) return;
-        currentY = yPosition;
-        const deltaY = startY - currentY;
-        const windowHeight = window.innerHeight;
-        const movementPercentage = (deltaY / windowHeight) * 100;
-
-        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-        drawer.style.bottom = `${newPosition}%`;
-    }
-
-    function endDrag() {
-        if (!isDragging || !drawer) return;
-        isDragging = false;
-        drawer.style.transition = 'bottom 0.4s cubic-bezier(0.2, 0, 0.38, 0.9)';
-        
-        const finalPosition = parseFloat(drawer.style.bottom || '-100');
-
-        if (finalPosition > -50) {
-            drawer.classList.add('open');
-            drawer.style.bottom = '0%';
-        } else {
-            closeWidgetPicker();
-        }
-    }
-
-    handle.addEventListener('mousedown', (e) => startDrag(e.clientY));
-    handle.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientY), { passive: true });
-
-    document.addEventListener('mousemove', (e) => moveDrawer(e.clientY));
-    document.addEventListener('touchmove', (e) => moveDrawer(e.touches[0].clientY), { passive: true });
-
-    document.addEventListener('mouseup', endDrag);
-    document.addEventListener('touchend', endDrag);
-}
-
 function setupDrawerInteractions() {
     let startY = 0;
     let currentY = 0;
@@ -5433,7 +5391,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // --- Initialize UI components ---
     initAppDraw(); // Now this will use the fully populated 'apps' object
-    setupWidgetDrawerInteractions();
     initializeCustomization(); // This sets up theme, wallpaper, fonts
     setupWeatherToggle();
     initializeAndApplyWallpaper().catch(error => {
