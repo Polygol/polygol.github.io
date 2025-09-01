@@ -2113,16 +2113,12 @@ input[type="checkbox"]:checked::before {
     flex-shrink: 0;
 }
 
-.widget-drawer-handle .drawer-pill {
-    width: 50px;
-    height: 5px;
-    background-color: var(--secondary-text-color);
-    border-radius: 5px;
-    opacity: 0.5;
+.widget-drawer-handle .app-drawer-handle {
+	top: auto;
 }
 
 .widget-drawer-header {
-    padding: 0 30px 15px;
+    padding: 15px 30px 15px;
     text-align: center;
     flex-shrink: 0;
 }
