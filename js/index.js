@@ -320,9 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Connect all other settings ---
     connectGridItem('setting-wallpaper', 'uploadButton');
-
-    // --- Connect all other settings ---
-    connectGridItem('setting-wallpaper', 'uploadButton');
     connectGridItem('setting-wallpaper-blur', 'wallpaper-blur-slider');
     connectGridItem('setting-wallpaper-brightness', 'wallpaper-brightness-slider');
     connectGridItem('setting-wallpaper-contrast-fx', 'wallpaper-contrast-slider');
