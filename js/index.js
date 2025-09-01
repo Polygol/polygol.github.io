@@ -157,6 +157,21 @@ function renderWidgets() {
 
     // 1. Create and position all widget elements
     activeWidgets.forEach((widget, index) => {
+        // If the widget is missing its appName or its definition doesn't exist, skip it.
+        if (!widget.appName || !availableWidgets[widget.appName]) {
+            console.warn(`Could not find definition for widget from app: ${widget.appName}. Skipping.`);
+            return; // This is like 'continue' in a forEach loop
+        }
+        
+        const widgetData = availableWidgets[widget.appName].find(w => w.widgetId === widget.widgetId);
+        const appData = apps[widget.appName];
+
+        // If the specific widget can't be found (e.g., app was updated and widget removed), skip.
+        if (!widgetData) {
+            console.warn(`Could not find specific widget definition for ID: ${widget.widgetId}. Skipping.`);
+            return; 
+        }
+		
         const instance = document.createElement('div');
         instance.className = 'widget-instance';
         instance.dataset.widgetIndex = index;
