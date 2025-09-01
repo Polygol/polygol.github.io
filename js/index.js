@@ -143,6 +143,17 @@ let appLastOpened = {};
 
 secondsSwitch.checked = showSeconds;
 
+function saveAvailableWidgets() {
+    localStorage.setItem('availableWidgets', JSON.stringify(availableWidgets));
+}
+
+function loadAvailableWidgets() {
+    const saved = localStorage.getItem('availableWidgets');
+    if (saved) {
+        availableWidgets = JSON.parse(saved);
+    }
+}
+
 function saveWidgets() {
     localStorage.setItem('activeWidgets', JSON.stringify(activeWidgets));
 }
@@ -336,8 +347,10 @@ function registerWidget(widgetData) {
     if (!availableWidgets[widgetData.appName]) {
         availableWidgets[widgetData.appName] = [];
     }
+    // Only add it if it's not already registered
     if (!availableWidgets[widgetData.appName].some(w => w.widgetId === widgetData.widgetId)) {
         availableWidgets[widgetData.appName].push(widgetData);
+        saveAvailableWidgets(); // Save the updated list
     }
 }
 
@@ -4287,7 +4300,6 @@ async function installApp(appData) {
 
 async function deleteApp(appName) {
     // --- Protection Clause ---
-    // Find the app object to check its URL
     const appToDelete = apps[appName];
     if (appToDelete && appToDelete.url.includes('/appstore/index.html')) {
         showPopup(currentLanguage.GURAPP_DELETE_STORE_DENIED);
@@ -4300,6 +4312,22 @@ async function deleteApp(appName) {
     }
 
     if (apps[appName]) {
+        // --- NEW: Remove associated widgets ---
+        if (availableWidgets[appName]) {
+            delete availableWidgets[appName];
+            saveAvailableWidgets(); // Save the change
+        }
+        // Also remove any active instances of this app's widgets
+        activeWidgets = activeWidgets.filter(aw => {
+            const sourceAppName = Object.keys(availableWidgets).find(key => 
+                availableWidgets[key].some(w => w.widgetId === aw.widgetId)
+            );
+            return sourceAppName !== appName;
+        });
+        saveWidgets();
+        renderWidgetGrid();
+        // --- End of new logic ---
+
         // 1. Remove from the in-memory `apps` object
         delete apps[appName];
 
@@ -5463,6 +5491,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
     loadSavedData();         // Load usage and lastOpened data
     loadRecentWallpapers();
+    loadAvailableWidgets(); 
     initializeWallpaperTracking();
 
     // --- Perform initial setup that depends on the loaded data ---
