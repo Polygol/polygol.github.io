@@ -293,30 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- Special Handler for Clock Color ---
-    const clockColorItem = document.getElementById('setting-clock-color');
-    const colorSwitch = document.getElementById('clock-color-switch');
-    const colorPicker = document.getElementById('clock-color-picker');
-
-    if (clockColorItem && colorSwitch && colorPicker) {
-        const updateColorActiveState = () => clockColorItem.classList.toggle('active', colorSwitch.checked);
-        colorSwitch.addEventListener('change', updateColorActiveState);
-        updateColorActiveState();
-
-        clockColorItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            colorSwitch.checked = !colorSwitch.checked;
-            colorSwitch.dispatchEvent(new Event('change'));
-            if (colorSwitch.checked) {
-                hideActivePopup(); // Close other popups before opening the color picker
-                setTimeout(() => colorPicker.click(), 50);
-            }
-        });
-    }
-
-    // --- Special handlers for new Clock FX ---
-    connectGridItem('setting-clock-shadow', 'clock-shadow-switch');
-    connectGridItem('setting-clock-gradient', 'clock-gradient-switch');
+    // --- Connect items to their popup containers ---
+    connectGridItem('setting-clock-color', 'clock-color-popup');
+    connectGridItem('setting-clock-shadow', 'shadow-controls-popup');
 
     // --- Connect all other settings ---
     connectGridItem('setting-wallpaper', 'uploadButton');
@@ -3746,7 +3725,7 @@ function syncUiStates() {
     // Sync all checkbox-based toggles
     document.querySelectorAll('.setting-item').forEach(item => {
         // Exclude alignment from this generic check since it's a select
-        if (item.id === 'setting-alignment') return;
+        if (item.id === 'setting-alignment' || item.id === 'setting-clock-color' || item.id === 'setting-clock-shadow') return;
         
         // Construct potential IDs for different control types
         const controlId = item.id.replace('setting-', '');
@@ -3768,6 +3747,11 @@ function syncUiStates() {
     document.getElementById('setting-wallpaper-blur').classList.toggle('active', document.getElementById('wallpaper-blur-slider').value !== '0');
     document.getElementById('setting-wallpaper-brightness').classList.toggle('active', document.getElementById('wallpaper-brightness-slider').value !== '100');
     document.getElementById('setting-wallpaper-contrast-fx').classList.toggle('active', document.getElementById('wallpaper-contrast-slider').value !== '100');
+
+    // Sync special items
+    const isColorActive = document.getElementById('clock-color-switch').checked || document.getElementById('clock-gradient-switch').checked;
+    document.getElementById('setting-clock-color').classList.toggle('active', isColorActive);
+    document.getElementById('setting-clock-shadow').classList.toggle('active', document.getElementById('clock-shadow-switch').checked);
 }
 
 function applyWallpaperEffects() {
@@ -3786,141 +3770,112 @@ function applyWallpaperEffects() {
 }
 
 function setupFontSelection() {
-    const fontSelect = document.getElementById('font-select');
-    const weightSlider = document.getElementById('weight-slider');
     const clockElement = document.getElementById('clock');
     const infoElement = document.querySelector('.info');
-    const colorPicker = document.getElementById('clock-color-picker');
+
+    // --- Get all control elements ---
+    const fontSelect = document.getElementById('font-select');
+    const weightSlider = document.getElementById('weight-slider');
     const colorSwitch = document.getElementById('clock-color-switch');
+    const colorPicker = document.getElementById('clock-color-picker');
     const stackSwitch = document.getElementById('clock-stack-switch');
     const alignmentSelect = document.getElementById('alignment-select');
     const blurSlider = document.getElementById('wallpaper-blur-slider');
     const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
     const contrastSlider = document.getElementById('wallpaper-contrast-slider');
-    
-    // Get the computed --text-color value for the default
-    const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
-    
-    // Load saved preferences from localStorage
-    const savedFont = localStorage.getItem('clockFont') || 'Inter';
-    const savedWeight = localStorage.getItem('clockWeight') || '700';
-    const savedColor = localStorage.getItem('clockColor') || defaultColor;
-    const colorEnabled = localStorage.getItem('clockColorEnabled') === 'true';
-    const stackEnabled = localStorage.getItem('clockStackEnabled') === 'true';
-    const savedAlignment = localStorage.getItem('clockAlignment') || 'center';
-    const savedBlur = localStorage.getItem('wallpaperBlur') || '0';
-    const savedBrightness = localStorage.getItem('wallpaperBrightness') || '100';
-    const savedContrast = localStorage.getItem('wallpaperContrast') || '100';
-    
-    // Set UI control values from loaded preferences
-    fontSelect.value = savedFont;
-    weightSlider.value = parseInt(savedWeight) / 10;
-    colorPicker.value = savedColor;
-    colorSwitch.checked = colorEnabled;
-    stackSwitch.checked = stackEnabled;
-    alignmentSelect.value = savedAlignment;
-    if (blurSlider) blurSlider.value = savedBlur;
-    if (brightnessSlider) brightnessSlider.value = savedBrightness;
-    if (contrastSlider) contrastSlider.value = savedContrast;
-    
-    // Function to save current settings
-    function saveCurrentWallpaperSettings() {
-        // Update individual localStorage items for immediate persistence
-        localStorage.setItem('clockFont', fontSelect.value);
-        localStorage.setItem('clockWeight', (weightSlider.value * 10).toString());
-        localStorage.setItem('clockColor', colorPicker.value);
-        localStorage.setItem('clockColorEnabled', colorSwitch.checked.toString());
-        localStorage.setItem('clockStackEnabled', stackSwitch.checked.toString());
-        localStorage.setItem('clockAlignment', alignmentSelect.value);
-        localStorage.setItem('wallpaperBlur', blurSlider ? blurSlider.value : '0');
-        localStorage.setItem('wallpaperBrightness', brightnessSlider ? brightnessSlider.value : '100');
-        localStorage.setItem('wallpaperContrast', contrastSlider ? contrastSlider.value : '100');
+    const shadowSwitch = document.getElementById('clock-shadow-switch');
+    const shadowBlurSlider = document.getElementById('clock-shadow-blur-slider');
+    const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
+    const gradientSwitch = document.getElementById('clock-gradient-switch');
+    const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
 
-        // Update the settings object for the current wallpaper in the history array
-        if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0 && currentWallpaperPosition < recentWallpapers.length) {
-            const currentWallpaperSettings = {
-                font: fontSelect.value,
-                weight: (weightSlider.value * 10).toString(),
-                color: colorPicker.value,
-                colorEnabled: colorSwitch.checked,
-                stackEnabled: stackSwitch.checked,
-                showSeconds: document.getElementById('seconds-switch')?.checked || false,
-                showWeather: document.getElementById('weather-switch')?.checked !== false,
-                alignment: alignmentSelect.value,
-                wallpaperBlur: blurSlider ? blurSlider.value : '0',
-                wallpaperBrightness: brightnessSlider ? brightnessSlider.value : '100',
-                wallpaperContrast: contrastSlider ? contrastSlider.value : '100'
-            };
-            recentWallpapers[currentWallpaperPosition].clockStyles = currentWallpaperSettings;
-            saveRecentWallpapers(); // Save the updated history array to localStorage
+    // --- Load saved preferences ---
+    const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
+    fontSelect.value = localStorage.getItem('clockFont') || 'Inter';
+    weightSlider.value = (localStorage.getItem('clockWeight') || '700') / 10;
+    colorPicker.value = localStorage.getItem('clockColor') || defaultColor;
+    colorSwitch.checked = localStorage.getItem('clockColorEnabled') === 'true';
+    stackSwitch.checked = localStorage.getItem('clockStackEnabled') === 'true';
+    alignmentSelect.value = localStorage.getItem('clockAlignment') || 'center';
+    shadowSwitch.checked = localStorage.getItem('shadowEnabled') === 'true';
+    shadowBlurSlider.value = localStorage.getItem('shadowBlur') || '10';
+    shadowColorPicker.value = localStorage.getItem('shadowColor') || '#000000';
+    gradientSwitch.checked = localStorage.getItem('gradientEnabled') === 'true';
+    gradientColorPicker.value = localStorage.getItem('gradientColor') || '#ffffff';
+
+    // --- Function to save all settings ---
+    function saveCurrentWallpaperSettings() {
+        const settings = {
+            font: fontSelect.value,
+            weight: (weightSlider.value * 10).toString(),
+            color: colorPicker.value,
+            colorEnabled: colorSwitch.checked,
+            stackEnabled: stackSwitch.checked,
+            showSeconds: document.getElementById('seconds-switch')?.checked,
+            showWeather: document.getElementById('weather-switch')?.checked,
+            alignment: alignmentSelect.value,
+            wallpaperBlur: blurSlider.value,
+            wallpaperBrightness: brightnessSlider.value,
+            wallpaperContrast: contrastSlider.value,
+            shadowEnabled: shadowSwitch.checked,
+            shadowBlur: shadowBlurSlider.value,
+            shadowColor: shadowColorPicker.value,
+            gradientEnabled: gradientSwitch.checked,
+            gradientColor: gradientColorPicker.value
+        };
+
+        // Save to individual localStorage keys
+        for (const key in settings) {
+            localStorage.setItem(key, settings[key]);
+        }
+
+        // Save to the wallpaper history object
+        if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0) {
+            recentWallpapers[currentWallpaperPosition].clockStyles = settings;
+            saveRecentWallpapers();
         }
     }
-    
-    // Apply initial styles from loaded preferences
+
+    // --- Apply initial styles ---
     applyClockStyles();
-    applyAlignment(savedAlignment);
-    applyWallpaperEffects();
+    applyAlignment(alignmentSelect.value);
     
-    // Handle font changes
-    fontSelect.addEventListener('change', (e) => {
-        const selectedFont = e.target.value;
-        document.fonts.load(`16px ${selectedFont}`).then(() => {
+    // --- Setup event listeners ---
+    const allControls = [
+        fontSelect, weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
+        blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
+        shadowColorPicker, gradientSwitch, gradientColorPicker
+    ];
+
+    allControls.forEach(control => {
+        control.addEventListener('input', () => {
             applyClockStyles();
+            applyWallpaperEffects();
+            applyAlignment(alignmentSelect.value);
             saveCurrentWallpaperSettings();
-	        syncUiStates();
-        }).catch(() => {
-            showPopup(currentLanguage.CLOCK_STYLE_FAILED);
+            syncUiStates();
+        });
+        control.addEventListener('change', () => { // For checkboxes and selects
+            applyClockStyles();
+            applyWallpaperEffects();
+            applyAlignment(alignmentSelect.value);
+            saveCurrentWallpaperSettings();
+            syncUiStates();
         });
     });
 
-    // Handle alignment changes
-    alignmentSelect.addEventListener('change', (e) => {
-        applyAlignment(e.target.value);
-        saveCurrentWallpaperSettings();
-        syncUiStates();
-    });
-    
-    // Handle weight changes
-    weightSlider.addEventListener('input', (e) => {
-        applyClockStyles();
-        saveCurrentWallpaperSettings();
-	    syncUiStates();
-    });
-
-    // Handle wallpaper effect slider changes
-    [blurSlider, brightnessSlider, contrastSlider].forEach(slider => {
-        if (slider) {
-            slider.addEventListener('input', () => {
-                applyWallpaperEffects();
-                saveCurrentWallpaperSettings();
-                syncUiStates();
-            });
+    // Special logic: uncheck gradient if solid color is checked, and vice-versa
+    colorSwitch.addEventListener('change', () => {
+        if (colorSwitch.checked) {
+            gradientSwitch.checked = false;
         }
     });
-    
-    // Handle color changes
-    colorPicker.addEventListener('input', (e) => {
-        applyClockStyles();
-        saveCurrentWallpaperSettings();
+
+    gradientSwitch.addEventListener('change', () => {
+        if (gradientSwitch.checked) {
+            colorSwitch.checked = false;
+        }
     });
-    
-    // Handle color switch toggle
-    colorSwitch.addEventListener('change', (e) => {
-        applyClockStyles();
-        saveCurrentWallpaperSettings();
-        colorPicker.style.display = e.target.checked ? 'inline-block' : 'none';
-        colorPicker.disabled = !e.target.checked;
-    });
-    
-    // Handle stack switch toggle
-    stackSwitch.addEventListener('change', (e) => {
-        applyClockStyles();
-        saveCurrentWallpaperSettings();
-    });
-    
-    // Set initial color picker state based on switch
-    colorPicker.style.display = colorSwitch.checked ? 'inline-block' : 'none';
-    colorPicker.disabled = !colorSwitch.checked;
 }
 
 function applyClockStyles() {
