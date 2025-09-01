@@ -3752,6 +3752,21 @@ function syncUiStates() {
     document.getElementById('setting-wallpaper-contrast-fx').classList.toggle('active', document.getElementById('wallpaper-contrast-slider').value !== '100');
 }
 
+function applyWallpaperEffects() {
+    const blurSlider = document.getElementById('wallpaper-blur-slider');
+    const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
+    const contrastSlider = document.getElementById('wallpaper-contrast-slider');
+
+    if (!blurSlider || !brightnessSlider || !contrastSlider) return;
+
+    const blurValue = blurSlider.value;
+    const brightnessValue = brightnessSlider.value;
+    const contrastValue = contrastSlider.value;
+
+    const filterString = `blur(${blurValue}px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+    document.body.style.setProperty('--wallpaper-filter', filterString);
+}
+
 function setupFontSelection() {
     const fontSelect = document.getElementById('font-select');
     const weightSlider = document.getElementById('weight-slider');
