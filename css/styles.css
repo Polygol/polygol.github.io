@@ -2024,7 +2024,6 @@ input[type="checkbox"]:checked::before {
     cursor: pointer;
     color: var(--text-color);
 }
-
 /* --- Widget System Styles --- */
 .widget-grid {
     position: absolute;
@@ -2083,12 +2082,65 @@ input[type="checkbox"]:checked::before {
     z-index: 2; /* Sits on top of the iframe */
 }
 
-/* Widget Picker Styles */
+
+/* --- Widget Picker Drawer Styles --- */
+.widget-drawer {
+    position: fixed;
+    bottom: -100%; /* Start off-screen */
+    left: 0;
+    width: 100%;
+    height: 50%; /* Take up bottom half of the screen */
+    background-color: var(--search-background);
+    backdrop-filter: blur(10px) saturate(2) var(--edge-refraction-filter);
+    border-top: 1px solid var(--glass-border);
+    border-radius: 25px 25px 0 0;
+    z-index: 9997; /* Above blur overlay but below settings modal */
+    transition: bottom 0.4s cubic-bezier(0.2, 0, 0.38, 0.9);
+    display: flex;
+    flex-direction: column;
+}
+
+.widget-drawer.open {
+    bottom: 0; /* Slide in */
+}
+
+.widget-drawer-handle {
+    width: 100%;
+    padding: 15px 0;
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.widget-drawer-handle .drawer-pill {
+    width: 50px;
+    height: 5px;
+    background-color: var(--secondary-text-color);
+    border-radius: 5px;
+    opacity: 0.5;
+}
+
+.widget-drawer-header {
+    padding: 0 30px 15px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.widget-drawer-header h2 {
+    margin: 0;
+}
+
+.widget-drawer-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 0 30px 30px;
+}
+
 .widget-picker-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 15px;
-    margin-top: 20px;
 }
 
 .widget-picker-item {
