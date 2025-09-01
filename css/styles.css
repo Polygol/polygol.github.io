@@ -871,6 +871,12 @@ input[type="color"]::-moz-color-swatch {
 
 .settings-grid.home-settings {
     margin-top: 10px;
+	display: flex;
+	gap: 10px;
+	padding: none;
+	backdrop-filter: none;
+	background-color: none;
+	border: none;
 }
 
 .setting-item {
