@@ -314,6 +314,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Special handlers for new Clock FX ---
+    connectGridItem('setting-clock-shadow', 'clock-shadow-switch');
+    connectGridItem('setting-clock-gradient', 'clock-gradient-switch');
+
+    // --- Connect all other settings ---
+    connectGridItem('setting-wallpaper', 'uploadButton');
+
     // --- Connect all other settings ---
     connectGridItem('setting-wallpaper', 'uploadButton');
     connectGridItem('setting-wallpaper-blur', 'wallpaper-blur-slider');
@@ -2878,7 +2885,12 @@ function loadRecentWallpapers() {
         alignment: 'center',
         wallpaperBlur: '0',
         wallpaperBrightness: '100',
-        wallpaperContrast: '100'
+        wallpaperContrast: '100',
+        shadowEnabled: false,
+        shadowBlur: '10',
+        shadowColor: '#000000',
+        gradientEnabled: false,
+        gradientColor: '#ffffff'
 	};
     
     let updated = false;
@@ -2902,6 +2914,17 @@ function loadRecentWallpapers() {
         }
         if (wallpaper.clockStyles.wallpaperContrast === undefined) {
             wallpaper.clockStyles.wallpaperContrast = '100';
+            updated = true;
+        }
+        if (wallpaper.clockStyles.shadowEnabled === undefined) {
+            wallpaper.clockStyles.shadowEnabled = false;
+            wallpaper.clockStyles.shadowBlur = '10';
+            wallpaper.clockStyles.shadowColor = '#000000';
+            updated = true;
+        }
+        if (wallpaper.clockStyles.gradientEnabled === undefined) {
+            wallpaper.clockStyles.gradientEnabled = false;
+            wallpaper.clockStyles.gradientColor = '#ffffff';
             updated = true;
         }
     });
@@ -3408,16 +3431,6 @@ async function jumpToWallpaper(index) {
     let wallpaper = recentWallpapers[currentWallpaperPosition];
     
     if (wallpaper.clockStyles) {
-        // Update localStorage
-        localStorage.setItem('clockFont', wallpaper.clockStyles.font || 'Inter');
-        localStorage.setItem('clockWeight', wallpaper.clockStyles.weight || '700');
-        localStorage.setItem('clockColor', wallpaper.clockStyles.color || '#ffffff');
-        localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled || false);
-        localStorage.setItem('clockStackEnabled', wallpaper.clockStyles.stackEnabled || false);
-        localStorage.setItem('showSeconds', wallpaper.clockStyles.showSeconds !== undefined ? wallpaper.clockStyles.showSeconds : true);
-        localStorage.setItem('showWeather', wallpaper.clockStyles.showWeather !== undefined ? wallpaper.clockStyles.showWeather : true);
-        localStorage.setItem('clockAlignment', wallpaper.clockStyles.alignment || 'center');
-
         // Update UI elements
         const fontSelect = document.getElementById('font-select');
         const weightSlider = document.getElementById('weight-slider');
@@ -3430,6 +3443,11 @@ async function jumpToWallpaper(index) {
         const blurSlider = document.getElementById('wallpaper-blur-slider');
         const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
         const contrastSlider = document.getElementById('wallpaper-contrast-slider');
+        const shadowSwitch = document.getElementById('clock-shadow-switch');
+        const shadowBlurSlider = document.getElementById('clock-shadow-blur-slider');
+        const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
+        const gradientSwitch = document.getElementById('clock-gradient-switch');
+        const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
         if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
@@ -3454,6 +3472,12 @@ async function jumpToWallpaper(index) {
         if (blurSlider) blurSlider.value = wallpaper.clockStyles.wallpaperBlur || '0';
         if (brightnessSlider) brightnessSlider.value = wallpaper.clockStyles.wallpaperBrightness || '100';
         if (contrastSlider) contrastSlider.value = wallpaper.clockStyles.wallpaperContrast || '100';
+        if (shadowSwitch) shadowSwitch.checked = wallpaper.clockStyles.shadowEnabled || false;
+        if (shadowBlurSlider) shadowBlurSlider.value = wallpaper.clockStyles.shadowBlur || '10';
+        if (shadowColorPicker) shadowColorPicker.value = wallpaper.clockStyles.shadowColor || '#000000';
+        if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
+        if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
+
 
         // Apply the styles
         applyClockStyles();
@@ -3525,16 +3549,6 @@ function switchWallpaper(direction) {
     
     // Apply clock styles for this wallpaper if they exist
     if (wallpaper.clockStyles) {
-        // Update localStorage so all functions can read the values
-        localStorage.setItem('clockFont', wallpaper.clockStyles.font || 'Inter');
-        localStorage.setItem('clockWeight', wallpaper.clockStyles.weight || '700');
-        localStorage.setItem('clockColor', wallpaper.clockStyles.color || '#ffffff');
-        localStorage.setItem('clockColorEnabled', wallpaper.clockStyles.colorEnabled || false);
-        localStorage.setItem('clockStackEnabled', wallpaper.clockStyles.stackEnabled || false);
-        localStorage.setItem('showSeconds', wallpaper.clockStyles.showSeconds !== undefined ? wallpaper.clockStyles.showSeconds : true);
-        localStorage.setItem('showWeather', wallpaper.clockStyles.showWeather !== undefined ? wallpaper.clockStyles.showWeather : true);
-        localStorage.setItem('clockAlignment', wallpaper.clockStyles.alignment || 'center');
-        
         // Update the UI elements
         const fontSelect = document.getElementById('font-select');
         const weightSlider = document.getElementById('weight-slider');
@@ -3547,6 +3561,11 @@ function switchWallpaper(direction) {
         const blurSlider = document.getElementById('wallpaper-blur-slider');
         const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
         const contrastSlider = document.getElementById('wallpaper-contrast-slider');
+        const shadowSwitch = document.getElementById('clock-shadow-switch');
+        const shadowBlurSlider = document.getElementById('clock-shadow-blur-slider');
+        const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
+        const gradientSwitch = document.getElementById('clock-gradient-switch');
+        const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
         if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
@@ -3572,6 +3591,11 @@ function switchWallpaper(direction) {
         if (blurSlider) blurSlider.value = wallpaper.clockStyles.wallpaperBlur || '0';
         if (brightnessSlider) brightnessSlider.value = wallpaper.clockStyles.wallpaperBrightness || '100';
         if (contrastSlider) contrastSlider.value = wallpaper.clockStyles.wallpaperContrast || '100';
+        if (shadowSwitch) shadowSwitch.checked = wallpaper.clockStyles.shadowEnabled || false;
+        if (shadowBlurSlider) shadowBlurSlider.value = wallpaper.clockStyles.shadowBlur || '10';
+        if (shadowColorPicker) shadowColorPicker.value = wallpaper.clockStyles.shadowColor || '#000000';
+        if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
+        if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
         
         // Apply the styles
         applyClockStyles();
@@ -3910,26 +3934,55 @@ function applyClockStyles() {
     const colorPicker = document.getElementById('clock-color-picker');
     const colorSwitch = document.getElementById('clock-color-switch');
     const stackSwitch = document.getElementById('clock-stack-switch');
+    const shadowSwitch = document.getElementById('clock-shadow-switch');
+    const shadowBlurSlider = document.getElementById('clock-shadow-blur-slider');
+    const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
+    const gradientSwitch = document.getElementById('clock-gradient-switch');
+    const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
     
-    if (!fontSelect || !weightSlider || !clockElement || !infoElement) return;
-    
+    if (!clockElement || !infoElement) return;
+
     const fontFamily = fontSelect.value;
-    const fontWeight = weightSlider.value * 10; // Convert slider value to proper font weight
+    const fontWeight = weightSlider.value * 10;
     
     clockElement.style.fontFamily = fontFamily;
     clockElement.style.fontWeight = fontWeight;
+    infoElement.style.fontFamily = fontFamily;
+
+    // Reset styles before applying new ones
+    clockElement.style.textShadow = 'none';
+    infoElement.style.textShadow = 'none';
+    clockElement.style.backgroundImage = 'none';
+    clockElement.style.webkitBackgroundClip = 'unset';
+    clockElement.style.backgroundClip = 'unset';
     
-    // Only apply custom color if the switch is enabled
-    if (colorSwitch && colorSwitch.checked) {
+    // Apply Text Shadow
+    if (shadowSwitch && shadowSwitch.checked) {
+        const shadowBlur = shadowBlurSlider.value;
+        const shadowColor = shadowColorPicker.value;
+        const shadowString = `0 0 ${shadowBlur}px ${shadowColor}`;
+        clockElement.style.textShadow = shadowString;
+        infoElement.style.textShadow = shadowString;
+    }
+
+    // Apply Gradient or Solid Color
+    if (gradientSwitch && gradientSwitch.checked) {
+        const color1 = colorPicker.value;
+        const color2 = gradientColorPicker.value;
+        clockElement.style.backgroundImage = `linear-gradient(45deg, ${color1}, ${color2})`;
+        clockElement.style.webkitBackgroundClip = 'text';
+        clockElement.style.backgroundClip = 'text';
+        clockElement.style.color = 'transparent'; // Required for gradient to show
+        infoElement.style.color = color1; // Use the primary color for the date
+    } else if (colorSwitch && colorSwitch.checked) {
         clockElement.style.color = colorPicker.value;
         infoElement.style.color = colorPicker.value;
     } else {
-        // Reset to default theme color
-        clockElement.style.color = ''; // Empty string removes inline style, reverting to CSS
+        clockElement.style.color = ''; // Revert to default CSS color
         infoElement.style.color = '';
     }
     
-    // Apply stacked layout if enabled
+    // Apply Stacked Layout
     if (stackSwitch && stackSwitch.checked) {
         clockElement.style.flexDirection = 'column';
         clockElement.style.lineHeight = '0.9';
@@ -3937,8 +3990,6 @@ function applyClockStyles() {
         clockElement.style.flexDirection = '';
         clockElement.style.lineHeight = '';
     }
-    
-    infoElement.style.fontFamily = fontFamily;
 }
 
 // Initialize theme and wallpaper on load
