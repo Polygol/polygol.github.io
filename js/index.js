@@ -4288,7 +4288,6 @@ function applyClockStyles() {
 // Initialize theme and wallpaper on load
 function initializeCustomization() {
     setupThemeSwitcher();
-    applyWallpaper();
     setupFontSelection();
 }
 
@@ -5590,14 +5589,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     firstSetup(); // This handles language
     
     // --- Initialize UI components ---
-    initAppDraw(); // Now this will use the fully populated 'apps' object
-    initializeCustomization(); // This sets up theme, wallpaper, fonts
-    setupWeatherToggle();
-    initializeAndApplyWallpaper().catch(error => {
+    await initializeAndApplyWallpaper().catch(error => {
         console.error("Error initializing wallpaper:", error);
-    });
+    }); // Run this first to set localStorage and apply the correct wallpaper
+    
+    initAppDraw(); // Now this will use the fully populated 'apps' object
+    initializeCustomization(); // Now reads correct styles and applies them to DOM
+    setupWeatherToggle();
     initializePageIndicator();
-	loadWidgets();
+	loadWidgets(); // Now renders into a correctly styled layout
     checkWallpaperState();
     updateGurappsVisibility();
     syncUiStates();
