@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polygol Media Widget</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
+    <style>
+        :root {
+            --text-color: #f9f9f9;
+            --secondary-text-color: rgba(255, 255, 255, 0.7);
+        }
+        body.light-theme {
+            --text-color: #333333;
+            --secondary-text-color: rgba(0, 0, 0, 0.7);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 15px;
+            font-family: 'Inter', sans-serif;
+            background-color: transparent;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .widget-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+        .album-art {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .info {
+            overflow: hidden;
+            text-align: left;
+        }
+        .title, .artist {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .title {
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .artist {
+            font-size: 12px;
+            color: var(--secondary-text-color);
+        }
+        .placeholder {
+            color: var(--secondary-text-color);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="widget-container" class="widget-content">
+        <!-- Content will be loaded by JavaScript -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('widget-container');
+
+            function displayMetadata(metadata) {
+                if (!metadata || !metadata.title) {
+                    container.innerHTML = `<span class="placeholder">Nothing Playing</span>`;
+                    return;
+                }
+                const artwork = metadata.artwork[0]?.src || '/assets/appicon/default.png';
+                container.innerHTML = `
+                    <img src="${artwork}" class="album-art" alt="Album Art">
+                    <div class="info">
+                        <div class="title">${metadata.title}</div>
+                        <div class="artist">${metadata.artist}</div>
+                    </div>
+                `;
+            }
+
+            // Initial load from localStorage
+            try {
+                const savedMetadata = JSON.parse(localStorage.getItem('lastMediaMetadata'));
+                displayMetadata(savedMetadata);
+            } catch (e) {
+                container.innerHTML = `<span class="placeholder">Nothing Playing</span>`;
+            }
+
+            // Listen for real-time updates from other tabs/windows
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'lastMediaMetadata') {
+                    try {
+                        const newMetadata = JSON.parse(event.newValue);
+                        displayMetadata(newMetadata);
+                    } catch (e) {
+                         displayMetadata(null);
+                    }
+                }
+            });
+            
+            // Apply theme from parent
+            try {
+                 const storedTheme = localStorage.getItem('theme') || 'dark';
+                 document.body.classList.toggle('light-theme', storedTheme === 'light');
+            } catch (e) {}
+
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'themeUpdate') {
+                     document.body.classList.toggle('light-theme', event.data.theme === 'light');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
