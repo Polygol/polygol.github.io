@@ -873,7 +873,7 @@ input[type="color"]::-moz-color-swatch {
     margin-top: 10px;
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
+	gap: 5px;
 	padding: 0;
 	backdrop-filter: none;
 	background-color: transparent;
