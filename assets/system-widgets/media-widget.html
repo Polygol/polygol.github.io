@@ -121,7 +121,7 @@
                 let albumArtEl = document.querySelector('.album-art');
 
                 if (!metadata || !metadata.title) {
-                    container.innerHTML = `<span class="placeholder">Nothing Playing</span>`;
+                    container.innerHTML = `<span class="placeholder"><span class="material-symbols-rounded">music_note</span></span>`;
                     if (albumArtEl) albumArtEl.remove(); // Remove art if nothing is playing
                     return;
                 }
