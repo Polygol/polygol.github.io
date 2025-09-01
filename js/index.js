@@ -143,6 +143,190 @@ let appLastOpened = {};
 
 secondsSwitch.checked = showSeconds;
 
+// NEW: Core function to render all widgets based on the activeWidgets array
+function renderWidgets() {
+    const gridContainer = document.getElementById('widget-grid');
+    if (!gridContainer) return;
+    gridContainer.innerHTML = '';
+
+    const clockContainer = document.querySelector('.container');
+    const MARGIN = 10;
+
+    // A map to keep track of the widget elements for interaction
+    const widgetElements = new Map();
+
+    // 1. Create and position all widget elements
+    activeWidgets.forEach((widget, index) => {
+        const instance = document.createElement('div');
+        instance.className = 'widget-instance';
+        instance.dataset.widgetIndex = index;
+        instance.style.width = `${widget.w}px`;
+        instance.style.height = `${widget.h}px`;
+        
+        // Calculate position based on snap anchors
+        if (widget.snapX === 'left') {
+            instance.style.left = `${widget.x}px`;
+        } else if (widget.snapX === 'right') {
+            instance.style.right = `${widget.x}px`;
+        } else { // Center
+            instance.style.left = `calc(50% + ${widget.x}px)`;
+        }
+
+        if (widget.snapY === 'top') {
+            instance.style.top = `${widget.y}px`;
+        } else if (widget.snapY === 'bottom') {
+            instance.style.bottom = `${widget.y}px`;
+        } else { // Center
+            instance.style.top = `calc(50% + ${widget.y}px)`;
+        }
+
+        const iframe = document.createElement('iframe');
+        iframe.src = availableWidgets[widget.appName].find(w => w.widgetId === widget.widgetId).url;
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'widget-instance-overlay';
+
+        instance.appendChild(iframe);
+        instance.appendChild(overlay);
+        gridContainer.appendChild(instance);
+        widgetElements.set(index, instance);
+    });
+
+    // 2. Add interaction listeners to all widgets
+    widgetElements.forEach((instance, index) => {
+        const overlay = instance.querySelector('.widget-instance-overlay');
+        let longPressTimer;
+        let isDragging = false;
+        let offsetX, offsetY;
+        const SNAP_DISTANCE = 20;
+
+        const snapLineV = document.getElementById('snap-line-v');
+        const snapLineH = document.getElementById('snap-line-h');
+
+        const onDragStart = (e) => {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            isDragging = false;
+            instance.classList.add('is-dragging');
+            const rect = instance.getBoundingClientRect();
+            offsetX = clientX - rect.left;
+            offsetY = clientY - rect.top;
+
+            longPressTimer = setTimeout(() => {
+                instance.classList.remove('is-dragging');
+                removeWidget(index);
+                document.removeEventListener('mousemove', onDragMove);
+                document.removeEventListener('mouseup', onDragEnd);
+                document.removeEventListener('touchmove', onDragMove);
+                document.removeEventListener('touchend', onDragEnd);
+            }, 500);
+
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchmove', onDragMove);
+            document.addEventListener('touchend', onDragEnd);
+        };
+        
+        const onDragMove = (e) => {
+            clearTimeout(longPressTimer);
+            isDragging = true;
+            snapLineV.style.display = 'none';
+            snapLineH.style.display = 'none';
+
+            let newLeft = (e.touches ? e.touches[0].clientX : e.clientX) - offsetX;
+            let newTop = (e.touches ? e.touches[0].clientY : e.clientY) - offsetY;
+            let newRight = newLeft + instance.offsetWidth;
+            let newBottom = newTop + instance.offsetHeight;
+
+            let snapX = null, snapY = null;
+            let finalX = newLeft, finalY = newTop;
+            
+            const clockRect = clockContainer.getBoundingClientRect();
+            
+            // --- Snapping Logic ---
+            // Screen snapping
+            if (Math.abs(newLeft - MARGIN) < SNAP_DISTANCE) { finalX = MARGIN; snapX = 'left'; snapLineV.style.left = `${MARGIN}px`; snapLineV.style.display = 'block'; }
+            if (Math.abs(newRight - (window.innerWidth - MARGIN)) < SNAP_DISTANCE) { finalX = MARGIN; snapX = 'right'; snapLineV.style.left = `${window.innerWidth - MARGIN}px`; snapLineV.style.display = 'block';}
+            if (Math.abs(newTop - MARGIN) < SNAP_DISTANCE) { finalY = MARGIN; snapY = 'top'; snapLineH.style.top = `${MARGIN}px`; snapLineH.style.display = 'block';}
+            if (Math.abs(newBottom - (window.innerHeight - MARGIN)) < SNAP_DISTANCE) { finalY = MARGIN; snapY = 'bottom'; snapLineH.style.top = `${window.innerHeight - MARGIN}px`; snapLineH.style.display = 'block';}
+            
+            // Widget-to-widget snapping
+            widgetElements.forEach((otherInstance, otherIndex) => {
+                if (index === otherIndex) return;
+                const otherRect = otherInstance.getBoundingClientRect();
+
+                // Horizontal
+                if (Math.abs(newRight - (otherRect.left - MARGIN)) < SNAP_DISTANCE) { finalX = otherRect.left - instance.offsetWidth - MARGIN; snapX = 'left'; snapLineV.style.left = `${otherRect.left - MARGIN/2}px`; snapLineV.style.display = 'block'; }
+                if (Math.abs(newLeft - (otherRect.right + MARGIN)) < SNAP_DISTANCE) { finalX = otherRect.right + MARGIN; snapX = 'left'; snapLineV.style.left = `${otherRect.right + MARGIN/2}px`; snapLineV.style.display = 'block';}
+
+                // Vertical
+                if (Math.abs(newBottom - (otherRect.top - MARGIN)) < SNAP_DISTANCE) { finalY = otherRect.top - instance.offsetHeight - MARGIN; snapY = 'top'; snapLineH.style.top = `${otherRect.top - MARGIN/2}px`; snapLineH.style.display = 'block';}
+                if (Math.abs(newTop - (otherRect.bottom + MARGIN)) < SNAP_DISTANCE) { finalY = otherRect.bottom + MARGIN; snapY = 'top'; snapLineH.style.top = `${otherRect.bottom + MARGIN/2}px`; snapLineH.style.display = 'block';}
+            });
+
+            // Prevent dragging into clock area
+            if (finalX < clockRect.right && (finalX + instance.offsetWidth) > clockRect.left && finalY < clockRect.bottom && (finalY + instance.offsetHeight) > clockRect.top) {
+                // Don't update position if it would overlap
+                return;
+            }
+
+            // Apply new position based on snap
+            if (snapX === 'right') { instance.style.left = 'auto'; instance.style.right = `${window.innerWidth - finalX - instance.offsetWidth}px`; } 
+            else { instance.style.right = 'auto'; instance.style.left = `${finalX}px`; }
+
+            if (snapY === 'bottom') { instance.style.top = 'auto'; instance.style.bottom = `${window.innerHeight - finalY - instance.offsetHeight}px`; } 
+            else { instance.style.top = `${finalY}px`; instance.style.bottom = 'auto'; }
+
+            // Store snap for saving on mouseup
+            instance.dataset.snapX = snapX || 'left';
+            instance.dataset.snapY = snapY || 'top';
+            instance.dataset.finalX = finalX;
+            instance.dataset.finalY = finalY;
+        };
+
+        const onDragEnd = (e) => {
+            clearTimeout(longPressTimer);
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('touchend', onDragEnd);
+            snapLineV.style.display = 'none';
+            snapLineH.style.display = 'none';
+            instance.classList.remove('is-dragging');
+
+            if (isDragging) {
+                // Save the new position
+                const widgetToUpdate = activeWidgets[index];
+                widgetToUpdate.snapX = instance.dataset.snapX;
+                widgetToUpdate.snapY = instance.dataset.snapY;
+
+                if (widgetToUpdate.snapX === 'right') {
+                    widgetToUpdate.x = window.innerWidth - parseFloat(instance.dataset.finalX) - instance.offsetWidth;
+                } else {
+                    widgetToUpdate.x = parseFloat(instance.dataset.finalX);
+                }
+
+                if (widgetToUpdate.snapY === 'bottom') {
+                    widgetToUpdate.y = window.innerHeight - parseFloat(instance.dataset.finalY) - instance.offsetHeight;
+                } else {
+                    widgetToUpdate.y = parseFloat(instance.dataset.finalY);
+                }
+                saveWidgets();
+            } else {
+                 // It was a tap, open the app
+                const widgetData = availableWidgets[activeWidgets[index].appName].find(w => w.widgetId === activeWidgets[index].widgetId);
+                const appData = apps[activeWidgets[index].appName];
+                const openUrl = widgetData.openUrl || appData?.url;
+                if (openUrl) createFullscreenEmbed(openUrl);
+            }
+        };
+
+        overlay.addEventListener('mousedown', onDragStart);
+        overlay.addEventListener('touchstart', onDragStart, { passive: false });
+    });
+}
+
 function saveAvailableWidgets() {
     localStorage.setItem('availableWidgets', JSON.stringify(availableWidgets));
 }
@@ -156,135 +340,31 @@ function saveWidgets() {
     localStorage.setItem('activeWidgets', JSON.stringify(activeWidgets));
 }
 
-function renderWidgetGrid() {
-    const grid = document.getElementById('widget-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-
-    activeWidgets.forEach((widget, index) => {
-        let widgetData;
-        let appData;
-
-        // Find the full data for the active widget
-        for (const appName in availableWidgets) {
-            const found = availableWidgets[appName].find(w => w.widgetId === widget.widgetId);
-            if (found) {
-                widgetData = found;
-                appData = apps[appName];
-                break;
-            }
-        }
-
-        if (!widgetData) return; // Don't render if the source widget isn't available
-
-        const instance = document.createElement('div');
-        instance.className = 'widget-instance';
-        instance.dataset.widgetIndex = index;
-        instance.style.gridColumn = `span ${widget.w}`;
-        instance.style.gridRow = `span ${widget.h}`;
-        if (widget.w > widget.h) {
-            instance.style.aspectRatio = `${widget.w} / ${widget.h}`;
-        }
-        
-        const iframe = document.createElement('iframe');
-        iframe.src = widgetData.url;
-        
-        const overlay = document.createElement('div');
-        overlay.className = 'widget-instance-overlay';
-
-        // --- Interaction Logic ---
-        let longPressTimer;
-        let isDragging = false;
-        let startX, startY;
-        const longPressDuration = 500; // 500ms for long press
-        const dragThreshold = 10; // Pixels to move before it's a drag
-
-        const handleMouseDown = (e) => {
-            startX = e.clientX;
-            startY = e.clientY;
-            isDragging = false;
-            
-            longPressTimer = setTimeout(() => {
-                removeWidget(index);
-            }, longPressDuration);
-
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-        };
-
-        const handleMouseMove = (e) => {
-            if (Math.abs(e.clientX - startX) > dragThreshold || Math.abs(e.clientY - startY) > dragThreshold) {
-                clearTimeout(longPressTimer); // It's a drag, not a long press
-                isDragging = true;
-                instance.classList.add('dragging');
-            }
-
-            if (isDragging) {
-                const rect = grid.getBoundingClientRect();
-                const x = e.clientX - rect.left - (instance.offsetWidth / 2);
-                const y = e.clientY - rect.top - (instance.offsetHeight / 2);
-                instance.style.transform = `translate(${x}px, ${y}px) scale(1.05)`;
-            }
-        };
-
-        const handleMouseUp = (e) => {
-            clearTimeout(longPressTimer);
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-
-            if (isDragging) {
-                // Logic for what to do when drag ends. For now, we'll use it to remove.
-                // A more advanced implementation would handle reordering here.
-                instance.classList.remove('dragging');
-                instance.style.transform = ''; // Snap back
-                
-                // Example: Remove if dragged far enough
-                if (Math.abs(e.clientY - startY) > 100) {
-                     activeWidgets.splice(index, 1);
-                     renderWidgetGrid();
-                     saveWidgets();
-                }
-
-            } else {
-                // This was a tap. Open the app.
-                const openUrl = widgetData.openUrl || appData?.url;
-                if (openUrl) {
-                    createFullscreenEmbed(openUrl);
-                }
-            }
-            isDragging = false;
-        };
-
-        overlay.addEventListener('mousedown', handleMouseDown);
-        // Add touch equivalents for mobile
-        overlay.addEventListener('touchstart', (e) => handleMouseDown(e.touches[0]), { passive: true });
-        
-        instance.appendChild(iframe);
-        instance.appendChild(overlay);
-        grid.appendChild(instance);
-    });
-}
-
 function loadWidgets() {
     const saved = localStorage.getItem('activeWidgets');
     activeWidgets = saved ? JSON.parse(saved) : [];
-    renderWidgetGrid();
+    renderWidgets();
 }
 
 function addWidget(widgetData) {
     activeWidgets.push({
         widgetId: widgetData.widgetId,
-        w: widgetData.defaultSize[0] || 1,
-        h: widgetData.defaultSize[1] || 1,
+        appName: widgetData.appName, // Store the appName for easier lookup
+        w: 150, // Static size for now
+        h: 150,
+        x: 10 + (activeWidgets.length % 5) * 20, // Cascade new widgets
+        y: 80 + (activeWidgets.length % 5) * 20,
+        snapX: 'left',
+        snapY: 'top'
     });
-    renderWidgetGrid();
+    renderWidgets();
     saveWidgets();
 }
 
 function removeWidget(index) {
     if (confirm('Remove this widget?')) {
         activeWidgets.splice(index, 1);
-        renderWidgetGrid();
+        renderWidgets();
         saveWidgets();
     }
 }
@@ -4321,7 +4401,6 @@ async function deleteApp(appName) {
             return sourceAppName !== appName;
         });
         saveWidgets();
-        renderWidgetGrid();
         // --- End of new logic ---
 
         // 1. Remove from the in-memory `apps` object
@@ -4343,6 +4422,7 @@ async function deleteApp(appName) {
         // 4. Refresh the app drawer and dock
         createAppIcons();
         populateDock();
+		renderWidgets();
         showPopup(currentLanguage.GURAPP_DELETED.replace('{appName}', appName));
     } else {
         showPopup(currentLanguage.GURAPP_DELETE_FAILED.replace('{appName}', appName));
@@ -5923,6 +6003,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // --- 5. Final checks and ongoing processes ---
     preventLeaving();
+    window.addEventListener('resize', renderWidgets);
 
     // Initialize AI if it was already enabled on page load
     if (isAiAssistantEnabled) {
