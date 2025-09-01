@@ -1430,6 +1430,33 @@ input[type="color"]::-moz-color-swatch {
     transform: scale(1.1);
 }
 
+.control-popup-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    background: var(--modal-transparent);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+    border-radius: 25px;
+}
+
+.popup-control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.popup-control-row label {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.popup-control-row input[type="range"] {
+    flex-grow: 1;
+}
+
 #font-select option[value="Roboto"] { font-family: 'Roboto', sans-serif; }
 #font-select option[value="DynaPuff"] { font-family: 'DynaPuff', cursive; }
 #font-select option[value="DM Serif Display"] { font-family: 'DM Serif Display', serif; }
