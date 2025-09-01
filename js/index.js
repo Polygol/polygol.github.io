@@ -4388,41 +4388,37 @@ async function deleteApp(appName) {
     }
 
     if (apps[appName]) {
-        // --- NEW: Remove associated widgets ---
+        // --- CORRECTED WIDGET CLEANUP ---
+        // 1. Remove widget definitions from the available list
         if (availableWidgets[appName]) {
             delete availableWidgets[appName];
-            saveAvailableWidgets(); // Save the change
+            saveAvailableWidgets(); // Save the updated definitions
         }
-        // Also remove any active instances of this app's widgets
-        activeWidgets = activeWidgets.filter(aw => {
-            const sourceAppName = Object.keys(availableWidgets).find(key => 
-                availableWidgets[key].some(w => w.widgetId === aw.widgetId)
-            );
-            return sourceAppName !== appName;
-        });
-        saveWidgets();
-        // --- End of new logic ---
+        // 2. Filter out active instances of widgets from the deleted app
+        activeWidgets = activeWidgets.filter(widget => widget.appName !== appName);
+        saveWidgets(); // Save the cleaned active widgets list
+        renderWidgets(); // Re-render the grid immediately
+        // --- End of fix ---
 
-        // 1. Remove from the in-memory `apps` object
+        // Remove from the in-memory `apps` object
         delete apps[appName];
 
-        // 2. Remove from the 'userInstalledApps' in localStorage
+        // Remove from the 'userInstalledApps' in localStorage
         const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
         delete userApps[appName];
         localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
         
-        // 3. (Optional but Recommended) Un-cache the files from the Service Worker
+        // Un-cache the files from the Service Worker
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
              navigator.serviceWorker.controller.postMessage({
                 action: 'uncache-app',
-                appName: appName // We'll need to know which app files to remove
+                appName: appName
             });
         }
 
-        // 4. Refresh the app drawer and dock
+        // Refresh the app drawer and dock
         createAppIcons();
         populateDock();
-		renderWidgets();
         showPopup(currentLanguage.GURAPP_DELETED.replace('{appName}', appName));
     } else {
         showPopup(currentLanguage.GURAPP_DELETE_FAILED.replace('{appName}', appName));
