@@ -1660,10 +1660,6 @@ input[type="checkbox"]:checked::before {
             justify-content: space-between;
         }
 
-        .setup-option:hover {
-            transform: scale(1.02);
-        }
-
         .setup-buttons {
             margin-top: 2rem;
             display: flex;
@@ -2056,8 +2052,8 @@ input[type="checkbox"]:checked::before {
 
 .widget-instance {
     position: relative;
-    background: rgba(0,0,0,0.2);
-    border-radius: 24px;
+    background: var(--search-background);
+    border-radius: 25px;
     overflow: hidden;
     transform: scale(1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -2159,10 +2155,6 @@ input[type="checkbox"]:checked::before {
     padding: 15px;
     border-radius: 18px;
     transition: background-color 0.2s;
-}
-
-.widget-picker-item:hover {
-    background: var(--transparent-color);
 }
 
 .widget-picker-preview {
