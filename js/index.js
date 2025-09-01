@@ -1,5 +1,8 @@
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
 
+let availableWidgets = {}; // Stores info about all possible widgets from apps
+let activeWidgets = []; // Stores the user's current layout
+
 let originalFaviconUrl = '';
 
 const initialFaviconLink = document.querySelector("link[rel='icon']") || document.querySelector("link[rel='shortcut icon']");
@@ -142,6 +145,123 @@ let minimizedEmbeds = {}; // Object to store minimized embeds by URL
 let appLastOpened = {};
 
 secondsSwitch.checked = showSeconds;
+
+function saveWidgets() {
+    localStorage.setItem('activeWidgets', JSON.stringify(activeWidgets));
+}
+
+function renderWidgetGrid() {
+    const grid = document.getElementById('widget-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    activeWidgets.forEach((widget, index) => {
+        let widgetData;
+        for (const app in availableWidgets) {
+            const found = availableWidgets[app].find(w => w.widgetId === widget.widgetId);
+            if (found) {
+                widgetData = found;
+                break;
+            }
+        }
+
+        if (!widgetData) return;
+
+        const instance = document.createElement('div');
+        instance.className = 'widget-instance';
+        instance.dataset.widgetIndex = index;
+        instance.style.gridColumn = `span ${widget.w}`;
+        instance.style.gridRow = `span ${widget.h}`;
+        if (widget.w > widget.h) {
+            instance.style.aspectRatio = `${widget.w} / ${widget.h}`;
+        }
+        
+        const iframe = document.createElement('iframe');
+        iframe.src = widgetData.url;
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'widget-instance-overlay';
+
+        instance.appendChild(iframe);
+        instance.appendChild(overlay);
+        grid.appendChild(instance);
+    });
+}
+
+function loadWidgets() {
+    const saved = localStorage.getItem('activeWidgets');
+    if (saved) {
+        activeWidgets = JSON.parse(saved);
+    }
+    renderWidgetGrid();
+}
+
+function addWidget(widgetData) {
+    activeWidgets.push({
+        widgetId: widgetData.widgetId,
+        w: widgetData.defaultSize[0] || 1,
+        h: widgetData.defaultSize[1] || 1,
+    });
+    renderWidgetGrid();
+    saveWidgets();
+}
+
+function openWidgetPicker() {
+    const modal = document.getElementById('widget-picker-modal');
+    const grid = document.getElementById('widget-picker-grid');
+    const blurOverlay = document.getElementById('blurOverlayControls');
+    grid.innerHTML = ''; // Clear old items
+
+    // Check if there are any available widgets
+    if (Object.keys(availableWidgets).length === 0) {
+        grid.innerHTML = `<p style="text-align: center; opacity: 0.7;">No widgets available. Install apps that provide widgets.</p>`;
+    } else {
+        for (const appName in availableWidgets) {
+            availableWidgets[appName].forEach(widgetData => {
+                const item = document.createElement('div');
+                item.className = 'widget-picker-item';
+                item.innerHTML = `
+                    <div class="widget-picker-preview">
+                        <span class="material-symbols-rounded">extension</span>
+                    </div>
+                    <span class="widget-picker-title">${widgetData.title}</span>
+                `;
+                item.addEventListener('click', () => {
+                    addWidget(widgetData);
+                    closeWidgetPicker();
+                });
+                grid.appendChild(item);
+            });
+        }
+    }
+    
+    modal.style.display = 'block';
+    blurOverlay.style.display = 'block';
+    setTimeout(() => {
+        modal.classList.add('show');
+        blurOverlay.classList.add('show');
+    }, 10);
+}
+
+function closeWidgetPicker() {
+    const modal = document.getElementById('widget-picker-modal');
+    const blurOverlay = document.getElementById('blurOverlayControls');
+    modal.classList.remove('show');
+    blurOverlay.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        blurOverlay.style.display = 'none';
+    }, 300);
+}
+
+function registerWidget(widgetData) {
+    if (!availableWidgets[widgetData.appName]) {
+        availableWidgets[widgetData.appName] = [];
+    }
+    if (!availableWidgets[widgetData.appName].some(w => w.widgetId === widgetData.widgetId)) {
+        availableWidgets[widgetData.appName].push(widgetData);
+    }
+}
 
 function loadSavedData() {
     // Load existing data if available
@@ -331,6 +451,26 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-alignment', 'alignment-select');
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
+
+    // --- NEW: Special Handler for Widget Picker ---
+    const widgetPickerItem = document.getElementById('setting-widgets');
+    if (widgetPickerItem) {
+        widgetPickerItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeControls(); // Close the main settings
+            setTimeout(openWidgetPicker, 150); // Open picker after a short delay
+        });
+    }
+
+    // --- NEW: Add event listener to close the picker ---
+    const widgetPickerModal = document.getElementById('widget-picker-modal');
+    if(widgetPickerModal) {
+        widgetPickerModal.addEventListener('click', (e) => {
+            if (e.target === widgetPickerModal) {
+                closeWidgetPicker();
+            }
+        });
+    }
 
     // Album Art click listener (using event delegation for reliability)
     document.getElementById('media-session-widget').addEventListener('click', (e) => {
@@ -5260,6 +5400,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.error("Error initializing wallpaper:", error);
     });
     initializePageIndicator();
+	loadWidgets();
     checkWallpaperState();
     updateGurappsVisibility();
     syncUiStates();
@@ -6202,9 +6343,9 @@ window.addEventListener('message', event => {
 
         // --- NEW: Security Check for PROTECTED functions ---
         const protectedFunctions = [
-	    'createFullscreenEmbed',
-	    'blackoutScreen',
-	    'installApp', 
+		    'createFullscreenEmbed',
+		    'blackoutScreen',
+		    'installApp', 
             'deleteApp',
             'getLocalStorageItem',
             'setLocalStorageItem',
@@ -6249,10 +6390,11 @@ window.addEventListener('message', event => {
             blackoutScreen,
             installApp,
             deleteApp, // Keep deleteApp in the list so it can be called if the check passes
-	    registerMediaSession,
-	    clearMediaSession,
-	    updateMediaPlaybackState,
-	    updateMediaProgress, 
+            registerWidget,
+		    registerMediaSession,
+		    clearMediaSession,
+		    updateMediaPlaybackState,
+		    updateMediaProgress, 
             getLocalStorageItem,
             setLocalStorageItem,
             removeLocalStorageItem,
