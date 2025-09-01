@@ -73,13 +73,13 @@
             filter: blur(5px);
             /* Mask to control the visibility of the blur */
             -webkit-mask-image: linear-gradient(to bottom,
-                rgba(0,0,0,0) 0%,      /* 0% of 5px blur at the top */
-                rgba(0,0,0,0.75) 50%,  /* 75% of 5px blur at the middle (3.75px) */
-                rgba(0,0,0,1) 100%     /* 100% of 5px blur at the bottom */
+                rgba(0,0,0,0) 0%,
+                rgba(0,0,0,0.25) 50%,
+                rgba(0,0,0,1) 100%
             );
             mask-image: linear-gradient(to bottom,
                 rgba(0,0,0,0) 0%,
-                rgba(0,0,0,0.75) 50%,
+                rgba(0,0,0,0.25) 50%,
                 rgba(0,0,0,1) 100%
             );
         }
