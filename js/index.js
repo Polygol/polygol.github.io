@@ -4429,7 +4429,7 @@ function createFullscreenEmbed(url) {
         }, 10);
         
         // Hide all main UI elements
-        document.querySelectorAll('.container, .settings-grid.home-settings').forEach(el => {
+        document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
             if (!el.dataset.originalDisplay) {
                 el.dataset.originalDisplay = window.getComputedStyle(el).display;
             }
@@ -4595,7 +4595,7 @@ function minimizeFullscreenEmbed() {
     }
     
     // Restore all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 	el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay;
         el.style.transition = 'opacity 0.3s ease';
