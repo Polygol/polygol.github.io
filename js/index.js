@@ -455,6 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (widgetPickerItem) {
         widgetPickerItem.addEventListener('click', (e) => {
             e.stopPropagation();
+			closeControls();
             openWidgetPicker();
         });
     }
