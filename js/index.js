@@ -263,32 +263,51 @@ function renderWidgets() {
             let newX = initialWidgetX + (clientX - initialMouseX);
             let newY = initialWidgetY + (clientY - initialMouseY);
 
-            // --- NEW: Snap-to-Grid Alignment Logic ---
+            // --- REFINED: Snap-to-Grid Alignment Logic ---
             snapLineV.style.display = 'none';
             snapLineH.style.display = 'none';
 
-            let snapXPoints = [MARGIN, window.innerWidth / 2, window.innerWidth - MARGIN];
-            let snapYPoints = [MARGIN, window.innerHeight / 2, window.innerHeight - MARGIN];
+            // Base snap points are the screen edges
+            let snapXPoints = [MARGIN, window.innerWidth - instance.offsetWidth - MARGIN];
+            let snapYPoints = [MARGIN, window.innerHeight - instance.offsetHeight - MARGIN];
 
+            // Add snap points from other widgets
             widgetElements.forEach((otherInstance, otherIndexKey) => {
                 if (indexKey === otherIndexKey) return;
                 const r = otherInstance.getBoundingClientRect();
-                snapXPoints.push(r.left, r.right + MARGIN, r.left - instance.offsetWidth - MARGIN);
-                snapYPoints.push(r.top, r.bottom + MARGIN, r.top - instance.offsetHeight - MARGIN);
+                // Snap to the edge of the other widget
+                snapXPoints.push(r.left, r.right - instance.offsetWidth); 
+                // Snap to the edge PLUS the margin (for the gap)
+                snapXPoints.push(r.right + MARGIN, r.left - instance.offsetWidth - MARGIN);
+
+                // Do the same for vertical snapping
+                snapYPoints.push(r.top, r.bottom - instance.offsetHeight);
+                snapYPoints.push(r.bottom + MARGIN, r.top - instance.offsetHeight - MARGIN);
             });
+
+            let finalX = newX, finalY = newY;
 
             // Find closest snap points
             for (const p of snapXPoints) {
                 if (Math.abs(newX - p) < SNAP_DISTANCE) {
-                    newX = p;
-                    snapLineV.style.left = `${p + (p > window.innerWidth / 2 ? instance.offsetWidth : 0)}px`;
+                    finalX = p;
+                    snapLineV.style.left = `${p}px`;
+                    if (p === MARGIN || p === window.innerWidth - instance.offsetWidth - MARGIN) {
+                         // Full height for screen edges
+                        snapLineV.style.height = '100%';
+                        snapLineV.style.top = '0';
+                    } else {
+                        // Limit line to widget height for widget-to-widget snap
+                        snapLineV.style.height = `${Math.max(instance.offsetHeight, document.querySelector(`[data-widget-index="${indexKey}"]`).offsetHeight)}px`;
+                        snapLineV.style.top = `${instance.offsetTop}px`;
+                    }
                     snapLineV.style.display = 'block';
                     break;
                 }
             }
              for (const p of snapYPoints) {
                 if (Math.abs(newY - p) < SNAP_DISTANCE) {
-                    newY = p;
+                    finalY = p;
                     snapLineH.style.top = `${p}px`;
                     snapLineH.style.display = 'block';
                     break;
@@ -297,18 +316,17 @@ function renderWidgets() {
 
             // Boundary and Clock Collision Check
             const clockRect = document.querySelector('.container').getBoundingClientRect();
-            newX = Math.max(MARGIN, Math.min(newX, window.innerWidth - instance.offsetWidth - MARGIN));
-            newY = Math.max(MARGIN, Math.min(newY, window.innerHeight - instance.offsetHeight - MARGIN));
+            finalX = Math.max(MARGIN, Math.min(finalX, window.innerWidth - instance.offsetWidth - MARGIN));
+            finalY = Math.max(MARGIN, Math.min(finalY, window.innerHeight - instance.offsetHeight - MARGIN));
 
-            const widgetRect = { left: newX, top: newY, right: newX + instance.offsetWidth, bottom: newY + instance.offsetHeight };
+            const widgetRect = { left: finalX, top: finalY, right: finalX + instance.offsetWidth, bottom: finalY + instance.offsetHeight };
             if (!(widgetRect.right < clockRect.left || widgetRect.left > clockRect.right || widgetRect.bottom < clockRect.top || widgetRect.top > clockRect.bottom)) {
                 // Collision with clock, do not update position
             } else {
-                instance.style.left = `${newX}px`;
-                instance.style.top = `${newY}px`;
+                instance.style.left = `${finalX}px`;
+                instance.style.top = `${finalY}px`;
             }
         };
-
         const onDragEnd = () => {
             clearTimeout(longPressTimer);
             document.removeEventListener('mousemove', onDragMove);
