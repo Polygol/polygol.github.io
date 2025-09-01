@@ -4515,7 +4515,7 @@ function createFullscreenEmbed(url) {
     });
     
     // Hide all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
         if (!el.dataset.originalDisplay) {
             el.dataset.originalDisplay = window.getComputedStyle(el).display;
         }
