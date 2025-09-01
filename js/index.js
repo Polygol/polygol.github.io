@@ -293,9 +293,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- Connect items to their popup containers ---
-    connectGridItem('setting-clock-color', 'clock-color-popup');
-    connectGridItem('setting-clock-shadow', 'shadow-controls-popup');
+    // --- Special handler for Clock Color & Gradient Popup ---
+    const clockColorItem = document.getElementById('setting-clock-color');
+    const clockColorPopup = document.getElementById('clock-color-popup');
+    if (clockColorItem && clockColorPopup) {
+        clockColorItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlPopup(clockColorItem, clockColorPopup);
+        });
+    }
+
+    // --- Special handler for Clock Shadow Popup ---
+    const clockShadowItem = document.getElementById('setting-clock-shadow');
+    const shadowControlsPopup = document.getElementById('shadow-controls-popup');
+    if (clockShadowItem && shadowControlsPopup) {
+        clockShadowItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlPopup(clockShadowItem, shadowControlsPopup);
+        });
+    }
 
     // --- Connect all other settings ---
     connectGridItem('setting-wallpaper', 'uploadButton');
@@ -338,31 +354,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
     
-function updatePersistentClock() {
-  const isModalOpen = 
-    (appDrawer && appDrawer.classList.contains('open')) ||
-    document.querySelector('.fullscreen-embed[style*="display: block"]');
-    
-  if (isModalOpen) {
-    const now = new Date();
-    let hours = now.getHours();
-    let minutes = String(now.getMinutes()).padStart(2, '0');
-    
-    let displayHours;
-    
-    if (use12HourFormat) {
-      // 12-hour format without AM/PM
-      displayHours = hours % 12 || 12;
-    } else {
-      // 24-hour format
-      displayHours = String(hours).padStart(2, '0');
-    }
-    
-    persistentClock.textContent = `${displayHours}:${minutes}`;
-  } else {
-    persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
-  }
-}
+	function updatePersistentClock() {
+	  const isModalOpen = 
+	    (appDrawer && appDrawer.classList.contains('open')) ||
+	    document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    
+	  if (isModalOpen) {
+	    const now = new Date();
+	    let hours = now.getHours();
+	    let minutes = String(now.getMinutes()).padStart(2, '0');
+	    
+	    let displayHours;
+	    
+	    if (use12HourFormat) {
+	      // 12-hour format without AM/PM
+	      displayHours = hours % 12 || 12;
+	    } else {
+	      // 24-hour format
+	      displayHours = String(hours).padStart(2, '0');
+	    }
+	    
+	    persistentClock.textContent = `${displayHours}:${minutes}`;
+	  } else {
+	    persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+	  }
+	}
     
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
