@@ -16,10 +16,6 @@
             --secondary-text-color: rgba(0, 0, 0, 0.7);
         }
         * { box-sizing: border-box; }
-        html {
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 100%);
-            mask-image: linear-gradient(to bottom, transparent 0%, black 100%);
-        }
         body {
             margin: 0;
             padding: 15px;
@@ -71,6 +67,17 @@
             top: 0;
             left: 0;
             z-index: -2;
+            /* Added mask-image for the specified opacity gradient */
+            -webkit-mask-image: linear-gradient(to bottom, 
+                rgba(0,0,0,0) 25%, 
+                rgba(0,0,0,0.75) 50%, 
+                rgba(0,0,0,1) 100%
+            );
+            mask-image: linear-gradient(to bottom, 
+                rgba(0,0,0,0) 25%, 
+                rgba(0,0,0,0.75) 50%, 
+                rgba(0,0,0,1) 100%
+            );
         }
         .info {
             overflow: hidden;
