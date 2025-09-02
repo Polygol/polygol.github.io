@@ -433,7 +433,7 @@ function renderWidgets() {
             let newHeight = initialWidgetH + deltaY;
 
             // --- Grid Snapping Logic ---
-            const baseUnit = 150; // Size of a 1x1 widget
+            const baseUnit = 200; // Size of a 1x1 widget
             const maxUnits = 4;
 
             // Calculate grid units, including the margin between units
