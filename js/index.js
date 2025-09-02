@@ -286,7 +286,7 @@ function renderWidgets() {
         
         let isDragging = false, longPressTimer;
         let initialMouseX, initialMouseY, initialWidgetX, initialWidgetY;
-		let isAnchoredLeft, isAnchoredRight, isAnchoredTop, isAnchoredBottom;
+        let isDragAnchoredLeft, isDragAnchoredRight, isDragAnchoredTop, isDragAnchoredBottom;
         const snapLineV = document.getElementById('snap-line-v');
         const snapLineH = document.getElementById('snap-line-h');
 
@@ -301,10 +301,10 @@ function renderWidgets() {
             initialWidgetY = instance.offsetTop;
 	
 	        const tolerance = 5; // Use a small tolerance for imprecise positions
-	        isAnchoredLeft = initialWidgetX <= MARGIN + tolerance;
-	        isAnchoredRight = (initialWidgetX + instance.offsetWidth) >= (window.innerWidth - MARGIN - tolerance);
-	        isAnchoredTop = initialWidgetY <= MARGIN + tolerance;
-	        isAnchoredBottom = (initialWidgetY + instance.offsetHeight) >= (window.innerHeight - MARGIN - tolerance);
+            isDragAnchoredLeft = initialWidgetX <= MARGIN + tolerance;
+            isDragAnchoredRight = (initialWidgetX + instance.offsetWidth) >= (window.innerWidth - MARGIN - tolerance);
+            isDragAnchoredTop = initialWidgetY <= MARGIN + tolerance;
+            isDragAnchoredBottom = (initialWidgetY + instance.offsetHeight) >= (window.innerHeight - MARGIN - tolerance);
 
             longPressTimer = setTimeout(() => {
                 removeWidget(index);
@@ -331,12 +331,12 @@ function renderWidgets() {
 
             let newX = initialWidgetX + (clientX - initialMouseX);
             let newY = initialWidgetY + (clientY - initialMouseY);
-
-	        if (isAnchoredLeft) newX = MARGIN;
-	        if (isAnchoredRight) newX = window.innerWidth - instance.offsetWidth - MARGIN;
-	        if (isAnchoredTop) newY = MARGIN;
-	        if (isAnchoredBottom) newY = window.innerHeight - instance.offsetHeight - MARGIN;
-
+			
+            if (isDragAnchoredLeft) newX = MARGIN;
+            if (isDragAnchoredRight) newX = window.innerWidth - instance.offsetWidth - MARGIN;
+            if (isDragAnchoredTop) newY = MARGIN;
+            if (isDragAnchoredBottom) newY = window.innerHeight - instance.offsetHeight - MARGIN;
+			
             // --- JS-Controlled Spacing & Snapping ---
             snapLineV.style.display = 'none';
             snapLineH.style.display = 'none';
