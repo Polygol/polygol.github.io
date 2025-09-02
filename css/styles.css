@@ -2046,7 +2046,6 @@ input[type="checkbox"]:checked::before {
 }
 
 .widget-instance.is-dragging {
-    transition: none !important; /* Disable transitions while dragging */
     z-index: 1000;
     cursor: grabbing;
 }
@@ -2070,6 +2069,7 @@ input[type="checkbox"]:checked::before {
 
 .widget-instance-overlay:active {
     cursor: grabbing;
+	filter: brightness(1.5);
 }
 
 /* --- Snap Line Indicators --- */
