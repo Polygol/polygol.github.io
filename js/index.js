@@ -386,15 +386,17 @@ function renderWidgets() {
                 if (dist < bestY.dist) bestY = { dist, pos: p };
             }
 
-            // 3. Apply the winning snaps and draw the simple guide lines
+            // 3. Apply the winning snaps and draw the guide lines in the correct coordinate space
             if (bestX.dist < SNAP_DISTANCE) {
                 finalX = bestX.pos;
-                snapLineV.style.left = `${finalX}px`;
+                // FIX: Offset the fixed-position snap line by the grid's viewport position
+                snapLineV.style.left = `${finalX + gridRect.left}px`;
                 snapLineV.style.display = 'block';
             }
             if (bestY.dist < SNAP_DISTANCE) {
                 finalY = bestY.pos;
-                snapLineH.style.top = `${finalY}px`;
+                // FIX: Offset the fixed-position snap line by the grid's viewport position
+                snapLineH.style.top = `${finalY + gridRect.top}px`;
                 snapLineH.style.display = 'block';
             }
 			
