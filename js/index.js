@@ -310,7 +310,7 @@ function renderWidgets() {
             document.addEventListener('touchend', onDragEnd);
         };
 
-        const onDragMove = (e) => {
+		const onDragMove = (e) => {
             e.preventDefault();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -329,6 +329,9 @@ function renderWidgets() {
             // --- JS-Controlled Spacing & Snapping ---
             snapLineV.style.display = 'none';
             snapLineH.style.display = 'none';
+            
+            // --- FIX: Get the grid's current position on every move event ---
+            const gridRect = gridContainer.getBoundingClientRect();
 
             let finalX = newX;
             let finalY = newY;
