@@ -280,107 +280,72 @@ function renderWidgets() {
             let newX = initialWidgetX + (clientX - initialMouseX);
             let newY = initialWidgetY + (clientY - initialMouseY);
 
-            // --- FINAL: Context-Aware Snap-to-Grid Logic ---
+            // --- REVISED: Independent Axis Snapping Logic ---
             snapLineV.style.display = 'none';
             snapLineH.style.display = 'none';
 
             let finalX = newX, finalY = newY;
-            
-            // Store the best snap candidate for each axis
-            let bestXSnap = { dist: SNAP_DISTANCE, pos: newX, sourceRect: null };
-            let bestYSnap = { dist: SNAP_DISTANCE, pos: newY, sourceRect: null };
+            let bestXDist = SNAP_DISTANCE;
+            let bestYDist = SNAP_DISTANCE;
 
-            // Find the single best snap point on each axis across all other widgets
+            // Find the best X and Y snap points by iterating through all other widgets
             widgetElements.forEach((otherInstance, otherIndexKey) => {
                 if (indexKey === otherIndexKey) return;
                 const r = otherInstance.getBoundingClientRect();
 
                 // All possible horizontal snap points for this widget
                 const xPoints = [
-                    r.left, r.right - instance.offsetWidth, r.left + r.width / 2 - instance.offsetWidth / 2, // Flush
+                    r.left, r.right, r.right - instance.offsetWidth, r.left - instance.offsetWidth, // Edges
+                    r.left + r.width / 2 - instance.offsetWidth / 2, // Center
                     r.right + MARGIN, r.left - instance.offsetWidth - MARGIN // Adjacent
                 ];
                 for (const p of xPoints) {
                     const dist = Math.abs(newX - p);
-                    if (dist < bestXSnap.dist) {
-                        bestXSnap = { dist, pos: p, sourceRect: r };
+                    if (dist < bestXDist) {
+                        bestXDist = dist;
+                        finalX = p;
                     }
                 }
 
                 // All possible vertical snap points for this widget
                 const yPoints = [
-                    r.top, r.bottom - instance.offsetHeight, r.top + r.height / 2 - instance.offsetHeight / 2, // Flush
+                    r.top, r.bottom, r.bottom - instance.offsetHeight, r.top - instance.offsetHeight, // Edges
+                    r.top + r.height / 2 - instance.offsetHeight / 2, // Center
                     r.bottom + MARGIN, r.top - instance.offsetHeight - MARGIN // Adjacent
                 ];
                 for (const p of yPoints) {
                     const dist = Math.abs(newY - p);
-                    if (dist < bestYSnap.dist) {
-                        bestYSnap = { dist, pos: p, sourceRect: r };
+                    if (dist < bestYDist) {
+                        bestYDist = dist;
+                        finalY = p;
                     }
                 }
             });
-            
-            // Check for screen edge snaps if no widget snap was better
+
+            // Check against screen edges as a final option
             const screenXPoints = [MARGIN, window.innerWidth - instance.offsetWidth - MARGIN];
             for (const p of screenXPoints) {
-                if (Math.abs(newX - p) < bestXSnap.dist) {
-                    bestXSnap = { dist: Math.abs(newX - p), pos: p, sourceRect: null };
+                if (Math.abs(newX - p) < bestXDist) {
+                    bestXDist = Math.abs(newX - p);
+                    finalX = p;
                 }
             }
             const screenYPoints = [MARGIN, window.innerHeight - instance.offsetHeight - MARGIN];
-             for (const p of screenYPoints) {
-                if (Math.abs(newY - p) < bestYSnap.dist) {
-                    bestYSnap = { dist: Math.abs(newY - p), pos: p, sourceRect: null };
+            for (const p of screenYPoints) {
+                if (Math.abs(newY - p) < bestYDist) {
+                    bestYDist = Math.abs(newY - p);
+                    finalY = p;
                 }
             }
             
-            // Apply the best snaps found
-            const didSnapX = bestXSnap.dist < SNAP_DISTANCE;
-            const didSnapY = bestYSnap.dist < SNAP_DISTANCE;
-
-            if (didSnapX) finalX = bestXSnap.pos;
-            if (didSnapY) finalY = bestYSnap.pos;
-
-            // THE CRITICAL FIX: If we snapped on one axis, force-align on the other axis to the same source widget
-            if (didSnapX && !didSnapY && bestXSnap.sourceRect) {
-                const r = bestXSnap.sourceRect;
-                const flushYPoints = [r.top, r.bottom - instance.offsetHeight, r.top + r.height / 2 - instance.offsetHeight / 2];
-                // Find the closest flush alignment on the other axis and apply it
-                finalY = flushYPoints.reduce((prev, curr) => (Math.abs(curr - newY) < Math.abs(prev - newY) ? curr : prev));
-            } else if (didSnapY && !didSnapX && bestYSnap.sourceRect) {
-                const r = bestYSnap.sourceRect;
-                const flushXPoints = [r.left, r.right - instance.offsetWidth, r.left + r.width / 2 - instance.offsetWidth / 2];
-                finalX = flushXPoints.reduce((prev, curr) => (Math.abs(curr - newX) < Math.abs(prev - newX) ? curr : prev));
+            // Draw snap lines if a snap occurred on either axis
+            if (bestXDist < SNAP_DISTANCE) {
+                snapLineV.style.left = `${finalX}px`;
+                snapLineV.style.display = 'block';
             }
-
-            // Draw snap lines based on the final determined positions
-            if (didSnapX || (didSnapY && !didSnapX)) { // Redraw X line if Y snap forced an X alignment
-                 snapLineV.style.display = 'block';
-                 snapLineV.style.left = `${finalX}px`;
-                 const sourceForLine = bestXSnap.sourceRect || bestYSnap.sourceRect;
-                 if (sourceForLine) {
-                    const r = sourceForLine;
-                    const combinedTop = Math.min(finalY, r.top);
-                    const combinedBottom = Math.max(finalY + instance.offsetHeight, r.bottom);
-                    snapLineV.style.top = `${combinedTop}px`;
-                    snapLineV.style.height = `${combinedBottom - combinedTop}px`;
-                 } else { // Screen edge snap
-                    snapLineV.style.top = '0'; snapLineV.style.height = '100%';
-                 }
-            }
-             if (didSnapY || (didSnapX && !didSnapY)) { // Redraw Y line if X snap forced a Y alignment
-                 snapLineH.style.display = 'block';
-                 snapLineH.style.top = `${finalY}px`;
-                 const sourceForLine = bestYSnap.sourceRect || bestXSnap.sourceRect;
-                  if (sourceForLine) {
-                    const r = sourceForLine;
-                    const combinedLeft = Math.min(finalX, r.left);
-                    const combinedRight = Math.max(finalX + instance.offsetWidth, r.right);
-                    snapLineH.style.left = `${combinedLeft}px`;
-                    snapLineH.style.width = `${combinedRight - combinedLeft}px`;
-                 } else { // Screen edge snap
-                    snapLineH.style.left = '0'; snapLineH.style.width = '100%';
-                 }
+            if (bestYDist < SNAP_DISTANCE) {
+                snapLineH.style.top = `${finalY}px`;
+                snapLineH.style.display = 'block';
             }
 			
             // Boundary and Clock Collision Check
