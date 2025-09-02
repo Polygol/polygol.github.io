@@ -2150,7 +2150,7 @@ input[type="checkbox"]:checked::before {
 
 #widget-picker-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))
     gap: 15px;
 }
 
@@ -2168,8 +2168,9 @@ input[type="checkbox"]:checked::before {
 .widget-picker-preview {
     width: 150px;
     height: 150px;
+	overflow: auto;
     border: 1px solid var(--glass-border);
-    border-radius: 12px;
+    border-radius: 25px;
     display: flex;
     align-items: center;
     justify-content: center;
