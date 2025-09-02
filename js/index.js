@@ -4130,21 +4130,7 @@ function setupFontSelection() {
     const gradientSwitch = document.getElementById('clock-gradient-switch');
     const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
 
-    // --- Load saved preferences ---
-    const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
-    fontSelect.value = localStorage.getItem('clockFont') || 'Inter';
-    weightSlider.value = (localStorage.getItem('clockWeight') || '700') / 10;
-    colorPicker.value = localStorage.getItem('clockColor') || defaultColor;
-    colorSwitch.checked = localStorage.getItem('clockColorEnabled') === 'true';
-    stackSwitch.checked = localStorage.getItem('clockStackEnabled') === 'true';
-    alignmentSelect.value = localStorage.getItem('clockAlignment') || 'center';
-    shadowSwitch.checked = localStorage.getItem('shadowEnabled') === 'true';
-    shadowBlurSlider.value = localStorage.getItem('shadowBlur') || '10';
-    shadowColorPicker.value = localStorage.getItem('shadowColor') || '#000000';
-    gradientSwitch.checked = localStorage.getItem('gradientEnabled') === 'true';
-    gradientColorPicker.value = localStorage.getItem('gradientColor') || '#ffffff';
-
-    // --- Function to save all settings ---
+    // --- Function to save all settings (triggered by user interaction) ---
     function saveCurrentWallpaperSettings() {
         const settings = {
             font: fontSelect.value,
@@ -4165,23 +4151,45 @@ function setupFontSelection() {
             gradientColor: gradientColorPicker.value
         };
 
-        // Save to individual localStorage keys
+        // Save to individual localStorage keys for immediate use
         for (const key in settings) {
             localStorage.setItem(key, settings[key]);
         }
 
-        // Save to the wallpaper history object
+        // Save to the persistent wallpaper history object
         if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0) {
-            recentWallpapers[currentWallpaperPosition].clockStyles = settings;
-            saveRecentWallpapers();
+            if (recentWallpapers[currentWallpaperPosition]) {
+                 recentWallpapers[currentWallpaperPosition].clockStyles = settings;
+                 saveRecentWallpapers();
+            }
         }
     }
 
-    // --- Apply initial styles ---
+    // --- 1. Load saved preferences and set the state of the UI controls ---
+    const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
+    fontSelect.value = localStorage.getItem('clockFont') || 'Inter';
+    weightSlider.value = (localStorage.getItem('clockWeight') || '700') / 10;
+    colorPicker.value = localStorage.getItem('clockColor') || defaultColor;
+    colorSwitch.checked = localStorage.getItem('colorEnabled') === 'true'; // FIX: Use the correct key 'colorEnabled'
+    stackSwitch.checked = localStorage.getItem('stackEnabled') === 'true'; // FIX: Use the correct key 'stackEnabled'
+    alignmentSelect.value = localStorage.getItem('alignment') || 'center'; // FIX: Use the correct key 'alignment'
+    shadowSwitch.checked = localStorage.getItem('shadowEnabled') === 'true';
+    shadowBlurSlider.value = localStorage.getItem('shadowBlur') || '10';
+    shadowColorPicker.value = localStorage.getItem('shadowColor') || '#000000';
+    gradientSwitch.checked = localStorage.getItem('gradientEnabled') === 'true';
+    gradientColorPicker.value = localStorage.getItem('gradientColor') || '#ffffff';
+    // Note: Blur, brightness, and contrast sliders are handled by their own setup logic, but it's safe to include here too.
+    blurSlider.value = localStorage.getItem('wallpaperBlur') || '0';
+    brightnessSlider.value = localStorage.getItem('wallpaperBrightness') || '100';
+    contrastSlider.value = localStorage.getItem('wallpaperContrast') || '100';
+
+
+    // --- 2. Apply the visual styles based on the now-correct state of the controls ---
     applyClockStyles();
+    applyWallpaperEffects();
     applyAlignment(alignmentSelect.value);
     
-    // --- Setup event listeners ---
+    // --- 3. NOW, set up the event listeners for future user interactions ---
     const allControls = [
         fontSelect, weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
         blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
@@ -4189,14 +4197,8 @@ function setupFontSelection() {
     ];
 
     allControls.forEach(control => {
-        control.addEventListener('input', () => {
-            applyClockStyles();
-            applyWallpaperEffects();
-            applyAlignment(alignmentSelect.value);
-            saveCurrentWallpaperSettings();
-            syncUiStates();
-        });
-        control.addEventListener('change', () => { // For checkboxes and selects
+        const eventType = (control.type === 'checkbox' || control.tagName === 'SELECT') ? 'change' : 'input';
+        control.addEventListener(eventType, () => {
             applyClockStyles();
             applyWallpaperEffects();
             applyAlignment(alignmentSelect.value);
@@ -4209,12 +4211,18 @@ function setupFontSelection() {
     colorSwitch.addEventListener('change', () => {
         if (colorSwitch.checked) {
             gradientSwitch.checked = false;
+            // Manually trigger the save for the gradient switch as well
+            saveCurrentWallpaperSettings();
+            syncUiStates();
         }
     });
 
     gradientSwitch.addEventListener('change', () => {
         if (gradientSwitch.checked) {
             colorSwitch.checked = false;
+            // Manually trigger the save for the color switch as well
+            saveCurrentWallpaperSettings();
+            syncUiStates();
         }
     });
 }
