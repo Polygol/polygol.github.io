@@ -246,6 +246,8 @@ function renderWidgets() {
     const gridContainer = document.getElementById('widget-grid');
     if (!gridContainer) return;
     gridContainer.innerHTML = '';
+    const gridRect = gridContainer.getBoundingClientRect(); // CAPTURE THE GRID'S OFFSET
+    gridContainer.innerHTML = '';
 
     const SNAP_DISTANCE = 15;
     const widgetElements = new Map();
@@ -331,49 +333,64 @@ function renderWidgets() {
 
             let finalX = newX;
             let finalY = newY;
+            const draggedRect = { w: instance.offsetWidth, h: instance.offsetHeight };
 
-            // Define all potential snap points
-            const snapPointsX = [MARGIN, window.innerWidth - instance.offsetWidth - MARGIN];
-            const snapPointsY = [MARGIN, window.innerHeight - instance.offsetHeight - MARGIN];
+            // Find the single best snap point for each axis
+            let bestX = { dist: SNAP_DISTANCE, pos: newX };
+            let bestY = { dist: SNAP_DISTANCE, pos: newY };
 
+            // 1. Check against other widgets, correcting for the grid's offset
             widgetElements.forEach((otherInstance, otherIndexKey) => {
                 if (indexKey === otherIndexKey) return;
                 const r = otherInstance.getBoundingClientRect();
                 
-                // Add points for flush alignment
-                snapPointsX.push(r.left, r.right - instance.offsetWidth, r.left + r.width / 2 - instance.offsetWidth / 2);
-                snapPointsY.push(r.top, r.bottom - instance.offsetHeight, r.top + r.height / 2 - instance.offsetHeight / 2);
-                
-                // Add points for adjacent (gapped) alignment
-                snapPointsX.push(r.right + MARGIN, r.left - instance.offsetWidth - MARGIN);
-                snapPointsY.push(r.bottom + MARGIN, r.top - instance.offsetHeight - MARGIN);
+                // Convert viewport coordinates to be relative to the grid container
+                const otherLeft = r.left - gridRect.left;
+                const otherTop = r.top - gridRect.top;
+                const otherRight = r.right - gridRect.left;
+                const otherBottom = r.bottom - gridRect.top;
+                const otherCenterX = otherLeft + r.width / 2;
+                const otherCenterY = otherTop + r.height / 2;
+
+                const xPoints = [
+                    otherLeft, otherRight - draggedRect.w, otherCenterX - draggedRect.w / 2, // Flush
+                    otherRight + MARGIN, otherLeft - draggedRect.w - MARGIN              // Adjacent
+                ];
+                for (const p of xPoints) {
+                    const dist = Math.abs(newX - p);
+                    if (dist < bestX.dist) bestX = { dist, pos: p };
+                }
+
+                const yPoints = [
+                    otherTop, otherBottom - draggedRect.h, otherCenterY - draggedRect.h / 2, // Flush
+                    otherBottom + MARGIN, otherTop - draggedRect.h - MARGIN              // Adjacent
+                ];
+                for (const p of yPoints) {
+                    const dist = Math.abs(newY - p);
+                    if (dist < bestY.dist) bestY = { dist, pos: p };
+                }
             });
-
-            // Find the closest snap point for each axis
-            let bestXDist = SNAP_DISTANCE;
-            for (const p of snapPointsX) {
-                const dist = Math.abs(newX - p);
-                if (dist < bestXDist) {
-                    bestXDist = dist;
-                    finalX = p;
-                }
-            }
-
-            let bestYDist = SNAP_DISTANCE;
-            for (const p of snapPointsY) {
-                const dist = Math.abs(newY - p);
-                if (dist < bestYDist) {
-                    bestYDist = dist;
-                    finalY = p;
-                }
-            }
             
-            // Draw the snap lines if a snap occurred
-            if (bestXDist < SNAP_DISTANCE) {
+            // 2. Check against screen edges (which are already in the correct coordinate space relative to the grid)
+            const screenXPoints = [MARGIN, window.innerWidth - gridRect.left - draggedRect.w - MARGIN];
+             for (const p of screenXPoints) {
+                const dist = Math.abs(newX - p);
+                if (dist < bestX.dist) bestX = { dist, pos: p };
+            }
+             const screenYPoints = [MARGIN, window.innerHeight - gridRect.top - draggedRect.h - MARGIN];
+             for (const p of screenYPoints) {
+                const dist = Math.abs(newY - p);
+                if (dist < bestY.dist) bestY = { dist, pos: p };
+            }
+
+            // 3. Apply the winning snaps and draw the simple guide lines
+            if (bestX.dist < SNAP_DISTANCE) {
+                finalX = bestX.pos;
                 snapLineV.style.left = `${finalX}px`;
                 snapLineV.style.display = 'block';
             }
-            if (bestYDist < SNAP_DISTANCE) {
+            if (bestY.dist < SNAP_DISTANCE) {
+                finalY = bestY.pos;
                 snapLineH.style.top = `${finalY}px`;
                 snapLineH.style.display = 'block';
             }
