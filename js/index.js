@@ -292,14 +292,20 @@ function renderWidgets() {
             widgetElements.forEach((otherInstance, otherIndexKey) => {
                 if (indexKey === otherIndexKey) return;
                 const r = otherInstance.getBoundingClientRect();
-                // Snap to the edge of the other widget
-                snapXPoints.push(r.left, r.right - instance.offsetWidth); 
-                // Snap to the edge PLUS the margin (for the gap)
-                snapXPoints.push(r.right + MARGIN, r.left - instance.offsetWidth - MARGIN);
+                
+                // Add horizontal snap points (Left, Right, Center)
+                snapXPoints.push(r.left);                                       // Left to Left
+                snapXPoints.push(r.right - instance.offsetWidth);               // Right to Right
+                snapXPoints.push(r.left + r.width / 2 - instance.offsetWidth / 2); // Center to Center
+                snapXPoints.push(r.right + MARGIN);                             // To the right (with margin)
+                snapXPoints.push(r.left - instance.offsetWidth - MARGIN);       // To the left (with margin)
 
-                // Do the same for vertical snapping
-                snapYPoints.push(r.top, r.bottom - instance.offsetHeight);
-                snapYPoints.push(r.bottom + MARGIN, r.top - instance.offsetHeight - MARGIN);
+                // Add vertical snap points (Top, Bottom, Center)
+                snapYPoints.push(r.top);                                        // Top to Top
+                snapYPoints.push(r.bottom - instance.offsetHeight);             // Bottom to Bottom
+                snapYPoints.push(r.top + r.height / 2 - instance.offsetHeight / 2); // Center to Center
+                snapYPoints.push(r.bottom + MARGIN);                            // Below (with margin)
+                snapYPoints.push(r.top - instance.offsetHeight - MARGIN);       // Above (with margin)
             });
 
             let finalX = newX, finalY = newY;
