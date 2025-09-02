@@ -248,7 +248,6 @@ function renderWidgets() {
     gridContainer.innerHTML = '';
 
     const SNAP_DISTANCE = 15;
-	const BREAKAWAY_DISTANCE = 30;
     const widgetElements = new Map();
 
     // 1. Create and position all widget elements from the activeWidgets array
@@ -287,7 +286,6 @@ function renderWidgets() {
         
         let isDragging = false, longPressTimer;
         let initialMouseX, initialMouseY, initialWidgetX, initialWidgetY;
-        let isDragAnchoredLeft, isDragAnchoredRight, isDragAnchoredTop, isDragAnchoredBottom;
         const snapLineV = document.getElementById('snap-line-v');
         const snapLineH = document.getElementById('snap-line-h');
 
@@ -300,12 +298,6 @@ function renderWidgets() {
             initialMouseY = clientY;
             initialWidgetX = instance.offsetLeft;
             initialWidgetY = instance.offsetTop;
-	
-	        const tolerance = 5; // Use a small tolerance for imprecise positions
-            isDragAnchoredLeft = initialWidgetX <= MARGIN + tolerance;
-            isDragAnchoredRight = (initialWidgetX + instance.offsetWidth) >= (window.innerWidth - MARGIN - tolerance);
-            isDragAnchoredTop = initialWidgetY <= MARGIN + tolerance;
-            isDragAnchoredBottom = (initialWidgetY + instance.offsetHeight) >= (window.innerHeight - MARGIN - tolerance);
 
             longPressTimer = setTimeout(() => {
                 removeWidget(index);
@@ -333,22 +325,6 @@ function renderWidgets() {
             let newX = initialWidgetX + (clientX - initialMouseX);
             let newY = initialWidgetY + (clientY - initialMouseY);
 
-            // --- NEW: Breakaway Logic ---
-            // If anchored, check if the user has dragged far enough to "un-stick" it.
-            const dragDistX = clientX - initialMouseX;
-            const dragDistY = clientY - initialMouseY;
-
-            if (isDragAnchoredLeft && dragDistX > BREAKAWAY_DISTANCE) isDragAnchoredLeft = false;
-            if (isDragAnchoredRight && dragDistX < -BREAKAWAY_DISTANCE) isDragAnchoredRight = false;
-            if (isDragAnchoredTop && dragDistY > BREAKAWAY_DISTANCE) isDragAnchoredTop = false;
-            if (isDragAnchoredBottom && dragDistY < -BREAKAWAY_DISTANCE) isDragAnchoredBottom = false;
-
-            // --- Enforce sticky edges (this now uses the potentially updated flags) ---
-            if (isDragAnchoredLeft) newX = MARGIN;
-            if (isDragAnchoredRight) newX = window.innerWidth - instance.offsetWidth - MARGIN;
-            if (isDragAnchoredTop) newY = MARGIN;
-            if (isDragAnchoredBottom) newY = window.innerHeight - instance.offsetHeight - MARGIN;
-			
             // --- JS-Controlled Spacing & Snapping ---
             snapLineV.style.display = 'none';
             snapLineH.style.display = 'none';
@@ -533,7 +509,7 @@ function renderWidgets() {
             instance.style.top = `${finalY}px`;
         };
 
-		const onResizeEnd = () => {
+        const onResizeEnd = () => {
             if (!isResizing) return;
             isResizing = false;
             
@@ -543,11 +519,11 @@ function renderWidgets() {
             document.removeEventListener('touchend', onResizeEnd);
 
             const widgetToUpdate = activeWidgets[index];
-            if (!widgetToUpdate) return; // <-- FIX: Prevents crash
-            widgetToUpdate.w = instance.offsetWidth;
+            if (!widgetToUpdate) return;
+			widgetToUpdate.w = instance.offsetWidth;
             widgetToUpdate.h = instance.offsetHeight;
-            widgetToUpdate.x = instance.offsetLeft; 
-            widgetToUpdate.y = instance.offsetTop;  
+            widgetToUpdate.x = instance.offsetLeft; // Save the new X position
+            widgetToUpdate.y = instance.offsetTop;  // Save the new Y position
             saveWidgets();
         };
 
