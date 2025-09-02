@@ -2,6 +2,7 @@ let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag
 
 let availableWidgets; // Stores info about all possible widgets from apps
 let activeWidgets; // Stores the user's current layout
+const MARGIN = 20;
 
 let originalFaviconUrl = '';
 
@@ -246,7 +247,6 @@ function renderWidgets() {
     if (!gridContainer) return;
     gridContainer.innerHTML = '';
 
-    const MARGIN = 20;
     const SNAP_DISTANCE = 15;
     const widgetElements = new Map();
 
