@@ -218,8 +218,11 @@ function loadWidgets() {
 
 function addWidget(widgetData) {
     const baseUnit = 200; // The size of a 1x1 widget block
-    const defaultWidth = widgetData.defaultSize ? widgetData.defaultSize[0] * baseUnit : baseUnit;
-    const defaultHeight = widgetData.defaultSize ? widgetData.defaultSize[1] * baseUnit : baseUnit;
+    const gridW = widgetData.defaultSize ? widgetData.defaultSize[0] : 1;
+    const gridH = widgetData.defaultSize ? widgetData.defaultSize[1] : 1;
+	
+    const defaultWidth = (gridW * baseUnit) + ((gridW - 1) * MARGIN);
+    const defaultHeight = (gridH * baseUnit) + ((gridH - 1) * MARGIN);
 	
     activeWidgets.push({
         widgetId: widgetData.widgetId,
