@@ -397,21 +397,29 @@ function renderWidgets() {
 
         // --- Add Resizing Logic ---
         let isResizing = false;
-        // FIX: Use unique variable names for resizing to avoid conflict with dragging variables
         let initialResizeMouseX, initialResizeMouseY, initialWidgetW, initialWidgetH;
+        let initialWidgetX, initialWidgetY; // To store initial position
+        let isAnchoredRight, isAnchoredBottom; // Flags to track edge snapping
         const resizeHandle = instance.querySelector('.widget-resize-handle');
 
         const onResizeStart = (e) => {
-            e.stopPropagation(); // Prevent this from starting a drag action
+            e.stopPropagation(); 
             isResizing = true;
             
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-            initialResizeMouseX = clientX; // FIX: Use new variable
-            initialResizeMouseY = clientY; // FIX: Use new variable
+            initialResizeMouseX = clientX;
+            initialResizeMouseY = clientY;
             initialWidgetW = instance.offsetWidth;
             initialWidgetH = instance.offsetHeight;
+            initialWidgetX = instance.offsetLeft; // Capture initial X
+            initialWidgetY = instance.offsetTop;  // Capture initial Y
+
+            // Determine if the widget is anchored to the right or bottom edge
+            // A small tolerance (5px) helps catch slight imprecisions
+            isAnchoredRight = (initialWidgetX + initialWidgetW) >= (window.innerWidth - MARGIN - 5);
+            isAnchoredBottom = (initialWidgetY + initialWidgetH) >= (window.innerHeight - MARGIN - 5);
 
             document.addEventListener('mousemove', onResizeMove);
             document.addEventListener('mouseup', onResizeEnd);
@@ -426,30 +434,42 @@ function renderWidgets() {
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-            const deltaX = clientX - initialResizeMouseX; // FIX: Use new variable
-            const deltaY = clientY - initialResizeMouseY; // FIX: Use new variable
-
-            let newWidth = initialWidgetW + deltaX;
-            let newHeight = initialWidgetH + deltaY;
-
-            // --- Grid Snapping Logic ---
-            const baseUnit = 200; // Size of a 1x1 widget
+            // --- Grid Snapping for Size ---
+            const baseUnit = 200;
             const maxUnits = 4;
-
-            // Calculate grid units, including the margin between units
+            let newWidth = initialWidgetW + (clientX - initialResizeMouseX);
+            let newHeight = initialWidgetH + (clientY - initialResizeMouseY);
+            
             let gridW = Math.round((newWidth + MARGIN) / (baseUnit + MARGIN));
             let gridH = Math.round((newHeight + MARGIN) / (baseUnit + MARGIN));
-            
-            // Enforce min/max size
             gridW = Math.max(1, Math.min(maxUnits, gridW));
             gridH = Math.max(1, Math.min(maxUnits, gridH));
 
-            // Convert back to pixel dimensions
             const snappedWidth = (gridW * baseUnit) + ((gridW - 1) * MARGIN);
             const snappedHeight = (gridH * baseUnit) + ((gridH - 1) * MARGIN);
+            
+            // --- Positional Adjustment and Boundary Enforcement ---
+            let finalX = initialWidgetX;
+            let finalY = initialWidgetY;
+
+            // If anchored right, adjust the 'left' position to grow inwards
+            if (isAnchoredRight) {
+                finalX = window.innerWidth - snappedWidth - MARGIN;
+            }
+            
+            // If anchored bottom, adjust the 'top' position to grow inwards
+            if (isAnchoredBottom) {
+                finalY = window.innerHeight - snappedHeight - MARGIN;
+            }
+
+            // Final clamp to ensure the widget never leaves the viewport
+            finalX = Math.max(MARGIN, Math.min(finalX, window.innerWidth - snappedWidth - MARGIN));
+            finalY = Math.max(MARGIN, Math.min(finalY, window.innerHeight - snappedHeight - MARGIN));
 
             instance.style.width = `${snappedWidth}px`;
             instance.style.height = `${snappedHeight}px`;
+            instance.style.left = `${finalX}px`;
+            instance.style.top = `${finalY}px`;
         };
 
         const onResizeEnd = () => {
@@ -464,6 +484,8 @@ function renderWidgets() {
             const widgetToUpdate = activeWidgets[index];
             widgetToUpdate.w = instance.offsetWidth;
             widgetToUpdate.h = instance.offsetHeight;
+            widgetToUpdate.x = instance.offsetLeft; // Save the new X position
+            widgetToUpdate.y = instance.offsetTop;  // Save the new Y position
             saveWidgets();
         };
 
