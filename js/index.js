@@ -331,11 +331,20 @@ function renderWidgets() {
 
             let newX = initialWidgetX + (clientX - initialMouseX);
             let newY = initialWidgetY + (clientY - initialMouseY);
-			
-            if (isDragAnchoredLeft) newX = MARGIN;
-            if (isDragAnchoredRight) newX = window.innerWidth - instance.offsetWidth - MARGIN;
-            if (isDragAnchoredTop) newY = MARGIN;
-            if (isDragAnchoredBottom) newY = window.innerHeight - instance.offsetHeight - MARGIN;
+
+            // If anchored to a vertical edge (left/right), lock the X-axis but allow Y to move.
+            if (isDragAnchoredLeft) {
+                newX = MARGIN;
+            } else if (isDragAnchoredRight) {
+                newX = window.innerWidth - instance.offsetWidth - MARGIN;
+            }
+
+            // If anchored to a horizontal edge (top/bottom), lock the Y-axis but allow X to move.
+            if (isDragAnchoredTop) {
+                newY = MARGIN;
+            } else if (isDragAnchoredBottom) {
+                newY = window.innerHeight - instance.offsetHeight - MARGIN;
+            }
 			
             // --- JS-Controlled Spacing & Snapping ---
             snapLineV.style.display = 'none';
