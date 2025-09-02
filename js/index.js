@@ -3171,6 +3171,16 @@ observer.observe(document.body, { childList: true });
 // Load recent wallpapers from localStorage on startup
 function loadRecentWallpapers() {
   try {
+    // --- ONE-TIME MIGRATION FOR OLD LOCALSTORAGE KEYS ---
+    const oldKeys = ['clockFont', 'clockWeight', 'clockColor', 'clockColorEnabled', 'clockStackEnabled', 'clockAlignment'];
+    oldKeys.forEach(oldKey => {
+        if (localStorage.getItem(oldKey) !== null) {
+            const newKey = oldKey.replace('clock', '').charAt(0).toLowerCase() + oldKey.replace('clock', '').slice(1);
+            localStorage.setItem(newKey, localStorage.getItem(oldKey));
+            localStorage.removeItem(oldKey);
+        }
+    });
+	  
     const savedWallpapers = localStorage.getItem('recentWallpapers');
     if (savedWallpapers) {
       recentWallpapers = JSON.parse(savedWallpapers);
@@ -4153,12 +4163,12 @@ function setupFontSelection() {
 
     // --- 1. Load saved preferences and set the state of the UI controls ---
     const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
-    fontSelect.value = localStorage.getItem('clockFont') || 'Inter';
-    weightSlider.value = (localStorage.getItem('clockWeight') || '700') / 10;
-    colorPicker.value = localStorage.getItem('clockColor') || defaultColor;
-    colorSwitch.checked = localStorage.getItem('colorEnabled') === 'true'; // FIX: Use the correct key 'colorEnabled'
-    stackSwitch.checked = localStorage.getItem('stackEnabled') === 'true'; // FIX: Use the correct key 'stackEnabled'
-    alignmentSelect.value = localStorage.getItem('alignment') || 'center'; // FIX: Use the correct key 'alignment'
+    fontSelect.value = localStorage.getItem('font') || 'Inter'; // FIX: Use 'font'
+    weightSlider.value = (localStorage.getItem('weight') || '700') / 10; // FIX: Use 'weight'
+    colorPicker.value = localStorage.getItem('color') || defaultColor; // FIX: Use 'color'
+    colorSwitch.checked = localStorage.getItem('colorEnabled') === 'true';
+    stackSwitch.checked = localStorage.getItem('stackEnabled') === 'true'; // FIX: Use 'stackEnabled'
+    alignmentSelect.value = localStorage.getItem('alignment') || 'center'; // FIX: Use 'alignment'
     shadowSwitch.checked = localStorage.getItem('shadowEnabled') === 'true';
     shadowBlurSlider.value = localStorage.getItem('shadowBlur') || '10';
     shadowColorPicker.value = localStorage.getItem('shadowColor') || '#000000';
