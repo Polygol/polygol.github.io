@@ -428,11 +428,11 @@ function openWidgetPicker() {
                 iframe.style.width = `${widgetWidth}px`;
                 iframe.style.height = `${widgetHeight}px`;
 
-                // Scale the iframe down to fit into the preview container (e.g., 100px wide)
-                const previewBoxWidth = 100;
+                // Scale the iframe down to fit into the preview container (e.g., 150px wide)
+                const previewBoxWidth = 150;
                 const scale = previewBoxWidth / widgetWidth;
                 iframe.style.transform = `scale(${scale})`;
-                iframe.style.transformOrigin = 'top left';
+                iframe.style.transformOrigin = 'center';
                 
                 previewContainer.appendChild(iframe);
                 // --- End of Live Preview ---
