@@ -248,6 +248,7 @@ function renderWidgets() {
     gridContainer.innerHTML = '';
 
     const SNAP_DISTANCE = 15;
+	const BREAKAWAY_DISTANCE = 30;
     const widgetElements = new Map();
 
     // 1. Create and position all widget elements from the activeWidgets array
@@ -332,19 +333,21 @@ function renderWidgets() {
             let newX = initialWidgetX + (clientX - initialMouseX);
             let newY = initialWidgetY + (clientY - initialMouseY);
 
-            // If anchored to a vertical edge (left/right), lock the X-axis but allow Y to move.
-            if (isDragAnchoredLeft) {
-                newX = MARGIN;
-            } else if (isDragAnchoredRight) {
-                newX = window.innerWidth - instance.offsetWidth - MARGIN;
-            }
+            // --- NEW: Breakaway Logic ---
+            // If anchored, check if the user has dragged far enough to "un-stick" it.
+            const dragDistX = clientX - initialMouseX;
+            const dragDistY = clientY - initialMouseY;
 
-            // If anchored to a horizontal edge (top/bottom), lock the Y-axis but allow X to move.
-            if (isDragAnchoredTop) {
-                newY = MARGIN;
-            } else if (isDragAnchoredBottom) {
-                newY = window.innerHeight - instance.offsetHeight - MARGIN;
-            }
+            if (isDragAnchoredLeft && dragDistX > BREAKAWAY_DISTANCE) isDragAnchoredLeft = false;
+            if (isDragAnchoredRight && dragDistX < -BREAKAWAY_DISTANCE) isDragAnchoredRight = false;
+            if (isDragAnchoredTop && dragDistY > BREAKAWAY_DISTANCE) isDragAnchoredTop = false;
+            if (isDragAnchoredBottom && dragDistY < -BREAKAWAY_DISTANCE) isDragAnchoredBottom = false;
+
+            // --- Enforce sticky edges (this now uses the potentially updated flags) ---
+            if (isDragAnchoredLeft) newX = MARGIN;
+            if (isDragAnchoredRight) newX = window.innerWidth - instance.offsetWidth - MARGIN;
+            if (isDragAnchoredTop) newY = MARGIN;
+            if (isDragAnchoredBottom) newY = window.innerHeight - instance.offsetHeight - MARGIN;
 			
             // --- JS-Controlled Spacing & Snapping ---
             snapLineV.style.display = 'none';
