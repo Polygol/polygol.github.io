@@ -341,18 +341,17 @@ function renderWidgets() {
             let bestX = { dist: SNAP_DISTANCE, pos: newX };
             let bestY = { dist: SNAP_DISTANCE, pos: newY };
 
-            // 1. Check against other widgets, correcting for the grid's offset
+            // 1. Check against other widgets using their direct offset properties for accuracy
             widgetElements.forEach((otherInstance, otherIndexKey) => {
                 if (indexKey === otherIndexKey) return;
-                const r = otherInstance.getBoundingClientRect();
                 
-                // Convert viewport coordinates to be relative to the grid container
-                const otherLeft = r.left - gridRect.left;
-                const otherTop = r.top - gridRect.top;
-                const otherRight = r.right - gridRect.left;
-                const otherBottom = r.bottom - gridRect.top;
-                const otherCenterX = otherLeft + r.width / 2;
-                const otherCenterY = otherTop + r.height / 2;
+                // Use offsetLeft/Top which are relative to the grid container, avoiding conversion errors.
+                const otherLeft = otherInstance.offsetLeft;
+                const otherTop = otherInstance.offsetTop;
+                const otherRight = otherInstance.offsetLeft + otherInstance.offsetWidth;
+                const otherBottom = otherInstance.offsetTop + otherInstance.offsetHeight;
+                const otherCenterX = otherLeft + otherInstance.offsetWidth / 2;
+                const otherCenterY = otherTop + otherInstance.offsetHeight / 2;
 
                 const xPoints = [
                     otherLeft, otherRight - draggedRect.w, otherCenterX - draggedRect.w / 2, // Flush
