@@ -169,6 +169,42 @@ function loadAvailableWidgets() {
     availableWidgets = { ...availableWidgets, ...systemWidgets };
 }
 
+function adjustWidgetsForViewportResize() {
+    const windowW = window.innerWidth;
+    const windowH = window.innerHeight;
+    let hasChanges = false;
+
+    activeWidgets.forEach(widget => {
+        // Calculate the maximum allowed x and y coordinates for this widget
+        const maxX = windowW - widget.w - MARGIN;
+        const maxY = windowH - widget.h - MARGIN;
+
+        // Store original position
+        const originalX = widget.x;
+        const originalY = widget.y;
+
+        // Clamp the widget's position to be within the viewport boundaries
+        // This ensures it never goes off the left/top or right/bottom edges.
+        widget.x = Math.max(MARGIN, Math.min(widget.x, maxX));
+        widget.y = Math.max(MARGIN, Math.min(widget.y, maxY));
+
+        // Check if the position was changed
+        if (widget.x !== originalX || widget.y !== originalY) {
+            hasChanges = true;
+        }
+    });
+
+    // If any widget positions were updated, save the changes
+    if (hasChanges) {
+        saveWidgets();
+    }
+}
+
+function handleViewportResize() {
+    adjustWidgetsForViewportResize(); // First, fix the data
+    renderWidgets();                  // Then, re-render with the corrected data
+}
+
 function saveWidgets() {
     localStorage.setItem('activeWidgets', JSON.stringify(activeWidgets));
 }
@@ -6215,7 +6251,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // --- 5. Final checks and ongoing processes ---
     preventLeaving();
-    window.addEventListener('resize', renderWidgets);
+    window.addEventListener('resize', handleViewportResize);
 
     // Initialize AI if it was already enabled on page load
     if (isAiAssistantEnabled) {
