@@ -2043,7 +2043,6 @@ input[type="checkbox"]:checked::before {
     height: 200px;
     pointer-events: auto; /* Widgets are interactive */
     touch-action: none; /* Prevent page scroll on mobile */
-	margin: 10px;
 }
 
 .widget-instance.is-dragging {
