@@ -2102,22 +2102,21 @@ input[type="checkbox"]:checked::before {
 /* --- Widget Picker Drawer Styles --- */
 .widget-drawer {
     position: fixed;
-    bottom: -100%; /* Start off-screen */
+    opacity: 0;
     left: 0;
     width: 100%;
-    height: 50%; /* Take up bottom half of the screen */
-    background-color: var(--search-background);
-    backdrop-filter: blur(10px) saturate(2) var(--edge-refraction-filter);
-    border-top: 1px solid var(--glass-border);
-    border-radius: 25px 25px 0 0;
-    z-index: 9997; /* Above blur overlay but below settings modal */
-    transition: bottom 0.4s cubic-bezier(0.2, 0, 0.38, 0.9);
+    height: 100%;
+    background-color: var(--background-color);
+    z-index: 9995;
+    transition: opacity 0.4s cubic-bezier(0.2, 0, 0.38, 0.9);
     display: flex;
     flex-direction: column;
+	pointer-events: none;
 }
 
 .widget-drawer.open {
-    bottom: 0; /* Slide in */
+	opacity: 1;
+	pointer-events: none;
 }
 
 .widget-drawer-handle {
