@@ -2167,9 +2167,9 @@ input[type="checkbox"]:checked::before {
 }
 
 .widget-picker-preview {
-    width: 80px;
-    height: 80px;
-    border: 2px dashed var(--secondary-text-color);
+    width: 150px;
+    height: 150px;
+    border: 1px solid var(--glass-border);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -2177,9 +2177,9 @@ input[type="checkbox"]:checked::before {
     margin-bottom: 10px;
 }
 
-.widget-picker-preview .material-symbols-rounded {
-    font-size: 36px;
-    color: var(--secondary-text-color);
+.widget-picker-preview iframe {
+	border: none;
+	pointer-events: none;
 }
 
         @media (max-width: 800px) {
