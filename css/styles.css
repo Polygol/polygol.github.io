@@ -2116,7 +2116,7 @@ input[type="checkbox"]:checked::before {
 
 .widget-drawer.open {
 	opacity: 1;
-	pointer-events: none;
+	pointer-events: auto;
 }
 
 .widget-drawer-handle {
