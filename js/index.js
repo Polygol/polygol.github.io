@@ -157,9 +157,9 @@ function loadAvailableWidgets() {
             {
                 appName: 'System',
                 widgetId: 'system-media',
-                title: 'Media Player',
+                title: 'Now Playing',
                 url: '/assets/system-widgets/media-widget.html',
-                defaultSize: [2, 1], // Media widget is wider
+                defaultSize: [1, 1],
                 openUrl: '#open-last-media-app' // Special action handled by the dashboard
             }
         ]
@@ -180,11 +180,15 @@ function loadWidgets() {
 }
 
 function addWidget(widgetData) {
+    const baseUnit = 200; // The size of a 1x1 widget block
+    const defaultWidth = widgetData.defaultSize ? widgetData.defaultSize[0] * baseUnit : baseUnit;
+    const defaultHeight = widgetData.defaultSize ? widgetData.defaultSize[1] * baseUnit : baseUnit;
+	
     activeWidgets.push({
         widgetId: widgetData.widgetId,
         appName: widgetData.appName,
-        w: 200,
-        h: 200,
+        w: defaultWidth,
+        h: defaultHeight,
         // Place new widgets in the top-left, avoiding the clock area
         x: 10,
         y: 80, 
@@ -407,12 +411,39 @@ function openWidgetPicker() {
             availableWidgets[appName].forEach(widgetData => {
                 const item = document.createElement('div');
                 item.className = 'widget-picker-item';
-                item.innerHTML = `
-                    <div class="widget-picker-preview">
-                        <span class="material-symbols-rounded">extension</span>
-                    </div>
-                    <span class="widget-picker-title">${widgetData.title}</span>
-                `;
+
+                // --- Live Preview Implementation ---
+                const previewContainer = document.createElement('div');
+                previewContainer.className = 'widget-picker-preview';
+
+                const iframe = document.createElement('iframe');
+                iframe.src = widgetData.url;
+                iframe.scrolling = 'no';
+                iframe.style.pointerEvents = 'none'; // Make the preview non-interactive
+
+                // Calculate the widget's actual size
+                const baseUnit = 150;
+                const widgetWidth = widgetData.defaultSize ? widgetData.defaultSize[0] * baseUnit : baseUnit;
+                const widgetHeight = widgetData.defaultSize ? widgetData.defaultSize[1] * baseUnit : baseUnit;
+                iframe.style.width = `${widgetWidth}px`;
+                iframe.style.height = `${widgetHeight}px`;
+
+                // Scale the iframe down to fit into the preview container (e.g., 100px wide)
+                const previewBoxWidth = 100;
+                const scale = previewBoxWidth / widgetWidth;
+                iframe.style.transform = `scale(${scale})`;
+                iframe.style.transformOrigin = 'top left';
+                
+                previewContainer.appendChild(iframe);
+                // --- End of Live Preview ---
+
+                const title = document.createElement('span');
+                title.className = 'widget-picker-title';
+                title.textContent = widgetData.title;
+
+                item.appendChild(previewContainer);
+                item.appendChild(title);
+
                 item.addEventListener('click', () => {
                     addWidget(widgetData);
                     closeWidgetPicker();
@@ -649,13 +680,14 @@ document.addEventListener('DOMContentLoaded', () => {
             openWidgetPicker();
         });
     }
-	
+
     // --- NEW: Add event listeners to close the widget drawer ---
     const widgetDrawer = document.getElementById('widget-picker-drawer');
     const widgetDrawerHandle = document.querySelector('.widget-drawer-handle');
-    if (widgetDrawer && widgetDrawerHandle) {
+    const blurOverlayControls = document.getElementById('blurOverlayControls'); // Get overlay
+    if (widgetDrawer && widgetDrawerHandle && blurOverlayControls) {
         widgetDrawerHandle.addEventListener('click', closeWidgetPicker);
-        blurOverlayControls.addEventListener('click', closeWidgetPicker);
+        blurOverlayControls.addEventListener('click', closeWidgetPicker); // Add this line
     }
 
     // Album Art click listener (using event delegation for reliability)
