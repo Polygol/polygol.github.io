@@ -3,6 +3,7 @@ let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag
 let availableWidgets; // Stores info about all possible widgets from apps
 let activeWidgets; // Stores the user's current layout
 const MARGIN = 20;
+const WIDGET_BASE_UNIT = 200;
 
 let originalFaviconUrl = '';
 
@@ -171,21 +172,23 @@ function loadAvailableWidgets() {
 }
 
 function adjustWidgetsForViewportResize() {
-    const windowW = window.innerWidth;
-    const windowH = window.innerHeight;
+    const gridContainer = document.getElementById('widget-grid');
+    if (!gridContainer) return;
+
+    const gridW = gridContainer.clientWidth;
+    const gridH = gridContainer.clientHeight;
     let hasChanges = false;
 
     activeWidgets.forEach(widget => {
-        // Calculate the maximum allowed x and y coordinates for this widget
-        const maxX = windowW - widget.w - MARGIN;
-        const maxY = windowH - widget.h - MARGIN;
+        // Calculate the maximum allowed x and y coordinates for this widget within the grid
+        const maxX = gridW - widget.w - MARGIN;
+        const maxY = gridH - widget.h - MARGIN;
 
         // Store original position
         const originalX = widget.x;
         const originalY = widget.y;
 
-        // Clamp the widget's position to be within the viewport boundaries
-        // This ensures it never goes off the left/top or right/bottom edges.
+        // Clamp the widget's position to be within the grid's boundaries
         widget.x = Math.max(MARGIN, Math.min(widget.x, maxX));
         widget.y = Math.max(MARGIN, Math.min(widget.y, maxY));
 
@@ -195,9 +198,10 @@ function adjustWidgetsForViewportResize() {
         }
     });
 
-    // If any widget positions were updated, save the changes
+    // If any widget positions were updated, save and re-render
     if (hasChanges) {
         saveWidgets();
+        renderWidgets(); // Re-render immediately to show the change
     }
 }
 
@@ -217,9 +221,8 @@ function loadWidgets() {
 }
 
 function addWidget(widgetData) {
-    const baseUnit = 200; // The size of a 1x1 widget block
-    const defaultWidth = widgetData.defaultSize ? widgetData.defaultSize[0] * baseUnit : baseUnit;
-    const defaultHeight = widgetData.defaultSize ? widgetData.defaultSize[1] * baseUnit : baseUnit;
+    const defaultWidth = widgetData.defaultSize ? widgetData.defaultSize[0] * WIDGET_BASE_UNIT : WIDGET_BASE_UNIT;
+    const defaultHeight = widgetData.defaultSize ? widgetData.defaultSize[1] * WIDGET_BASE_UNIT : WIDGET_BASE_UNIT;
 	
     activeWidgets.push({
         widgetId: widgetData.widgetId,
@@ -245,7 +248,6 @@ function removeWidget(index) {
 function renderWidgets() {
     const gridContainer = document.getElementById('widget-grid');
     if (!gridContainer) return;
-    gridContainer.innerHTML = '';
     const gridRect = gridContainer.getBoundingClientRect(); // CAPTURE THE GRID'S OFFSET
     gridContainer.innerHTML = '';
 
@@ -327,7 +329,7 @@ function renderWidgets() {
             let newX = initialWidgetX + (clientX - initialMouseX);
             let newY = initialWidgetY + (clientY - initialMouseY);
 
-            // --- JS-Controlled Spacing & Snapping ---
+            // --- DEFINITIVE COORDINATE-CORRECTED SNAPPING & BOUNDARY LOGIC ---
             snapLineV.style.display = 'none';
             snapLineH.style.display = 'none';
 
@@ -335,26 +337,28 @@ function renderWidgets() {
             let finalY = newY;
             const draggedRect = { w: instance.offsetWidth, h: instance.offsetHeight };
 
-            // Find the single best snap point for each axis
+            // Get grid dimensions for boundary checking
+            const gridW = gridContainer.clientWidth;
+            const gridH = gridContainer.clientHeight;
+
             let bestX = { dist: SNAP_DISTANCE, pos: newX };
             let bestY = { dist: SNAP_DISTANCE, pos: newY };
 
-            // 1. Check against other widgets, correcting for the grid's offset
+            // 1. Calculate snap points from other widgets (relative to the grid)
             widgetElements.forEach((otherInstance, otherIndexKey) => {
                 if (indexKey === otherIndexKey) return;
-                const r = otherInstance.getBoundingClientRect();
                 
-                // Convert viewport coordinates to be relative to the grid container
-                const otherLeft = r.left - gridRect.left;
-                const otherTop = r.top - gridRect.top;
-                const otherRight = r.right - gridRect.left;
-                const otherBottom = r.bottom - gridRect.top;
-                const otherCenterX = otherLeft + r.width / 2;
-                const otherCenterY = otherTop + r.height / 2;
+                // Use offsetLeft/Top as they are already relative to the grid container
+                const otherLeft = otherInstance.offsetLeft;
+                const otherTop = otherInstance.offsetTop;
+                const otherRight = otherLeft + otherInstance.offsetWidth;
+                const otherBottom = otherTop + otherInstance.offsetHeight;
+                const otherCenterX = otherLeft + otherInstance.offsetWidth / 2;
+                const otherCenterY = otherTop + otherInstance.offsetHeight / 2;
 
                 const xPoints = [
-                    otherLeft, otherRight - draggedRect.w, otherCenterX - draggedRect.w / 2, // Flush
-                    otherRight + MARGIN, otherLeft - draggedRect.w - MARGIN              // Adjacent
+                    otherLeft, otherRight - draggedRect.w, otherCenterX - draggedRect.w / 2,
+                    otherRight + MARGIN, otherLeft - draggedRect.w - MARGIN
                 ];
                 for (const p of xPoints) {
                     const dist = Math.abs(newX - p);
@@ -362,28 +366,16 @@ function renderWidgets() {
                 }
 
                 const yPoints = [
-                    otherTop, otherBottom - draggedRect.h, otherCenterY - draggedRect.h / 2, // Flush
-                    otherBottom + MARGIN, otherTop - draggedRect.h - MARGIN              // Adjacent
+                    otherTop, otherBottom - draggedRect.h, otherCenterY - draggedRect.h / 2,
+                    otherBottom + MARGIN, otherTop - draggedRect.h - MARGIN
                 ];
                 for (const p of yPoints) {
                     const dist = Math.abs(newY - p);
                     if (dist < bestY.dist) bestY = { dist, pos: p };
                 }
             });
-            
-            // 2. Check against screen edges (which are already in the correct coordinate space relative to the grid)
-            const screenXPoints = [MARGIN, window.innerWidth - gridRect.left - draggedRect.w - MARGIN];
-             for (const p of screenXPoints) {
-                const dist = Math.abs(newX - p);
-                if (dist < bestX.dist) bestX = { dist, pos: p };
-            }
-             const screenYPoints = [MARGIN, window.innerHeight - gridRect.top - draggedRect.h - MARGIN];
-             for (const p of screenYPoints) {
-                const dist = Math.abs(newY - p);
-                if (dist < bestY.dist) bestY = { dist, pos: p };
-            }
 
-            // 3. Apply the winning snaps and draw the simple guide lines
+            // 2. Apply the best found snaps
             if (bestX.dist < SNAP_DISTANCE) {
                 finalX = bestX.pos;
                 snapLineV.style.left = `${finalX}px`;
@@ -394,7 +386,11 @@ function renderWidgets() {
                 snapLineH.style.top = `${finalY}px`;
                 snapLineH.style.display = 'block';
             }
-			
+
+            // 3. Enforce Grid Boundaries
+            finalX = Math.max(MARGIN, Math.min(finalX, gridW - draggedRect.w - MARGIN));
+            finalY = Math.max(MARGIN, Math.min(finalY, gridH - draggedRect.h - MARGIN));
+            
             // Boundary and Clock Collision Check
             const clockRect = document.querySelector('.container').getBoundingClientRect();
             finalX = Math.max(MARGIN, Math.min(finalX, window.innerWidth - instance.offsetWidth - MARGIN));
@@ -489,18 +485,17 @@ function renderWidgets() {
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
             // --- Grid Snapping for Size ---
-            const baseUnit = 200;
             const maxUnits = 4;
             let newWidth = initialWidgetW + (clientX - initialResizeMouseX);
             let newHeight = initialWidgetH + (clientY - initialResizeMouseY);
             
-            let gridW = Math.round((newWidth + MARGIN) / (baseUnit + MARGIN));
-            let gridH = Math.round((newHeight + MARGIN) / (baseUnit + MARGIN));
+            let gridW = Math.round((newWidth + MARGIN) / (WIDGET_BASE_UNIT + MARGIN));
+            let gridH = Math.round((newHeight + MARGIN) / (WIDGET_BASE_UNIT + MARGIN));
             gridW = Math.max(1, Math.min(maxUnits, gridW));
             gridH = Math.max(1, Math.min(maxUnits, gridH));
 
-            const snappedWidth = (gridW * baseUnit) + ((gridW - 1) * MARGIN);
-            const snappedHeight = (gridH * baseUnit) + ((gridH - 1) * MARGIN);
+            const snappedWidth = (gridW * WIDGET_BASE_UNIT) + ((gridW - 1) * MARGIN);
+            const snappedHeight = (gridH * WIDGET_BASE_UNIT) + ((gridH - 1) * MARGIN);
             
             // --- Positional Adjustment and Boundary Enforcement ---
             let finalX = initialResizeWidgetX;
@@ -580,9 +575,9 @@ function openWidgetPicker() {
                 iframe.style.pointerEvents = 'none'; // Make the preview non-interactive
 
                 // Calculate the widget's actual size
-                const baseUnit = 150;
-                const widgetWidth = widgetData.defaultSize ? widgetData.defaultSize[0] * baseUnit : baseUnit;
-                const widgetHeight = widgetData.defaultSize ? widgetData.defaultSize[1] * baseUnit : baseUnit;
+                const WIDGET_BASE_UNIT = 150;
+                const widgetWidth = widgetData.defaultSize ? widgetData.defaultSize[0] * WIDGET_BASE_UNIT : WIDGET_BASE_UNIT;
+                const widgetHeight = widgetData.defaultSize ? widgetData.defaultSize[1] * WIDGET_BASE_UNIT : WIDGET_BASE_UNIT;
                 iframe.style.width = `${widgetWidth}px`;
                 iframe.style.height = `${widgetHeight}px`;
 
