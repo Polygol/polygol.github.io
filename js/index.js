@@ -3779,7 +3779,9 @@ async function jumpToWallpaper(index) {
         
         if (weatherSwitch) {
             weatherSwitch.checked = wallpaper.clockStyles.showWeather !== false;
-            weatherSwitch.dispatchEvent(new Event('change'));
+            // FIX: Manually update state and UI instead of dispatching a generic event
+            showWeather = weatherSwitch.checked;
+            updateWeatherVisibility();
         }
         
         if (alignmentSelect) {
@@ -3895,10 +3897,11 @@ function switchWallpaper(direction) {
             showSeconds = secondsSwitch.checked; // Update the global variable
         }
         
-        if (weatherSwitch) {
+		if (weatherSwitch) {
             weatherSwitch.checked = wallpaper.clockStyles.showWeather !== false;
-            // Trigger the weather visibility update
-            weatherSwitch.dispatchEvent(new Event('change'));
+            // FIX: Manually update state and UI instead of dispatching a generic event
+            showWeather = weatherSwitch.checked;
+            updateWeatherVisibility();
         }
 
         if (alignmentSelect) {
