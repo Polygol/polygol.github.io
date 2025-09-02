@@ -2186,8 +2186,9 @@ input[type="checkbox"]:checked::before {
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 20px;
-    height: 20px;
+    width: 40px;
+    height: 40px;
+	border-radius: 50%;
     cursor: se-resize;
     z-index: 2; /* Must be above the iframe but below the drag overlay */
 }
