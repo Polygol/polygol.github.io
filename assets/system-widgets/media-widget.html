@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polygol Media Widget</title>
+    <title>Now Playing</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
+    <script src="/assets/gurapp/api/gurasuraisu-api.js"></script>
     <style>
         :root {
             --text-color: #f9f9f9;
@@ -151,7 +152,7 @@
                 const savedMetadata = JSON.parse(localStorage.getItem('lastMediaMetadata'));
                 displayMetadata(savedMetadata);
             } catch (e) {
-                container.innerHTML = `<span class="placeholder">Nothing Playing</span>`;
+                container.innerHTML = `<span class="placeholder"><span class="material-symbols-rounded">music_note</span></span>`;
             }
 
             // Listen for real-time updates from other tabs/windows
@@ -163,18 +164,6 @@
                     } catch (e) {
                          displayMetadata(null);
                     }
-                }
-            });
-            
-            // Apply theme from parent
-            try {
-                 const storedTheme = localStorage.getItem('theme') || 'dark';
-                 document.body.classList.toggle('light-theme', storedTheme === 'light');
-            } catch (e) {}
-
-            window.addEventListener('message', (event) => {
-                if (event.data && event.data.type === 'themeUpdate') {
-                     document.body.classList.toggle('light-theme', event.data.theme === 'light');
                 }
             });
         });
