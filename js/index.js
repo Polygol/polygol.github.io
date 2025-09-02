@@ -280,119 +280,117 @@ function renderWidgets() {
             let newX = initialWidgetX + (clientX - initialMouseX);
             let newY = initialWidgetY + (clientY - initialMouseY);
 
-            // --- RESEARCHED SOLUTION: Find and Apply Best Snap Point Logic ---
+            // --- FINAL REVISED: Contextual Margin Snapping Logic ---
             snapLineV.style.display = 'none';
             snapLineH.style.display = 'none';
 
-            let finalX = newX, finalY = newY;
+            let finalX = newX;
+            let finalY = newY;
 
-            let bestSnap = {
-                x: { dist: SNAP_DISTANCE, pos: null, source: null },
-                y: { dist: SNAP_DISTANCE, pos: null, source: null }
-            };
+            let xSnapped = false;
+            let ySnapped = false;
 
-            const draggedRect = {
-                width: instance.offsetWidth,
-                height: instance.offsetHeight
-            };
+            // Find best snap points across all other widgets
+            let bestX = { dist: SNAP_DISTANCE, pos: newX };
+            let bestY = { dist: SNAP_DISTANCE, pos: newY };
 
-            // 1. Gather all potential snap points from other widgets
             widgetElements.forEach((otherInstance, otherIndexKey) => {
                 if (indexKey === otherIndexKey) return;
                 const r = otherInstance.getBoundingClientRect();
 
-                // Potential Y (horizontal) alignments
-                const yPoints = [
-                    r.top,                                      // Top to Top
-                    r.bottom - draggedRect.height,              // Bottom to Bottom
-                    r.top + r.height / 2 - draggedRect.height / 2 // Center to Center
-                ];
-                for (const p of yPoints) {
+                // Potential FLUSH Y alignments (top, center, bottom)
+                const flushYPoints = [r.top, r.top + r.height / 2 - instance.offsetHeight / 2, r.bottom - instance.offsetHeight];
+                for (const p of flushYPoints) {
                     const dist = Math.abs(newY - p);
-                    if (dist < bestSnap.y.dist) {
-                        bestSnap.y = { dist, pos: p, source: r };
+                    if (dist < bestY.dist) {
+                        bestY = { dist, pos: p };
                     }
                 }
-                
-                // Potential X (vertical) alignments
-                const xPoints = [
-                    r.left,                                     // Left to Left
-                    r.right - draggedRect.width,                // Right to Right
-                    r.left + r.width / 2 - draggedRect.width / 2 // Center to Center
-                ];
-                for (const p of xPoints) {
+
+                // Potential FLUSH X alignments (left, center, right)
+                const flushXPoints = [r.left, r.left + r.width / 2 - instance.offsetWidth / 2, r.right - instance.offsetWidth];
+                for (const p of flushXPoints) {
                     const dist = Math.abs(newX - p);
-                    if (dist < bestSnap.x.dist) {
-                        bestSnap.x = { dist, pos: p, source: r };
-                    }
-                }
-                
-                // Adjacent (margin-based) alignments - lower priority
-                const adjacentYPoints = [r.bottom + MARGIN, r.top - draggedRect.height - MARGIN];
-                 for (const p of adjacentYPoints) {
-                    const dist = Math.abs(newY - p);
-                    if (dist < bestSnap.y.dist) {
-                        bestSnap.y = { dist, pos: p, source: r };
-                    }
-                }
-                const adjacentXPoints = [r.right + MARGIN, r.left - draggedRect.width - MARGIN];
-                for (const p of adjacentXPoints) {
-                    const dist = Math.abs(newX - p);
-                    if (dist < bestSnap.x.dist) {
-                        bestSnap.x = { dist, pos: p, source: r };
+                    if (dist < bestX.dist) {
+                        bestX = { dist, pos: p };
                     }
                 }
             });
 
-            // 2. Check against screen edges if they provide a better snap
-            const screenYPoints = [MARGIN, window.innerHeight - draggedRect.height - MARGIN];
-             for (const p of screenYPoints) {
-                const dist = Math.abs(newY - p);
-                if (dist < bestSnap.y.dist) {
-                    bestSnap.y = { dist, pos: p, source: null }; // No source for screen edge
+            // If a strong FLUSH alignment is found on either axis, we prioritize that.
+            if (bestY.dist < SNAP_DISTANCE) {
+                finalY = bestY.pos;
+                ySnapped = true;
+            }
+            if (bestX.dist < SNAP_DISTANCE) {
+                finalX = bestX.pos;
+                xSnapped = true;
+            }
+
+            // ONLY if no flush alignment is found, check for ADJACENT (margin-based) snaps.
+            if (!xSnapped) {
+                 widgetElements.forEach((otherInstance, otherIndexKey) => {
+                    if (indexKey === otherIndexKey) return;
+                    const r = otherInstance.getBoundingClientRect();
+                    const adjacentXPoints = [r.right + MARGIN, r.left - instance.offsetWidth - MARGIN];
+                     for (const p of adjacentXPoints) {
+                        const dist = Math.abs(newX - p);
+                        if (dist < bestX.dist) {
+                            bestX = { dist, pos: p };
+                        }
+                    }
+                 });
+                 if (bestX.dist < SNAP_DISTANCE) {
+                     finalX = bestX.pos;
+                     xSnapped = true;
+                 }
+            }
+             if (!ySnapped) {
+                 widgetElements.forEach((otherInstance, otherIndexKey) => {
+                    if (indexKey === otherIndexKey) return;
+                    const r = otherInstance.getBoundingClientRect();
+                    const adjacentYPoints = [r.bottom + MARGIN, r.top - instance.offsetHeight - MARGIN];
+                     for (const p of adjacentYPoints) {
+                        const dist = Math.abs(newY - p);
+                        if (dist < bestY.dist) {
+                            bestY = { dist, pos: p };
+                        }
+                    }
+                 });
+                  if (bestY.dist < SNAP_DISTANCE) {
+                     finalY = bestY.pos;
+                     ySnapped = true;
+                 }
+            }
+
+            // Lowest priority: Snap to screen edges if no other snap was found
+            if (!xSnapped) {
+                 const screenXPoints = [MARGIN, window.innerWidth - instance.offsetWidth - MARGIN];
+                 for (const p of screenXPoints) {
+                    if (Math.abs(newX - p) < bestX.dist) {
+                        finalX = p;
+                        xSnapped = true;
+                    }
                 }
             }
-             const screenXPoints = [MARGIN, window.innerWidth - draggedRect.width - MARGIN];
-            for (const p of screenXPoints) {
-                const dist = Math.abs(newX - p);
-                if (dist < bestSnap.x.dist) {
-                    bestSnap.x = { dist, pos: p, source: null }; // No source for screen edge
+            if (!ySnapped) {
+                 const screenYPoints = [MARGIN, window.innerHeight - instance.offsetHeight - MARGIN];
+                 for (const p of screenYPoints) {
+                    if (Math.abs(newY - p) < bestY.dist) {
+                        finalY = p;
+                        ySnapped = true;
+                    }
                 }
             }
 
-            // 3. Apply the best found snaps
-            if (bestSnap.x.pos !== null) {
-                finalX = bestSnap.x.pos;
+            // Draw snap lines for any active snap
+            if (xSnapped) {
                 snapLineV.style.left = `${finalX}px`;
                 snapLineV.style.display = 'block';
             }
-            if (bestSnap.y.pos !== null) {
-                finalY = bestSnap.y.pos;
+            if (ySnapped) {
                 snapLineH.style.top = `${finalY}px`;
                 snapLineH.style.display = 'block';
-            }
-
-            // 4. Correctly draw the guide lines
-            if(bestSnap.y.source) { // If we snapped to a widget vertically
-                const r = bestSnap.y.source;
-                const combinedLeft = Math.min(finalX, r.left);
-                const combinedRight = Math.max(finalX + draggedRect.width, r.right);
-                snapLineH.style.left = `${combinedLeft}px`;
-                snapLineH.style.width = `${combinedRight - combinedLeft}px`;
-            } else if (bestSnap.y.pos !== null) { // Screen edge snap
-                snapLineH.style.left = '0';
-                snapLineH.style.width = '100%';
-            }
-
-            if(bestSnap.x.source) { // If we snapped to a widget horizontally
-                const r = bestSnap.x.source;
-                const combinedTop = Math.min(finalY, r.top);
-                const combinedBottom = Math.max(finalY + draggedRect.height, r.bottom);
-                snapLineV.style.top = `${combinedTop}px`;
-                snapLineV.style.height = `${combinedBottom - combinedTop}px`;
-            } else if (bestSnap.x.pos !== null) { // Screen edge snap
-                snapLineV.style.top = '0';
-                snapLineV.style.height = '100%';
             }
 			
             // Boundary and Clock Collision Check
