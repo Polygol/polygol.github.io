@@ -2039,8 +2039,8 @@ input[type="checkbox"]:checked::before {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-    width: 150px; /* Default size, can be overridden */
-    height: 150px;
+    width: 200px; /* Default size, can be overridden */
+    height: 200px;
     pointer-events: auto; /* Widgets are interactive */
     touch-action: none; /* Prevent page scroll on mobile */
 	margin: 10px;
