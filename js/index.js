@@ -183,8 +183,8 @@ function addWidget(widgetData) {
     activeWidgets.push({
         widgetId: widgetData.widgetId,
         appName: widgetData.appName,
-        w: 150,
-        h: 150,
+        w: 200,
+        h: 200,
         // Place new widgets in the top-left, avoiding the clock area
         x: 10,
         y: 80, 
