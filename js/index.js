@@ -372,14 +372,16 @@ function renderWidgets() {
                 }
             });
             
-            // 2. Check against screen edges (which are already in the correct coordinate space relative to the grid)
-            const screenXPoints = [MARGIN, window.innerWidth - gridRect.left - draggedRect.w - MARGIN];
-             for (const p of screenXPoints) {
+            // 2. Check against grid container edges
+            const gridW = gridContainer.offsetWidth;
+            const gridH = gridContainer.offsetHeight;
+            const screenXPoints = [MARGIN, gridW - draggedRect.w - MARGIN];
+            for (const p of screenXPoints) {
                 const dist = Math.abs(newX - p);
                 if (dist < bestX.dist) bestX = { dist, pos: p };
             }
-             const screenYPoints = [MARGIN, window.innerHeight - gridRect.top - draggedRect.h - MARGIN];
-             for (const p of screenYPoints) {
+            const screenYPoints = [MARGIN, gridH - draggedRect.h - MARGIN];
+            for (const p of screenYPoints) {
                 const dist = Math.abs(newY - p);
                 if (dist < bestY.dist) bestY = { dist, pos: p };
             }
@@ -398,8 +400,9 @@ function renderWidgets() {
 			
             // Boundary and Clock Collision Check
             const clockRect = document.querySelector('.container').getBoundingClientRect();
-            finalX = Math.max(MARGIN, Math.min(finalX, window.innerWidth - instance.offsetWidth - MARGIN));
-            finalY = Math.max(MARGIN, Math.min(finalY, window.innerHeight - instance.offsetHeight - MARGIN));
+            // FIX: Use the grid's dimensions for the final position clamp, not the window's.
+            finalX = Math.max(MARGIN, Math.min(finalX, gridContainer.offsetWidth - instance.offsetWidth - MARGIN));
+            finalY = Math.max(MARGIN, Math.min(finalY, gridContainer.offsetHeight - instance.offsetHeight - MARGIN));
 
             const widgetRect = { left: finalX, top: finalY, right: finalX + instance.offsetWidth, bottom: finalY + instance.offsetHeight };
             if (!(widgetRect.right < clockRect.left || widgetRect.left > clockRect.right || widgetRect.bottom < clockRect.top || widgetRect.top > clockRect.bottom)) {
