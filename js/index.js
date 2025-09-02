@@ -2873,16 +2873,8 @@ wallpaperInput.addEventListener("change", async event => {
             }
             
 	    if (processedWallpapers.length > 0) {
-	        // Get current clock styles for the slideshow
-	        const currentClockStyles = {
-	            font: localStorage.getItem('clockFont') || 'Inter',
-	            weight: localStorage.getItem('clockWeight') || '700',
-	            color: localStorage.getItem('clockColor') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
-	            colorEnabled: localStorage.getItem('clockColorEnabled') === 'true',
-                wallpaperBlur: document.getElementById('wallpaper-blur-slider')?.value || '0',
-                wallpaperBrightness: document.getElementById('wallpaper-brightness-slider')?.value || '100',
-                wallpaperContrast: document.getElementById('wallpaper-contrast-slider')?.value || '100'
-	        };
+	        // FIX: Reset clock styles to default for the new slideshow
+	        const defaultClockStyles = resetAndApplyDefaultClockStyles();
 	    
 	        localStorage.setItem("wallpapers", JSON.stringify(processedWallpapers));
 	        currentWallpaperIndex = 0;
@@ -2891,7 +2883,7 @@ wallpaperInput.addEventListener("change", async event => {
 	        recentWallpapers.unshift({
 	            isSlideshow: true,
 	            timestamp: Date.now(),
-	            clockStyles: currentClockStyles // Store clock styles for slideshow
+	            clockStyles: defaultClockStyles // Store default clock styles for slideshow
 	        });
                 
                 while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
@@ -2977,16 +2969,8 @@ async function saveWallpaper(file) {
     try {
         const wallpaperId = `wallpaper_${Date.now()}`;
         
-        // Get current clock AND wallpaper effect styles
-        const currentClockStyles = {
-            font: localStorage.getItem('clockFont') || 'Inter',
-            weight: localStorage.getItem('clockWeight') || '700',
-            color: localStorage.getItem('clockColor') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
-            colorEnabled: localStorage.getItem('clockColorEnabled') === 'true',
-            wallpaperBlur: document.getElementById('wallpaper-blur-slider')?.value || '0',
-            wallpaperBrightness: document.getElementById('wallpaper-brightness-slider')?.value || '100',
-            wallpaperContrast: document.getElementById('wallpaper-contrast-slider')?.value || '100'
-        };
+        // FIX: Reset clock styles to default for the new wallpaper and get the defaults
+        const defaultClockStyles = resetAndApplyDefaultClockStyles();
         
         if (file.type.startsWith("video/")) {
             await storeWallpaper(wallpaperId, {
@@ -2998,7 +2982,7 @@ async function saveWallpaper(file) {
                 type: file.type,
                 isVideo: true,
                 timestamp: Date.now(),
-                clockStyles: currentClockStyles // Store current settings
+                clockStyles: defaultClockStyles // Store default settings
             });
         } else {
             let compressedData = await compressMedia(file);
@@ -3011,7 +2995,7 @@ async function saveWallpaper(file) {
                 type: file.type,
                 isVideo: false,
                 timestamp: Date.now(),
-                clockStyles: currentClockStyles // Store current settings
+                clockStyles: defaultClockStyles // Store default settings
             });
         }
         
@@ -4291,6 +4275,63 @@ function applyClockStyles() {
         clockElement.style.flexDirection = '';
         clockElement.style.lineHeight = '';
     }
+}
+
+function resetAndApplyDefaultClockStyles() {
+    const defaultStyles = {
+        font: 'Inter',
+        weight: '700',
+        color: getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
+        colorEnabled: false,
+        stackEnabled: false,
+        showSeconds: true,
+        showWeather: true,
+        alignment: 'center',
+        wallpaperBlur: '0',
+        wallpaperBrightness: '100',
+        wallpaperContrast: '100',
+        shadowEnabled: false,
+        shadowBlur: '10',
+        shadowColor: '#000000',
+        gradientEnabled: false,
+        gradientColor: '#ffffff'
+    };
+
+    // Update UI controls to their default values
+    document.getElementById('font-select').value = defaultStyles.font;
+    document.getElementById('weight-slider').value = parseInt(defaultStyles.weight) / 10;
+    document.getElementById('clock-color-picker').value = defaultStyles.color;
+    document.getElementById('clock-color-switch').checked = defaultStyles.colorEnabled;
+    document.getElementById('clock-stack-switch').checked = defaultStyles.stackEnabled;
+    document.getElementById('seconds-switch').checked = defaultStyles.showSeconds;
+    document.getElementById('weather-switch').checked = defaultStyles.showWeather;
+    document.getElementById('alignment-select').value = defaultStyles.alignment;
+    document.getElementById('wallpaper-blur-slider').value = defaultStyles.wallpaperBlur;
+    document.getElementById('wallpaper-brightness-slider').value = defaultStyles.wallpaperBrightness;
+    document.getElementById('wallpaper-contrast-slider').value = defaultStyles.wallpaperContrast;
+    document.getElementById('clock-shadow-switch').checked = defaultStyles.shadowEnabled;
+    document.getElementById('clock-shadow-blur-slider').value = defaultStyles.shadowBlur;
+    document.getElementById('clock-shadow-color-picker').value = defaultStyles.shadowColor;
+    document.getElementById('clock-gradient-switch').checked = defaultStyles.gradientEnabled;
+    document.getElementById('clock-gradient-color-picker').value = defaultStyles.gradientColor;
+
+    // Update global state variables
+    showSeconds = defaultStyles.showSeconds;
+    showWeather = defaultStyles.showWeather;
+
+    // Apply the visual changes
+    applyClockStyles();
+    applyWallpaperEffects();
+    applyAlignment(defaultStyles.alignment);
+    updateWeatherVisibility();
+    updateClockAndDate();
+
+    // Update localStorage with the new defaults
+    for (const [key, value] of Object.entries(defaultStyles)) {
+        localStorage.setItem(key, value);
+    }
+    
+    return defaultStyles;
 }
 
 // Initialize theme and wallpaper on load
