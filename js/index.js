@@ -232,8 +232,13 @@ function renderWidgets() {
         const overlay = document.createElement('div');
         overlay.className = 'widget-instance-overlay';
 
+        // --- Create the invisible resize handle ---
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'widget-resize-handle';
+        
         instance.appendChild(iframe);
         instance.appendChild(overlay);
+        instance.appendChild(resizeHandle); // Add handle to the widget
         gridContainer.appendChild(instance);
         widgetElements.set(index.toString(), instance);
     });
@@ -389,6 +394,81 @@ function renderWidgets() {
             }
             isDragging = false;
         };
+
+        // --- Add Resizing Logic ---
+        let isResizing = false;
+        let initialMouseX, initialMouseY, initialWidgetW, initialWidgetH;
+        const resizeHandle = instance.querySelector('.widget-resize-handle');
+
+        const onResizeStart = (e) => {
+            e.stopPropagation(); // Prevent this from starting a drag action
+            isResizing = true;
+            
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            initialMouseX = clientX;
+            initialMouseY = clientY;
+            initialWidgetW = instance.offsetWidth;
+            initialWidgetH = instance.offsetHeight;
+
+            document.addEventListener('mousemove', onResizeMove);
+            document.addEventListener('mouseup', onResizeEnd);
+            document.addEventListener('touchmove', onResizeMove, { passive: false });
+            document.addEventListener('touchend', onResizeEnd);
+        };
+        
+        const onResizeMove = (e) => {
+            if (!isResizing) return;
+            e.preventDefault();
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const deltaX = clientX - initialMouseX;
+            const deltaY = clientY - initialMouseY;
+
+            let newWidth = initialWidgetW + deltaX;
+            let newHeight = initialWidgetH + deltaY;
+
+            // --- Grid Snapping Logic ---
+            const baseUnit = 150; // Size of a 1x1 widget
+            const maxUnits = 4;
+
+            // Calculate grid units, including the margin between units
+            let gridW = Math.round((newWidth + MARGIN) / (baseUnit + MARGIN));
+            let gridH = Math.round((newHeight + MARGIN) / (baseUnit + MARGIN));
+            
+            // Enforce min/max size
+            gridW = Math.max(1, Math.min(maxUnits, gridW));
+            gridH = Math.max(1, Math.min(maxUnits, gridH));
+
+            // Convert back to pixel dimensions
+            const snappedWidth = (gridW * baseUnit) + ((gridW - 1) * MARGIN);
+            const snappedHeight = (gridH * baseUnit) + ((gridH - 1) * MARGIN);
+
+            instance.style.width = `${snappedWidth}px`;
+            instance.style.height = `${snappedHeight}px`;
+        };
+
+        const onResizeEnd = () => {
+            if (!isResizing) return;
+            isResizing = false;
+            
+            document.removeEventListener('mousemove', onResizeMove);
+            document.removeEventListener('mouseup', onResizeEnd);
+            document.removeEventListener('touchmove', onResizeMove);
+            document.removeEventListener('touchend', onResizeEnd);
+
+            const widgetToUpdate = activeWidgets[index];
+            widgetToUpdate.w = instance.offsetWidth;
+            widgetToUpdate.h = instance.offsetHeight;
+            saveWidgets();
+        };
+
+        // Attach listeners to the handle
+        resizeHandle.addEventListener('mousedown', onResizeStart);
+        resizeHandle.addEventListener('touchstart', onResizeStart, { passive: false });
         
         overlay.addEventListener('mousedown', onDragStart);
         overlay.addEventListener('touchstart', onDragStart, { passive: false });
