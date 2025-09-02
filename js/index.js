@@ -6484,8 +6484,8 @@ function hideMediaWidget() {
     const widget = document.getElementById('media-session-widget');
     if (!widget) return;
 
-    localStorage.removeItem('lastMediaMetadata');
-    localStorage.removeItem('lastMediaSessionApp');
+    // localStorage.removeItem('lastMediaMetadata');
+    // localStorage.removeItem('lastMediaSessionApp');
 
     widget.style.opacity = '0';
     widget.style.transform = 'scale(0.95)';
