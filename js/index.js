@@ -398,7 +398,7 @@ function renderWidgets() {
         // --- Add Resizing Logic ---
         let isResizing = false;
         let initialResizeMouseX, initialResizeMouseY, initialWidgetW, initialWidgetH;
-        let initialWidgetX, initialWidgetY; // To store initial position
+		let initialResizeWidgetX, initialResizeWidgetY; 
         let isAnchoredRight, isAnchoredBottom; // Flags to track edge snapping
         const resizeHandle = instance.querySelector('.widget-resize-handle');
 
@@ -413,13 +413,13 @@ function renderWidgets() {
             initialResizeMouseY = clientY;
             initialWidgetW = instance.offsetWidth;
             initialWidgetH = instance.offsetHeight;
-            initialWidgetX = instance.offsetLeft; // Capture initial X
-            initialWidgetY = instance.offsetTop;  // Capture initial Y
+            initialResizeWidgetX = instance.offsetLeft; // Capture initial X
+            initialResizeWidgetY = instance.offsetTop;  // Capture initial Y
 
             // Determine if the widget is anchored to the right or bottom edge
             // A small tolerance (5px) helps catch slight imprecisions
-            isAnchoredRight = (initialWidgetX + initialWidgetW) >= (window.innerWidth - MARGIN - 5);
-            isAnchoredBottom = (initialWidgetY + initialWidgetH) >= (window.innerHeight - MARGIN - 5);
+            isAnchoredRight = (initialResizeWidgetX + initialWidgetW) >= (window.innerWidth - MARGIN - 5);
+            isAnchoredBottom = (initialResizeWidgetY + initialWidgetH) >= (window.innerHeight - MARGIN - 5);
 
             document.addEventListener('mousemove', onResizeMove);
             document.addEventListener('mouseup', onResizeEnd);
@@ -449,8 +449,8 @@ function renderWidgets() {
             const snappedHeight = (gridH * baseUnit) + ((gridH - 1) * MARGIN);
             
             // --- Positional Adjustment and Boundary Enforcement ---
-            let finalX = initialWidgetX;
-            let finalY = initialWidgetY;
+            let finalX = initialResizeWidgetX;
+            let finalY = initialResizeWidgetY;
 
             // If anchored right, adjust the 'left' position to grow inwards
             if (isAnchoredRight) {
