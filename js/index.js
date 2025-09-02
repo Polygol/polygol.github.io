@@ -397,7 +397,8 @@ function renderWidgets() {
 
         // --- Add Resizing Logic ---
         let isResizing = false;
-        let initialMouseX, initialMouseY, initialWidgetW, initialWidgetH;
+        // FIX: Use unique variable names for resizing to avoid conflict with dragging variables
+        let initialResizeMouseX, initialResizeMouseY, initialWidgetW, initialWidgetH;
         const resizeHandle = instance.querySelector('.widget-resize-handle');
 
         const onResizeStart = (e) => {
@@ -407,8 +408,8 @@ function renderWidgets() {
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-            initialMouseX = clientX;
-            initialMouseY = clientY;
+            initialResizeMouseX = clientX; // FIX: Use new variable
+            initialResizeMouseY = clientY; // FIX: Use new variable
             initialWidgetW = instance.offsetWidth;
             initialWidgetH = instance.offsetHeight;
 
@@ -425,8 +426,8 @@ function renderWidgets() {
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-            const deltaX = clientX - initialMouseX;
-            const deltaY = clientY - initialMouseY;
+            const deltaX = clientX - initialResizeMouseX; // FIX: Use new variable
+            const deltaY = clientY - initialResizeMouseY; // FIX: Use new variable
 
             let newWidth = initialWidgetW + deltaX;
             let newHeight = initialWidgetH + deltaY;
@@ -469,7 +470,7 @@ function renderWidgets() {
         // Attach listeners to the handle
         resizeHandle.addEventListener('mousedown', onResizeStart);
         resizeHandle.addEventListener('touchstart', onResizeStart, { passive: false });
-        
+                
         overlay.addEventListener('mousedown', onDragStart);
         overlay.addEventListener('touchstart', onDragStart, { passive: false });
     });
