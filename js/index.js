@@ -206,7 +206,7 @@ function renderWidgets() {
     if (!gridContainer) return;
     gridContainer.innerHTML = '';
 
-    const MARGIN = 10;
+    const MARGIN = 20;
     const SNAP_DISTANCE = 15;
     const widgetElements = new Map();
 
@@ -280,70 +280,55 @@ function renderWidgets() {
             let newX = initialWidgetX + (clientX - initialMouseX);
             let newY = initialWidgetY + (clientY - initialMouseY);
 
-                        // --- DEFINITIVE GRID-AWARE SNAPPING ALGORITHM ---
+            // --- JS-Controlled Spacing & Snapping ---
             snapLineV.style.display = 'none';
             snapLineH.style.display = 'none';
 
-            let finalX = newX, finalY = newY;
-            const draggedRect = { w: instance.offsetWidth, h: instance.offsetHeight };
+            let finalX = newX;
+            let finalY = newY;
 
-            let bestX = { dist: SNAP_DISTANCE, pos: newX, source: null };
-            let bestY = { dist: SNAP_DISTANCE, pos: newY, source: null };
+            // Define all potential snap points
+            const snapPointsX = [MARGIN, window.innerWidth - instance.offsetWidth - MARGIN];
+            const snapPointsY = [MARGIN, window.innerHeight - instance.offsetHeight - MARGIN];
 
-            // 1. Find the single BEST snap point for each axis, preferring flush alignments
             widgetElements.forEach((otherInstance, otherIndexKey) => {
                 if (indexKey === otherIndexKey) return;
                 const r = otherInstance.getBoundingClientRect();
                 
-                // Define flush and adjacent points separately
-                const flushX = [r.left, r.right - draggedRect.w, r.left + r.width/2 - draggedRect.w/2];
-                const adjacentX = [r.right + MARGIN, r.left - draggedRect.w - MARGIN];
-                const flushY = [r.top, r.bottom - draggedRect.h, r.top + r.height/2 - draggedRect.h/2];
-                const adjacentY = [r.bottom + MARGIN, r.top - draggedRect.h - MARGIN];
-
-                // Check for a better flush snap first
-                for(const p of flushX) {
-                    const dist = Math.abs(newX - p);
-                    if (dist < bestX.dist) bestX = { dist, pos: p, source: r };
-                }
-                for(const p of flushY) {
-                    const dist = Math.abs(newY - p);
-                    if (dist < bestY.dist) bestY = { dist, pos: p, source: r };
-                }
+                // Add points for flush alignment
+                snapPointsX.push(r.left, r.right - instance.offsetWidth, r.left + r.width / 2 - instance.offsetWidth / 2);
+                snapPointsY.push(r.top, r.bottom - instance.offsetHeight, r.top + r.height / 2 - instance.offsetHeight / 2);
                 
-                // Only check for adjacent snaps if the current best snap isn't already very good
-                if (bestX.dist > 5) { // Higher threshold for flush to "win"
-                    for(const p of adjacentX) {
-                        const dist = Math.abs(newX - p);
-                        if (dist < bestX.dist) bestX = { dist, pos: p, source: r };
-                    }
-                }
-                if (bestY.dist > 5) {
-                    for(const p of adjacentY) {
-                        const dist = Math.abs(newY - p);
-                        if (dist < bestY.dist) bestY = { dist, pos: p, source: r };
-                    }
-                }
+                // Add points for adjacent (gapped) alignment
+                snapPointsX.push(r.right + MARGIN, r.left - instance.offsetWidth - MARGIN);
+                snapPointsY.push(r.bottom + MARGIN, r.top - instance.offsetHeight - MARGIN);
             });
 
-            // 2. Check screen edges as the last resort
-            [MARGIN, window.innerWidth - draggedRect.w - MARGIN].forEach(p => {
+            // Find the closest snap point for each axis
+            let bestXDist = SNAP_DISTANCE;
+            for (const p of snapPointsX) {
                 const dist = Math.abs(newX - p);
-                if (dist < bestX.dist) bestX = { dist, pos: p, source: null };
-            });
-            [MARGIN, window.innerHeight - draggedRect.h - MARGIN].forEach(p => {
-                const dist = Math.abs(newY - p);
-                if (dist < bestY.dist) bestY = { dist, pos: p, source: null };
-            });
+                if (dist < bestXDist) {
+                    bestXDist = dist;
+                    finalX = p;
+                }
+            }
 
-            // 3. Apply the winning snaps
-            if (bestX.dist < SNAP_DISTANCE) {
-                finalX = bestX.pos;
+            let bestYDist = SNAP_DISTANCE;
+            for (const p of snapPointsY) {
+                const dist = Math.abs(newY - p);
+                if (dist < bestYDist) {
+                    bestYDist = dist;
+                    finalY = p;
+                }
+            }
+            
+            // Draw the snap lines if a snap occurred
+            if (bestXDist < SNAP_DISTANCE) {
                 snapLineV.style.left = `${finalX}px`;
                 snapLineV.style.display = 'block';
             }
-            if (bestY.dist < SNAP_DISTANCE) {
-                finalY = bestY.pos;
+            if (bestYDist < SNAP_DISTANCE) {
                 snapLineH.style.top = `${finalY}px`;
                 snapLineH.style.display = 'block';
             }
