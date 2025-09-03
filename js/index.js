@@ -4838,14 +4838,17 @@ function createFullscreenEmbed(url) {
     embedContainer.style.borderRadius = '25px';
     embedContainer.style.overflow = 'hidden';
     embedContainer.style.display = 'block';
-    
-    // Set initial background blur
-    document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
-    
+        
     // IMPORTANT FIX: Set proper z-index and pointer events
     embedContainer.style.pointerEvents = 'auto';
     embedContainer.style.zIndex = '1001';
     embedContainer.appendChild(iframe);
+
+    const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
+    const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
+    const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+    document.body.style.setProperty('--wallpaper-filter', openFilter);
+    document.body.style.setProperty('--bg-transform-scale', '1.25');
     
     // Store the URL as a data attribute
     embedContainer.dataset.embedUrl = url;
@@ -4905,7 +4908,7 @@ function createFullscreenEmbed(url) {
         embedContainer.style.transform = 'scale(1)';
         embedContainer.style.opacity = '1';
         embedContainer.style.borderRadius = '0px';
-        document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
+        
     }, 10);
     
     // Show the swipe overlay when opening an app
@@ -5279,7 +5282,7 @@ function setupDrawerInteractions() {
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
 	            openEmbed.style.border = 'none';
-	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
+	            
 		    persistentClock.style.opacity = '1';
 	        }
 	
@@ -5398,7 +5401,7 @@ function setupDrawerInteractions() {
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
 	            openEmbed.style.border = 'none'; // Animate border removal
-	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
+	            
 	            appDrawer.style.opacity = '0';
 				persistentClock.style.opacity = '1';
                 // NEW: Apply opening effects on snap-back
@@ -5451,7 +5454,7 @@ function setupDrawerInteractions() {
 	            appDrawer.classList.add('open');
 	            initialDrawerPosition = 0;
 	            interactionBlocker.style.display = 'none';
-	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
+	            
 				// Apply opening background effects
                 const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
                 const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
