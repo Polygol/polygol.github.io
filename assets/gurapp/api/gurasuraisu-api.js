@@ -10,7 +10,7 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
 // This block runs as soon as the script is loaded by the Gurapp.
 (function() {
     const style = document.createElement('style');
-    style.textContent = `
+    let css = `
         /* Inject Open Runde Font Faces via jsDelivr CDN */
         @font-face {
           font-family: 'Open Runde';
