@@ -268,7 +268,6 @@ function renderWidgets() {
         instance.style.top = `${widget.y}px`;
 
         const iframe = document.createElement('iframe');
-		iframe.dataset.isGurasuraisuApp = 'true'; 
         iframe.src = widgetDef.url;
         const overlay = document.createElement('div');
         overlay.className = 'widget-instance-overlay';
@@ -585,7 +584,6 @@ function openWidgetPicker() {
                 previewContainer.className = 'widget-picker-preview';
 
                 const iframe = document.createElement('iframe');
-				iframe.dataset.isGurasuraisuApp = 'true'; 
                 iframe.src = widgetData.url;
                 iframe.scrolling = 'no';
                 iframe.style.pointerEvents = 'none'; // Make the preview non-interactive
@@ -4840,7 +4838,6 @@ function createFullscreenEmbed(url) {
     iframe.src = url;
     const appId = Object.keys(apps).find(k => apps[k].url === url);
     iframe.dataset.appId = appId;
-    iframe.dataset.isGurasuraisuApp = 'true'; 
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allowfullscreen', '');
     
@@ -6863,21 +6860,6 @@ window.addEventListener('message', event => {
     if (event.origin !== window.location.origin) return;
 
     const data = event.data;
-
-    if (data.type === 'gurasuraisu-request-settings') {
-        // A Gurapp has loaded and is asking for its initial settings.
-        if (event.source) {
-            event.source.postMessage({
-                type: 'gurasuraisu-settings-response',
-                settings: {
-                    theme: localStorage.getItem('theme') || 'dark',
-                    animationsEnabled: localStorage.getItem('animationsEnabled') !== 'false',
-                    highContrast: localStorage.getItem('highContrast') === 'true'
-                }
-            }, window.location.origin);
-        }
-        return; // Message handled
-    }
 
     // Allow an app to view the currently installed apps
     // This check should happen BEFORE the main API call router.
