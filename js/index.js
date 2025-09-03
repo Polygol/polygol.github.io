@@ -4767,7 +4767,7 @@ function createFullscreenEmbed(url) {
 	    const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
 	    const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
 	    document.body.style.setProperty('--wallpaper-filter', openFilter);
-	    document.body.style.setProperty('--bg-scale', '2');
+	    document.body.style.setProperty('--bg-scale', '3');
         
         // IMPORTANT FIX: Restore proper z-index and pointer events
         embedContainer.style.pointerEvents = 'auto';
@@ -5406,7 +5406,7 @@ function setupDrawerInteractions() {
                 const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
                 const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
                 document.body.style.setProperty('--wallpaper-filter', openFilter);
-                document.body.style.setProperty('--bg-scale', '2');
+                document.body.style.setProperty('--bg-scale', '3');
 	        }
 	
 	    } else {
@@ -5457,7 +5457,7 @@ function setupDrawerInteractions() {
                 const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
                 const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
                 document.body.style.setProperty('--wallpaper-filter', openFilter);
-                document.body.style.setProperty('--bg-scale', '2');
+                document.body.style.setProperty('--bg-scale', '3');
 				// Hide UI elements
 				document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 			        if (!el.dataset.originalDisplay) {
