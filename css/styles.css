@@ -1790,7 +1790,7 @@ input[type="checkbox"]:checked::before {
 
         .app-drawer-content {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             height: calc(100% - 42px);
             overflow-y: auto;
             user-select: none;
@@ -2245,9 +2245,3 @@ input[type="checkbox"]:checked::before {
                 grid-template-columns: repeat(1, 1fr);
             }
         }
-
-	@media (max-height: 700px) {
-	    .app-drawer-content {
-	        align-items: flex-start;
-	    }
-	}
