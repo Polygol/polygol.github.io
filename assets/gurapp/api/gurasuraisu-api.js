@@ -42,8 +42,8 @@
         }
 
         .high-contrast-fallback {
-            --background-color-dark-tr: var(--background-color-dark, #121212);
-            --background-color-light-tr: var(--background-color-light, #f5f5f5);
+            --background-color-dark-tr: var(--background-color-dark, #1c1c1c);
+            --background-color-light-tr: var(--background-color-light, #f0f0f0);
         }
     `;
     
