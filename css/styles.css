@@ -219,6 +219,8 @@ input[type="submit"]:active,
             user-select: none;
             overscroll-behavior: none;
             touch-action: manipulation;
+            /* Set the default value on the body element */
+            --bg-transform-scale: 1.05; 
         }
 
 body::before {
@@ -234,8 +236,7 @@ body::before {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-	/* --bg-transform-scale will be controlled by JS. Default is 1.05 */
-    --bg-transform-scale: 1.05; 
+    /* Use the variable inherited from the body */
 	transform: scale(var(--bg-transform-scale));
 	filter: var(--wallpaper-filter, none); /* Use the CSS custom property */
 }
