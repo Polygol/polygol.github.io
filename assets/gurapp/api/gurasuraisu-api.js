@@ -258,7 +258,7 @@ window.addEventListener('message', async (event) => {
         document.body.classList.toggle('reduce-animations', !data.enabled);
         break;
     case 'contrastUpdate':
-        document.body.classList.toggle('gurasuraisu-high-contrast', data.enabled);
+        document.documentElement.classList.toggle('gurasuraisu-high-contrast', data.enabled);
         break;
       
       // --- NEW: Handles screenshot requests from the parent ---
@@ -291,6 +291,11 @@ window.addEventListener('message', async (event) => {
  * in localStorage for a seamless appearance.
  */
 document.addEventListener('DOMContentLoaded', () => {
+  // FIX: Apply the 'standalone' class to the <html> element if not in Gurasuraisu
+  if (!isInsideGurasuraisu) {
+      document.documentElement.classList.add('standalone');
+  }
+
   try {
     const storedTheme = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('light-theme', storedTheme === 'light');
@@ -298,8 +303,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
     document.body.classList.toggle('reduce-animations', !animationsEnabled);
 
+    // FIX: Target the <html> element for the initial high contrast check
     const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
-    document.body.classList.toggle('gurasuraisu-high-contrast', highContrastEnabled);
+    document.documentElement.classList.toggle('gurasuraisu-high-contrast', highContrastEnabled);
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
