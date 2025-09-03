@@ -5081,6 +5081,9 @@ function createAppIcons() {
         appIcon.appendChild(label);
         
         const handleAppOpen = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+			
             try {      
                 if (app.details.url.startsWith('#')) {
                     switch (app.details.url) {
@@ -5107,7 +5110,6 @@ function createAppIcons() {
         };
         
         appIcon.addEventListener('click', handleAppOpen);
-        appIcon.addEventListener('touchend', handleAppOpen);
         appGrid.appendChild(appIcon);
     });
 }
@@ -5577,16 +5579,19 @@ function setupDrawerInteractions() {
         endDrag();
     });
 
-    // Mouse Events for regular drawer interaction
-    document.addEventListener('mousedown', (e) => {
-        if (e.button !== 0) return;
-        const element = document.elementFromPoint(e.clientX, e.clientY);
-        
-        // Check if click is on handle area
-        if (drawerHandle.contains(element)) {
-            startDrag(e.clientY);
-        }
-    });
+	// Mouse Events for regular drawer interaction
+	document.addEventListener('mousedown', (e) => {
+	    // only left button
+	    if (e.button !== 0) return;
+	
+	    // did we press inside the handle?
+	    if (!drawerHandle.contains(e.target)) return;
+	
+	    // avoid accidental text selection while dragging
+	    e.preventDefault();
+	
+	    startDrag(e.clientY);
+	});
 
     document.addEventListener('mousemove', (e) => {
         if (isDragging) {
