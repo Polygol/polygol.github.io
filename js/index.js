@@ -1200,10 +1200,7 @@ const weatherConditions = {
 
 function updateWeatherVisibility() {
     const weatherWidget = document.getElementById('weather');
-    if (weatherWidget) {
-        // Toggle a class to allow for CSS transitions instead of setting display directly
-        weatherWidget.classList.toggle('hidden', !showWeather);
-    }
+    weatherWidget.style.display = showWeather ? 'block' : 'none';
 }
 
 function setupWeatherToggle() {
@@ -1217,8 +1214,7 @@ function setupWeatherToggle() {
     function updateWeatherVisibility() {
         const weatherWidget = document.getElementById('weather');
         if (weatherWidget) {
-            // Use class toggle for smooth fade animations
-            weatherWidget.classList.toggle('hidden', !showWeather);
+            weatherWidget.style.display = showWeather ? 'block' : 'none';
         }
         
         // Force title update without weather when weather is hidden
@@ -1294,26 +1290,30 @@ function updateClockAndDate() {
     const isStacked = stackSwitch && stackSwitch.checked;
     const clock = document.querySelector('.clock');
     
-    // NEW: Toggle a class for showing/hiding seconds for CSS animation
-    clock.classList.toggle('hide-seconds', !showSeconds);
-
     if (isStacked) {
         // Stacked format: each time component on a new line with digit containers
 	document.querySelector('.clock').style.fontSize = 'clamp(10rem, 12vw, 12rem)';
-        // Seconds wrapper is always in the DOM for smooth transitions
-        clockElement.innerHTML = `
-            <div>${wrapDigits(displayHours)}</div>
-            <div>${wrapDigits(minutes)}</div>
-            <div class="seconds-wrapper">${wrapDigits(seconds)}</div>
-            ${period ? `<div>${period.trim()}</div>` : ''}
-        `;
+        if (showSeconds) {
+            clockElement.innerHTML = `
+                <div>${wrapDigits(displayHours)}</div>
+                <div>${wrapDigits(minutes)}</div>
+                <div>${wrapDigits(seconds)}</div>
+                ${period ? `<div>${period.trim()}</div>` : ''}
+            `;
+        } else {
+            clockElement.innerHTML = `
+                <div>${wrapDigits(displayHours)}</div>
+                <div>${wrapDigits(minutes)}</div>
+                ${period ? `<div>${period.trim()}</div>` : ''}
+            `;
+        }
     } else {
         // Normal format: standard time display with digit containers
 	document.querySelector('.clock').style.fontSize = '';
-        // Seconds wrapper is always in the DOM for smooth transitions
-        const timeString = `${displayHours}:${minutes}`;
-        const secondsString = `:${seconds}${period}`;
-        clockElement.innerHTML = `${wrapDigits(timeString)}<span class="seconds-wrapper">${wrapDigits(secondsString)}</span>`;
+        const timeString = showSeconds ? 
+            `${displayHours}:${minutes}:${seconds}${period}` : 
+            `${displayHours}:${minutes}${period}`;
+        clockElement.innerHTML = wrapDigits(timeString);
     }
         
     let formattedDate = now.toLocaleDateString(undefined, {
@@ -3969,90 +3969,94 @@ function handleDotDragEnd(e) {
   resetIndicatorTimeout();
 }
 
+// New function to jump to a specific wallpaper by index
 async function jumpToWallpaper(index) {
     if (index < 0 || index >= recentWallpapers.length || index === currentWallpaperPosition) return;
-
+    
     currentWallpaperPosition = index;
-
-    await transitionToNewWallpaperState(async () => {
-        saveCurrentPosition();
-
-        let wallpaper = recentWallpapers[currentWallpaperPosition];
-
-        if (wallpaper.clockStyles) {
-            // Update UI control elements from saved styles
-            const fontSelect = document.getElementById('font-select');
-            const weightSlider = document.getElementById('weight-slider');
-            const colorPicker = document.getElementById('clock-color-picker');
-            const colorSwitch = document.getElementById('clock-color-switch');
-            const stackSwitch = document.getElementById('clock-stack-switch');
-            const secondsSwitch = document.getElementById('seconds-switch');
-            const weatherSwitch = document.getElementById('weather-switch');
-            const alignmentSelect = document.getElementById('alignment-select');
-            const blurSlider = document.getElementById('wallpaper-blur-slider');
-            const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
-            const contrastSlider = document.getElementById('wallpaper-contrast-slider');
-            const shadowSwitch = document.getElementById('clock-shadow-switch');
-            const shadowBlurSlider = document.getElementById('clock-shadow-blur-slider');
-            const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
-            const gradientSwitch = document.getElementById('clock-gradient-switch');
-            const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
-
-            if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
-            if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
-            if (colorPicker) colorPicker.value = wallpaper.clockStyles.color || '#ffffff';
-            if (colorSwitch) colorSwitch.checked = wallpaper.clockStyles.colorEnabled || false;
-            if (stackSwitch) stackSwitch.checked = wallpaper.clockStyles.stackEnabled || false;
-            if (secondsSwitch) {
-                secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
-                showSeconds = secondsSwitch.checked;
-            }
-            if (weatherSwitch) {
-                weatherSwitch.checked = wallpaper.clockStyles.showWeather !== false;
-                showWeather = weatherSwitch.checked;
-                updateWeatherVisibility(); // This now uses the class toggle
-            }
-            if (alignmentSelect) {
-                alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
-            }
-            if (blurSlider) blurSlider.value = wallpaper.clockStyles.wallpaperBlur || '0';
-            if (brightnessSlider) brightnessSlider.value = wallpaper.clockStyles.wallpaperBrightness || '100';
-            if (contrastSlider) contrastSlider.value = wallpaper.clockStyles.wallpaperContrast || '100';
-            if (shadowSwitch) shadowSwitch.checked = wallpaper.clockStyles.shadowEnabled || false;
-            if (shadowBlurSlider) shadowBlurSlider.value = wallpaper.clockStyles.shadowBlur || '10';
-            if (shadowColorPicker) shadowColorPicker.value = wallpaper.clockStyles.shadowColor || '#000000';
-            if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
-            if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
+    saveCurrentPosition();
+    
+    let wallpaper = recentWallpapers[currentWallpaperPosition];
+    
+    if (wallpaper.clockStyles) {
+        // Update UI elements
+        const fontSelect = document.getElementById('font-select');
+        const weightSlider = document.getElementById('weight-slider');
+        const colorPicker = document.getElementById('clock-color-picker');
+        const colorSwitch = document.getElementById('clock-color-switch');
+        const stackSwitch = document.getElementById('clock-stack-switch');
+        const secondsSwitch = document.getElementById('seconds-switch');
+        const weatherSwitch = document.getElementById('weather-switch');
+        const alignmentSelect = document.getElementById('alignment-select');
+        const blurSlider = document.getElementById('wallpaper-blur-slider');
+        const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
+        const contrastSlider = document.getElementById('wallpaper-contrast-slider');
+        const shadowSwitch = document.getElementById('clock-shadow-switch');
+        const shadowBlurSlider = document.getElementById('clock-shadow-blur-slider');
+        const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
+        const gradientSwitch = document.getElementById('clock-gradient-switch');
+        const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
+        
+        if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
+        if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
+        if (colorPicker) colorPicker.value = wallpaper.clockStyles.color || '#ffffff';
+        if (colorSwitch) colorSwitch.checked = wallpaper.clockStyles.colorEnabled || false;
+        if (stackSwitch) stackSwitch.checked = wallpaper.clockStyles.stackEnabled || false;
+        
+        if (secondsSwitch) {
+            secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
+            showSeconds = secondsSwitch.checked;
+        }
+        
+        if (weatherSwitch) {
+            weatherSwitch.checked = wallpaper.clockStyles.showWeather !== false;
+            // FIX: Manually update state and UI instead of dispatching a generic event
+            showWeather = weatherSwitch.checked;
+            updateWeatherVisibility();
+        }
+        
+        if (alignmentSelect) {
+            alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
         }
 
-        // Apply all visual styles based on the new state
+        if (blurSlider) blurSlider.value = wallpaper.clockStyles.wallpaperBlur || '0';
+        if (brightnessSlider) brightnessSlider.value = wallpaper.clockStyles.wallpaperBrightness || '100';
+        if (contrastSlider) contrastSlider.value = wallpaper.clockStyles.wallpaperContrast || '100';
+        if (shadowSwitch) shadowSwitch.checked = wallpaper.clockStyles.shadowEnabled || false;
+        if (shadowBlurSlider) shadowBlurSlider.value = wallpaper.clockStyles.shadowBlur || '10';
+        if (shadowColorPicker) shadowColorPicker.value = wallpaper.clockStyles.shadowColor || '#000000';
+        if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
+        if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
+
+
+        // Apply the styles
         applyClockStyles();
         applyWallpaperEffects();
-        applyAlignment((wallpaper.clockStyles && wallpaper.clockStyles.alignment) || 'center');
+        applyAlignment(wallpaper.clockStyles.alignment || 'center');
         updateClockAndDate();
-        loadWidgets();
-
-        clearInterval(slideshowInterval);
-        slideshowInterval = null;
-
-        if (wallpaper.isSlideshow) {
-            isSlideshow = true;
-            let slideshowData = JSON.parse(localStorage.getItem("wallpapers"));
-            if (slideshowData && slideshowData.length > 0) {
-                localStorage.setItem("wallpapers", JSON.stringify(slideshowData));
-                currentWallpaperIndex = 0;
-                await applyWallpaper();
-                showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
-            }
-        } else {
-            isSlideshow = false;
-            localStorage.removeItem("wallpapers");
-            await applyWallpaper();
+    }
+        
+    clearInterval(slideshowInterval);
+    slideshowInterval = null;
+    
+    if (wallpaper.isSlideshow) {
+        isSlideshow = true;
+        let slideshowData = JSON.parse(localStorage.getItem("wallpapers"));
+        if (slideshowData && slideshowData.length > 0) {
+            localStorage.setItem("wallpapers", JSON.stringify(slideshowData));
+            currentWallpaperIndex = 0;
+            applyWallpaper();
+            showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
         }
+    } else {
+        isSlideshow = false;
+        localStorage.removeItem("wallpapers");
+        applyWallpaper();
+    }
 
-        updatePageIndicatorDots(false);
-        resetIndicatorTimeout();
-    });
+    loadWidgets(); // Load widgets for the new page
+    updatePageIndicatorDots(false);
+    resetIndicatorTimeout();
 }
 
 // Add a function to check if we need to load or restore default wallpaper
@@ -4067,31 +4071,12 @@ function checkWallpaperState() {
   }
 }
 
-// Orchestrates the fade-in/fade-out transition between wallpaper pages
-async function transitionToNewWallpaperState(asyncStateApplier) {
-    const elementsToTransition = [
-        document.querySelector('.container'), // Holds clock, date, weather
-        document.getElementById('widget-grid')
-    ];
-
-    // 1. Start exit animation
-    elementsToTransition.forEach(el => el && el.classList.add('page-exiting'));
-
-    // 2. Wait for animation to finish (duration should match CSS transition)
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    // 3. Apply all the new state changes while elements are invisible
-    await asyncStateApplier();
-
-    // 4. Start enter animation by removing the class
-    elementsToTransition.forEach(el => el && el.classList.remove('page-exiting'));
-}
-
-async function switchWallpaper(direction) {
+function switchWallpaper(direction) {
     if (recentWallpapers.length === 0) return;
-
+    
+    // Calculate new position (existing logic)
     let newPosition = currentWallpaperPosition;
-
+    
     if (direction === 'right') {
         newPosition++;
         if (newPosition >= recentWallpapers.length) {
@@ -4105,92 +4090,99 @@ async function switchWallpaper(direction) {
             return;
         }
     }
-
-    const stateApplier = async () => {
-        const wallpaper = recentWallpapers[currentWallpaperPosition];
-        if (wallpaper.clockStyles) {
-            const fontSelect = document.getElementById('font-select');
-            const weightSlider = document.getElementById('weight-slider');
-            const colorPicker = document.getElementById('clock-color-picker');
-            const colorSwitch = document.getElementById('clock-color-switch');
-            const stackSwitch = document.getElementById('clock-stack-switch');
-            const secondsSwitch = document.getElementById('seconds-switch');
-            const weatherSwitch = document.getElementById('weather-switch');
-            const alignmentSelect = document.getElementById('alignment-select');
-            const blurSlider = document.getElementById('wallpaper-blur-slider');
-            const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
-            const contrastSlider = document.getElementById('wallpaper-contrast-slider');
-            const shadowSwitch = document.getElementById('clock-shadow-switch');
-            const shadowBlurSlider = document.getElementById('clock-shadow-blur-slider');
-            const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
-            const gradientSwitch = document.getElementById('clock-gradient-switch');
-            const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
-            
-            if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
-            if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
-            if (colorPicker) colorPicker.value = wallpaper.clockStyles.color || '#ffffff';
-            if (colorSwitch) colorSwitch.checked = wallpaper.clockStyles.colorEnabled || false;
-            if (stackSwitch) stackSwitch.checked = wallpaper.clockStyles.stackEnabled || false;
-            if (secondsSwitch) {
-                secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
-                showSeconds = secondsSwitch.checked;
-            }
-            if (weatherSwitch) {
-                weatherSwitch.checked = wallpaper.clockStyles.showWeather !== false;
-                showWeather = weatherSwitch.checked;
-                updateWeatherVisibility();
-            }
-            if (alignmentSelect) {
-                alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
-            }
-            if (blurSlider) blurSlider.value = wallpaper.clockStyles.wallpaperBlur || '0';
-            if (brightnessSlider) brightnessSlider.value = wallpaper.clockStyles.wallpaperBrightness || '100';
-            if (contrastSlider) contrastSlider.value = wallpaper.clockStyles.wallpaperContrast || '100';
-            if (shadowSwitch) shadowSwitch.checked = wallpaper.clockStyles.shadowEnabled || false;
-            if (shadowBlurSlider) shadowBlurSlider.value = wallpaper.clockStyles.shadowBlur || '10';
-            if (shadowColorPicker) shadowColorPicker.value = wallpaper.clockStyles.shadowColor || '#000000';
-            if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
-            if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
+    
+    // Only proceed if position actually changed or we're reapplying
+    if (newPosition !== currentWallpaperPosition && direction !== 'none') {
+        currentWallpaperPosition = newPosition;
+    }
+    
+    const wallpaper = recentWallpapers[currentWallpaperPosition];
+    
+    // Apply clock styles for this wallpaper if they exist
+    if (wallpaper.clockStyles) {
+        // Update the UI elements
+        const fontSelect = document.getElementById('font-select');
+        const weightSlider = document.getElementById('weight-slider');
+        const colorPicker = document.getElementById('clock-color-picker');
+        const colorSwitch = document.getElementById('clock-color-switch');
+        const stackSwitch = document.getElementById('clock-stack-switch');
+        const secondsSwitch = document.getElementById('seconds-switch');
+        const weatherSwitch = document.getElementById('weather-switch');
+        const alignmentSelect = document.getElementById('alignment-select');
+        const blurSlider = document.getElementById('wallpaper-blur-slider');
+        const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
+        const contrastSlider = document.getElementById('wallpaper-contrast-slider');
+        const shadowSwitch = document.getElementById('clock-shadow-switch');
+        const shadowBlurSlider = document.getElementById('clock-shadow-blur-slider');
+        const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
+        const gradientSwitch = document.getElementById('clock-gradient-switch');
+        const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
+        
+        if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
+        if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
+        if (colorPicker) colorPicker.value = wallpaper.clockStyles.color || '#ffffff';
+        if (colorSwitch) colorSwitch.checked = wallpaper.clockStyles.colorEnabled || false;
+        if (stackSwitch) stackSwitch.checked = wallpaper.clockStyles.stackEnabled || false;
+        
+        if (secondsSwitch) {
+            secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
+            showSeconds = secondsSwitch.checked; // Update the global variable
+        }
+        
+		if (weatherSwitch) {
+            weatherSwitch.checked = wallpaper.clockStyles.showWeather !== false;
+            // FIX: Manually update state and UI instead of dispatching a generic event
+            showWeather = weatherSwitch.checked;
+            updateWeatherVisibility();
         }
 
+        if (alignmentSelect) {
+            alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
+        }
+
+        if (blurSlider) blurSlider.value = wallpaper.clockStyles.wallpaperBlur || '0';
+        if (brightnessSlider) brightnessSlider.value = wallpaper.clockStyles.wallpaperBrightness || '100';
+        if (contrastSlider) contrastSlider.value = wallpaper.clockStyles.wallpaperContrast || '100';
+        if (shadowSwitch) shadowSwitch.checked = wallpaper.clockStyles.shadowEnabled || false;
+        if (shadowBlurSlider) shadowBlurSlider.value = wallpaper.clockStyles.shadowBlur || '10';
+        if (shadowColorPicker) shadowColorPicker.value = wallpaper.clockStyles.shadowColor || '#000000';
+        if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
+        if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
+        
+        // Apply the styles
         applyClockStyles();
         applyWallpaperEffects();
-        applyAlignment((wallpaper.clockStyles && wallpaper.clockStyles.alignment) || 'center');
+        applyAlignment(wallpaper.clockStyles.alignment || 'center');
+
+        // Update clock and weather display
         updateClockAndDate();
-        saveCurrentPosition();
-        
-        clearInterval(slideshowInterval);
-        slideshowInterval = null;
-        
-        if (wallpaper.isSlideshow) {
-            isSlideshow = true;
-            const wallpapers = JSON.parse(localStorage.getItem('wallpapers'));
-            if (wallpapers && wallpapers.length > 0) {
-                localStorage.setItem('wallpapers', JSON.stringify(wallpapers));
-                currentWallpaperIndex = 0;
-                await applyWallpaper();
-                showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
-            }
-        } else {
-            isSlideshow = false;
-            localStorage.removeItem('wallpapers');
-            await applyWallpaper();
-        }
-
-        loadWidgets();
-        updatePageIndicatorDots(false);
-        resetIndicatorTimeout();
-        syncUiStates();
-    };
-
-    if (newPosition !== currentWallpaperPosition || direction === 'none') {
-        currentWallpaperPosition = newPosition;
-        if (direction === 'none') {
-            await stateApplier(); // Apply directly without animation
-        } else {
-            await transitionToNewWallpaperState(stateApplier); // Animate the change
-        }
     }
+    
+    // Save the position for persistence
+    saveCurrentPosition();
+    
+    clearInterval(slideshowInterval);
+    slideshowInterval = null;
+    
+    if (wallpaper.isSlideshow) {
+        isSlideshow = true;
+        const wallpapers = JSON.parse(localStorage.getItem('wallpapers'));
+        if (wallpapers && wallpapers.length > 0) {
+            localStorage.setItem('wallpapers', JSON.stringify(wallpapers));
+            currentWallpaperIndex = 0;
+            applyWallpaper();
+            showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
+        }
+    } else {
+        isSlideshow = false;
+        localStorage.removeItem('wallpapers');
+        applyWallpaper();
+    }
+    
+    loadWidgets(); // Load widgets for the new page
+    updatePageIndicatorDots(false);
+    resetIndicatorTimeout();
+    syncUiStates();
 }
 
 // Update handleSwipe to show indicator even if no swipe is detected
