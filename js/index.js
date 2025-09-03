@@ -268,6 +268,7 @@ function renderWidgets() {
         instance.style.top = `${widget.y}px`;
 
         const iframe = document.createElement('iframe');
+		iframe.dataset.isGurasuraisuApp = 'true'; 
         iframe.src = widgetDef.url;
         const overlay = document.createElement('div');
         overlay.className = 'widget-instance-overlay';
@@ -584,6 +585,7 @@ function openWidgetPicker() {
                 previewContainer.className = 'widget-picker-preview';
 
                 const iframe = document.createElement('iframe');
+				iframe.dataset.isGurasuraisuApp = 'true'; 
                 iframe.src = widgetData.url;
                 iframe.scrolling = 'no';
                 iframe.style.pointerEvents = 'none'; // Make the preview non-interactive
