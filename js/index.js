@@ -5146,6 +5146,7 @@ function setupDrawerInteractions() {
     const openThreshold = -50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
+	const appDrawerHandle = document.querySelector('.app-drawer-handle');
 
     const startLongPress = (e) => {
         // Only trigger long press if AI is enabled and not already dragging the drawer.
@@ -5562,7 +5563,7 @@ function setupDrawerInteractions() {
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
         
         // Check if touch is on handle area
-        if (drawerHandle.contains(element)) {
+        if (appDrawerHandle.contains(element)) {
             startDrag(touch.clientY);
             e.preventDefault();
         }
@@ -5579,19 +5580,16 @@ function setupDrawerInteractions() {
         endDrag();
     });
 
-	// Mouse Events for regular drawer interaction
-	document.addEventListener('mousedown', (e) => {
-	    // only left button
-	    if (e.button !== 0) return;
-	
-	    // did we press inside the handle?
-	    if (!drawerHandle.contains(e.target)) return;
-	
-	    // avoid accidental text selection while dragging
-	    e.preventDefault();
-	
-	    startDrag(e.clientY);
-	});
+    // Mouse Events for regular drawer interaction
+    document.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        const element = document.elementFromPoint(e.clientX, e.clientY);
+        
+        // Check if click is on handle area
+        if (appDrawerHandle.contains(element)) {
+            startDrag(e.clientY);
+        }
+    });
 
     document.addEventListener('mousemove', (e) => {
         if (isDragging) {
