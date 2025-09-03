@@ -171,6 +171,14 @@ const Gurasuraisu = {
   },
 
   /**
+   * Requests the parent Gurasuraisu to install a new App-Link.
+   * @param {object} appLinkObject - The app-link object with name, url, iconUrl, etc.
+   */
+  installAppLink: function(appLinkObject) {
+    this._call('installAppLink', [appLinkObject]);
+  },
+
+  /**
    * Registers a widget with the Polygol dashboard.
    * Apps should call this for each widget they provide.
    * @param {object} widgetData - An object describing the widget.
