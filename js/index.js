@@ -2392,6 +2392,18 @@ contrastSwitch.addEventListener('change', function() {
     const highContrast = this.checked;
     localStorage.setItem('highContrast', highContrast);
     document.body.classList.toggle('high-contrast', highContrast);
+    
+    // Broadcast the change to all Gurapp iframes
+    const iframes = document.querySelectorAll('iframe');
+    iframes.forEach((iframe) => {
+        // Check if contentWindow is accessible to avoid cross-origin errors
+        if (iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+                type: 'contrastUpdate',
+                enabled: highContrast 
+            }, window.location.origin);
+        }
+    });
 });
 
 // Load saved preference (default to true/on if not set)
