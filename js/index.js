@@ -5291,6 +5291,17 @@ function setupDrawerInteractions() {
 	            dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
 	            drawerPill.style.opacity = '0';
+
+				// Restore all main UI elements
+			    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+				el.classList.remove('force-hide');
+			        el.style.display = el.dataset.originalDisplay;
+			        el.style.transition = 'opacity 0.3s ease';
+			
+			        requestAnimationFrame(() => {
+			            el.style.opacity = '1';
+			        });
+			    });
 	        } else {
 	            dock.classList.remove('show');
 	            dock.style.boxShadow = 'none';
@@ -5303,8 +5314,20 @@ function setupDrawerInteractions() {
 	            drawerPill.style.opacity = '1';
 	        }
 		    
-		cancelLongPress();
-		persistentClock.style.opacity = '0';
+			cancelLongPress();
+			persistentClock.style.opacity = '0';
+			
+			// Hide UI elements
+			document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+		        if (!el.dataset.originalDisplay) {
+		            el.dataset.originalDisplay = window.getComputedStyle(el).display;
+		        }
+		        el.style.transition = 'opacity 0.3s ease';
+		        el.style.opacity = '0';
+		        setTimeout(() => {
+		            el.classList.add('force-hide');
+		        }, 300);
+		    });
 	
 	        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
 	        
@@ -5421,17 +5444,6 @@ function setupDrawerInteractions() {
 	            initialDrawerPosition = 0;
 	            interactionBlocker.style.display = 'none';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
-				// Hide UI elements
-				document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
-		            if (!el.dataset.originalDisplay) {
-		                el.dataset.originalDisplay = window.getComputedStyle(el).display;
-		            }
-		            el.style.transition = 'opacity 0.3s ease';
-		            el.style.opacity = '0';
-		            setTimeout(() => {
-		                el.classList.add('force-hide');
-		            }, 300);
-		        });
 	        } else {
 	            dock.classList.remove('show');
 	            dock.style.boxShadow = 'none';
