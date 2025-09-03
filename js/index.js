@@ -1,7 +1,6 @@
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
 
 let availableWidgets; // Stores info about all possible widgets from apps
-let activeWidgets; // Stores the user's current layout
 const MARGIN = 20;
 
 let originalFaviconUrl = '';
@@ -175,7 +174,10 @@ function adjustWidgetsForViewportResize() {
     const windowH = window.innerHeight;
     let hasChanges = false;
 
-    activeWidgets.forEach(widget => {
+    // Get widgets for the current wallpaper page
+    const widgetsForCurrentPage = recentWallpapers[currentWallpaperPosition]?.widgets || [];
+
+    widgetsForCurrentPage.forEach(widget => {
         // Calculate the maximum allowed x and y coordinates for this widget
         const maxX = windowW - widget.w - MARGIN;
         const maxY = windowH - widget.h - MARGIN;
@@ -207,12 +209,21 @@ function handleViewportResize() {
 }
 
 function saveWidgets() {
-    localStorage.setItem('activeWidgets', JSON.stringify(activeWidgets));
+    // The widget data is now part of the recentWallpapers object,
+    // so we just need to save that object.
+    saveRecentWallpapers();
 }
 
 function loadWidgets() {
-    const saved = localStorage.getItem('activeWidgets');
-    activeWidgets = saved ? JSON.parse(saved) : [];
+    // This function now primarily acts as a trigger to render widgets
+    // for the currently active wallpaper page. The data is already loaded
+    // as part of the recentWallpapers array.
+    if (recentWallpapers.length > 0 && currentWallpaperPosition < recentWallpapers.length) {
+        // Ensure the current wallpaper object has a widgets array for safety.
+        if (!recentWallpapers[currentWallpaperPosition].widgets) {
+            recentWallpapers[currentWallpaperPosition].widgets = [];
+        }
+    }
     renderWidgets();
 }
 
@@ -223,8 +234,12 @@ function addWidget(widgetData) {
 	
     const defaultWidth = (gridW * baseUnit) + ((gridW - 1) * MARGIN);
     const defaultHeight = (gridH * baseUnit) + ((gridH - 1) * MARGIN);
+
+    // Get the widget array for the current wallpaper
+    const currentWallpaperWidgets = recentWallpapers[currentWallpaperPosition]?.widgets;
+    if (!currentWallpaperWidgets) return; // Should not happen if initialized correctly
 	
-    activeWidgets.push({
+    currentWallpaperWidgets.push({
         widgetId: widgetData.widgetId,
         appName: widgetData.appName,
         w: defaultWidth,
@@ -239,7 +254,10 @@ function addWidget(widgetData) {
 
 function removeWidget(index) {
     if (confirm('Remove this widget?')) {
-        activeWidgets.splice(index, 1);
+        const currentWallpaperWidgets = recentWallpapers[currentWallpaperPosition]?.widgets;
+        if (!currentWallpaperWidgets) return;
+
+        currentWallpaperWidgets.splice(index, 1);
         renderWidgets();
         saveWidgets();
     }
@@ -251,11 +269,14 @@ function renderWidgets() {
     const gridRect = gridContainer.getBoundingClientRect(); // CAPTURE THE GRID'S OFFSET
     gridContainer.innerHTML = '';
 
+    // Get widgets for the current wallpaper page
+    const widgetsForCurrentPage = recentWallpapers[currentWallpaperPosition]?.widgets || [];
+
     const SNAP_DISTANCE = 15;
     const widgetElements = new Map();
 
-    // 1. Create and position all widget elements from the activeWidgets array
-    activeWidgets.forEach((widget, index) => {
+    // 1. Create and position all widget elements from the current page's widget array
+    widgetsForCurrentPage.forEach((widget, index) => {
         const widgetDef = availableWidgets[widget.appName]?.find(w => w.widgetId === widget.widgetId);
         if (!widgetDef) return; // Skip rendering if definition is missing
 
@@ -430,13 +451,13 @@ function renderWidgets() {
 
             if (isDragging) {
                 instance.classList.remove('is-dragging');
-                const widgetToUpdate = activeWidgets[index];
+                const widgetToUpdate = widgetsForCurrentPage[index];
                 if (!widgetToUpdate) return; // <-- FIX: Prevents crash if widget is deleted mid-drag
                 widgetToUpdate.x = instance.offsetLeft;
                 widgetToUpdate.y = instance.offsetTop;
                 saveWidgets();
             } else {
-                const widgetData = availableWidgets[activeWidgets[index].appName]?.find(w => w.widgetId === activeWidgets[index].widgetId);
+                const widgetData = availableWidgets[widgetsForCurrentPage[index].appName]?.find(w => w.widgetId === widgetsForCurrentPage[index].widgetId);
                 if (!widgetData) return;
 
                 // Handle special system widget actions
@@ -451,7 +472,7 @@ function renderWidgets() {
                     }
                 } else {
                     // Standard app widget behavior
-                    const appData = apps[activeWidgets[index].appName];
+                    const appData = apps[widgetsForCurrentPage[index].appName];
                     const openUrl = widgetData.openUrl || appData?.url;
                     if (openUrl) createFullscreenEmbed(openUrl);
                 }
@@ -545,7 +566,7 @@ function renderWidgets() {
             document.removeEventListener('touchmove', onResizeMove);
             document.removeEventListener('touchend', onResizeEnd);
 
-            const widgetToUpdate = activeWidgets[index];
+            const widgetToUpdate = widgetsForCurrentPage[index];
             if (!widgetToUpdate) return;
 			widgetToUpdate.w = instance.offsetWidth;
             widgetToUpdate.h = instance.offsetHeight;
@@ -3095,7 +3116,8 @@ wallpaperInput.addEventListener("change", async event => {
 	        recentWallpapers.unshift({
 	            isSlideshow: true,
 	            timestamp: Date.now(),
-	            clockStyles: defaultClockStyles // Store default clock styles for slideshow
+	            clockStyles: defaultClockStyles, // Store default clock styles for slideshow
+				widgets: [] // Initialize with an empty widget page for the slideshow
 	        });
                 
                 while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
@@ -3194,7 +3216,8 @@ async function saveWallpaper(file) {
                 type: file.type,
                 isVideo: true,
                 timestamp: Date.now(),
-                clockStyles: defaultClockStyles // Store default settings
+                clockStyles: defaultClockStyles, // Store default settings
+			    widgets: [] // Initialize with an empty widget page
             });
         } else {
             let compressedData = await compressMedia(file);
@@ -3207,7 +3230,8 @@ async function saveWallpaper(file) {
                 type: file.type,
                 isVideo: false,
                 timestamp: Date.now(),
-                clockStyles: defaultClockStyles // Store default settings
+                clockStyles: defaultClockStyles, // Store default settings
+                widgets: [] // Initialize with an empty widget page
             });
         }
         
@@ -3448,6 +3472,11 @@ function loadRecentWallpapers() {
         if (wallpaper.clockStyles.gradientEnabled === undefined) {
             wallpaper.clockStyles.gradientEnabled = false;
             wallpaper.clockStyles.gradientColor = '#ffffff';
+            updated = true;
+        }
+        // Add widgets array to older wallpapers that don't have it
+        if (wallpaper.widgets === undefined) {
+            wallpaper.widgets = [];
             updated = true;
         }
     });
@@ -4031,6 +4060,7 @@ async function jumpToWallpaper(index) {
     
     updatePageIndicatorDots(false);
     resetIndicatorTimeout();
+    renderWidgets(); // Re-render widgets for the new page
 }
 
 // Add a function to check if we need to load or restore default wallpaper
