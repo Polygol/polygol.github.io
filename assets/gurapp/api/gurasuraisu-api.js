@@ -368,5 +368,5 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    window.dispatchEvent(new CustomEvent('GurasuraisuReady'));\
+    window.dispatchEvent(new CustomEvent('GurasuraisuReady'));
 });
