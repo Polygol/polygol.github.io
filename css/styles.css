@@ -64,6 +64,7 @@
     
     /* Dark Theme (Default) Variables */
     --background-color-dark: #1c1c1c;
+    --background-color-dark-tr: rgba(28, 28, 28, 0.5);
     --text-color-dark: #f9f9f9;
     --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
     --modal-background-dark: rgba(51, 51, 51, 0.8);
@@ -75,6 +76,7 @@
     
     /* Light Theme Variables */
     --background-color-light: #f0f0f0;
+	--background-color-light-tr: rgba(240, 240, 240, 0.5);
     --text-color-light: #333333;
     --secondary-text-color-light: rgba(0, 0, 0, 0.7);
     --modal-background-light: rgba(220, 220, 220, 0.8);
@@ -86,6 +88,7 @@
     
     /* High Contrast Dark Theme Variables */
     --background-color-dark-highcontrast: #1c1c1c;
+    --background-color-dark-tr-highcontrast: #1c1c1c;
     --text-color-dark-highcontrast: #f9f9f9;
     --secondary-text-color-dark-highcontrast: #b3b3b3;
     --modal-background-dark-highcontrast: #333333;
@@ -96,6 +99,7 @@
     
     /* High Contrast Light Theme Variables */
     --background-color-light-highcontrast: #f0f0f0;
+    --background-color-light-tr-highcontrast: #f0f0f0;
     --text-color-light-highcontrast: #333333;
     --secondary-text-color-light-highcontrast: #4d4d4d;
     --modal-background-light-highcontrast: #dcdcdc;
@@ -109,6 +113,7 @@
     
     /* Default to Dark Theme */
     --background-color: var(--background-color-dark);
+    --background-color-tr: var(--background-color-dark-tr);
     --text-color: var(--text-color-dark);
     --secondary-text-color: var(--secondary-text-color-dark);
     --modal-background: var(--modal-background-dark);
@@ -121,6 +126,7 @@
 
 body.light-theme {
     --background-color: var(--background-color-light);
+    --background-color-tr: var(--background-color-light-tr);
     --text-color: var(--text-color-light);
     --secondary-text-color: var(--secondary-text-color-light);
     --modal-background: var(--modal-background-light);
@@ -133,6 +139,7 @@ body.light-theme {
 
 /* For dark theme (default) with high contrast */
 body.high-contrast:not(.light-theme) {
+    --background-color-tr: var(--background-color-dark-tr-highcontrast);
     --secondary-text-color: var(--secondary-text-color-dark-highcontrast);
     --modal-background: var(--modal-background-dark-highcontrast);
     --modal-transparent: var(--modal-transparent-dark-highcontrast);
@@ -144,6 +151,7 @@ body.high-contrast:not(.light-theme) {
 
 /* For light theme with high contrast */
 body.high-contrast.light-theme {
+    --background-color-tr: var(--background-color-light-tr-highcontrast);
     --secondary-text-color: var(--secondary-text-color-light-highcontrast);
     --modal-background: var(--modal-background-light-highcontrast);
     --modal-transparent: var(--modal-transparent-light-highcontrast);
