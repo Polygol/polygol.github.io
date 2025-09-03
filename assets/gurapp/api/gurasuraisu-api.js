@@ -48,6 +48,18 @@
     `;
     // Append the style to the head of the Gurapp's document.
     document.head.appendChild(style);
+
+    // Check if running standalone and remap CSS variables.
+    if (window.parent === window) {
+        const fallbackStyle = document.createElement('style');
+        fallbackStyle.textContent = `
+            :root {
+                --background-color-dark-tr: var(--background-color-dark, #1c1c1c);
+                --background-color-light-tr: var(--background-color-light, #f0f0f0);
+            }
+        `;
+        document.head.appendChild(fallbackStyle);
+    }
 })();
  
 const Gurasuraisu = {
@@ -75,7 +87,40 @@ const Gurasuraisu = {
    * @param {string} message - The text to display in the popup.
    */
   showPopup: function(message) {
-    this._call('showPopup', [message]);
+    if (window.parent !== window) {
+        this._call('showPopup', [message]);
+    } else {
+        // Native JS fallback for showPopup
+        const popup = document.createElement('div');
+        popup.textContent = message;
+        Object.assign(popup.style, {
+            position: 'fixed',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            padding: '12px 24px',
+            backgroundColor: 'var(--search-background)',
+            backdropFilter: 'blur(5px) saturate(2) var(--edge-refraction-filter)',
+            color: 'var(--text-color)',
+            borderRadius: '25px',
+            zIndex: '2147483647',
+            opacity: '0',
+            transition: 'opacity 0.4s ease, bottom 0.4s ease',
+            fontFamily: 'sans-serif'
+        });
+        document.body.appendChild(popup);
+
+        setTimeout(() => {
+            popup.style.opacity = '1';
+            popup.style.bottom = '30px';
+        }, 10);
+        
+        setTimeout(() => {
+            popup.style.opacity = '0';
+            popup.style.bottom = '20px';
+            setTimeout(() => document.body.removeChild(popup), 400);
+        }, 3500);
+    }
   },
 
   /**
@@ -84,16 +129,37 @@ const Gurasuraisu = {
    * @param {object} [options] - Optional parameters like icon and button text.
    */
   showNotification: function(message, options = {}) {
-    // Note: 'buttonAction' functions cannot be passed from the iframe.
-    // The parent window handles all actions.
-    this._call('showNotification', [message, options]);
+    if (window.parent !== window) {
+      this._call('showNotification', [message, options]);
+    } else {
+      // Native JS fallback using the browser's Notification API
+      if (!('Notification' in window)) {
+        console.warn('This browser does not support desktop notifications.');
+        this.showPopup(message); // Use the simpler popup as a final fallback
+        return;
+      }
+
+      if (Notification.permission === 'granted') {
+        new Notification(message, options);
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification(message, options);
+          }
+        });
+      }
+    }
   },
 
   /**
    * Requests the parent window to minimize the current Gurapp.
    */
   minimize: function() {
-    this._call('minimizeFullscreenEmbed');
+    if (window.parent !== window) {
+      this._call('minimizeFullscreenEmbed');
+    } else {
+      console.warn('Gurasuraisu.minimize() has no effect outside the Polygol environment.');
+    }
   },
 
   /**
@@ -101,14 +167,23 @@ const Gurasuraisu = {
    * @param {string} url - The URL of the Gurapp to open (e.g., "/chronos/index.html").
    */
   openApp: function(url) {
-    this._call('createFullscreenEmbed', [url]);
+    if (window.parent !== window) {
+      this._call('createFullscreenEmbed', [url]);
+    } else {
+      console.warn(`Gurasuraisu.openApp() cannot open '${url}' outside the Polygol environment. Opening in a new tab as a fallback.`);
+      window.open(url, '_blank');
+    }
   },
 
   /**
    * Turns the screen black for power-saving or privacy.
    */
   blackout: function() {
-    this._call('blackoutScreen');
+    if (window.parent !== window) {
+      this._call('blackoutScreen');
+    } else {
+      console.warn('Gurasuraisu.blackout() has no effect outside the Polygol environment.');
+    }
   },
  
    /**
