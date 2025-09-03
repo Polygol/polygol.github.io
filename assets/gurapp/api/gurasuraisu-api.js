@@ -4,28 +4,11 @@
  * with the parent Gurasuraisu (Polygol) window and use its core functions.
  */
 
-const isInsideGurasuraisu = (() => {
-    try {
-        // If window.frameElement exists, it means the page is in an iframe.
-        // This is a reliable, synchronous check.
-        return window.frameElement && window.parent !== window;
-    } catch (e) {
-        // Cross-origin errors can happen. In that case, we are not in a friendly iframe.
-        return false;
-    }
-})();
-
-/**
- * Internal helper to apply the high-contrast background fallback.
- * @param {boolean} isHighContrast - Whether high contrast mode is enabled.
- */
-function applyContrastFallback(isHighContrast) {
-    document.body.classList.toggle('high-contrast-fallback', isHighContrast);
-}
-
-// Immediately inject necessary styles.
-(function initializeStyles() {
-    let css = `
+// Gurasuraisu Font and Cursor Injection
+// This block runs as soon as the script is loaded by the Gurapp.
+(function() {
+    const style = document.createElement('style');
+    style.textContent = `
         /* Inject Open Runde Font Faces via jsDelivr CDN */
         @font-face {
           font-family: 'Open Runde';
@@ -54,39 +37,19 @@ function applyContrastFallback(isHighContrast) {
           font-weight: 800;
           src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Bold.woff2') format('woff2');
         }
-        
+
+        * {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
+        }
+
         h1, h2, h3, h4, h5, h6 {
         	font-family: 'Open Runde', sans-serif;
         }
-
-        .high-contrast-fallback {
-            --background-color-dark-tr: var(--background-color-dark, #1c1c1c);
-            --background-color-light-tr: var(--background-color-light, #f0f0f0);
-        }
     `;
-    
-    if (isInsideGurasuraisu) {
-        // Only add the custom cursor when inside Polygol.
-        css += `
-            * {
-                cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
-            }
-        `;
-    } else {
-        // If standalone, immediately apply solid background colors.
-        css += `
-            :root {
-                --background-color-dark-tr: var(--background-color-dark, #1c1c1c);
-                --background-color-light-tr: var(--background-color-light, #f0f0f0);
-            }
-        `;
-        console.log("Gurasuraisu API: Running in standalone mode.");
-    }
-
-    style.textContent = css;
+    // Append the style to the head of the Gurapp's document.
     document.head.appendChild(style);
 })();
-
+ 
 const Gurasuraisu = {
   /**
    * Internal helper to send a structured message to the parent window.
@@ -94,14 +57,14 @@ const Gurasuraisu = {
    * @param {Array} args - An array of arguments to pass to the function.
    */
   _call: function(functionName, args = []) {
-    if (isInsideGurasuraisu) { 
+    if (window.parent && window.parent !== window) {
       window.parent.postMessage({
         action: 'callGurasuraisuFunc',
         functionName: functionName,
         args: args
       }, window.location.origin);
     } else {
-      console.warn(`Gurasuraisu API: Standalone: call to '${functionName}' was ignored or fell back to native behavior.`);
+      console.warn(`Gurasuraisu API: Could not call '${functionName}'. Not running inside a Gurasuraisu iframe.`);
     }
   },
 
@@ -112,40 +75,7 @@ const Gurasuraisu = {
    * @param {string} message - The text to display in the popup.
    */
   showPopup: function(message) {
-    if (isInsideGurasuraisu) {
-        this._call('showPopup', [message]);
-    } else {
-        // Native JS fallback for showPopup
-        const popup = document.createElement('div');
-        popup.textContent = message;
-        Object.assign(popup.style, {
-            position: 'fixed',
-            bottom: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            padding: '12px 24px',
-            backgroundColor: 'var(--search-background)',
-            backdropFilter: 'blur(5px) saturate(2) var(--edge-refraction-filter)',
-            color: 'var(--text-color)',
-            borderRadius: '25px',
-            zIndex: '2147483647',
-            opacity: '0',
-            transition: 'opacity 0.4s ease, bottom 0.4s ease',
-            fontFamily: 'sans-serif'
-        });
-        document.body.appendChild(popup);
-
-        setTimeout(() => {
-            popup.style.opacity = '1';
-            popup.style.bottom = '30px';
-        }, 10);
-        
-        setTimeout(() => {
-            popup.style.opacity = '0';
-            popup.style.bottom = '20px';
-            setTimeout(() => document.body.removeChild(popup), 400);
-        }, 3500);
-    }
+    this._call('showPopup', [message]);
   },
 
   /**
@@ -154,37 +84,16 @@ const Gurasuraisu = {
    * @param {object} [options] - Optional parameters like icon and button text.
    */
   showNotification: function(message, options = {}) {
-    if (window.parent !== window) {
-      this._call('showNotification', [message, options]);
-    } else {
-      // Native JS fallback using the browser's Notification API
-      if (!('Notification' in window)) {
-        console.warn('This browser does not support desktop notifications.');
-        this.showPopup(message); // Use the simpler popup as a final fallback
-        return;
-      }
-
-      if (Notification.permission === 'granted') {
-        new Notification(message, options);
-      } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            new Notification(message, options);
-          }
-        });
-      }
-    }
+    // Note: 'buttonAction' functions cannot be passed from the iframe.
+    // The parent window handles all actions.
+    this._call('showNotification', [message, options]);
   },
 
   /**
    * Requests the parent window to minimize the current Gurapp.
    */
   minimize: function() {
-    if (window.parent !== window) {
-      this._call('minimizeFullscreenEmbed');
-    } else {
-      console.warn('Gurasuraisu.minimize() has no effect outside the Polygol environment.');
-    }
+    this._call('minimizeFullscreenEmbed');
   },
 
   /**
@@ -192,23 +101,14 @@ const Gurasuraisu = {
    * @param {string} url - The URL of the Gurapp to open (e.g., "/chronos/index.html").
    */
   openApp: function(url) {
-    if (window.parent !== window) {
-      this._call('createFullscreenEmbed', [url]);
-    } else {
-      console.warn(`Gurasuraisu.openApp() cannot open '${url}' outside the Polygol environment. Opening in a new tab as a fallback.`);
-      window.open(url, '_blank');
-    }
+    this._call('createFullscreenEmbed', [url]);
   },
 
   /**
    * Turns the screen black for power-saving or privacy.
    */
   blackout: function() {
-    if (window.parent !== window) {
-      this._call('blackoutScreen');
-    } else {
-      console.warn('Gurasuraisu.blackout() has no effect outside the Polygol environment.');
-    }
+    this._call('blackoutScreen');
   },
  
    /**
@@ -290,7 +190,7 @@ const Gurasuraisu = {
    */
   onMediaControl: function(actions) {
     window.addEventListener('message', (event) => {
-      if (!isInsideGurasuraisu || event.origin !== window.location.origin) return;
+      if (event.origin !== window.location.origin) return;
         if (event.data.type === 'media-control' && actions[event.data.action]) {
           actions[event.data.action]();
         }
@@ -305,7 +205,7 @@ const Gurasuraisu = {
  * or animation setting changes, and applies them to the Gurapp.
  */
 window.addEventListener('message', async (event) => {
-  if (!isInsideGurasuraisu || event.origin !== window.location.origin) {
+  if (event.origin !== window.location.origin) {
     return;
   }
 
@@ -318,9 +218,8 @@ window.addEventListener('message', async (event) => {
       case 'animationsUpdate':
         document.body.classList.toggle('reduce-animations', !data.enabled);
         break;
-      case 'contrastUpdate':
-        applyContrastFallback(data.enabled);
-        break;
+      
+      // --- NEW: Handles screenshot requests from the parent ---
       case 'request-screenshot':
         try {
             // Check if html2canvas is loaded in the Gurapp's window
@@ -350,23 +249,17 @@ window.addEventListener('message', async (event) => {
  * in localStorage for a seamless appearance.
  */
 document.addEventListener('DOMContentLoaded', () => {
-    // If we're inside the iframe, ask the parent for the initial settings.
-    if (isInsideGurasuraisu) {
-        window.parent.postMessage({ type: 'gurasuraisu-request-settings' }, window.location.origin);
-    } else {
-      try {
-        const storedTheme = localStorage.getItem('theme') || 'dark';
-        document.body.classList.toggle('light-theme', storedTheme === 'light');
-    
-        const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
-        document.body.classList.toggle('reduce-animations', !animationsEnabled);
-    
-        const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
-        applyContrastFallback(highContrastEnabled);
-      } catch (e) {
-        console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
-      }
-    }
+  try {
+    const storedTheme = localStorage.getItem('theme') || 'dark';
+    document.body.classList.toggle('light-theme', storedTheme === 'light');
 
-    window.dispatchEvent(new CustomEvent('GurasuraisuReady'));
+    const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
+    document.body.classList.toggle('reduce-animations', !animationsEnabled);
+  } catch (e) {
+    console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
+  }
 });
+
+// Announce that the API is ready
+const readyEvent = new CustomEvent('GurasuraisuReady');
+window.dispatchEvent(readyEvent);
