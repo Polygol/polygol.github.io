@@ -5316,18 +5316,6 @@ function setupDrawerInteractions() {
 		    
 			cancelLongPress();
 			persistentClock.style.opacity = '0';
-			
-			// Hide UI elements
-			document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
-		        if (!el.dataset.originalDisplay) {
-		            el.dataset.originalDisplay = window.getComputedStyle(el).display;
-		        }
-		        el.style.transition = 'opacity 0.3s ease';
-		        el.style.opacity = '0';
-		        setTimeout(() => {
-		            el.classList.add('force-hide');
-		        }, 300);
-		    });
 	
 	        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
 	        
@@ -5444,6 +5432,17 @@ function setupDrawerInteractions() {
 	            initialDrawerPosition = 0;
 	            interactionBlocker.style.display = 'none';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
+				// Hide UI elements
+				document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+			        if (!el.dataset.originalDisplay) {
+			            el.dataset.originalDisplay = window.getComputedStyle(el).display;
+			        }
+			        el.style.transition = 'opacity 0.3s ease';
+			        el.style.opacity = '0';
+			        setTimeout(() => {
+			            el.classList.add('force-hide');
+			        }, 300);
+			    });
 	        } else {
 	            dock.classList.remove('show');
 	            dock.style.boxShadow = 'none';
