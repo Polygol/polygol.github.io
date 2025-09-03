@@ -5563,7 +5563,7 @@ function setupDrawerInteractions() {
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
         
         // Check if touch is on handle area
-        if (appDrawerHandle.contains(element)) {
+        if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
             startDrag(touch.clientY);
             e.preventDefault();
         }
@@ -5586,7 +5586,7 @@ function setupDrawerInteractions() {
         const element = document.elementFromPoint(e.clientX, e.clientY);
         
         // Check if click is on handle area
-        if (appDrawerHandle.contains(element)) {
+        if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
             startDrag(e.clientY);
         }
     });
