@@ -4,9 +4,19 @@
  * with the parent Gurasuraisu (Polygol) window and use its core functions.
  */
 
+let isInsideGurasuraisu = false;
+
 // Gurasuraisu Font and Cursor Injection
 // This block runs as soon as the script is loaded by the Gurapp.
 (function() {
+    // 1. Detect the environment synchronously and reliably.
+    try {
+        isInsideGurasuraisu = !!(window.frameElement && window.frameElement.dataset.isGurasuraisuApp);
+    } catch (e) {
+        isInsideGurasuraisu = false;
+    }
+
+    // 2. Build the CSS string based on the detected environment.
     let css = `
         /* Inject Open Runde Font Faces via jsDelivr CDN */
         @font-face {
@@ -47,30 +57,28 @@
         }
     `;
     
-    // Conditionally add the custom cursor ONLY when inside Polygol
-    if (window.parent !== window) {
+    if (isInsideGurasuraisu) {
+        // Only add the custom cursor when inside Polygol.
         css += `
             * {
                 cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
             }
         `;
-    }
-
-    const style = document.createElement('style');
-    style.textContent = css;
-    document.head.appendChild(style);
-    
-    // Check if running standalone and remap CSS variables.
-    if (window.parent === window) {
-        const fallbackStyle = document.createElement('style');
-        fallbackStyle.textContent = `
+    } else {
+        // If standalone, immediately apply solid background colors.
+        css += `
             :root {
                 --background-color-dark-tr: var(--background-color-dark, #1c1c1c);
                 --background-color-light-tr: var(--background-color-light, #f0f0f0);
             }
         `;
-        document.head.appendChild(fallbackStyle);
+        console.log("Gurasuraisu API: Running in standalone mode.");
     }
+
+    // 3. Inject the final styles.
+    const style = document.createElement('style');
+    style.textContent = css;
+    document.head.appendChild(style);
 })();
 
 /**
@@ -88,14 +96,14 @@ const Gurasuraisu = {
    * @param {Array} args - An array of arguments to pass to the function.
    */
   _call: function(functionName, args = []) {
-    if (window.parent && window.parent !== window) {
+    if (isInsideGurasuraisu) { 
       window.parent.postMessage({
         action: 'callGurasuraisuFunc',
         functionName: functionName,
         args: args
       }, window.location.origin);
     } else {
-      console.warn(`Gurasuraisu API: Could not call '${functionName}'. Not running inside a Gurasuraisu iframe.`);
+      console.warn(`Gurasuraisu API: Standalone: call to '${functionName}' was ignored or fell back to native behavior.`);
     }
   },
 
@@ -106,7 +114,7 @@ const Gurasuraisu = {
    * @param {string} message - The text to display in the popup.
    */
   showPopup: function(message) {
-    if (window.parent !== window) {
+    if (isInsideGurasuraisu) {
         this._call('showPopup', [message]);
     } else {
         // Native JS fallback for showPopup
@@ -284,7 +292,7 @@ const Gurasuraisu = {
    */
   onMediaControl: function(actions) {
     window.addEventListener('message', (event) => {
-      if (event.origin !== window.location.origin) return;
+      if (!isInsideGurasuraisu || event.origin !== window.location.origin) return;
         if (event.data.type === 'media-control' && actions[event.data.action]) {
           actions[event.data.action]();
         }
@@ -299,7 +307,7 @@ const Gurasuraisu = {
  * or animation setting changes, and applies them to the Gurapp.
  */
 window.addEventListener('message', async (event) => {
-  if (event.origin !== window.location.origin) {
+  if (!isInsideGurasuraisu || event.origin !== window.location.origin) {
     return;
   }
 
