@@ -4430,11 +4430,20 @@ function setupFontSelection() {
     ];
 
     allControls.forEach(control => {
-        const eventType = (control.type === 'checkbox' || control.tagName === 'SELECT') ? 'change' : 'input';
+        const eventType = (control.type === 'range' || control.type === 'text') ? 'input' : 'change';
         control.addEventListener(eventType, () => {
-            applyClockStyles();
-            applyWallpaperEffects();
-            applyAlignment(alignmentSelect.value);
+            // Apply visual styles first to ensure live update
+            if (control === weightSlider || control === fontSelect || control.id.includes('color') || control.id.includes('shadow') || control.id.includes('gradient') || control === stackSwitch) {
+                applyClockStyles();
+            }
+            if (control.id.includes('wallpaper')) {
+                applyWallpaperEffects();
+            }
+            if (control === alignmentSelect) {
+                applyAlignment(alignmentSelect.value);
+            }
+            
+            // Then, save the settings
             saveCurrentWallpaperSettings();
             syncUiStates();
         });
