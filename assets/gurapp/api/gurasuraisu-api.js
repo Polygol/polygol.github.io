@@ -4,6 +4,8 @@
  * with the parent Gurasuraisu (Polygol) window and use its core functions.
  */
 
+const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttribute('data-gurasuraisu-iframe');
+
 // Gurasuraisu Font and Cursor Injection
 // This block runs as soon as the script is loaded by the Gurapp.
 (function() {
@@ -69,8 +71,6 @@
     style.textContent = css;
     document.head.appendChild(style);
 })();
-
-const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttribute('data-gurasuraisu-iframe');
 
 // Native JS solutions for when the app is running outside of Polygol
 const _fallbacks = {
