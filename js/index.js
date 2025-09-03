@@ -5466,13 +5466,9 @@ function setupDrawerInteractions() {
 	            appDrawer.classList.add('open');
 	            initialDrawerPosition = 0;
 	            interactionBlocker.style.display = 'none';
-	            
-				// Apply opening background effects
-                const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
-                const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
-                const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
-                document.body.style.setProperty('--wallpaper-filter', openFilter);
-                document.body.style.setProperty('--bg-transform-scale', '1.25');
+                // Revert background effects
+                applyWallpaperEffects();
+                document.body.style.setProperty('--bg-transform-scale', '1.05');
 				// Hide UI elements
 				document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 			        if (!el.dataset.originalDisplay) {
