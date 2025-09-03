@@ -4838,6 +4838,7 @@ function createFullscreenEmbed(url) {
     iframe.src = url;
     const appId = Object.keys(apps).find(k => apps[k].url === url);
     iframe.dataset.appId = appId;
+    iframe.dataset.isGurasuraisuApp = 'true'; 
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allowfullscreen', '');
     
