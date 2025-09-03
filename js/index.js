@@ -4762,6 +4762,12 @@ function createFullscreenEmbed(url) {
         embedContainer.style.borderRadius = '25px';
         embedContainer.style.overflow = 'hidden';
         embedContainer.style.display = 'block';
+
+		const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
+	    const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
+	    const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+	    document.body.style.setProperty('--wallpaper-filter', openFilter);
+	    document.body.style.setProperty('--bg-scale', '1.5');
         
         // IMPORTANT FIX: Restore proper z-index and pointer events
         embedContainer.style.pointerEvents = 'auto';
@@ -4772,9 +4778,13 @@ function createFullscreenEmbed(url) {
         
         // Add transition for all properties (removed filter)
         embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
-        
-        // Clear background blur when restoring app
-        document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
+		
+	    // Clear background blur and trigger the animation
+	    setTimeout(() => {
+	        embedContainer.style.transform = 'scale(1)';
+	        embedContainer.style.opacity = '1';
+	        embedContainer.style.borderRadius = '0px';
+	    }, 10);
 	    
         // Trigger the animation
         setTimeout(() => {
@@ -4937,9 +4947,10 @@ function minimizeFullscreenEmbed() {
         if (url) {
             // Store the embed in our minimized embeds object
             minimizedEmbeds[url] = embedContainer;
-            
-            // After animation completes, actually hide it completely
-	        document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+
+			// After animation completes, actually hide it completely, and restore user-set filter and scale
+            applyWallpaperEffects();
+            document.body.style.setProperty('--bg-scale', '1');
             embedContainer.style.display = 'none';
 			persistentClock.style.opacity = '1';
             
@@ -5261,7 +5272,6 @@ function setupDrawerInteractions() {
 	
 	            // Animate background blur from 1px (blurry) to 0px (clear)
 	            const blurRadius = 1 - progress;
-	            document.querySelector('body').style.setProperty('--bg-blur', `blur(${blurRadius}px)`);
 	        } else {
 		    cancelLongPress();
 	            // If dragging back down below the deadzone, reset to initial state
@@ -5320,9 +5330,7 @@ function setupDrawerInteractions() {
 	        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
 	        
 	        const opacity = (newPosition + 100) / 100;
-	        const blurRadius = Math.max(0, Math.min(1, ((-newPosition) / 50)));
 	        appDrawer.style.opacity = opacity;
-	        document.querySelector('body').style.setProperty('--bg-blur', `blur(${blurRadius}px)`);
 	        
 	        appDrawer.style.bottom = `${newPosition}%`;
 	        
@@ -5362,6 +5370,10 @@ function setupDrawerInteractions() {
 	            openEmbed.style.opacity = '0';
 	            openEmbed.style.borderRadius = '25px';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+
+                // NEW: Revert background effects on close
+                applyWallpaperEffects();
+                document.body.style.setProperty('--bg-scale', '1');
 	
 	            setTimeout(() => {
 	                minimizeFullscreenEmbed();
@@ -5389,6 +5401,12 @@ function setupDrawerInteractions() {
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
 	            appDrawer.style.opacity = '0';
 				persistentClock.style.opacity = '1';
+                // NEW: Apply opening effects on snap-back
+                const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
+                const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
+                const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+                document.body.style.setProperty('--wallpaper-filter', openFilter);
+                document.body.style.setProperty('--bg-scale', '1.5');
 	        }
 	
 	    } else {
@@ -5410,7 +5428,9 @@ function setupDrawerInteractions() {
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
-	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+                // Revert background effects
+                applyWallpaperEffects();
+                document.body.style.setProperty('--bg-scale', '1');				
 			    // Restore all main UI elements
 			    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 				el.classList.remove('force-hide');
@@ -5432,6 +5452,12 @@ function setupDrawerInteractions() {
 	            initialDrawerPosition = 0;
 	            interactionBlocker.style.display = 'none';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(1px)');
+				// Apply opening background effects
+                const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
+                const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
+                const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+                document.body.style.setProperty('--wallpaper-filter', openFilter);
+                document.body.style.setProperty('--bg-scale', '1.5');
 				// Hide UI elements
 				document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 			        if (!el.dataset.originalDisplay) {
@@ -5453,8 +5479,10 @@ function setupDrawerInteractions() {
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
-	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
-			    // Restore all main UI elements
+                // Revert background effects
+                applyWallpaperEffects();
+                document.body.style.setProperty('--bg-scale', '1');
+				// Restore all main UI elements
 			    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 				el.classList.remove('force-hide');
 			        el.style.display = el.dataset.originalDisplay;
