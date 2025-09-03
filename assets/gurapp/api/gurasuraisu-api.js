@@ -7,8 +7,7 @@
 // Gurasuraisu Font and Cursor Injection
 // This block runs as soon as the script is loaded by the Gurapp.
 (function() {
-    const style = document.createElement('style');
-    style.textContent = `
+    let css = `
         /* Inject Open Runde Font Faces via jsDelivr CDN */
         @font-face {
           font-family: 'Open Runde';
@@ -55,7 +54,7 @@
     const style = document.createElement('style');
     style.textContent = css;
     document.head.appendChild(style);
-
+    
     // Check if running standalone and remap CSS variables.
     if (window.parent === window) {
         const fallbackStyle = document.createElement('style');
