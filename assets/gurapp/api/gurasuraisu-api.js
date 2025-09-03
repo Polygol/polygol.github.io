@@ -72,6 +72,14 @@
         document.head.appendChild(fallbackStyle);
     }
 })();
+
+/**
+ * Internal helper to apply the high-contrast background fallback.
+ * @param {boolean} isHighContrast - Whether high contrast mode is enabled.
+ */
+function applyContrastFallback(isHighContrast) {
+    document.body.classList.toggle('high-contrast-fallback', isHighContrast);
+}
  
 const Gurasuraisu = {
   /**
@@ -304,8 +312,9 @@ window.addEventListener('message', async (event) => {
       case 'animationsUpdate':
         document.body.classList.toggle('reduce-animations', !data.enabled);
         break;
-      
-      // --- NEW: Handles screenshot requests from the parent ---
+      case 'contrastUpdate':
+        applyContrastFallback(data.enabled);
+        break;
       case 'request-screenshot':
         try {
             // Check if html2canvas is loaded in the Gurapp's window
@@ -341,6 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
     document.body.classList.toggle('reduce-animations', !animationsEnabled);
+
+    const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
+    applyContrastFallback(highContrastEnabled);
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
