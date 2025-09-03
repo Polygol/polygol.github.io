@@ -5654,7 +5654,8 @@ function setupDrawerInteractions() {
             appDrawer.classList.remove('open');
             initialDrawerPosition = -100;
             interactionBlocker.style.display = 'none';
-            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+            applyWallpaperEffects();
+            document.body.style.setProperty('--bg-scale', '1');			
 			// Restore all main UI elements
 		    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 			el.classList.remove('force-hide');
