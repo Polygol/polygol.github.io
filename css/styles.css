@@ -2139,7 +2139,7 @@ input[type="checkbox"]:checked::before {
 }
 
 .widget-drawer-handle .app-drawer-handle {
-	top: auto;
+	top: 0;
 }
 
 .widget-drawer-header {
