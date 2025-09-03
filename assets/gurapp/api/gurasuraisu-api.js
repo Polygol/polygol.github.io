@@ -44,10 +44,10 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
         	font-family: 'Open Runde', sans-serif;
         }
 
-        body.standalone,
-        body.gurasuraisu-high-contrast {
-            --background-color-dark-tr: var(--background-color-dark) !important;
-            --background-color-light-tr: var(--background-color-light) !important;
+        :root.standalone,
+        :root.gurasuraisu-high-contrast {
+            --background-color-dark-tr: var(--background-color-dark);
+            --background-color-light-tr: var(--background-color-light);
         }
     `;
     
