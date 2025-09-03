@@ -269,6 +269,7 @@ function renderWidgets() {
 
         const iframe = document.createElement('iframe');
         iframe.src = widgetDef.url;
+		iframe.setAttribute('data-gurasuraisu-iframe', 'true');
         const overlay = document.createElement('div');
         overlay.className = 'widget-instance-overlay';
 
@@ -585,6 +586,7 @@ function openWidgetPicker() {
 
                 const iframe = document.createElement('iframe');
                 iframe.src = widgetData.url;
+				iframe.setAttribute('data-gurasuraisu-iframe', 'true');
                 iframe.scrolling = 'no';
                 iframe.style.pointerEvents = 'none'; // Make the preview non-interactive
 
@@ -2393,16 +2395,13 @@ contrastSwitch.addEventListener('change', function() {
     localStorage.setItem('highContrast', highContrast);
     document.body.classList.toggle('high-contrast', highContrast);
     
-    // Broadcast the change to all Gurapp iframes
+    // Inform iframes
     const iframes = document.querySelectorAll('iframe');
     iframes.forEach((iframe) => {
-        // Check if contentWindow is accessible to avoid cross-origin errors
-        if (iframe.contentWindow) {
-            iframe.contentWindow.postMessage({
-                type: 'contrastUpdate',
-                enabled: highContrast 
-            }, window.location.origin);
-        }
+        iframe.contentWindow.postMessage({
+            type: 'contrastUpdate',
+            enabled: highContrast
+        }, window.location.origin);
     });
 });
 
@@ -4836,6 +4835,7 @@ function createFullscreenEmbed(url) {
     // Create new embed if not already minimized
     const iframe = document.createElement('iframe');
     iframe.src = url;
+    iframe.setAttribute('data-gurasuraisu-iframe', 'true');
     const appId = Object.keys(apps).find(k => apps[k].url === url);
     iframe.dataset.appId = appId;
     iframe.setAttribute('frameborder', '0');
