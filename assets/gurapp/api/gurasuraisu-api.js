@@ -43,27 +43,19 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
         h1, h2, h3, h4, h5, h6 {
         	font-family: 'Open Runde', sans-serif;
         }
+
+        body.standalone,
+        body.gurasuraisu-high-contrast {
+            --background-color-dark-tr: var(--background-color-dark) !important;
+            --background-color-light-tr: var(--background-color-light) !important;
+        }
     `;
     
+    // Conditionally add Gurasuraisu-specific styles.
     if (isInsideGurasuraisu) {
-        // --- STYLES ONLY FOR GURASURAISU ENVIRONMENT ---
         css += `
             * {
                 cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
-            }
-            /* Style for when parent enables high contrast */
-            body.gurasuraisu-high-contrast {
-                --background-color-dark-tr: var(--background-color-dark);
-                --background-color-light-tr: var(--background-color-light);
-            }
-        `;
-    } else {
-        // --- STYLES ONLY FOR STANDALONE ENVIRONMENT ---
-        css += `
-            body {
-                /* Remap transparent colors to solid colors when standalone */
-                --background-color-dark-tr: var(--background-color-dark);
-                --background-color-light-tr: var(--background-color-light);
             }
         `;
     }
