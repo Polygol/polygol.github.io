@@ -207,12 +207,36 @@ function handleViewportResize() {
 }
 
 function saveWidgets() {
-    localStorage.setItem('activeWidgets', JSON.stringify(activeWidgets));
+    if (recentWallpapers.length > 0 && currentWallpaperPosition < recentWallpapers.length) {
+        if (!recentWallpapers[currentWallpaperPosition]) return; // Safety check
+        recentWallpapers[currentWallpaperPosition].widgets = activeWidgets;
+        saveRecentWallpapers(); // This saves the whole `recentWallpapers` array
+    }
 }
 
 function loadWidgets() {
-    const saved = localStorage.getItem('activeWidgets');
-    activeWidgets = saved ? JSON.parse(saved) : [];
+    // Migration for users from the old single-page widget system
+    const oldSinglePageWidgetsJSON = localStorage.getItem('activeWidgets');
+    if (oldSinglePageWidgetsJSON) {
+        if (recentWallpapers.length > 0 && currentWallpaperPosition < recentWallpapers.length) {
+            const wallpaper = recentWallpapers[currentWallpaperPosition];
+            // If the current wallpaper doesn't have widgets defined, assign the old ones.
+            if (wallpaper && !wallpaper.widgets) {
+                wallpaper.widgets = JSON.parse(oldSinglePageWidgetsJSON);
+                saveRecentWallpapers();
+            }
+        }
+        // Clean up the old key after migration
+        localStorage.removeItem('activeWidgets');
+    }
+
+    // Load widgets for the current wallpaper page
+    if (recentWallpapers.length > 0 && currentWallpaperPosition < recentWallpapers.length) {
+        const wallpaper = recentWallpapers[currentWallpaperPosition];
+        activeWidgets = (wallpaper && wallpaper.widgets) ? wallpaper.widgets : [];
+    } else {
+        activeWidgets = [];
+    }
     renderWidgets();
 }
 
@@ -3035,7 +3059,6 @@ async function getVideo() {
         request.onsuccess = () => resolve(request.result);
     });
 }
-
 wallpaperInput.addEventListener("change", async event => {
     let files = Array.from(event.target.files);
     if (files.length === 0) return;
@@ -3105,6 +3128,7 @@ wallpaperInput.addEventListener("change", async event => {
                 saveRecentWallpapers();
                 currentWallpaperPosition = 0;
                 applyWallpaper();
+                loadWidgets(); // Load widgets for the new page
                 showPopup(currentLanguage.MULTIPLE_WALLPAPERS_UPDATED);
             } else {
                 showPopup(currentLanguage.NO_VALID_WALLPAPERS);
@@ -3225,6 +3249,7 @@ async function saveWallpaper(file) {
         saveRecentWallpapers();
         currentWallpaperPosition = 0;
         applyWallpaper();
+        loadWidgets(); // Load widgets for the new page
         showPopup(currentLanguage.WALLPAPER_UPDATED);
 	syncUiStates();
     } catch (error) {
@@ -4028,7 +4053,8 @@ async function jumpToWallpaper(index) {
         localStorage.removeItem("wallpapers");
         applyWallpaper();
     }
-    
+
+    loadWidgets(); // Load widgets for the new page
     updatePageIndicatorDots(false);
     resetIndicatorTimeout();
 }
@@ -4153,6 +4179,7 @@ function switchWallpaper(direction) {
         applyWallpaper();
     }
     
+    loadWidgets(); // Load widgets for the new page
     updatePageIndicatorDots(false);
     resetIndicatorTimeout();
     syncUiStates();
