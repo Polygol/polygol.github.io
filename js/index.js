@@ -5562,8 +5562,8 @@ function setupDrawerInteractions() {
         const touch = e.touches[0];
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
         
-        // Check if touch is on handle area or if drawer is already open
-        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+        // Check if touch is on handle area
+        if (drawerHandle.contains(element)) {
             startDrag(touch.clientY);
             e.preventDefault();
         }
@@ -5585,8 +5585,8 @@ function setupDrawerInteractions() {
         if (e.button !== 0) return;
         const element = document.elementFromPoint(e.clientX, e.clientY);
         
-        // Check if click is on handle area or if drawer is already open
-        if (drawerHandle.contains(element) || (appDrawer.classList.contains('open') && appDrawer.contains(element))) {
+        // Check if click is on handle area
+        if (drawerHandle.contains(element)) {
             startDrag(e.clientY);
         }
     });
