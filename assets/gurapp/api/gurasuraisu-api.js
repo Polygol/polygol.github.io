@@ -38,17 +38,62 @@
           src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Bold.woff2') format('woff2');
         }
 
-        * {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
-        }
-
         h1, h2, h3, h4, h5, h6 {
         	font-family: 'Open Runde', sans-serif;
         }
     `;
-    // Append the style to the head of the Gurapp's document.
+    
+    if (isInsideGurasuraisu) {
+        // --- STYLES ONLY FOR GURASURAISU ENVIRONMENT ---
+        css += `
+            * {
+                cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
+            }
+            /* Style for when parent enables high contrast */
+            body.gurasuraisu-high-contrast {
+                --background-color-dark-tr: var(--background-color-dark);
+                --background-color-light-tr: var(--background-color-light);
+            }
+        `;
+    } else {
+        // --- STYLES ONLY FOR STANDALONE ENVIRONMENT ---
+        css += `
+            body {
+                /* Remap transparent colors to solid colors when standalone */
+                --background-color-dark-tr: var(--background-color-dark);
+                --background-color-light-tr: var(--background-color-light);
+            }
+        `;
+    }
+
+    style.textContent = css;
     document.head.appendChild(style);
 })();
+
+const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttribute('data-gurasuraisu-iframe');
+
+// Native JS solutions for when the app is running outside of Polygol
+const _fallbacks = {
+    showPopup: function(message) {
+        // A simple, non-blocking "toast" notification fallback
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background-color: #333; color: white; padding: 10px 20px; border-radius: 20px;
+            z-index: 9999; transition: opacity 0.5s; font-family: sans-serif;
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    },
+    // For functions that have no standalone equivalent, we can just log a warning.
+    default: function(functionName) {
+        console.warn(`Gurasuraisu API: '${functionName}' is only available inside the Polygol environment.`);
+    }
+};
  
 const Gurasuraisu = {
   /**
@@ -57,14 +102,16 @@ const Gurasuraisu = {
    * @param {Array} args - An array of arguments to pass to the function.
    */
   _call: function(functionName, args = []) {
-    if (window.parent && window.parent !== window) {
+    if (isInsideGurasuraisu) {
       window.parent.postMessage({
         action: 'callGurasuraisuFunc',
         functionName: functionName,
         args: args
       }, window.location.origin);
     } else {
-      console.warn(`Gurasuraisu API: Could not call '${functionName}'. Not running inside a Gurasuraisu iframe.`);
+      // Use the fallback if it exists, otherwise use the default fallback
+      const fallback = _fallbacks[functionName] || (() => _fallbacks.default(functionName));
+      fallback.apply(this, args);
     }
   },
 
@@ -218,6 +265,9 @@ window.addEventListener('message', async (event) => {
       case 'animationsUpdate':
         document.body.classList.toggle('reduce-animations', !data.enabled);
         break;
+    case 'contrastUpdate':
+        document.body.classList.toggle('gurasuraisu-high-contrast', data.enabled);
+        break;
       
       // --- NEW: Handles screenshot requests from the parent ---
       case 'request-screenshot':
@@ -255,6 +305,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
     document.body.classList.toggle('reduce-animations', !animationsEnabled);
+
+    const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
+    document.body.classList.toggle('gurasuraisu-high-contrast', highContrastEnabled);
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
