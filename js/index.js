@@ -4425,19 +4425,30 @@ function setupFontSelection() {
     applyWallpaperEffects();
     applyAlignment(alignmentSelect.value);
     
-    // --- 3. NOW, set up the event listeners for future user interactions ---
+    // --- 3. Set up event listeners for live updates and saving ---
     const allControls = [
         fontSelect, weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
         blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
         shadowColorPicker, gradientSwitch, gradientColorPicker
     ];
-
+    
+    // Function for fast, live visual updates
+    const liveUpdate = () => {
+        applyClockStyles();
+        applyWallpaperEffects();
+        applyAlignment(alignmentSelect.value);
+    };
+    
     allControls.forEach(control => {
-        const eventType = (control.type === 'checkbox' || control.tagName === 'SELECT') ? 'change' : 'input';
-        control.addEventListener(eventType, () => {
-            applyClockStyles();
-            applyWallpaperEffects();
-            applyAlignment(alignmentSelect.value);
+        // For sliders and color pickers, update the UI live on 'input' for a smooth experience.
+        if (control.type === 'range' || control.type === 'color') {
+            control.addEventListener('input', liveUpdate);
+        }
+    
+        // For all controls, apply final styles, save settings, and sync UI state on 'change'.
+        // This handles checkboxes, selects, and the final state when a slider is released.
+        control.addEventListener('change', () => {
+            liveUpdate(); // Ensure final state is applied visually
             saveCurrentWallpaperSettings();
             syncUiStates();
         });
@@ -4447,18 +4458,12 @@ function setupFontSelection() {
     colorSwitch.addEventListener('change', () => {
         if (colorSwitch.checked) {
             gradientSwitch.checked = false;
-            // Manually trigger the save for the gradient switch as well
-            saveCurrentWallpaperSettings();
-            syncUiStates();
         }
     });
 
     gradientSwitch.addEventListener('change', () => {
         if (gradientSwitch.checked) {
             colorSwitch.checked = false;
-            // Manually trigger the save for the color switch as well
-            saveCurrentWallpaperSettings();
-            syncUiStates();
         }
     });
 }
