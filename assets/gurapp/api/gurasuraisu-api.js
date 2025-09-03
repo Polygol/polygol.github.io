@@ -4,19 +4,27 @@
  * with the parent Gurasuraisu (Polygol) window and use its core functions.
  */
 
-let isInsideGurasuraisu = false;
-
-// Gurasuraisu Font and Cursor Injection
-// This block runs as soon as the script is loaded by the Gurapp.
-(function() {
-    // 1. Detect the environment synchronously and reliably.
+const isInsideGurasuraisu = (() => {
     try {
-        isInsideGurasuraisu = !!(window.frameElement && window.frameElement.dataset.isGurasuraisuApp);
+        // If window.frameElement exists, it means the page is in an iframe.
+        // This is a reliable, synchronous check.
+        return window.frameElement && window.parent !== window;
     } catch (e) {
-        isInsideGurasuraisu = false;
+        // Cross-origin errors can happen. In that case, we are not in a friendly iframe.
+        return false;
     }
+})();
 
-    // 2. Build the CSS string based on the detected environment.
+/**
+ * Internal helper to apply the high-contrast background fallback.
+ * @param {boolean} isHighContrast - Whether high contrast mode is enabled.
+ */
+function applyContrastFallback(isHighContrast) {
+    document.body.classList.toggle('high-contrast-fallback', isHighContrast);
+}
+
+// Immediately inject necessary styles.
+(function initializeStyles() {
     let css = `
         /* Inject Open Runde Font Faces via jsDelivr CDN */
         @font-face {
@@ -75,20 +83,10 @@ let isInsideGurasuraisu = false;
         console.log("Gurasuraisu API: Running in standalone mode.");
     }
 
-    // 3. Inject the final styles.
-    const style = document.createElement('style');
     style.textContent = css;
     document.head.appendChild(style);
 })();
 
-/**
- * Internal helper to apply the high-contrast background fallback.
- * @param {boolean} isHighContrast - Whether high contrast mode is enabled.
- */
-function applyContrastFallback(isHighContrast) {
-    document.body.classList.toggle('high-contrast-fallback', isHighContrast);
-}
- 
 const Gurasuraisu = {
   /**
    * Internal helper to send a structured message to the parent window.
@@ -352,20 +350,23 @@ window.addEventListener('message', async (event) => {
  * in localStorage for a seamless appearance.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  try {
-    const storedTheme = localStorage.getItem('theme') || 'dark';
-    document.body.classList.toggle('light-theme', storedTheme === 'light');
+    // If we're inside the iframe, ask the parent for the initial settings.
+    if (isInsideGurasuraisu) {
+        window.parent.postMessage({ type: 'gurasuraisu-request-settings' }, window.location.origin);
+    } else {
+      try {
+        const storedTheme = localStorage.getItem('theme') || 'dark';
+        document.body.classList.toggle('light-theme', storedTheme === 'light');
+    
+        const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
+        document.body.classList.toggle('reduce-animations', !animationsEnabled);
+    
+        const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
+        applyContrastFallback(highContrastEnabled);
+      } catch (e) {
+        console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
+      }
+    }
 
-    const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
-    document.body.classList.toggle('reduce-animations', !animationsEnabled);
-
-    const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
-    applyContrastFallback(highContrastEnabled);
-  } catch (e) {
-    console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
-  }
+    window.dispatchEvent(new CustomEvent('GurasuraisuReady'));\
 });
-
-// Announce that the API is ready
-const readyEvent = new CustomEvent('GurasuraisuReady');
-window.dispatchEvent(readyEvent);
