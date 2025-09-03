@@ -4340,7 +4340,7 @@ function setupFontSelection() {
     function saveCurrentWallpaperSettings() {
         const settings = {
             font: fontSelect.value,
-            weight: (weightSlider.value * 10).toString(),
+            weight: (parseInt(weightSlider.value, 10) * 10).toString(),
             color: colorPicker.value,
             colorEnabled: colorSwitch.checked,
             stackEnabled: stackSwitch.checked,
@@ -4374,7 +4374,7 @@ function setupFontSelection() {
     // --- 1. Load saved preferences and set the state of the UI controls ---
     const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
     fontSelect.value = localStorage.getItem('font') || 'Inter'; // FIX: Use 'font'
-    weightSlider.value = (localStorage.getItem('weight') || '700') / 10; // FIX: Use 'weight'
+    weightSlider.value = parseInt(localStorage.getItem('weight') || '700', 10) / 10; // FIX: Use 'weight'
     colorPicker.value = localStorage.getItem('color') || defaultColor; // FIX: Use 'color'
     colorSwitch.checked = localStorage.getItem('colorEnabled') === 'true';
     stackSwitch.checked = localStorage.getItem('stackEnabled') === 'true'; // FIX: Use 'stackEnabled'
@@ -4450,7 +4450,7 @@ function applyClockStyles() {
     if (!clockElement || !infoElement) return;
 
     const fontFamily = fontSelect.value;
-    const fontWeight = weightSlider.value * 10;
+    const fontWeight = parseInt(weightSlider.value, 10) * 10;
     
     clockElement.style.fontFamily = fontFamily;
     clockElement.style.fontWeight = fontWeight;
