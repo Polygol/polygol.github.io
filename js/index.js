@@ -4767,7 +4767,7 @@ function createFullscreenEmbed(url) {
 	    const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
 	    const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
 	    document.body.style.setProperty('--wallpaper-filter', openFilter);
-	    document.body.style.setProperty('--bg-scale', '3');
+	    document.body.style.setProperty('--bg-transform-scale', '1.25');
         
         // IMPORTANT FIX: Restore proper z-index and pointer events
         embedContainer.style.pointerEvents = 'auto';
@@ -4950,7 +4950,7 @@ function minimizeFullscreenEmbed() {
 
 			// After animation completes, actually hide it completely, and restore user-set filter and scale
             applyWallpaperEffects();
-            document.body.style.setProperty('--bg-scale', '1');
+            document.body.style.setProperty('--bg-transform-scale', '1.05');
             embedContainer.style.display = 'none';
 			persistentClock.style.opacity = '1';
             
@@ -5373,7 +5373,7 @@ function setupDrawerInteractions() {
 
                 // NEW: Revert background effects on close
                 applyWallpaperEffects();
-                document.body.style.setProperty('--bg-scale', '1');
+                document.body.style.setProperty('--bg-transform-scale', '1.05');
 	
 	            setTimeout(() => {
 	                minimizeFullscreenEmbed();
@@ -5406,7 +5406,7 @@ function setupDrawerInteractions() {
                 const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
                 const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
                 document.body.style.setProperty('--wallpaper-filter', openFilter);
-                document.body.style.setProperty('--bg-scale', '3');
+                document.body.style.setProperty('--bg-transform-scale', '1.25');
 	        }
 	
 	    } else {
@@ -5430,7 +5430,7 @@ function setupDrawerInteractions() {
 	            interactionBlocker.style.display = 'none';
                 // Revert background effects
                 applyWallpaperEffects();
-                document.body.style.setProperty('--bg-scale', '1');				
+                document.body.style.setProperty('--bg-transform-scale', '1.05');				
 			    // Restore all main UI elements
 			    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 				el.classList.remove('force-hide');
@@ -5457,7 +5457,7 @@ function setupDrawerInteractions() {
                 const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
                 const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
                 document.body.style.setProperty('--wallpaper-filter', openFilter);
-                document.body.style.setProperty('--bg-scale', '3');
+                document.body.style.setProperty('--bg-transform-scale', '1.25');
 				// Hide UI elements
 				document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 			        if (!el.dataset.originalDisplay) {
@@ -5481,7 +5481,7 @@ function setupDrawerInteractions() {
 	            interactionBlocker.style.display = 'none';
                 // Revert background effects
                 applyWallpaperEffects();
-                document.body.style.setProperty('--bg-scale', '1');
+                document.body.style.setProperty('--bg-transform-scale', '1.05');
 				// Restore all main UI elements
 			    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 				el.classList.remove('force-hide');
@@ -5655,7 +5655,7 @@ function setupDrawerInteractions() {
             initialDrawerPosition = -100;
             interactionBlocker.style.display = 'none';
             applyWallpaperEffects();
-            document.body.style.setProperty('--bg-scale', '1');			
+            document.body.style.setProperty('--bg-transform-scale', '1.05');			
 			// Restore all main UI elements
 		    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 			el.classList.remove('force-hide');
