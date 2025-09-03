@@ -40,6 +40,11 @@
         h1, h2, h3, h4, h5, h6 {
         	font-family: 'Open Runde', sans-serif;
         }
+
+        .high-contrast-fallback {
+            --background-color-dark-tr: var(--background-color-dark, #121212);
+            --background-color-light-tr: var(--background-color-light, #f5f5f5);
+        }
     `;
     
     // Conditionally add the custom cursor ONLY when inside Polygol
