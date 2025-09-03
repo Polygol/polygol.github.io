@@ -4421,29 +4421,28 @@ function setupFontSelection() {
     applyClockStyles();
     applyWallpaperEffects();
     applyAlignment(alignmentSelect.value);
+
+    if (weightSlider) {
+        weightSlider.addEventListener('input', () => {
+            applyClockStyles(); // Apply the style change live.
+            saveCurrentWallpaperSettings(); // Save the new value.
+            syncUiStates(); // Sync the "active" state of the control button.
+        });
+    }
     
     // --- 3. NOW, set up the event listeners for future user interactions ---
     const allControls = [
-        fontSelect, weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
+        fontSelect, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
         blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
         shadowColorPicker, gradientSwitch, gradientColorPicker
     ];
 
     allControls.forEach(control => {
-        const eventType = (control.type === 'range' || control.type === 'text') ? 'input' : 'change';
+        const eventType = (control.type === 'checkbox' || control.tagName === 'SELECT') ? 'change' : 'input';
         control.addEventListener(eventType, () => {
-            // Apply visual styles first to ensure live update
-            if (control === weightSlider || control === fontSelect || control.id.includes('color') || control.id.includes('shadow') || control.id.includes('gradient') || control === stackSwitch) {
-                applyClockStyles();
-            }
-            if (control.id.includes('wallpaper')) {
-                applyWallpaperEffects();
-            }
-            if (control === alignmentSelect) {
-                applyAlignment(alignmentSelect.value);
-            }
-            
-            // Then, save the settings
+            applyClockStyles();
+            applyWallpaperEffects();
+            applyAlignment(alignmentSelect.value);
             saveCurrentWallpaperSettings();
             syncUiStates();
         });
