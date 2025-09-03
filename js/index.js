@@ -5081,9 +5081,6 @@ function createAppIcons() {
         appIcon.appendChild(label);
         
         const handleAppOpen = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
             try {      
                 if (app.details.url.startsWith('#')) {
                     switch (app.details.url) {
