@@ -247,6 +247,55 @@ const Gurasuraisu = {
 
 // --- Event Listener for Messages FROM Gurasuraisu ---
 
+// Define the function to apply border styles within the iframe
+function applyIframeBorderLightEffect(enabled, position) {
+    const rootStyle = getComputedStyle(document.documentElement);
+    // Use the iframe's own --glass-border variable as the base
+    const baseBorderColor = rootStyle.getPropertyValue('--glass-border').trim();
+    if (!baseBorderColor) return; // Don't run if the variable isn't defined in the app
+
+    // Define colors (these could also be passed from the parent if they need to be dynamic)
+    const colors = {
+        sunrise: 'rgba(255, 204, 112, 0.9)',
+        midday: 'rgba(255, 255, 255, 0.8)',
+        sunset: 'rgba(255, 100, 120, 0.8)',
+        night: 'rgba(120, 160, 255, 0.3)'
+    };
+
+    let topColor = baseBorderColor, rightColor = baseBorderColor, bottomColor = baseBorderColor, leftColor = baseBorderColor;
+
+    if (enabled) {
+        switch (position) {
+            case 'sunrise':
+                topColor = colors.sunrise;
+                rightColor = colors.sunrise;
+                break;
+            case 'midday':
+                topColor = colors.midday;
+                break;
+            case 'sunset':
+                topColor = colors.sunset;
+                leftColor = colors.sunset;
+                break;
+            case 'night':
+            default:
+                topColor = colors.night;
+                break;
+        }
+    }
+
+    // Find all elements in the iframe's document
+    document.querySelectorAll('*').forEach(el => {
+        const computedStyle = getComputedStyle(el);
+        if (computedStyle.borderColor === baseBorderColor) {
+            el.style.borderTopColor = topColor;
+            el.style.borderRightColor = rightColor;
+            el.style.borderBottomColor = bottomColor;
+            el.style.borderLeftColor = leftColor;
+        }
+    });
+}
+
 /**
  * Listens for messages from the parent window, such as theme
  * or animation setting changes, and applies them to the Gurapp.
@@ -267,6 +316,9 @@ window.addEventListener('message', async (event) => {
         break;
     case 'contrastUpdate':
         document.documentElement.classList.toggle('gurasuraisu-high-contrast', data.enabled);
+        break;
+    case 'borderLightUpdate':
+        applyIframeBorderLightEffect(data.enabled, data.position);
         break;
       
       // --- NEW: Handles screenshot requests from the parent ---
@@ -293,6 +345,7 @@ window.addEventListener('message', async (event) => {
     }
   }
 });
+
 
 /**
  * On initial load, apply settings that might have been set by Gurasuraisu
