@@ -129,6 +129,61 @@ function consoleLoaded() {
     console.log(currentLanguage.LOAD_SUCCESS);
 }
 
+let borderLightEffectsEnabled = localStorage.getItem('borderLightEffectsEnabled') === 'true';
+let sunPositionClass = ''; // To store the current class (sunrise, midday, etc.)
+
+function updateBorderLightEffect() {
+    if (!borderLightEffectsEnabled) return;
+
+    // Use existing weather data which includes latitude and longitude
+    const lastWeatherDataString = localStorage.getItem('lastWeatherData');
+    if (!lastWeatherDataString) return; // Exit if no location data
+
+    const weatherData = JSON.parse(lastWeatherDataString);
+    // Exit if location data is incomplete
+    if (!weatherData || weatherData.latitude === undefined || weatherData.longitude === undefined) {
+        return;
+    }
+
+    const lat = weatherData.latitude;
+    const lon = weatherData.longitude;
+    const now = new Date();
+    const times = SunCalc.getTimes(now, lat, lon);
+
+    let newClass = 'night';
+    // Add a 30-minute buffer around sunrise/sunset for a smoother transition period
+    const sunriseStart = new Date(times.sunrise.getTime() - 30 * 60000);
+    const sunriseEnd = new Date(times.sunrise.getTime() + 30 * 60000);
+    const sunsetStart = new Date(times.sunset.getTime() - 30 * 60000);
+    const sunsetEnd = new Date(times.sunset.getTime() + 30 * 60000);
+
+    if (now > sunriseStart && now < sunriseEnd) {
+        newClass = 'sunrise';
+    } else if (now > sunriseEnd && now < sunsetStart) {
+        newClass = 'midday';
+    } else if (now > sunsetStart && now < sunsetEnd) {
+        newClass = 'sunset';
+    }
+
+    if (newClass !== sunPositionClass) {
+        sunPositionClass = newClass;
+        document.body.classList.remove('sunrise', 'midday', 'sunset', 'night');
+        document.body.classList.add(sunPositionClass);
+
+        // Inform iframes of the change
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach((iframe) => {
+            if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    type: 'borderLightUpdate',
+                    enabled: borderLightEffectsEnabled,
+                    position: sunPositionClass
+                }, window.location.origin);
+            }
+        });
+    }
+}
+
 const secondsSwitch = document.getElementById('seconds-switch');
 let appUsage = {};
 const weatherSwitch = document.getElementById('weather-switch');
@@ -839,6 +894,7 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-alignment', 'alignment-select');
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
+    connectGridItem('setting-effects', 'effects-switch');
 
     // --- NEW: Special Handler for Widget Picker ---
     const widgetPickerItem = document.getElementById('setting-widgets');
@@ -849,6 +905,41 @@ document.addEventListener('DOMContentLoaded', () => {
             openWidgetPicker();
         });
     }
+
+    const effectsSwitch = document.getElementById('effects-switch');
+    effectsSwitch.checked = borderLightEffectsEnabled;
+    if (borderLightEffectsEnabled) {
+        document.body.classList.add('border-effects-enabled');
+        updateBorderLightEffect(); // Initial call
+    }
+    
+    effectsSwitch.addEventListener('change', function() {
+        borderLightEffectsEnabled = this.checked;
+        localStorage.setItem('borderLightEffectsEnabled', borderLightEffectsEnabled);
+        document.body.classList.toggle('border-effects-enabled', borderLightEffectsEnabled);
+    
+        const messagePayload = {
+            type: 'borderLightUpdate',
+            enabled: borderLightEffectsEnabled,
+            position: '' // Will be updated by the function call
+        };
+    
+        if (borderLightEffectsEnabled) {
+            updateBorderLightEffect(); // This will calculate and set the position class
+        } else {
+            // If disabling, clean up classes and send disable message
+            document.body.classList.remove('sunrise', 'midday', 'sunset', 'night');
+            const iframes = document.querySelectorAll('iframe');
+            iframes.forEach((iframe) => {
+                if(iframe.contentWindow) {
+                    iframe.contentWindow.postMessage(messagePayload, window.location.origin);
+                }
+            });
+        }
+    });
+    
+    // Update light effect every 5 minutes
+    setInterval(updateBorderLightEffect, 300000);
 
     // --- NEW: Add event listeners to close the widget drawer ---
     const widgetDrawer = document.getElementById('widget-picker-drawer');
