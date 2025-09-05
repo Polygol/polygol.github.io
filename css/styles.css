@@ -122,12 +122,6 @@
     --overlay-color: var(--dark-overlay);
     --transparent-color: var(--dark-transparent);
     --glass-border: var(--glass-border-dark);
-	
-	/* --- Dynamic Border Light Simulation --- */
-    --sunrise-color: rgba(255, 204, 112, 0.9);
-    --midday-color: rgba(255, 255, 255, 0.8);
-    --sunset-color: rgba(255, 100, 120, 0.8);
-    --night-color: rgba(120, 160, 255, 0.3);
 }
 
 body.light-theme {
