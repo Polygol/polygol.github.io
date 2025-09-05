@@ -122,6 +122,12 @@
     --overlay-color: var(--dark-overlay);
     --transparent-color: var(--dark-transparent);
     --glass-border: var(--glass-border-dark);
+	
+	/* --- Dynamic Border Light Simulation --- */
+    --sunrise-color: rgba(255, 204, 112, 0.9);
+    --midday-color: rgba(255, 255, 255, 0.8);
+    --sunset-color: rgba(255, 100, 120, 0.8);
+    --night-color: rgba(120, 160, 255, 0.3);
 }
 
 body.light-theme {
@@ -202,90 +208,6 @@ input[type="submit"]:active,
   transform: scale(0.96);
   transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
   filter: brightness(1.5);
-}
-
-/* --- Dynamic Border Light Simulation --- */
-body.border-effects-enabled .qcontrol-item,
-body.border-effects-enabled .settings-grid,
-body.border-effects-enabled .widget-instance,
-body.border-effects-enabled .dock,
-body.border-effects-enabled .version-info,
-body.border-effects-enabled .brightness-slider-container,
-body.border-effects-enabled .media-widget,
-body.border-effects-enabled .popup,
-body.border-effects-enabled .on-screen-notification,
-body.border-effects-enabled .shade-notification,
-body.border-effects-enabled .ai-search-bar,
-body.border-effects-enabled #ai-response-area,
-body.border-effects-enabled .widget-picker-preview {
-    --glass-border: transparent;
-    position: relative;
-    /* overflow: visible; is needed if pseudo-element bleeds out, but mask should handle it */
-}
-
-body.border-effects-enabled .qcontrol-item::before,
-body.border-effects-enabled .settings-grid::before,
-body.border-effects-enabled .widget-instance::before,
-body.border-effects-enabled .dock::before,
-body.border-effects-enabled .version-info::before,
-body.border-effects-enabled .brightness-slider-container::before,
-body.border-effects-enabled .media-widget::before,
-body.border-effects-enabled .popup::before,
-body.border-effects-enabled .on-screen-notification::before,
-body.border-effects-enabled .shade-notification::before,
-body.border-effects-enabled .ai-search-bar::before,
-body.border-effects-enabled #ai-response-area::before,
-body.border-effects-enabled .widget-picker-preview::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: inherit;
-    padding: 1px; /* The thickness of the border */
-    background: var(--border-light-gradient);
-    -webkit-mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: destination-out;
-    mask-composite: exclude;
-    z-index: -1;
-    transition: background 1s ease-in-out;
-    pointer-events: none;
-}
-
-/* Default/Night State */
-body.border-effects-enabled.night,
-body.border-effects-enabled:not(.sunrise):not(.midday):not(.sunset) {
-    --border-light-gradient: radial-gradient(circle at 50% -50%, 
-        rgba(120, 160, 255, 0.3),
-        rgba(120, 160, 255, 0) 25%
-    );
-}
-
-/* Sunrise State */
-body.border-effects-enabled.sunrise {
-    --border-light-gradient: radial-gradient(circle at 100% 0%, 
-        rgba(255, 204, 112, 0.9), 
-        rgba(255, 165, 0, 0) 25%
-    );
-}
-
-/* Midday State */
-body.border-effects-enabled.midday {
-    --border-light-gradient: radial-gradient(circle at 50% -50%, 
-        rgba(255, 255, 255, 0.8), 
-        rgba(255, 255, 255, 0) 20%
-    );
-}
-
-/* Sunset State */
-body.border-effects-enabled.sunset {
-    --border-light-gradient: radial-gradient(circle at 0% 0%, 
-        rgba(255, 100, 120, 0.8),
-        rgba(200, 80, 255, 0) 25%
-    );
 }
 
         body {
