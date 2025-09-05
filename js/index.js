@@ -132,15 +132,69 @@ function consoleLoaded() {
 let borderLightEffectsEnabled = localStorage.getItem('borderLightEffectsEnabled') === 'true';
 let sunPositionClass = ''; // To store the current class (sunrise, midday, etc.)
 
-function updateBorderLightEffect() {
-    if (!borderLightEffectsEnabled) return;
+// This function finds all elements with the --glass-border and applies/resets the effect
+function applyOrClearBorderLightEffect() {
+    const rootStyle = getComputedStyle(document.documentElement);
+    const baseBorderColor = rootStyle.getPropertyValue('--glass-border').trim();
 
-    // Use existing weather data which includes latitude and longitude
+    // Define colors for each time of day
+    const colors = {
+        sunrise: rootStyle.getPropertyValue('--sunrise-color').trim(),
+        midday: rootStyle.getPropertyValue('--midday-color').trim(),
+        sunset: rootStyle.getPropertyValue('--sunset-color').trim(),
+        night: rootStyle.getPropertyValue('--night-color').trim()
+    };
+
+    let topColor = baseBorderColor, rightColor = baseBorderColor, bottomColor = baseBorderColor, leftColor = baseBorderColor;
+
+    if (borderLightEffectsEnabled) {
+        switch (sunPositionClass) {
+            case 'sunrise':
+                topColor = colors.sunrise;
+                rightColor = colors.sunrise;
+                break;
+            case 'midday':
+                topColor = colors.midday;
+                break;
+            case 'sunset':
+                topColor = colors.sunset;
+                leftColor = colors.sunset;
+                break;
+            case 'night':
+                topColor = colors.night;
+                break;
+        }
+    }
+
+    // Find all elements in the document
+    document.querySelectorAll('*').forEach(el => {
+        const computedStyle = getComputedStyle(el);
+        // Check if the element's border is using our variable.
+        // This is the key to making it scalable.
+        if (computedStyle.borderTopColor === baseBorderColor || 
+            computedStyle.borderRightColor === baseBorderColor ||
+            computedStyle.borderBottomColor === baseBorderColor ||
+            computedStyle.borderLeftColor === baseBorderColor) 
+        {
+            el.style.borderTopColor = topColor;
+            el.style.borderRightColor = rightColor;
+            el.style.borderBottomColor = bottomColor;
+            el.style.borderLeftColor = leftColor;
+        }
+    });
+}
+
+
+function updateBorderLightEffect() {
+    if (!borderLightEffectsEnabled) {
+        applyOrClearBorderLightEffect(); // This will clear the effect
+        return;
+    }
+
     const lastWeatherDataString = localStorage.getItem('lastWeatherData');
-    if (!lastWeatherDataString) return; // Exit if no location data
+    if (!lastWeatherDataString) return;
 
     const weatherData = JSON.parse(lastWeatherDataString);
-    // Exit if location data is incomplete
     if (!weatherData || weatherData.latitude === undefined || weatherData.longitude === undefined) {
         return;
     }
@@ -151,27 +205,23 @@ function updateBorderLightEffect() {
     const times = SunCalc.getTimes(now, lat, lon);
 
     let newClass = 'night';
-    // Add a 30-minute buffer around sunrise/sunset for a smoother transition period
-    const sunriseStart = new Date(times.sunrise.getTime() - 30 * 60000);
-    const sunriseEnd = new Date(times.sunrise.getTime() + 30 * 60000);
+    const sunriseEnd = new Date(times.sunriseEnd.getTime() + 30 * 60000);
     const sunsetStart = new Date(times.sunset.getTime() - 30 * 60000);
-    const sunsetEnd = new Date(times.sunset.getTime() + 30 * 60000);
 
-    if (now > sunriseStart && now < sunriseEnd) {
+    if (now > times.sunrise && now < sunriseEnd) {
         newClass = 'sunrise';
     } else if (now > sunriseEnd && now < sunsetStart) {
         newClass = 'midday';
-    } else if (now > sunsetStart && now < sunsetEnd) {
+    } else if (now > sunsetStart && now < times.sunsetEnd) {
         newClass = 'sunset';
     }
 
     if (newClass !== sunPositionClass) {
         sunPositionClass = newClass;
-        document.body.classList.remove('sunrise', 'midday', 'sunset', 'night');
-        document.body.classList.add(sunPositionClass);
+        applyOrClearBorderLightEffect(); // Apply the new colors
 
         // Inform iframes of the change
-        const iframes = document.querySelectorAll('iframe');
+        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
         iframes.forEach((iframe) => {
             if (iframe.contentWindow) {
                 iframe.contentWindow.postMessage({
@@ -909,35 +959,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const effectsSwitch = document.getElementById('effects-switch');
     effectsSwitch.checked = borderLightEffectsEnabled;
     if (borderLightEffectsEnabled) {
-        document.body.classList.add('border-effects-enabled');
-        updateBorderLightEffect(); // Initial call
+        updateBorderLightEffect();
     }
-    
+
     effectsSwitch.addEventListener('change', function() {
         borderLightEffectsEnabled = this.checked;
         localStorage.setItem('borderLightEffectsEnabled', borderLightEffectsEnabled);
-        document.body.classList.toggle('border-effects-enabled', borderLightEffectsEnabled);
-    
-        const messagePayload = {
-            type: 'borderLightUpdate',
-            enabled: borderLightEffectsEnabled,
-            position: '' // Will be updated by the function call
-        };
-    
-        if (borderLightEffectsEnabled) {
-            updateBorderLightEffect(); // This will calculate and set the position class
-        } else {
-            // If disabling, clean up classes and send disable message
-            document.body.classList.remove('sunrise', 'midday', 'sunset', 'night');
-            const iframes = document.querySelectorAll('iframe');
-            iframes.forEach((iframe) => {
-                if(iframe.contentWindow) {
-                    iframe.contentWindow.postMessage(messagePayload, window.location.origin);
-                }
-            });
-        }
+        updateBorderLightEffect(); // This will handle applying or clearing the effect
     });
-    
+
     // Update light effect every 5 minutes
     setInterval(updateBorderLightEffect, 300000);
 
