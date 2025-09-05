@@ -129,100 +129,6 @@ function consoleLoaded() {
     console.log(currentLanguage.LOAD_SUCCESS);
 }
 
-let borderLightEffectsEnabled = localStorage.getItem('borderLightEffectsEnabled') === 'true';
-let sunPositionClass = ''; // To store the current class (sunrise, midday, etc.)
-
-// A comprehensive selector for all elements that should receive the border effect.
-const BORDER_EFFECT_SELECTOR = `
-    .qcontrol-item, .settings-grid, .widget-instance, .dock, .version-info, 
-    .brightness-slider-container, .media-widget, .popup, .on-screen-notification, 
-    .shade-notification, .ai-search-bar, #ai-response-area, .widget-picker-preview, 
-    input[type="color"], .qc-switch, #uploadButton, #versionButton, #resetButton, 
-    #font-select, #language-switcher, #alignment-select, .weight-slider, 
-    .thermostat-popup, .app-drawer
-`;
-
-// This function finds all targeted elements and applies/resets the effect
-function applyOrClearBorderLightEffect() {
-    const rootStyle = getComputedStyle(document.documentElement);
-    const baseBorderColor = rootStyle.getPropertyValue('--glass-border').trim();
-    const elements = document.querySelectorAll(BORDER_EFFECT_SELECTOR);
-
-    const colors = {
-        sunrise: rootStyle.getPropertyValue('--sunrise-color').trim(),
-        midday: rootStyle.getPropertyValue('--midday-color').trim(),
-        sunset: rootStyle.getPropertyValue('--sunset-color').trim(),
-        night: rootStyle.getPropertyValue('--night-color').trim()
-    };
-
-    let top = baseBorderColor, right = baseBorderColor, bottom = baseBorderColor, left = baseBorderColor;
-
-    if (borderLightEffectsEnabled) {
-        switch (sunPositionClass) {
-            case 'sunrise':
-                top = colors.sunrise; right = colors.sunrise; break;
-            case 'midday':
-                top = colors.midday; break;
-            case 'sunset':
-                top = colors.sunset; left = colors.sunset; break;
-            case 'night':
-                top = colors.night; break;
-        }
-    }
-
-    elements.forEach(el => {
-        el.style.borderTopColor = top;
-        el.style.borderRightColor = right;
-        el.style.borderBottomColor = bottom;
-        el.style.borderLeftColor = left;
-    });
-}
-
-function updateBorderLightEffect() {
-    const lastWeatherDataString = localStorage.getItem('lastWeatherData');
-    if (!borderLightEffectsEnabled) {
-        sunPositionClass = ''; // Clear position class
-        applyOrClearBorderLightEffect(); // Reset all borders to default
-        return;
-    }
-    
-    if (!lastWeatherDataString) return; // Exit if no location data
-
-    const weatherData = JSON.parse(lastWeatherDataString);
-    if (!weatherData || weatherData.latitude === undefined || weatherData.longitude === undefined) return;
-
-    const lat = weatherData.latitude;
-    const lon = weatherData.longitude;
-    const now = new Date();
-    const times = SunCalc.getTimes(now, lat, lon);
-
-    let newClass = 'night';
-    // Define transition periods for a smoother effect
-    const sunriseEnd = new Date(times.sunriseEnd.getTime() + 30 * 60000);
-    const sunsetStart = new Date(times.sunset.getTime() - 30 * 60000);
-
-    if (now > times.sunrise && now < sunriseEnd) newClass = 'sunrise';
-    else if (now > sunriseEnd && now < sunsetStart) newClass = 'midday';
-    else if (now > sunsetStart && now < times.sunsetEnd) newClass = 'sunset';
-
-    if (newClass !== sunPositionClass) {
-        sunPositionClass = newClass;
-        applyOrClearBorderLightEffect();
-
-        // Inform iframes of the change
-        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
-        iframes.forEach((iframe) => {
-            if (iframe.contentWindow) {
-                iframe.contentWindow.postMessage({
-                    type: 'borderLightUpdate',
-                    enabled: borderLightEffectsEnabled,
-                    position: sunPositionClass
-                }, window.location.origin);
-            }
-        });
-    }
-}
-
 const secondsSwitch = document.getElementById('seconds-switch');
 let appUsage = {};
 const weatherSwitch = document.getElementById('weather-switch');
@@ -933,7 +839,6 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-alignment', 'alignment-select');
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
-    connectGridItem('setting-effects', 'effects-switch');
 
     // --- NEW: Special Handler for Widget Picker ---
     const widgetPickerItem = document.getElementById('setting-widgets');
@@ -944,23 +849,6 @@ document.addEventListener('DOMContentLoaded', () => {
             openWidgetPicker();
         });
     }
-
-    const effectsSwitch = document.getElementById('effects-switch');
-    if (effectsSwitch) {
-        effectsSwitch.checked = borderLightEffectsEnabled;
-        if (borderLightEffectsEnabled) {
-            updateBorderLightEffect();
-        }
-
-        effectsSwitch.addEventListener('change', function() {
-            borderLightEffectsEnabled = this.checked;
-            localStorage.setItem('borderLightEffectsEnabled', borderLightEffectsEnabled);
-            updateBorderLightEffect(); // Handles both enabling and disabling
-        });
-    }
-
-    // Update light effect every 5 minutes
-    setInterval(updateBorderLightEffect, 300000);
 
     // --- NEW: Add event listeners to close the widget drawer ---
     const widgetDrawer = document.getElementById('widget-picker-drawer');
