@@ -132,12 +132,22 @@ function consoleLoaded() {
 let borderLightEffectsEnabled = localStorage.getItem('borderLightEffectsEnabled') === 'true';
 let sunPositionClass = ''; // To store the current class (sunrise, midday, etc.)
 
-// This function finds all elements with the --glass-border and applies/resets the effect
+// A comprehensive selector for all elements that should receive the border effect.
+const BORDER_EFFECT_SELECTOR = `
+    .qcontrol-item, .settings-grid, .widget-instance, .dock, .version-info, 
+    .brightness-slider-container, .media-widget, .popup, .on-screen-notification, 
+    .shade-notification, .ai-search-bar, #ai-response-area, .widget-picker-preview, 
+    input[type="color"], .qc-switch, #uploadButton, #versionButton, #resetButton, 
+    #font-select, #language-switcher, #alignment-select, .weight-slider, 
+    .thermostat-popup, .app-drawer
+`;
+
+// This function finds all targeted elements and applies/resets the effect
 function applyOrClearBorderLightEffect() {
     const rootStyle = getComputedStyle(document.documentElement);
     const baseBorderColor = rootStyle.getPropertyValue('--glass-border').trim();
+    const elements = document.querySelectorAll(BORDER_EFFECT_SELECTOR);
 
-    // Define colors for each time of day
     const colors = {
         sunrise: rootStyle.getPropertyValue('--sunrise-color').trim(),
         midday: rootStyle.getPropertyValue('--midday-color').trim(),
@@ -145,59 +155,41 @@ function applyOrClearBorderLightEffect() {
         night: rootStyle.getPropertyValue('--night-color').trim()
     };
 
-    let topColor = baseBorderColor, rightColor = baseBorderColor, bottomColor = baseBorderColor, leftColor = baseBorderColor;
+    let top = baseBorderColor, right = baseBorderColor, bottom = baseBorderColor, left = baseBorderColor;
 
     if (borderLightEffectsEnabled) {
         switch (sunPositionClass) {
             case 'sunrise':
-                topColor = colors.sunrise;
-                rightColor = colors.sunrise;
-                break;
+                top = colors.sunrise; right = colors.sunrise; break;
             case 'midday':
-                topColor = colors.midday;
-                break;
+                top = colors.midday; break;
             case 'sunset':
-                topColor = colors.sunset;
-                leftColor = colors.sunset;
-                break;
+                top = colors.sunset; left = colors.sunset; break;
             case 'night':
-                topColor = colors.night;
-                break;
+                top = colors.night; break;
         }
     }
 
-    // Find all elements in the document
-    document.querySelectorAll('*').forEach(el => {
-        const computedStyle = getComputedStyle(el);
-        // Check if the element's border is using our variable.
-        // This is the key to making it scalable.
-        if (computedStyle.borderTopColor === baseBorderColor || 
-            computedStyle.borderRightColor === baseBorderColor ||
-            computedStyle.borderBottomColor === baseBorderColor ||
-            computedStyle.borderLeftColor === baseBorderColor) 
-        {
-            el.style.borderTopColor = topColor;
-            el.style.borderRightColor = rightColor;
-            el.style.borderBottomColor = bottomColor;
-            el.style.borderLeftColor = leftColor;
-        }
+    elements.forEach(el => {
+        el.style.borderTopColor = top;
+        el.style.borderRightColor = right;
+        el.style.borderBottomColor = bottom;
+        el.style.borderLeftColor = left;
     });
 }
 
-
 function updateBorderLightEffect() {
+    const lastWeatherDataString = localStorage.getItem('lastWeatherData');
     if (!borderLightEffectsEnabled) {
-        applyOrClearBorderLightEffect(); // This will clear the effect
+        sunPositionClass = ''; // Clear position class
+        applyOrClearBorderLightEffect(); // Reset all borders to default
         return;
     }
-
-    const lastWeatherDataString = localStorage.getItem('lastWeatherData');
-    if (!lastWeatherDataString) return;
+    
+    if (!lastWeatherDataString) return; // Exit if no location data
 
     const weatherData = JSON.parse(lastWeatherDataString);
-    if (!weatherData || weatherData.latitude === undefined || weatherData.longitude === undefined) {
-        return;
-    }
+    if (!weatherData || weatherData.latitude === undefined || weatherData.longitude === undefined) return;
 
     const lat = weatherData.latitude;
     const lon = weatherData.longitude;
@@ -205,20 +197,17 @@ function updateBorderLightEffect() {
     const times = SunCalc.getTimes(now, lat, lon);
 
     let newClass = 'night';
+    // Define transition periods for a smoother effect
     const sunriseEnd = new Date(times.sunriseEnd.getTime() + 30 * 60000);
     const sunsetStart = new Date(times.sunset.getTime() - 30 * 60000);
 
-    if (now > times.sunrise && now < sunriseEnd) {
-        newClass = 'sunrise';
-    } else if (now > sunriseEnd && now < sunsetStart) {
-        newClass = 'midday';
-    } else if (now > sunsetStart && now < times.sunsetEnd) {
-        newClass = 'sunset';
-    }
+    if (now > times.sunrise && now < sunriseEnd) newClass = 'sunrise';
+    else if (now > sunriseEnd && now < sunsetStart) newClass = 'midday';
+    else if (now > sunsetStart && now < times.sunsetEnd) newClass = 'sunset';
 
     if (newClass !== sunPositionClass) {
         sunPositionClass = newClass;
-        applyOrClearBorderLightEffect(); // Apply the new colors
+        applyOrClearBorderLightEffect();
 
         // Inform iframes of the change
         const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
@@ -957,16 +946,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const effectsSwitch = document.getElementById('effects-switch');
-    effectsSwitch.checked = borderLightEffectsEnabled;
-    if (borderLightEffectsEnabled) {
-        updateBorderLightEffect();
-    }
+    if (effectsSwitch) {
+        effectsSwitch.checked = borderLightEffectsEnabled;
+        if (borderLightEffectsEnabled) {
+            updateBorderLightEffect();
+        }
 
-    effectsSwitch.addEventListener('change', function() {
-        borderLightEffectsEnabled = this.checked;
-        localStorage.setItem('borderLightEffectsEnabled', borderLightEffectsEnabled);
-        updateBorderLightEffect(); // This will handle applying or clearing the effect
-    });
+        effectsSwitch.addEventListener('change', function() {
+            borderLightEffectsEnabled = this.checked;
+            localStorage.setItem('borderLightEffectsEnabled', borderLightEffectsEnabled);
+            updateBorderLightEffect(); // Handles both enabling and disabling
+        });
+    }
 
     // Update light effect every 5 minutes
     setInterval(updateBorderLightEffect, 300000);
