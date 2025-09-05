@@ -60,27 +60,36 @@
     
     <svg style="display: none">
         <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
-            <!-- Part 1: Create the turbulence that will only be used at the edges -->
-            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"/>
+            <!-- Part 1: Create the turbulence noise that will displace the pixels -->
+            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"></feTurbulence>
         
-            <!-- Part 2: Create a mask that is only opaque at the edges -->
-            <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"/>
-            <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"/>
-            <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"/>
+            <!-- Part 2: Create a mask that is only opaque at the very edges of the source graphic -->
+            <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"></feMorphology>
+            <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"></feComposite>
         
-            <!-- Part 3: Create the final displacement map -->
-            <!-- First, create the 50% gray neutral background -->
-            <feFlood flood-color="#808080" result="neutral_base"/>
-            
-            <!-- Next, use feMerge to explicitly stack the edge turbulence ON TOP of the gray base.
-                 This is the key step that prevents the center from shifting. -->
+            <!-- Part 3: Apply the turbulence only to the edge mask -->
+            <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"></feComposite>
+        
+            <!-- Part 4: Create a displacement map that is neutral (50% gray) in the center
+                 and has the turbulence pattern at the edges. This prevents the center of the
+                 graphic from being distorted. -->
+            <feFlood flood-color="#808080" result="neutral_base"></feFlood>
             <feMerge result="displacement_map">
-                <feMergeNode in="neutral_base"/>
-                <feMergeNode in="edge_turbulence"/>
+                <feMergeNode in="neutral_base"></feMergeNode>
+                <feMergeNode in="edge_turbulence"></feMergeNode>
             </feMerge>
         
-            <!-- Part 4: Apply the final, perfectly centered displacement map -->
-            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="20" xChannelSelector="R" yChannelSelector="G"/>
+            <!-- Part 5: Apply the displacement twice and combine the results. -->
+            <!-- Pass 1: A positive scale refracts the top and left edges inward correctly. -->
+            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="40" xChannelSelector="R" yChannelSelector="G" result="disp_positive"></feDisplacementMap>
+            
+            <!-- Pass 2: A negative scale refracts the bottom and right edges inward correctly. -->
+            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="-40" xChannelSelector="R" yChannelSelector="G" result="disp_negative"></feDisplacementMap>
+            
+            <!-- Part 6: Blend the two results. The 'lighten' mode takes the non-transparent pixels
+                 from both passes. Since the "incorrect" refractions are pushed into transparent
+                 areas, this effectively combines the correctly refracted edges from both passes. -->
+            <feBlend in="disp_positive" in2="disp_negative" mode="lighten"></feBlend>
         </filter>
     </svg>
 
