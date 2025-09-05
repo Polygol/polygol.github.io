@@ -247,6 +247,47 @@ const Gurasuraisu = {
 
 // --- Event Listener for Messages FROM Gurasuraisu ---
 
+// This function finds all elements with a border and applies the effect.
+// It's designed to work without knowing the app's specific structure.
+function applyIframeBorderLightEffect(enabled, position) {
+    const root = document.documentElement;
+    const baseBorderColor = getComputedStyle(root).getPropertyValue('--glass-border').trim();
+    if (!baseBorderColor) return; // App doesn't use the required variable
+
+    const colors = {
+        sunrise: 'rgba(255, 204, 112, 0.9)',
+        midday: 'rgba(255, 255, 255, 0.8)',
+        sunset: 'rgba(255, 100, 120, 0.8)',
+        night: 'rgba(120, 160, 255, 0.3)'
+    };
+
+    let top = baseBorderColor, right = baseBorderColor, bottom = baseBorderColor, left = baseBorderColor;
+
+    if (enabled) {
+        switch (position) {
+            case 'sunrise': top = colors.sunrise; right = colors.sunrise; break;
+            case 'midday': top = colors.midday; break;
+            case 'sunset': top = colors.sunset; left = colors.sunset; break;
+            case 'night': default: top = colors.night; break;
+        }
+    }
+
+    // Dynamically find and style elements that use the base border color
+    document.querySelectorAll('*').forEach(el => {
+        const style = getComputedStyle(el);
+        if (style.borderWidth !== '0px' && style.borderColor === baseBorderColor) {
+             el.style.borderTopColor = top;
+             el.style.borderRightColor = right;
+             el.style.borderBottomColor = bottom;
+             el.style.borderLeftColor = left;
+             // Ensure a smooth transition
+             el.style.transition = el.style.transition ? 
+                el.style.transition + ', border-color 1s ease-in-out' : 
+                'border-color 1s ease-in-out';
+        }
+    });
+}
+
 /**
  * Listens for messages from the parent window, such as theme
  * or animation setting changes, and applies them to the Gurapp.
@@ -267,6 +308,9 @@ window.addEventListener('message', async (event) => {
         break;
     case 'contrastUpdate':
         document.documentElement.classList.toggle('gurasuraisu-high-contrast', data.enabled);
+        break;
+      case 'borderLightUpdate':
+        applyIframeBorderLightEffect(data.enabled, data.position);
         break;
       
       // --- NEW: Handles screenshot requests from the parent ---
