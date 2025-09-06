@@ -259,8 +259,8 @@ function _applySunShadowToGurapp() {
     allElements.forEach(el => {
         try {
             const style = window.getComputedStyle(el);
-            // Check if the element uses the glass effect by looking for the unique filter ID in the resolved style
-            if (style.backdropFilter && style.backdropFilter.includes('edge-refraction-only')) {
+            // CORRECTED CHECK: Look for the resolved fragment identifier of the SVG filter.
+            if (style.backdropFilter && style.backdropFilter.includes('#edge-refraction-only')) {
                  let currentShadow = el.style.boxShadow;
         
                 // Remove old sun shadow if it exists to prevent duplication
