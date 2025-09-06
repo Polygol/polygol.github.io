@@ -471,6 +471,9 @@ input[type="color"]::-moz-color-swatch {
     position: relative;
     transition: color 0.3s;
     user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .container.align-left {
