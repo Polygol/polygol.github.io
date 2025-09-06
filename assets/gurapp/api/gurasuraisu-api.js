@@ -245,6 +245,48 @@ const Gurasuraisu = {
   }
 };
 
+  /**
+   * Applies the current sun-based lighting effect to an element.
+   * This should be called by the Gurapp on its glass-like elements.
+   * @param {HTMLElement} element - The DOM element to apply the shadow to.
+   */
+  applySunEffect: function(element) {
+    if (!element || typeof element.style === 'undefined') {
+        console.warn('[Gurasuraisu API] applySunEffect requires a valid DOM element.');
+        return;
+    }
+
+    const SUN_SHADOW_ID = '/* sun-shadow */';
+    let currentShadow = element.style.boxShadow;
+
+    // Find and remove the old sun shadow if it exists
+    const oldSunShadowIndex = currentShadow.indexOf(SUN_SHADOW_ID);
+    if (oldSunShadowIndex !== -1) {
+        // Search backwards from the comment to find the start of the 'inset' property
+        const shadowStartIndex = currentShadow.lastIndexOf('inset', oldSunShadowIndex);
+        if (shadowStartIndex !== -1) {
+            // Find the comma that separates it from other shadows
+            let shadowEndIndex = currentShadow.indexOf(',', oldSunShadowIndex);
+            if (shadowEndIndex !== -1) {
+                // Remove the shadow and the trailing comma and space
+                currentShadow = currentShadow.substring(0, shadowStartIndex) + currentShadow.substring(shadowEndIndex + 1).trim();
+            } else {
+                // It's the only shadow, so just remove it.
+                currentShadow = '';
+            }
+        }
+    }
+
+    // Apply the new sun shadow, preserving other existing shadows
+    if (currentSunShadow) {
+        const newShadow = `${currentSunShadow}${SUN_SHADOW_ID}`;
+        element.style.boxShadow = currentShadow ? `${newShadow}, ${currentShadow}` : newShadow;
+    } else {
+        element.style.boxShadow = currentShadow;
+    }
+  }
+};
+
 // --- Event Listener for Messages FROM Gurasuraisu ---
 
 /**
