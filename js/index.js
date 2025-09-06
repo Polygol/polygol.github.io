@@ -4696,7 +4696,7 @@ let apps = {
     },
 
     "Files": {
-        url: "/sysapp/forudaraisu/index.html",
+        url: "/assets/gurapp/intl/forudaraisu/index.html",
         icon: "files.png"
     }
 };
