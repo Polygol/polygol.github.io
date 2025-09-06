@@ -1866,13 +1866,13 @@ function addToNotificationShade(message, options = {}) {
     contentContainer.style.gap = '10px';
     contentContainer.style.width = '100%';
     
-    let iconType = 'notification';
+    let iconType = 'notifications';
 
-    let iconTypeForShade = 'notification'; // Default icon
+    let iconTypeForShade = 'notifications'; // Default icon
     if (options.icon) { // Prefer explicit icon from options
         iconTypeForShade = options.icon;
     } else {
-        iconTypeForShade = 'notification';
+        iconTypeForShade = 'notifications';
     }
     
     // Create icon
