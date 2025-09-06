@@ -1683,13 +1683,11 @@ input[type="checkbox"]:checked::before {
         }
 
         .setup-buttons {
-		    margin-top: 2rem;
+		    margin: 2rem;
 		    display: flex;
 		    gap: 1rem;
 		    justify-content: center;
 		    font-family: 'Inter', sans-serif;
-		    position: fixed;
-		    bottom: 70px;
 		}
 
         .setup-button {
