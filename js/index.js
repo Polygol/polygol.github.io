@@ -4733,12 +4733,7 @@ function createFullscreenEmbed(url) {
         appLastOpened[appName] = Date.now();
         saveLastOpenedData();
     };
-
-    const interactionListener = () => {
-        appLastOpened[appName] = Date.now();
-        saveLastOpenedData();
-    };
-
+	
     // Update the favicon to the app's icon
     const appDetails = apps[appName];
     if (appDetails && appDetails.icon) {
