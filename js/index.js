@@ -4763,6 +4763,12 @@ function createFullscreenEmbed(url) {
     if (minimizedEmbeds[url]) {
         // Restore the minimized embed
         const embedContainer = minimizedEmbeds[url];
+		const iframe = embedContainer.querySelector('iframe'); // Get the iframe
+
+		if (iframe) iframe.style.pointerEvents = 'none';
+        setTimeout(() => {
+            if (iframe) iframe.style.pointerEvents = 'auto';
+        }, 100);
         
         // First, remove any existing transitions
         embedContainer.style.transition = 'none';
@@ -4835,6 +4841,7 @@ function createFullscreenEmbed(url) {
     // Create new embed if not already minimized
     const iframe = document.createElement('iframe');
     iframe.src = url;
+	iframe.style.pointerEvents = 'none';
     iframe.setAttribute('data-gurasuraisu-iframe', 'true');
     const appId = Object.keys(apps).find(k => apps[k].url === url);
     iframe.dataset.appId = appId;
@@ -4935,6 +4942,10 @@ function createFullscreenEmbed(url) {
         interactionBlocker.style.pointerEvents = 'none';
         interactionBlocker.style.display = 'none';
     }
+
+	setTimeout(() => {
+        iframe.style.pointerEvents = 'auto';
+    }, 100);
 }
 
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
@@ -5233,6 +5244,9 @@ function setupDrawerInteractions() {
         dragStartTime = Date.now();
         velocities = [];
         appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
+		document.querySelectorAll('.fullscreen-embed iframe').forEach(frame => {
+            frame.style.pointerEvents = 'none';
+        });
     }
 
 	function moveDrawer(yPosition) {
@@ -5423,6 +5437,16 @@ function setupDrawerInteractions() {
                 document.body.style.setProperty('--wallpaper-filter', openFilter);
                 document.body.style.setProperty('--bg-transform-scale', '1.25');
 	        }
+
+			setTimeout(() => {
+		        const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+		        if (activeEmbed) {
+		            const activeIframe = activeEmbed.querySelector('iframe');
+		            if (activeIframe) {
+		                activeIframe.style.pointerEvents = 'auto';
+		            }
+		        }
+		    }, 350); // Delay should be slightly longer than your CSS animation
 	
 	    } else {
 	        // LOGIC FOR FINISHING A DRAWER DRAG (NO APP OPEN)
