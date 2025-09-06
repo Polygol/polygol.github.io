@@ -2074,23 +2074,8 @@ function createSetupScreen() {
     const setupPages = [
         {
             title: "SETUP_HI_THERE",
-            description: "SETUP_SELECT_LANGUAGE",
-	    icon: "language",
-            options: [
-	        { name: "SETUP_SELECT_LANGUAGE_DESC", default: true },
-			    { "name": "English", "value": "EN" },
-			    { "name": "日本語", "value": "JP" },
-			    { "name": "Deutsch", "value": "DE" },
-			    { "name": "Français", "value": "FR" },
-			    { "name": "Español", "value": "ES" },
-			    { "name": "한국어", "value": "KO" },
-			    { "name": "中文", "value": "ZH" },
-            ]
-        },
-        {
-            title: "SETUP_OPEN_PRIVATE",
             description: "SETUP_OPEN_PRIVATE_DESC",
-	    icon: "verified_user", // Add icon
+	    icon: "waving_hand",
             options: []
         },
         {
@@ -2227,13 +2212,7 @@ function createSetupScreen() {
                 optionElement.appendChild(checkIcon);
         
                 // Handle click events based on option type
-                if (pageData.title === "SETUP_SELECT_LANGUAGE") {
-					optionElement.addEventListener('click', async () => {
-					    localStorage.setItem('selectedLanguage', option.value);
-					    await selectLanguage(option.value); // Wait for language to apply
-					    updateSetup(); // Refresh the current page
-					});
-                } else if (option.permission) {
+                if (option.permission) {
                     optionElement.addEventListener('click', async () => {
                         try {
                             let permissionGranted = false;
