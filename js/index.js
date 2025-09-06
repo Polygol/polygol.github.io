@@ -4769,7 +4769,7 @@ function createFullscreenEmbed(url) {
     // Check if we have this URL minimized already
     if (minimizedEmbeds[url]) {
         // Restore the minimized embed
-        const embedContainer = minimizedEmbeds[url];
+        const embedContainer = minimizedEmbeds[url].element;
         
         // First, remove any existing transitions
         embedContainer.style.transition = 'none';
