@@ -27,6 +27,7 @@ const ASSETS_TO_CACHE = [
   'https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Medium.woff2',
   'https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Semibold.woff2',
   'https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Bold.woff2',
+  'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js',
   'https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap',
   'https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&display=swap',
   'https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap',
