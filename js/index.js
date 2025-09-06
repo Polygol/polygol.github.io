@@ -4693,6 +4693,11 @@ let apps = {
     "App Store": {
         url: "/appstore/index.html",
         icon: "appstore.png"
+    },
+
+    "Files": {
+        url: "/sysapp/forudaraisu/index.html",
+        icon: "files.png"
     }
 };
 
