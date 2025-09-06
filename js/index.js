@@ -6472,6 +6472,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (isAiAssistantEnabled) {
         initializeAiAssistant();
     }
+
+    window.addEventListener('blur', () => {
+        // Use a timeout to check the active element after the blur event has fully processed
+        setTimeout(() => {
+            const activeIframe = document.activeElement;
+            if (activeIframe && activeIframe.tagName === 'IFRAME' && activeIframe.closest('.fullscreen-embed')) {
+                const embedContainer = activeIframe.closest('.fullscreen-embed');
+                const url = embedContainer.dataset.embedUrl;
+                if (url) {
+                    updateLastUsed(url);
+                }
+            }
+        }, 0);
+    });
 });
 
 window.addEventListener('load', checkFullscreen);
