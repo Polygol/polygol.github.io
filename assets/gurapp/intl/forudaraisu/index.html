@@ -71,6 +71,30 @@
             -webkit-tap-highlight-color: transparent;
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
         }
+
+        /* For all clickable elements */
+        [onclick], 
+        button, 
+        a, 
+        input[type="button"], 
+        input[type="submit"],
+        .clickable {
+          cursor: pointer;
+          transform: scale(1);
+          transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+        }
+        
+        /* Active effect (when clicking down) */
+        [onclick]:active, 
+        button:active, 
+        a:active, 
+        input[type="button"]:active, 
+        input[type="submit"]:active,
+        .clickable:active {
+          transform: scale(0.96);
+          transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+          filter: brightness(1.5);
+        }
         
         body {
             background-color: var(--background-color-tr);
