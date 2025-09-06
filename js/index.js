@@ -82,47 +82,51 @@ function applyLanguage(language) {
 }
 
 function selectLanguage(languageCode) {
-	const languageMap = {
-	    'EN': LANG_EN,
-	    'JP': LANG_JP,
-	    'DE': LANG_DE,
-	    'FR': LANG_FR,
-	    'ES': LANG_ES,
-	    'KO': LANG_KO,
-	    'ZH': LANG_ZH,
-	    'HI': LANG_HI,
-	    'PT': LANG_PT,
-	    'BN': LANG_BN,
-	    'RU': LANG_RU,
-	    'PA': LANG_PA,
-	    'VI': LANG_VI,
-	    'TR': LANG_TR,
-	    'AR_EG': LANG_AR_EG,
-	    'MR': LANG_MR,
-	    'TE': LANG_TE,
-	    'TA': LANG_TA,
-	    'UR': LANG_UR,
-	    'ID': LANG_ID,
-	    'JV': LANG_JV,
-	    'FA_IR': LANG_FA_IR,
-	    'IT': LANG_IT,
-	    'HA': LANG_HA,
-	    'GU': LANG_GU,
-	    'AR_LEV': LANG_AR_LEV,
-	    'BHO': LANG_BHO
-	};
+    return new Promise(resolve => {
+        const languageMap = {
+            'EN': LANG_EN,
+            'JP': LANG_JP,
+            'DE': LANG_DE,
+            'FR': LANG_FR,
+            'ES': LANG_ES,
+            'KO': LANG_KO,
+            'ZH': LANG_ZH,
+            'HI': LANG_HI,
+            'PT': LANG_PT,
+            'BN': LANG_BN,
+            'RU': LANG_RU,
+            'PA': LANG_PA,
+            'VI': LANG_VI,
+            'TR': LANG_TR,
+            'AR_EG': LANG_AR_EG,
+            'MR': LANG_MR,
+            'TE': LANG_TE,
+            'TA': LANG_TA,
+            'UR': LANG_UR,
+            'ID': LANG_ID,
+            'JV': LANG_JV,
+            'FA_IR': LANG_FA_IR,
+            'IT': LANG_IT,
+            'HA': LANG_HA,
+            'GU': LANG_GU,
+            'AR_LEV': LANG_AR_LEV,
+            'BHO': LANG_BHO
+        };
 
-    currentLanguage = languageMap[languageCode] || LANG_EN;
-    console.log('Selected language code:', languageCode);
-    console.log('Current language object:', currentLanguage);
+        currentLanguage = languageMap[languageCode] || LANG_EN;
+        console.log('Selected language code:', languageCode);
+        console.log('Current language object:', currentLanguage);
 
-    localStorage.setItem('selectedLanguage', languageCode);
-    applyLanguage(currentLanguage);
+        localStorage.setItem('selectedLanguage', languageCode);
+        applyLanguage(currentLanguage);
 
-    const languageSwitcher = document.getElementById('language-switcher');
-    if (languageSwitcher) {
-        languageSwitcher.value = languageCode;
-    }
+        const languageSwitcher = document.getElementById('language-switcher');
+        if (languageSwitcher) {
+            languageSwitcher.value = languageCode;
+        }
+
+        resolve(); // Let async functions await this
+    });
 }
 
 function consoleLicense() {
@@ -2048,23 +2052,18 @@ function checkFullscreen() {
   }
 }
 
-function firstSetup() {
-    // Check if it's the first visit
+async function firstSetup() {
     const hasVisitedBefore = localStorage.getItem('hasVisitedBefore');
-
-    // Get the selected language, defaulting to 'EN'
     const selectedLanguage = localStorage.getItem('selectedLanguage') || 'EN';
     console.log('First setup: selected language:', selectedLanguage);
 
-    // Select and apply the language
-    selectLanguage(selectedLanguage);
+    // Wait for the language to be set and applied
+    await selectLanguage(selectedLanguage);
 
-    // Show setup screen for first-time users
     if (!hasVisitedBefore) {
-        createSetupScreen();
+        createSetupScreen(); // UI now uses the correct currentLanguage
     }
 
-    // Mark that the user has visited before
     localStorage.setItem('hasVisitedBefore', 'true');
 }
 
@@ -2249,11 +2248,11 @@ function createSetupScreen() {
         
                 // Handle click events based on option type
                 if (pageData.title === "SETUP_SELECT_LANGUAGE") {
-                    optionElement.addEventListener('click', () => {
-                        localStorage.setItem('selectedLanguage', option.value);
-                        selectLanguage(option.value);
-                        updateSetup();
-                    });
+					optionElement.addEventListener('click', async () => {
+					    localStorage.setItem('selectedLanguage', option.value);
+					    await selectLanguage(option.value); // Wait for language to apply
+					    updateSetup(); // Refresh the current page
+					});
                 } else if (option.permission) {
                     optionElement.addEventListener('click', async () => {
                         try {
