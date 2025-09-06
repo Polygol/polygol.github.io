@@ -151,6 +151,7 @@ let currentWallpaperPosition = 0;
 let isSlideshow = false;
 let minimizedEmbeds = {}; // Object to store minimized embeds by URL
 let appLastOpened = {};
+let currentSunShadow = ''; // To store the calculated sun shadow string
 
 secondsSwitch.checked = showSeconds;
 
@@ -678,6 +679,93 @@ function loadSavedData() {
 
 function saveLastOpenedData() {
     localStorage.setItem('appLastOpened', JSON.stringify(appLastOpened));
+}
+
+/**
+ * Calculates a box-shadow string based on the sun's position.
+ */
+function updateSunEffect() {
+    // Check if geolocation is available to get coordinates for SunCalc
+    if (!navigator.geolocation) {
+        console.warn("Sun effect disabled: Geolocation not available.");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(position => {
+        const { latitude, longitude } = position.coords;
+        const now = new Date();
+        const sunPosition = SunCalc.getPosition(now, latitude, longitude);
+
+        // altitude: 0 at horizon, PI/2 at zenith.
+        // azimuth: 0 is south, PI/2 is west, PI is north, 3PI/2 is east.
+        
+        if (sunPosition.altitude <= 0) {
+            // Sun is below the horizon, no shadow
+            currentSunShadow = '';
+        } else {
+            // Calculate properties based on sun position
+            const lightIntensity = Math.max(0.1, Math.pow(Math.sin(sunPosition.altitude), 0.5));
+            const shadowColor = `rgba(255, 255, 255, ${0.25 * lightIntensity})`;
+            const shadowDistance = 2.5 * (1 - Math.sin(sunPosition.altitude)); // Larger when sun is low
+            const offsetX = -Math.sin(sunPosition.azimuth) * shadowDistance;
+            const offsetY = -Math.cos(sunPosition.azimuth) * shadowDistance;
+
+            currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 4px ${shadowColor}`;
+        }
+        
+        // Apply to the main page and broadcast to iframes
+        applySunShadowToPage();
+        broadcastSunUpdate();
+
+    }, error => {
+        console.warn("Sun effect disabled: Could not get location.", error);
+    });
+}
+
+/**
+ * Applies the calculated sun shadow to all relevant elements on the main page.
+ */
+function applySunShadowToPage() {
+    const SUN_SHADOW_ID = '/* sun-shadow */';
+    const elements = document.querySelectorAll('.drawer-pill, .persistent-clock, .clock, .date, .weather-widget, .modal, .brightness-slider-container, .settings-grid, .media-widget, .qcontrol-item, .thermostat-popup, .version-info, .dock, .ai-search-bar, #ai-response-area, .widget-instance');
+
+    elements.forEach(el => {
+        let currentShadow = el.style.boxShadow;
+        
+        // Remove old sun shadow if it exists
+        const oldSunShadowIndex = currentShadow.indexOf(SUN_SHADOW_ID);
+        if (oldSunShadowIndex !== -1) {
+            const shadowStartIndex = currentShadow.lastIndexOf('inset', oldSunShadowIndex);
+            if (shadowStartIndex !== -1) {
+                let shadowEndIndex = currentShadow.indexOf(',', oldSunShadowIndex);
+                if (shadowEndIndex !== -1) {
+                    currentShadow = currentShadow.substring(0, shadowStartIndex) + currentShadow.substring(shadowEndIndex + 1).trim();
+                } else {
+                    currentShadow = '';
+                }
+            }
+        }
+        
+        // Apply new shadow, preserving existing styles
+        if (currentSunShadow) {
+            const newShadow = `${currentSunShadow} ${SUN_SHADOW_ID}`;
+            el.style.boxShadow = currentShadow ? `${newShadow}, ${currentShadow}` : newShadow;
+        } else {
+            el.style.boxShadow = currentShadow;
+        }
+    });
+}
+
+/**
+ * Sends the updated sun shadow value to all active Gurapp iframes.
+ */
+function broadcastSunUpdate() {
+    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    iframes.forEach(iframe => {
+        if (iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
+        }
+    });
 }
 
 // IndexedDB setup for video storage
@@ -4961,6 +5049,11 @@ function createFullscreenEmbed(url) {
             interactionBlocker.style.pointerEvents = 'none';
             interactionBlocker.style.display = 'none';
         }
+
+		// NEW: Send sun update to the iframe once it's restored
+	    if (iframe.contentWindow) {
+	        iframe.contentWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
+	    }
         
         return;
     }
@@ -6099,6 +6192,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     checkWallpaperState();
     updateGurappsVisibility();
     syncUiStates();
+
+	// --- Initialize sun effect and set it to update periodically ---
+    updateSunEffect();
+	setInterval(updateSunEffect, 30 * 60 * 1000); // Update every 30 minutes	
 	
     // Initialize control states
     const storedLightMode = localStorage.getItem('theme') || 'dark';
