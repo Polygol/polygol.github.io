@@ -139,17 +139,10 @@ let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults t
 let recentWallpapers = [];
 let currentWallpaperPosition = 0;
 let isSlideshow = false;
-let minimizedEmbeds = {}; // Will now store { url: { element, lastUsed } }
+let minimizedEmbeds = {}; // Object to store minimized embeds by URL
 let appLastOpened = {};
 
 secondsSwitch.checked = showSeconds;
-
-// New function to update the last used timestamp of an app
-function updateLastUsed(url) {
-    if (minimizedEmbeds[url] && minimizedEmbeds[url].element.style.display === 'block') {
-        minimizedEmbeds[url].lastUsed = Date.now();
-    }
-}
 
 function saveAvailableWidgets() {
     localStorage.setItem('availableWidgets', JSON.stringify(availableWidgets));
@@ -4769,13 +4762,7 @@ function createFullscreenEmbed(url) {
     // Check if we have this URL minimized already
     if (minimizedEmbeds[url]) {
         // Restore the minimized embed
-        const embedContainer = minimizedEmbeds[url].element;
-		const iframe = embedContainer.querySelector('iframe'); // Get the iframe
-
-        if (iframe) iframe.style.pointerEvents = 'none';
-        setTimeout(() => {
-            if (iframe) iframe.style.pointerEvents = 'auto';
-        }, 100);
+        const embedContainer = minimizedEmbeds[url];
         
         // First, remove any existing transitions
         embedContainer.style.transition = 'none';
@@ -4848,7 +4835,6 @@ function createFullscreenEmbed(url) {
     // Create new embed if not already minimized
     const iframe = document.createElement('iframe');
     iframe.src = url;
-	iframe.style.pointerEvents = 'none';
     iframe.setAttribute('data-gurasuraisu-iframe', 'true');
     const appId = Object.keys(apps).find(k => apps[k].url === url);
     iframe.dataset.appId = appId;
@@ -4878,7 +4864,6 @@ function createFullscreenEmbed(url) {
     
     // Store the URL as a data attribute
     embedContainer.dataset.embedUrl = url;
-    minimizedEmbeds[url] = { element: embedContainer, lastUsed: Date.now() };
     
     // Flag to track embedding status
     let embedFailed = false;
@@ -4950,10 +4935,6 @@ function createFullscreenEmbed(url) {
         interactionBlocker.style.pointerEvents = 'none';
         interactionBlocker.style.display = 'none';
     }
-	
-    setTimeout(() => {
-        iframe.style.pointerEvents = 'auto';
-    }, 100);
 }
 
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
@@ -4976,14 +4957,19 @@ function minimizeFullscreenEmbed() {
     const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
     
     if (embedContainer) {
+        // Get the URL before hiding it
         const url = embedContainer.dataset.embedUrl;
-        if (url && minimizedEmbeds[url]) {
+        if (url) {
+            // Store the embed in our minimized embeds object
+            minimizedEmbeds[url] = embedContainer;
+
+			// After animation completes, actually hide it completely, and restore user-set filter and scale
             applyWallpaperEffects();
             document.body.style.setProperty('--bg-transform-scale', '1.05');
             embedContainer.style.display = 'none';
-            embedContainer.style.transform = ''; // Reset transform for task switcher
 			persistentClock.style.opacity = '1';
             
+            // Use a different z-index approach when minimized
             embedContainer.style.pointerEvents = 'none';
             embedContainer.style.zIndex = '0';
         }
@@ -5187,9 +5173,6 @@ function setupDrawerInteractions() {
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
 	const appDrawerHandle = document.querySelector('.app-drawer-handle');
-    let startX = 0, currentX = 0;
-    let isVerticalDrag = false, isHorizontalDrag = false;
-    const switcherState = { apps: [], currentIndex: -1 };
 
     const startLongPress = (e) => {
         // Only trigger long press if AI is enabled and not already dragging the drawer.
@@ -5240,149 +5223,6 @@ function setupDrawerInteractions() {
     swipeOverlay.style.display = 'none';
     swipeOverlay.style.pointerEvents = 'none'; // Start with no interaction
     document.body.appendChild(swipeOverlay);
-
-
-    function prepareSwitcher() {
-        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        
-        // On drag start, build and sort the list of apps
-        switcherState.apps = Object.values(minimizedEmbeds)
-            .filter(app => app.element)
-            .sort((a, b) => b.lastUsed - a.lastUsed)
-            .map(app => app.element);
-            
-        // Abort if there's nothing to switch to
-        if (switcherState.apps.length < 2 || !openEmbed) {
-            isHorizontalDrag = false; // Cancel horizontal drag
-            return;
-        }
-        
-        switcherState.currentIndex = switcherState.apps.findIndex(el => el === openEmbed);
-        
-        // Pre-stage ALL apps for the transition by making them visible and placing them in a virtual "filmstrip"
-        switcherState.apps.forEach((appEl, index) => {
-            appEl.style.transition = 'none';
-            appEl.style.display = 'block';
-            const offset = index - switcherState.currentIndex;
-            const initialX = offset * window.innerWidth;
-            appEl.style.transform = `translateX(${initialX}px) scale(0.9)`;
-            appEl.style.zIndex = switcherState.apps.length - Math.abs(offset);
-        });
-
-        // Ensure the current app is full size and on top
-        const currentAppEl = switcherState.apps[switcherState.currentIndex];
-        if (currentAppEl) {
-            currentAppEl.style.transform = 'translateX(0) scale(1)';
-            currentAppEl.style.zIndex = '1001';
-        }
-    }
-
-    function handleHorizontalDrag() {
-        const screenWidth = window.innerWidth;
-        const deltaX = currentX - startX;
-        
-        // Move the entire "filmstrip" of apps based on the user's finger
-        switcherState.apps.forEach((appEl, index) => {
-            const offset = index - switcherState.currentIndex;
-            const newX = (offset * screenWidth) + deltaX;
-            const proximity = Math.abs(newX / screenWidth);
-            const scale = 1 - (proximity * 0.1);
-
-            appEl.style.transform = `translateX(${newX}px) scale(${scale})`;
-        });
-    }
-
-    function endHorizontalDrag() {
-        const deltaX = currentX - startX;
-        const screenWidth = window.innerWidth;
-        let newIndex = switcherState.currentIndex;
-
-        // Determine if the swipe was far enough to trigger a switch
-        if (Math.abs(deltaX) > screenWidth / 4) {
-            newIndex = deltaX < 0 ? newIndex + 1 : newIndex - 1;
-        }
-        newIndex = Math.max(0, Math.min(switcherState.apps.length - 1, newIndex));
-
-        // Animate all apps to their final positions
-        switcherState.apps.forEach((appEl, index) => {
-            appEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            const offset = index - newIndex;
-            appEl.style.transform = `translateX(${offset * screenWidth}px) scale(${offset === 0 ? 1 : 0.9})`;
-            appEl.style.zIndex = offset === 0 ? '1001' : '1000';
-        });
-
-        switcherState.currentIndex = newIndex;
-        const newActiveApp = switcherState.apps[newIndex];
-        if (newActiveApp) {
-            updateLastUsed(newActiveApp.dataset.embedUrl);
-        }
-
-        // After the animation, hide the apps that are now off-screen
-        setTimeout(() => {
-            switcherState.apps.forEach((appEl, index) => {
-                if (index !== switcherState.currentIndex) {
-                    appEl.style.display = 'none';
-                }
-            });
-        }, 350);
-    }
-	
-    function handleDragStart(e) {
-        const point = e.touches ? e.touches[0] : e;
-        startX = point.clientX;
-        startY = point.clientY;
-        lastY = startY; // Keep for vertical drag
-        isDragging = true;
-        isDrawerInMotion = true;
-        dragStartTime = Date.now();
-        velocities = [];
-        isVerticalDrag = false;
-        isHorizontalDrag = false;
-        
-        document.querySelectorAll('.fullscreen-embed iframe').forEach(frame => frame.style.pointerEvents = 'none');
-    }
-
-    function handleDragMove(e) {
-        if (!isDragging) return;
-        const point = e.touches ? e.touches[0] : e;
-        currentX = point.clientX;
-        currentY = point.clientY;
-        const deltaX = currentX - startX;
-        const deltaY = currentY - startY;
-
-        if (!isVerticalDrag && !isHorizontalDrag && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
-            if (Math.abs(deltaY) > Math.abs(deltaX)) {
-                isVerticalDrag = true;
-            } else {
-                isHorizontalDrag = true;
-                prepareSwitcher();
-            }
-        }
-        
-        if (isVerticalDrag) {
-            moveDrawer(currentY); // Your existing vertical drag function
-        } else if (isHorizontalDrag && switcherState.apps.length > 0) {
-            e.preventDefault();
-            handleHorizontalDrag();
-        }
-    }
-
-    function handleDragEnd(e) {
-        if (!isDragging) return;
-
-        if (isVerticalDrag) {
-            endDrag(); // Your existing vertical drag end function
-        } else if (isHorizontalDrag && switcherState.apps.length > 0) {
-            endHorizontalDrag();
-        }
-
-        isDragging = false;
-        setTimeout(() => {
-            const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"] iframe');
-            if(activeEmbed) activeEmbed.style.pointerEvents = 'auto';
-            isDrawerInMotion = false;
-        }, 350);
-    }
 
     function startDrag(yPosition) {
         startY = yPosition;
@@ -5675,21 +5515,141 @@ function setupDrawerInteractions() {
 	    }, 300);
 	}
 
-    const swipeInitiators = [drawerHandle, appDrawerHandle, swipeOverlay];
-    swipeInitiators.forEach(handle => {
-        if (handle) {
-            handle.addEventListener('mousedown', e => { if (e.button === 0) handleDragStart(e); });
-            handle.addEventListener('touchstart', e => {
-                handleDragStart(e);
-                e.preventDefault(); // Prevent scrolling while interacting with the handle
-            }, { passive: false });
+    // Add initial swipe detection in app
+    function setupAppSwipeDetection() {
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        let isInSwipeMode = false;
+
+	swipeOverlay.addEventListener('touchstart', (e) => {
+            // Stop this event from bubbling up to the general document listener.
+            // This ensures that when the overlay is active, it takes priority
+            // and prevents a double-drag initiation.
+            e.stopPropagation(); 
+        
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+        
+            // We also need to start the long-press timer here for the in-app context
+            startLongPress(e); 
+
+        }, { passive: true });
+        
+        swipeOverlay.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+        }, { passive: true });
+        
+        swipeOverlay.addEventListener('touchmove', (e) => {
+            const currentY = e.touches[0].clientY;
+            const deltaY = touchStartY - currentY;
+            
+            if (deltaY > 25 && !isInSwipeMode) { // Detected upward swipe
+                isInSwipeMode = true;
+                startDrag(touchStartY);
+                // Capture all further events
+                swipeOverlay.style.pointerEvents = 'auto';
+            }
+            
+            if (isInSwipeMode) {
+                moveDrawer(currentY);
+                e.preventDefault(); // Prevent default scrolling when in swipe mode
+            }
+        }, { passive: false });
+        
+        swipeOverlay.addEventListener('touchend', () => {
+	    cancelLongPress();
+		
+            if (isInSwipeMode) {
+                endDrag();
+                isInSwipeMode = false;
+            }
+            // Return to passive mode
+            swipeOverlay.style.pointerEvents = 'none';
+        });
+        
+        // Similar handling for mouse events
+        swipeOverlay.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            touchStartY = e.clientY;
+            touchStartTime = Date.now();
+            startLongPress(e);
+        });
+        
+        swipeOverlay.addEventListener('mousemove', (e) => {
+            if (e.buttons !== 1) return; // Only proceed if left mouse button is pressed
+
+	    cancelLongPress();
+            
+            const deltaY = touchStartY - e.clientY;
+            
+            if (deltaY > 25 && !isInSwipeMode) {
+                isInSwipeMode = true;
+                startDrag(touchStartY);
+                swipeOverlay.style.pointerEvents = 'auto';
+            }
+            
+            if (isInSwipeMode) {
+                moveDrawer(e.clientY);
+            }
+        });
+        
+        swipeOverlay.addEventListener('mouseup', () => {
+            cancelLongPress();
+		
+            if (isInSwipeMode) {
+                endDrag();
+                isInSwipeMode = false;
+            }
+            swipeOverlay.style.pointerEvents = 'none';
+        });
+    }
+    
+    setupAppSwipeDetection();
+
+    // Touch Events for regular drawer interaction
+    document.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Check if touch is on handle area
+        if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
+            startDrag(touch.clientY);
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+        if (isDragging) {
+            e.preventDefault();
+            moveDrawer(e.touches[0].clientY);
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchend', () => {
+        endDrag();
+    });
+
+    // Mouse Events for regular drawer interaction
+    document.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        const element = document.elementFromPoint(e.clientX, e.clientY);
+        
+        // Check if click is on handle area
+        if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
+            startDrag(e.clientY);
         }
     });
 
-    document.addEventListener('mousemove', handleDragMove);
-    document.addEventListener('touchmove', handleDragMove, { passive: false });
-    document.addEventListener('mouseup', handleDragEnd);
-    document.addEventListener('touchend', handleDragEnd);
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            moveDrawer(e.clientY);
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        endDrag();
+    });
 
     document.addEventListener('click', (e) => {
         if (isDrawerInMotion) return; // Do nothing if an animation is in progress
@@ -6417,20 +6377,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (isAiAssistantEnabled) {
         initializeAiAssistant();
     }
-
-    window.addEventListener('blur', () => {
-        // Use a timeout to check the active element after the blur event has fully processed
-        setTimeout(() => {
-            const activeIframe = document.activeElement;
-            if (activeIframe && activeIframe.tagName === 'IFRAME' && activeIframe.closest('.fullscreen-embed')) {
-                const embedContainer = activeIframe.closest('.fullscreen-embed');
-                const url = embedContainer.dataset.embedUrl;
-                if (url) {
-                    updateLastUsed(url);
-                }
-            }
-        }, 0);
-    });
 });
 
 window.addEventListener('load', checkFullscreen);
