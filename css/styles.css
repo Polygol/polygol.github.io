@@ -477,12 +477,18 @@ input[type="color"]::-moz-color-swatch {
     margin-left: 5vw;
     margin-right: auto;
     text-align: left;
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .container.align-right {
     margin-left: auto;
     margin-right: 5vw;
     text-align: right;
+    display: flex;
+    flex-direction: column !important;
+    align-items: flex-end;
 }
 
 .container.align-left .info,
@@ -506,6 +512,7 @@ input[type="color"]::-moz-color-swatch {
     position: relative;
     border-radius: 10px;
     line-height: 1;
+	width: fit-content
 }
 
 .clock .digit {
