@@ -5592,18 +5592,30 @@ function setupDrawerInteractions() {
             const deltaX = touch.clientX - touchStartX;
             const deltaY = touch.clientY - touchStartY;
 
-            if (!swipeMode) { // Determine swipe direction
-                if (Math.abs(deltaY) > 20 && Math.abs(deltaY) > Math.abs(deltaX)) {
-                    swipeMode = 'vertical';
-                    startDrag(touchStartY);
-                } else if (Math.abs(deltaX) > 20 && Math.abs(deltaX) > Math.abs(deltaY)) {
-                    swipeMode = 'horizontal';
+            if (!swipeMode) { // Determine swipe direction only once
+                const absDeltaX = Math.abs(deltaX);
+                const absDeltaY = Math.abs(deltaY);
+
+                // Wait for a minimum movement before deciding the direction
+                if (absDeltaX > 20 || absDeltaY > 20) {
+                    // Prioritize vertical swipes. A swipe is only considered horizontal
+                    // if the horizontal movement is significantly greater than the vertical.
+                    if (absDeltaX > absDeltaY * 1.5) {
+                        swipeMode = 'horizontal';
+                    } else {
+                        swipeMode = 'vertical';
+                        startDrag(touchStartY); // Initiate vertical drag
+                    }
                 }
             }
 
+            // Continue handling the locked-in swipe mode
             if (swipeMode === 'vertical') {
                 e.preventDefault();
                 moveDrawer(touch.clientY);
+            } else if (swipeMode === 'horizontal') {
+                // Prevent browser's native horizontal swipe actions (like back/forward)
+                e.preventDefault();
             }
         };
 
