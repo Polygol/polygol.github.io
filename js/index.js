@@ -2134,12 +2134,12 @@ function createSetupScreen() {
             options: []
         },
         {
-            title: "SETUP_AUTO_BACKUP",
-            description: "SETUP_AUTO_BACKUP_DESC",
+            title: "Back Up your Data",
+            description: "Automatically back up and save your data. A notification will be sent when your data backup is ready.",
             icon: "settings_backup_restore",
             options: [
-                { name: "SETUP_ENABLE", value: 'true', default: true },
-                { name: "SETUP_DISABLE", value: 'false' }
+                { name: "Enable", value: 'true', default: true },
+                { name: "Disable", value: 'false' }
             ]
         },
         {
