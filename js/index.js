@@ -4823,10 +4823,11 @@ function createFullscreenEmbed(url) {
         });
         
         // Show the swipe overlay when restoring an app
-        const swipeOverlay = document.getElementById('swipe-overlay');
-        if (swipeOverlay) {
-            swipeOverlay.style.display = 'block';
-        }
+	    const swipeOverlay = document.getElementById('swipe-overlay');
+	    if (swipeOverlay) {
+	        swipeOverlay.style.display = 'block';
+	        swipeOverlay.style.pointerEvents = 'auto';
+	    }
         
         // IMPORTANT FIX: Make sure interaction blocker doesn't block embed
         const interactionBlocker = document.getElementById('interaction-blocker');
@@ -4934,6 +4935,7 @@ function createFullscreenEmbed(url) {
     const swipeOverlay = document.getElementById('swipe-overlay');
     if (swipeOverlay) {
         swipeOverlay.style.display = 'block';
+        swipeOverlay.style.pointerEvents = 'auto';
     }
     
     // IMPORTANT FIX: Make sure interaction blocker doesn't block embed
@@ -5229,7 +5231,7 @@ function setupDrawerInteractions() {
     swipeOverlay.style.bottom = '0';
     swipeOverlay.style.left = '0';
     swipeOverlay.style.width = '100%';
-    swipeOverlay.style.height = '15%'; // Bottom 15% of screen for swipe detection
+    swipeOverlay.style.height = '100%'; // 100% of screen for swipe detection
     swipeOverlay.style.zIndex = '1000';
     swipeOverlay.style.display = 'none';
     swipeOverlay.style.pointerEvents = 'none'; // Start with no interaction
@@ -5571,8 +5573,6 @@ function setupDrawerInteractions() {
             if (deltaY > 25 && !isInSwipeMode) { // Detected upward swipe
                 isInSwipeMode = true;
                 startDrag(touchStartY);
-                // Capture all further events
-                swipeOverlay.style.pointerEvents = 'auto';
             }
             
             if (isInSwipeMode) {
@@ -5588,8 +5588,6 @@ function setupDrawerInteractions() {
                 endDrag();
                 isInSwipeMode = false;
             }
-            // Return to passive mode
-            swipeOverlay.style.pointerEvents = 'none';
         });
         
         // Similar handling for mouse events
@@ -5610,7 +5608,6 @@ function setupDrawerInteractions() {
             if (deltaY > 25 && !isInSwipeMode) {
                 isInSwipeMode = true;
                 startDrag(touchStartY);
-                swipeOverlay.style.pointerEvents = 'auto';
             }
             
             if (isInSwipeMode) {
@@ -5625,7 +5622,6 @@ function setupDrawerInteractions() {
                 endDrag();
                 isInSwipeMode = false;
             }
-            swipeOverlay.style.pointerEvents = 'none';
         });
     }
     
