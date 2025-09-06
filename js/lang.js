@@ -79,7 +79,7 @@ const LANG_EN = {
     SETUP_LOCATION_ACCESS_DESC: "Enables Weather and personalized results",
     SETUP_NOTIFICATIONS: "Notifications",
     SETUP_NOTIFICATIONS_DESC: "Enables updates and timer alerts",
-    SETUP_CANNIBALIZE: "Cannibalize your Polygol",
+    SETUP_CANNIBALIZE: "Personalize your Polygol",
     SETUP_CLOCK_FORMAT: "Clock Format",
     SETUP_SHOW_SECONDS: "Show Seconds",
     SETUP_HIDE_SECONDS: "Hide Seconds",
