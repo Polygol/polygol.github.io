@@ -1,3 +1,9 @@
+// DB Schemas for backup functionality
+const DB_SCHEMAS = {
+    'WallpaperDB': { version: 1, stores: ['wallpapers'] },
+    'GuraAIDB': { version: 1, stores: [{ name: 'ChatHistory', options: { keyPath: 'id', autoIncrement: true } }] }
+};
+
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
 
 let availableWidgets; // Stores info about all possible widgets from apps
@@ -2068,25 +2074,39 @@ function createSetupScreen() {
 
     const setupPages = [
         {
-            title: "SETUP_SELECT_LANGUAGE",
-            description: "",
+            title: "SETUP_HI_THERE",
+            description: "SETUP_SELECT_LANGUAGE",
 	    icon: "language",
             options: [
 	        { name: "SETUP_SELECT_LANGUAGE_DESC", default: true },
-                { name: "English", value: "EN" },
-                { name: "日本語", value: "JP" },
-                { name: "Deutsch", value: "DE" },
-                { name: "Français", value: "FR" },
-                { name: "Español", value: "ES" },
-                { name: "한국어", value: "KO" },
-                { name: "中文", value: "ZH" }
+			    { "name": "English", "value": "EN" },
+			    { "name": "日本語", "value": "JP" },
+			    { "name": "Deutsch", "value": "DE" },
+			    { "name": "Français", "value": "FR" },
+			    { "name": "Español", "value": "ES" },
+			    { "name": "한국어", "value": "KO" },
+			    { "name": "中文", "value": "ZH" },
+			    { "name": "Hindi", "value": "HI" },
+			    { "name": "Português", "value": "PT" },
+			    { "name": "বাংলা", "value": "BN" },
+			    { "name": "Русский", "value": "RU" },
+			    { "name": "ਪੰਜਾਬੀ", "value": "PA" },
+			    { "name": "Tiếng Việt", "value": "VI" },
+			    { "name": "Türkçe", "value": "TR" },
+			    { "name": "Egyptian Arabic", "value": "AR_EG" },
+			    { "name": "मराठी", "value": "MR" },
+			    { "name": "తెలుగు", "value": "TE" },
+			    { "name": "தமிழ்", "value": "TA" },
+			    { "name": "اردو", "value": "UR" },
+			    { "name": "Bahasa Indonesia", "value": "ID" },
+			    { "name": "Basa Jawa", "value": "JV" },
+			    { "name": "فارسی (ایران)", "value": "FA_IR" },
+			    { "name": "Italiano", "value": "IT" },
+			    { "name": "Hausa", "value": "HA" },
+			    { "name": "ગુજરાતી", "value": "GU" },
+			    { "name": "Levantine Arabic", "value": "AR_LEV" },
+			    { "name": "भोजपुरी", "value": "BHO" }
             ]
-        },
-        {
-            title: "SETUP_HI_THERE",
-            description: "",
-	    icon: "waving_hand",
-            options: []
         },
         {
             title: "SETUP_OPEN_PRIVATE",
@@ -2148,6 +2168,15 @@ function createSetupScreen() {
             description: "SETUP_GURAPPS_USAGE_DESC",
 	    icon: "grid_view", // Add icon
             options: []
+        },
+        {
+            title: "SETUP_AUTO_BACKUP",
+            description: "SETUP_AUTO_BACKUP_DESC",
+            icon: "settings_backup_restore",
+            options: [
+                { name: "SETUP_ENABLE", value: 'true', default: true },
+                { name: "SETUP_DISABLE", value: 'false' }
+            ]
         },
         {
             title: "SETUP_CONFIGURE_OPTIONS",
@@ -2273,6 +2302,9 @@ function createSetupScreen() {
                                 document.getElementById('weather').style.display = option.value ? 'block' : 'none';
                                 if (option.value) updateSmallWeather();
                                 break;
+							case "SETUP_AUTO_BACKUP":
+                                localStorage.setItem('automaticBackupsEnabled', option.value);
+                                break;
                         }
                     });
                 }
@@ -2352,6 +2384,142 @@ function createSetupScreen() {
 
     document.body.appendChild(setupContainer);
     updateSetup();
+}
+
+// Function to check if an automatic backup is due
+function checkForAutomaticBackup() {
+    if (localStorage.getItem('automaticBackupsEnabled') !== 'true') {
+        return;
+    }
+
+    const lastBackupTimestamp = parseInt(localStorage.getItem('lastBackupTimestamp') || '0', 10);
+    const oneWeekInMs = 7 * 24 * 60 * 60 * 1000;
+
+    if (Date.now() - lastBackupTimestamp > oneWeekInMs) {
+        console.log('Automatic backup is due. Starting process...');
+        createAutomaticBackup();
+    } else {
+        console.log('Automatic backup not yet due.');
+    }
+}
+
+// Function to create the backup file and notify the user
+async function createAutomaticBackup() {
+    showPopup(currentLanguage.BACKUP_STARTED || 'Starting automatic backup...');
+    try {
+        // 1. Gather localStorage
+        const localStorageData = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key) { // Ensure key is not null
+                 localStorageData[key] = localStorage.getItem(key);
+            }
+        }
+
+        // 2. Gather IndexedDB data
+        const indexedDbData = {};
+        for (const dbName of Object.keys(DB_SCHEMAS)) {
+             try {
+                const db = await initDbForBackup(dbName);
+                indexedDbData[dbName] = {};
+                for (const storeName of db.objectStoreNames) {
+                    indexedDbData[dbName][storeName] = await getStoreDataForBackup(db, storeName);
+                }
+                db.close();
+            } catch (dbError) {
+                console.warn(`Could not access DB for backup: ${dbName}. Skipping.`, dbError);
+            }
+        }
+
+        // 3. Package data
+        const transferData = {
+            gurasuraisu_transfer_version: "1.0",
+            export_timestamp: new Date().toISOString(),
+            data: {
+                localStorage: localStorageData,
+                indexedDB: indexedDbData,
+            },
+        };
+
+        const backupBlob = new Blob([JSON.stringify(transferData, null, 2)], { type: 'application/json' });
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileName = `polygol_backup_${timestamp}.guradata`;
+        
+        // 4. Update timestamp and notify user
+        localStorage.setItem('lastBackupTimestamp', Date.now().toString());
+        
+        showNotification(currentLanguage.BACKUP_READY || 'Your weekly backup is ready.', {
+            buttonText: currentLanguage.BACKUP_DOWNLOAD || "Download",
+            buttonAction: () => {
+                downloadBackupFile(backupBlob, fileName);
+            }
+        });
+
+    } catch (error) {
+        console.error('Automatic backup failed:', error);
+        showNotification(currentLanguage.BACKUP_FAILED || 'Automatic backup failed.', { icon: 'error' });
+    }
+}
+
+// Utility functions adapted from the transfer tool for backup creation
+function downloadBackupFile(blob, fileName) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+}
+
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+function initDbForBackup(dbName) {
+    return new Promise((resolve, reject) => {
+        const schema = DB_SCHEMAS[dbName];
+        if (!schema) return reject(`No schema found for DB: ${dbName}`);
+        const request = indexedDB.open(dbName, schema.version);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+    });
+}
+
+async function getStoreDataForBackup(db, storeName) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(storeName, 'readonly');
+        const store = transaction.objectStore(storeName);
+        const request = store.getAll();
+        request.onsuccess = async () => {
+            const records = request.result;
+            if (db.name === 'WallpaperDB' && storeName === 'wallpapers') {
+                const keysRequest = store.getAllKeys();
+                keysRequest.onsuccess = async () => {
+                    const keys = keysRequest.result;
+                    const keyedRecords = [];
+                    for (let i = 0; i < records.length; i++) {
+                        let recordValue = records[i];
+                        if (recordValue.blob) {
+                            recordValue.base64 = await blobToBase64(recordValue.blob);
+                            delete recordValue.blob;
+                        }
+                        keyedRecords.push({ key: keys[i], value: recordValue });
+                    }
+                    resolve(keyedRecords);
+                };
+                keysRequest.onerror = reject;
+            } else {
+                resolve(records);
+            }
+        };
+        request.onerror = reject;
+    });
 }
 
 const customizeModal = document.getElementById('customizeModal');
@@ -6397,6 +6565,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (isAiAssistantEnabled) {
         initializeAiAssistant();
     }
+
+    // Call to check for automatic backup on page load
+    checkForAutomaticBackup();
 });
 
 window.addEventListener('load', checkFullscreen);
