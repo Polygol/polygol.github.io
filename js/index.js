@@ -139,10 +139,17 @@ let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults t
 let recentWallpapers = [];
 let currentWallpaperPosition = 0;
 let isSlideshow = false;
-let minimizedEmbeds = {}; // Object to store minimized embeds by URL
+let minimizedEmbeds = {}; // Will now store { url: { element, lastUsed } }
 let appLastOpened = {};
 
 secondsSwitch.checked = showSeconds;
+
+// New function to update the last used timestamp of an app
+function updateLastUsed(url) {
+    if (minimizedEmbeds[url]) {
+        minimizedEmbeds[url].lastUsed = Date.now();
+    }
+}
 
 function saveAvailableWidgets() {
     localStorage.setItem('availableWidgets', JSON.stringify(availableWidgets));
@@ -4864,6 +4871,7 @@ function createFullscreenEmbed(url) {
     
     // Store the URL as a data attribute
     embedContainer.dataset.embedUrl = url;
+    minimizedEmbeds[url] = { element: embedContainer, lastUsed: Date.now() };
     
     // Flag to track embedding status
     let embedFailed = false;
@@ -4957,19 +4965,14 @@ function minimizeFullscreenEmbed() {
     const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
     
     if (embedContainer) {
-        // Get the URL before hiding it
         const url = embedContainer.dataset.embedUrl;
-        if (url) {
-            // Store the embed in our minimized embeds object
-            minimizedEmbeds[url] = embedContainer;
-
-			// After animation completes, actually hide it completely, and restore user-set filter and scale
+        if (url && minimizedEmbeds[url]) {
             applyWallpaperEffects();
             document.body.style.setProperty('--bg-transform-scale', '1.05');
             embedContainer.style.display = 'none';
+            embedContainer.style.transform = ''; // Reset transform for task switcher
 			persistentClock.style.opacity = '1';
             
-            // Use a different z-index approach when minimized
             embedContainer.style.pointerEvents = 'none';
             embedContainer.style.zIndex = '0';
         }
@@ -5173,6 +5176,9 @@ function setupDrawerInteractions() {
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
 	const appDrawerHandle = document.querySelector('.app-drawer-handle');
+    let startX = 0, currentX = 0;
+    let isVerticalDrag = false, isHorizontalDrag = false;
+    let switcherApps = [], switcherIndex = 0;
 
     const startLongPress = (e) => {
         // Only trigger long press if AI is enabled and not already dragging the drawer.
@@ -5223,6 +5229,123 @@ function setupDrawerInteractions() {
     swipeOverlay.style.display = 'none';
     swipeOverlay.style.pointerEvents = 'none'; // Start with no interaction
     document.body.appendChild(swipeOverlay);
+	
+    function handleDragStart(e) {
+        const point = e.touches ? e.touches[0] : e;
+        startY = point.clientY;
+        startX = point.clientX;
+        lastY = startY;
+        currentY = startY;
+        currentX = startX;
+        isDragging = true;
+        isDrawerInMotion = true;
+        dragStartTime = Date.now();
+        velocities = [];
+        isVerticalDrag = false;
+        isHorizontalDrag = false;
+        appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
+    }
+
+    function handleDragMove(e) {
+        if (!isDragging) return;
+        const point = e.touches ? e.touches[0] : e;
+        const moveX = point.clientX;
+        const moveY = point.clientY;
+        const deltaX = moveX - startX;
+        const deltaY = moveY - startY;
+
+        // Determine drag direction on first significant movement
+        if (!isVerticalDrag && !isHorizontalDrag && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+            if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                isVerticalDrag = true;
+            } else {
+                isHorizontalDrag = true;
+                const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+                
+                // Get sorted list of running apps
+                switcherApps = Object.values(minimizedEmbeds)
+                    .filter(app => app.element) // Ensure element exists
+                    .sort((a, b) => b.lastUsed - a.lastUsed)
+                    .map(app => app.element);
+
+                if (switcherApps.length < 1 || !openEmbed) {
+                    isHorizontalDrag = false; // Not enough apps or none open, cancel horizontal drag
+                    return;
+                }
+                
+                switcherIndex = switcherApps.findIndex(el => el === openEmbed);
+                if (switcherIndex === -1) switcherIndex = 0; // Fallback
+
+                // Prepare adjacent apps for animation
+                switcherApps.forEach((appEl, index) => {
+                    appEl.style.transition = 'none';
+                    if (index !== switcherIndex) {
+                        appEl.style.display = 'block'; // Make them visible for the transition
+                    }
+                });
+            }
+        }
+        
+        if (isVerticalDrag) {
+            moveDrawer(moveY); // Call your existing vertical drag logic
+        } else if (isHorizontalDrag) {
+            e.preventDefault();
+            const currentApp = switcherApps[switcherIndex];
+            const nextApp = switcherApps[switcherIndex + 1];
+            const prevApp = switcherApps[switcherIndex - 1];
+            const screenWidth = window.innerWidth;
+            
+            // Move apps based on horizontal drag
+            if (currentApp) currentApp.style.transform = `translateX(${deltaX}px) scale(${1 - Math.abs(deltaX) / (screenWidth * 2)})`;
+            if (nextApp) nextApp.style.transform = `translateX(${screenWidth + deltaX}px) scale(0.9)`;
+            if (prevApp) prevApp.style.transform = `translateX(${-screenWidth + deltaX}px) scale(0.9)`;
+        }
+    }
+
+    function handleDragEnd(e) {
+        if (!isDragging) return;
+
+        const deltaX = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) - startX;
+
+        if (isVerticalDrag) {
+            endDrag(); // Call your existing vertical drag end logic
+        } else if (isHorizontalDrag) {
+            const screenWidth = window.innerWidth;
+            let newIndex = switcherIndex;
+            // Switch if swiped more than a quarter of the screen
+            if (Math.abs(deltaX) > screenWidth / 4) {
+                newIndex = deltaX < 0 ? switcherIndex + 1 : switcherIndex - 1;
+            }
+            newIndex = Math.max(0, Math.min(switcherApps.length - 1, newIndex));
+            
+            // Animate apps to their final positions
+            switcherApps.forEach((appEl, index) => {
+                appEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                const offset = index - newIndex;
+                if (offset === 0) {
+                    appEl.style.transform = 'translateX(0) scale(1)';
+                    appEl.style.zIndex = '1001';
+                    updateLastUsed(appEl.dataset.embedUrl); // Update timestamp on switch
+                } else {
+                    appEl.style.transform = `translateX(${Math.sign(offset) * screenWidth}px) scale(0.9)`;
+                    appEl.style.zIndex = '1000';
+                }
+            });
+
+            // Hide non-visible apps after the animation
+            setTimeout(() => {
+                switcherApps.forEach((appEl, index) => {
+                    if (index !== newIndex) appEl.style.display = 'none';
+                });
+            }, 350);
+        }
+
+        // Reset drag state
+        isDragging = false;
+        isVerticalDrag = false;
+        isHorizontalDrag = false;
+        setTimeout(() => { isDrawerInMotion = false; }, 300);
+    }
 
     function startDrag(yPosition) {
         startY = yPosition;
@@ -5607,49 +5730,21 @@ function setupDrawerInteractions() {
     
     setupAppSwipeDetection();
 
-    // Touch Events for regular drawer interaction
-    document.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        
-        // Check if touch is on handle area
-        if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
-            startDrag(touch.clientY);
-            e.preventDefault();
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchmove', (e) => {
-        if (isDragging) {
-            e.preventDefault();
-            moveDrawer(e.touches[0].clientY);
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchend', () => {
-        endDrag();
-    });
-
-    // Mouse Events for regular drawer interaction
-    document.addEventListener('mousedown', (e) => {
-        if (e.button !== 0) return;
-        const element = document.elementFromPoint(e.clientX, e.clientY);
-        
-        // Check if click is on handle area
-        if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
-            startDrag(e.clientY);
+    const swipeInitiators = [drawerHandle, appDrawerHandle, swipeOverlay];
+    swipeInitiators.forEach(handle => {
+        if (handle) {
+            handle.addEventListener('mousedown', e => { if (e.button === 0) handleDragStart(e); });
+            handle.addEventListener('touchstart', e => {
+                handleDragStart(e);
+                e.preventDefault(); // Prevent scrolling while interacting with the handle
+            }, { passive: false });
         }
     });
 
-    document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-            moveDrawer(e.clientY);
-        }
-    });
-
-    document.addEventListener('mouseup', () => {
-        endDrag();
-    });
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('touchmove', handleDragMove, { passive: false });
+    document.addEventListener('mouseup', handleDragEnd);
+    document.addEventListener('touchend', handleDragEnd);
 
     document.addEventListener('click', (e) => {
         if (isDrawerInMotion) return; // Do nothing if an animation is in progress
