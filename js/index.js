@@ -4811,7 +4811,6 @@ function createFullscreenEmbed(url) {
 	        embedContainer.style.transform = 'scale(1)';
 	        embedContainer.style.opacity = '1';
 	        embedContainer.style.borderRadius = '0px';
-	        isAppOpening = false; // Reset flag after animation
 	    }, 10);
 	    
         // Hide all main UI elements
@@ -5001,6 +5000,8 @@ function switchApp(direction) {
 }
 
 function minimizeFullscreenEmbed() {
+	isAppOpening = false; // Reset flag
+	
     // Restore the original favicon when minimizing an app
     if (originalFaviconUrl) {
         updateFavicon(originalFaviconUrl);
