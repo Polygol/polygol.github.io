@@ -4722,16 +4722,22 @@ function createFullscreenEmbed(url) {
         showPopup(currentLanguage.GURAPP_OFF);
         return; // Stop execution immediately
     }
+	
 
     // 2. Find the app's name from the URL. This also validates that the app is "installed".
     const appName = Object.keys(apps).find(name => apps[name].url === url);
 
-    // If the app is not found in our list, show an error and stop.
-    if (!appName) {
-        showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
-        console.warn(`Attempted to open an unknown app URL: ${url}`);
-        return;
-    }
+    // App interaction listener to update the 'last used' timestamp.
+    // This is key for sorting apps in the switcher.
+    const interactionListener = () => {
+        appLastOpened[appName] = Date.now();
+        saveLastOpenedData();
+    };
+
+    const interactionListener = () => {
+        appLastOpened[appName] = Date.now();
+        saveLastOpenedData();
+    };
 
     // Update the favicon to the app's icon
     const appDetails = apps[appName];
@@ -4946,6 +4952,54 @@ createFullscreenEmbed = function(url) {
   originalCreateFullscreenEmbed(url);
 };
 
+// in js/index.js, add this new function
+
+/**
+ * Switches between running applications.
+ * @param {'next' | 'previous'} direction The direction to switch in.
+ */
+function switchApp(direction) {
+    const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+    if (!activeEmbed) return; // No app is open to switch from
+
+    const currentUrl = activeEmbed.dataset.embedUrl;
+    const currentAppName = Object.keys(apps).find(name => apps[name].url === currentUrl);
+
+    // Get all apps that are currently "running" (the active one + all minimized ones)
+    const runningUrls = new Set(Object.keys(minimizedEmbeds));
+    runningUrls.add(currentUrl);
+
+    let runningAppNames = Array.from(runningUrls).map(url =>
+        Object.keys(apps).find(name => apps[name].url === url)
+    ).filter(Boolean); // Filter out any apps that might have been uninstalled
+
+    if (runningAppNames.length < 2) {
+        return; // Can't switch if only one app is running
+    }
+
+    // Sort apps by the last time they were interacted with (most recent first)
+    runningAppNames.sort((a, b) => (appLastOpened[b] || 0) - (appLastOpened[a] || 0));
+
+    const currentIndex = runningAppNames.indexOf(currentAppName);
+    if (currentIndex === -1) return;
+
+    let nextIndex;
+    if (direction === 'next') { // Corresponds to a swipe left
+        nextIndex = (currentIndex + 1) % runningAppNames.length;
+    } else { // 'previous', corresponds to a swipe right
+        nextIndex = (currentIndex - 1 + runningAppNames.length) % runningAppNames.length;
+    }
+
+    const nextAppName = runningAppNames[nextIndex];
+    if (nextAppName === currentAppName) return;
+
+    const nextAppUrl = apps[nextAppName].url;
+
+    // Minimize the current app and open the next one, using existing animations
+    minimizeFullscreenEmbed();
+    createFullscreenEmbed(nextAppUrl);
+}
+
 function minimizeFullscreenEmbed() {
     // Restore the original favicon when minimizing an app
     if (originalFaviconUrl) {
@@ -5158,6 +5212,7 @@ function saveUsageData() {
 function setupDrawerInteractions() {
     let startY = 0;
     let currentY = 0;
+    let startX = 0; // Horizontal swipe detection
     let initialDrawerPosition = -100;
     let isDragging = false;
     let isDrawerInMotion = false;
@@ -5518,89 +5573,107 @@ function setupDrawerInteractions() {
     // Add initial swipe detection in app
     function setupAppSwipeDetection() {
         let touchStartY = 0;
+        let touchStartX = 0; // Add touchStartX here
         let touchStartTime = 0;
-        let isInSwipeMode = false;
+        let isInSwipeMode = false; // This can now be 'vertical', 'horizontal', or false
 
-	swipeOverlay.addEventListener('touchstart', (e) => {
-            // Stop this event from bubbling up to the general document listener.
-            // This ensures that when the overlay is active, it takes priority
-            // and prevents a double-drag initiation.
-            e.stopPropagation(); 
-        
-            touchStartY = e.touches[0].clientY;
-            touchStartTime = Date.now();
-        
-            // We also need to start the long-press timer here for the in-app context
-            startLongPress(e); 
-
-        }, { passive: true });
-        
         swipeOverlay.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
             touchStartTime = Date.now();
+            startLongPress(e);
         }, { passive: true });
-        
+
         swipeOverlay.addEventListener('touchmove', (e) => {
             const currentY = e.touches[0].clientY;
+            const currentX = e.touches[0].clientX;
             const deltaY = touchStartY - currentY;
-            
-            if (deltaY > 25 && !isInSwipeMode) { // Detected upward swipe
-                isInSwipeMode = true;
-                startDrag(touchStartY);
-                // Capture all further events
-                swipeOverlay.style.pointerEvents = 'auto';
+            const deltaX = currentX - touchStartX;
+
+            if (!isInSwipeMode) {
+                // Check for a clear directional swipe to lock into a mode
+                if (Math.abs(deltaY) > 25 && Math.abs(deltaY) > Math.abs(deltaX)) {
+                    isInSwipeMode = 'vertical';
+                    startDrag(touchStartY);
+                } else if (Math.abs(deltaX) > 25 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    isInSwipeMode = 'horizontal';
+                }
             }
             
-            if (isInSwipeMode) {
+            if (isInSwipeMode === 'vertical') {
                 moveDrawer(currentY);
-                e.preventDefault(); // Prevent default scrolling when in swipe mode
+                e.preventDefault();
+            } else if (isInSwipeMode === 'horizontal') {
+                e.preventDefault(); // Prevent page scroll during app switching gesture
             }
         }, { passive: false });
-        
-        swipeOverlay.addEventListener('touchend', () => {
-	    cancelLongPress();
-		
-            if (isInSwipeMode) {
-                endDrag();
-                isInSwipeMode = false;
+
+        swipeOverlay.addEventListener('touchend', (e) => {
+            cancelLongPress();
+            
+            if (isInSwipeMode === 'vertical') {
+                endDrag(); // This handles closing the app
+            } else if (isInSwipeMode === 'horizontal') {
+                const endX = e.changedTouches[0].clientX;
+                const deltaX = endX - touchStartX;
+
+                if (Math.abs(deltaX) > 50) { // Horizontal swipe threshold
+                    if (deltaX < 0) { // Swipe Left
+                        switchApp('next');
+                    } else { // Swipe Right
+                        switchApp('previous');
+                    }
+                }
             }
-            // Return to passive mode
+            isInSwipeMode = false;
             swipeOverlay.style.pointerEvents = 'none';
         });
-        
-        // Similar handling for mouse events
+
+        // Add corresponding mouse event handlers for desktop
         swipeOverlay.addEventListener('mousedown', (e) => {
             e.stopPropagation();
+            touchStartX = e.clientX;
             touchStartY = e.clientY;
             touchStartTime = Date.now();
             startLongPress(e);
         });
         
         swipeOverlay.addEventListener('mousemove', (e) => {
-            if (e.buttons !== 1) return; // Only proceed if left mouse button is pressed
+            if (e.buttons !== 1) return;
 
-	    cancelLongPress();
+            cancelLongPress();
             
             const deltaY = touchStartY - e.clientY;
+            const deltaX = e.clientX - touchStartX;
             
-            if (deltaY > 25 && !isInSwipeMode) {
-                isInSwipeMode = true;
-                startDrag(touchStartY);
-                swipeOverlay.style.pointerEvents = 'auto';
+            if (!isInSwipeMode) {
+                if (Math.abs(deltaY) > 25 && Math.abs(deltaY) > Math.abs(deltaX)) {
+                    isInSwipeMode = 'vertical';
+                    startDrag(touchStartY);
+                } else if (Math.abs(deltaX) > 25 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    isInSwipeMode = 'horizontal';
+                }
             }
-            
-            if (isInSwipeMode) {
+
+            if (isInSwipeMode === 'vertical') {
                 moveDrawer(e.clientY);
             }
         });
         
-        swipeOverlay.addEventListener('mouseup', () => {
+        swipeOverlay.addEventListener('mouseup', (e) => {
             cancelLongPress();
-		
-            if (isInSwipeMode) {
+            if (isInSwipeMode === 'vertical') {
                 endDrag();
-                isInSwipeMode = false;
+            } else if (isInSwipeMode === 'horizontal') {
+                const endX = e.clientX;
+                const deltaX = endX - touchStartX;
+                if (Math.abs(deltaX) > 50) {
+                    if (deltaX < 0) { switchApp('next'); }
+                    else { switchApp('previous'); }
+                }
             }
+            isInSwipeMode = false;
             swipeOverlay.style.pointerEvents = 'none';
         });
     }
