@@ -4693,12 +4693,7 @@ let apps = {
     "App Store": {
         url: "/appstore/index.html",
         icon: "appstore.png"
-    },
-
-    "Files": {
-        url: "/assets/gurapp/intl/forudaraisu/index.html",
-        icon: "files.png"
-    }
+	}
 };
 
 // NEW function to load user-installed apps and merge them.
