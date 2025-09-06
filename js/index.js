@@ -1,7 +1,5 @@
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
 
-let isAppOpening = false; // Add this flag to prevent double-opening apps
-
 let availableWidgets; // Stores info about all possible widgets from apps
 let activeWidgets; // Stores the user's current layout
 const MARGIN = 20;
@@ -4718,37 +4716,23 @@ async function deleteApp(appName) {
 }
 
 function createFullscreenEmbed(url) {
-    if (isAppOpening) {
-        console.warn('App opening already in progress.');
-        return;
-    }
-    isAppOpening = true;
-	
     // 1. Check if Gurapps are disabled entirely
     // This uses the 'gurappsEnabled' variable you already have.
     if (!gurappsEnabled) {
         showPopup(currentLanguage.GURAPP_OFF);
-		isAppOpening = false; // Reset flag
         return; // Stop execution immediately
     }
-	
+
     // 2. Find the app's name from the URL. This also validates that the app is "installed".
     const appName = Object.keys(apps).find(name => apps[name].url === url);
 
+    // If the app is not found in our list, show an error and stop.
     if (!appName) {
         showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
         console.warn(`Attempted to open an unknown app URL: ${url}`);
-        isAppOpening = false; // Reset flag
         return;
     }
 
-    // App interaction listener to update the 'last used' timestamp.
-    // This is key for sorting apps in the switcher.
-    const interactionListener = () => {
-        appLastOpened[appName] = Date.now();
-        saveLastOpenedData();
-    };
-	
     // Update the favicon to the app's icon
     const appDetails = apps[appName];
     if (appDetails && appDetails.icon) {
@@ -4813,6 +4797,13 @@ function createFullscreenEmbed(url) {
 	        embedContainer.style.borderRadius = '0px';
 	    }, 10);
 	    
+        // Trigger the animation
+        setTimeout(() => {
+            embedContainer.style.transform = 'scale(1)';
+            embedContainer.style.opacity = '1';
+            embedContainer.style.borderRadius = '0px';
+        }, 10);
+        
         // Hide all main UI elements
         document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
             if (!el.dataset.originalDisplay) {
@@ -4955,53 +4946,7 @@ createFullscreenEmbed = function(url) {
   originalCreateFullscreenEmbed(url);
 };
 
-/**
- * Switches between running applications.
- * @param {'next' | 'previous'} direction The direction to switch in.
- */
-function switchApp(direction) {
-    const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-    if (!activeEmbed) return; // No app is open to switch from
-
-    const currentUrl = activeEmbed.dataset.embedUrl;
-    const currentAppName = Object.keys(apps).find(name => apps[name].url === currentUrl);
-
-    // Get all apps that are currently "running"
-    const runningUrls = new Set(Object.keys(minimizedEmbeds));
-    runningUrls.add(currentUrl);
-
-    let runningAppNames = Array.from(runningUrls).map(url =>
-        Object.keys(apps).find(name => apps[name].url === url)
-    ).filter(Boolean);
-
-    if (runningAppNames.length < 2) return;
-
-    // Sort apps by the last time they were interacted with
-    runningAppNames.sort((a, b) => (appLastOpened[b] || 0) - (appLastOpened[a] || 0));
-
-    const currentIndex = runningAppNames.indexOf(currentAppName);
-    if (currentIndex === -1) return;
-
-    let nextIndex;
-    if (direction === 'next') { // Swipe Left
-        nextIndex = (currentIndex + 1) % runningAppNames.length;
-    } else { // Swipe Right
-        nextIndex = (currentIndex - 1 + runningAppNames.length) % runningAppNames.length;
-    }
-
-    const nextAppName = runningAppNames[nextIndex];
-    if (nextAppName === currentAppName) return;
-
-    const nextAppUrl = apps[nextAppName].url;
-
-    minimizeFullscreenEmbed();
-    // Use a small timeout to ensure animations are smooth
-    setTimeout(() => createFullscreenEmbed(nextAppUrl), 50);
-}
-
 function minimizeFullscreenEmbed() {
-	isAppOpening = false; // Reset flag
-	
     // Restore the original favicon when minimizing an app
     if (originalFaviconUrl) {
         updateFavicon(originalFaviconUrl);
@@ -5213,7 +5158,6 @@ function saveUsageData() {
 function setupDrawerInteractions() {
     let startY = 0;
     let currentY = 0;
-    let startX = 0; // Horizontal swipe detection
     let initialDrawerPosition = -100;
     let isDragging = false;
     let isDrawerInMotion = false;
@@ -5573,79 +5517,91 @@ function setupDrawerInteractions() {
 
     // Add initial swipe detection in app
     function setupAppSwipeDetection() {
-        let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
-        let swipeMode = null; // Can be 'vertical', 'horizontal', or null
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        let isInSwipeMode = false;
 
-        const handleTouchStart = (e) => {
-            e.stopPropagation();
-            const touch = e.touches ? e.touches[0] : e;
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
+	swipeOverlay.addEventListener('touchstart', (e) => {
+            // Stop this event from bubbling up to the general document listener.
+            // This ensures that when the overlay is active, it takes priority
+            // and prevents a double-drag initiation.
+            e.stopPropagation(); 
+        
+            touchStartY = e.touches[0].clientY;
             touchStartTime = Date.now();
-            swipeMode = null; // Reset swipe mode on new touch
-            startLongPress(e);
-        };
+        
+            // We also need to start the long-press timer here for the in-app context
+            startLongPress(e); 
 
-        const handleTouchMove = (e) => {
-            if (e.buttons && e.buttons !== 1) return; // For mousemove, ensure left button is down
-            const touch = e.touches ? e.touches[0] : e;
-            const deltaX = touch.clientX - touchStartX;
-            const deltaY = touch.clientY - touchStartY;
-
-            if (!swipeMode) { // Determine swipe direction only once
-                const absDeltaX = Math.abs(deltaX);
-                const absDeltaY = Math.abs(deltaY);
-
-                // Wait for a minimum movement before deciding the direction
-                if (absDeltaX > 20 || absDeltaY > 20) {
-                    // Prioritize vertical swipes. A swipe is only considered horizontal
-                    // if the horizontal movement is significantly greater than the vertical.
-                    if (absDeltaX > absDeltaY * 1.5) {
-                        swipeMode = 'horizontal';
-                    } else {
-                        swipeMode = 'vertical';
-                        startDrag(touchStartY); // Initiate vertical drag
-                    }
-                }
+        }, { passive: true });
+        
+        swipeOverlay.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+        }, { passive: true });
+        
+        swipeOverlay.addEventListener('touchmove', (e) => {
+            const currentY = e.touches[0].clientY;
+            const deltaY = touchStartY - currentY;
+            
+            if (deltaY > 25 && !isInSwipeMode) { // Detected upward swipe
+                isInSwipeMode = true;
+                startDrag(touchStartY);
+                // Capture all further events
+                swipeOverlay.style.pointerEvents = 'auto';
             }
-
-            // Continue handling the locked-in swipe mode
-            if (swipeMode === 'vertical') {
-                e.preventDefault();
-                moveDrawer(touch.clientY);
-            } else if (swipeMode === 'horizontal') {
-                // Prevent browser's native horizontal swipe actions (like back/forward)
-                e.preventDefault();
+            
+            if (isInSwipeMode) {
+                moveDrawer(currentY);
+                e.preventDefault(); // Prevent default scrolling when in swipe mode
             }
-        };
-
-        const handleTouchEnd = (e) => {
-            cancelLongPress();
-            if (swipeMode === 'vertical') {
+        }, { passive: false });
+        
+        swipeOverlay.addEventListener('touchend', () => {
+	    cancelLongPress();
+		
+            if (isInSwipeMode) {
                 endDrag();
-            } else if (swipeMode === 'horizontal') {
-                const touch = e.changedTouches ? e.changedTouches[0] : e;
-                const deltaX = touch.clientX - touchStartX;
-                if (Math.abs(deltaX) > 50) {
-                    switchApp(deltaX < 0 ? 'next' : 'previous');
-                }
+                isInSwipeMode = false;
             }
-            swipeMode = null;
-        };
+            // Return to passive mode
+            swipeOverlay.style.pointerEvents = 'none';
+        });
         
-        // This targets the gesture area when an app is open OR the main drawer handle
-        const gestureTargets = [swipeOverlay, drawerHandle];
+        // Similar handling for mouse events
+        swipeOverlay.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            touchStartY = e.clientY;
+            touchStartTime = Date.now();
+            startLongPress(e);
+        });
         
-        gestureTargets.forEach(target => {
-            if (!target) return;
-            // Touch events
-            target.addEventListener('touchstart', handleTouchStart, { passive: true });
-            target.addEventListener('touchmove', handleTouchMove, { passive: false });
-            target.addEventListener('touchend', handleTouchEnd);
-            // Mouse events
-            target.addEventListener('mousedown', handleTouchStart);
-            target.addEventListener('mousemove', handleTouchMove);
-            target.addEventListener('mouseup', handleTouchEnd);
+        swipeOverlay.addEventListener('mousemove', (e) => {
+            if (e.buttons !== 1) return; // Only proceed if left mouse button is pressed
+
+	    cancelLongPress();
+            
+            const deltaY = touchStartY - e.clientY;
+            
+            if (deltaY > 25 && !isInSwipeMode) {
+                isInSwipeMode = true;
+                startDrag(touchStartY);
+                swipeOverlay.style.pointerEvents = 'auto';
+            }
+            
+            if (isInSwipeMode) {
+                moveDrawer(e.clientY);
+            }
+        });
+        
+        swipeOverlay.addEventListener('mouseup', () => {
+            cancelLongPress();
+		
+            if (isInSwipeMode) {
+                endDrag();
+                isInSwipeMode = false;
+            }
+            swipeOverlay.style.pointerEvents = 'none';
         });
     }
     
