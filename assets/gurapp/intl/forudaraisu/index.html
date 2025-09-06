@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Forudaraisu</title>
-    <link rel="icon" href="/assets/appicon/files.png" type="image/png">
+    <title>Files</title>
+    <link rel="icon" href="favicon.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
     <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/gurapp/api/shared-file-manager.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
@@ -80,6 +81,7 @@
             transition: background-color 0.3s, color 0.3s;
             color: var(--text-color);
             overflow: hidden;
+            padding-top: 80px;
         }
 
         .container {
@@ -88,75 +90,109 @@
             display: flex;
             flex-direction: column;
         }
-
-        .header {
+        
+        .tab-container {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+            gap: 10px;
             padding: 15px 20px;
             background-color: transparent;
+            border: none;
             position: fixed;
-            top: 0; left: 0; right: 0;
+            top: 0px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 1000;
+            transition: top 0.3s ease;
+            width: 100%;
+            flex-wrap: wrap;
             height: 80px;
         }
 
-        .header::after {
+        .tab-container::after {
             content: "";
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            z-index: -1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
             backdrop-filter: blur(2.5px);
-            mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+            mask-image: linear-gradient( to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 90%, rgba(0, 0, 0, 0) 100% );
+            -webkit-mask-image: linear-gradient( to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 90%, rgba(0, 0, 0, 0) 100% );
         }
 
-        .header-title {
+        .tab-btn {
+            background-color: var(--search-background);
+            color: transparent;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 9px 10px 18px;
+            font-size: 0;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(.3,1.2,.64,1) !IMPORTANT;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+            border: 1px solid var(--glass-border);
+        }
+
+        .tab-btn.active {
+            background-color: var(--secondary-text-color);
+            color: var(--background-color);
+            border-radius: 15px;
+            font-family: 'Open Runde';
+            font-weight: 500;
+            padding: 10px 18px 10px 16px;
+            font-size: revert;
+        }
+
+        .tab-container .tab-btn .material-symbols-rounded {
+            transition: color 0.3s;
+            color: var(--text-color);
+            font-size: 20px;
+        }
+
+        .tab-container .tab-btn.active .material-symbols-rounded {
+            color: var(--background-color) !important;
+        }
+        
+        .tab-content {
+            display: none;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-content::-webkit-scrollbar { width: 8px; }
+        .tab-content::-webkit-scrollbar-track { background: transparent; }
+        .tab-content::-webkit-scrollbar-thumb { background-color: var(--search-background); border-radius: 50px; }
+
+        .section-title {
             font-size: 1.5rem;
             font-weight: 600;
+            margin-bottom: 20px;
             font-family: 'Open Runde';
         }
 
-        .header-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .search-container {
-            position: relative;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 10px 15px 10px 40px;
-            border-radius: 25px;
-            border: 1px solid var(--glass-border);
-            background: var(--search-background);
+        .action-button {
+            background-color: var(--search-background);
             color: var(--text-color);
-            backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-            font-size: 14px;
-            outline: none;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-
-        .search-icon {
-            font-size: 20px;
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--secondary-text-color);
-        }
-
-        .files-container {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 80px 20px 20px;
-        }
-
-        .files-container::-webkit-scrollbar { width: 8px; }
-        .files-container::-webkit-scrollbar-track { background: transparent; }
-        .files-container::-webkit-scrollbar-thumb { background-color: var(--search-background); border-radius: 50px; }
-
+        
         .item-list {
             display: flex;
             flex-direction: column;
@@ -168,7 +204,7 @@
             align-items: center;
             gap: 15px;
             padding: 12px;
-            background-color: var(--search-background);
+            background-color: var(--overlay-color);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
             cursor: pointer;
@@ -188,7 +224,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--overlay-color);
+            background: var(--search-background);
             border-radius: 8px;
         }
 
@@ -198,7 +234,6 @@
         }
         .file-name {
             font-weight: 500;
-            font-family: 'Open Runde';
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -224,9 +259,38 @@
         .empty-state .material-symbols-rounded {
             font-size: 4rem;
         }
+
+        .search-page-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .search-bar {
+            position: relative;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 18px 12px 45px;
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            background: var(--search-background);
+            color: var(--text-color);
+            backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+            font-size: 1rem;
+            outline: none;
+        }
+        .search-icon {
+            font-size: 22px;
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-text-color);
+        }
+
     </style>
 </head>
-<body>
+<body data-app-name="Files">
     <svg style="display: none">
         <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
             <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"></feTurbulence>
@@ -245,17 +309,40 @@
     </svg>
     
     <div class="container">
-        <div class="header">
-            <div class="header-title">Files</div>
-            <div class="header-actions">
-                <div class="search-container">
-                    <span class="material-symbols-rounded search-icon">search</span>
-                    <input type="text" id="search-input" class="search-input" placeholder="Search files">
-                </div>
-            </div>
+        <div class="tab-container">
+            <button class="tab-btn active" data-tab="home">
+                <span class="material-symbols-rounded">home</span>Home
+            </button>
+            <button class="tab-btn" data-tab="files">
+                <span class="material-symbols-rounded">folder</span>Files
+            </button>
+            <button class="tab-btn" data-tab="search">
+                <span class="material-symbols-rounded">search</span>Search
+            </button>
         </div>
-        <div class="files-container" id="files-container">
-            <!-- File items will be rendered here -->
+
+        <div id="home-content" class="tab-content active">
+            <h2 class="section-title">Home</h2>
+            <button id="export-button" class="action-button">
+                <span class="material-symbols-rounded">archive</span> Export All Data
+            </button>
+            <h2 class="section-title">Recent Files</h2>
+            <div id="recent-files-list" class="item-list"></div>
+        </div>
+
+        <div id="files-content" class="tab-content">
+            <h2 class="section-title">All Files</h2>
+            <div id="all-files-list" class="item-list"></div>
+        </div>
+
+        <div id="search-content" class="tab-content">
+             <div class="search-page-container">
+                <div class="search-bar">
+                     <span class="material-symbols-rounded search-icon">search</span>
+                    <input type="text" id="search-input-page" class="search-input" placeholder="Search all files...">
+                </div>
+                <div id="search-results-list" class="item-list"></div>
+            </div>
         </div>
     </div>
 
@@ -265,8 +352,15 @@
         const STORE_NAME = "files";
         let db;
 
-        const filesContainer = document.getElementById('files-container');
-        const searchInput = document.getElementById('search-input');
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        const recentFilesList = document.getElementById('recent-files-list');
+        const allFilesList = document.getElementById('all-files-list');
+        const searchInput = document.getElementById('search-input-page');
+        const searchResultsList = document.getElementById('search-results-list');
+        const exportButton = document.getElementById('export-button');
+
         let allFiles = [];
 
         function initDB() {
@@ -298,29 +392,37 @@
             
             return new Promise((resolve, reject) => {
                 request.onsuccess = () => {
-                    allFiles = request.result.reverse(); // Newest first
+                    allFiles = request.result.reverse();
                     resolve();
                 };
                 request.onerror = () => reject("Error fetching files.");
             });
         }
-        
-        function getIconForFileType(fileType) {
-            if (fileType.startsWith('audio/')) return 'audio_file';
-            if (fileType.startsWith('image/')) return 'image';
-            if (fileType.startsWith('video/')) return 'movie';
-            if (fileType.includes('markdown') || fileType.includes('text')) return 'article';
-            if (fileType.includes('html')) return 'html';
-            return 'draft'; // Default icon
-        }
 
-        function formatBytes(bytes, decimals = 2) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        function createFileItemHTML(file) {
+             const iconMap = {
+                'Music': 'audio_file',
+                'Invitations': 'article',
+                'Wordy': 'article',
+                'Clapper': 'movie',
+                'SketchPad': 'draw',
+                'Moments': 'image',
+                'Camera': 'photo_camera'
+            };
+            const icon = iconMap[file.appName] || 'draft';
+
+            return `
+                <div class="file-item" data-id="${file.id}">
+                    <span class="material-symbols-rounded file-icon">${icon}</span>
+                    <div class="file-info">
+                        <div class="file-name">${file.fileName}</div>
+                        <div class="file-metadata">${file.appName} • ${timeAgo(file.lastModified)}</div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="delete-btn" data-id="${file.id}"><span class="material-symbols-rounded">delete</span></button>
+                    </div>
+                </div>
+            `;
         }
 
         function timeAgo(timestamp) {
@@ -338,36 +440,48 @@
             if (interval > 1) return Math.floor(interval) + " minutes ago";
             return Math.floor(seconds) + " seconds ago";
         }
+        
+        function renderHomeTab() {
+            const recent = allFiles.slice(0, 10);
+            if (recent.length === 0) {
+                 recentFilesList.innerHTML = `<div class="empty-state"><p>No recent files</p></div>`;
+                 return;
+            }
+            recentFilesList.innerHTML = recent.map(createFileItemHTML).join('');
+            attachItemListeners(recentFilesList);
+        }
 
-        function renderFiles(filesToRender) {
-            if (filesToRender.length === 0) {
-                filesContainer.innerHTML = `
+        function renderFilesTab() {
+            if (allFiles.length === 0) {
+                allFilesList.innerHTML = `
                     <div class="empty-state">
                         <span class="material-symbols-rounded">folder_off</span>
                         <p>No files found</p>
+                        <small>Files from your other apps will appear here automatically.</small>
                     </div>`;
                 return;
             }
-
-            const html = filesToRender.map(file => `
-                <div class="file-item" data-id="${file.id}">
-                    <span class="material-symbols-rounded file-icon">${getIconForFileType(file.fileType)}</span>
-                    <div class="file-info">
-                        <div class="file-name">${file.fileName}</div>
-                        <div class="file-metadata">${file.appName} • ${timeAgo(file.lastModified)}</div>
-                    </div>
-                    <div class="file-actions">
-                        <button class="delete-btn" data-id="${file.id}"><span class="material-symbols-rounded">delete</span></button>
-                    </div>
-                </div>
-            `).join('');
-            
-            filesContainer.innerHTML = `<div class="item-list">${html}</div>`;
-            attachItemListeners();
+            allFilesList.innerHTML = allFiles.map(createFileItemHTML).join('');
+            attachItemListeners(allFilesList);
+        }
+        
+        function renderSearchResults() {
+            const query = searchInput.value.toLowerCase();
+            if (!query) {
+                 searchResultsList.innerHTML = `<div class="empty-state"><p>Start typing to search</p></div>`;
+                 return;
+            }
+            const filtered = allFiles.filter(f => f.fileName.toLowerCase().includes(query) || f.appName.toLowerCase().includes(query));
+            if (filtered.length === 0) {
+                 searchResultsList.innerHTML = `<div class="empty-state"><p>No results found for "${query}"</p></div>`;
+                 return;
+            }
+            searchResultsList.innerHTML = filtered.map(createFileItemHTML).join('');
+            attachItemListeners(searchResultsList);
         }
 
-        function attachItemListeners() {
-            document.querySelectorAll('.file-item').forEach(item => {
+        function attachItemListeners(container) {
+            container.querySelectorAll('.file-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     if (e.target.closest('.delete-btn')) return;
                     const file = allFiles.find(f => f.id === item.dataset.id);
@@ -375,7 +489,7 @@
                 });
             });
 
-            document.querySelectorAll('.delete-btn').forEach(btn => {
+            container.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const file = allFiles.find(f => f.id === btn.dataset.id);
@@ -386,61 +500,85 @@
 
         function openFile(file) {
             Gurasuraisu.openApp(file.openUrl);
-            // Send a follow-up message with the action for the app to perform
             setTimeout(() => {
                 window.parent.postMessage({
                     targetApp: file.appName,
                     ...file.openParam
                 }, window.location.origin);
-            }, 500); // Small delay to ensure the app is opening
+            }, 500);
         }
 
         async function deleteFile(file) {
-            if (confirm(`Are you sure you want to delete "${file.fileName}"? This action cannot be undone.`)) {
-                // Tell the source app to delete its own file
+            if (confirm(`Are you sure you want to delete "${file.fileName}"? This cannot be undone.`)) {
                 window.parent.postMessage({
                     targetApp: file.appName,
                     type: 'deleteFile',
                     payload: { id: file.originalId }
                 }, window.location.origin);
                 
-                // Immediately delete from the shared DB and re-render
                 try {
                     const tx = db.transaction(STORE_NAME, 'readwrite');
                     await tx.objectStore(STORE_NAME).delete(file.id);
                     await tx.done;
-                    await refreshAndRender();
                     Gurasuraisu.showPopup("File deleted.");
+                    await refreshAndRenderAllTabs();
                 } catch(e) {
                     Gurasuraisu.showPopup("Error deleting file record.");
                 }
             }
         }
 
-        async function refreshAndRender() {
-            await loadFiles();
-            const query = searchInput.value.toLowerCase();
-            const filtered = query ? allFiles.filter(f => f.fileName.toLowerCase().includes(query)) : allFiles;
-            renderFiles(filtered);
+        async function exportAllData() {
+            if (allFiles.length === 0) {
+                Gurasuraisu.showPopup("No files to export.");
+                return;
+            }
+            const exportData = JSON.stringify(allFiles, null, 2);
+            const blob = new Blob([exportData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gurasuraisu_files_export_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
-        
+
+        async function refreshAndRenderAllTabs() {
+            await loadFiles();
+            renderHomeTab();
+            renderFilesTab();
+            renderSearchResults();
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             await initDB();
-            await refreshAndRender();
+            await refreshAndRenderAllTabs();
 
-            searchInput.addEventListener('input', () => {
-                const query = searchInput.value.toLowerCase();
-                const filtered = allFiles.filter(f => f.fileName.toLowerCase().includes(query));
-                renderFiles(filtered);
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    const tabId = button.dataset.tab + '-content';
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // Re-render the active tab to ensure it's up to date
+                    if(button.dataset.tab === 'home') renderHomeTab();
+                    if(button.dataset.tab === 'files') renderFilesTab();
+                    if(button.dataset.tab === 'search') renderSearchResults();
+                });
             });
+
+            searchInput.addEventListener('input', renderSearchResults);
+            exportButton.addEventListener('click', exportAllData);
         });
         
-        // Listen for updates from other apps
         window.addEventListener('message', (event) => {
             if (event.origin !== window.location.origin) return;
             if (event.data.type === 'fileSystemUpdate') {
                 console.log("File system update received. Refreshing...");
-                refreshAndRender();
+                refreshAndRenderAllTabs();
             }
         });
     </script>
