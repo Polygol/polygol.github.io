@@ -5246,21 +5246,19 @@ function setupDrawerInteractions() {
         startY = point.clientY;
         startX = point.clientX;
         lastY = startY;
-        currentY = startY;
-        currentX = startX;
         isDragging = true;
         isDrawerInMotion = true;
         dragStartTime = Date.now();
         velocities = [];
         isVerticalDrag = false;
         isHorizontalDrag = false;
-        appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
-
+        
+        // Disable interaction on all app iframes as soon as a drag starts
         document.querySelectorAll('.fullscreen-embed iframe').forEach(frame => {
             frame.style.pointerEvents = 'none';
         });
     }
-
+	
     function handleDragMove(e) {
         if (!isDragging) return;
         const point = e.touches ? e.touches[0] : e;
@@ -5269,55 +5267,59 @@ function setupDrawerInteractions() {
         const deltaX = moveX - startX;
         const deltaY = moveY - startY;
 
-        // Determine drag direction on first significant movement
+        // First, determine drag direction if not already set
         if (!isVerticalDrag && !isHorizontalDrag && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
             if (Math.abs(deltaY) > Math.abs(deltaX)) {
                 isVerticalDrag = true;
-	        } else {
-	            isHorizontalDrag = true;
-	            const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-	            
-	            switcherApps = Object.values(minimizedEmbeds)
-	                .filter(app => app.element)
-	                .sort((a, b) => b.lastUsed - a.lastUsed)
-	                .map(app => app.element);
-	
-	            if (switcherApps.length < 2 || !openEmbed) {
-	                isHorizontalDrag = false;
-	                return;
-	            }
-	            
-	            switcherIndex = switcherApps.findIndex(el => el === openEmbed);
-	            if (switcherIndex === -1) switcherIndex = 0;
-	
-	            // Prepare ALL apps for the transition
-	            switcherApps.forEach((appEl, index) => {
-	                appEl.style.transition = 'none';
-	                appEl.style.display = 'block';
-	                const offset = index - switcherIndex;
-	                if (offset === 0) {
-	                    appEl.style.transform = 'translateX(0) scale(1)';
-	                } else {
-	                    appEl.style.transform = `translateX(${offset * window.innerWidth}px) scale(0.9)`;
-	                }
-	            });
-	        }
+            } else {
+                isHorizontalDrag = true;
+                const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+                
+                // On drag start, build and sort the list of apps
+                switcherApps = Object.values(minimizedEmbeds)
+                    .filter(app => app.element)
+                    .sort((a, b) => b.lastUsed - a.lastUsed)
+                    .map(app => app.element);
+
+                // Abort if there's nothing to switch to
+                if (switcherApps.length < 2 || !openEmbed) {
+                    isHorizontalDrag = false;
+                    return;
+                }
+                
+                switcherIndex = switcherApps.findIndex(el => el === openEmbed);
+                if (switcherIndex === -1) switcherIndex = 0; // Fallback
+
+                // **CRITICAL FIX:** Pre-stage ALL apps for the transition.
+                // This makes them visible and places them in a virtual "filmstrip".
+                switcherApps.forEach((appEl, index) => {
+                    appEl.style.transition = 'none';
+                    appEl.style.display = 'block';
+                    const offset = index - switcherIndex;
+                    const initialX = offset * window.innerWidth;
+                    appEl.style.transform = `translateX(${initialX}px) scale(0.9)`;
+                });
+                // The current app needs to be scaled to 1 and have a higher z-index
+                if(switcherApps[switcherIndex]){
+                    switcherApps[switcherIndex].style.transform = 'translateX(0) scale(1)';
+                    switcherApps[switcherIndex].style.zIndex = '1001';
+                }
+            }
         }
         
+        // Execute the appropriate drag logic based on direction
         if (isVerticalDrag) {
-            moveDrawer(moveY); // Your existing vertical drag logic
+            moveDrawer(moveY);
         } else if (isHorizontalDrag) {
             e.preventDefault();
             const screenWidth = window.innerWidth;
-
-            // This new loop moves the entire "filmstrip" of apps together.
+            
+            // Move the entire filmstrip based on the user's finger
             switcherApps.forEach((appEl, index) => {
-                const offset = index - switcherIndex; // Position relative to the starting app
-                const newX = (offset * screenWidth) + deltaX; // Base position + current drag distance
-                
-                // Dynamically scale apps based on how far they are from the center
+                const offset = index - switcherIndex;
+                const newX = (offset * screenWidth) + deltaX;
                 const proximity = Math.abs(newX / screenWidth);
-                const scale = Math.max(0.9, 1 - proximity * 0.1); // Scale from 1 down to 0.9
+                const scale = Math.max(0.9, 1 - proximity * 0.1);
 
                 appEl.style.transform = `translateX(${newX}px) scale(${scale})`;
             });
@@ -5330,62 +5332,54 @@ function setupDrawerInteractions() {
         const deltaX = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) - startX;
 
         if (isVerticalDrag) {
-            endDrag(); // Your existing vertical drag end logic
+            endDrag(); // This calls your existing, working vertical drag logic
         } else if (isHorizontalDrag) {
             const screenWidth = window.innerWidth;
             let newIndex = switcherIndex;
             
-            // Determine if the swipe was far enough to trigger a switch
+            // Switch if the user swiped more than a quarter of the screen
             if (Math.abs(deltaX) > screenWidth / 4) {
                 newIndex = deltaX < 0 ? switcherIndex + 1 : switcherIndex - 1;
             }
             
-            // Make sure the new index is within the bounds of the apps array
             newIndex = Math.max(0, Math.min(switcherApps.length - 1, newIndex));
 
-            // Animate all apps to their final positions
+            // Animate all apps to their final resting positions
             switcherApps.forEach((appEl, index) => {
                 appEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
                 const offset = index - newIndex;
 
                 if (offset === 0) {
-                    // This is the new active app
                     appEl.style.transform = 'translateX(0) scale(1)';
                     appEl.style.zIndex = '1001';
                 } else {
-                    // These are the off-screen apps
                     appEl.style.transform = `translateX(${Math.sign(offset) * screenWidth}px) scale(0.9)`;
                     appEl.style.zIndex = '1000';
                 }
             });
-
-            // IMPORTANT: Update the global switcherIndex and the app's "last used" timestamp
+            
+            // Update the state for the next swipe
             switcherIndex = newIndex;
-            if (switcherApps[switcherIndex]) {
-                updateLastUsed(switcherApps[switcherIndex].dataset.embedUrl);
+            const newActiveApp = switcherApps[switcherIndex];
+            if (newActiveApp) {
+                updateLastUsed(newActiveApp.dataset.embedUrl);
             }
 
-            // After the animation, hide the apps that are no longer visible
+            // After animation, hide non-visible apps and re-enable pointer events on the active one
             setTimeout(() => {
                 switcherApps.forEach((appEl, index) => {
                     if (index !== switcherIndex) {
                         appEl.style.display = 'none';
+                    } else {
+                        const activeIframe = appEl.querySelector('iframe');
+                        if (activeIframe) {
+                            activeIframe.style.pointerEvents = 'auto';
+                        }
                     }
                 });
-            }, 350);
+            }, 350); // Must be slightly longer than the animation duration
         }
 
-        setTimeout(() => {
-            const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-            if (activeEmbed) {
-                const activeIframe = activeEmbed.querySelector('iframe');
-                if (activeIframe) {
-                    activeIframe.style.pointerEvents = 'auto';
-                }
-            }
-        }, 350);
-
-        // Reset drag state
         isDragging = false;
         isVerticalDrag = false;
         isHorizontalDrag = false;
