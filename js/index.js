@@ -5231,7 +5231,7 @@ function setupDrawerInteractions() {
     swipeOverlay.style.bottom = '0';
     swipeOverlay.style.left = '0';
     swipeOverlay.style.width = '100%';
-    swipeOverlay.style.height = '15%'; // Bottom 15% of screen for swipe detection
+    swipeOverlay.style.height = '100%'; // 100% of screen for swipe detection
     swipeOverlay.style.zIndex = '1000';
     swipeOverlay.style.display = 'none';
     swipeOverlay.style.pointerEvents = 'none'; // Start with no interaction
