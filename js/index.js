@@ -714,43 +714,43 @@ function updateSunEffect() {
         // Check for current theme to adjust intensity
         const isLightMode = document.body.classList.contains('light-theme');
 
-        // Define constants for the effect, with adjustments for visibility
-        const SUNRISE_COLOR = [255, 190, 140]; // More saturated warm orange
-        const MIDDAY_COLOR = [255, 255, 255];  // Pure white
-        const MOONLIGHT_COLOR = [190, 215, 255]; // More saturated cool blue
-        const SHADOW_DISTANCE = 2;            // Increased from 1.5
-        const BLUR_RADIUS = 2;                // Increased from 1 for a slightly softer glow
-        const MAX_SUN_ALPHA = isLightMode ? 0.6 : 0.35; // Significantly stronger for light mode
-        const MAX_MOON_ALPHA = isLightMode ? 0.3 : 0.15; // Stronger for light mode
+        // Define constants for the sharp highlight effect
+        const SUNRISE_COLOR = [255, 205, 160];    // Richer orange for sunrise/sunset
+        const MIDDAY_COLOR = [255, 255, 255];     // Pure white
+        const MOONLIGHT_COLOR = [210, 225, 255];  // Sharper cool blue for moonlight
+        const SHADOW_DISTANCE = 1.0;             // A tight, 1px distance for the highlight
+        const BLUR_RADIUS = 1.5;                 // A very small blur for a slight softness
+        const SPREAD_RADIUS = 0.5;               // A small spread to make the line visible
+        const MAX_SUN_ALPHA = isLightMode ? 0.6 : 0.4;   // Much stronger opacity
+        const MAX_MOON_ALPHA = isLightMode ? 0.3 : 0.2; // Stronger moonlight
 
         if (sunPosition.altitude > 0) {
             // --- SUNLIGHT LOGIC ---
             const altitudeFactor = Math.sin(sunPosition.altitude); // 0 at horizon, 1 at zenith
-            const finalAlpha = MAX_SUN_ALPHA * Math.max(0.2, altitudeFactor);
+            const finalAlpha = MAX_SUN_ALPHA * Math.max(0.1, altitudeFactor);
             const finalColor = lerpColor(SUNRISE_COLOR, MIDDAY_COLOR, altitudeFactor);
 
             const offsetX = -Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
             const offsetY = -Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
 
             const [r, g, b] = finalColor;
-            currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
+            currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
         } else {
             // --- MOONLIGHT LOGIC ---
             const moonPosition = SunCalc.getMoonPosition(now, latitude, longitude);
             
-            // Check if the moon is above the horizon
             if (moonPosition.altitude > 0) {
-                const moonIllumination = SunCalc.getMoonIllumination(now); // Get phase
+                const moonIllumination = SunCalc.getMoonIllumination(now);
                 const moonAltitudeFactor = Math.sin(moonPosition.altitude);
                 
-                // Intensity depends on both moon height and its phase
                 const finalAlpha = MAX_MOON_ALPHA * moonAltitudeFactor * moonIllumination.fraction;
 
                 const offsetX = -Math.sin(moonPosition.azimuth) * SHADOW_DISTANCE;
                 const offsetY = -Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
 
                 const [r, g, b] = MOONLIGHT_COLOR;
-                currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
+                // Moonlight is slightly sharper with less blur
+                currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS - 0.5}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
             } else {
                 // Both sun and moon are down, so no light source
                 currentSunShadow = '0 0 0 0 transparent';
