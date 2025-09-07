@@ -325,3 +325,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // Announce that the API is ready
 const readyEvent = new CustomEvent('GurasuraisuReady');
 window.dispatchEvent(readyEvent);
+
+// Tell the parent that this app is ready to receive settings
+if (isInsideGurasuraisu) {
+    window.parent.postMessage({ type: 'gurapp-ready' }, window.location.origin);
+}
