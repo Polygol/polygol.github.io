@@ -1654,6 +1654,7 @@ function showPopup(message) {
     popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'var(--search-background)';
     popup.style.backdropFilter = 'blur(5px) saturate(2) var(--edge-refraction-filter)';
+    popup.style.boxShadow = 'var(--sun-shadow)';
     popup.style.color = 'var(--text-color)';
     popup.style.padding = '20px';
     popup.style.borderRadius = '40px';
@@ -1708,6 +1709,7 @@ function showPopup(message) {
         fullscreenBtn.style.border = 'var(--glass-border)';
         fullscreenBtn.style.backgroundColor = 'var(--search-background)';
         fullscreenBtn.style.backdropFilter = 'blur(5px) saturate(2) var(--edge-refraction-filter)';
+	    fullscreenBtn.style.boxShadow = 'var(--sun-shadow)';
         fullscreenBtn.style.color = 'var(--text-color)';
         fullscreenBtn.style.cursor = 'pointer';
         fullscreenBtn.style.display = 'flex';
@@ -1994,6 +1996,7 @@ function addToNotificationShade(message, options = {}) {
     notification.className = 'shade-notification';
     notification.style.backgroundColor = 'var(--search-background)';
     notification.style.backdropFilter = 'blur(5px) saturate(2) var(--edge-refraction-filter)';
+    notification.style.boxShadow = 'var(--sun-shadow), 0 0 10px rgba(0, 0, 0, 0.2)';
     notification.style.color = 'var(--text-color)';
     notification.style.padding = '18px';
     notification.style.borderRadius = '25px';
