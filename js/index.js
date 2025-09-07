@@ -719,10 +719,10 @@ function updateSunEffect() {
         const MIDDAY_COLOR = [255, 255, 255];     // Pure white
         const MOONLIGHT_COLOR = [210, 225, 255];  // Sharper cool blue for moonlight
         const SHADOW_DISTANCE = 1.0;             // A tight, 1px distance for the highlight
-        const BLUR_RADIUS = 1.5;                 // A very small blur for a slight softness
-        const SPREAD_RADIUS = 0.5;               // A small spread to make the line visible
-        const MAX_SUN_ALPHA = isLightMode ? 0.6 : 0.4;   // Much stronger opacity
-        const MAX_MOON_ALPHA = isLightMode ? 0.3 : 0.2; // Stronger moonlight
+        const BLUR_RADIUS = 1.0;                 // A minimal blur to anti-alias the 1px line
+        const SPREAD_RADIUS = 0.0;               // No spread, for a crisp line
+        const MAX_SUN_ALPHA = isLightMode ? 0.75 : 0.4;  // Strong opacity, especially for light mode
+        const MAX_MOON_ALPHA = isLightMode ? 0.35 : 0.2; // Stronger moonlight
 
         if (sunPosition.altitude > 0) {
             // --- SUNLIGHT LOGIC ---
@@ -749,8 +749,7 @@ function updateSunEffect() {
                 const offsetY = -Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
 
                 const [r, g, b] = MOONLIGHT_COLOR;
-                // Moonlight is slightly sharper with less blur
-                currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS - 0.5}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
+                currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
             } else {
                 // Both sun and moon are down, so no light source
                 currentSunShadow = '0 0 0 0 transparent';
