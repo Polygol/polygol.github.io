@@ -682,6 +682,21 @@ function saveLastOpenedData() {
 }
 
 /**
+ * Linearly interpolates between two RGB colors.
+ * @param {Array<number>} color1 - The starting [R, G, B] color.
+ * @param {Array<number>} color2 - The ending [R, G, B] color.
+ * @param {number} factor - The interpolation factor (0.0 to 1.0).
+ * @returns {Array<number>} The interpolated [R, G, B] color.
+ */
+function lerpColor(color1, color2, factor) {
+    const result = color1.slice();
+    for (let i = 0; i < 3; i++) {
+        result[i] = Math.round(color1[i] + factor * (color2[i] - color1[i]));
+    }
+    return result;
+}
+
+/**
  * Calculates a box-shadow string based on the sun's position and sets it as a CSS variable.
  */
 function updateSunEffect() {
@@ -696,26 +711,47 @@ function updateSunEffect() {
         const now = new Date();
         const sunPosition = SunCalc.getPosition(now, latitude, longitude);
 
-        if (sunPosition.altitude <= 0) {
-            // Sun is below the horizon, no shadow
-            currentSunShadow = 'none';
+        // Define constants for the effect
+        const SUNRISE_COLOR = [255, 200, 150]; // Warm orange
+        const MIDDAY_COLOR = [255, 255, 255];  // Pure white
+        const MOONLIGHT_COLOR = [200, 220, 255]; // Cool blueish-white
+        const SHADOW_DISTANCE = 1.5;          // Total distance of the highlight from the edge
+        const BLUR_RADIUS = 1;                // A sharp 1px blur
+        const MAX_SUN_ALPHA = 0.25;           // The alpha value at midday
+        const MAX_MOON_ALPHA = 0.12;          // Max alpha for a full moon at zenith
+
+        if (sunPosition.altitude > 0) {
+            // --- SUNLIGHT LOGIC ---
+            const altitudeFactor = Math.sin(sunPosition.altitude); // 0 at horizon, 1 at zenith
+            const finalAlpha = MAX_SUN_ALPHA * Math.max(0.2, altitudeFactor);
+            const finalColor = lerpColor(SUNRISE_COLOR, MIDDAY_COLOR, altitudeFactor);
+
+            const offsetX = -Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
+            const offsetY = -Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
+
+            const [r, g, b] = finalColor;
+            currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
         } else {
-            // A factor from 0 (horizon) to 1 (zenith)
-            const altitudeFactor = Math.sin(sunPosition.altitude);
-
-            // Intensity: Alpha channel based on the template's 0.2, brighter when sun is high.
-            const lightIntensity = 0.05 + (0.15 * altitudeFactor); // Ranges from 0.05 to 0.2
-            const shadowColor = `rgba(255, 255, 255, ${lightIntensity.toFixed(2)})`;
-
-            // Distance: Offset is larger when the sun is low on the horizon.
-            const shadowDistance = 1.5 * (1 - altitudeFactor); // Max offset of 1.5px
-            const offsetX = -Math.sin(sunPosition.azimuth) * shadowDistance;
-            const offsetY = -Math.cos(sunPosition.azimuth) * shadowDistance;
+            // --- MOONLIGHT LOGIC ---
+            const moonPosition = SunCalc.getMoonPosition(now, latitude, longitude);
             
-            // Blur: Sharper when sun is high (closer to template's 1px), softer when low.
-            const blurRadius = 1 + (1.5 * (1 - altitudeFactor)); // Ranges from 2.5px to 1px
+            // Check if the moon is above the horizon
+            if (moonPosition.altitude > 0) {
+                const moonIllumination = SunCalc.getMoonIllumination(now); // Get phase
+                const moonAltitudeFactor = Math.sin(moonPosition.altitude);
+                
+                // Intensity depends on both moon height and its phase
+                const finalAlpha = MAX_MOON_ALPHA * moonAltitudeFactor * moonIllumination.fraction;
 
-            currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${blurRadius.toFixed(2)}px ${shadowColor}`;
+                const offsetX = -Math.sin(moonPosition.azimuth) * SHADOW_DISTANCE;
+                const offsetY = -Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
+
+                const [r, g, b] = MOONLIGHT_COLOR;
+                currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
+            } else {
+                // Both sun and moon are down, so no light source
+                currentSunShadow = 'none';
+            }
         }
         
         // Apply to the main page by setting the CSS variable and broadcast to iframes
