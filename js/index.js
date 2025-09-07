@@ -700,14 +700,22 @@ function updateSunEffect() {
             // Sun is below the horizon, no shadow
             currentSunShadow = 'none';
         } else {
-            // Calculate properties based on sun position with increased visibility
-            const lightIntensity = Math.max(0.15, Math.pow(Math.sin(sunPosition.altitude), 0.5));
-            const shadowColor = `rgba(255, 255, 255, ${0.35 * lightIntensity})`; // Increased opacity
-            const shadowDistance = 1.2 * (1 - Math.sin(sunPosition.altitude)); // Slightly reduced distance
+            // A factor from 0 (horizon) to 1 (zenith)
+            const altitudeFactor = Math.sin(sunPosition.altitude);
+
+            // Intensity: Alpha channel based on the template's 0.2, brighter when sun is high.
+            const lightIntensity = 0.05 + (0.15 * altitudeFactor); // Ranges from 0.05 to 0.2
+            const shadowColor = `rgba(255, 255, 255, ${lightIntensity.toFixed(2)})`;
+
+            // Distance: Offset is larger when the sun is low on the horizon.
+            const shadowDistance = 1.5 * (1 - altitudeFactor); // Max offset of 1.5px
             const offsetX = -Math.sin(sunPosition.azimuth) * shadowDistance;
             const offsetY = -Math.cos(sunPosition.azimuth) * shadowDistance;
+            
+            // Blur: Sharper when sun is high (closer to template's 1px), softer when low.
+            const blurRadius = 1 + (1.5 * (1 - altitudeFactor)); // Ranges from 2.5px to 1px
 
-            currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 2px ${shadowColor}`; // Reduced blur for a sharper look
+            currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${blurRadius.toFixed(2)}px ${shadowColor}`;
         }
         
         // Apply to the main page by setting the CSS variable and broadcast to iframes
