@@ -750,7 +750,7 @@ function updateSunEffect() {
                 currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
             } else {
                 // Both sun and moon are down, so no light source
-                currentSunShadow = 'none';
+                currentSunShadow = '0 0 0 0 transparent';
             }
         }
         
