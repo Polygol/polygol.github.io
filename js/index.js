@@ -1919,8 +1919,8 @@ function createOnScreenPopup(message, options = {}) {
     // Get all existing popups
     const existingPopups = document.querySelectorAll('.on-screen-notification');
     
-    // If there are already 2 popups, remove the oldest one
-    if (existingPopups.length >= 2) {
+    // If there is already a popup, remove the oldest one
+    if (existingPopups.length >= 1) {
         document.body.removeChild(existingPopups[0]);
     }
     
