@@ -61,6 +61,7 @@
 
 :root {
     --edge-refraction-filter: url('#edge-refraction-only');
+    --sun-shadow: none; /* Default value for the sun effect */
     
     /* Dark Theme (Default) Variables */
     --background-color-dark: #1c1c1c;
@@ -401,7 +402,7 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 5px;
     opacity: 1;
     max-width: 400px;
-    box-shadow: 0 0 0 1px var(--glass-border);
+    box-shadow: var(--sun-shadow), 0 0 0 1px var(--glass-border);
     backdrop-filter: blur(1px) saturate(2) var(--edge-refraction-filter);
 }
 
@@ -621,7 +622,7 @@ input[type="color"]::-moz-color-swatch {
             border: 1px solid var(--glass-border);
             opacity: 0;
             transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s, color 0.3s, border-color 0.3s, filter 0.3s;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
             overflow-y: auto;
             user-select: none;
             pointer-events: none;
@@ -748,6 +749,7 @@ input[type="color"]::-moz-color-swatch {
     padding: 8px 18px;
     background-color: var(--search-background);
     backdrop-filter: blur(2.5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -817,6 +819,7 @@ input[type="color"]::-moz-color-swatch {
     border: 1px solid var(--glass-border);
     background: var(--search-background);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     border-radius: 20px;
     transition: background-color 0.2s, transform 0.1s;
 }
@@ -885,6 +888,7 @@ input[type="color"]::-moz-color-swatch {
     gap: 10px;
     padding: 15px 5px;
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     background-color: var(--search-background);
     border: 1px solid var(--glass-border);
     border-radius: 25px;
@@ -984,6 +988,7 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 25px;
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     overflow: hidden;
     transition: all 0.3s ease;
 }
@@ -1098,6 +1103,7 @@ input[type="color"]::-moz-color-swatch {
     min-height: 32px;
     height: 32px;
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
 }
 
@@ -1199,6 +1205,7 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 25px;
     padding: 15px;
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     width: 155px;
 }
 
@@ -1309,6 +1316,7 @@ input[type="color"]::-moz-color-swatch {
     padding: 15px 13px 15px 20px;
     background-color: var(--search-background);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     border-radius: 25px;
     transition: background-color 0.2s, transform 0.1s;
     height: 32px;
@@ -1376,6 +1384,7 @@ input[type="checkbox"]:checked::before {
     transition: background-color 0.2s, transform 0.1s;
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     cursor: pointer;
     transform: scale(1);
@@ -1416,7 +1425,7 @@ input[type="checkbox"]:checked::before {
     outline: none;
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--sun-shadow), 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .weight-slider::-webkit-slider-thumb, .wallpaper-effect-slider::-webkit-slider-thumb, #clock-shadow-blur-slider::-webkit-slider-thumb {
@@ -1461,6 +1470,7 @@ input[type="checkbox"]:checked::before {
     background: var(--modal-transparent);
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     border-radius: 25px;
 }
 
@@ -1517,6 +1527,7 @@ input[type="checkbox"]:checked::before {
     background-color: var(--overlay-color);
     color: var(--text-color);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     border-radius: 32px;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -1757,6 +1768,7 @@ input[type="checkbox"]:checked::before {
     touch-action: none;
     user-select: none;
     backdrop-filter: blur(10px) saturate(2) var(--edge-refraction-filter); /* Apply blur to the background */
+	box-shadow: var(--sun-shadow);
     touch-action: none;
     user-select: none;
     opacity: 0;
@@ -1884,6 +1896,7 @@ input[type="checkbox"]:checked::before {
             transform: translateX(-50%) scale(0.6);
             background: var(--search-background);
             backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+			box-shadow: var(--sun-shadow);
             border: 1px solid var(--glass-border);
             border-radius: 36px;
             padding: 8px 10px;
@@ -2005,6 +2018,7 @@ input[type="checkbox"]:checked::before {
     scrollbar-color: var(--transparent-color) transparent;
     background-color: var(--search-background);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
 }
 
@@ -2024,6 +2038,7 @@ input[type="checkbox"]:checked::before {
     gap: 15px;
     background-color: var(--search-background);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     padding: 15px 20px;
     border-radius: 40px;
     width: 80%;
@@ -2070,6 +2085,7 @@ input[type="checkbox"]:checked::before {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow);
     width: 200px; /* Default size, can be overridden */
     height: 200px;
     pointer-events: auto; /* Widgets are interactive */
