@@ -6255,7 +6255,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 	// --- Initialize sun effect and set it to update periodically ---
     updateSunEffect();
-	setInterval(updateSunEffect, 30 * 60 * 1000); // Update every 30 minutes	
+	setInterval(updateSunEffect, 10 * 60 * 1000); // Update every 10 minutes
 	
     // Initialize control states
     const storedLightMode = localStorage.getItem('theme') || 'dark';
