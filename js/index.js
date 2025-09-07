@@ -682,7 +682,7 @@ function saveLastOpenedData() {
 }
 
 /**
- * Calculates a box-shadow string based on the sun's position.
+ * Calculates a box-shadow string based on the sun's position and sets it as a CSS variable.
  */
 function updateSunEffect() {
     // Check if geolocation is available to get coordinates for SunCalc
@@ -696,12 +696,9 @@ function updateSunEffect() {
         const now = new Date();
         const sunPosition = SunCalc.getPosition(now, latitude, longitude);
 
-        // altitude: 0 at horizon, PI/2 at zenith.
-        // azimuth: 0 is south, PI/2 is west, PI is north, 3PI/2 is east.
-        
         if (sunPosition.altitude <= 0) {
             // Sun is below the horizon, no shadow
-            currentSunShadow = '';
+            currentSunShadow = 'none';
         } else {
             // Calculate properties based on sun position with reduced intensity for a subtler effect
             const lightIntensity = Math.max(0.1, Math.pow(Math.sin(sunPosition.altitude), 0.5));
@@ -713,12 +710,15 @@ function updateSunEffect() {
             currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 3px ${shadowColor}`; // Reduced blur from 4px
         }
         
-        // Apply to the main page and broadcast to iframes
-        applySunShadowToPage();
+        // Apply to the main page by setting the CSS variable and broadcast to iframes
+        document.body.style.setProperty('--sun-shadow', currentSunShadow);
         broadcastSunUpdate();
 
     }, error => {
         console.warn("Sun effect disabled: Could not get location.", error);
+        // Ensure the variable is cleared if location fails
+        document.body.style.setProperty('--sun-shadow', 'none');
+        broadcastSunUpdate();
     });
 }
 
