@@ -715,23 +715,25 @@ function updateSunEffect() {
         const isLightMode = document.body.classList.contains('light-theme');
 
         // Define constants for the sharp highlight effect
-        const SUNRISE_COLOR = [255, 205, 160];    // Richer orange for sunrise/sunset
+        const SUNRISE_COLOR = [255, 195, 150];    // Saturated orange for sunrise/sunset
         const MIDDAY_COLOR = [255, 255, 255];     // Pure white
         const MOONLIGHT_COLOR = [210, 225, 255];  // Sharper cool blue for moonlight
         const SHADOW_DISTANCE = 1.0;             // A tight, 1px distance for the highlight
         const BLUR_RADIUS = 1.0;                 // A minimal blur to anti-alias the 1px line
         const SPREAD_RADIUS = 0.0;               // No spread, for a crisp line
-        const MAX_SUN_ALPHA = isLightMode ? 0.75 : 0.4;  // Strong opacity, especially for light mode
-        const MAX_MOON_ALPHA = isLightMode ? 0.35 : 0.2; // Stronger moonlight
+        const MAX_SUN_ALPHA = isLightMode ? 0.85 : 0.5;  // Much stronger opacity
+        const MAX_MOON_ALPHA = isLightMode ? 0.5 : 0.25; // Stronger moonlight
 
         if (sunPosition.altitude > 0) {
             // --- SUNLIGHT LOGIC ---
             const altitudeFactor = Math.sin(sunPosition.altitude); // 0 at horizon, 1 at zenith
-            const finalAlpha = MAX_SUN_ALPHA * Math.max(0.1, altitudeFactor);
+            const finalAlpha = MAX_SUN_ALPHA * Math.max(0.15, altitudeFactor);
             const finalColor = lerpColor(SUNRISE_COLOR, MIDDAY_COLOR, altitudeFactor);
 
-            const offsetX = -Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
-            const offsetY = -Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
+            // CORRECTED DIRECTION: The highlight should come from the same direction as the sun.
+            // No longer negated, so a positive cos (sun in the south) gives a positive offsetY (highlight on bottom).
+            const offsetX = Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
+            const offsetY = Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
 
             const [r, g, b] = finalColor;
             currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
@@ -745,13 +747,13 @@ function updateSunEffect() {
                 
                 const finalAlpha = MAX_MOON_ALPHA * moonAltitudeFactor * moonIllumination.fraction;
 
-                const offsetX = -Math.sin(moonPosition.azimuth) * SHADOW_DISTANCE;
-                const offsetY = -Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
+                // CORRECTED DIRECTION for moonlight
+                const offsetX = Math.sin(moonPosition.azimuth) * SHADOW_DISTANCE;
+                const offsetY = Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
 
                 const [r, g, b] = MOONLIGHT_COLOR;
                 currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
             } else {
-                // Both sun and moon are down, so no light source
                 currentSunShadow = '0 0 0 0 transparent';
             }
         }
