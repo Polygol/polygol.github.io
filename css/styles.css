@@ -903,6 +903,7 @@ input[type="color"]::-moz-color-swatch {
 	backdrop-filter: none;
 	background-color: transparent;
 	border: none;
+	box-shadow: none;
 }
 
 .setting-item {
