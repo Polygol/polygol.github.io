@@ -711,14 +711,17 @@ function updateSunEffect() {
         const now = new Date();
         const sunPosition = SunCalc.getPosition(now, latitude, longitude);
 
-        // Define constants for the effect
-        const SUNRISE_COLOR = [255, 200, 150]; // Warm orange
+        // Check for current theme to adjust intensity
+        const isLightMode = document.body.classList.contains('light-theme');
+
+        // Define constants for the effect, with adjustments for visibility
+        const SUNRISE_COLOR = [255, 190, 140]; // More saturated warm orange
         const MIDDAY_COLOR = [255, 255, 255];  // Pure white
-        const MOONLIGHT_COLOR = [200, 220, 255]; // Cool blueish-white
-        const SHADOW_DISTANCE = 1.5;          // Total distance of the highlight from the edge
-        const BLUR_RADIUS = 1;                // A sharp 1px blur
-        const MAX_SUN_ALPHA = 0.25;           // The alpha value at midday
-        const MAX_MOON_ALPHA = 0.12;          // Max alpha for a full moon at zenith
+        const MOONLIGHT_COLOR = [190, 215, 255]; // More saturated cool blue
+        const SHADOW_DISTANCE = 2;            // Increased from 1.5
+        const BLUR_RADIUS = 2;                // Increased from 1 for a slightly softer glow
+        const MAX_SUN_ALPHA = isLightMode ? 0.6 : 0.35; // Significantly stronger for light mode
+        const MAX_MOON_ALPHA = isLightMode ? 0.3 : 0.15; // Stronger for light mode
 
         if (sunPosition.altitude > 0) {
             // --- SUNLIGHT LOGIC ---
