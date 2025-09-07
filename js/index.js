@@ -700,14 +700,14 @@ function updateSunEffect() {
             // Sun is below the horizon, no shadow
             currentSunShadow = 'none';
         } else {
-            // Calculate properties based on sun position with reduced intensity for a subtler effect
-            const lightIntensity = Math.max(0.1, Math.pow(Math.sin(sunPosition.altitude), 0.5));
-            const shadowColor = `rgba(255, 255, 255, ${0.15 * lightIntensity})`; // Reduced from 0.25
-            const shadowDistance = 1.5 * (1 - Math.sin(sunPosition.altitude)); // Reduced from 2.5
+            // Calculate properties based on sun position with increased visibility
+            const lightIntensity = Math.max(0.15, Math.pow(Math.sin(sunPosition.altitude), 0.5));
+            const shadowColor = `rgba(255, 255, 255, ${0.35 * lightIntensity})`; // Increased opacity
+            const shadowDistance = 1.2 * (1 - Math.sin(sunPosition.altitude)); // Slightly reduced distance
             const offsetX = -Math.sin(sunPosition.azimuth) * shadowDistance;
             const offsetY = -Math.cos(sunPosition.azimuth) * shadowDistance;
 
-            currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 3px ${shadowColor}`; // Reduced blur from 4px
+            currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 2px ${shadowColor}`; // Reduced blur for a sharper look
         }
         
         // Apply to the main page by setting the CSS variable and broadcast to iframes
@@ -717,7 +717,7 @@ function updateSunEffect() {
     }, error => {
         console.warn("Sun effect disabled: Could not get location.", error);
         // Ensure the variable is cleared if location fails
-        document.body.style.setProperty('--sun-shadow', 'none');
+        document.body.style.setProperty('--sun-shadow', '0 0 0 0 transparent');
         broadcastSunUpdate();
     });
 }
