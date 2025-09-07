@@ -5608,7 +5608,7 @@ function setupDrawerInteractions() {
 	            } else {
 	                dock.classList.add('show');
 	            }
-	            dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
+	            dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
 	            drawerPill.style.opacity = '0';
 
@@ -5741,7 +5741,7 @@ function setupDrawerInteractions() {
 	            dock.style.display = 'flex';
 	            requestAnimationFrame(() => {
 	                dock.classList.add('show');
-	                dock.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.1)';
+	                dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
 	            });
 	            appDrawer.style.bottom = '-100%';
 	            appDrawer.style.opacity = '0';
