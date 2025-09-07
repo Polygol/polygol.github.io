@@ -6482,6 +6482,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 theme: newTheme
             }, window.location.origin);
         });
+
+		// Update sun effect
+		updateSunEffect();
     });
     
     // Event listener for minimal mode control
