@@ -7119,6 +7119,30 @@ window.addEventListener('message', event => {
 
     const data = event.data;
 
+    // Handle a Gurapp announcing it's ready for settings
+    if (data.type === 'gurapp-ready') {
+        console.log('[Polygol] Gurapp is ready. Sending initial state.');
+        const sourceIframe = event.source;
+        if (!sourceIframe) return;
+
+        // Send current theme
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        sourceIframe.postMessage({ type: 'themeUpdate', theme: currentTheme }, window.location.origin);
+
+        // Send current animation setting
+        const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
+        sourceIframe.postMessage({ type: 'animationsUpdate', enabled: animationsEnabled }, window.location.origin);
+        
+        // Send current contrast setting
+        const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
+        sourceIframe.postMessage({ type: 'contrastUpdate', enabled: highContrastEnabled }, window.location.origin);
+
+        // Send current sun shadow
+        sourceIframe.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
+
+        return; // Message handled
+    }
+
     // Allow an app to view the currently installed apps
     // This check should happen BEFORE the main API call router.
     if (data.action === 'callGurasuraisuFunc' && data.functionName === 'requestInstalledApps') {
