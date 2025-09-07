@@ -247,50 +247,6 @@ const Gurasuraisu = {
 
 // --- Event Listener for Messages FROM Gurasuraisu ---
 
-let currentSunShadow = ''; // Variable to store the latest sun shadow CSS
-
-/**
- * Internal function to find elements with the glass effect and apply the sun shadow.
- */
-function _applySunShadowToGurapp() {
-    const SUN_SHADOW_ID = '/* sun-shadow */';
-    const allElements = document.querySelectorAll('*');
-
-    allElements.forEach(el => {
-        try {
-            const style = window.getComputedStyle(el);
-            // CORRECTED CHECK: Look for the resolved fragment identifier of the SVG filter.
-            if (style.backdropFilter && style.backdropFilter.includes('#edge-refraction-only')) {
-                 let currentShadow = el.style.boxShadow;
-        
-                // Remove old sun shadow if it exists to prevent duplication
-                const oldSunShadowIndex = currentShadow.indexOf(SUN_SHADOW_ID);
-                if (oldSunShadowIndex !== -1) {
-                    const shadowStartIndex = currentShadow.lastIndexOf('inset', oldSunShadowIndex);
-                    if (shadowStartIndex !== -1) {
-                        let shadowEndIndex = currentShadow.indexOf(',', oldSunShadowIndex);
-                        if (shadowEndIndex !== -1) {
-                            currentShadow = currentShadow.substring(0, shadowStartIndex) + currentShadow.substring(shadowEndIndex + 1).trim();
-                        } else {
-                            currentShadow = '';
-                        }
-                    }
-                }
-                
-                // Apply new shadow, preserving existing styles
-                if (currentSunShadow) {
-                    const newShadow = `${currentSunShadow} ${SUN_SHADOW_ID}`;
-                    el.style.boxShadow = currentShadow ? `${newShadow}, ${currentShadow}` : newShadow;
-                } else {
-                    el.style.boxShadow = currentShadow;
-                }
-            }
-        } catch (e) {
-            // Failsafe for elements that don't have computed styles (e.g., <script>)
-        }
-    });
-}
-
 /**
  * Listens for messages from the parent window, such as theme
  * or animation setting changes, and applies them to the Gurapp.
@@ -313,8 +269,7 @@ window.addEventListener('message', async (event) => {
         document.documentElement.classList.toggle('gurasuraisu-high-contrast', data.enabled);
         break;
       case 'sunUpdate':
-        currentSunShadow = data.shadow;
-        _applySunShadowToGurapp(); // Immediately apply the new shadow
+        document.documentElement.style.setProperty('--sun-shadow', data.shadow);
         break;
       
       // --- NEW: Handles screenshot requests from the parent ---
