@@ -563,6 +563,7 @@ input[type="color"]::-moz-color-swatch {
             margin-bottom: 10px;
             user-select: none;
             gap: clamp(0.5rem, 2vw, 1rem);
+			z-index: 1;
         }
 
 .date {
