@@ -727,7 +727,7 @@ function updateSunEffect() {
         if (sunPosition.altitude > 0) {
             // --- SUNLIGHT LOGIC ---
             const altitudeFactor = Math.sin(sunPosition.altitude); // 0 at horizon, 1 at zenith
-            const finalAlpha = MAX_SUN_ALPHA * Math.max(0.3, altitudeFactor); // Higher base alpha to keep color strong
+            const finalAlpha = MAX_SUN_ALPHA * Math.max(0.5, altitudeFactor); // Higher base alpha to keep color strong
             const finalColor = lerpColor(SUNRISE_COLOR, MIDDAY_COLOR, altitudeFactor);
 
             // CORRECTED DIRECTION: The highlight should come from the same direction as the sun.
