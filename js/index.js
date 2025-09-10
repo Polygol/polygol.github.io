@@ -5592,7 +5592,7 @@ function setupDrawerInteractions() {
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
-	            openEmbed.style.border = 'none';
+	            openEmbed.style.border = '0 solid var(--glass-border)';
 	            
 		    persistentClock.style.opacity = '1';
 	        }
@@ -5693,7 +5693,7 @@ function setupDrawerInteractions() {
 	                minimizeFullscreenEmbed();
 	                swipeOverlay.style.display = 'none';
 	                swipeOverlay.style.pointerEvents = 'none';
-	                openEmbed.style.border = 'none'; // Clean up border after animation
+	                openEmbed.style.border = '0 solid var(--glass-border)'; // Clean up border after animation
 	            }, 300);
 	
 	            // Reset drawer & dock state
@@ -5711,7 +5711,7 @@ function setupDrawerInteractions() {
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
-	            openEmbed.style.border = 'none'; // Animate border removal
+	            openEmbed.style.border = '0 solid var(--glass-border)'; // Animate border removal
 	            
 	            appDrawer.style.opacity = '0';
 				persistentClock.style.opacity = '1';
