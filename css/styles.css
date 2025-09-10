@@ -1971,6 +1971,7 @@ input[type="checkbox"]:checked::before {
             height: 100%;
             z-index: 1000;
             overflow: hidden; /* Add this to ensure border-radius works properly */
+			border: 0 solid var(--glass-border);
             transition: transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease;
             filter: none;
         }
