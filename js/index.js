@@ -715,14 +715,14 @@ function updateSunEffect() {
         const isLightMode = document.body.classList.contains('light-theme');
 
         // Define constants for the sharp highlight effect
-        const SUNRISE_COLOR = [255, 195, 150];    // Saturated orange for sunrise/sunset
+        const SUNRISE_COLOR = [255, 180, 110];    // More saturated, deeper orange
         const MIDDAY_COLOR = [255, 255, 255];     // Pure white
-        const MOONLIGHT_COLOR = [210, 225, 255];  // Sharper cool blue for moonlight
+        const MOONLIGHT_COLOR = [170, 205, 255];  // More saturated, deeper blue
         const SHADOW_DISTANCE = 1.0;             // A tight, 1px distance for the highlight
         const BLUR_RADIUS = 1.0;                 // A minimal blur to anti-alias the 1px line
         const SPREAD_RADIUS = 0.0;               // No spread, for a crisp line
-        const MAX_SUN_ALPHA = isLightMode ? 0.85 : 0.5;  // Much stronger opacity
-        const MAX_MOON_ALPHA = isLightMode ? 0.5 : 0.25; // Stronger moonlight
+        const MAX_SUN_ALPHA = isLightMode ? 0.9 : 0.6;   // Increased opacity for visibility
+        const MAX_MOON_ALPHA = isLightMode ? 0.6 : 0.35; // Increased moonlight opacity
 
         if (sunPosition.altitude > 0) {
             // --- SUNLIGHT LOGIC ---
