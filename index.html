@@ -82,10 +82,10 @@
         
             <!-- Part 5: Apply the displacement twice and combine the results. -->
             <!-- Pass 1: A positive scale refracts the top and left edges inward correctly. -->
-            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="40" xChannelSelector="R" yChannelSelector="G" result="disp_positive"></feDisplacementMap>
+            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="30" xChannelSelector="R" yChannelSelector="G" result="disp_positive"></feDisplacementMap>
             
             <!-- Pass 2: A negative scale refracts the bottom and right edges inward correctly. -->
-            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="-40" xChannelSelector="R" yChannelSelector="G" result="disp_negative"></feDisplacementMap>
+            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="-30" xChannelSelector="R" yChannelSelector="G" result="disp_negative"></feDisplacementMap>
             
             <!-- Part 6: Blend the two results. The 'lighten' mode takes the non-transparent pixels
                  from both passes. Since the "incorrect" refractions are pushed into transparent
