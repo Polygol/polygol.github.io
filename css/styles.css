@@ -1013,7 +1013,7 @@ input[type="color"]::-moz-color-swatch {
     flex-shrink: 0;
     cursor: pointer;
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
-	opacity: 0.5;
+	mix-blend-mode: overlay;
 }
 
 #media-widget-art:active {
