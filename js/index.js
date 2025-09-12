@@ -7079,9 +7079,17 @@ function hideMediaWidget() {
 }
 
 function updateMediaWidgetState(playbackState) {
-    const playPauseIcon = document.querySelector('#media-widget-play-pause .material-symbols-rounded');
-    if (playPauseIcon) {
-        playPauseIcon.textContent = playbackState === 'playing' ? 'pause' : 'play_arrow';
+    const playPauseButton = document.querySelector('#media-widget-play-pause');
+    const playPauseIcon = playPauseButton?.querySelector('.material-symbols-rounded');
+
+    if (playPauseIcon && playPauseButton) {
+        if (playbackState === 'playing') {
+            playPauseIcon.textContent = 'pause';
+            playPauseButton.style.borderRadius = '16px';
+        } else {
+            playPauseIcon.textContent = 'play_arrow';
+            playPauseButton.style.borderRadius = '42px';
+        }
     }
 }
 
