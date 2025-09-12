@@ -1072,7 +1072,7 @@ input[type="color"]::-moz-color-swatch {
 
 .media-widget-controls {
     display: flex;
-    gap: 12px;
+    gap: 18px;
     justify-content: flex-end;
     margin: 4px 4px 20px auto;
 	align-items: center;
