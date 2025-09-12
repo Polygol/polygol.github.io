@@ -1055,7 +1055,7 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 6px;
     overflow: hidden;
     position: absolute;
-    bottom: 2px;
+    bottom: 16px;
     left: 6%;
     background-color: var(--overlay-color);
     backdrop-filter: blur(1px) saturate(2) var(--edge-refraction-filter);
@@ -1074,7 +1074,7 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     gap: 12px;
     justify-content: flex-end;
-    margin: 4px 4px 4px auto;
+    margin: 4px 4px 20px auto;
 }
 
 .media-widget-controls button {
