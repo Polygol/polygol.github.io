@@ -1031,7 +1031,7 @@ input[type="color"]::-moz-color-swatch {
     margin: 8px;
     z-index: 1;
     pointer-events: none;
-    text-shadow: 0 0 2px var(--search-background);
+    text-shadow: 0 0 2px var(--background-color);
 }
 
 .media-widget-info .title {
@@ -1059,6 +1059,7 @@ input[type="color"]::-moz-color-swatch {
     left: 6%;
     background-color: var(--overlay-color);
     backdrop-filter: blur(1px) saturate(2) var(--edge-refraction-filter);
+	box-shadow: var(--sun-shadow), 0 0 2px var(--background-color);
 }
 
 #media-widget-progress {
@@ -1074,7 +1075,6 @@ input[type="color"]::-moz-color-swatch {
     gap: 12px;
     justify-content: flex-end;
     margin: 4px 4px 4px auto;
-    text-shadow: 0 0 2px var(--search-background);
 }
 
 .media-widget-controls button {
@@ -1089,6 +1089,7 @@ input[type="color"]::-moz-color-swatch {
     justify-content: center;
     border-radius: 50%;
     transition: background-color 0.2s;
+	text-shadow: 0 0 2px var(--background-color);
 }
 
 /* Smart Home Controls Styles */
