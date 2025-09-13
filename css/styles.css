@@ -1001,6 +1001,17 @@ input[type="color"]::-moz-color-swatch {
     opacity: 0;
     transform: scale(0.95);
     pointer-events: none;
+	height: 0;
+}
+
+.media-widget-app-icon {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    z-index: 2;
 }
 
 #media-widget-art {
@@ -1047,6 +1058,24 @@ input[type="color"]::-moz-color-swatch {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.media-widget-progress-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    z-index: 1;
+    padding: 0 4px;
+    box-sizing: border-box;
+}
+
+.media-widget-time {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-color);
+    opacity: 0.8;
+    text-shadow: 0 0 2px var(--background-color);
 }
 
 #media-widget-progress-bar {
