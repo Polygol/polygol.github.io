@@ -164,12 +164,17 @@
             </div>
             <div id="media-session-widget" class="media-widget" style="display: none;">
                 <img id="media-widget-art" src="" alt="Album Art">
+                <img id="media-widget-app-icon" src="" class="media-widget-app-icon" style="display: none;" />
                 <div class="media-widget-info">
                     <div id="media-widget-title" class="title"></div>
                     <div id="media-widget-artist" class="artist"></div>
                 </div>
-                <div id="media-widget-progress-bar">
-                    <div id="media-widget-progress"></div>
+                <div class="media-widget-progress-container">
+                    <span id="media-widget-current-time" class="media-widget-time">0:00</span>
+                    <div id="media-widget-progress-bar">
+                        <div id="media-widget-progress"></div>
+                    </div>
+                    <span id="media-widget-duration" class="media-widget-time">0:00</span>
                 </div>
                 <div class="media-widget-controls">
                     <button id="media-widget-prev"><span class="material-symbols-rounded">skip_previous</span></button>
