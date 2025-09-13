@@ -985,7 +985,6 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     align-items: stretch;
 	flex-direction: column;
-    gap: 10px;
     padding: 12px 18px 12px 16px;
     margin: 10px 0;
     background-color: var(--search-background);
@@ -995,6 +994,7 @@ input[type="color"]::-moz-color-swatch {
 	box-shadow: var(--sun-shadow);
     overflow: hidden;
     transition: all 0.3s ease;
+	height: 134px;
 }
 
 .media-widget[style*="display: none"] {
@@ -1055,6 +1055,7 @@ input[type="color"]::-moz-color-swatch {
     overflow: hidden;
     text-overflow: ellipsis;
 	padding-left: 4px;
+	line-height: 1.25;
 }
 
 .media-widget-info .artist {
@@ -1063,6 +1064,7 @@ input[type="color"]::-moz-color-swatch {
     overflow: hidden;
     text-overflow: ellipsis;
 	padding-left: 4px;
+	line-height: 1.25;
 }
 
 .media-widget-progress-container {
@@ -1111,7 +1113,7 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     gap: 24px;
     justify-content: flex-end;
-    margin: 4px 4px 26px auto;
+    margin: 4px 4px 28px auto;
 	align-items: center;
 }
 
