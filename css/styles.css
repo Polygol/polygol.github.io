@@ -986,7 +986,7 @@ input[type="color"]::-moz-color-swatch {
     align-items: stretch;
 	flex-direction: column;
     gap: 10px;
-    padding: 12px 18px 12px 13.4px;
+    padding: 12px 18px 12px 16px;
     margin: 10px 0;
     background-color: var(--search-background);
     border-radius: 25px;
@@ -1091,7 +1091,7 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 6px;
     overflow: hidden;
     position: absolute;
-    bottom: 16px;
+    bottom: 18px;
     left: 6%;
     background-color: var(--search-background);
     backdrop-filter: blur(2.5px) saturate(2) var(--edge-refraction-filter);
@@ -1111,7 +1111,7 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     gap: 24px;
     justify-content: flex-end;
-    margin: 4px 4px 24px auto;
+    margin: 4px 4px 26px auto;
 	align-items: center;
 }
 
