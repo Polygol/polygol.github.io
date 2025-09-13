@@ -7063,8 +7063,18 @@ function hideMediaWidget() {
     widget.style.transform = 'scale(0.95)';
     setTimeout(() => {
         widget.style.display = 'none';
+
+        // Reset new elements
+        const appIconEl = document.getElementById('media-widget-app-icon');
+        if (appIconEl) appIconEl.style.display = 'none';
+        const currentTimeEl = document.getElementById('media-widget-current-time');
+        if (currentTimeEl) currentTimeEl.textContent = '0:00';
+        const durationEl = document.getElementById('media-widget-duration');
+        if (durationEl) durationEl.textContent = '0:00';
+        const progressEl = document.getElementById('media-widget-progress');
+        if (progressEl) progressEl.style.width = '0%';
 	    
-	const prevBtn = document.getElementById('media-widget-prev');
+		const prevBtn = document.getElementById('media-widget-prev');
         const playPauseBtn = document.getElementById('media-widget-play-pause');
         const nextBtn = document.getElementById('media-widget-next');
 
@@ -7097,7 +7107,21 @@ function updateMediaWidgetState(playbackState) {
 function registerMediaSession(appName, metadata, supportedActions = []) {
     if (!appName) return;
     activeMediaSessionApp = appName;
+    localStorage.setItem('lastMediaSessionApp', appName); // Store the last app that controlled media
     showMediaWidget(metadata);
+
+    // Get the app icon
+    const appIconEl = document.getElementById('media-widget-app-icon');
+    if (appIconEl && apps[appName] && apps[appName].icon) {
+        let iconUrl = apps[appName].icon;
+        if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/'))) {
+            iconUrl = `/assets/appicon/${iconUrl}`;
+        }
+        appIconEl.src = iconUrl;
+        appIconEl.style.display = 'block';
+    } else if (appIconEl) {
+        appIconEl.style.display = 'none';
+    }
 
     // Get references to the control buttons
     const prevBtn = document.getElementById('media-widget-prev');
@@ -7159,10 +7183,23 @@ document.addEventListener('DOMContentLoaded', () => {
 function updateMediaProgress(appName, progressState) {
     if (activeMediaSessionApp === appName) {
         const progressEl = document.getElementById('media-widget-progress');
-        if (progressEl) {
-            // progressState should be an object like { currentTime, duration }
+        const currentTimeEl = document.getElementById('media-widget-current-time');
+        const durationEl = document.getElementById('media-widget-duration');
+
+        if (progressEl && currentTimeEl && durationEl && progressState.duration > 0) {
             const percentage = (progressState.currentTime / progressState.duration) * 100;
             progressEl.style.width = `${percentage}%`;
+            
+            // Helper to format seconds into MM:SS
+            const formatTime = (seconds) => {
+                if (isNaN(seconds)) return '0:00';
+                const min = Math.floor(seconds / 60);
+                const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
+                return `${min}:${sec}`;
+            };
+            
+            currentTimeEl.textContent = formatTime(progressState.currentTime);
+            durationEl.textContent = formatTime(progressState.duration);
         }
     }
 }
