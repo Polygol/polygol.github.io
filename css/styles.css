@@ -1006,12 +1006,15 @@ input[type="color"]::-moz-color-swatch {
 
 .media-widget-app-icon {
     position: absolute;
-    top: 16px;
-    right: 16px;
-    width: 24px;
-    height: 24px;
+    top: 18px;
+    right: 18px;
+    width: 32px;
+    height: 32px;
     border-radius: 12px;
     z-index: 2;
+	filter: saturate(0);
+    mix-blend-mode: luminosity;
+    pointer-events: none;
 }
 
 #media-widget-art {
@@ -1063,11 +1066,14 @@ input[type="color"]::-moz-color-swatch {
 .media-widget-progress-container {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 90px;
     width: 100%;
+    padding: 0 8px;
     z-index: 1;
-    padding: 0 4px;
     box-sizing: border-box;
+    position: absolute;
+    bottom: 34px;
+	pointer-events: none;
 }
 
 .media-widget-time {
