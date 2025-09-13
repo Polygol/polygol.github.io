@@ -1042,10 +1042,10 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     gap: 6px;
     flex-direction: column;
-    margin: 8px 40px 8px 8px;
+    margin: 8px 40px 8px 4px;
     z-index: 1;
     pointer-events: none;
-    text-shadow: 0 0 2px var(--background-color);
+    text-shadow: 0 0 4px var(--background-color);
 }
 
 .media-widget-info .title {
@@ -1054,6 +1054,7 @@ input[type="color"]::-moz-color-swatch {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+	padding-left: 4px;
 }
 
 .media-widget-info .artist {
@@ -1061,6 +1062,7 @@ input[type="color"]::-moz-color-swatch {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+	padding-left: 4px;
 }
 
 .media-widget-progress-container {
@@ -1079,9 +1081,8 @@ input[type="color"]::-moz-color-swatch {
 .media-widget-time {
     font-size: 12px;
     font-variant-numeric: tabular-nums;
-    color: var(--text-color);
-    opacity: 0.8;
-    text-shadow: 0 0 2px var(--background-color);
+    color: var(--secondary-text-color);
+    text-shadow: 0 0 4px var(--background-color);
 }
 
 #media-widget-progress-bar {
@@ -1126,7 +1127,7 @@ input[type="color"]::-moz-color-swatch {
     justify-content: center;
     border-radius: 50%;
     transition: background-color 0.2s;
-	text-shadow: 0 0 2px var(--background-color);
+	text-shadow: 0 0 4px var(--background-color);
 }
 
 #media-widget-play-pause {
