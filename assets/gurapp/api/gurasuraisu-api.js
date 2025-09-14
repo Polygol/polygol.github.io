@@ -320,22 +320,29 @@ async function setLanguage(langCode) {
 
         const appName = document.body.dataset.appName?.toUpperCase();
         
-        const appLangMap = { EN: LANG_EN_APP, JP: LANG_JP_APP, DE: LANG_DE_APP, ES: LANG_ES_APP, KO: LANG_KO_APP, ZH: LANG_ZH_APP };
-        const specificAppLangMap = {
-             EN: appName && window[`LANG_EN_${appName}`] ? window[`LANG_EN_${appName}`] : {},
-             JP: appName && window[`LANG_JP_${appName}`] ? window[`LANG_JP_${appName}`] : {},
-             DE: appName && window[`LANG_DE_${appName}`] ? window[`LANG_DE_${appName}`] : {},
-             ES: appName && window[`LANG_ES_${appName}`] ? window[`LANG_ES_${appName}`] : {},
-             KO: appName && window[`LANG_KO_${appName}`] ? window[`LANG_KO_${appName}`] : {},
-             ZH: appName && window[`LANG_ZH_${appName}`] ? window[`LANG_ZH_${appName}`] : {},
-        };
-        
-        currentGlobalLanguage = appLangMap[langCode] || LANG_EN_APP;
-        currentAppLanguage = specificAppLangMap[langCode] || specificAppLangMap['EN'] || {};
+        // --- CORRECTED LOGIC ---
+        // 1. Get the global language pack (this is guaranteed to be loaded).
+        const globalLangMap = { EN: LANG_EN_APP, JP: LANG_JP_APP, DE: LANG_DE_APP, ES: LANG_ES_APP, KO: LANG_KO_APP, ZH: LANG_ZH_APP };
+        currentGlobalLanguage = globalLangMap[langCode] || LANG_EN_APP;
 
+        // 2. Dynamically build the variable name for the app-specific language and look it up "just-in-time".
+        let appSpecificLang = {};
+        if (appName) {
+            const specificLangVarName = `LANG_${langCode}_${appName}`;
+            const englishFallbackVarName = `LANG_EN_${appName}`;
+            // Look for the specific language first, then fall back to English for that app.
+            appSpecificLang = window[specificLangVarName] || window[englishFallbackVarName] || {};
+        }
+        currentAppLanguage = appSpecificLang;
+        
+        // 3. Merge the global and app-specific languages. App-specific keys will overwrite global ones.
         mergedLanguage = { ...currentGlobalLanguage, ...currentAppLanguage };
 
         Gurasuraisu.applyTranslations();
+        
+        // Dispatch a custom event to let the app know the language has been applied.
+        // This is useful for apps that need to re-render dynamic text.
+        window.dispatchEvent(new CustomEvent('languageApplied'));
 
     } catch (error) {
         console.error("Gurasuraisu API: Failed to set language.", error);
