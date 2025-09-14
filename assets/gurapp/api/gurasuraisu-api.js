@@ -93,7 +93,36 @@ const _fallbacks = {
 };
  
 const Gurasuraisu = {
-  /**
+    /**
+     * [REQUIRED] Initializes the API for the app.
+     * The app MUST call this once its own language files have loaded.
+     * @param {object} config - Configuration object.
+     * @param {object} config.langPack - The app-specific language pack (e.g., { EN: LANG_EN_APPSTORE, DE: ... }).
+     */
+    initialize: function(config) {
+        if (!config || !config.langPack) {
+            console.error('[Gurasuraisu API] Initialization failed: A `langPack` object must be provided.');
+            return;
+        }
+
+        // 1. Determine the current language from parent or localStorage
+        const currentLang = localStorage.getItem('gurappLanguage') || 'EN';
+
+        // 2. Load and merge the language packs
+        const globalLangMap = { EN: LANG_EN_APP, JP: LANG_JP_APP, DE: LANG_DE_APP, ES: LANG_ES_APP, KO: LANG_KO_APP, ZH: LANG_ZH_APP };
+        const globalStrings = globalLangMap[currentLang] || LANG_EN_APP;
+        const appStrings = config.langPack[currentLang] || config.langPack['EN'] || {};
+        
+        mergedLanguage = { ...globalStrings, ...appStrings };
+
+        // 3. Perform the initial, full-page translation
+        this.applyTranslations(document.documentElement);
+        
+        // 4. Activate the observer for future dynamic content
+        this._startTranslationObserver();
+        isLanguageInitialized = true;
+    },
+
    * Internal helper to send a structured message to the parent window.
    * @param {string} functionName - The name of the Gurasuraisu function to call.
    * @param {Array} args - An array of arguments to pass to the function.
@@ -114,7 +143,29 @@ const Gurasuraisu = {
 
   // --- Language API Functions ---
 
-  /**
+    /**
+     * Starts the MutationObserver to watch for new DOM elements and translate them.
+     * This is now called internally by initialize().
+     */
+    _startTranslationObserver: function() {
+        if (languageObserver) return; // Don't start it twice
+
+        languageObserver = new MutationObserver((mutationsList) => {
+            for (const mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) { // Only translate element nodes
+                            this.applyTranslations(node);
+                        }
+                    });
+                }
+            }
+        });
+
+        languageObserver.observe(document.body, { childList: true, subtree: true });
+    },
+
+   /**
    * [INTERNAL] Registers the app-specific language pack with the API.
    * This should be called by the app's main script after its language variables are defined.
    * @param {object} langPack - An object containing language codes as keys (e.g., { EN: {...}, JP: {...} }).
@@ -355,6 +406,8 @@ function _initializeTranslationObserver() {
     observer.observe(document.body, { childList: true, subtree: true });
 }
 
+window.Gurasuraisu = Gurasuraisu;
+
 // --- Event Listener for Messages FROM Gurasuraisu ---
 
 /**
@@ -400,6 +453,21 @@ window.addEventListener('message', async (event) => {
   const data = event.data;
   if (data && data.type) {
     switch (data.type) {
+            case 'languageUpdate':
+                // If language changes after initialization, re-run the merge and translation
+                if (isLanguageInitialized) {
+                    const currentLang = data.languageCode || 'EN';
+                    localStorage.setItem('gurappLanguage', currentLang);
+                    // Re-initialize with the new language code
+                    const appName = document.body.dataset.appName?.toUpperCase();
+                    const langPack = {
+                        EN: window[`LANG_EN_${appName}`], DE: window[`LANG_DE_${appName}`],
+                        JP: window[`LANG_JP_${appName}`], ES: window[`LANG_ES_${appName}`],
+                        KO: window[`LANG_KO_${appName}`], ZH: window[`LANG_ZH_${appName}`]
+                    };
+                    Gurasuraisu.initialize({ langPack });
+                }
+                break;
       case 'themeUpdate':
         document.body.classList.toggle('light-theme', data.theme === 'light');
         break;
@@ -411,9 +479,6 @@ window.addEventListener('message', async (event) => {
         break;
       case 'sunUpdate':
         document.documentElement.style.setProperty('--sun-shadow', data.shadow);
-        break;
-      case 'languageUpdate':
-        await setLanguage(data.languageCode);
         break;
       // --- NEW: Handles screenshot requests from the parent ---
       case 'request-screenshot':
