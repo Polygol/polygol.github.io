@@ -64,20 +64,30 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
     document.head.appendChild(style);
 })();
 
-let currentTargetLanguage = 'en'; // Default language
-const translationCache = {};
+// Map Polygol's custom codes to standard ISO 639-1 codes for the API
+const langCodeMap = {
+    'EN': 'en', 'JP': 'ja', 'DE': 'de', 'FR': 'fr',
+    'ES': 'es', 'KO': 'ko', 'ZH': 'zh-cn', 'HI': 'hi',
+    'PT': 'pt', 'BN': 'bn', 'RU': 'ru', 'PA': 'pa',
+    'VI': 'vi', 'TR': 'tr', 'AR_EG': 'ar', 'MR': 'mr',
+    'TE': 'te', 'TA': 'ta', 'UR': 'ur', 'ID': 'id',
+    'JV': 'jv', 'FA_IR': 'fa', 'IT': 'it', 'HA': 'ha',
+    'GU': 'gu', 'AR_LEV': 'ar', 'BHO': 'bho'
+};
 
 // Helper to translate a single text string using a free API
 async function translateText(text, sourceLang = 'en', targetLang) {
-    if (!targetLang || targetLang.toLowerCase() === sourceLang || !text.trim()) {
+    const apiLangCode = langCodeMap[targetLang.toUpperCase()] || targetLang.toLowerCase();
+
+    if (!apiLangCode || apiLangCode === sourceLang || !text.trim()) {
         return text;
     }
-    const cacheKey = `${targetLang}:${text}`;
+    const cacheKey = `${apiLangCode}:${text}`;
     if (translationCache[cacheKey]) {
         return translationCache[cacheKey];
     }
     try {
-        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang.toLowerCase()}`);
+        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${apiLangCode}`);
         const data = await res.json();
         if (data.responseData) {
             const translated = data.responseData.translatedText;
