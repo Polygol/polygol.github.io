@@ -445,28 +445,30 @@ window.addEventListener('message', async (event) => {
  * in localStorage for a seamless appearance.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  // FIX: Apply the 'standalone' class to the <html> element if not in Gurasuraisu
   if (!isInsideGurasuraisu) {
       document.documentElement.classList.add('standalone');
   }
 
   try {
+    // Apply visual settings that can be determined immediately
     const storedTheme = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('light-theme', storedTheme === 'light');
 
     const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
     document.body.classList.toggle('reduce-animations', !animationsEnabled);
 
-    // FIX: Target the <html> element for the initial high contrast check
     const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
     document.documentElement.classList.toggle('gurasuraisu-high-contrast', highContrastEnabled);
 
     // Load and apply language immediately from localStorage if available
     const savedLang = localStorage.getItem('gurappLanguage') || 'EN';
-    setTimeout(async () => {
+    
+    // IMPORTANT: Wait for the app to signal readiness before initializing translations
+    window.addEventListener('GurappReady', async () => {
         await setLanguage(savedLang);
         _initializeTranslationObserver();
-    }, 0);
+    });
+
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
