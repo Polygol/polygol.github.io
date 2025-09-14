@@ -5,7 +5,6 @@
  */
 
 const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttribute('data-gurasuraisu-iframe');
-let currentLanguageObject = {};
 
 // Gurasuraisu Font and Cursor Injection
 // This block runs as soon as the script is loaded by the Gurapp.
@@ -65,95 +64,6 @@ let currentLanguageObject = {};
     document.head.appendChild(style);
 })();
 
-// Helper to load a script file dynamically
-function _loadScript(url) {
-    return new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${url}"]`)) {
-            return resolve(); // Already loaded
-        }
-        const script = document.createElement('script');
-        script.src = url;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-    });
-}
-
-/**
- * Automatically finds elements with data-lang-key attributes and applies translations.
- * @param {object} langObj - The merged language object to use for translations.
- */
-function _autoApplyTranslations(langObj) {
-    if (!langObj) return;
-
-    // Translate innerText
-    document.querySelectorAll('[data-lang-key]').forEach(el => {
-        const key = el.getAttribute('data-lang-key');
-        if (langObj[key]) {
-            el.innerText = langObj[key];
-        }
-    });
-
-    // Translate placeholder attributes
-    document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => {
-        const key = el.getAttribute('data-lang-key-placeholder');
-        if (langObj[key]) {
-            el.setAttribute('placeholder', langObj[key]);
-        }
-    });
-    
-    // Add more attributes here as needed (e.g., title)
-    document.querySelectorAll('[data-lang-key-title]').forEach(el => {
-        const key = el.getAttribute('data-lang-key-title');
-        if (langObj[key]) {
-            el.setAttribute('title', langObj[key]);
-        }
-    });
-}
-
-
-/**
- * Loads and merges language files, then notifies the app.
- * @param {string} langCode - The language code (e.g., 'EN', 'JP').
- */
-async function _applyLanguage(langCode = 'EN') {
-    const langAppUrl = '/assets/gurapp/lang-app.js';
-    const appPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-    const appLangUrl = `${appPath}lang.js`;
-
-    try {
-        await _loadScript(langAppUrl);
-        const response = await fetch(appLangUrl, { method: 'HEAD' });
-        if (response.ok) {
-            await _loadScript(appLangUrl);
-        }
-    } catch (e) {
-        console.warn(`Gurasuraisu API: Could not load language files.`, e);
-    }
-
-    const genericLangObjName = `LANG_${langCode}_APP`;
-    const appPrefix = window.APP_LANG_PREFIX || null;
-    const appLangObjName = appPrefix ? `LANG_${langCode}_${appPrefix}` : null;
-
-    const genericLang = window[genericLangObjName] || window['LANG_EN_APP'] || {};
-    let appLang = {};
-
-    if (appLangObjName && window[appLangObjName]) {
-        appLang = window[appLangObjName];
-    } else if (appLangObjName) {
-        const appEnLangObjName = `LANG_EN_${appPrefix}`;
-        appLang = window[appEnLangObjName] || {};
-    }
-
-    currentLanguageObject = { ...genericLang, ...appLang };
-    
-    // Automatically translate the static elements on the page
-    _autoApplyTranslations(currentLanguageObject);
-
-    // Notify the app that the language is ready for any custom logic
-    window.dispatchEvent(new CustomEvent('GurasuraisuLanguageReady', { detail: currentLanguageObject }));
-}
-
 // Native JS solutions for when the app is running outside of Polygol
 const _fallbacks = {
     showPopup: function(message) {
@@ -196,26 +106,6 @@ const Gurasuraisu = {
       fallback.apply(this, args);
     }
   },
-
-    /**
-     * Retrieves the currently active, merged language object for the app.
-     * @returns {object} The language object.
-     */
-    getLanguageObject: function() {
-        return currentLanguageObject;
-    },
-
-    /**
-     * Registers a callback function to be executed whenever the language changes.
-     * @param {function} callback - The function to call with the new language object.
-     */
-    onLanguageChange: function(callback) {
-        window.addEventListener('GurasuraisuLanguageReady', (event) => {
-            if (callback && typeof callback === 'function') {
-                callback(event.detail);
-            }
-        });
-    },
 
   // --- Public API Functions ---
 
@@ -377,9 +267,6 @@ window.addEventListener('message', async (event) => {
         break;
       case 'contrastUpdate':
         document.documentElement.classList.toggle('gurasuraisu-high-contrast', data.enabled);
-        break;
-      case 'languageUpdate':
-        _applyLanguage(data.languageCode);
         break;
       case 'sunUpdate':
         document.documentElement.style.setProperty('--sun-shadow', data.shadow);
