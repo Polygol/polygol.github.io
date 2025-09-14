@@ -64,11 +64,6 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
     document.head.appendChild(style);
 })();
 
-let currentAppLanguage = {}; // For the specific app's language file
-let currentGlobalLanguage = {}; // For the global lang-app.js
-let mergedLanguage = {}; // The final combined language object
-let registeredAppLangPack = null; // <-- NEW: Variable to hold the app's registered pack
-
 // Native JS solutions for when the app is running outside of Polygol
 const _fallbacks = {
     showPopup: function(message) {
@@ -93,36 +88,7 @@ const _fallbacks = {
 };
  
 const Gurasuraisu = {
-    /**
-     * [REQUIRED] Initializes the API for the app.
-     * The app MUST call this once its own language files have loaded.
-     * @param {object} config - Configuration object.
-     * @param {object} config.langPack - The app-specific language pack (e.g., { EN: LANG_EN_APPSTORE, DE: ... }).
-     */
-    initialize: function(config) {
-        if (!config || !config.langPack) {
-            console.error('[Gurasuraisu API] Initialization failed: A `langPack` object must be provided.');
-            return;
-        }
-
-        // 1. Determine the current language from parent or localStorage
-        const currentLang = localStorage.getItem('gurappLanguage') || 'EN';
-
-        // 2. Load and merge the language packs
-        const globalLangMap = { EN: LANG_EN_APP, JP: LANG_JP_APP, DE: LANG_DE_APP, ES: LANG_ES_APP, KO: LANG_KO_APP, ZH: LANG_ZH_APP };
-        const globalStrings = globalLangMap[currentLang] || LANG_EN_APP;
-        const appStrings = config.langPack[currentLang] || config.langPack['EN'] || {};
-        
-        mergedLanguage = { ...globalStrings, ...appStrings };
-
-        // 3. Perform the initial, full-page translation
-        this.applyTranslations(document.documentElement);
-        
-        // 4. Activate the observer for future dynamic content
-        this._startTranslationObserver();
-        isLanguageInitialized = true;
-    },
-
+  /**
    * Internal helper to send a structured message to the parent window.
    * @param {string} functionName - The name of the Gurasuraisu function to call.
    * @param {Array} args - An array of arguments to pass to the function.
@@ -139,110 +105,6 @@ const Gurasuraisu = {
       const fallback = _fallbacks[functionName] || (() => _fallbacks.default(functionName));
       fallback.apply(this, args);
     }
-  },
-
-  // --- Language API Functions ---
-
-    /**
-     * Starts the MutationObserver to watch for new DOM elements and translate them.
-     * This is now called internally by initialize().
-     */
-    _startTranslationObserver: function() {
-        if (languageObserver) return; // Don't start it twice
-
-        languageObserver = new MutationObserver((mutationsList) => {
-            for (const mutation of mutationsList) {
-                if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.nodeType === 1) { // Only translate element nodes
-                            this.applyTranslations(node);
-                        }
-                    });
-                }
-            }
-        });
-
-        languageObserver.observe(document.body, { childList: true, subtree: true });
-    },
-
-   /**
-   * [INTERNAL] Registers the app-specific language pack with the API.
-   * This should be called by the app's main script after its language variables are defined.
-   * @param {object} langPack - An object containing language codes as keys (e.g., { EN: {...}, JP: {...} }).
-   */
-  _registerAppLangPack: function(langPack) {
-    registeredAppLangPack = langPack;
-    // Re-apply the language now that we have the app-specific strings
-    const currentLang = localStorage.getItem('gurappLanguage') || 'EN';
-    setLanguage(currentLang);
-  },
-
-  /**
-   * Applies the currently loaded translations to the document or a specific element.
-   * If rootElement is provided, it only scans within that element.
-   * @param {Element} [rootElement=document.body] - The element to apply translations to.
-   */
-  applyTranslations: function(rootElement = document.body) {
-    if (Object.keys(mergedLanguage).length === 0) {
-      return;
-    }
-
-    // Function to translate a single element and its children
-    const translateNode = (node) => {
-        // Translate text content
-        node.querySelectorAll('[data-lang-key]').forEach(el => {
-            const key = el.getAttribute('data-lang-key');
-            if (mergedLanguage[key]) el.textContent = mergedLanguage[key];
-        });
-
-        // Translate placeholders
-        node.querySelectorAll('[data-lang-placeholder]').forEach(el => {
-            const key = el.getAttribute('data-lang-placeholder');
-            if (mergedLanguage[key]) el.placeholder = mergedLanguage[key];
-        });
-
-        // Translate title attributes
-        node.querySelectorAll('[data-lang-title]').forEach(el => {
-            const key = el.getAttribute('data-lang-title');
-            if (mergedLanguage[key]) el.title = mergedLanguage[key];
-        });
-    };
-
-    // Translate the root element itself if it has a data-lang attribute
-    if (rootElement.matches && rootElement.matches('[data-lang-key], [data-lang-placeholder], [data-lang-title]')) {
-        const key = rootElement.getAttribute('data-lang-key');
-        if (key && mergedLanguage[key]) rootElement.textContent = mergedLanguage[key];
-        
-        const placeholderKey = rootElement.getAttribute('data-lang-placeholder');
-        if (placeholderKey && mergedLanguage[placeholderKey]) rootElement.placeholder = mergedLanguage[placeholderKey];
-
-        const titleKey = rootElement.getAttribute('data-lang-title');
-        if (titleKey && mergedLanguage[titleKey]) rootElement.title = mergedLanguage[titleKey];
-    }
-    
-    // Translate all descendants of the root element
-    translateNode(rootElement);
-
-    // Translate document title (this is a global action, but safe to run here)
-    const titleElement = document.querySelector('title[data-lang-key]');
-    if (titleElement) {
-        const key = titleElement.getAttribute('data-lang-key');
-        if (mergedLanguage[key]) document.title = mergedLanguage[key];
-    }
-  },
-
-  /**
-   * Gets a translated string by its key.
-   * @param {string} key - The key of the string to retrieve.
-   * @param {object} [replacements] - Optional object for placeholder replacement (e.g., {count: 5}).
-   * @returns {string} The translated string or the key if not found.
-   */
-  getString: function(key, replacements = {}) {
-    let str = mergedLanguage[key] || key;
-    for (const placeholder in replacements) {
-        str = str.replace(`{${placeholder}}`, replacements[placeholder]);
-    }
-    return str;
   },
 
   // --- Public API Functions ---
@@ -383,63 +245,7 @@ const Gurasuraisu = {
   }
 };
 
-// --- Automatic Translation Observer ---
-
-/**
- * Initializes a MutationObserver to automatically translate new content added to the DOM.
- */
-function _initializeTranslationObserver() {
-    const observer = new MutationObserver((mutationsList) => {
-        for (const mutation of mutationsList) {
-            if (mutation.type === 'childList') {
-                mutation.addedNodes.forEach(node => {
-                    // We only care about element nodes (not text, comments, etc.)
-                    if (node.nodeType === 1) { 
-                        Gurasuraisu.applyTranslations(node);
-                    }
-                });
-            }
-        }
-    });
-
-    // Start observing the body for added children and all their descendants
-    observer.observe(document.body, { childList: true, subtree: true });
-}
-
-window.Gurasuraisu = Gurasuraisu;
-
 // --- Event Listener for Messages FROM Gurasuraisu ---
-
-/**
- * Sets the app's language, loads the language packs, and applies them.
- * @param {string} langCode - The language code (e.g., 'EN', 'JP').
- */
-async function setLanguage(langCode) {
-    try {
-        localStorage.setItem('gurappLanguage', langCode);
-
-        // --- UPDATED LOGIC ---
-        // 1. Load the global language pack every time.
-        const globalLangMap = { EN: LANG_EN_APP, JP: LANG_JP_APP, DE: LANG_DE_APP, ES: LANG_ES_APP, KO: LANG_KO_APP, ZH: LANG_ZH_APP };
-        currentGlobalLanguage = globalLangMap[langCode] || LANG_EN_APP;
-
-        // 2. Check if the app has registered its specific language pack.
-        if (registeredAppLangPack) {
-            currentAppLanguage = registeredAppLangPack[langCode] || registeredAppLangPack['EN'] || {};
-        } else {
-            currentAppLanguage = {};
-        }
-        
-        // 3. Merge global and app-specific languages. App-specific strings will override global ones if keys conflict.
-        mergedLanguage = { ...currentGlobalLanguage, ...currentAppLanguage };
-
-        // 4. Apply the merged translations to the entire document.
-        Gurasuraisu.applyTranslations(document.documentElement);
-
-    } catch (error) {
-        console.error("Gurasuraisu API: Failed to set language.", error);
-    }
-}
 
 /**
  * Listens for messages from the parent window, such as theme
@@ -453,21 +259,6 @@ window.addEventListener('message', async (event) => {
   const data = event.data;
   if (data && data.type) {
     switch (data.type) {
-            case 'languageUpdate':
-                // If language changes after initialization, re-run the merge and translation
-                if (isLanguageInitialized) {
-                    const currentLang = data.languageCode || 'EN';
-                    localStorage.setItem('gurappLanguage', currentLang);
-                    // Re-initialize with the new language code
-                    const appName = document.body.dataset.appName?.toUpperCase();
-                    const langPack = {
-                        EN: window[`LANG_EN_${appName}`], DE: window[`LANG_DE_${appName}`],
-                        JP: window[`LANG_JP_${appName}`], ES: window[`LANG_ES_${appName}`],
-                        KO: window[`LANG_KO_${appName}`], ZH: window[`LANG_ZH_${appName}`]
-                    };
-                    Gurasuraisu.initialize({ langPack });
-                }
-                break;
       case 'themeUpdate':
         document.body.classList.toggle('light-theme', data.theme === 'light');
         break;
@@ -480,6 +271,7 @@ window.addEventListener('message', async (event) => {
       case 'sunUpdate':
         document.documentElement.style.setProperty('--sun-shadow', data.shadow);
         break;
+      
       // --- NEW: Handles screenshot requests from the parent ---
       case 'request-screenshot':
         try {
@@ -525,13 +317,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // FIX: Target the <html> element for the initial high contrast check
     const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
     document.documentElement.classList.toggle('gurasuraisu-high-contrast', highContrastEnabled);
-
-    // Load and apply language immediately from localStorage if available
-    const savedLang = localStorage.getItem('gurappLanguage') || 'EN';
-    setTimeout(async () => {
-        await setLanguage(savedLang);
-        _initializeTranslationObserver();
-    }, 0);
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
