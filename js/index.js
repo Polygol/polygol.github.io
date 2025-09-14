@@ -7225,6 +7225,8 @@ const Gurasuraisu = {
     }
 };
 
+let googleTranslateApiKey = localStorage.getItem('googleTranslateApiKey');
+
 window.addEventListener('message', event => {
     if (event.origin !== window.location.origin) return;
 
@@ -7235,6 +7237,19 @@ window.addEventListener('message', event => {
         console.log('[Polygol] Gurapp is ready. Sending initial state.');
         const sourceIframe = event.source;
         if (!sourceIframe) return;
+
+        // Check for Translate API Key, prompt if missing
+        if (!googleTranslateApiKey) {
+            googleTranslateApiKey = prompt("For automatic app translations, please enter your Google Cloud Translate API Key:");
+            if (googleTranslateApiKey) {
+                localStorage.setItem('googleTranslateApiKey', googleTranslateApiKey);
+            }
+        }
+
+        // Send the key if it exists
+        if (googleTranslateApiKey) {
+            sourceIframe.postMessage({ type: 'apiKeyUpdate', key: googleTranslateApiKey }, window.location.origin);
+        }
 
         // Send current theme
         const currentTheme = localStorage.getItem('theme') || 'dark';
