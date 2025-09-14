@@ -104,6 +104,17 @@ function selectLanguage(languageCode) {
             languageSwitcher.value = languageCode;
         }
 
+        // Broadcast the language change to all Gurapp iframes
+        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+        iframes.forEach(iframe => {
+            if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    type: 'languageUpdate',
+                    languageCode: languageCode
+                }, window.location.origin);
+            }
+        });
+
         resolve(); // Let async functions await this
     });
 }
@@ -5155,6 +5166,15 @@ function createFullscreenEmbed(url) {
            embedFailed = true;
            window.open(url, '_blank');
        }
+		
+       // Send current language to newly loaded iframe
+        const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
+        if (iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+                type: 'languageUpdate',
+                languageCode: currentLang
+            }, window.location.origin);
+        }
     });
     
     // Handle iframe loading error
