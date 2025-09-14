@@ -67,6 +67,7 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
 let currentAppLanguage = {}; // For the specific app's language file
 let currentGlobalLanguage = {}; // For the global lang-app.js
 let mergedLanguage = {}; // The final combined language object
+let registeredAppLangPack = null; // <-- NEW: Variable to hold the app's registered pack
 
 // Native JS solutions for when the app is running outside of Polygol
 const _fallbacks = {
@@ -112,6 +113,18 @@ const Gurasuraisu = {
   },
 
   // --- Language API Functions ---
+
+  /**
+   * [INTERNAL] Registers the app-specific language pack with the API.
+   * This should be called by the app's main script after its language variables are defined.
+   * @param {object} langPack - An object containing language codes as keys (e.g., { EN: {...}, JP: {...} }).
+   */
+  _registerAppLangPack: function(langPack) {
+    registeredAppLangPack = langPack;
+    // Re-apply the language now that we have the app-specific strings
+    const currentLang = localStorage.getItem('gurappLanguage') || 'EN';
+    setLanguage(currentLang);
+  },
 
   /**
    * Applies the currently loaded translations to the document or a specific element.
@@ -352,24 +365,23 @@ async function setLanguage(langCode) {
     try {
         localStorage.setItem('gurappLanguage', langCode);
 
-        const appName = document.body.dataset.appName?.toUpperCase();
-        
-        const appLangMap = { EN: LANG_EN_APP, JP: LANG_JP_APP, DE: LANG_DE_APP, ES: LANG_ES_APP, KO: LANG_KO_APP, ZH: LANG_ZH_APP };
-        const specificAppLangMap = {
-             EN: appName && window[`LANG_EN_${appName}`] ? window[`LANG_EN_${appName}`] : {},
-             JP: appName && window[`LANG_JP_${appName}`] ? window[`LANG_JP_${appName}`] : {},
-             DE: appName && window[`LANG_DE_${appName}`] ? window[`LANG_DE_${appName}`] : {},
-             ES: appName && window[`LANG_ES_${appName}`] ? window[`LANG_ES_${appName}`] : {},
-             KO: appName && window[`LANG_KO_${appName}`] ? window[`LANG_KO_${appName}`] : {},
-             ZH: appName && window[`LANG_ZH_${appName}`] ? window[`LANG_ZH_${appName}`] : {},
-        };
-        
-        currentGlobalLanguage = appLangMap[langCode] || LANG_EN_APP;
-        currentAppLanguage = specificAppLangMap[langCode] || specificAppLangMap['EN'] || {};
+        // --- UPDATED LOGIC ---
+        // 1. Load the global language pack every time.
+        const globalLangMap = { EN: LANG_EN_APP, JP: LANG_JP_APP, DE: LANG_DE_APP, ES: LANG_ES_APP, KO: LANG_KO_APP, ZH: LANG_ZH_APP };
+        currentGlobalLanguage = globalLangMap[langCode] || LANG_EN_APP;
 
+        // 2. Check if the app has registered its specific language pack.
+        if (registeredAppLangPack) {
+            currentAppLanguage = registeredAppLangPack[langCode] || registeredAppLangPack['EN'] || {};
+        } else {
+            currentAppLanguage = {};
+        }
+        
+        // 3. Merge global and app-specific languages. App-specific strings will override global ones if keys conflict.
         mergedLanguage = { ...currentGlobalLanguage, ...currentAppLanguage };
 
-        Gurasuraisu.applyTranslations();
+        // 4. Apply the merged translations to the entire document.
+        Gurasuraisu.applyTranslations(document.documentElement);
 
     } catch (error) {
         console.error("Gurasuraisu API: Failed to set language.", error);
