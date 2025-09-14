@@ -124,17 +124,6 @@ function selectLanguage(languageCode) {
         if (languageSwitcher) {
             languageSwitcher.value = languageCode;
         }
-		
-        // Broadcast the language change to all Gurapp iframes
-        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
-        iframes.forEach(iframe => {
-            if (iframe.contentWindow) {
-                iframe.contentWindow.postMessage({
-                    type: 'languageUpdate',
-                    language: languageCode // Send the code e.g., 'JP', 'DE'
-                }, window.location.origin);
-            }
-        });
 
         resolve(); // Let async functions await this
     });
@@ -7225,8 +7214,6 @@ const Gurasuraisu = {
     }
 };
 
-let googleTranslateApiKey = localStorage.getItem('googleTranslateApiKey');
-
 window.addEventListener('message', event => {
     if (event.origin !== window.location.origin) return;
 
@@ -7237,19 +7224,6 @@ window.addEventListener('message', event => {
         console.log('[Polygol] Gurapp is ready. Sending initial state.');
         const sourceIframe = event.source;
         if (!sourceIframe) return;
-
-        // Check for Translate API Key, prompt if missing
-        if (!googleTranslateApiKey) {
-            googleTranslateApiKey = prompt("For automatic app translations, please enter your Google Cloud Translate API Key:");
-            if (googleTranslateApiKey) {
-                localStorage.setItem('googleTranslateApiKey', googleTranslateApiKey);
-            }
-        }
-
-        // Send the key if it exists
-        if (googleTranslateApiKey) {
-            sourceIframe.postMessage({ type: 'apiKeyUpdate', key: googleTranslateApiKey }, window.location.origin);
-        }
 
         // Send current theme
         const currentTheme = localStorage.getItem('theme') || 'dark';
@@ -7265,10 +7239,6 @@ window.addEventListener('message', event => {
 
         // Send current sun shadow
         sourceIframe.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
-
-		// Send current language
-        const currentLangCode = localStorage.getItem('selectedLanguage') || 'EN';
-        sourceIframe.postMessage({ type: 'languageUpdate', language: currentLangCode }, window.location.origin);
 
         return; // Message handled
     }
