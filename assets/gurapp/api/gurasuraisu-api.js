@@ -64,100 +64,6 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
     document.head.appendChild(style);
 })();
 
-let currentTargetLanguage = 'en'; // Default language
-let googleTranslateApiKey = null;
-const translationCache = {};
-
-// Map Polygol's custom codes to standard ISO 639-1 codes for the API
-const langCodeMap = {
-    'EN': 'en', 'JP': 'ja', 'DE': 'de', 'FR': 'fr',
-    'ES': 'es', 'KO': 'ko', 'ZH': 'zh-cn', 'HI': 'hi',
-    'PT': 'pt', 'BN': 'bn', 'RU': 'ru', 'PA': 'pa',
-    'VI': 'vi', 'TR': 'tr', 'AR_EG': 'ar', 'MR': 'mr',
-    'TE': 'te', 'TA': 'ta', 'UR': 'ur', 'ID': 'id',
-    'JV': 'jv', 'FA_IR': 'fa', 'IT': 'it', 'HA': 'ha',
-    'GU': 'gu', 'AR_LEV': 'ar', 'BHO': 'bho'
-};
-
-// Helper to translate a single text string using a free API
-async function translateText(text, sourceLang = 'en', targetLang) {
-    if (!googleTranslateApiKey) {
-        console.warn("Translation skipped: Google Translate API key not provided.");
-        return text; // Don't try to translate without a key
-    }
-
-    const apiLangCode = langCodeMap[targetLang.toUpperCase()] || targetLang.toLowerCase();
-    if (!apiLangCode || apiLangCode === sourceLang || !text.trim()) {
-        return text;
-    }
-
-    const cacheKey = `${apiLangCode}:${text}`;
-    if (translationCache[cacheKey]) {
-        return translationCache[cacheKey];
-    }
-
-    try {
-        const apiUrl = `https://translation.googleapis.com/language/translate/v2?key=${googleTranslateApiKey}`;
-        const res = await fetch(apiUrl, {
-            method: 'POST',
-            body: JSON.stringify({
-                q: text,
-                source: sourceLang,
-                target: apiLangCode,
-                format: 'text'
-            }),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        const data = await res.json();
-        if (data.data && data.data.translations && data.data.translations.length > 0) {
-            const translated = data.data.translations[0].translatedText;
-            // Basic HTML entity decoding for characters like ' and "
-            const decoded = new DOMParser().parseFromString(translated, "text/html").documentElement.textContent;
-            translationCache[cacheKey] = decoded;
-            return decoded;
-        } else if (data.error) {
-             console.error('Google Translate API Error:', data.error.message);
-        }
-    } catch (e) {
-        console.error('Translation request failed:', e);
-    }
-    return text; // Return original text on failure
-}
-
-// Translates all static text nodes in the body
-async function translateDOM() {
-    console.log(`[Gurasuraisu API] Translating DOM to: ${currentTargetLanguage}`);
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    const nodesToUpdate = [];
-    let node;
-    while (node = walker.nextNode()) {
-        const parent = node.parentElement;
-        if (parent && (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE' || parent.classList.contains('material-symbols-rounded'))) {
-            continue;
-        }
-        if (node.nodeValue.trim()) {
-            if (!parent.dataset.originalText) {
-                parent.dataset.originalText = node.nodeValue;
-            }
-            nodesToUpdate.push(node);
-        }
-    }
-
-    const revertToEnglish = currentTargetLanguage.toLowerCase() === 'en';
-    const translationPromises = nodesToUpdate.map(node => {
-        const originalText = node.parentElement.dataset.originalText;
-        return revertToEnglish ? Promise.resolve(originalText) : translateText(originalText, 'en', currentTargetLanguage);
-    });
-    
-    const translatedTexts = await Promise.all(translationPromises);
-    nodesToUpdate.forEach((node, index) => {
-        node.nodeValue = translatedTexts[index];
-    });
-}
-
 // Native JS solutions for when the app is running outside of Polygol
 const _fallbacks = {
     showPopup: function(message) {
@@ -290,15 +196,6 @@ const Gurasuraisu = {
     }
     this._call('registerWidget', [widgetData]);
   },
-
-  /**
-   * Translates a given string of text to the user's selected language.
-   * @param {string} text - The text to translate (assumed to be in English).
-   * @returns {Promise<string>} A promise that resolves with the translated text.
-   */
-  translate: async function(text) {
-    return await translateText(text, 'en', currentTargetLanguage);
-  },
     
   /**
    * Registers a new media session with the parent.
@@ -374,17 +271,7 @@ window.addEventListener('message', async (event) => {
       case 'sunUpdate':
         document.documentElement.style.setProperty('--sun-shadow', data.shadow);
         break;
-      case 'apiKeyUpdate':
-        googleTranslateApiKey = data.key;
-        console.log('[Gurasuraisu API] Received Google Translate API Key.');
-        // Automatically translate the DOM now that we have the key
-        await translateDOM();
-        break;
-      case 'languageUpdate':
-        console.log('[Gurasuraisu API] Received language update from parent:', data.language);
-        currentTargetLanguage = data.language;
-        await translateDOM();
-        break;
+      
       // --- NEW: Handles screenshot requests from the parent ---
       case 'request-screenshot':
         try {
@@ -414,20 +301,13 @@ window.addEventListener('message', async (event) => {
  * On initial load, apply settings that might have been set by Gurasuraisu
  * in localStorage for a seamless appearance.
  */
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   // FIX: Apply the 'standalone' class to the <html> element if not in Gurasuraisu
   if (!isInsideGurasuraisu) {
       document.documentElement.classList.add('standalone');
   }
 
   try {
-    // Load and apply language from localStorage first
-    const storedLanguage = localStorage.getItem('selectedLanguage') || 'en';
-    currentTargetLanguage = storedLanguage;
-    if (currentTargetLanguage.toLowerCase() !== 'en') {
-        await translateDOM();
-    }
-
     const storedTheme = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('light-theme', storedTheme === 'light');
 
