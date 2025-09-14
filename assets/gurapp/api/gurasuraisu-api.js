@@ -67,7 +67,6 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
 let currentAppLanguage = {}; // For the specific app's language file
 let currentGlobalLanguage = {}; // For the global lang-app.js
 let mergedLanguage = {}; // The final combined language object
-let languagePacks = { global: {}, app: {} }; // Storage for registered language packs
 
 // Native JS solutions for when the app is running outside of Polygol
 const _fallbacks = {
@@ -311,21 +310,28 @@ const Gurasuraisu = {
 
 // --- Event Listener for Messages FROM Gurasuraisu ---
 
-// --- NEW: Language Registration Function ---
-Gurasuraisu.registerLanguagePack = function(type, langCode, data) {
-    if (!languagePacks[type]) {
-        languagePacks[type] = {};
-    }
-    languagePacks[type][langCode] = data;
-};
-
+/**
+ * Sets the app's language, loads the language packs, and applies them.
+ * @param {string} langCode - The language code (e.g., 'EN', 'JP').
+ */
 async function setLanguage(langCode) {
     try {
         localStorage.setItem('gurappLanguage', langCode);
 
-        // Use the registered language packs
-        currentGlobalLanguage = languagePacks.global[langCode] || languagePacks.global['EN'] || {};
-        currentAppLanguage = languagePacks.app[langCode] || languagePacks.app['EN'] || {};
+        const appName = document.body.dataset.appName?.toUpperCase();
+        
+        const appLangMap = { EN: LANG_EN_APP, JP: LANG_JP_APP, DE: LANG_DE_APP, ES: LANG_ES_APP, KO: LANG_KO_APP, ZH: LANG_ZH_APP };
+        const specificAppLangMap = {
+             EN: appName && window[`LANG_EN_${appName}`] ? window[`LANG_EN_${appName}`] : {},
+             JP: appName && window[`LANG_JP_${appName}`] ? window[`LANG_JP_${appName}`] : {},
+             DE: appName && window[`LANG_DE_${appName}`] ? window[`LANG_DE_${appName}`] : {},
+             ES: appName && window[`LANG_ES_${appName}`] ? window[`LANG_ES_${appName}`] : {},
+             KO: appName && window[`LANG_KO_${appName}`] ? window[`LANG_KO_${appName}`] : {},
+             ZH: appName && window[`LANG_ZH_${appName}`] ? window[`LANG_ZH_${appName}`] : {},
+        };
+        
+        currentGlobalLanguage = appLangMap[langCode] || LANG_EN_APP;
+        currentAppLanguage = specificAppLangMap[langCode] || specificAppLangMap['EN'] || {};
 
         mergedLanguage = { ...currentGlobalLanguage, ...currentAppLanguage };
 
