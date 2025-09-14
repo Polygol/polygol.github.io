@@ -90,6 +90,7 @@ async function translateText(text, sourceLang = 'en', targetLang) {
 
 // Translates all static text nodes in the body
 async function translateDOM() {
+    console.log(`[Gurasuraisu API] Translating DOM to: ${currentTargetLanguage}`);
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const nodesToUpdate = [];
     let node;
@@ -335,6 +336,7 @@ window.addEventListener('message', async (event) => {
         document.documentElement.style.setProperty('--sun-shadow', data.shadow);
         break;
       case 'languageUpdate':
+        console.log('[Gurasuraisu API] Received language update from parent:', data.language);
         currentTargetLanguage = data.language;
         await translateDOM();
         break;
