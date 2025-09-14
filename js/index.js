@@ -124,6 +124,17 @@ function selectLanguage(languageCode) {
         if (languageSwitcher) {
             languageSwitcher.value = languageCode;
         }
+		
+        // Broadcast the language change to all Gurapp iframes
+        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+        iframes.forEach(iframe => {
+            if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    type: 'languageUpdate',
+                    language: languageCode // Send the code e.g., 'JP', 'DE'
+                }, window.location.origin);
+            }
+        });
 
         resolve(); // Let async functions await this
     });
