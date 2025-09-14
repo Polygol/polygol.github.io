@@ -64,6 +64,10 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
     document.head.appendChild(style);
 })();
 
+let currentAppLanguage = {}; // For the specific app's language file
+let currentGlobalLanguage = {}; // For the global lang-app.js
+let mergedLanguage = {}; // The final combined language object
+
 // Native JS solutions for when the app is running outside of Polygol
 const _fallbacks = {
     showPopup: function(message) {
@@ -105,6 +109,65 @@ const Gurasuraisu = {
       const fallback = _fallbacks[functionName] || (() => _fallbacks.default(functionName));
       fallback.apply(this, args);
     }
+  },
+
+  // --- Language API Functions ---
+
+  /**
+   * Applies the currently loaded translations to the document.
+   * Looks for elements with data-lang-key, data-lang-placeholder, etc.
+   */
+  applyTranslations: function() {
+    if (Object.keys(mergedLanguage).length === 0) {
+      return;
+    }
+
+    // Translate text content
+    document.querySelectorAll('[data-lang-key]').forEach(el => {
+        const key = el.getAttribute('data-lang-key');
+        if (mergedLanguage[key]) {
+            el.textContent = mergedLanguage[key];
+        }
+    });
+
+    // Translate placeholders
+    document.querySelectorAll('[data-lang-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-lang-placeholder');
+        if (mergedLanguage[key]) {
+            el.placeholder = mergedLanguage[key];
+        }
+    });
+
+    // Translate title attributes (for tooltips)
+    document.querySelectorAll('[data-lang-title]').forEach(el => {
+        const key = el.getAttribute('data-lang-title');
+        if (mergedLanguage[key]) {
+            el.title = mergedLanguage[key];
+        }
+    });
+
+    // Translate document title
+    const titleElement = document.querySelector('title[data-lang-key]');
+    if (titleElement) {
+        const key = titleElement.getAttribute('data-lang-key');
+        if (mergedLanguage[key]) {
+            document.title = mergedLanguage[key];
+        }
+    }
+  },
+
+  /**
+   * Gets a translated string by its key.
+   * @param {string} key - The key of the string to retrieve.
+   * @param {object} [replacements] - Optional object for placeholder replacement (e.g., {count: 5}).
+   * @returns {string} The translated string or the key if not found.
+   */
+  getString: function(key, replacements = {}) {
+    let str = mergedLanguage[key] || key;
+    for (const placeholder in replacements) {
+        str = str.replace(`{${placeholder}}`, replacements[placeholder]);
+    }
+    return str;
   },
 
   // --- Public API Functions ---
@@ -248,6 +311,38 @@ const Gurasuraisu = {
 // --- Event Listener for Messages FROM Gurasuraisu ---
 
 /**
+ * Sets the app's language, loads the language packs, and applies them.
+ * @param {string} langCode - The language code (e.g., 'EN', 'JP').
+ */
+async function setLanguage(langCode) {
+    try {
+        localStorage.setItem('gurappLanguage', langCode);
+
+        const appName = document.body.dataset.appName?.toUpperCase();
+        
+        const appLangMap = { EN: LANG_EN_APP, JP: LANG_JP_APP, DE: LANG_DE_APP, ES: LANG_ES_APP, KO: LANG_KO_APP, ZH: LANG_ZH_APP };
+        const specificAppLangMap = {
+             EN: appName && window[`LANG_EN_${appName}`] ? window[`LANG_EN_${appName}`] : {},
+             JP: appName && window[`LANG_JP_${appName}`] ? window[`LANG_JP_${appName}`] : {},
+             DE: appName && window[`LANG_DE_${appName}`] ? window[`LANG_DE_${appName}`] : {},
+             ES: appName && window[`LANG_ES_${appName}`] ? window[`LANG_ES_${appName}`] : {},
+             KO: appName && window[`LANG_KO_${appName}`] ? window[`LANG_KO_${appName}`] : {},
+             ZH: appName && window[`LANG_ZH_${appName}`] ? window[`LANG_ZH_${appName}`] : {},
+        };
+        
+        currentGlobalLanguage = appLangMap[langCode] || LANG_EN_APP;
+        currentAppLanguage = specificAppLangMap[langCode] || specificAppLangMap['EN'] || {};
+
+        mergedLanguage = { ...currentGlobalLanguage, ...currentAppLanguage };
+
+        Gurasuraisu.applyTranslations();
+
+    } catch (error) {
+        console.error("Gurasuraisu API: Failed to set language.", error);
+    }
+}
+
+/**
  * Listens for messages from the parent window, such as theme
  * or animation setting changes, and applies them to the Gurapp.
  */
@@ -271,7 +366,9 @@ window.addEventListener('message', async (event) => {
       case 'sunUpdate':
         document.documentElement.style.setProperty('--sun-shadow', data.shadow);
         break;
-      
+      case 'languageUpdate':
+        await setLanguage(data.languageCode);
+        break;
       // --- NEW: Handles screenshot requests from the parent ---
       case 'request-screenshot':
         try {
@@ -317,6 +414,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // FIX: Target the <html> element for the initial high contrast check
     const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
     document.documentElement.classList.toggle('gurasuraisu-high-contrast', highContrastEnabled);
+
+    // Load and apply language immediately from localStorage if available
+    const savedLang = localStorage.getItem('gurappLanguage') || 'EN';
+    // Wait for language variable files to be loaded
+    setTimeout(async () => {
+        await setLanguage(savedLang);
+    }, 0);
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
