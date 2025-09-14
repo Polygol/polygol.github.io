@@ -64,9 +64,27 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
     document.head.appendChild(style);
 })();
 
-let currentAppLanguage = {}; // For the specific app's language file
-let currentGlobalLanguage = {}; // For the global lang-app.js
-let mergedLanguage = {}; // The final combined language object
+let _globalLangPacks = {};
+let _appLangPacks = {};
+let mergedLanguage = {};
+
+async function setLanguage(langCode) {
+    try {
+        localStorage.setItem('gurappLanguage', langCode);
+
+        const globalPack = _globalLangPacks[langCode] || _globalLangPacks['EN'] || {};
+        const appPack = _appLangPacks[langCode] || _appLangPacks['EN'] || {};
+
+        mergedLanguage = { ...globalPack, ...appPack };
+
+        if (Object.keys(mergedLanguage).length > 0) {
+            Gurasuraisu.applyTranslations();
+            window.dispatchEvent(new CustomEvent('languageApplied'));
+        }
+    } catch (error) {
+        console.error("Gurasuraisu API: Failed to set language.", error);
+    }
+}
 
 // Native JS solutions for when the app is running outside of Polygol
 const _fallbacks = {
@@ -311,49 +329,6 @@ const Gurasuraisu = {
 // --- Event Listener for Messages FROM Gurasuraisu ---
 
 /**
- * Sets the app's language, loads the language packs, and applies them.
- * @param {string} langCode - The language code (e.g., 'EN', 'JP').
- */
-async function setLanguage(langCode) {
-    try {
-        localStorage.setItem('gurappLanguage', langCode);
-        const appName = document.body.dataset.appName?.toUpperCase();
-
-        // 1. Determine the global language pack using a switch statement.
-        // This avoids a ReferenceError on script load because the variables
-        // are only accessed when this function is actually CALLED.
-        switch(langCode) {
-            case 'JP': currentGlobalLanguage = LANG_JP_APP; break;
-            case 'DE': currentGlobalLanguage = LANG_DE_APP; break;
-            case 'ES': currentGlobalLanguage = LANG_ES_APP; break;
-            case 'KO': currentGlobalLanguage = LANG_KO_APP; break;
-            case 'ZH': currentGlobalLanguage = LANG_ZH_APP; break;
-            default: currentGlobalLanguage = LANG_EN_APP; break;
-        }
-
-        // 2. Dynamically look up the app-specific language variable.
-        // This part was correct before and remains correct.
-        let appSpecificLang = {};
-        if (appName) {
-            const specificLangVarName = `LANG_${langCode}_${appName}`;
-            const englishFallbackVarName = `LANG_EN_${appName}`;
-            appSpecificLang = window[specificLangVarName] || window[englishFallbackVarName] || {};
-        }
-        currentAppLanguage = appSpecificLang;
-        
-        // 3. Merge the languages.
-        mergedLanguage = { ...currentGlobalLanguage, ...currentAppLanguage };
-
-        Gurasuraisu.applyTranslations();
-        
-        window.dispatchEvent(new CustomEvent('languageApplied'));
-
-    } catch (error) {
-        console.error("Gurasuraisu API: Failed to set language.", error);
-    }
-}
-
-/**
  * Listens for messages from the parent window, such as theme
  * or animation setting changes, and applies them to the Gurapp.
  */
@@ -410,7 +385,6 @@ window.addEventListener('message', async (event) => {
  * in localStorage for a seamless appearance.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  // FIX: Apply the 'standalone' class to the <html> element if not in Gurasuraisu
   if (!isInsideGurasuraisu) {
       document.documentElement.classList.add('standalone');
   }
@@ -422,16 +396,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
     document.body.classList.toggle('reduce-animations', !animationsEnabled);
 
-    // FIX: Target the <html> element for the initial high contrast check
     const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
     document.documentElement.classList.toggle('gurasuraisu-high-contrast', highContrastEnabled);
 
-    // Load and apply language immediately from localStorage if available
+    // This will now work correctly because setLanguage waits for registration.
     const savedLang = localStorage.getItem('gurappLanguage') || 'EN';
-    // Wait for language variable files to be loaded
-    setTimeout(async () => {
-        await setLanguage(savedLang);
-    }, 0);
+    setLanguage(savedLang);
+
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
