@@ -1,4 +1,4 @@
- const LANG_EN_APP = {
+ const window.LANG_EN_APP = {
     // General UI
     HOME: "Home",
     LIBRARY: "Library",
@@ -78,7 +78,7 @@
     DEVELOPER: "Developer"
 };
 
-const LANG_JP_APP = {
+const window.LANG_JP_APP = {
     // General UI
     HOME: "ホーム",
     LIBRARY: "ライブラリ",
@@ -158,7 +158,7 @@ const LANG_JP_APP = {
     DEVELOPER: "開発者"
 };
 
-const LANG_DE_APP = {
+const window.LANG_DE_APP = {
     // General UI
     HOME: "Startseite",
     LIBRARY: "Bibliothek",
@@ -238,7 +238,7 @@ const LANG_DE_APP = {
     DEVELOPER: "Entwickler"
 };
 
-const LANG_ES_APP = {
+const window.LANG_ES_APP = {
     // General UI
     HOME: "Inicio",
     LIBRARY: "Biblioteca",
@@ -318,7 +318,7 @@ const LANG_ES_APP = {
     DEVELOPER: "Desarrollador"
 };
 
-const LANG_KO_APP = {
+const window.LANG_KO_APP = {
     // General UI
     HOME: "홈",
     LIBRARY: "라이브러리",
@@ -398,7 +398,7 @@ const LANG_KO_APP = {
     DEVELOPER: "개발자"
 };
 
-const LANG_ZH_APP = {
+const window.LANG_ZH_APP = {
     // General UI
     HOME: "主页",
     LIBRARY: "媒体库",
