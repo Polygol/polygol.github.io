@@ -64,6 +64,60 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
     document.head.appendChild(style);
 })();
 
+let currentTargetLanguage = 'en'; // Default language
+const translationCache = {};
+
+// Helper to translate a single text string using a free API
+async function translateText(text, sourceLang = 'en', targetLang) {
+    if (!targetLang || targetLang.toLowerCase() === sourceLang || !text.trim()) {
+        return text;
+    }
+    const cacheKey = `${targetLang}:${text}`;
+    if (translationCache[cacheKey]) {
+        return translationCache[cacheKey];
+    }
+    try {
+        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang.toLowerCase()}`);
+        const data = await res.json();
+        if (data.responseData) {
+            const translated = data.responseData.translatedText;
+            translationCache[cacheKey] = translated;
+            return translated;
+        }
+    } catch (e) { console.error('Translation failed:', e); }
+    return text;
+}
+
+// Translates all static text nodes in the body
+async function translateDOM() {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodesToUpdate = [];
+    let node;
+    while (node = walker.nextNode()) {
+        const parent = node.parentElement;
+        if (parent && (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE' || parent.classList.contains('material-symbols-rounded'))) {
+            continue;
+        }
+        if (node.nodeValue.trim()) {
+            if (!parent.dataset.originalText) {
+                parent.dataset.originalText = node.nodeValue;
+            }
+            nodesToUpdate.push(node);
+        }
+    }
+
+    const revertToEnglish = currentTargetLanguage.toLowerCase() === 'en';
+    const translationPromises = nodesToUpdate.map(node => {
+        const originalText = node.parentElement.dataset.originalText;
+        return revertToEnglish ? Promise.resolve(originalText) : translateText(originalText, 'en', currentTargetLanguage);
+    });
+    
+    const translatedTexts = await Promise.all(translationPromises);
+    nodesToUpdate.forEach((node, index) => {
+        node.nodeValue = translatedTexts[index];
+    });
+}
+
 // Native JS solutions for when the app is running outside of Polygol
 const _fallbacks = {
     showPopup: function(message) {
@@ -195,6 +249,15 @@ const Gurasuraisu = {
         return;
     }
     this._call('registerWidget', [widgetData]);
+  },
+
+  /**
+   * Translates a given string of text to the user's selected language.
+   * @param {string} text - The text to translate (assumed to be in English).
+   * @returns {Promise<string>} A promise that resolves with the translated text.
+   */
+  translate: async function(text) {
+    return await translateText(text, 'en', currentTargetLanguage);
   },
     
   /**
