@@ -64,27 +64,9 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
     document.head.appendChild(style);
 })();
 
-let _globalLangPacks = {};
-let _appLangPacks = {};
-let mergedLanguage = {};
-
-async function setLanguage(langCode) {
-    try {
-        localStorage.setItem('gurappLanguage', langCode);
-
-        const globalPack = _globalLangPacks[langCode] || _globalLangPacks['EN'] || {};
-        const appPack = _appLangPacks[langCode] || _appLangPacks['EN'] || {};
-
-        mergedLanguage = { ...globalPack, ...appPack };
-
-        if (Object.keys(mergedLanguage).length > 0) {
-            Gurasuraisu.applyTranslations();
-            window.dispatchEvent(new CustomEvent('languageApplied'));
-        }
-    } catch (error) {
-        console.error("Gurasuraisu API: Failed to set language.", error);
-    }
-}
+let currentAppLanguage = {}; // For the specific app's language file
+let currentGlobalLanguage = {}; // For the global lang-app.js
+let mergedLanguage = {}; // The final combined language object
 
 // Native JS solutions for when the app is running outside of Polygol
 const _fallbacks = {
@@ -329,6 +311,38 @@ const Gurasuraisu = {
 // --- Event Listener for Messages FROM Gurasuraisu ---
 
 /**
+ * Sets the app's language, loads the language packs, and applies them.
+ * @param {string} langCode - The language code (e.g., 'EN', 'JP').
+ */
+async function setLanguage(langCode) {
+    try {
+        localStorage.setItem('gurappLanguage', langCode);
+
+        const appName = document.body.dataset.appName?.toUpperCase();
+        
+        const appLangMap = { EN: LANG_EN_APP, JP: LANG_JP_APP, DE: LANG_DE_APP, ES: LANG_ES_APP, KO: LANG_KO_APP, ZH: LANG_ZH_APP };
+        const specificAppLangMap = {
+             EN: appName && window[`LANG_EN_${appName}`] ? window[`LANG_EN_${appName}`] : {},
+             JP: appName && window[`LANG_JP_${appName}`] ? window[`LANG_JP_${appName}`] : {},
+             DE: appName && window[`LANG_DE_${appName}`] ? window[`LANG_DE_${appName}`] : {},
+             ES: appName && window[`LANG_ES_${appName}`] ? window[`LANG_ES_${appName}`] : {},
+             KO: appName && window[`LANG_KO_${appName}`] ? window[`LANG_KO_${appName}`] : {},
+             ZH: appName && window[`LANG_ZH_${appName}`] ? window[`LANG_ZH_${appName}`] : {},
+        };
+        
+        currentGlobalLanguage = appLangMap[langCode] || LANG_EN_APP;
+        currentAppLanguage = specificAppLangMap[langCode] || specificAppLangMap['EN'] || {};
+
+        mergedLanguage = { ...currentGlobalLanguage, ...currentAppLanguage };
+
+        Gurasuraisu.applyTranslations();
+
+    } catch (error) {
+        console.error("Gurasuraisu API: Failed to set language.", error);
+    }
+}
+
+/**
  * Listens for messages from the parent window, such as theme
  * or animation setting changes, and applies them to the Gurapp.
  */
@@ -385,6 +399,7 @@ window.addEventListener('message', async (event) => {
  * in localStorage for a seamless appearance.
  */
 document.addEventListener('DOMContentLoaded', () => {
+  // FIX: Apply the 'standalone' class to the <html> element if not in Gurasuraisu
   if (!isInsideGurasuraisu) {
       document.documentElement.classList.add('standalone');
   }
@@ -396,13 +411,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
     document.body.classList.toggle('reduce-animations', !animationsEnabled);
 
+    // FIX: Target the <html> element for the initial high contrast check
     const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
     document.documentElement.classList.toggle('gurasuraisu-high-contrast', highContrastEnabled);
 
-    // This will now work correctly because setLanguage waits for registration.
+    // Load and apply language immediately from localStorage if available
     const savedLang = localStorage.getItem('gurappLanguage') || 'EN';
-    setLanguage(savedLang);
-
+    // Wait for language variable files to be loaded
+    setTimeout(async () => {
+        await setLanguage(savedLang);
+    }, 0);
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
