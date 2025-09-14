@@ -64,6 +64,9 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
     document.head.appendChild(style);
 })();
 
+let currentTargetLanguage = 'en'; // Default language
+const translationCache = {};
+
 // Map Polygol's custom codes to standard ISO 639-1 codes for the API
 const langCodeMap = {
     'EN': 'en', 'JP': 'ja', 'DE': 'de', 'FR': 'fr',
