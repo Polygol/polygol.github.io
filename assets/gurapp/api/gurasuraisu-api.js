@@ -125,24 +125,30 @@ const Gurasuraisu = {
     // Translate text content
     document.querySelectorAll('[data-lang-key]').forEach(el => {
         const key = el.getAttribute('data-lang-key');
-        if (mergedLanguage[key]) {
+        if (mergedLanguage[key] !== undefined) {
             el.textContent = mergedLanguage[key];
+        } else {
+            console.warn(`Translation key not found: ${key}`);
         }
     });
 
     // Translate placeholders
     document.querySelectorAll('[data-lang-placeholder]').forEach(el => {
         const key = el.getAttribute('data-lang-placeholder');
-        if (mergedLanguage[key]) {
+        if (mergedLanguage[key] !== undefined) {
             el.placeholder = mergedLanguage[key];
+        } else {
+            console.warn(`Translation placeholder key not found: ${key}`);
         }
     });
 
     // Translate title attributes (for tooltips)
     document.querySelectorAll('[data-lang-title]').forEach(el => {
         const key = el.getAttribute('data-lang-title');
-        if (mergedLanguage[key]) {
+        if (mergedLanguage[key] !== undefined) {
             el.title = mergedLanguage[key];
+        } else {
+            console.warn(`Translation title key not found: ${key}`);
         }
     });
 
@@ -150,7 +156,7 @@ const Gurasuraisu = {
     const titleElement = document.querySelector('title[data-lang-key]');
     if (titleElement) {
         const key = titleElement.getAttribute('data-lang-key');
-        if (mergedLanguage[key]) {
+        if (mergedLanguage[key] !== undefined) {
             document.title = mergedLanguage[key];
         }
     }
@@ -319,23 +325,33 @@ async function setLanguage(langCode) {
         localStorage.setItem('gurappLanguage', langCode);
 
         const appName = document.body.dataset.appName?.toUpperCase();
-        
-        const appLangMap = { EN: LANG_EN_APP, JP: LANG_JP_APP, DE: LANG_DE_APP, ES: LANG_ES_APP, KO: LANG_KO_APP, ZH: LANG_ZH_APP };
-        const specificAppLangMap = {
-             EN: appName && window[`LANG_EN_${appName}`] ? window[`LANG_EN_${appName}`] : {},
-             JP: appName && window[`LANG_JP_${appName}`] ? window[`LANG_JP_${appName}`] : {},
-             DE: appName && window[`LANG_DE_${appName}`] ? window[`LANG_DE_${appName}`] : {},
-             ES: appName && window[`LANG_ES_${appName}`] ? window[`LANG_ES_${appName}`] : {},
-             KO: appName && window[`LANG_KO_${appName}`] ? window[`LANG_KO_${appName}`] : {},
-             ZH: appName && window[`LANG_ZH_${appName}`] ? window[`LANG_ZH_${appName}`] : {},
-        };
-        
-        currentGlobalLanguage = appLangMap[langCode] || LANG_EN_APP;
-        currentAppLanguage = specificAppLangMap[langCode] || specificAppLangMap['EN'] || {};
+        if (!appName) {
+            console.warn("Gurasuraisu API: data-app-name attribute is missing on body. App-specific translations will not load.");
+            // Still load the global language
+            mergedLanguage = window[`LANG_${langCode}_APP`] || window['LANG_EN_APP'] || {};
+            Gurasuraisu.applyTranslations();
+            return;
+        }
 
-        mergedLanguage = { ...currentGlobalLanguage, ...currentAppLanguage };
+        // 1. Directly get the correct global language object, falling back to English.
+        const globalLangObject = window[`LANG_${langCode}_APP`] || window['LANG_EN_APP'] || {};
+
+        // 2. Directly get the correct app-specific language object, falling back to English for that app.
+        const appLangObject = window[`LANG_${langCode}_${appName}`] || window[`LANG_EN_${appName}`] || {};
+
+        // 3. Merge them. App-specific keys will correctly overwrite global keys if they conflict.
+        mergedLanguage = { ...globalLangObject, ...appLangObject };
+        
+        if (Object.keys(appLangObject).length === 0) {
+             console.warn(`Gurasuraisu API: Could not find language object for app '${appName}' with langCode '${langCode}'.`);
+        }
 
         Gurasuraisu.applyTranslations();
+        
+        // Dispatch a custom event to notify the app that the language has changed,
+        // allowing it to perform any specific updates that can't be done with data-attributes.
+        const langChangeEvent = new CustomEvent('languageApplied', { detail: { lang: mergedLanguage } });
+        window.dispatchEvent(langChangeEvent);
 
     } catch (error) {
         console.error("Gurasuraisu API: Failed to set language.", error);
