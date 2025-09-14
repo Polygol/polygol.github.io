@@ -65,6 +65,7 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
 })();
 
 let currentTargetLanguage = 'en'; // Default language
+let googleTranslateApiKey = null;
 const translationCache = {};
 
 // Map Polygol's custom codes to standard ISO 639-1 codes for the API
@@ -80,25 +81,50 @@ const langCodeMap = {
 
 // Helper to translate a single text string using a free API
 async function translateText(text, sourceLang = 'en', targetLang) {
-    const apiLangCode = langCodeMap[targetLang.toUpperCase()] || targetLang.toLowerCase();
+    if (!googleTranslateApiKey) {
+        console.warn("Translation skipped: Google Translate API key not provided.");
+        return text; // Don't try to translate without a key
+    }
 
+    const apiLangCode = langCodeMap[targetLang.toUpperCase()] || targetLang.toLowerCase();
     if (!apiLangCode || apiLangCode === sourceLang || !text.trim()) {
         return text;
     }
+
     const cacheKey = `${apiLangCode}:${text}`;
     if (translationCache[cacheKey]) {
         return translationCache[cacheKey];
     }
+
     try {
-        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${apiLangCode}`);
+        const apiUrl = `https://translation.googleapis.com/language/translate/v2?key=${googleTranslateApiKey}`;
+        const res = await fetch(apiUrl, {
+            method: 'POST',
+            body: JSON.stringify({
+                q: text,
+                source: sourceLang,
+                target: apiLangCode,
+                format: 'text'
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
         const data = await res.json();
-        if (data.responseData) {
-            const translated = data.responseData.translatedText;
-            translationCache[cacheKey] = translated;
-            return translated;
+        if (data.data && data.data.translations && data.data.translations.length > 0) {
+            const translated = data.data.translations[0].translatedText;
+            // Basic HTML entity decoding for characters like ' and "
+            const decoded = new DOMParser().parseFromString(translated, "text/html").documentElement.textContent;
+            translationCache[cacheKey] = decoded;
+            return decoded;
+        } else if (data.error) {
+             console.error('Google Translate API Error:', data.error.message);
         }
-    } catch (e) { console.error('Translation failed:', e); }
-    return text;
+    } catch (e) {
+        console.error('Translation request failed:', e);
+    }
+    return text; // Return original text on failure
 }
 
 // Translates all static text nodes in the body
@@ -347,6 +373,12 @@ window.addEventListener('message', async (event) => {
         break;
       case 'sunUpdate':
         document.documentElement.style.setProperty('--sun-shadow', data.shadow);
+        break;
+      case 'apiKeyUpdate':
+        googleTranslateApiKey = data.key;
+        console.log('[Gurasuraisu API] Received Google Translate API Key.');
+        // Automatically translate the DOM now that we have the key
+        await translateDOM();
         break;
       case 'languageUpdate':
         console.log('[Gurasuraisu API] Received language update from parent:', data.language);
