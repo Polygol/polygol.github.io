@@ -7251,6 +7251,10 @@ window.addEventListener('message', event => {
         // Send current sun shadow
         sourceIframe.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
 
+		// Send current language
+        const currentLangCode = localStorage.getItem('selectedLanguage') || 'EN';
+        sourceIframe.postMessage({ type: 'languageUpdate', language: currentLangCode }, window.location.origin);
+
         return; // Message handled
     }
 
