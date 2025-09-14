@@ -80,6 +80,39 @@ function _loadScript(url) {
 }
 
 /**
+ * Automatically finds elements with data-lang-key attributes and applies translations.
+ * @param {object} langObj - The merged language object to use for translations.
+ */
+function _autoApplyTranslations(langObj) {
+    if (!langObj) return;
+
+    // Translate innerText
+    document.querySelectorAll('[data-lang-key]').forEach(el => {
+        const key = el.getAttribute('data-lang-key');
+        if (langObj[key]) {
+            el.innerText = langObj[key];
+        }
+    });
+
+    // Translate placeholder attributes
+    document.querySelectorAll('[data-lang-key-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-lang-key-placeholder');
+        if (langObj[key]) {
+            el.setAttribute('placeholder', langObj[key]);
+        }
+    });
+    
+    // Add more attributes here as needed (e.g., title)
+    document.querySelectorAll('[data-lang-key-title]').forEach(el => {
+        const key = el.getAttribute('data-lang-key-title');
+        if (langObj[key]) {
+            el.setAttribute('title', langObj[key]);
+        }
+    });
+}
+
+
+/**
  * Loads and merges language files, then notifies the app.
  * @param {string} langCode - The language code (e.g., 'EN', 'JP').
  */
@@ -108,13 +141,16 @@ async function _applyLanguage(langCode = 'EN') {
     if (appLangObjName && window[appLangObjName]) {
         appLang = window[appLangObjName];
     } else if (appLangObjName) {
-        // Fallback to English for the specific app if the language is missing
         const appEnLangObjName = `LANG_EN_${appPrefix}`;
         appLang = window[appEnLangObjName] || {};
     }
 
     currentLanguageObject = { ...genericLang, ...appLang };
+    
+    // Automatically translate the static elements on the page
+    _autoApplyTranslations(currentLanguageObject);
 
+    // Notify the app that the language is ready for any custom logic
     window.dispatchEvent(new CustomEvent('GurasuraisuLanguageReady', { detail: currentLanguageObject }));
 }
 
