@@ -334,7 +334,10 @@ window.addEventListener('message', async (event) => {
       case 'sunUpdate':
         document.documentElement.style.setProperty('--sun-shadow', data.shadow);
         break;
-      
+      case 'languageUpdate':
+        currentTargetLanguage = data.language;
+        await translateDOM();
+        break;
       // --- NEW: Handles screenshot requests from the parent ---
       case 'request-screenshot':
         try {
@@ -364,13 +367,20 @@ window.addEventListener('message', async (event) => {
  * On initial load, apply settings that might have been set by Gurasuraisu
  * in localStorage for a seamless appearance.
  */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // FIX: Apply the 'standalone' class to the <html> element if not in Gurasuraisu
   if (!isInsideGurasuraisu) {
       document.documentElement.classList.add('standalone');
   }
 
   try {
+    // Load and apply language from localStorage first
+    const storedLanguage = localStorage.getItem('selectedLanguage') || 'en';
+    currentTargetLanguage = storedLanguage;
+    if (currentTargetLanguage.toLowerCase() !== 'en') {
+        await translateDOM();
+    }
+
     const storedTheme = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('light-theme', storedTheme === 'light');
 
