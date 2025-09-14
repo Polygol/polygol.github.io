@@ -1,4 +1,4 @@
-const LANG_EN_APP = {
+ const LANG_EN_APP = {
     // General UI
     HOME: "Home",
     LIBRARY: "Library",
@@ -477,14 +477,3 @@ const LANG_ZH_APP = {
     INSTALLED: "已安装",
     DEVELOPER: "开发者"
 };
-
-if (window.Gurasuraisu && Gurasuraisu._registerGlobalLangPack) {
-    Gurasuraisu._registerGlobalLangPack({
-        EN: LANG_EN_APP,
-        JP: LANG_JP_APP,
-        DE: LANG_DE_APP,
-        ES: LANG_ES_APP,
-        KO: LANG_KO_APP,
-        ZH: LANG_ZH_APP
-    });
-}
