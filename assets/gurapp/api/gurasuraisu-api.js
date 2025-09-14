@@ -114,45 +114,56 @@ const Gurasuraisu = {
   // --- Language API Functions ---
 
   /**
-   * Applies the currently loaded translations to the document.
-   * Looks for elements with data-lang-key, data-lang-placeholder, etc.
+   * Applies the currently loaded translations to the document or a specific element.
+   * If rootElement is provided, it only scans within that element.
+   * @param {Element} [rootElement=document.body] - The element to apply translations to.
    */
-  applyTranslations: function() {
+  applyTranslations: function(rootElement = document.body) {
     if (Object.keys(mergedLanguage).length === 0) {
       return;
     }
 
-    // Translate text content
-    document.querySelectorAll('[data-lang-key]').forEach(el => {
-        const key = el.getAttribute('data-lang-key');
-        if (mergedLanguage[key]) {
-            el.textContent = mergedLanguage[key];
-        }
-    });
+    // Function to translate a single element and its children
+    const translateNode = (node) => {
+        // Translate text content
+        node.querySelectorAll('[data-lang-key]').forEach(el => {
+            const key = el.getAttribute('data-lang-key');
+            if (mergedLanguage[key]) el.textContent = mergedLanguage[key];
+        });
 
-    // Translate placeholders
-    document.querySelectorAll('[data-lang-placeholder]').forEach(el => {
-        const key = el.getAttribute('data-lang-placeholder');
-        if (mergedLanguage[key]) {
-            el.placeholder = mergedLanguage[key];
-        }
-    });
+        // Translate placeholders
+        node.querySelectorAll('[data-lang-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-lang-placeholder');
+            if (mergedLanguage[key]) el.placeholder = mergedLanguage[key];
+        });
 
-    // Translate title attributes (for tooltips)
-    document.querySelectorAll('[data-lang-title]').forEach(el => {
-        const key = el.getAttribute('data-lang-title');
-        if (mergedLanguage[key]) {
-            el.title = mergedLanguage[key];
-        }
-    });
+        // Translate title attributes
+        node.querySelectorAll('[data-lang-title]').forEach(el => {
+            const key = el.getAttribute('data-lang-title');
+            if (mergedLanguage[key]) el.title = mergedLanguage[key];
+        });
+    };
 
-    // Translate document title
+    // Translate the root element itself if it has a data-lang attribute
+    if (rootElement.matches && rootElement.matches('[data-lang-key], [data-lang-placeholder], [data-lang-title]')) {
+        const key = rootElement.getAttribute('data-lang-key');
+        if (key && mergedLanguage[key]) rootElement.textContent = mergedLanguage[key];
+        
+        const placeholderKey = rootElement.getAttribute('data-lang-placeholder');
+        if (placeholderKey && mergedLanguage[placeholderKey]) rootElement.placeholder = mergedLanguage[placeholderKey];
+
+        const titleKey = rootElement.getAttribute('data-lang-title');
+        if (titleKey && mergedLanguage[titleKey]) rootElement.title = mergedLanguage[titleKey];
+    }
+    
+    // Translate all descendants of the root element
+    translateNode(rootElement);
+
+    // Translate document title (this is a global action, but safe to run here)
     const titleElement = document.querySelector('title[data-lang-key]');
     if (titleElement) {
         const key = titleElement.getAttribute('data-lang-key');
-        if (mergedLanguage[key]) {
-            document.title = mergedLanguage[key];
-        }
+        if (mergedLanguage[key]) document.title = mergedLanguage[key];
     }
   },
 
@@ -308,6 +319,29 @@ const Gurasuraisu = {
   }
 };
 
+// --- Automatic Translation Observer ---
+
+/**
+ * Initializes a MutationObserver to automatically translate new content added to the DOM.
+ */
+function _initializeTranslationObserver() {
+    const observer = new MutationObserver((mutationsList) => {
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach(node => {
+                    // We only care about element nodes (not text, comments, etc.)
+                    if (node.nodeType === 1) { 
+                        Gurasuraisu.applyTranslations(node);
+                    }
+                });
+            }
+        }
+    });
+
+    // Start observing the body for added children and all their descendants
+    observer.observe(document.body, { childList: true, subtree: true });
+}
+
 // --- Event Listener for Messages FROM Gurasuraisu ---
 
 /**
@@ -417,9 +451,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load and apply language immediately from localStorage if available
     const savedLang = localStorage.getItem('gurappLanguage') || 'EN';
-    // Wait for language variable files to be loaded
     setTimeout(async () => {
         await setLanguage(savedLang);
+        _initializeTranslationObserver();
     }, 0);
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
