@@ -729,7 +729,7 @@ function updateSunEffect() {
 
             // Start with a default, very dim ambient "starlight" for when the moon is not visible.
             const STARLIGHT_COLOR = [200, 210, 230]; // Faint, cool white
-            const STARLIGHT_ALPHA = isLightMode ? 0.15 : 0.10; // Very subtle
+            const STARLIGHT_ALPHA = isLightMode ? 0.75 : 0.5; // Very subtle
             const [r_star, g_star, b_star] = STARLIGHT_COLOR;
             currentSunShadow = `inset 0px 0px 2px 0px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
             
