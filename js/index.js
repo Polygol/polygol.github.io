@@ -713,10 +713,10 @@ function updateSunEffect() {
             const finalAlpha = MAX_SUN_ALPHA * Math.max(0.5, altitudeFactor); // Higher base alpha to keep color strong
             const finalColor = lerpColor(SUNRISE_COLOR, MIDDAY_COLOR, altitudeFactor);
 
-            // CORRECTED DIRECTION: The highlight should come from the same direction as the sun.
-            // No longer negated, so a positive cos (sun in the south) gives a positive offsetY (highlight on bottom).
+            // CORRECTED DIRECTION: The highlight should come from the top when the sun is in the south (azimuth=0).
+            // A positive offsetY puts the highlight on the bottom, so we negate it.
             const offsetX = Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
-            const offsetY = Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
+            const offsetY = -Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
 
             const [r, g, b] = finalColor;
             currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
@@ -730,9 +730,9 @@ function updateSunEffect() {
                 
                 const finalAlpha = MAX_MOON_ALPHA * moonAltitudeFactor * moonIllumination.fraction;
 
-                // CORRECTED DIRECTION for moonlight
+                // CORRECTED DIRECTION for moonlight, consistent with sun logic
                 const offsetX = Math.sin(moonPosition.azimuth) * SHADOW_DISTANCE;
-                const offsetY = Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
+                const offsetY = -Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
 
                 const [r, g, b] = MOONLIGHT_COLOR;
                 currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
