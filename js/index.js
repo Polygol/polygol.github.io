@@ -7143,7 +7143,7 @@ function registerMediaSession(appName, metadata, supportedActions = []) {
 	
     if (nextBtn) {
         nextBtn.disabled = !supportedActions.includes('next');
-        nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
+        nextBtn.style.display = nextBtn.disabled ? 'none' : 'block';
     }
 
     // 4. Set the initial playback state (usually 'paused')
