@@ -722,7 +722,7 @@ function updateSunEffect() {
             // 2. Sharp specular highlight on the edge facing the light
             const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px 0px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
             // 3. "Caustic Glow" on the opposite edge to simulate thickness and internal reflection
-            const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.1 : 0.05})`;
+            const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.25 : 0.05})`;
 
             currentSunShadow = `${causticGlow}, ${specularHighlight}, ${softGlow}`;
 
@@ -736,8 +736,8 @@ function updateSunEffect() {
             const [r_star, g_star, b_star] = STARLIGHT_COLOR;
             
             const starlightGlow = `inset 0px 1px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
-            const starlightSpecular = `inset 0px 1px 1px 0px rgba(255, 255, 255, 0.15)`;
-            const starlightCaustic = `inset 0px -1px 4px 0px rgba(${r_star}, ${g_star}, ${b_star}, 0.05)`;
+            const starlightSpecular = `inset 0px 1px 1px 0px rgba(255, 255, 255, ${isLightMode ? 0.3 : 0.15})`;
+            const starlightCaustic = `inset 0px -1px 4px 0px rgba(${r_star}, ${g_star}, ${b_star}, ${isLightMode ? 0.15 : 0.05})`;
             currentSunShadow = `${starlightCaustic}, ${starlightSpecular}, ${starlightGlow}`;
             
             // If the moon is up, override starlight with brighter, directional moonlight.
@@ -751,8 +751,8 @@ function updateSunEffect() {
                 const offsetY = Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
                 
                 const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
-                const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px 0px rgba(255, 255, 255, 0.2)`;
-                const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, 0.1)`;
+                const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px 0px rgba(255, 255, 255, ${isLightMode ? 0.4 : 0.2})`;
+                const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.2 : 0.1})`;
                 
                 currentSunShadow = `${causticGlow}, ${specularHighlight}, ${softGlow}`;
             }
