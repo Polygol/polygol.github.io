@@ -728,7 +728,7 @@ function updateSunEffect() {
             const STARLIGHT_COLOR = [200, 210, 230]; // Faint, cool white
             const STARLIGHT_ALPHA = isLightMode ? 0.5 : 0.25; // Very subtle
             const [r_star, g_star, b_star] = STARLIGHT_COLOR;
-            currentSunShadow = `inset 0px 1px 2px 0px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
+            currentSunShadow = `inset 0px 1px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
             
             // If the moon is up, override the starlight with brighter, directional moonlight.
             if (moonPosition.altitude > 0) {
