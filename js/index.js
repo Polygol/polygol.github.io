@@ -710,39 +710,50 @@ function updateSunEffect() {
         if (sunPosition.altitude > 0) {
             // --- SUNLIGHT LOGIC ---
             const altitudeFactor = Math.sin(sunPosition.altitude); // 0 at horizon, 1 at zenith
-            const finalAlpha = MAX_SUN_ALPHA * Math.max(0.5, altitudeFactor); // Higher base alpha to keep color strong
+            const finalAlpha = MAX_SUN_ALPHA * Math.max(0.5, altitudeFactor); 
             const finalColor = lerpColor(SUNRISE_COLOR, MIDDAY_COLOR, altitudeFactor);
+            const [r, g, b] = finalColor;
 
-            // CORRECTED DIRECTION: The highlight should come from the same direction as the sun.
-            // No longer negated, so a positive cos (sun in the south) gives a positive offsetY (highlight on bottom).
             const offsetX = Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
             const offsetY = Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
 
-            const [r, g, b] = finalColor;
-            currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
+            // 1. Primary soft glow (existing)
+            const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
+            // 2. Sharp specular highlight
+            const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 0px -1px rgba(255, 255, 255, ${isLightMode ? 0.5 : 0.25})`;
+            // 3. Dark inner shadow for thickness
+            const thicknessShadow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 3px 0px rgba(0, 0, 0, ${isLightMode ? 0.05 : 0.15})`;
+
+            currentSunShadow = `${thicknessShadow}, ${specularHighlight}, ${softGlow}`;
+
         } else {
             // --- NIGHT LOGIC (MOONLIGHT OR STARLIGHT) ---
             const moonPosition = SunCalc.getMoonPosition(now, latitude, longitude);
 
-            // Start with a default, dim "starlight" effect that always comes from the top.
-            const STARLIGHT_COLOR = [200, 210, 230]; // Faint, cool white
-            const STARLIGHT_ALPHA = isLightMode ? 0.5 : 0.25; // Very subtle
+            // Default to starlight
+            const STARLIGHT_COLOR = [200, 210, 230];
+            const STARLIGHT_ALPHA = isLightMode ? 0.15 : 0.10;
             const [r_star, g_star, b_star] = STARLIGHT_COLOR;
-            currentSunShadow = `inset 0px 1px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
+            const starlightGlow = `inset 0px 1px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
+            const starlightSpecular = `inset 0px 1px 0px -1px rgba(255, 255, 255, 0.1)`;
+            const starlightThickness = `inset 0px -1px 2px 0px rgba(0, 0, 0, 0.1)`;
+            currentSunShadow = `${starlightThickness}, ${starlightSpecular}, ${starlightGlow}`;
             
-            // If the moon is up, override the starlight with brighter, directional moonlight.
+            // If the moon is up, override starlight with brighter, directional moonlight.
             if (moonPosition.altitude > 0) {
                 const moonIllumination = SunCalc.getMoonIllumination(now);
                 const moonAltitudeFactor = Math.sin(moonPosition.altitude);
-                
                 const finalAlpha = MAX_MOON_ALPHA * moonAltitudeFactor * moonIllumination.fraction;
+                const [r, g, b] = MOONLIGHT_COLOR;
 
-                // CORRECTED DIRECTION for moonlight
                 const offsetX = Math.sin(moonPosition.azimuth) * SHADOW_DISTANCE;
                 const offsetY = Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
-
-                const [r, g, b] = MOONLIGHT_COLOR;
-                currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
+                
+                const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
+                const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 0px -1px rgba(255, 255, 255, 0.15)`;
+                const thicknessShadow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 3px 0px rgba(0, 0, 0, 0.15)`;
+                
+                currentSunShadow = `${thicknessShadow}, ${specularHighlight}, ${softGlow}`;
             }
         }
         
