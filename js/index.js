@@ -798,27 +798,22 @@ function updateSunEffect() {
 
         if (sunPosition.altitude > 0) {
             // --- SUNLIGHT LOGIC ---
-            const altitudeFactor = Math.sin(sunPosition.altitude); // 0 at horizon, 1 at zenith
+            const altitudeFactor = Math.sin(sunPosition.altitude); 
             const finalAlpha = MAX_SUN_ALPHA * Math.max(0.5, altitudeFactor); 
             const finalColor = lerpColor(SUNRISE_COLOR, MIDDAY_COLOR, altitudeFactor);
             const [r, g, b] = finalColor;
 
-            // --- 1. Create the new dynamic shadow color ---
-            const shadowRgb = createShadowColor(finalColor);
-            const [sr, sg, sb] = shadowRgb;
-            const shadowOpacity = isLightMode ? 0.12 : 0.25;
-
             const offsetX = Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
             const offsetY = Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
 
-            // 2. Primary soft glow (existing)
+            // 1. Primary soft glow from the light source
             const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
-            // 3. Sharp specular highlight
-            const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 0px -1px rgba(255, 255, 255, ${isLightMode ? 0.5 : 0.25})`;
-            // 4. Dark inner shadow for thickness - NOW WITH DYNAMIC COLOR
-            const thicknessShadow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 3px 0px rgba(${sr}, ${sg}, ${sb}, ${shadowOpacity})`;
+            // 2. Sharp specular highlight on the edge facing the light
+            const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px 0px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
+            // 3. "Caustic Glow" on the opposite edge to simulate thickness and internal reflection
+            const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.1 : 0.05})`;
 
-            currentSunShadow = `${thicknessShadow}, ${specularHighlight}, ${softGlow}`;
+            currentSunShadow = `${causticGlow}, ${specularHighlight}, ${softGlow}`;
 
         } else {
             // --- NIGHT LOGIC (MOONLIGHT OR STARLIGHT) ---
@@ -826,18 +821,13 @@ function updateSunEffect() {
 
             // Default to starlight
             const STARLIGHT_COLOR = [200, 210, 230];
-            const STARLIGHT_ALPHA = isLightMode ? 0.15 : 0.10;
+            const STARLIGHT_ALPHA = isLightMode ? 0.20 : 0.15;
             const [r_star, g_star, b_star] = STARLIGHT_COLOR;
             
-            // Starlight now also gets a premium shadow
-            const starlightShadowRgb = createShadowColor(STARLIGHT_COLOR);
-            const [ssr, ssg, ssb] = starlightShadowRgb;
-            const starlightShadowOpacity = 0.15;
-            
             const starlightGlow = `inset 0px 1px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
-            const starlightSpecular = `inset 0px 1px 0px -1px rgba(255, 255, 255, 0.1)`;
-            const starlightThickness = `inset 0px -1px 2px 0px rgba(${ssr}, ${ssg}, ${ssb}, ${starlightShadowOpacity})`;
-            currentSunShadow = `${starlightThickness}, ${starlightSpecular}, ${starlightGlow}`;
+            const starlightSpecular = `inset 0px 1px 1px 0px rgba(255, 255, 255, 0.15)`;
+            const starlightCaustic = `inset 0px -1px 4px 0px rgba(${r_star}, ${g_star}, ${b_star}, 0.05)`;
+            currentSunShadow = `${starlightCaustic}, ${starlightSpecular}, ${starlightGlow}`;
             
             // If the moon is up, override starlight with brighter, directional moonlight.
             if (moonPosition.altitude > 0) {
@@ -846,18 +836,14 @@ function updateSunEffect() {
                 const finalAlpha = MAX_MOON_ALPHA * moonAltitudeFactor * moonIllumination.fraction;
                 const [r, g, b] = MOONLIGHT_COLOR;
 
-                const moonShadowRgb = createShadowColor(MOONLIGHT_COLOR);
-                const [mr, mg, mb] = moonShadowRgb;
-                const moonShadowOpacity = isLightMode ? 0.15 : 0.3;
-
                 const offsetX = Math.sin(moonPosition.azimuth) * SHADOW_DISTANCE;
                 const offsetY = Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
                 
                 const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
-                const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 0px -1px rgba(255, 255, 255, 0.15)`;
-                const thicknessShadow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 3px 0px rgba(${mr}, ${mg}, ${mb}, ${moonShadowOpacity})`;
+                const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px 0px rgba(255, 255, 255, 0.2)`;
+                const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, 0.1)`;
                 
-                currentSunShadow = `${thicknessShadow}, ${specularHighlight}, ${softGlow}`;
+                currentSunShadow = `${causticGlow}, ${specularHighlight}, ${softGlow}`;
             }
         }
         
@@ -872,6 +858,7 @@ function updateSunEffect() {
         broadcastSunUpdate();
     });
 }
+
 /**
  * Applies the calculated sun shadow to all relevant elements on the main page.
  */
