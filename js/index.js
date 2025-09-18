@@ -7133,12 +7133,12 @@ function registerMediaSession(appName, metadata, supportedActions = []) {
     // Enable or disable buttons based on the 'supportedActions' array
     if (prevBtn) {
         prevBtn.disabled = !supportedActions.includes('prev');
-        prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
+        prevBtn.style.display = prevBtn.disabled ? 'none' : 'block';
     }
 	
     if (playPauseBtn) {
         playPauseBtn.disabled = !supportedActions.includes('playPause');
-        playPauseBtn.style.opacity = playPauseBtn.disabled ? '0.5' : '1';
+        playPauseBtn.style.display = playPauseBtn.disabled ? 'none' : 'block';
     }
 	
     if (nextBtn) {
@@ -7160,7 +7160,8 @@ function clearMediaSession(appName) {
 
 // A function for the Gurapp to update the parent's state
 function updateMediaPlaybackState(appName, state) {
-    if (activeMediaSessionApp === appName) {
+    // --- FIX: Use a case-insensitive comparison to match the app name ---
+    if (activeMediaSessionApp && activeMediaSessionApp.toLowerCase() === appName.toLowerCase()) {
         updateMediaWidgetState(state.playbackState);
         // We could also update metadata here if it changes (e.g., new song)
         if (state.metadata) {
@@ -7183,7 +7184,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function updateMediaProgress(appName, progressState) {
-    if (activeMediaSessionApp === appName) {
+    // --- FIX: Use a case-insensitive comparison to match the app name ---
+    if (activeMediaSessionApp && activeMediaSessionApp.toLowerCase() === appName.toLowerCase()) {
         const progressEl = document.getElementById('media-widget-progress');
         const currentTimeEl = document.getElementById('media-widget-current-time');
         const durationEl = document.getElementById('media-widget-duration');
