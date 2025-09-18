@@ -7097,14 +7097,25 @@ function updateMediaWidgetState(playbackState) {
 // This is the new function that Gurapps will call
 function registerMediaSession(appName, metadata, supportedActions = []) {
     if (!appName) return;
-    activeMediaSessionApp = appName;
+
+    // --- FIX: Find the canonical app name with a case-insensitive search ---
+    const canonicalAppName = Object.keys(apps).find(key => key.toLowerCase() === appName.toLowerCase());
+
+    if (!canonicalAppName) {
+        console.warn(`[Polygol Media] Received media session request from an unknown app: "${appName}"`);
+        return; // If the app isn't found, do nothing.
+    } 
+	
+	if (!appName) return;
+
+    activeMediaSessionApp = canonicalAppName;
     localStorage.setItem('lastMediaSessionApp', appName); // Store the last app that controlled media
     showMediaWidget(metadata);
 
-    // Get the app icon
+    // Get the app icon using the correct, canonical name
     const appIconEl = document.getElementById('media-widget-app-icon');
-    if (appIconEl && apps[appName] && apps[appName].icon) {
-        let iconUrl = apps[appName].icon;
+    if (appIconEl && apps[canonicalAppName] && apps[canonicalAppName].icon) {
+        let iconUrl = apps[canonicalAppName].icon;
         if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/'))) {
             iconUrl = `/assets/appicon/${iconUrl}`;
         }
