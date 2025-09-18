@@ -682,9 +682,6 @@ function lerpColor(color1, color2, factor) {
 /**
  * Calculates a box-shadow string based on the sun's position and sets it as a CSS variable.
  */
-/**
- * Calculates a box-shadow string based on the sun's position and sets it as a CSS variable.
- */
 function updateSunEffect() {
     // Check if geolocation is available to get coordinates for SunCalc
     if (!navigator.geolocation) {
@@ -727,11 +724,11 @@ function updateSunEffect() {
             // --- NIGHT LOGIC (MOONLIGHT OR STARLIGHT) ---
             const moonPosition = SunCalc.getMoonPosition(now, latitude, longitude);
 
-            // Start with a default, very dim ambient "starlight" for when the moon is not visible.
+            // Start with a default, dim "starlight" effect that always comes from the top.
             const STARLIGHT_COLOR = [200, 210, 230]; // Faint, cool white
-            const STARLIGHT_ALPHA = isLightMode ? 0.75 : 0.5; // Very subtle
+            const STARLIGHT_ALPHA = isLightMode ? 0.5 : 0.25; // Very subtle
             const [r_star, g_star, b_star] = STARLIGHT_COLOR;
-            currentSunShadow = `inset 0px 0px 2px 0px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
+            currentSunShadow = `inset 0px 1px 2px 0px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
             
             // If the moon is up, override the starlight with brighter, directional moonlight.
             if (moonPosition.altitude > 0) {
