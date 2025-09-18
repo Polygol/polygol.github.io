@@ -680,6 +680,95 @@ function lerpColor(color1, color2, factor) {
 }
 
 /**
+ * Converts an RGB color value to HSL. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes r, g, and b are contained in the set [0, 255] and
+ * returns h, s, and l in the set [0, 1].
+ *
+ * @param   {number}  r       The red color value
+ * @param   {number}  g       The green color value
+ * @param   {number}  b       The blue color value
+ * @return  {Array}           The HSL representation
+ */
+function rgbToHsl(r, g, b) {
+  r /= 255, g /= 255, b /= 255;
+  var max = Math.max(r, g, b), min = Math.min(r, g, b);
+  var h, s, l = (max + min) / 2;
+
+  if (max == min) {
+    h = s = 0; // achromatic
+  } else {
+    var d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+
+  return [h, s, l];
+}
+
+/**
+ * Converts an HSL color value to RGB. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes h, s, and l are contained in the set [0, 1] and
+ * returns r, g, and b in the set [0, 255].
+ *
+ * @param   {number}  h       The hue
+ * @param   {number}  s       The saturation
+ * @param   {number}  l       The lightness
+ * @return  {Array}           The RGB representation
+ */
+function hslToRgb(h, s, l) {
+  var r, g, b;
+
+  if (s == 0) {
+    r = g = b = l; // achromatic
+  } else {
+    function hue2rgb(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    }
+
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    var p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+
+/**
+ * Calculates a premium shadow color based on the light source color.
+ * @param {Array<number>} lightColorRGB - The [R, G, B] of the light source.
+ * @returns {Array<number>} The calculated [R, G, B] for the shadow.
+ */
+function createShadowColor(lightColorRGB) {
+    let [h, s, l] = rgbToHsl(lightColorRGB[0], lightColorRGB[1], lightColorRGB[2]);
+
+    // Shift hue to the complementary side (e.g., warm yellow -> cool blue)
+    h = (h + 0.5) % 1.0; 
+
+    // Make it dark
+    l = 0.1; // Greatly reduce lightness for a deep shadow
+
+    // Keep it somewhat saturated for a rich color
+    s = Math.max(0.4, s * 0.8);
+
+    return hslToRgb(h, s, l);
+}
+
+/**
  * Calculates a box-shadow string based on the sun's position and sets it as a CSS variable.
  */
 function updateSunEffect() {
@@ -714,15 +803,20 @@ function updateSunEffect() {
             const finalColor = lerpColor(SUNRISE_COLOR, MIDDAY_COLOR, altitudeFactor);
             const [r, g, b] = finalColor;
 
+            // --- 1. Create the new dynamic shadow color ---
+            const shadowRgb = createShadowColor(finalColor);
+            const [sr, sg, sb] = shadowRgb;
+            const shadowOpacity = isLightMode ? 0.12 : 0.25;
+
             const offsetX = Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
             const offsetY = Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
 
-            // 1. Primary soft glow (existing)
+            // 2. Primary soft glow (existing)
             const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
-            // 2. Sharp specular highlight
+            // 3. Sharp specular highlight
             const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 0px -1px rgba(255, 255, 255, ${isLightMode ? 0.5 : 0.25})`;
-            // 3. Dark inner shadow for thickness
-            const thicknessShadow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 3px 0px rgba(0, 0, 0, ${isLightMode ? 0.05 : 0.15})`;
+            // 4. Dark inner shadow for thickness - NOW WITH DYNAMIC COLOR
+            const thicknessShadow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 3px 0px rgba(${sr}, ${sg}, ${sb}, ${shadowOpacity})`;
 
             currentSunShadow = `${thicknessShadow}, ${specularHighlight}, ${softGlow}`;
 
@@ -734,9 +828,15 @@ function updateSunEffect() {
             const STARLIGHT_COLOR = [200, 210, 230];
             const STARLIGHT_ALPHA = isLightMode ? 0.15 : 0.10;
             const [r_star, g_star, b_star] = STARLIGHT_COLOR;
+            
+            // Starlight now also gets a premium shadow
+            const starlightShadowRgb = createShadowColor(STARLIGHT_COLOR);
+            const [ssr, ssg, ssb] = starlightShadowRgb;
+            const starlightShadowOpacity = 0.15;
+            
             const starlightGlow = `inset 0px 1px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
             const starlightSpecular = `inset 0px 1px 0px -1px rgba(255, 255, 255, 0.1)`;
-            const starlightThickness = `inset 0px -1px 2px 0px rgba(0, 0, 0, 0.1)`;
+            const starlightThickness = `inset 0px -1px 2px 0px rgba(${ssr}, ${ssg}, ${ssb}, ${starlightShadowOpacity})`;
             currentSunShadow = `${starlightThickness}, ${starlightSpecular}, ${starlightGlow}`;
             
             // If the moon is up, override starlight with brighter, directional moonlight.
@@ -746,12 +846,16 @@ function updateSunEffect() {
                 const finalAlpha = MAX_MOON_ALPHA * moonAltitudeFactor * moonIllumination.fraction;
                 const [r, g, b] = MOONLIGHT_COLOR;
 
+                const moonShadowRgb = createShadowColor(MOONLIGHT_COLOR);
+                const [mr, mg, mb] = moonShadowRgb;
+                const moonShadowOpacity = isLightMode ? 0.15 : 0.3;
+
                 const offsetX = Math.sin(moonPosition.azimuth) * SHADOW_DISTANCE;
                 const offsetY = Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
                 
                 const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
                 const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 0px -1px rgba(255, 255, 255, 0.15)`;
-                const thicknessShadow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 3px 0px rgba(0, 0, 0, 0.15)`;
+                const thicknessShadow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 3px 0px rgba(${mr}, ${mg}, ${mb}, ${moonShadowOpacity})`;
                 
                 currentSunShadow = `${thicknessShadow}, ${specularHighlight}, ${softGlow}`;
             }
@@ -768,7 +872,6 @@ function updateSunEffect() {
         broadcastSunUpdate();
     });
 }
-
 /**
  * Applies the calculated sun shadow to all relevant elements on the main page.
  */
