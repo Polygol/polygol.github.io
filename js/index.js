@@ -682,6 +682,9 @@ function lerpColor(color1, color2, factor) {
 /**
  * Calculates a box-shadow string based on the sun's position and sets it as a CSS variable.
  */
+/**
+ * Calculates a box-shadow string based on the sun's position and sets it as a CSS variable.
+ */
 function updateSunEffect() {
     // Check if geolocation is available to get coordinates for SunCalc
     if (!navigator.geolocation) {
@@ -713,31 +716,36 @@ function updateSunEffect() {
             const finalAlpha = MAX_SUN_ALPHA * Math.max(0.5, altitudeFactor); // Higher base alpha to keep color strong
             const finalColor = lerpColor(SUNRISE_COLOR, MIDDAY_COLOR, altitudeFactor);
 
-            // CORRECTED DIRECTION: The highlight should come from the top when the sun is in the south (azimuth=0).
-            // A positive offsetY puts the highlight on the bottom, so we negate it.
+            // CORRECTED DIRECTION: The highlight should come from the same direction as the sun.
+            // No longer negated, so a positive cos (sun in the south) gives a positive offsetY (highlight on bottom).
             const offsetX = Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
-            const offsetY = -Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
+            const offsetY = Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
 
             const [r, g, b] = finalColor;
             currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
         } else {
-            // --- MOONLIGHT LOGIC ---
+            // --- NIGHT LOGIC (MOONLIGHT OR STARLIGHT) ---
             const moonPosition = SunCalc.getMoonPosition(now, latitude, longitude);
+
+            // Start with a default, very dim ambient "starlight" for when the moon is not visible.
+            const STARLIGHT_COLOR = [200, 210, 230]; // Faint, cool white
+            const STARLIGHT_ALPHA = isLightMode ? 0.15 : 0.10; // Very subtle
+            const [r_star, g_star, b_star] = STARLIGHT_COLOR;
+            currentSunShadow = `inset 0px 0px 2px 0px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
             
+            // If the moon is up, override the starlight with brighter, directional moonlight.
             if (moonPosition.altitude > 0) {
                 const moonIllumination = SunCalc.getMoonIllumination(now);
                 const moonAltitudeFactor = Math.sin(moonPosition.altitude);
                 
                 const finalAlpha = MAX_MOON_ALPHA * moonAltitudeFactor * moonIllumination.fraction;
 
-                // CORRECTED DIRECTION for moonlight, consistent with sun logic
+                // CORRECTED DIRECTION for moonlight
                 const offsetX = Math.sin(moonPosition.azimuth) * SHADOW_DISTANCE;
-                const offsetY = -Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
+                const offsetY = Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
 
                 const [r, g, b] = MOONLIGHT_COLOR;
                 currentSunShadow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
-            } else {
-                currentSunShadow = '0 0 0 0 transparent';
             }
         }
         
