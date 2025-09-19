@@ -1671,6 +1671,11 @@ input[type="checkbox"]:checked::before {
         display: none;
     }
 
+    body.minimal-active .persistent-clock {
+		color: var(--secondary-text-color);
+		font-weight: normal;
+	}
+
     body.minimal-active .app-drawer, body.minimal-active .dock {
 		mix-blend-mode: luminosity;
 		filter: grayscale(0.5);
