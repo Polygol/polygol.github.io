@@ -1673,6 +1673,7 @@ input[type="checkbox"]:checked::before {
 
     body.minimal-active .app-drawer, body.minimal-active .dock {
 		mix-blend-mode: luminosity;
+		filter: grayscale(0.5);
 	}
 
 	body.minimal-active .widget-instance iframe {
@@ -1682,7 +1683,6 @@ input[type="checkbox"]:checked::before {
 	body.minimal-active .fullscreen-embed iframe {
 		background-color: var(--search-background);
 	}
-
 
         .setup-screen {
             position: fixed;
