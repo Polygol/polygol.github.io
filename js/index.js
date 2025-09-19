@@ -6264,6 +6264,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 	loadWidgets(); // Now renders into a correctly styled layout
     checkWallpaperState();
     updateGurappsVisibility();
+	updateMinimalMode();
     syncUiStates();
 
 	// --- Initialize sun effect and set it to update periodically ---
