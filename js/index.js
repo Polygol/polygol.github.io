@@ -6472,6 +6472,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Update the overlay color
         temperatureOverlay.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${a})`;
     }
+
+	let sunEffectTimeout;
     
     // Event listener for light mode control
     lightModeControl.addEventListener('click', function() {
@@ -6497,9 +6499,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             }, window.location.origin);
         });
 
-		// Update sun effect
-		updateSunEffect();
-    });
+	    // Cancel any previous pending sun effect
+	    clearTimeout(sunEffectTimeout);
+	
+	    // Schedule a new sun effect after 3 seconds
+	    sunEffectTimeout = setTimeout(() => {
+	        updateSunEffect();
+	    }, 3000);
+	});
     
     // Event listener for minimal mode control
     minimalModeControl.addEventListener('click', function() {
