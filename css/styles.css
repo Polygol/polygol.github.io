@@ -1668,7 +1668,7 @@ input[type="checkbox"]:checked::before {
     }
     
     body.minimal-active .drawer-pill {
-        opacity: 0;
+        display: none;
     }
 
     body.minimal-active .app-drawer, body.minimal-active .dock {
