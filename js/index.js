@@ -3242,6 +3242,10 @@ function updateMinimalMode() {
 
     // Function to update night mode icon
     function updateNightModeIcon(isNightMode) {
+        // Get the control element directly inside this function
+        const nightModeControl = document.getElementById('night-mode-qc');
+        if (!nightModeControl) return;
+
         const nightModeIcon = nightModeControl.querySelector('.material-symbols-rounded');
         if (!nightModeIcon) return;
         
