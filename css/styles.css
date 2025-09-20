@@ -1205,6 +1205,31 @@ input[type="color"]::-moz-color-swatch {
 #temp_control_qc {
     grid-column: 2;
     grid-row: 1;
+	width: 100%;
+    justify-content: center;
+}
+
+#temp_control_qc .qc-label {
+	display: none;
+}
+
+#temp_control_qc .qcontrol-item .material-symbols-rounded {
+	margin: 0;
+}
+
+#night-mode-qc {
+    grid-column: 2;
+    grid-row: 1;
+	width: 100%;
+    justify-content: center;
+}
+
+#night_mode_qc .qc-label {
+	display: none;
+}
+
+#night_mode_qc .qcontrol-item .material-symbols-rounded {
+	margin: 0;
 }
 
 #thermostat-value {
