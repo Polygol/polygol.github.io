@@ -1708,7 +1708,7 @@ input[type="checkbox"]:checked::before {
 	}
 
     body.night-mode-active #temperature-overlay {
-        backdrop-filter: grayscale(1);
+        backdrop-filter: contrast(2) blur(0.3px) grayscale(1);
     }
 
         .setup-screen {
