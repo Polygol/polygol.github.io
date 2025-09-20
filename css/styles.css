@@ -1707,6 +1707,10 @@ input[type="checkbox"]:checked::before {
 		background-color: var(--search-background);
 	}
 
+    body.night-mode-active #temperature-overlay {
+        backdrop-filter: grayscale(1);
+    }
+
         .setup-screen {
             position: fixed;
             top: 0;
