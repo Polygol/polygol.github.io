@@ -6418,12 +6418,24 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (!temperatureIcon) return;
         
         const tempValue = parseInt(value);
-        if (tempValue <= -3) {
+        if (tempValue <= -1) {
             temperatureIcon.textContent = 'thermometer_minus'; // Cold
-        } else if (tempValue >= 3) {
+        } else if (tempValue >= 1) {
             temperatureIcon.textContent = 'thermometer_add'; // Hot
         } else {
             temperatureIcon.textContent = 'thermostat_auto'; // Neutral
+        }
+    }
+
+    // Function to update night mode icon
+    function updateNightModeIcon(isNightMode) {
+        const nightModeIcon = nightModeControl.querySelector('.material-symbols-rounded');
+        if (!nightModeIcon) return;
+        
+        if (isNightMode) {
+            nightModeIcon.textContent = 'moon'; // Active icon
+        } else {
+            nightModeIcon.textContent = 'bedtime'; // Default icon
         }
     }
     
@@ -6541,6 +6553,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         localStorage.setItem('nightMode', nightMode);
         updateNightMode();
         this.classList.toggle('active', nightMode);
+        updateNightModeIcon(nightMode);
     });
 
     // Event listener for silent mode control
