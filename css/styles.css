@@ -1213,10 +1213,6 @@ input[type="color"]::-moz-color-swatch {
 	display: none;
 }
 
-#temp_control_qc .material-symbols-rounded {
-	margin: 0;
-}
-
 #night-mode-qc {
     grid-column: 2;
     grid-row: 1;
@@ -1226,10 +1222,6 @@ input[type="color"]::-moz-color-swatch {
 
 #night_mode_qc .qc-label {
 	display: none;
-}
-
-#night_mode_qc .material-symbols-rounded {
-	margin: 0;
 }
 
 #thermostat-value {
