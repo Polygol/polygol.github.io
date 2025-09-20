@@ -1431,6 +1431,7 @@ input[type="checkbox"]:checked::before {
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s;
     border: 1px solid var(--glass-border);
+	box-shadow: var(--sun-shadow);
 }
 
 #font-select, #language-switcher, #alignment-select {
