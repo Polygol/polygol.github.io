@@ -1213,7 +1213,7 @@ input[type="color"]::-moz-color-swatch {
 	display: none;
 }
 
-#temp_control_qc .qcontrol-item .material-symbols-rounded {
+#temp_control_qc .material-symbols-rounded {
 	margin: 0;
 }
 
@@ -1228,7 +1228,7 @@ input[type="color"]::-moz-color-swatch {
 	display: none;
 }
 
-#night_mode_qc .qcontrol-item .material-symbols-rounded {
+#night_mode_qc .material-symbols-rounded {
 	margin: 0;
 }
 
