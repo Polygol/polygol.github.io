@@ -3241,7 +3241,13 @@ function updateMinimalMode() {
 }
 
 function updateNightMode() {
+    const nightModeControl = document.getElementById('night-mode-qc');
+    if (!nightModeControl) return;
+
+    // Toggle all visual states based on the global nightMode variable
     document.body.classList.toggle('night-mode-active', nightMode);
+    nightModeControl.classList.toggle('active', nightMode);
+    updateNightModeIcon(nightMode);
 }
 
 // Wallpaper upload functionality
@@ -6270,6 +6276,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     checkWallpaperState();
     updateGurappsVisibility();
 	updateMinimalMode();
+    updateNightMode();
     syncUiStates();
 
 	// --- Initialize sun effect and set it to update periodically ---
@@ -6551,9 +6558,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     nightModeControl.addEventListener('click', function() {
         nightMode = !nightMode;
         localStorage.setItem('nightMode', nightMode);
-        updateNightMode();
-        this.classList.toggle('active', nightMode);
-        updateNightModeIcon(nightMode);
+        updateNightMode(); // This single call handles all state changes.
     });
 
     // Event listener for silent mode control
