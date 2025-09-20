@@ -6433,7 +6433,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (!nightModeIcon) return;
         
         if (isNightMode) {
-            nightModeIcon.textContent = 'moon'; // Active icon
+            nightModeIcon.textContent = 'moon_stars'; // Active icon
         } else {
             nightModeIcon.textContent = 'bedtime'; // Default icon
         }
