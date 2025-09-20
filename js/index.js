@@ -3240,6 +3240,18 @@ function updateMinimalMode() {
     }
 }
 
+    // Function to update night mode icon
+    function updateNightModeIcon(isNightMode) {
+        const nightModeIcon = nightModeControl.querySelector('.material-symbols-rounded');
+        if (!nightModeIcon) return;
+        
+        if (isNightMode) {
+            nightModeIcon.textContent = 'moon_stars'; // Active icon
+        } else {
+            nightModeIcon.textContent = 'bedtime'; // Default icon
+        }
+    }
+
 function updateNightMode() {
     const nightModeControl = document.getElementById('night-mode-qc');
     if (!nightModeControl) return;
@@ -6431,18 +6443,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             temperatureIcon.textContent = 'thermometer_add'; // Hot
         } else {
             temperatureIcon.textContent = 'thermostat_auto'; // Neutral
-        }
-    }
-
-    // Function to update night mode icon
-    function updateNightModeIcon(isNightMode) {
-        const nightModeIcon = nightModeControl.querySelector('.material-symbols-rounded');
-        if (!nightModeIcon) return;
-        
-        if (isNightMode) {
-            nightModeIcon.textContent = 'moon_stars'; // Active icon
-        } else {
-            nightModeIcon.textContent = 'bedtime'; // Default icon
         }
     }
     
