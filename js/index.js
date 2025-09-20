@@ -2644,6 +2644,7 @@ let gurappsEnabled = localStorage.getItem("gurappsEnabled") !== "false";
 let slideshowInterval = null;
 let currentWallpaperIndex = 0;
 let minimalMode = localStorage.getItem('minimalMode') === 'true';
+let nightMode = localStorage.getItem('nightMode') === 'true';
 let isAiAssistantEnabled = localStorage.getItem('aiAssistantEnabled') === 'true';
 let geminiApiKey = localStorage.getItem('geminiApiKey');
 let genAI; // Will be initialized if AI is enabled
@@ -3237,6 +3238,10 @@ function updateMinimalMode() {
         // Remove minimal-active class
         document.body.classList.remove('minimal-active');
     }
+}
+
+function updateNightMode() {
+    document.body.classList.toggle('night-mode-active', nightMode);
 }
 
 // Wallpaper upload functionality
@@ -6283,6 +6288,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const minimalModeControl = document.getElementById('minimal_mode_qc');
     const silentModeControl = document.getElementById('silent_switch_qc');
     const temperatureControl = document.getElementById('temp_control_qc');
+    const nightModeControl = document.getElementById('night-mode-qc');
     
     const silentModeSwitch = document.getElementById('silent_switch');
     const minimalModeSwitch = document.getElementById('focus-switch');
@@ -6340,6 +6346,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     minimalModeSwitch.checked = storedMinimalMode;
     if (minimalModeSwitch.checked) minimalModeControl.classList.add('active');
+
+    if (nightMode) nightModeControl.classList.add('active');
     
     silentModeSwitch.checked = storedSilentMode;
     if (silentModeSwitch.checked) silentModeControl.classList.add('active');
@@ -6525,6 +6533,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // Update icon
         updateMinimalModeIcon(minimalMode);
+    });
+
+    // Event listener for night mode control
+    nightModeControl.addEventListener('click', function() {
+        nightMode = !nightMode;
+        localStorage.setItem('nightMode', nightMode);
+        updateNightMode();
+        this.classList.toggle('active', nightMode);
     });
 
     // Event listener for silent mode control
