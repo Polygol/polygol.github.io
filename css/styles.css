@@ -115,12 +115,12 @@
     /* Default to Dark Theme */
     --background-color: var(--background-color-dark);
     --background-color-tr: var(--background-color-dark-tr);
+    --background-color-tr-op: var(--background-color-light-tr);
     --text-color: var(--text-color-dark);
     --secondary-text-color: var(--secondary-text-color-dark);
     --modal-background: var(--modal-background-dark);
     --modal-transparent: var(--modal-transparent-dark);
     --search-background: var(--search-background-dark);
-    --search-background-op: var(--search-background-light);
     --overlay-color: var(--dark-overlay);
     --transparent-color: var(--dark-transparent);
     --glass-border: var(--glass-border-dark);
@@ -129,6 +129,7 @@
 body.light-theme {
     --background-color: var(--background-color-light);
     --background-color-tr: var(--background-color-light-tr);
+    --background-color-tr-op: var(--background-color-dark-tr);
     --text-color: var(--text-color-light);
     --secondary-text-color: var(--secondary-text-color-light);
     --modal-background: var(--modal-background-light);
@@ -143,11 +144,11 @@ body.light-theme {
 /* For dark theme (default) with high contrast */
 body.high-contrast:not(.light-theme) {
     --background-color-tr: var(--background-color-dark-tr-highcontrast);
+    --background-color-tr-op: var(--background-color-light-tr-highcontrast);
     --secondary-text-color: var(--secondary-text-color-dark-highcontrast);
     --modal-background: var(--modal-background-dark-highcontrast);
     --modal-transparent: var(--modal-transparent-dark-highcontrast);
     --search-background: var(--search-background-dark-highcontrast);
-    --search-background-op: var(--search-background-light-highcontrast);
     --overlay-color: var(--dark-overlay-highcontrast);
     --transparent-color: var(--dark-transparent-highcontrast);
     backdrop-filter: none !important;
@@ -156,11 +157,11 @@ body.high-contrast:not(.light-theme) {
 /* For light theme with high contrast */
 body.high-contrast.light-theme {
     --background-color-tr: var(--background-color-light-tr-highcontrast);
+    --background-color-tr-op: var(--background-color-dark-tr-highcontrast);
     --secondary-text-color: var(--secondary-text-color-light-highcontrast);
     --modal-background: var(--modal-background-light-highcontrast);
     --modal-transparent: var(--modal-transparent-light-highcontrast);
     --search-background: var(--search-background-light-highcontrast);
-    --search-background-op: var(--search-background-dark-highcontrast);
     --overlay-color: var(--light-overlay-highcontrast);
     --transparent-color: var(--light-transparent-highcontrast);
     backdrop-filter: none !important;
@@ -510,7 +511,7 @@ input[type="color"]::-moz-color-swatch {
 
 .clock.glass-effect,
 .info.glass-effect .date {
-    color: var(--search-background-op) !important;
+    color: var(--background-color-tr-op) !important;
     background: none !important; /* Ensure no other backgrounds interfere */
 
     -webkit-mask-image: linear-gradient(black, black);
