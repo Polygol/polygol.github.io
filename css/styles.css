@@ -521,7 +521,7 @@ input[type="color"]::-moz-color-swatch {
     mask-clip: text;
     mask-composite: source-in;
 
-    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+    backdrop-filter: blur(5px) saturate(2) contrast(2) var(--edge-refraction-filter);
 }
 
 .clock {
