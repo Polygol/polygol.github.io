@@ -3581,6 +3581,8 @@ async function saveWallpaper(file) {
 }
 
 async function applyWallpaper() {
+    applyCustomWallpaperStyles(); 
+	
     let slideshowWallpapers = JSON.parse(localStorage.getItem("wallpapers"));
     if (slideshowWallpapers && slideshowWallpapers.length > 0) {
         async function displaySlideshow() {
@@ -3647,6 +3649,9 @@ async function applyWallpaper() {
         // Apply single wallpaper from recent wallpapers
         if (recentWallpapers.length > 0 && currentWallpaperPosition < recentWallpapers.length) {
             let currentWallpaper = recentWallpapers[currentWallpaperPosition];
+            if (currentWallpaper.clockStyles) {
+                applyCustomWallpaperStyles(currentWallpaper.clockStyles);
+            }
             try {
                 if (currentWallpaper.isVideo) {
                     let videoData = await getWallpaper(currentWallpaper.id);
@@ -3725,6 +3730,34 @@ const observer = new MutationObserver((mutations) => {
 
 observer.observe(document.body, { childList: true });
 
+// --- Dynamic Style Manager ---
+function applyCustomWallpaperStyles(styles = {}) {
+    let styleTag = document.getElementById('custom-wallpaper-styles');
+    if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = 'custom-wallpaper-styles';
+        document.head.appendChild(styleTag);
+    }
+
+    let css = '';
+    // 1. Add @font-face rule if a custom font URL is provided
+    if (styles.customFontUrl && styles.customFontName) {
+        css += `
+            @font-face {
+                font-family: '${styles.customFontName}';
+                src: url('${styles.customFontUrl}');
+            }
+        `;
+    }
+
+    // 2. Add any raw custom CSS
+    if (styles.customCSS) {
+        css += styles.customCSS;
+    }
+
+    styleTag.textContent = css;
+}
+
 // Load recent wallpapers from localStorage on startup
 function loadRecentWallpapers() {
   try {
@@ -3760,7 +3793,12 @@ function loadRecentWallpapers() {
         shadowBlur: '10',
         shadowColor: '#000000',
         gradientEnabled: false,
-        gradientColor: '#ffffff'
+        gradientColor: '#ffffff',
+        glassEnabled: false,
+        customFontName: null,
+        customFontUrl: null,
+        customLineHeight: null,
+        customCSS: null
 	};
     
     let updated = false;
@@ -3796,6 +3834,17 @@ function loadRecentWallpapers() {
             wallpaper.clockStyles.gradientEnabled = false;
             wallpaper.clockStyles.gradientColor = '#ffffff';
             updated = true;
+        }
+        if (wallpaper.clockStyles.glassEnabled === undefined) {
+            wallpaper.clockStyles.glassEnabled = false;
+            updated = true;
+        }
+        if (wallpaper.clockStyles.customFontName === undefined) {
+             wallpaper.clockStyles.customFontName = null;
+             wallpaper.clockStyles.customFontUrl = null;
+             wallpaper.clockStyles.customLineHeight = null;
+             wallpaper.clockStyles.customCSS = null;
+             updated = true;
         }
     });
     
@@ -4418,6 +4467,8 @@ function switchWallpaper(direction) {
     }
     
     const wallpaper = recentWallpapers[currentWallpaperPosition];
+
+    applyCustomWallpaperStyles(wallpaper.clockStyles);
     
     // Apply clock styles for this wallpaper if they exist
     if (wallpaper.clockStyles) {
@@ -4813,11 +4864,18 @@ function applyClockStyles() {
     const fontFamily = fontSelect.value;
     const fontWeight = parseInt(weightSlider.value, 10) * 10;
     
-    clockElement.style.fontFamily = fontFamily;
+    const currentStyles = (recentWallpapers.length > 0 && recentWallpapers[currentWallpaperPosition] && recentWallpapers[currentWallpaperPosition].clockStyles) ?
+                           recentWallpapers[currentWallpaperPosition].clockStyles : {};
+    
+    // Use custom font if available, otherwise use font from dropdown
+    const fontFamily = currentStyles.customFontName || fontSelect.value;
+    const fontWeight = parseInt(weightSlider.value, 10) * 10;
+    
+    clockElement.style.fontFamily = `'${fontFamily}', ${fontSelect.value}, Inter, sans-serif`;
     clockElement.style.fontWeight = fontWeight;
-    infoElement.style.fontFamily = fontFamily;
+    infoElement.style.fontFamily = `'${fontFamily}', ${fontSelect.value}, Inter, sans-serif`;
 
-    // Reset styles before applying new ones
+    // Reset all color/background/effect styles first
     clockElement.style.backgroundImage = 'none';
     clockElement.style.color = ''; // Revert to stylesheet color
     clockElement.classList.remove('glass-effect');
@@ -4854,8 +4912,11 @@ function applyClockStyles() {
         infoElement.style.textShadow = shadowString;
     }
     
-    // Apply Stacked Layout
-    if (stackSwitch && stackSwitch.checked) {
+    // Apply Stacked Layout OR Custom Line Height
+    const customLineHeight = currentStyles.customLineHeight;
+    if (customLineHeight) {
+        clockElement.style.lineHeight = customLineHeight;
+    } else if (stackSwitch && stackSwitch.checked) {
         clockElement.style.flexDirection = 'column';
         clockElement.style.lineHeight = '0.9';
     } else {
@@ -4882,7 +4943,11 @@ function resetAndApplyDefaultClockStyles() {
         shadowColor: '#000000',
         gradientEnabled: false,
         gradientColor: '#ffffff',
-        glassEnabled: false
+        glassEnabled: false,
+		customFontName: null,
+        customFontUrl: null,
+        customLineHeight: null,
+        customCSS: null
     };
 
     // Update UI controls to their default values
