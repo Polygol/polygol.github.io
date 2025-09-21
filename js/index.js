@@ -2534,11 +2534,13 @@ async function createAutomaticBackup() {
             }
         }
 
-        // 2. Gather IndexedDB data
+        // 2. Dynamically gather IndexedDB data
         const indexedDbData = {};
-        for (const dbName of Object.keys(DB_SCHEMAS)) {
+        const dbs = await indexedDB.databases();
+        for (const dbInfo of dbs) {
+             const dbName = dbInfo.name;
              try {
-                const db = await initDbForBackup(dbName);
+                const db = await initDbForBackup(dbName); // Use a simplified opener
                 indexedDbData[dbName] = {};
                 for (const storeName of db.objectStoreNames) {
                     indexedDbData[dbName][storeName] = await getStoreDataForBackup(db, storeName);
@@ -2551,7 +2553,7 @@ async function createAutomaticBackup() {
 
         // 3. Package data
         const transferData = {
-            gurasuraisu_transfer_version: "1.0",
+            gurasuraisu_transfer_version: "1.1", // Match new version
             export_timestamp: new Date().toISOString(),
             data: {
                 localStorage: localStorageData,
@@ -2601,9 +2603,8 @@ function blobToBase64(blob) {
 
 function initDbForBackup(dbName) {
     return new Promise((resolve, reject) => {
-        const schema = DB_SCHEMAS[dbName];
-        if (!schema) return reject(`No schema found for DB: ${dbName}`);
-        const request = indexedDB.open(dbName, schema.version);
+        // Open without version for read-only inspection
+        const request = indexedDB.open(dbName);
         request.onerror = () => reject(request.error);
         request.onsuccess = () => resolve(request.result);
     });
@@ -2633,7 +2634,14 @@ async function getStoreDataForBackup(db, storeName) {
                 };
                 keysRequest.onerror = reject;
             } else {
-                resolve(records);
+                 // For other DBs, also include keys for robust import
+                const keysRequest = store.getAllKeys();
+                keysRequest.onsuccess = () => {
+                    const keys = keysRequest.result;
+                    const keyedRecords = records.map((record, i) => ({ key: keys[i], value: record }));
+                    resolve(keyedRecords);
+                };
+                keysRequest.onerror = reject;
             }
         };
         request.onerror = reject;
