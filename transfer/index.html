@@ -350,8 +350,10 @@
                     logStatus('Restoring databases...');
                     for (const dbName in idbData) {
                         const dbData = idbData[dbName];
-                        // Open DB with a new version to trigger creation
-                        const request = indexedDB.open(dbName, Date.now()); 
+                        // ** THE FIX IS HERE: Open without a version number **
+                        // This allows onupgradeneeded to fire for a brand new database,
+                        // which will be created with a low default version number.
+                        const request = indexedDB.open(dbName); 
                         
                         request.onupgradeneeded = (event) => {
                             const db = event.target.result;
