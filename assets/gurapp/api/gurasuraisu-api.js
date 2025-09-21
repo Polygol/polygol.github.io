@@ -242,7 +242,7 @@ const Gurasuraisu = {
           actions[event.data.action]();
         }
     });
-  }
+  },
       
   // --- NEW IndexedDB Functions ---
   listIDBDatabases: function() { this._call('listIDBDatabases'); },
