@@ -7423,25 +7423,34 @@ window.addEventListener('message', async (event) => { // Make listener async
                 
                 // Determine the correct message type based on the function name
                 let messageType = 'parentActionSuccess'; // Default success message
+                const typeMap = {
+                    'getLocalStorageItem': 'localStorageItemValue',
+                    'listLocalStorageKeys': 'localStorageKeysList',
+                    'listCommonSettings': 'commonSettingsList',
+                    'listRecentWallpapers': 'recentWallpapersList',
+                    'getCurrentTimeParent': 'currentTimeValue',
+                    'executeParentJS': 'commandOutput',
+                    'listIDBDatabases': 'idbDatabasesList',
+                    'listIDBStores': 'idbStoresList',
+                    'getIDBRecord': 'idbRecordValue'
+                };
                 if (funcName.startsWith('get') || funcName.startsWith('list')) {
-                    // Map function names to specific response types for clarity
-                    const typeMap = {
-                        'getLocalStorageItem': 'localStorageItemValue',
-                        'listLocalStorageKeys': 'localStorageKeysList',
-                        'listCommonSettings': 'commonSettingsList',
-                        'listRecentWallpapers': 'recentWallpapersList',
-                        'getCurrentTimeParent': 'currentTimeValue',
-                        'executeParentJS': 'commandOutput',
-                        'listIDBDatabases': 'idbDatabasesList',
-                        'listIDBStores': 'idbStoresList',
-                        'getIDBRecord': 'idbRecordValue'
-                    };
                     messageType = typeMap[funcName] || 'commandOutput';
                 }
 
                 // Construct the response message
                 const response = { type: messageType };
-                if (funcName === 'getLocalStorageItem') {
+                
+                // --- FIX: Specific handlers for functions returning arrays/objects ---
+                if (funcName === 'listLocalStorageKeys') {
+                    response.keys = result;
+                } else if (funcName === 'listIDBDatabases') {
+                    response.dbs = result;
+                } else if (funcName === 'listRecentWallpapers') {
+                    response.wallpapers = result;
+                } else if (funcName === 'listCommonSettings') {
+                    response.settings = result;
+                } else if (funcName === 'getLocalStorageItem') {
                     response.key = args[0];
                     response.value = result;
                 } else if (funcName === 'listIDBStores') {
@@ -7452,15 +7461,10 @@ window.addEventListener('message', async (event) => { // Make listener async
                     response.storeName = args[1];
                     response.key = args[2];
                     response.value = result;
+                } else if (funcName === 'executeParentJS') {
+                    response.result = result;
                 } else {
-                     // For functions that return a simple message string
-                     if (typeof result === 'string') {
-                         response.message = result;
-                     } 
-                     // For functions that return a complex object
-                     else if (typeof result === 'object' && result !== null) {
-                         Object.assign(response, result);
-                     }
+                    response.message = result; // For simple string confirmation messages
                 }
                 
                 sourceWindow.postMessage(response, window.location.origin);
