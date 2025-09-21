@@ -7324,46 +7324,29 @@ window.addEventListener('message', async (event) => { // Make listener async
     if (event.origin !== window.location.origin) return;
 
     const data = event.data;
+    const sourceWindow = event.source;
 
     // Handle a Gurapp announcing it's ready for settings
     if (data.type === 'gurapp-ready') {
         console.log('[Polygol] Gurapp is ready. Sending initial state.');
-        const sourceIframe = event.source;
-        if (!sourceIframe) return;
+        if (!sourceWindow) return;
 
         // Send current theme
         const currentTheme = localStorage.getItem('theme') || 'dark';
-        sourceIframe.postMessage({ type: 'themeUpdate', theme: currentTheme }, window.location.origin);
+        sourceWindow.postMessage({ type: 'themeUpdate', theme: currentTheme }, window.location.origin);
 
         // Send current animation setting
         const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
-        sourceIframe.postMessage({ type: 'animationsUpdate', enabled: animationsEnabled }, window.location.origin);
+        sourceWindow.postMessage({ type: 'animationsUpdate', enabled: animationsEnabled }, window.location.origin);
         
         // Send current contrast setting
         const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
-        sourceIframe.postMessage({ type: 'contrastUpdate', enabled: highContrastEnabled }, window.location.origin);
+        sourceWindow.postMessage({ type: 'contrastUpdate', enabled: highContrastEnabled }, window.location.origin);
 
         // Send current sun shadow
-        sourceIframe.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
+        sourceWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
 
         return; // Message handled
-    }
-
-    // Allow an app to view the currently installed apps
-    // This check should happen BEFORE the main API call router.
-    if (data.action === 'callGurasuraisuFunc' && data.functionName === 'requestInstalledApps') {
-        console.log('An app is requesting the list of installed apps.');
-        
-        // Get the names of all currently installed apps.
-        const installedAppNames = Object.keys(apps);
-        
-        // Send the list back to the specific iframe that asked for it.
-        event.source.postMessage({
-            type: 'installed-apps-list',
-            apps: installedAppNames
-        }, window.location.origin);
-        
-        return; // The request is handled, we can stop here.
     }
 
     // Check if this is an API call from a Gurapp
@@ -7371,11 +7354,9 @@ window.addEventListener('message', async (event) => { // Make listener async
         const funcName = data.functionName;
         const args = Array.isArray(data.args) ? data.args : [];
 
-        // --- NEW: Security Check for PROTECTED functions ---
+        // --- REVISED Security Check ---
         const protectedFunctions = [
-		    'createFullscreenEmbed',
-		    'blackoutScreen',
-		    'installApp', 
+            'installApp', 
             'deleteApp',
             'getLocalStorageItem',
             'setLocalStorageItem',
@@ -7391,25 +7372,37 @@ window.addEventListener('message', async (event) => { // Make listener async
             'rebootGurasuraisu',
             'promptPWAInstall',
             'executeParentJS',
+            'listIDBDatabases',
+            'listIDBStores',
+            'getIDBRecord',
             'setIDBRecord',
             'removeIDBRecord',
             'clearIDBStore'
         ];
 
         if (protectedFunctions.includes(funcName)) {
-            try {
-                const sourceUrl = sourceWindow.location.href;
-                if (!sourceUrl.endsWith('/terminal/index.html')) {
-                    const errorMessage = `SECURITY VIOLATION: A script at "${sourceUrl}" attempted to call protected function '${funcName}'. Access denied.`;
-                    console.error(errorMessage);
-                    return;
+            let sourceAppId = null;
+            // Find which of our created iframes sent this message.
+            const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+            for (const iframe of iframes) {
+                if (iframe.contentWindow === sourceWindow) {
+                    sourceAppId = iframe.dataset.appId;
+                    break;
                 }
-            } catch (e) {
-                console.error(`Could not verify source for protected function '${funcName}'.`, e);
-                return;
+            }
+
+            // Only allow the 'Terminal' app to execute protected functions.
+            if (sourceAppId !== 'Terminal') {
+                const errorMessage = `SECURITY VIOLATION: An app ('${sourceAppId || 'Unknown'}') attempted to call protected function '${funcName}'. Access denied.`;
+                console.error(errorMessage);
+                // Optionally send an error back to the source window
+                if(sourceWindow) {
+                    sourceWindow.postMessage({ type: 'parentActionError', message: 'Access Denied.' }, window.location.origin);
+                }
+                return; // Stop processing immediately.
             }
         }
-        // --- End of Security Check ---
+        // --- End of Revised Security Check ---
 
         const allowedFunctions = {
             showPopup, showNotification, minimizeFullscreenEmbed, createFullscreenEmbed, blackoutScreen,
@@ -7460,15 +7453,14 @@ window.addEventListener('message', async (event) => { // Make listener async
                     response.key = args[2];
                     response.value = result;
                 } else {
-                     // For other functions, the result can be a simple message or a complex object
-                    if (typeof result === 'object' && result !== null) {
-                        // Spread properties for list commands
-                        for (const key in result) {
-                            response[key] = result[key];
-                        }
-                    } else {
-                        response.message = result;
-                    }
+                     // For functions that return a simple message string
+                     if (typeof result === 'string') {
+                         response.message = result;
+                     } 
+                     // For functions that return a complex object
+                     else if (typeof result === 'object' && result !== null) {
+                         Object.assign(response, result);
+                     }
                 }
                 
                 sourceWindow.postMessage(response, window.location.origin);
@@ -7481,7 +7473,7 @@ window.addEventListener('message', async (event) => { // Make listener async
         }
         return;
     }
-
+	
     // Case 2: Gurapp-to-Gurapp communication
     const { targetApp, ...payload } = data;
     if (targetApp) {
