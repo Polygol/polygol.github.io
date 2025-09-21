@@ -6828,14 +6828,14 @@ function preventLeaving() {
 
 // --- Terminal Functions ---
 
-function getLocalStorageItem(key, sourceWindow) {
+function getLocalStorageItem(sourceWindow, key) {
     const value = localStorage.getItem(key);
     if (sourceWindow) {
         sourceWindow.postMessage({ type: 'localStorageItemValue', key: key, value: value }, window.location.origin);
     }
 }
 
-function setLocalStorageItem(key, value, sourceWindow) {
+function setLocalStorageItem(sourceWindow, key, value) {
     localStorage.setItem(key, value);
     // Re-sync UI for common settings immediately
     if (key === 'page_brightness') updateBrightness(value);
@@ -6915,7 +6915,7 @@ function setLocalStorageItem(key, value, sourceWindow) {
     }
 }
 
-function removeLocalStorageItem(key, sourceWindow) {
+function removeLocalStorageItem(sourceWindow, key) {
     localStorage.removeItem(key);
     if (sourceWindow) {
         sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Storage key '${key}' removed.` }, window.location.origin);
@@ -7046,7 +7046,7 @@ function clearAllWallpapers(sourceWindow) {
     }
 }
 
-function switchWallpaperParent(directionOrIndex, sourceWindow) {
+function switchWallpaperParent(sourceWindow, directionOrIndex) {
     if (typeof directionOrIndex === 'string' && (directionOrIndex === 'left' || directionOrIndex === 'right')) {
         switchWallpaper(directionOrIndex); // Call existing switchWallpaper logic
         if (sourceWindow) {
@@ -7075,7 +7075,7 @@ function getCurrentTimeParent(sourceWindow) {
     }
 }
 
-function executeParentJS(code, sourceWindow) {
+function executeParentJS(sourceWindow, code) {
     try {
         // IMPORTANT: eval() is DANGEROUS. Use with extreme caution.
         // The security check below attempts to restrict its use.
@@ -7111,7 +7111,7 @@ async function listIDBDatabases(sourceWindow) {
     }
 }
 
-function openIDB(dbName, sourceWindow) {
+function openIDB(sourceWindow, dbName) {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(dbName);
         request.onerror = () => {
@@ -7124,18 +7124,18 @@ function openIDB(dbName, sourceWindow) {
     });
 }
 
-async function listIDBStores(dbName, sourceWindow) {
+async function listIDBStores(sourceWindow, dbName) {
     try {
-        const db = await openIDB(dbName, sourceWindow);
+        const db = await openIDB(sourceWindow, dbName);
         const storeNames = Array.from(db.objectStoreNames);
         db.close();
         sourceWindow.postMessage({ type: 'idbStoresList', dbName: dbName, stores: storeNames }, window.location.origin);
     } catch (e) { /* Error already sent by openIDB */ }
 }
 
-async function getIDBRecord(dbName, storeName, key, sourceWindow) {
+async function getIDBRecord(sourceWindow, dbName, storeName, key) {
     try {
-        const db = await openIDB(dbName, sourceWindow);
+        const db = await openIDB(sourceWindow, dbName);
         const transaction = db.transaction(storeName, 'readonly');
         const store = transaction.objectStore(storeName);
         const request = key ? store.get(key) : store.getAll();
@@ -7148,10 +7148,10 @@ async function getIDBRecord(dbName, storeName, key, sourceWindow) {
     } catch (e) { /* Error already sent by openIDB */ }
 }
 
-async function setIDBRecord(dbName, storeName, jsonData, sourceWindow) {
+async function setIDBRecord(sourceWindow, dbName, storeName, jsonData) {
     try {
         const data = JSON.parse(jsonData);
-        const db = await openIDB(dbName, sourceWindow);
+        const db = await openIDB(sourceWindow, dbName);
         const transaction = db.transaction(storeName, 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.put(data); // put handles both add and update
@@ -7164,9 +7164,9 @@ async function setIDBRecord(dbName, storeName, jsonData, sourceWindow) {
     }
 }
 
-async function removeIDBRecord(dbName, storeName, key, sourceWindow) {
+async function removeIDBRecord(sourceWindow, dbName, storeName, key) {
     try {
-        const db = await openIDB(dbName, sourceWindow);
+        const db = await openIDB(sourceWindow, dbName);
         const transaction = db.transaction(storeName, 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.delete(key);
@@ -7177,13 +7177,13 @@ async function removeIDBRecord(dbName, storeName, key, sourceWindow) {
     } catch (e) { /* Error already sent by openIDB */ }
 }
 
-async function clearIDBStore(dbName, storeName, sourceWindow) {
+async function clearIDBStore(sourceWindow, dbName, storeName) {
     if (!confirm(`Are you sure you want to clear ALL data from the '${storeName}' store in the '${dbName}' database? This cannot be undone.`)) {
         sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Operation cancelled.' }, window.location.origin);
         return;
     }
     try {
-        const db = await openIDB(dbName, sourceWindow);
+        const db = await openIDB(sourceWindow, dbName);
         const transaction = db.transaction(storeName, 'readwrite');
         const store = transaction.objectStore(storeName);
         const request = store.clear();
