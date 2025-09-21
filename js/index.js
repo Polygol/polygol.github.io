@@ -2534,16 +2534,42 @@ async function createAutomaticBackup() {
             }
         }
 
-        // 2. Dynamically gather IndexedDB data
+        // 2. Dynamically gather IndexedDB data and schema
         const indexedDbData = {};
         const dbs = await indexedDB.databases();
         for (const dbInfo of dbs) {
              const dbName = dbInfo.name;
              try {
-                const db = await initDbForBackup(dbName); // Use a simplified opener
-                indexedDbData[dbName] = {};
-                for (const storeName of db.objectStoreNames) {
-                    indexedDbData[dbName][storeName] = await getStoreDataForBackup(db, storeName);
+                const db = await initDbForBackup(dbName);
+                indexedDbData[dbName] = {
+                    stores: {},
+                    storeInfo: []
+                };
+                const storeNames = Array.from(db.objectStoreNames);
+
+                const tempTx = db.transaction(storeNames, 'readonly');
+                for (const storeName of storeNames) {
+                     const store = tempTx.objectStore(storeName);
+                     const indexNames = Array.from(store.indexNames);
+                     const indexes = indexNames.map(indexName => {
+                         const index = store.index(indexName);
+                         return {
+                             name: index.name,
+                             keyPath: index.keyPath,
+                             unique: index.unique,
+                             multiEntry: index.multiEntry
+                         };
+                     });
+                     indexedDbData[dbName].storeInfo.push({
+                         name: store.name,
+                         keyPath: store.keyPath,
+                         autoIncrement: store.autoIncrement,
+                         indexes: indexes
+                     });
+                }
+
+                for (const storeName of storeNames) {
+                    indexedDbData[dbName].stores[storeName] = await getStoreDataForBackup(db, storeName);
                 }
                 db.close();
             } catch (dbError) {
@@ -2553,7 +2579,7 @@ async function createAutomaticBackup() {
 
         // 3. Package data
         const transferData = {
-            gurasuraisu_transfer_version: "1.1", // Match new version
+            gurasuraisu_transfer_version: "1.2", // Match new version with schema
             export_timestamp: new Date().toISOString(),
             data: {
                 localStorage: localStorageData,
