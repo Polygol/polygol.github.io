@@ -7092,6 +7092,100 @@ function executeParentJS(code, sourceWindow) {
     }
 }
 
+// --- NEW IndexedDB Functions for Terminal ---
+
+async function listIDBDatabases(sourceWindow) {
+    try {
+        const dbs = await indexedDB.databases();
+        sourceWindow.postMessage({ type: 'idbDatabasesList', dbs: dbs.map(db => db.name) }, window.location.origin);
+    } catch (e) {
+        sourceWindow.postMessage({ type: 'parentActionError', message: 'Could not list IndexedDB databases: ' + e.message }, window.location.origin);
+    }
+}
+
+function openIDB(dbName, sourceWindow) {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName);
+        request.onerror = () => {
+            const errorMsg = `Failed to open DB '${dbName}': ${request.error}`;
+            sourceWindow.postMessage({ type: 'parentActionError', message: errorMsg }, window.location.origin);
+            reject(errorMsg);
+        };
+        request.onsuccess = () => resolve(request.result);
+        // No onupgradeneeded, we are just inspecting, not creating/modifying schema.
+    });
+}
+
+async function listIDBStores(dbName, sourceWindow) {
+    try {
+        const db = await openIDB(dbName, sourceWindow);
+        const storeNames = Array.from(db.objectStoreNames);
+        db.close();
+        sourceWindow.postMessage({ type: 'idbStoresList', dbName: dbName, stores: storeNames }, window.location.origin);
+    } catch (e) { /* Error already sent by openIDB */ }
+}
+
+async function getIDBRecord(dbName, storeName, key, sourceWindow) {
+    try {
+        const db = await openIDB(dbName, sourceWindow);
+        const transaction = db.transaction(storeName, 'readonly');
+        const store = transaction.objectStore(storeName);
+        const request = key ? store.get(key) : store.getAll();
+
+        request.onsuccess = () => {
+            sourceWindow.postMessage({ type: 'idbRecordValue', dbName, storeName, key, value: request.result }, window.location.origin);
+        };
+        request.onerror = () => sourceWindow.postMessage({ type: 'parentActionError', message: `Could not get from '${storeName}': ${request.error}` }, window.location.origin);
+        transaction.oncomplete = () => db.close();
+    } catch (e) { /* Error already sent by openIDB */ }
+}
+
+async function setIDBRecord(dbName, storeName, jsonData, sourceWindow) {
+    try {
+        const data = JSON.parse(jsonData);
+        const db = await openIDB(dbName, sourceWindow);
+        const transaction = db.transaction(storeName, 'readwrite');
+        const store = transaction.objectStore(storeName);
+        const request = store.put(data); // put handles both add and update
+
+        request.onsuccess = () => sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Record successfully set in '${dbName}/${storeName}'.` }, window.location.origin);
+        request.onerror = () => sourceWindow.postMessage({ type: 'parentActionError', message: `Could not set record in '${storeName}': ${request.error}` }, window.location.origin);
+        transaction.oncomplete = () => db.close();
+    } catch (e) {
+        sourceWindow.postMessage({ type: 'parentActionError', message: 'Invalid JSON data provided: ' + e.message }, window.location.origin);
+    }
+}
+
+async function removeIDBRecord(dbName, storeName, key, sourceWindow) {
+    try {
+        const db = await openIDB(dbName, sourceWindow);
+        const transaction = db.transaction(storeName, 'readwrite');
+        const store = transaction.objectStore(storeName);
+        const request = store.delete(key);
+
+        request.onsuccess = () => sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Record with key '${key}' deleted from '${dbName}/${storeName}'.` }, window.location.origin);
+        request.onerror = () => sourceWindow.postMessage({ type: 'parentActionError', message: `Could not delete record from '${storeName}': ${request.error}` }, window.location.origin);
+        transaction.oncomplete = () => db.close();
+    } catch (e) { /* Error already sent by openIDB */ }
+}
+
+async function clearIDBStore(dbName, storeName, sourceWindow) {
+    if (!confirm(`Are you sure you want to clear ALL data from the '${storeName}' store in the '${dbName}' database? This cannot be undone.`)) {
+        sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Operation cancelled.' }, window.location.origin);
+        return;
+    }
+    try {
+        const db = await openIDB(dbName, sourceWindow);
+        const transaction = db.transaction(storeName, 'readwrite');
+        const store = transaction.objectStore(storeName);
+        const request = store.clear();
+
+        request.onsuccess = () => sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Store '${dbName}/${storeName}' has been cleared.` }, window.location.origin);
+        request.onerror = () => sourceWindow.postMessage({ type: 'parentActionError', message: `Could not clear store '${storeName}': ${request.error}` }, window.location.origin);
+        transaction.oncomplete = () => db.close();
+    } catch (e) { /* Error already sent by openIDB */ }
+}
+
 // Global functions exposed for the Terminal (or other Gurapps if needed)
 window.rebootGurasuraisu = function(sourceWindow) {
     if (confirm(currentLanguage.REBOOT_CONFIRM)) { // Assuming REBOOT_CONFIRM is defined in lang.js
@@ -7378,6 +7472,10 @@ window.addEventListener('message', event => {
             'rebootGurasuraisu',
             'promptPWAInstall',
             'executeParentJS'
+            // Privileged IDB commands
+            'setIDBRecord',
+            'removeIDBRecord',
+            'clearIDBStore'
         ];
 
         if (protectedFunctions.includes(data.functionName)) {
@@ -7426,6 +7524,12 @@ window.addEventListener('message', event => {
             rebootGurasuraisu,
             promptPWAInstall,
             executeParentJS,
+            listIDBDatabases,
+            listIDBStores,
+            getIDBRecord,
+            setIDBRecord,
+            removeIDBRecord,
+            clearIDBStore,
         };
 
         const funcToCall = allowedFunctions[data.functionName];
