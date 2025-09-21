@@ -1457,6 +1457,14 @@ function updateClockAndDate() {
     });
     dateElement.textContent = formattedDate;
     if (modalTitle) modalTitle.textContent = formattedDate;
+
+    // --- FIX to force mask repaint ---
+    if (clockElement.classList.contains('glass-effect')) {
+        clockElement.classList.remove('glass-effect');
+        // Reading offsetHeight is a trick to force the browser to reflow
+        void clockElement.offsetHeight; 
+        clockElement.classList.add('glass-effect');
+    }
 }
 
 function startSynchronizedClockAndDate() {
