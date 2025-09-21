@@ -504,53 +504,10 @@ input[type="color"]::-moz-color-swatch {
     justify-content: flex-end;
 }
 
-.clock {
-    font-size: clamp(10rem, 12vw, 12rem);
-    font-weight: 700;
-    color: var(--text-color);
-    cursor: pointer;
-    user-select: none;
-    font-variant-numeric: tabular-nums;
-    transform: scale(1);
-    transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
-    position: relative;
-    border-radius: 10px;
-    line-height: 1;
-	width: fit-content
-}
-
-.clock.glass-effect {
-    color: transparent !important; /* Hide the original text, letting the ::before show through */
-}
-
-/* The ::before pseudo-element becomes the glass pane, which is then masked by the parent's text */
-.clock.glass-effect::before {
-    background: var(--search-background);
-    backdrop-filter: blur(10px) saturate(2) var(--edge-refraction-filter);
-    box-shadow: var(--sun-shadow);
-
-    /* Use the parent's text as a mask */
-    -webkit-mask: linear-gradient(black, black);
-    -webkit-mask-clip: text;
-    -webkit-mask-composite: source-in;
-    mask: linear-gradient(black, black);
-    mask-clip: text;
-    mask-composite: source-in;
-}
-
+.clock.glass-effect,
 .info.glass-effect .date {
-    color: transparent !important; /* Make text transparent so ::before shows through */
-}
-
-.info.glass-effect .date::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-
-    background: var(--search-background);
-    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-    box-shadow: var(--sun-shadow);
+    color: transparent !important;
+    background: none !important; /* Ensure no other backgrounds interfere */
 
     -webkit-mask-image: linear-gradient(black, black);
     -webkit-mask-clip: text;
@@ -559,6 +516,25 @@ input[type="color"]::-moz-color-swatch {
     mask-image: linear-gradient(black, black);
     mask-clip: text;
     mask-composite: source-in;
+}
+
+/* 2. The ::before pseudo-element creates the actual glass layer. */
+/*    It's positioned behind the (now transparent) text and fills the element. */
+/*    The parent's mask then clips this layer to the shape of the text. */
+.clock.glass-effect::before,
+.info.glass-effect .date::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1; /* Position it behind the text content plane */
+
+    /* The actual glass styling */
+    background: var(--search-background);
+    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+    box-shadow: var(--sun-shadow);
+
+    /* This is important for the date's pseudo-element to be properly sized */
+    border-radius: inherit; 
 }
 
 .clock .digit {
