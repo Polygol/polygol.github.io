@@ -519,18 +519,46 @@ input[type="color"]::-moz-color-swatch {
 	width: fit-content
 }
 
-.clock.glass-effect,
-.info.glass-effect .date {
+.clock.glass-effect {
+    color: transparent !important; /* Hide the original text, letting the ::before show through */
+}
+
+/* The ::before pseudo-element becomes the glass pane, which is then masked by the parent's text */
+.clock.glass-effect::before {
     background: var(--search-background);
-    -webkit-backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+    backdrop-filter: blur(10px) saturate(2) var(--edge-refraction-filter);
+    box-shadow: var(--sun-shadow);
+
+    /* Use the parent's text as a mask */
+    -webkit-mask: linear-gradient(black, black);
+    -webkit-mask-clip: text;
+    -webkit-mask-composite: source-in;
+    mask: linear-gradient(black, black);
+    mask-clip: text;
+    mask-composite: source-in;
+}
+
+.info.glass-effect .date {
+    color: transparent !important; /* Make text transparent so ::before shows through */
+}
+
+.info.glass-effect .date::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+
+    background: var(--search-background);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-    
-    /* Clip this background to the text shape */
-    -webkit-background-clip: text;
-    background-clip: text;
-    
-    /* Make the text transparent to show the background */
-    color: transparent;
+    box-shadow: var(--sun-shadow);
+
+    -webkit-mask-image: linear-gradient(black, black);
+    -webkit-mask-clip: text;
+    -webkit-mask-composite: source-in;
+
+    mask-image: linear-gradient(black, black);
+    mask-clip: text;
+    mask-composite: source-in;
 }
 
 .clock .digit {
