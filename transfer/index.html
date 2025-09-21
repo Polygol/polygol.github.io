@@ -375,6 +375,12 @@
                         for (const storeName of storeNames) {
                             const store = tx.objectStore(storeName);
                             const records = dbData.stores[storeName];
+                            const storeInfo = dbData.storeInfo.find(s => s.name === storeName);
+
+                            if (!storeInfo) {
+                                logStatus(`Warning: Schema info for store '${storeName}' not found in transfer file. Skipping.`, true);
+                                continue;
+                            }
                             
                             for (const record of records) {
                                 let valueToStore = record.value;
@@ -382,7 +388,16 @@
                                     valueToStore.blob = base64ToBlob(valueToStore.base64);
                                     delete valueToStore.base64;
                                 }
-                                store.put(valueToStore, record.key);
+                                
+                                // ** THE FIX IS HERE **
+                                // Check if the store uses in-line keys (has a keyPath)
+                                if (storeInfo.keyPath) {
+                                    // If so, do not provide the key parameter to put()
+                                    store.put(valueToStore);
+                                } else {
+                                    // Otherwise, provide both the value and the key
+                                    store.put(valueToStore, record.key);
+                                }
                             }
                         }
                         await new Promise((resolve, reject) => {
