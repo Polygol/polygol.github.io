@@ -519,6 +519,25 @@ input[type="color"]::-moz-color-swatch {
 	width: fit-content
 }
 
+.clock.glass-effect {
+    color: transparent !important; /* Hide the original text, letting the ::before show through */
+}
+
+/* The ::before pseudo-element becomes the glass pane, which is then masked by the parent's text */
+.clock.glass-effect::before {
+    background: var(--search-background);
+    backdrop-filter: blur(10px) saturate(2) var(--edge-refraction-filter);
+    box-shadow: var(--sun-shadow);
+
+    /* Use the parent's text as a mask */
+    -webkit-mask: linear-gradient(black, black);
+    -webkit-mask-clip: text;
+    -webkit-mask-composite: source-in;
+    mask: linear-gradient(black, black);
+    mask-clip: text;
+    mask-composite: source-in;
+}
+
 .clock .digit {
     display: inline-block;
     width: 1ch;
