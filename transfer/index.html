@@ -234,7 +234,7 @@
                 }
                 logStatus('localStorage data collected.');
 
-                // 2. Dynamically gather IndexedDB data
+                // 2. Dynamically gather IndexedDB data and schema
                 const indexedDbData = {};
                 const dbs = await indexedDB.databases();
                 if (dbs.length === 0) {
@@ -254,14 +254,25 @@
                         };
                         const storeNames = Array.from(db.objectStoreNames);
                         
-                        // Get schema info for import
                         const tempTx = db.transaction(storeNames, 'readonly');
                         for (const storeName of storeNames) {
                              const store = tempTx.objectStore(storeName);
+                             const indexNames = Array.from(store.indexNames);
+                             const indexes = indexNames.map(indexName => {
+                                 const index = store.index(indexName);
+                                 return {
+                                     name: index.name,
+                                     keyPath: index.keyPath,
+                                     unique: index.unique,
+                                     multiEntry: index.multiEntry
+                                 };
+                             });
+
                              indexedDbData[dbName].storeInfo.push({
                                  name: store.name,
                                  keyPath: store.keyPath,
-                                 autoIncrement: store.autoIncrement
+                                 autoIncrement: store.autoIncrement,
+                                 indexes: indexes
                              });
                         }
 
@@ -277,7 +288,7 @@
 
                 // 3. Package and download
                 const transferData = {
-                    gurasuraisu_transfer_version: "1.1", // Version bump for new structure
+                    gurasuraisu_transfer_version: "1.2", // Version bump for schema inclusion
                     export_timestamp: new Date().toISOString(),
                     data: {
                         localStorage: localStorageData,
@@ -350,19 +361,28 @@
                     logStatus('Restoring databases...');
                     for (const dbName in idbData) {
                         const dbData = idbData[dbName];
-                        // ** THE FIX IS HERE: Open without a version number **
-                        // This allows onupgradeneeded to fire for a brand new database,
-                        // which will be created with a low default version number.
+                        
                         const request = indexedDB.open(dbName); 
                         
                         request.onupgradeneeded = (event) => {
+                            logStatus(`Creating schema for new database: ${dbName}`);
                             const db = event.target.result;
                             dbData.storeInfo.forEach(sInfo => {
                                 if (!db.objectStoreNames.contains(sInfo.name)) {
                                     const options = {};
                                     if(sInfo.keyPath) options.keyPath = sInfo.keyPath;
                                     if(sInfo.autoIncrement) options.autoIncrement = sInfo.autoIncrement;
-                                    db.createObjectStore(sInfo.name, options);
+                                    const store = db.createObjectStore(sInfo.name, options);
+
+                                    // **THE FIX IS HERE: Create the indexes**
+                                    if (sInfo.indexes && Array.isArray(sInfo.indexes)) {
+                                        sInfo.indexes.forEach(indexInfo => {
+                                            store.createIndex(indexInfo.name, indexInfo.keyPath, {
+                                                unique: indexInfo.unique,
+                                                multiEntry: indexInfo.multiEntry
+                                            });
+                                        });
+                                    }
                                 }
                             });
                         };
