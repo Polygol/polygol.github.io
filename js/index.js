@@ -7471,8 +7471,7 @@ window.addEventListener('message', event => {
             'getCurrentTimeParent',
             'rebootGurasuraisu',
             'promptPWAInstall',
-            'executeParentJS'
-            // Privileged IDB commands
+            'executeParentJS',
             'setIDBRecord',
             'removeIDBRecord',
             'clearIDBStore'
