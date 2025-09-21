@@ -4861,7 +4861,6 @@ function applyClockStyles() {
     
     if (!clockElement || !infoElement) return;
 
-    const fontFamily = fontSelect.value;
     const fontWeight = parseInt(weightSlider.value, 10) * 10;
     
     const currentStyles = (recentWallpapers.length > 0 && recentWallpapers[currentWallpaperPosition] && recentWallpapers[currentWallpaperPosition].clockStyles) ?
