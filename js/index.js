@@ -7185,18 +7185,35 @@ async function getIDBRecord(dbName, storeName, key) {
     });
 }
 
-async function setIDBRecord(dbName, storeName, jsonData) {
-    const data = JSON.parse(jsonData); // Can throw error, caught by listener
-    const db = await openIDB(dbName);
-    const transaction = db.transaction(storeName, 'readwrite');
-    const store = transaction.objectStore(storeName);
-    const request = store.put(data);
+async function setIDBRecord(dbName, storeName, key, jsonData) {
+    try {
+        const data = JSON.parse(jsonData);
+        const db = await openIDB(dbName);
+        const transaction = db.transaction(storeName, 'readwrite');
+        const store = transaction.objectStore(storeName);
 
-    return new Promise((resolve, reject) => {
-        request.onsuccess = () => resolve(`Record successfully set in '${dbName}/${storeName}'.`);
-        request.onerror = () => reject(new Error(`Could not set record in '${storeName}': ${request.error}`));
-        transaction.oncomplete = () => db.close();
-    });
+        let request;
+        // Check if the store uses in-line keys (the key is part of the data object)
+        if (store.keyPath) {
+            // In this case, the provided 'key' argument from the terminal is ignored.
+            request = store.put(data);
+        } else {
+            // The store uses out-of-line keys, so the 'key' argument is required.
+            if (key === undefined || key === null) {
+                throw new Error("This object store requires an explicit key, but none was provided.");
+            }
+            request = store.put(data, key);
+        }
+
+        return new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(`Record successfully set in '${dbName}/${storeName}'.`);
+            request.onerror = () => reject(new Error(`Could not set record in '${storeName}': ${request.error.message}`));
+            transaction.oncomplete = () => db.close();
+        });
+    } catch (e) {
+        // Catches JSON parsing errors or other synchronous issues.
+        throw new Error('Operation failed: ' + e.message);
+    }
 }
 
 async function removeIDBRecord(dbName, storeName, key) {
