@@ -6826,16 +6826,13 @@ function preventLeaving() {
   });
 }
 
-// --- Terminal Functions ---
+// --- Terminal Functions (Corrected Signatures) ---
 
-function getLocalStorageItem(sourceWindow, key) {
-    const value = localStorage.getItem(key);
-    if (sourceWindow) {
-        sourceWindow.postMessage({ type: 'localStorageItemValue', key: key, value: value }, window.location.origin);
-    }
+function getLocalStorageItem(key) {
+    return localStorage.getItem(key);
 }
 
-function setLocalStorageItem(sourceWindow, key, value) {
+function setLocalStorageItem(key, value) {
     localStorage.setItem(key, value);
     // Re-sync UI for common settings immediately
     if (key === 'page_brightness') updateBrightness(value);
@@ -6909,45 +6906,34 @@ function setLocalStorageItem(sourceWindow, key, value) {
         })();
     }
     syncUiStates(); // Update UI for other visual indicators
-
-    if (sourceWindow) {
-        sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Setting '${key}' updated.` }, window.location.origin);
-    }
+    return `Setting '${key}' updated.`;
 }
 
-function removeLocalStorageItem(sourceWindow, key) {
+function removeLocalStorageItem(key) {
     localStorage.removeItem(key);
-    if (sourceWindow) {
-        sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Storage key '${key}' removed.` }, window.location.origin);
-    }
+    return `Storage key '${key}' removed.`;
 }
 
-function listLocalStorageKeys(sourceWindow) {
+function listLocalStorageKeys() {
     const keys = [];
     for (let i = 0; i < localStorage.length; i++) {
         keys.push(localStorage.key(i));
     }
-    if (sourceWindow) {
-        sourceWindow.postMessage({ type: 'localStorageKeysList', keys: keys }, window.location.origin);
-    }
+    return keys;
 }
 
-function clearLocalStorage(sourceWindow) {
-    if (confirm(currentLanguage.RESET_CONFIRM)) { // Use Polygol's own confirmation
+function clearLocalStorage() {
+    if (confirm(currentLanguage.RESET_CONFIRM)) {
         localStorage.clear();
-        if (sourceWindow) {
-            sourceWindow.postMessage({ type: 'parentActionSuccess', message: 'All Polygol localStorage data cleared. Reloading...' }, window.location.origin);
-        }
-        window.location.reload(); // Hard reload might be necessary after clearing all localStorage
+        setTimeout(() => window.location.reload(), 100); // Give time for message to send
+        return 'All Polygol localStorage data cleared. Reloading...';
     } else {
-        if (sourceWindow) {
-            sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Operation cancelled.' }, window.location.origin);
-        }
+        return 'Operation cancelled.';
     }
 }
 
-function listCommonSettings(sourceWindow) {
-    const settings = {
+function listCommonSettings() {
+    return {
         'theme': localStorage.getItem('theme'),
         'minimalMode': localStorage.getItem('minimalMode'),
         'silentMode': localStorage.getItem('silentMode'),
@@ -6964,257 +6950,180 @@ function listCommonSettings(sourceWindow) {
         'clockColorEnabled': localStorage.getItem('clockColorEnabled'),
         'clockStackEnabled': localStorage.getItem('clockStackEnabled'),
         'selectedLanguage': localStorage.getItem('selectedLanguage'),
-        // Add more settings here as needed
     };
-    if (sourceWindow) {
-        sourceWindow.postMessage({ type: 'commonSettingsList', settings: settings }, window.location.origin);
-    }
 }
 
-function listRecentWallpapers(sourceWindow) {
-    if (sourceWindow) {
-        sourceWindow.postMessage({ type: 'recentWallpapersList', wallpapers: recentWallpapers }, window.location.origin);
-    }
+function listRecentWallpapers() {
+    return recentWallpapers;
 }
 
-async function removeWallpaperAtIndex(index, sourceWindow) {
+async function removeWallpaperAtIndex(index) {
     if (index < 0 || index >= recentWallpapers.length) {
-        if (sourceWindow) {
-            sourceWindow.postMessage({ type: 'parentActionError', message: 'Invalid wallpaper index.' }, window.location.origin);
-        }
-        return;
+        throw new Error('Invalid wallpaper index.');
     }
-    if (confirm(currentLanguage.WALLPAPER_REMOVE_CONFIRM)) { // Use Polygol's own confirmation
-        await removeWallpaper(index); // Call existing removeWallpaper logic
-        if (sourceWindow) {
-            sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Wallpaper at index ${index} removed.` }, window.location.origin);
-        }
+    if (confirm(currentLanguage.WALLPAPER_REMOVE_CONFIRM)) {
+        await removeWallpaper(index);
+        return `Wallpaper at index ${index} removed.`;
     } else {
-        if (sourceWindow) {
-            sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Operation cancelled.' }, window.location.origin);
-        }
+        return 'Operation cancelled.';
     }
 }
 
-function clearAllWallpapers(sourceWindow) {
+async function clearAllWallpapers() {
     if (recentWallpapers.length === 0) {
-         if (sourceWindow) {
-            sourceWindow.postMessage({ type: 'parentActionInfo', message: 'No custom wallpapers to clear.' }, window.location.origin);
-        }
-        return;
+        return 'No custom wallpapers to clear.';
     }
-    if (confirm(currentLanguage.WALLPAPER_CLEAR_CONFIRM)) { // Use Polygol's own confirmation
-        // Clear all from IndexedDB first
-        initDB().then(db => {
-            const transaction = db.transaction([storeName], 'readwrite');
-            const store = transaction.objectStore(storeName);
-            const request = store.clear();
+    if (confirm(currentLanguage.WALLPAPER_CLEAR_CONFIRM)) {
+        const db = await initDB();
+        const transaction = db.transaction([storeName], 'readwrite');
+        const store = transaction.objectStore(storeName);
+        const request = store.clear();
+        
+        return new Promise((resolve, reject) => {
             request.onsuccess = () => {
-                recentWallpapers = []; // Clear in-memory array
-                localStorage.removeItem("recentWallpapers"); // Clear localStorage record
-                // Reset slideshow/single wallpaper state
+                recentWallpapers = [];
+                localStorage.removeItem("recentWallpapers");
                 clearInterval(slideshowInterval);
                 slideshowInterval = null;
                 isSlideshow = false;
-                localStorage.removeItem("wallpapers"); // Remove slideshow indicator
-                localStorage.removeItem("wallpaperOrder"); // Reset order
+                localStorage.removeItem("wallpapers");
+                localStorage.removeItem("wallpaperOrder");
                 currentWallpaperPosition = 0;
-                localStorage.setItem("wallpaperType", "default"); // Set to default type
-                applyWallpaper(); // Apply default wallpaper
-                updatePageIndicatorDots(true); // Update indicator
-                syncUiStates(); // Update UI settings
-                if (sourceWindow) {
-                    sourceWindow.postMessage({ type: 'parentActionSuccess', message: 'All custom wallpapers cleared. Resetting to default.' }, window.location.origin);
-                }
+                localStorage.setItem("wallpaperType", "default");
+                applyWallpaper();
+                updatePageIndicatorDots(true);
+                syncUiStates();
+                resolve('All custom wallpapers cleared. Resetting to default.');
             };
-            request.onerror = (e) => {
-                 console.error('Failed to clear IndexedDB:', e.target.error);
-                 if (sourceWindow) {
-                    sourceWindow.postMessage({ type: 'parentActionError', message: 'Failed to clear wallpapers from database.' }, window.location.origin);
-                }
-            };
-        }).catch(e => {
-            console.error('IndexedDB error:', e);
-            if (sourceWindow) {
-                sourceWindow.postMessage({ type: 'parentActionError', message: 'Failed to access wallpaper database.' }, window.location.origin);
-            }
+            request.onerror = (e) => reject(new Error('Failed to clear wallpapers from database.'));
         });
     } else {
-        if (sourceWindow) {
-            sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Operation cancelled.' }, window.location.origin);
-        }
+        return 'Operation cancelled.';
     }
 }
 
-function switchWallpaperParent(sourceWindow, directionOrIndex) {
+function switchWallpaperParent(directionOrIndex) {
     if (typeof directionOrIndex === 'string' && (directionOrIndex === 'left' || directionOrIndex === 'right')) {
-        switchWallpaper(directionOrIndex); // Call existing switchWallpaper logic
-        if (sourceWindow) {
-            sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Switched wallpaper ${directionOrIndex}.` }, window.location.origin);
-        }
+        switchWallpaper(directionOrIndex);
+        return `Switched wallpaper ${directionOrIndex}.`;
+    }
+    const index = parseInt(directionOrIndex);
+    if (!isNaN(index)) {
+        jumpToWallpaper(index);
+        return `Jumped to wallpaper at index ${index}.`;
+    }
+    throw new Error('Invalid argument. Use "left", "right", or a numeric index.');
+}
+
+function getCurrentTimeParent() {
+    return new Date().toLocaleTimeString();
+}
+
+function executeParentJS(code) {
+    // eval() is dangerous, but this function is already protected by the security check.
+    const result = eval(code);
+    let resultString;
+    if (typeof result === 'object' && result !== null) {
+        try { resultString = JSON.stringify(result); } catch (e) { resultString = result.toString(); }
     } else {
-        const index = parseInt(directionOrIndex);
-        if (!isNaN(index)) {
-            jumpToWallpaper(index); // Call existing jumpToWallpaper logic
-            if (sourceWindow) {
-                sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Jumped to wallpaper at index ${index}.` }, window.location.origin);
-            }
-        } else {
-            if (sourceWindow) {
-                sourceWindow.postMessage({ type: 'parentActionError', message: 'Invalid wallpaper switch argument. Use "left", "right", or a numeric index.' }, window.location.origin);
-            }
-        }
+        resultString = String(result);
     }
+    return resultString;
 }
 
-function getCurrentTimeParent(sourceWindow) {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString(); // Formats time based on locale
-    if (sourceWindow) {
-        sourceWindow.postMessage({ type: 'currentTimeValue', time: timeString }, window.location.origin);
-    }
+// --- NEW IndexedDB Functions for Terminal (Corrected Signatures) ---
+
+async function listIDBDatabases() {
+    const dbs = await indexedDB.databases();
+    return dbs.map(db => db.name);
 }
 
-function executeParentJS(sourceWindow, code) {
-    try {
-        // IMPORTANT: eval() is DANGEROUS. Use with extreme caution.
-        // The security check below attempts to restrict its use.
-        const result = eval(code);
-        let resultString;
-        if (typeof result === 'object' && result !== null) {
-            try {
-                resultString = JSON.stringify(result);
-            } catch (e) {
-                resultString = result.toString(); // Fallback for circular structures, DOM elements etc.
-            }
-        } else {
-            resultString = String(result);
-        }
-        if (sourceWindow) {
-            sourceWindow.postMessage({ type: 'commandOutput', result: resultString }, window.location.origin);
-        }
-    } catch (e) {
-        if (sourceWindow) {
-            sourceWindow.postMessage({ type: 'commandError', error: e.message }, window.location.origin);
-        }
-    }
-}
-
-// --- NEW IndexedDB Functions for Terminal ---
-
-async function listIDBDatabases(sourceWindow) {
-    try {
-        const dbs = await indexedDB.databases();
-        sourceWindow.postMessage({ type: 'idbDatabasesList', dbs: dbs.map(db => db.name) }, window.location.origin);
-    } catch (e) {
-        sourceWindow.postMessage({ type: 'parentActionError', message: 'Could not list IndexedDB databases: ' + e.message }, window.location.origin);
-    }
-}
-
-function openIDB(sourceWindow, dbName) {
+function openIDB(dbName) { // Removed sourceWindow
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(dbName);
-        request.onerror = () => {
-            const errorMsg = `Failed to open DB '${dbName}': ${request.error}`;
-            sourceWindow.postMessage({ type: 'parentActionError', message: errorMsg }, window.location.origin);
-            reject(errorMsg);
-        };
+        request.onerror = () => reject(new Error(`Failed to open DB '${dbName}': ${request.error}`));
         request.onsuccess = () => resolve(request.result);
-        // No onupgradeneeded, we are just inspecting, not creating/modifying schema.
     });
 }
 
-async function listIDBStores(sourceWindow, dbName) {
-    try {
-        const db = await openIDB(sourceWindow, dbName);
-        const storeNames = Array.from(db.objectStoreNames);
-        db.close();
-        sourceWindow.postMessage({ type: 'idbStoresList', dbName: dbName, stores: storeNames }, window.location.origin);
-    } catch (e) { /* Error already sent by openIDB */ }
+async function listIDBStores(dbName) {
+    const db = await openIDB(dbName);
+    const storeNames = Array.from(db.objectStoreNames);
+    db.close();
+    return storeNames;
 }
 
-async function getIDBRecord(sourceWindow, dbName, storeName, key) {
-    try {
-        const db = await openIDB(sourceWindow, dbName);
-        const transaction = db.transaction(storeName, 'readonly');
-        const store = transaction.objectStore(storeName);
-        const request = key ? store.get(key) : store.getAll();
+async function getIDBRecord(dbName, storeName, key) {
+    const db = await openIDB(dbName);
+    const transaction = db.transaction(storeName, 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = key ? store.get(key) : store.getAll();
 
-        request.onsuccess = () => {
-            sourceWindow.postMessage({ type: 'idbRecordValue', dbName, storeName, key, value: request.result }, window.location.origin);
-        };
-        request.onerror = () => sourceWindow.postMessage({ type: 'parentActionError', message: `Could not get from '${storeName}': ${request.error}` }, window.location.origin);
+    return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(new Error(`Could not get from '${storeName}': ${request.error}`));
         transaction.oncomplete = () => db.close();
-    } catch (e) { /* Error already sent by openIDB */ }
+    });
 }
 
-async function setIDBRecord(sourceWindow, dbName, storeName, jsonData) {
-    try {
-        const data = JSON.parse(jsonData);
-        const db = await openIDB(sourceWindow, dbName);
-        const transaction = db.transaction(storeName, 'readwrite');
-        const store = transaction.objectStore(storeName);
-        const request = store.put(data); // put handles both add and update
+async function setIDBRecord(dbName, storeName, jsonData) {
+    const data = JSON.parse(jsonData); // Can throw error, caught by listener
+    const db = await openIDB(dbName);
+    const transaction = db.transaction(storeName, 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.put(data);
 
-        request.onsuccess = () => sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Record successfully set in '${dbName}/${storeName}'.` }, window.location.origin);
-        request.onerror = () => sourceWindow.postMessage({ type: 'parentActionError', message: `Could not set record in '${storeName}': ${request.error}` }, window.location.origin);
+    return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(`Record successfully set in '${dbName}/${storeName}'.`);
+        request.onerror = () => reject(new Error(`Could not set record in '${storeName}': ${request.error}`));
         transaction.oncomplete = () => db.close();
-    } catch (e) {
-        sourceWindow.postMessage({ type: 'parentActionError', message: 'Invalid JSON data provided: ' + e.message }, window.location.origin);
-    }
+    });
 }
 
-async function removeIDBRecord(sourceWindow, dbName, storeName, key) {
-    try {
-        const db = await openIDB(sourceWindow, dbName);
-        const transaction = db.transaction(storeName, 'readwrite');
-        const store = transaction.objectStore(storeName);
-        const request = store.delete(key);
+async function removeIDBRecord(dbName, storeName, key) {
+    const db = await openIDB(dbName);
+    const transaction = db.transaction(storeName, 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.delete(key);
 
-        request.onsuccess = () => sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Record with key '${key}' deleted from '${dbName}/${storeName}'.` }, window.location.origin);
-        request.onerror = () => sourceWindow.postMessage({ type: 'parentActionError', message: `Could not delete record from '${storeName}': ${request.error}` }, window.location.origin);
+    return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(`Record with key '${key}' deleted from '${dbName}/${storeName}'.`);
+        request.onerror = () => reject(new Error(`Could not delete record from '${storeName}': ${request.error}`));
         transaction.oncomplete = () => db.close();
-    } catch (e) { /* Error already sent by openIDB */ }
+    });
 }
 
-async function clearIDBStore(sourceWindow, dbName, storeName) {
+async function clearIDBStore(dbName, storeName) {
     if (!confirm(`Are you sure you want to clear ALL data from the '${storeName}' store in the '${dbName}' database? This cannot be undone.`)) {
-        sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Operation cancelled.' }, window.location.origin);
-        return;
+        return 'Operation cancelled.';
     }
-    try {
-        const db = await openIDB(sourceWindow, dbName);
-        const transaction = db.transaction(storeName, 'readwrite');
-        const store = transaction.objectStore(storeName);
-        const request = store.clear();
+    const db = await openIDB(dbName);
+    const transaction = db.transaction(storeName, 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.clear();
 
-        request.onsuccess = () => sourceWindow.postMessage({ type: 'parentActionSuccess', message: `Store '${dbName}/${storeName}' has been cleared.` }, window.location.origin);
-        request.onerror = () => sourceWindow.postMessage({ type: 'parentActionError', message: `Could not clear store '${storeName}': ${request.error}` }, window.location.origin);
+    return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(`Store '${dbName}/${storeName}' has been cleared.`);
+        request.onerror = () => reject(new Error(`Could not clear store '${storeName}': ${request.error}`));
         transaction.oncomplete = () => db.close();
-    } catch (e) { /* Error already sent by openIDB */ }
+    });
 }
+
 
 // Global functions exposed for the Terminal (or other Gurapps if needed)
-window.rebootGurasuraisu = function(sourceWindow) {
-    if (confirm(currentLanguage.REBOOT_CONFIRM)) { // Assuming REBOOT_CONFIRM is defined in lang.js
-        if (sourceWindow) {
-            sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Rebooting Polygol...' }, window.location.origin);
-        }
-        window.location.reload();
+function rebootGurasuraisu() { // Removed sourceWindow
+    if (confirm(currentLanguage.REBOOT_CONFIRM)) {
+        setTimeout(() => window.location.reload(), 100);
+        return 'Rebooting Polygol...';
     } else {
-        if (sourceWindow) {
-            sourceWindow.postMessage({ type: 'parentActionInfo', message: 'Reboot cancelled.' }, window.location.origin);
-        }
+        return 'Reboot cancelled.';
     }
-};
+}
 
-window.promptPWAInstall = function(sourceWindow) {
-    // This calls the existing `promptToInstallPWA` which triggers the popup.
+function promptPWAInstall() { // Removed sourceWindow
     promptToInstallPWA();
-    if (sourceWindow) {
-        sourceWindow.postMessage({ type: 'parentActionInfo', message: 'PWA installation prompt initiated.' }, window.location.origin);
-    }
-};
+    return 'PWA installation prompt initiated.';
+}
 
 // --- Media Session Management Functions ---
 
@@ -7411,7 +7320,7 @@ const Gurasuraisu = {
     }
 };
 
-window.addEventListener('message', event => {
+window.addEventListener('message', async (event) => { // Make listener async
     if (event.origin !== window.location.origin) return;
 
     const data = event.data;
@@ -7459,6 +7368,8 @@ window.addEventListener('message', event => {
 
     // Check if this is an API call from a Gurapp
     if (data && data.action === 'callGurasuraisuFunc' && data.functionName) {
+        const funcName = data.functionName;
+        const args = Array.isArray(data.args) ? data.args : [];
 
         // --- NEW: Security Check for PROTECTED functions ---
         const protectedFunctions = [
@@ -7485,69 +7396,90 @@ window.addEventListener('message', event => {
             'clearIDBStore'
         ];
 
-        if (protectedFunctions.includes(data.functionName)) {
+        if (protectedFunctions.includes(funcName)) {
             try {
-                const sourceUrl = event.source.location.href;
-
-                // Check if the source URL path ends with the trusted App Store path
-		if (!sourceUrl.endsWith('/appstore/index.html') && !sourceUrl.endsWith('/terminal/index.html')) {
-                    const errorMessage = `SECURITY VIOLATION: A script at "${sourceUrl}" attempted to call the protected '${data.functionName}' function. Access denied.`;
+                const sourceUrl = sourceWindow.location.href;
+                if (!sourceUrl.endsWith('/terminal/index.html')) {
+                    const errorMessage = `SECURITY VIOLATION: A script at "${sourceUrl}" attempted to call protected function '${funcName}'. Access denied.`;
                     console.error(errorMessage);
-                    return; // Stop processing immediately
+                    return;
                 }
             } catch (e) {
-                console.error(`Could not verify the source of the '${data.functionName}' call.`, e);
+                console.error(`Could not verify source for protected function '${funcName}'.`, e);
                 return;
             }
         }
         // --- End of Security Check ---
 
-
-        // If the check passes (or it's not a protected function), proceed with the normal whitelist.
         const allowedFunctions = {
-            showPopup,
-            showNotification,
-            minimizeFullscreenEmbed,
-            createFullscreenEmbed,
-            blackoutScreen,
-            installApp,
-            deleteApp, // Keep deleteApp in the list so it can be called if the check passes
-            registerWidget,
-		    registerMediaSession,
-		    clearMediaSession,
-		    updateMediaPlaybackState,
-		    updateMediaProgress, 
-            getLocalStorageItem,
-            setLocalStorageItem,
-            removeLocalStorageItem,
-            listLocalStorageKeys,
-            clearLocalStorage,
-            listCommonSettings,
-            listRecentWallpapers,
-            removeWallpaperAtIndex,
-            clearAllWallpapers,
-            switchWallpaperParent,
-            getCurrentTimeParent,
-            rebootGurasuraisu,
-            promptPWAInstall,
-            executeParentJS,
-            listIDBDatabases,
-            listIDBStores,
-            getIDBRecord,
-            setIDBRecord,
-            removeIDBRecord,
-            clearIDBStore,
+            showPopup, showNotification, minimizeFullscreenEmbed, createFullscreenEmbed, blackoutScreen,
+            installApp, deleteApp, registerWidget, registerMediaSession, clearMediaSession,
+            updateMediaPlaybackState, updateMediaProgress, getLocalStorageItem, setLocalStorageItem,
+            removeLocalStorageItem, listLocalStorageKeys, clearLocalStorage, listCommonSettings,
+            listRecentWallpapers, removeWallpaperAtIndex, clearAllWallpapers, switchWallpaperParent,
+            getCurrentTimeParent, rebootGurasuraisu, promptPWAInstall, executeParentJS,
+            listIDBDatabases, listIDBStores, getIDBRecord, setIDBRecord, removeIDBRecord, clearIDBStore,
         };
 
-        const funcToCall = allowedFunctions[data.functionName];
+        const funcToCall = allowedFunctions[funcName];
 
         if (typeof funcToCall === 'function') {
-            const args = Array.isArray(data.args) ? data.args : [];
-            funcToCall.apply(window, args);
+            try {
+                // Await the result of the function, which might be a promise
+                const result = await funcToCall.apply(window, args);
+                
+                // Determine the correct message type based on the function name
+                let messageType = 'parentActionSuccess'; // Default success message
+                if (funcName.startsWith('get') || funcName.startsWith('list')) {
+                    // Map function names to specific response types for clarity
+                    const typeMap = {
+                        'getLocalStorageItem': 'localStorageItemValue',
+                        'listLocalStorageKeys': 'localStorageKeysList',
+                        'listCommonSettings': 'commonSettingsList',
+                        'listRecentWallpapers': 'recentWallpapersList',
+                        'getCurrentTimeParent': 'currentTimeValue',
+                        'executeParentJS': 'commandOutput',
+                        'listIDBDatabases': 'idbDatabasesList',
+                        'listIDBStores': 'idbStoresList',
+                        'getIDBRecord': 'idbRecordValue'
+                    };
+                    messageType = typeMap[funcName] || 'commandOutput';
+                }
+
+                // Construct the response message
+                const response = { type: messageType };
+                if (funcName === 'getLocalStorageItem') {
+                    response.key = args[0];
+                    response.value = result;
+                } else if (funcName === 'listIDBStores') {
+                    response.dbName = args[0];
+                    response.stores = result;
+                } else if (funcName === 'getIDBRecord') {
+                    response.dbName = args[0];
+                    response.storeName = args[1];
+                    response.key = args[2];
+                    response.value = result;
+                } else {
+                     // For other functions, the result can be a simple message or a complex object
+                    if (typeof result === 'object' && result !== null) {
+                        // Spread properties for list commands
+                        for (const key in result) {
+                            response[key] = result[key];
+                        }
+                    } else {
+                        response.message = result;
+                    }
+                }
+                
+                sourceWindow.postMessage(response, window.location.origin);
+
+            } catch (error) {
+                sourceWindow.postMessage({ type: 'parentActionError', message: error.message }, window.location.origin);
+            }
         } else {
-            console.warn(`A Gurapp attempted to call a disallowed or non-existent function: "${data.functionName}"`);
+            console.warn(`A Gurapp attempted to call a disallowed or non-existent function: "${funcName}"`);
         }
-        return; // Message handled
+        return;
     }
 
     // Case 2: Gurapp-to-Gurapp communication
