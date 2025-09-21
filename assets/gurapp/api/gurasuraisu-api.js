@@ -243,6 +243,14 @@ const Gurasuraisu = {
         }
     });
   }
+      
+  // --- NEW IndexedDB Functions ---
+  listIDBDatabases: function() { this._call('listIDBDatabases'); },
+  listIDBStores: function(dbName) { this._call('listIDBStores', [dbName]); },
+  getIDBRecord: function(dbName, storeName, key) { this._call('getIDBRecord', [dbName, storeName, key]); },
+  setIDBRecord: function(dbName, storeName, jsonData) { this._call('setIDBRecord', [dbName, storeName, jsonData]); },
+  removeIDBRecord: function(dbName, storeName, key) { this._call('removeIDBRecord', [dbName, storeName, key]); },
+  clearIDBStore: function(dbName, storeName) { this._call('clearIDBStore', [dbName, storeName]); }
 };
 
 // --- Event Listener for Messages FROM Gurasuraisu ---
