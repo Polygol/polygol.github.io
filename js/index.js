@@ -3323,7 +3323,8 @@ async function storeWallpaper(key, data) {
             dataUrl: data.dataUrl || null,
             type: data.type,
             version: "1.0",
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            clockStyles: data.clockStyles || {} 
         };
         let request = store.put(wallpaperData, key);
         request.onerror = () => reject(request.error);
@@ -3534,7 +3535,8 @@ async function saveWallpaper(file) {
         if (file.type.startsWith("video/")) {
             await storeWallpaper(wallpaperId, {
                 blob: file,
-                type: file.type
+                type: file.type,
+                clockStyles: defaultClockStyles // Pass the styles
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
@@ -3547,7 +3549,8 @@ async function saveWallpaper(file) {
             let compressedData = await compressMedia(file);
             await storeWallpaper(wallpaperId, {
                 dataUrl: compressedData,
-                type: file.type
+                type: file.type,
+                clockStyles: defaultClockStyles // Pass the styles
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
@@ -4738,8 +4741,13 @@ function setupFontSelection() {
     const glassSwitch = document.getElementById('clock-glass-switch');
 
     // --- Function to save all settings (triggered by user interaction) ---
-    function saveCurrentWallpaperSettings() {
-        const settings = {
+    async function saveCurrentWallpaperSettings() {
+        // First, get the existing styles to preserve manual settings
+        const currentStyles = (recentWallpapers.length > 0 && currentWallpaperPosition >= 0 && recentWallpapers[currentWallpaperPosition] && recentWallpapers[currentWallpaperPosition].clockStyles) ? 
+                                { ...recentWallpapers[currentWallpaperPosition].clockStyles } : {};
+
+        // Then, get the settings from the UI controls
+        const settingsFromUI = {
             font: fontSelect.value,
             weight: (parseInt(weightSlider.value, 10) * 10).toString(),
             color: colorPicker.value,
@@ -4759,16 +4767,39 @@ function setupFontSelection() {
             glassEnabled: glassSwitch.checked
         };
 
-        // Save to individual localStorage keys for immediate use
-        for (const key in settings) {
-            localStorage.setItem(key, settings[key]);
+        // Merge them, letting UI changes override existing values
+        const finalSettings = { ...currentStyles, ...settingsFromUI };
+
+        // If user selects a standard font, clear the custom font fields
+        if (settingsFromUI.font !== currentStyles.customFontName) {
+            finalSettings.customFontName = null;
+            finalSettings.customFontUrl = null;
         }
 
-        // Save to the persistent wallpaper history object
+        // Save to individual localStorage keys for immediate use
+        for (const key in finalSettings) {
+            // Only save keys that have a UI control, to avoid overwriting all manual settings
+            if (settingsFromUI.hasOwnProperty(key)) {
+                 localStorage.setItem(key, finalSettings[key]);
+            }
+        }
+
+        // Save the complete, merged object to the persistent wallpaper history
         if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0) {
             if (recentWallpapers[currentWallpaperPosition]) {
-                 recentWallpapers[currentWallpaperPosition].clockStyles = settings;
+                 recentWallpapers[currentWallpaperPosition].clockStyles = finalSettings;
                  saveRecentWallpapers();
+
+                 // --- UPDATE IndexedDB record as well ---
+                 const currentWallpaperMeta = recentWallpapers[currentWallpaperPosition];
+                 if (currentWallpaperMeta.id) { // Only for non-slideshow wallpapers
+                     const wallpaperRecord = await getWallpaper(currentWallpaperMeta.id);
+                     if (wallpaperRecord) {
+                         wallpaperRecord.clockStyles = finalSettings;
+                         // The existing storeWallpaper function will handle the update correctly.
+                         await storeWallpaper(currentWallpaperMeta.id, wallpaperRecord);
+                     }
+                 }
             }
         }
     }
