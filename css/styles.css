@@ -524,6 +524,21 @@ input[type="color"]::-moz-color-swatch {
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
 }
 
+.clock {
+    font-size: clamp(10rem, 12vw, 12rem);
+    font-weight: 700;
+    color: var(--text-color);
+    cursor: pointer;
+    user-select: none;
+    font-variant-numeric: tabular-nums;
+    transform: scale(1);
+    transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+    position: relative;
+    border-radius: 10px;
+    line-height: 1;
+	width: fit-content
+}
+
 .clock .digit {
     display: inline-block;
     width: 1ch;
