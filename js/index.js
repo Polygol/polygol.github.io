@@ -4697,7 +4697,6 @@ function setupFontSelection() {
     brightnessSlider.value = localStorage.getItem('wallpaperBrightness') || '100';
     contrastSlider.value = localStorage.getItem('wallpaperContrast') || '100';
 
-
     // --- 2. Apply the visual styles based on the now-correct state of the controls ---
     applyClockStyles();
     applyWallpaperEffects();
@@ -4783,18 +4782,13 @@ function applyClockStyles() {
     clockElement.style.webkitBackgroundClip = 'unset';
     clockElement.style.backgroundClip = 'unset';
     clockElement.classList.remove('glass-effect');
-    
-    // Apply Text Shadow
-    if (shadowSwitch && shadowSwitch.checked) {
-        const shadowBlur = shadowBlurSlider.value;
-        const shadowColor = shadowColorPicker.value;
-        const shadowString = `0 0 ${shadowBlur}px ${shadowColor}`;
-        clockElement.style.textShadow = shadowString;
-        infoElement.style.textShadow = shadowString;
-    }
-
-    // Apply Gradient or Solid Color
-    if (gradientSwitch && gradientSwitch.checked) {
+    infoElement.classList.remove('glass-effect');
+	
+    // --- Apply styles based on priority: Glass > Gradient > Solid Color ---
+    if (glassSwitch && glassSwitch.checked) {
+        clockElement.classList.add('glass-effect');
+        infoElement.classList.add('glass-effect'); // Apply to date as well
+    } else if (gradientSwitch && gradientSwitch.checked) {
         const color1 = colorPicker.value;
         const color2 = gradientColorPicker.value;
         clockElement.style.backgroundImage = `linear-gradient(45deg, ${color1}, ${color2})`;
@@ -4805,9 +4799,15 @@ function applyClockStyles() {
     } else if (colorSwitch && colorSwitch.checked) {
         clockElement.style.color = colorPicker.value;
         infoElement.style.color = colorPicker.value;
-    } else {
-        clockElement.style.color = ''; // Revert to default CSS color
-        infoElement.style.color = '';
+    }
+	
+    // Apply Text Shadow (can be combined with other effects)
+    if (shadowSwitch && shadowSwitch.checked) {
+        const shadowBlur = shadowBlurSlider.value;
+        const shadowColor = shadowColorPicker.value;
+        const shadowString = `0 0 ${shadowBlur}px ${shadowColor}`;
+        clockElement.style.textShadow = shadowString;
+        infoElement.style.textShadow = shadowString;
     }
     
     // Apply Stacked Layout
