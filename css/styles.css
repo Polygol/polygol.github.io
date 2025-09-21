@@ -134,7 +134,7 @@ body.light-theme {
     --modal-background: var(--modal-background-light);
     --modal-transparent: var(--modal-transparent-light);
     --search-background: var(--search-background-light);
-    --search-background-op: var(--search-background-dark-op);
+    --search-background-op: var(--search-background-dark);
     --overlay-color: var(--light-overlay);
     --transparent-color: var(--light-transparent);
     --glass-border: var(--glass-border-light);
@@ -147,7 +147,7 @@ body.high-contrast:not(.light-theme) {
     --modal-background: var(--modal-background-dark-highcontrast);
     --modal-transparent: var(--modal-transparent-dark-highcontrast);
     --search-background: var(--search-background-dark-highcontrast);
-    --search-background-op: var(--search-background-light-op-highcontrast);
+    --search-background-op: var(--search-background-light-highcontrast);
     --overlay-color: var(--dark-overlay-highcontrast);
     --transparent-color: var(--dark-transparent-highcontrast);
     backdrop-filter: none !important;
@@ -160,7 +160,7 @@ body.high-contrast.light-theme {
     --modal-background: var(--modal-background-light-highcontrast);
     --modal-transparent: var(--modal-transparent-light-highcontrast);
     --search-background: var(--search-background-light-highcontrast);
-    --search-background-op: var(--search-background-dark-op-highcontrast);
+    --search-background-op: var(--search-background-dark-highcontrast);
     --overlay-color: var(--light-overlay-highcontrast);
     --transparent-color: var(--light-transparent-highcontrast);
     backdrop-filter: none !important;
@@ -522,7 +522,6 @@ input[type="color"]::-moz-color-swatch {
     mask-composite: source-in;
 
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-    text-shadow: var(--sun-shadow);
 }
 
 .clock .digit {
