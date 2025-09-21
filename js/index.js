@@ -4725,7 +4725,6 @@ function setupFontSelection() {
         if (colorSwitch.checked) {
             gradientSwitch.checked = false;
             glassSwitch.checked = false;
-            // Manually trigger the save for the gradient switch as well
             saveCurrentWallpaperSettings();
             syncUiStates();
         }
@@ -4735,7 +4734,6 @@ function setupFontSelection() {
         if (gradientSwitch.checked) {
             colorSwitch.checked = false;
             glassSwitch.checked = false;
-            // Manually trigger the save for the color switch as well
             saveCurrentWallpaperSettings();
             syncUiStates();
         }
@@ -4776,13 +4774,15 @@ function applyClockStyles() {
     infoElement.style.fontFamily = fontFamily;
 
     // Reset styles before applying new ones
+    clockElement.style.backgroundImage = 'none';
+    clockElement.style.color = ''; // Revert to stylesheet color
+    clockElement.classList.remove('glass-effect');
+    
+    infoElement.style.color = '';
+    infoElement.classList.remove('glass-effect');
+    
     clockElement.style.textShadow = 'none';
     infoElement.style.textShadow = 'none';
-    clockElement.style.backgroundImage = 'none';
-    clockElement.style.webkitBackgroundClip = 'unset';
-    clockElement.style.backgroundClip = 'unset';
-    clockElement.classList.remove('glass-effect');
-    infoElement.classList.remove('glass-effect');
 	
     // --- Apply styles based on priority: Glass > Gradient > Solid Color ---
     if (glassSwitch && glassSwitch.checked) {
