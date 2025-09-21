@@ -4601,7 +4601,7 @@ function syncUiStates() {
     document.getElementById('setting-wallpaper-contrast-fx').classList.toggle('active', document.getElementById('wallpaper-contrast-slider').value !== '100');
 
     // Sync special items
-    const isColorActive = document.getElementById('clock-color-switch').checked || document.getElementById('clock-gradient-switch').checked;
+    const isColorActive = document.getElementById('clock-color-switch').checked || document.getElementById('clock-gradient-switch').checked || document.getElementById('clock-glass-switch').checked;
     document.getElementById('setting-clock-color').classList.toggle('active', isColorActive);
     document.getElementById('setting-clock-shadow').classList.toggle('active', document.getElementById('clock-shadow-switch').checked);
 }
@@ -4640,6 +4640,7 @@ function setupFontSelection() {
     const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
     const gradientSwitch = document.getElementById('clock-gradient-switch');
     const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
+    const glassSwitch = document.getElementById('clock-glass-switch');
 
     // --- Function to save all settings (triggered by user interaction) ---
     function saveCurrentWallpaperSettings() {
@@ -4659,7 +4660,8 @@ function setupFontSelection() {
             shadowBlur: shadowBlurSlider.value,
             shadowColor: shadowColorPicker.value,
             gradientEnabled: gradientSwitch.checked,
-            gradientColor: gradientColorPicker.value
+            gradientColor: gradientColorPicker.value,
+            glassEnabled: glassSwitch.checked
         };
 
         // Save to individual localStorage keys for immediate use
@@ -4689,6 +4691,7 @@ function setupFontSelection() {
     shadowColorPicker.value = localStorage.getItem('shadowColor') || '#000000';
     gradientSwitch.checked = localStorage.getItem('gradientEnabled') === 'true';
     gradientColorPicker.value = localStorage.getItem('gradientColor') || '#ffffff';
+    glassSwitch.checked = localStorage.getItem('glassEnabled') === 'true';
     // Note: Blur, brightness, and contrast sliders are handled by their own setup logic, but it's safe to include here too.
     blurSlider.value = localStorage.getItem('wallpaperBlur') || '0';
     brightnessSlider.value = localStorage.getItem('wallpaperBrightness') || '100';
@@ -4704,7 +4707,7 @@ function setupFontSelection() {
     const allControls = [
         fontSelect, weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
         blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
-        shadowColorPicker, gradientSwitch, gradientColorPicker
+        shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch
     ];
 
     allControls.forEach(control => {
@@ -4722,6 +4725,7 @@ function setupFontSelection() {
     colorSwitch.addEventListener('change', () => {
         if (colorSwitch.checked) {
             gradientSwitch.checked = false;
+            glassSwitch.checked = false;
             // Manually trigger the save for the gradient switch as well
             saveCurrentWallpaperSettings();
             syncUiStates();
@@ -4731,7 +4735,17 @@ function setupFontSelection() {
     gradientSwitch.addEventListener('change', () => {
         if (gradientSwitch.checked) {
             colorSwitch.checked = false;
+            glassSwitch.checked = false;
             // Manually trigger the save for the color switch as well
+            saveCurrentWallpaperSettings();
+            syncUiStates();
+        }
+    });
+
+    glassSwitch.addEventListener('change', () => {
+        if (glassSwitch.checked) {
+            colorSwitch.checked = false;
+            gradientSwitch.checked = false;
             saveCurrentWallpaperSettings();
             syncUiStates();
         }
@@ -4751,6 +4765,7 @@ function applyClockStyles() {
     const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
     const gradientSwitch = document.getElementById('clock-gradient-switch');
     const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
+    const glassSwitch = document.getElementById('clock-glass-switch');
     
     if (!clockElement || !infoElement) return;
 
@@ -4767,6 +4782,7 @@ function applyClockStyles() {
     clockElement.style.backgroundImage = 'none';
     clockElement.style.webkitBackgroundClip = 'unset';
     clockElement.style.backgroundClip = 'unset';
+    clockElement.classList.remove('glass-effect');
     
     // Apply Text Shadow
     if (shadowSwitch && shadowSwitch.checked) {
@@ -4821,7 +4837,8 @@ function resetAndApplyDefaultClockStyles() {
         shadowBlur: '10',
         shadowColor: '#000000',
         gradientEnabled: false,
-        gradientColor: '#ffffff'
+        gradientColor: '#ffffff',
+        glassEnabled: false
     };
 
     // Update UI controls to their default values
@@ -4841,6 +4858,7 @@ function resetAndApplyDefaultClockStyles() {
     document.getElementById('clock-shadow-color-picker').value = defaultStyles.shadowColor;
     document.getElementById('clock-gradient-switch').checked = defaultStyles.gradientEnabled;
     document.getElementById('clock-gradient-color-picker').value = defaultStyles.gradientColor;
+    document.getElementById('clock-glass-switch').checked = defaultStyles.glassEnabled;
 
     // Update global state variables
     showSeconds = defaultStyles.showSeconds;
