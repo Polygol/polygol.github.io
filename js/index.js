@@ -4396,6 +4396,7 @@ function switchWallpaper(direction) {
         const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
         const gradientSwitch = document.getElementById('clock-gradient-switch');
         const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
+        const glassSwitch = document.getElementById('clock-glass-switch');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
         if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
@@ -4427,6 +4428,7 @@ function switchWallpaper(direction) {
         if (shadowColorPicker) shadowColorPicker.value = wallpaper.clockStyles.shadowColor || '#000000';
         if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
         if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
+        if (glassSwitch) glassSwitch.checked = wallpaper.clockStyles.glassEnabled || false;
         
         // Apply the styles
         applyClockStyles();
