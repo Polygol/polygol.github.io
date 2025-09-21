@@ -131,11 +131,6 @@
         const fileNameSpan = document.getElementById('file-name');
         const statusDiv = document.getElementById('status');
         const returnHomeBtn = document.getElementById('return-home');
-
-        const DB_SCHEMAS = {
-            'WallpaperDB': { version: 1, stores: ['wallpapers'] },
-            'GuraAIDB': { version: 1, stores: [{ name: 'ChatHistory', options: { keyPath: 'id', autoIncrement: true } }] }
-        };
         
         function logStatus(message, isError = false) {
             console.log(message);
@@ -177,29 +172,11 @@
         }
 
         // --- IndexedDB Utilities ---
-        function initDb(dbName) {
+        function openDb(dbName) {
             return new Promise((resolve, reject) => {
-                const schema = DB_SCHEMAS[dbName];
-                if (!schema) return reject(`No schema found for DB: ${dbName}`);
-
-                const request = indexedDB.open(dbName, schema.version);
+                const request = indexedDB.open(dbName);
                 request.onerror = () => reject(request.error);
                 request.onsuccess = () => resolve(request.result);
-                request.onupgradeneeded = event => {
-                    logStatus(`Upgrading/creating DB: ${dbName}`);
-                    const db = event.target.result;
-                    schema.stores.forEach(storeInfo => {
-                        if (typeof storeInfo === 'string') {
-                            if (!db.objectStoreNames.contains(storeInfo)) {
-                                db.createObjectStore(storeInfo);
-                            }
-                        } else {
-                             if (!db.objectStoreNames.contains(storeInfo.name)) {
-                                db.createObjectStore(storeInfo.name, storeInfo.options);
-                            }
-                        }
-                    });
-                };
             });
         }
 
@@ -228,7 +205,17 @@
                         }
                         keysRequest.onerror = reject;
                     } else {
-                        resolve(records);
+                        // For other DBs, try to get keys if a keyPath is not set
+                        const keysRequest = store.getAllKeys();
+                        keysRequest.onsuccess = () => {
+                             const keys = keysRequest.result;
+                             const keyedRecords = records.map((record, i) => ({
+                                 key: keys[i],
+                                 value: record
+                             }));
+                             resolve(keyedRecords);
+                        };
+                        keysRequest.onerror = reject;
                     }
                 };
                 request.onerror = reject;
@@ -247,26 +234,50 @@
                 }
                 logStatus('localStorage data collected.');
 
-                // 2. Gather IndexedDB data
+                // 2. Dynamically gather IndexedDB data
                 const indexedDbData = {};
-                for (const dbName of Object.keys(DB_SCHEMAS)) {
+                const dbs = await indexedDB.databases();
+                if (dbs.length === 0) {
+                     logStatus('No IndexedDB databases found to export.');
+                } else {
+                    logStatus(`Found ${dbs.length} databases to export...`);
+                }
+
+                for (const dbInfo of dbs) {
+                    const dbName = dbInfo.name;
                     try {
                         logStatus(`Accessing IndexedDB: ${dbName}...`);
-                        const db = await initDb(dbName);
-                        indexedDbData[dbName] = {};
-                        for (const storeName of db.objectStoreNames) {
-                            indexedDbData[dbName][storeName] = await getStoreData(db, storeName);
+                        const db = await openDb(dbName);
+                        indexedDbData[dbName] = {
+                            stores: {},
+                            storeInfo: []
+                        };
+                        const storeNames = Array.from(db.objectStoreNames);
+                        
+                        // Get schema info for import
+                        const tempTx = db.transaction(storeNames, 'readonly');
+                        for (const storeName of storeNames) {
+                             const store = tempTx.objectStore(storeName);
+                             indexedDbData[dbName].storeInfo.push({
+                                 name: store.name,
+                                 keyPath: store.keyPath,
+                                 autoIncrement: store.autoIncrement
+                             });
+                        }
+
+                        for (const storeName of storeNames) {
+                            indexedDbData[dbName].stores[storeName] = await getStoreData(db, storeName);
                         }
                         db.close();
                     } catch (dbError) {
-                        logStatus(`Could not access DB: ${dbName}. It may not exist. Skipping.`, true);
+                        logStatus(`Could not access or read DB: ${dbName}. Skipping. Error: ${dbError.message}`, true);
                     }
                 }
                 logStatus('IndexedDB data collected.');
 
                 // 3. Package and download
                 const transferData = {
-                    gurasuraisu_transfer_version: "1.0",
+                    gurasuraisu_transfer_version: "1.1", // Version bump for new structure
                     export_timestamp: new Date().toISOString(),
                     data: {
                         localStorage: localStorageData,
@@ -275,7 +286,7 @@
                 };
 
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const fileName = `gurasuraisu_transfer_${timestamp}.guradata`;
+                const fileName = `polygol_transfer_${timestamp}.guradata`;
                 downloadFile(JSON.stringify(transferData, null, 2), fileName, 'application/json');
 
                 logStatus(`Export successful! File '${fileName}' is downloading.`);
@@ -313,16 +324,17 @@
                     
                     const { localStorage: lsData, indexedDB: idbData } = transferData.data;
 
-                    // 1. Clear existing localStorage and IndexedDB data
+                    // 1. Clear existing localStorage and all detected IndexedDB data
                     logStatus('Clearing current system data...');
                     localStorage.clear();
-                    // This now also deletes the entire DB, ensuring a clean slate.
-                    for (const dbName of Object.keys(DB_SCHEMAS)) {
+                    const currentDBs = await indexedDB.databases();
+                    for (const dbInfo of currentDBs) {
                         await new Promise((resolve, reject) => {
-                           const req = indexedDB.deleteDatabase(dbName);
+                           logStatus(`Deleting old database: ${dbInfo.name}`);
+                           const req = indexedDB.deleteDatabase(dbInfo.name);
                            req.onsuccess = resolve;
                            req.onerror = reject;
-                           req.onblocked = () => logStatus(`Deletion of ${dbName} is blocked. Please close other Polygol tabs.`);
+                           req.onblocked = () => logStatus(`Deletion of ${dbInfo.name} is blocked. Please close other Polygol tabs.`);
                         });
                     }
                     logStatus('Current data cleared.');
@@ -337,31 +349,46 @@
                     // 3. Restore IndexedDB
                     logStatus('Restoring databases...');
                     for (const dbName in idbData) {
-                        // Use the corrected initDb to ensure schema is created
-                        const db = await initDb(dbName); 
+                        const dbData = idbData[dbName];
+                        // Open DB with a new version to trigger creation
+                        const request = indexedDB.open(dbName, Date.now()); 
                         
-                        for (const storeName in idbData[dbName]) {
-                            const tx = db.transaction(storeName, 'readwrite');
+                        request.onupgradeneeded = (event) => {
+                            const db = event.target.result;
+                            dbData.storeInfo.forEach(sInfo => {
+                                if (!db.objectStoreNames.contains(sInfo.name)) {
+                                    const options = {};
+                                    if(sInfo.keyPath) options.keyPath = sInfo.keyPath;
+                                    if(sInfo.autoIncrement) options.autoIncrement = sInfo.autoIncrement;
+                                    db.createObjectStore(sInfo.name, options);
+                                }
+                            });
+                        };
+                        
+                        const db = await new Promise((resolve, reject) => {
+                            request.onsuccess = () => resolve(request.result);
+                            request.onerror = () => reject(request.error);
+                        });
+
+                        const storeNames = Object.keys(dbData.stores);
+                        const tx = db.transaction(storeNames, 'readwrite');
+                        for (const storeName of storeNames) {
                             const store = tx.objectStore(storeName);
-                            const records = idbData[dbName][storeName];
+                            const records = dbData.stores[storeName];
                             
                             for (const record of records) {
-                                if (dbName === 'WallpaperDB' && storeName === 'wallpapers') {
-                                    let valueToStore = record.value;
-                                    if (valueToStore.base64) {
-                                        valueToStore.blob = base64ToBlob(valueToStore.base64);
-                                        delete valueToStore.base64;
-                                    }
-                                    store.put(valueToStore, record.key);
-                                } else {
-                                    store.put(record);
+                                let valueToStore = record.value;
+                                if (dbName === 'WallpaperDB' && storeName === 'wallpapers' && valueToStore.base64) {
+                                    valueToStore.blob = base64ToBlob(valueToStore.base64);
+                                    delete valueToStore.base64;
                                 }
+                                store.put(valueToStore, record.key);
                             }
-                             await new Promise((resolve, reject) => {
-                                tx.oncomplete = resolve;
-                                tx.onerror = () => reject(tx.error);
-                            });
                         }
+                        await new Promise((resolve, reject) => {
+                            tx.oncomplete = resolve;
+                            tx.onerror = () => reject(tx.error);
+                        });
                         db.close();
                     }
                     logStatus('Databases restored.');
