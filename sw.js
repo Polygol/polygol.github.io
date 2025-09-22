@@ -1,4 +1,4 @@
-const CACHE_NAME = 'polygol-cache-v3'; // Bump version for new SW logic
+const CACHE_NAME = 'polygol-cache-v4'; // Bump version for new SW logic
 
 const ASSETS_TO_CACHE = [
   '/',
@@ -42,26 +42,18 @@ const ASSETS_TO_CACHE = [
   'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0',
 ];
 
-// INSTALL: Cache assets. The new SW will wait to be activated.
+// INSTALL: Cache all assets. This now uses a single, simpler call.
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('[SW] Caching core assets for new version.');
-        const localAssets = ASSETS_TO_CACHE.filter(url => !url.startsWith('http'));
-        const externalAssets = ASSETS_TO_CACHE.filter(url => url.startsWith('http'));
-        
-        const localCachePromise = cache.addAll(localAssets).catch(err => {
-            console.warn('[SW] Failed to cache one or more local assets during install.', err);
-        });
-
-        const externalCachePromises = externalAssets.map(url => {
-            return fetch(url, { mode: 'no-cors' })
-                .then(response => cache.put(url, response))
-                .catch(err => console.warn(`[SW] Failed to cache external asset during install: ${url}`, err));
-        });
-
-        return Promise.allSettled([localCachePromise, ...externalCachePromises]);
+        // THE FIX: Use cache.addAll for the entire list.
+        // It correctly handles CORS requests for cross-origin assets like fonts.
+        return cache.addAll(ASSETS_TO_CACHE);
+      })
+      .catch(err => {
+        console.error('[SW] Core asset caching failed:', err);
       })
   );
 });
@@ -99,13 +91,11 @@ self.addEventListener('message', event => {
             console.log(`[SW] Caching ${filesToCache.length} files for new app.`);
             event.waitUntil(
                 caches.open(CACHE_NAME).then(cache => {
-                    const cachePromises = filesToCache.map(url => {
-                        return fetch(url, { mode: 'no-cors' })
-                            .then(response => cache.put(url, response))
-                            .catch(err => console.warn(`[SW] Failed to cache file: ${url}`, err));
-                    });
-                    return Promise.allSettled(cachePromises)
-                        .then(() => console.log('[SW] App caching complete.'));
+                    // THE FIX: Use cache.addAll here as well for simplicity and correctness.
+                    // This attempts a standard CORS request for each file.
+                    return cache.addAll(filesToCache)
+                        .then(() => console.log('[SW] App caching complete.'))
+                        .catch(err => console.warn(`[SW] Failed to cache one or more app files. The app may not work offline.`, err));
                 })
             );
         }
