@@ -6452,14 +6452,6 @@ function setupDrawerInteractions() {
 const appDrawerObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            
-        }
-    });
-});
-
-const appDrawerObserver = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
             const isNowOpen = appDrawer.classList.contains('open');
             // Check previous state to see if it changed
             const wasOpen = mutation.oldValue ? mutation.oldValue.includes('open') : false;
