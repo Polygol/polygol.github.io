@@ -6065,7 +6065,7 @@ function setupDrawerInteractions() {
 	        
 	        if (isCloseSwipe) {
 	            // Animate to a shrunken state and then minimize
-	            openEmbed.style.transform = 'translateY(0px) scale(0.8)'; // Center and shrink
+	            openEmbed.style.transform = 'translateY(-40px) scale(0.85)'; // Animate upwards and shrink
 	            openEmbed.style.opacity = '0';
 	            openEmbed.style.borderRadius = '25px';
 
@@ -6089,7 +6089,6 @@ function setupDrawerInteractions() {
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
-
 	        } else if (isDockSwipe) {
                 // Show dock on small swipe up from in-app
                 openEmbed.style.transform = 'translateY(0px) scale(1)'; // Snap back to fullscreen
@@ -6098,10 +6097,20 @@ function setupDrawerInteractions() {
                 openEmbed.style.border = '0 solid var(--glass-border)';
 
                 dock.style.display = 'flex';
+                dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
                 requestAnimationFrame(() => { dock.classList.add('show'); });
                 
                 if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                dockHideTimeout = setTimeout(() => { dock.classList.remove('show'); }, 4000);
+                dockHideTimeout = setTimeout(() => {
+                    dock.classList.remove('show');
+                    dock.style.boxShadow = 'none';
+                    // Add a second timeout to set display to none after the transition
+                    setTimeout(() => {
+                         if (!dock.classList.contains('show')) {
+                             dock.style.display = 'none';
+                         }
+                    }, 300);
+                }, 4000); // 4 seconds to auto-hide
             } else {
 	            // Animate back to the original fullscreen state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
@@ -6143,6 +6152,7 @@ function setupDrawerInteractions() {
 	                dock.classList.add('show');
 	                dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
 	            });
+	            drawerPill.style.opacity = '0';
 	            appDrawer.style.bottom = '-100%';
 	            appDrawer.style.opacity = '0';
 	            appDrawer.classList.remove('open');
