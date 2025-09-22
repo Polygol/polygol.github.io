@@ -5910,26 +5910,33 @@ function setupDrawerInteractions() {
 	    if (openEmbed) {
 	        // LOGIC FOR FINISHING AN APP DRAG
 	        // Add transitions for the snap-back or close animation
-	        openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
+	        openEmbed.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0.38, 0.9), opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
 	
 	        // Condition to close: swipe up more than 20% of the screen OR a fast flick up
 	        if (movementPercentage > 20 || isFlickUp) {
-	            // Animate to a shrunken state and then minimize
-	            openEmbed.style.transform = 'translateY(-40px) scale(0.8)'; // Center and shrink
-	            openEmbed.style.opacity = '0';
-	            openEmbed.style.borderRadius = '25px';
-	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+	            // --- NEW TWO-PART ANIMATION ---
+                // 1. First, animate the app UP slightly.
+                openEmbed.style.transform = 'translateY(-40px) scale(1)';
+                openEmbed.style.opacity = '0.5'; // Start fading slightly
 
-                // NEW: Revert background effects on close
+                // Revert background effects immediately
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
+
+                // 2. After a short delay, animate it DOWN to its final minimized state.
+                setTimeout(() => {
+                    openEmbed.style.transform = 'translateY(0px) scale(0.8)';
+                    openEmbed.style.opacity = '0';
+                    openEmbed.style.borderRadius = '25px';
+                }, 50); // 50ms delay creates the two-step effect
 	
+	            // 3. After the main animation finishes, clean up.
 	            setTimeout(() => {
 	                minimizeFullscreenEmbed();
 	                swipeOverlay.style.display = 'none';
 	                swipeOverlay.style.pointerEvents = 'none';
 	                openEmbed.style.border = '0 solid var(--glass-border)'; // Clean up border after animation
-	            }, 300);
+	            }, 350); // Increased delay to account for the full animation
 	
 	            // Reset drawer & dock state
 	            dock.classList.remove('show');
