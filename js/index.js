@@ -3248,7 +3248,7 @@ function updateGurappsVisibility() {
     
     if (gurappsEnabled) {
         // Show Gurapps elements
-        if (drawerHandle) drawerHandle.style.display = "block";
+        if (drawerHandle) drawerHandle.style.display = "flex";
         if (dock) dock.classList.remove("permanently-hidden");
         
         // Reset app functionality
