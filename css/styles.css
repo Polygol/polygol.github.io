@@ -390,12 +390,16 @@ input[type="color"]::-moz-color-swatch {
     );
 }
 
-.drawer-handle:active .drawer-pill {
+.drawer-handle:active .nav-pill {
     transform: translateX(-50%) scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
 
 .drawer-pill {
+	padding: 10px;
+}
+
+.nav-pill {
     position: absolute;
     bottom: 10px;
     left: 50%;
