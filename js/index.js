@@ -5217,6 +5217,31 @@ async function deleteApp(appName) {
     }
 }
 
+function hideMainUI() {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+        if (!el.dataset.originalDisplay) {
+            el.dataset.originalDisplay = window.getComputedStyle(el).display;
+        }
+        el.style.transition = 'opacity 0.3s ease';
+        el.style.opacity = '0';
+        setTimeout(() => {
+            el.classList.add('force-hide');
+        }, 300);
+    });
+}
+
+function showMainUI() {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+	el.classList.remove('force-hide');
+        el.style.display = el.dataset.originalDisplay || ''; // Revert to original or default
+        el.style.transition = 'opacity 0.3s ease';
+
+        requestAnimationFrame(() => {
+            el.style.opacity = '1';
+        });
+    });
+}
+
 function createFullscreenEmbed(url) {
     // 1. Check if Gurapps are disabled entirely
     // This uses the 'gurappsEnabled' variable you already have.
@@ -5419,16 +5444,7 @@ function createFullscreenEmbed(url) {
     });
     
     // Hide all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-        if (!el.dataset.originalDisplay) {
-            el.dataset.originalDisplay = window.getComputedStyle(el).display;
-        }
-        el.style.transition = 'opacity 0.3s ease';
-        el.style.opacity = '0';
-        setTimeout(() => {
-            el.classList.add('force-hide');
-        }, 300);
-    });
+    hideMainUI();
 	
     // Append the container to the DOM
     document.body.appendChild(embedContainer);
@@ -5490,9 +5506,15 @@ function initiateSplitView(existingEmbed, newAppUrl) {
 
     // 1. Configure existing app (App 1)
     const app1 = existingEmbed;
+    
+    // Reset any in-flight animation/drag styles before repositioning
+    app1.style.transform = 'none';
+    app1.style.opacity = '1';
+    app1.style.borderRadius = '0px';
+
     app1.style.transition = 'width 0.3s ease, left 0.3s ease, border-radius 0.3s ease';
     app1.style.width = '50%';
-    app1.style.position = 'absolute'; // Ensure positioning is correct
+    app1.style.position = 'absolute';
     app1.style.left = '0';
     app1.style.borderRadius = '0';
     app1.style.transform = 'none';
@@ -5654,15 +5676,7 @@ function minimizeFullscreenEmbed() {
     }
     
     // Restore all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-	el.classList.remove('force-hide');
-        el.style.display = el.dataset.originalDisplay;
-        el.style.transition = 'opacity 0.3s ease';
-
-        requestAnimationFrame(() => {
-            el.style.opacity = '1';
-        });
-    });
+    showMainUI();
     
     // Hide all fullscreen embeds that are not being displayed
     document.querySelectorAll('.fullscreen-embed:not([style*="display: block"])').forEach(embed => {
@@ -6096,12 +6110,14 @@ function setupDrawerInteractions() {
 
                 dock.style.display = 'flex';
                 dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
+                drawerPill.style.opacity = '0';
                 requestAnimationFrame(() => { dock.classList.add('show'); });
                 
                 if (dockHideTimeout) clearTimeout(dockHideTimeout);
                 dockHideTimeout = setTimeout(() => {
                     dock.classList.remove('show');
                     dock.style.boxShadow = 'none';
+                    drawerPill.style.opacity = '1';
                     // Add a second timeout to set display to none after the transition
                     setTimeout(() => {
                          if (!dock.classList.contains('show')) {
@@ -6150,25 +6166,12 @@ function setupDrawerInteractions() {
 	                dock.classList.add('show');
 	                dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
 	            });
-	            drawerPill.style.opacity = '0';
+	            drawerPill.style.opacity = '0'; // Hide the pill
 	            appDrawer.style.bottom = '-100%';
 	            appDrawer.style.opacity = '0';
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
-                // Revert background effects
-                applyWallpaperEffects();
-                document.body.style.setProperty('--bg-transform-scale', '1.05');				
-			    // Restore all main UI elements
-			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-				el.classList.remove('force-hide');
-			        el.style.display = el.dataset.originalDisplay;
-			        el.style.transition = 'opacity 0.3s ease';
-			
-			        requestAnimationFrame(() => {
-			            el.style.opacity = '1';
-			        });
-			    });
 	        } else if (isSignificantSwipe) {
 	            dock.classList.remove('show');
 	            dock.style.boxShadow = 'none';
@@ -6179,43 +6182,17 @@ function setupDrawerInteractions() {
 	            appDrawer.classList.add('open');
 	            initialDrawerPosition = 0;
 	            interactionBlocker.style.display = 'none';
-                // Revert background effects
-                applyWallpaperEffects();
-                document.body.style.setProperty('--bg-transform-scale', '1.05');
-				// Hide UI elements
-				document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-			        if (!el.dataset.originalDisplay) {
-			            el.dataset.originalDisplay = window.getComputedStyle(el).display;
-			        }
-			        el.style.transition = 'opacity 0.3s ease';
-			        el.style.opacity = '0';
-			        setTimeout(() => {
-			            el.classList.add('force-hide');
-			        }, 300);
-			    });
 	        } else {
 	            dock.classList.remove('show');
 	            dock.style.boxShadow = 'none';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
 	            dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
+	            drawerPill.style.opacity = '1'; // Ensure pill is visible when dock is hidden
 	            appDrawer.style.bottom = '-100%';
 	            appDrawer.style.opacity = '0';
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
-                // Revert background effects
-                applyWallpaperEffects();
-                document.body.style.setProperty('--bg-transform-scale', '1.05');
-				// Restore all main UI elements
-			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-				el.classList.remove('force-hide');
-			        el.style.display = el.dataset.originalDisplay;
-			        el.style.transition = 'opacity 0.3s ease';
-			
-			        requestAnimationFrame(() => {
-			            el.style.opacity = '1';
-			        });
-			    });
 	        }
 	        
 	        swipeOverlay.style.display = 'none';
@@ -6480,8 +6457,29 @@ const appDrawerObserver = new MutationObserver((mutations) => {
     });
 });
 
+const appDrawerObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const isNowOpen = appDrawer.classList.contains('open');
+            // Check previous state to see if it changed
+            const wasOpen = mutation.oldValue ? mutation.oldValue.includes('open') : false;
+
+            if (isNowOpen && !wasOpen) {
+                hideMainUI();
+            } else if (!isNowOpen && wasOpen) {
+                // Only show the UI if an app isn't currently open fullscreen
+                const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+                if (!openEmbed) {
+                    showMainUI();
+                }
+            }
+        }
+    });
+});
+
 appDrawerObserver.observe(appDrawer, {
-    attributes: true
+    attributes: true,
+    attributeOldValue: true // Required to check the previous state
 });
 
 function blackoutScreen() {
