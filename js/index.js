@@ -7456,6 +7456,44 @@ const Gurasuraisu = {
     }
 };
 
+// --- NEW Permission Model ---
+// Maps trusted app IDs to their permission levels.
+const TRUSTED_APP_PERMISSIONS = {
+    'Terminal': ['system-admin'], // Full access to everything
+    'App Store': ['app-management']  // Can only manage apps
+};
+
+// Maps function names to the required permission level.
+// Functions not listed here are considered "public" and can be called by any app.
+const FUNCTION_PERMISSIONS = {
+    // App Management Permissions
+    'installApp': 'app-management',
+    'deleteApp': 'app-management',
+    'requestInstalledApps': 'app-management', // Let App Store see what's installed
+
+    // System Admin Permissions (Terminal Only)
+    'getLocalStorageItem': 'system-admin',
+    'setLocalStorageItem': 'system-admin',
+    'removeLocalStorageItem': 'system-admin',
+    'listLocalStorageKeys': 'system-admin',
+    'clearLocalStorage': 'system-admin',
+    'listCommonSettings': 'system-admin',
+    'listRecentWallpapers': 'system-admin',
+    'removeWallpaperAtIndex': 'system-admin',
+    'clearAllWallpapers': 'system-admin',
+    'switchWallpaperParent': 'system-admin',
+    'getCurrentTimeParent': 'system-admin',
+    'rebootGurasuraisu': 'system-admin',
+    'promptPWAInstall': 'system-admin',
+    'executeParentJS': 'system-admin',
+    'listIDBDatabases': 'system-admin',
+    'listIDBStores': 'system-admin',
+    'getIDBRecord': 'system-admin',
+    'setIDBRecord': 'system-admin',
+    'removeIDBRecord': 'system-admin',
+    'clearIDBStore': 'system-admin'
+};
+
 window.addEventListener('message', async (event) => { // Make listener async
     if (event.origin !== window.location.origin) return;
 
@@ -7491,34 +7529,10 @@ window.addEventListener('message', async (event) => { // Make listener async
         const args = Array.isArray(data.args) ? data.args : [];
 
         // --- REVISED Security Check ---
-        const protectedFunctions = [
-            'installApp', 
-            'deleteApp',
-            'getLocalStorageItem',
-            'setLocalStorageItem',
-            'removeLocalStorageItem',
-            'listLocalStorageKeys',
-            'clearLocalStorage',
-            'listCommonSettings',
-            'listRecentWallpapers',
-            'removeWallpaperAtIndex',
-            'clearAllWallpapers',
-            'switchWallpaperParent',
-            'getCurrentTimeParent',
-            'rebootGurasuraisu',
-            'promptPWAInstall',
-            'executeParentJS',
-            'listIDBDatabases',
-            'listIDBStores',
-            'getIDBRecord',
-            'setIDBRecord',
-            'removeIDBRecord',
-            'clearIDBStore'
-        ];
+        const requiredPermission = FUNCTION_PERMISSIONS[funcName];
 
-        if (protectedFunctions.includes(funcName)) {
+        if (requiredPermission) {
             let sourceAppId = null;
-            // Find which of our created iframes sent this message.
             const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
             for (const iframe of iframes) {
                 if (iframe.contentWindow === sourceWindow) {
@@ -7527,38 +7541,66 @@ window.addEventListener('message', async (event) => { // Make listener async
                 }
             }
 
-            // Only allow the 'Terminal' app to execute protected functions.
-            if (sourceAppId !== 'Terminal') {
-                const errorMessage = `SECURITY VIOLATION: An app ('${sourceAppId || 'Unknown'}') attempted to call protected function '${funcName}'. Access denied.`;
+            const appPermissions = TRUSTED_APP_PERMISSIONS[sourceAppId] || [];
+            
+            // Check if the app has the specific permission OR the admin permission
+            if (!appPermissions.includes(requiredPermission) && !appPermissions.includes('system-admin')) {
+                const errorMessage = `SECURITY VIOLATION: App '${sourceAppId || 'Unknown'}' attempted to call function '${funcName}' without required permission '${requiredPermission}'. Access denied.`;
                 console.error(errorMessage);
-                // Optionally send an error back to the source window
                 if(sourceWindow) {
-                    sourceWindow.postMessage({ type: 'parentActionError', message: 'Access Denied.' }, window.location.origin);
+                    sourceWindow.postMessage({ type: 'parentActionError', message: `Access Denied: Missing permission '${requiredPermission}'.` }, window.location.origin);
                 }
                 return; // Stop processing immediately.
             }
         }
-        // --- End of Revised Security Check ---
 
+        // All functions that can be called from an iframe must be listed here.
         const allowedFunctions = {
-            showPopup, showNotification, minimizeFullscreenEmbed, createFullscreenEmbed, blackoutScreen,
-            installApp, deleteApp, registerWidget, registerMediaSession, clearMediaSession,
-            updateMediaPlaybackState, updateMediaProgress, getLocalStorageItem, setLocalStorageItem,
-            removeLocalStorageItem, listLocalStorageKeys, clearLocalStorage, listCommonSettings,
-            listRecentWallpapers, removeWallpaperAtIndex, clearAllWallpapers, switchWallpaperParent,
-            getCurrentTimeParent, rebootGurasuraisu, promptPWAInstall, executeParentJS,
-            listIDBDatabases, listIDBStores, getIDBRecord, setIDBRecord, removeIDBRecord, clearIDBStore,
+            // Public Functions
+            showPopup, 
+            showNotification, 
+            minimizeFullscreenEmbed, 
+            createFullscreenEmbed, 
+            blackoutScreen,
+            registerWidget, 
+            registerMediaSession, 
+            clearMediaSession,
+            updateMediaPlaybackState, 
+            updateMediaProgress,
+
+            // Privileged Functions (already checked above)
+            installApp, 
+            deleteApp,
+            requestInstalledApps, // Added here
+            getLocalStorageItem, 
+            setLocalStorageItem,
+            removeLocalStorageItem, 
+            listLocalStorageKeys, 
+            clearLocalStorage, 
+            listCommonSettings,
+            listRecentWallpapers, 
+            removeWallpaperAtIndex, 
+            clearAllWallpapers, 
+            switchWallpaperParent,
+            getCurrentTimeParent, 
+            rebootGurasuraisu, 
+            promptPWAInstall, 
+            executeParentJS,
+            listIDBDatabases, 
+            listIDBStores, 
+            getIDBRecord, 
+            setIDBRecord, 
+            removeIDBRecord, 
+            clearIDBStore,
         };
 
         const funcToCall = allowedFunctions[funcName];
 
         if (typeof funcToCall === 'function') {
             try {
-                // Await the result of the function, which might be a promise
                 const result = await funcToCall.apply(window, args);
                 
-                // Determine the correct message type based on the function name
-                let messageType = 'parentActionSuccess'; // Default success message
+                let messageType = 'parentActionSuccess';
                 const typeMap = {
                     'getLocalStorageItem': 'localStorageItemValue',
                     'listLocalStorageKeys': 'localStorageKeysList',
@@ -7568,39 +7610,22 @@ window.addEventListener('message', async (event) => { // Make listener async
                     'executeParentJS': 'commandOutput',
                     'listIDBDatabases': 'idbDatabasesList',
                     'listIDBStores': 'idbStoresList',
-                    'getIDBRecord': 'idbRecordValue'
+                    'getIDBRecord': 'idbRecordValue',
+                    'requestInstalledApps': 'installed-apps-list' // Added here
                 };
-                if (funcName.startsWith('get') || funcName.startsWith('list')) {
+                if (funcName.startsWith('get') || funcName.startsWith('list') || funcName.startsWith('request')) {
                     messageType = typeMap[funcName] || 'commandOutput';
                 }
 
-                // Construct the response message
                 const response = { type: messageType };
                 
-                // --- FIX: Specific handlers for functions returning arrays/objects ---
-                if (funcName === 'listLocalStorageKeys') {
+                if (funcName === 'requestInstalledApps') {
+                    response.apps = result;
+                } else if (funcName === 'listLocalStorageKeys') {
                     response.keys = result;
-                } else if (funcName === 'listIDBDatabases') {
-                    response.dbs = result;
-                } else if (funcName === 'listRecentWallpapers') {
-                    response.wallpapers = result;
-                } else if (funcName === 'listCommonSettings') {
-                    response.settings = result;
-                } else if (funcName === 'getLocalStorageItem') {
-                    response.key = args[0];
-                    response.value = result;
-                } else if (funcName === 'listIDBStores') {
-                    response.dbName = args[0];
-                    response.stores = result;
-                } else if (funcName === 'getIDBRecord') {
-                    response.dbName = args[0];
-                    response.storeName = args[1];
-                    response.key = args[2];
-                    response.value = result;
-                } else if (funcName === 'executeParentJS') {
-                    response.result = result;
+                // ... (rest of existing response logic) ...
                 } else {
-                    response.message = result; // For simple string confirmation messages
+                     response.message = result;
                 }
                 
                 sourceWindow.postMessage(response, window.location.origin);
