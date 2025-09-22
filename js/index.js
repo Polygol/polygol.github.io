@@ -5552,10 +5552,10 @@ function initiateSplitView(existingEmbed, newAppUrl) {
     // 4. Setup interaction listeners
     setupSplitViewResizing(app1, app2, splitViewDivider, closeArea);
 
-    // FIX: Show the swipe overlay specifically for the close area gesture
+    // FIX: The swipe overlay should cover the entire split view area to catch swipe-to-home gestures
     if (swipeOverlay) {
         swipeOverlay.style.display = 'block';
-        swipeOverlay.style.height = '40px'; // Only cover the close area
+        swipeOverlay.style.height = '100%'; 
     }
 }
 
@@ -5624,8 +5624,28 @@ function endSplitView(appToKeepFullscreen = null) {
     
     const appsInSplit = Array.from(splitViewContainer.querySelectorAll('.fullscreen-embed'));
     
-    if (appToKeepFullscreen) {
-        // Logic to keep one app fullscreen
+    // Going home, so animate both apps away
+    if (!appToKeepFullscreen) {
+        appsInSplit.forEach(app => {
+            app.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+            // Use the same animation as the single-app close gesture
+            app.style.transform = 'translateY(-40px) scale(0.85)';
+            app.style.opacity = '0';
+            app.style.borderRadius = '25px';
+        });
+
+        // Use a timeout to clean up after the animation completes
+        setTimeout(() => {
+            appsInSplit.forEach(app => {
+                const url = app.dataset.embedUrl;
+                if (url) minimizedEmbeds[url] = app;
+                app.style.display = 'none';
+                document.body.appendChild(app); // Move back to body for later recall
+            });
+            showMainUI();
+        }, 300);
+    } else {
+        // This part handles snapping one app to fullscreen
         appsInSplit.forEach(app => {
             if (app === appToKeepFullscreen) {
                 document.body.appendChild(app);
@@ -5634,37 +5654,18 @@ function endSplitView(appToKeepFullscreen = null) {
                 app.style.left = '0';
                 if (swipeOverlay) {
                     swipeOverlay.style.display = 'block';
-                    swipeOverlay.style.height = '100%';
+                    swipeOverlay.style.height = '100%'; // Full height for single app
                 }
             } else {
-                // Minimize the other app
                 const url = app.dataset.embedUrl;
                 if (url) minimizedEmbeds[url] = app;
                 app.style.display = 'none';
                 document.body.appendChild(app);
             }
         });
-    } else {
-        // FIX: Animate BOTH apps away when going home
-        appsInSplit.forEach(app => {
-            app.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
-            app.style.transform = 'translateY(-100px) scale(0.85)';
-            app.style.opacity = '0';
-            app.style.borderRadius = '25px';
-        });
-
-        setTimeout(() => {
-            appsInSplit.forEach(app => {
-                const url = app.dataset.embedUrl;
-                if (url) minimizedEmbeds[url] = app;
-                app.style.display = 'none';
-                document.body.appendChild(app);
-            });
-            showMainUI();
-        }, 300);
     }
 
-    splitViewContainer.innerHTML = ''; // Clear the container
+    splitViewContainer.innerHTML = '';
     splitViewContainer.style.display = 'none';
     isSplitViewActive = false;
 }
@@ -6086,11 +6087,11 @@ function setupDrawerInteractions() {
 	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
 	    
         if (isSplitViewActive) {
-            endSplitView(null);
+            // This is now handled by the swipeOverlay listener below
             isDragging = false;
             return;
         }
-
+		
 	    if (openEmbed) {
 	        openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
 	
@@ -6098,8 +6099,8 @@ function setupDrawerInteractions() {
             const isDockSwipe = movementPercentage > 2.5 && !isCloseSwipe;
 	        
 	        if (isCloseSwipe) {
-	            // FIX: Use a more dramatic upward motion for a consistent feel
-	            openEmbed.style.transform = 'translateY(-200px) scale(0.8)';
+	            // FIX: Match the flick animation with the long swipe animation
+	            openEmbed.style.transform = 'translateY(-40px) scale(0.85)';
 	            openEmbed.style.opacity = '0';
 	            openEmbed.style.borderRadius = '25px';
 
@@ -6131,24 +6132,14 @@ function setupDrawerInteractions() {
                 drawerPill.style.opacity = '0';
                 requestAnimationFrame(() => { dock.classList.add('show'); });
                 
-                // FIX: Properly disable the swipe overlay so the app can be used
-                if (swipeOverlay) {
-                    swipeOverlay.style.display = 'none';
-                    swipeOverlay.style.pointerEvents = 'none';
-                }
-                
                 if (dockHideTimeout) clearTimeout(dockHideTimeout);
                 dockHideTimeout = setTimeout(() => {
                     dock.classList.remove('show');
-                    // Re-enable the swipe overlay after the dock auto-hides
-                    if (swipeOverlay) {
-                       swipeOverlay.style.display = 'block';
-                       swipeOverlay.style.pointerEvents = 'auto';
-                    }
+                    dock.style.boxShadow = 'none';
+                    drawerPill.style.opacity = '1';
                     setTimeout(() => {
                          if (!dock.classList.contains('show')) {
                              dock.style.display = 'none';
-                             drawerPill.style.opacity = '1';
                          }
                     }, 300);
                 }, 4000);
@@ -6272,16 +6263,13 @@ function setupDrawerInteractions() {
             }
         }, { passive: false });
         
-        swipeOverlay.addEventListener('touchend', () => {
-	    cancelLongPress();
-		
+        swipeOverlay.addEventListener('touchend', (e) => {
+            cancelLongPress();
             if (isInSwipeMode) {
-                // FIX: Check if we are in split view and handle it specifically
-                if (isSplitViewActive) {
-                    const deltaY = touchStartY - lastY; // 'lastY' is updated in moveDrawer
-                    if (deltaY > 50) { // Check for swipe up on close area
-                        endSplitView(null);
-                    }
+                // Get final position for swipe check
+                const endY = e.changedTouches[0].clientY;
+                if (isSplitViewActive && (touchStartY - endY > 50)) {
+                    endSplitView(null); // Explicitly go home on swipe up
                 } else {
                     endDrag();
                 }
@@ -6314,11 +6302,14 @@ function setupDrawerInteractions() {
             }
         });
         
-        swipeOverlay.addEventListener('mouseup', () => {
+        swipeOverlay.addEventListener('mouseup', (e) => {
             cancelLongPress();
-		
             if (isInSwipeMode) {
-                endDrag();
+                if (isSplitViewActive && (touchStartY - e.clientY > 50)) {
+                     endSplitView(null); // Explicitly go home on swipe up
+                } else {
+                    endDrag();
+                }
                 isInSwipeMode = false;
             }
         });
