@@ -5507,14 +5507,18 @@ function initiateSplitView(existingEmbed, newAppUrl) {
     // 1. Configure existing app (App 1)
     const app1 = existingEmbed;
     
-    // Reset any in-flight animation/drag styles before repositioning
+    // FIX: Forcefully reset any in-flight animation/drag styles before repositioning
+    app1.style.transition = 'none'; // Temporarily disable transitions
     app1.style.transform = 'none';
     app1.style.opacity = '1';
     app1.style.borderRadius = '0px';
+    // Force reflow to apply the reset styles immediately
+    void app1.offsetWidth; 
 
+    // Now re-apply transitions for the split-screen animation
     app1.style.transition = 'width 0.3s ease, left 0.3s ease, border-radius 0.3s ease';
     app1.style.width = '50%';
-    app1.style.position = 'absolute';
+    app1.style.position = 'absolute'; // Ensure positioning is correct
     app1.style.left = '0';
     app1.style.borderRadius = '0';
     app1.style.transform = 'none';
@@ -5570,7 +5574,7 @@ function setupSplitViewResizing(app1, app2, divider, closeArea) {
         if (!isResizing) return;
         e.preventDefault();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const parentWidth = splitViewContainer.offsetWidth;
+        const parentWidth = document.getElementById('split-view-container').offsetWidth; // FIX: Get element by ID
         const newX = Math.max(150, Math.min(clientX, parentWidth - 150)); // Min app width
         const newPercentage = (newX / parentWidth) * 100;
 
@@ -5615,7 +5619,7 @@ function setupSplitViewResizing(app1, app2, divider, closeArea) {
 function endSplitView(appToKeepFullscreen = null) {
     if (!isSplitViewActive) return;
     
-    const appsInSplit = Array.from(splitViewContainer.querySelectorAll('.fullscreen-embed'));
+    const splitViewContainer = document.getElementById('split-view-container'); // FIX: Get element by ID
     
     appsInSplit.forEach(app => {
         if (app === appToKeepFullscreen) {
@@ -6226,6 +6230,8 @@ function setupDrawerInteractions() {
         }, { passive: true });
         
         swipeOverlay.addEventListener('touchstart', (e) => {
+            // FIX: check if already dragging before starting a new one
+            if (isDragging) return;
             touchStartY = e.touches[0].clientY;
             touchStartTime = Date.now();
         }, { passive: true });
