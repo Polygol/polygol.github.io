@@ -5108,7 +5108,7 @@ function updateFavicon(url) {
 }
 
 async function installApp(appData) {
-    // This object now also stores version and file list for updates
+    // This object now only stores the file list for updates
     const userInstalledAppsInfo = JSON.parse(localStorage.getItem('userInstalledAppsInfo') || '{}');
     const isUpdate = userInstalledAppsInfo[appData.name]; // Check if the app is already installed
 
@@ -5132,9 +5132,8 @@ async function installApp(appData) {
     userApps[appData.name] = { url: appData.url, icon: appData.icon };
     localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
 
-    // Update the version info store
+    // Update the info store, now without the version property
     userInstalledAppsInfo[appData.name] = {
-        version: appData.version,
         filesToCache: appData.filesToCache
     };
     localStorage.setItem('userInstalledAppsInfo', JSON.stringify(userInstalledAppsInfo));
