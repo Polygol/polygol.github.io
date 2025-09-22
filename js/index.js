@@ -5910,38 +5910,26 @@ function setupDrawerInteractions() {
 	    if (openEmbed) {
 	        // LOGIC FOR FINISHING AN APP DRAG
 	        // Add transitions for the snap-back or close animation
-	        openEmbed.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0.38, 0.9), opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
+	        openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
 	
 	        // Condition to close: swipe up more than 20% of the screen OR a fast flick up
-	        if (isFlickUp || movementPercentage > 20) {
-	            // Revert background effects immediately for both close types
+	        if (movementPercentage > 20 || isFlickUp) {
+	            // Animate to a shrunken state and then minimize
+	            openEmbed.style.transform = 'translateY(-40px) scale(0.8)'; // Center and shrink
+	            openEmbed.style.opacity = '0';
+	            openEmbed.style.borderRadius = '25px';
+	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
+
+                // NEW: Revert background effects on close
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
-
-	            // --- NEW: Differentiate animation based on gesture ---
-	            if (isFlickUp) {
-	                // FLICK GESTURE: Apply the two-part "bounce" animation
-	                openEmbed.style.transform = 'translateY(-40px) scale(1)';
-	                openEmbed.style.opacity = '0.5';
-	                setTimeout(() => {
-	                    openEmbed.style.transform = 'translateY(0px) scale(0.8)';
-	                    openEmbed.style.opacity = '0';
-	                    openEmbed.style.borderRadius = '25px';
-	                }, 50);
-	            } else {
-	                // SLOW DRAG GESTURE: Apply a simple shrink/fade animation
-	                openEmbed.style.transform = 'translateY(0px) scale(0.8)';
-	                openEmbed.style.opacity = '0';
-	                openEmbed.style.borderRadius = '25px';
-	            }
 	
-	            // Common cleanup logic for both close animations
 	            setTimeout(() => {
 	                minimizeFullscreenEmbed();
 	                swipeOverlay.style.display = 'none';
 	                swipeOverlay.style.pointerEvents = 'none';
-	                if (openEmbed) openEmbed.style.border = '0 solid var(--glass-border)';
-	            }, 350);
+	                openEmbed.style.border = '0 solid var(--glass-border)'; // Clean up border after animation
+	            }, 300);
 	
 	            // Reset drawer & dock state
 	            dock.classList.remove('show');
