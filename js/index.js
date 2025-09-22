@@ -5915,7 +5915,7 @@ function setupDrawerInteractions() {
 	        // Condition to close: swipe up more than 20% of the screen OR a fast flick up
 	        if (movementPercentage > 20 || isFlickUp) {
 	            // Animate to a shrunken state and then minimize
-	            openEmbed.style.transform = 'translateY(0px) scale(0.8)'; // Center and shrink
+	            openEmbed.style.transform = 'translateY(-40px) scale(0.8)'; // Center and shrink
 	            openEmbed.style.opacity = '0';
 	            openEmbed.style.borderRadius = '25px';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
