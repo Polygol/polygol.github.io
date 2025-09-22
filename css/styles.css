@@ -2124,7 +2124,7 @@ input[type="checkbox"]:checked::before {
     overflow-y: auto;
     color: var(--text-color);
     margin-bottom: 25px;
-    border-radius: 25px;
+    border-radius: 26px;
     padding: 15px 20px;
     opacity: 0; /* Start hidden */
     transform: translateY(10px); /* Start slightly lower for a subtle lift effect */
@@ -2133,7 +2133,7 @@ input[type="checkbox"]:checked::before {
     scrollbar-color: var(--transparent-color) transparent;
     background-color: var(--search-background);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-	box-shadow: var(--sun-shadow);
+	box-shadow: var(--sun-shadow) ;
     border: 1px solid var(--glass-border);
 }
 
@@ -2160,7 +2160,7 @@ input[type="checkbox"]:checked::before {
     max-width: 600px;
     margin-bottom: 25px;
     border: 1px solid var(--glass-border);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--sun-shadow), 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 #ai-input {
