@@ -5913,30 +5913,35 @@ function setupDrawerInteractions() {
 	        openEmbed.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0.38, 0.9), opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
 	
 	        // Condition to close: swipe up more than 20% of the screen OR a fast flick up
-	        if (movementPercentage > 20 || isFlickUp) {
-	            // --- NEW TWO-PART ANIMATION ---
-                // 1. First, animate the app UP slightly.
-                openEmbed.style.transform = 'translateY(-40px) scale(1)';
-                openEmbed.style.opacity = '0.5'; // Start fading slightly
-
-                // Revert background effects immediately
+	        if (isFlickUp || movementPercentage > 20) {
+	            // Revert background effects immediately for both close types
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
 
-                // 2. After a short delay, animate it DOWN to its final minimized state.
-                setTimeout(() => {
-                    openEmbed.style.transform = 'translateY(0px) scale(0.8)';
-                    openEmbed.style.opacity = '0';
-                    openEmbed.style.borderRadius = '25px';
-                }, 50); // 50ms delay creates the two-step effect
+	            // --- NEW: Differentiate animation based on gesture ---
+	            if (isFlickUp) {
+	                // FLICK GESTURE: Apply the two-part "bounce" animation
+	                openEmbed.style.transform = 'translateY(-40px) scale(1)';
+	                openEmbed.style.opacity = '0.5';
+	                setTimeout(() => {
+	                    openEmbed.style.transform = 'translateY(0px) scale(0.8)';
+	                    openEmbed.style.opacity = '0';
+	                    openEmbed.style.borderRadius = '25px';
+	                }, 50);
+	            } else {
+	                // SLOW DRAG GESTURE: Apply a simple shrink/fade animation
+	                openEmbed.style.transform = 'translateY(0px) scale(0.8)';
+	                openEmbed.style.opacity = '0';
+	                openEmbed.style.borderRadius = '25px';
+	            }
 	
-	            // 3. After the main animation finishes, clean up.
+	            // Common cleanup logic for both close animations
 	            setTimeout(() => {
 	                minimizeFullscreenEmbed();
 	                swipeOverlay.style.display = 'none';
 	                swipeOverlay.style.pointerEvents = 'none';
-	                openEmbed.style.border = '0 solid var(--glass-border)'; // Clean up border after animation
-	            }, 350); // Increased delay to account for the full animation
+	                if (openEmbed) openEmbed.style.border = '0 solid var(--glass-border)';
+	            }, 350);
 	
 	            // Reset drawer & dock state
 	            dock.classList.remove('show');
