@@ -174,6 +174,7 @@ let isSlideshow = false;
 let minimizedEmbeds = {}; // Object to store minimized embeds by URL
 let appLastOpened = {};
 let currentSunShadow = ''; // To store the calculated sun shadow string
+let isSplitViewActive = false; 
 
 secondsSwitch.checked = showSeconds;
 
@@ -5470,12 +5471,161 @@ function createFullscreenEmbed(url) {
 
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
 createFullscreenEmbed = function(url) {
+  // Check if we should initiate split view
+  const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+  if (activeEmbed && !isSplitViewActive) {
+      initiateSplitView(activeEmbed, url);
+      return;
+  }
+  
   if (url === "#tasks") {
     showMinimizedEmbeds();
     return;
   }
   originalCreateFullscreenEmbed(url);
 };
+
+function initiateSplitView(existingEmbed, newAppUrl) {
+    isSplitViewActive = true;
+    const splitViewContainer = document.getElementById('split-view-container');
+    const splitViewDivider = document.getElementById('split-view-divider');
+    const closeArea = document.getElementById('split-view-close-area');
+
+    // 1. Configure existing app (App 1)
+    const app1 = existingEmbed;
+    app1.style.transition = 'width 0.3s ease, left 0.3s ease, border-radius 0.3s ease';
+    app1.style.width = '50%';
+    app1.style.position = 'absolute'; // Ensure positioning is correct
+    app1.style.left = '0';
+    app1.style.borderRadius = '0';
+    app1.style.transform = 'none';
+
+    // 2. Create and configure new app (App 2)
+    const app2 = document.createElement('div');
+    const iframe2 = document.createElement('iframe');
+    const appName2 = Object.keys(apps).find(name => apps[name].url === newAppUrl);
+
+    iframe2.src = newAppUrl;
+    iframe2.setAttribute('data-gurasuraisu-iframe', 'true');
+    if (appName2) iframe2.dataset.appId = appName2;
+    iframe2.setAttribute('frameborder', '0');
+
+    app2.className = 'fullscreen-embed'; // Reuse class for consistent styling
+    app2.dataset.embedUrl = newAppUrl;
+    app2.appendChild(iframe2);
+    app2.style.width = '50%';
+    app2.style.height = '100%';
+    app2.style.left = '50%';
+    app2.style.top = '0';
+    app2.style.position = 'absolute';
+    app2.style.borderRadius = '0px';
+    app2.style.transition = 'width 0.3s ease, left 0.3s ease, border-radius 0.3s ease';
+
+    // 3. Move apps to split view container and show it
+    splitViewContainer.appendChild(app1);
+    splitViewContainer.appendChild(app2);
+    splitViewContainer.style.display = 'block'; // Changed from flex to block for absolute positioning
+    splitViewDivider.style.left = 'calc(50% - 5px)';
+
+    // 4. Setup interaction listeners
+    setupSplitViewResizing(app1, app2, splitViewDivider, closeArea);
+
+    // Hide the main swipe overlay as it's not used in split view
+    const swipeOverlay = document.getElementById('swipe-overlay');
+    if (swipeOverlay) swipeOverlay.style.display = 'none';
+}
+
+function setupSplitViewResizing(app1, app2, divider, closeArea) {
+    let isResizing = false;
+
+    const onResizeStart = (e) => {
+        isResizing = true;
+        document.querySelectorAll('#split-view-container iframe').forEach(f => f.style.pointerEvents = 'none');
+        document.addEventListener('mousemove', onResizeMove);
+        document.addEventListener('mouseup', onResizeEnd);
+        document.addEventListener('touchmove', onResizeMove, { passive: false });
+        document.addEventListener('touchend', onResizeEnd);
+    };
+
+    const onResizeMove = (e) => {
+        if (!isResizing) return;
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const parentWidth = splitViewContainer.offsetWidth;
+        const newX = Math.max(150, Math.min(clientX, parentWidth - 150)); // Min app width
+        const newPercentage = (newX / parentWidth) * 100;
+
+        app1.style.width = `${newPercentage}%`;
+        app2.style.width = `${100 - newPercentage}%`;
+        app2.style.left = `${newPercentage}%`;
+        divider.style.left = `calc(${newPercentage}% - 5px)`;
+    };
+
+    const onResizeEnd = (e) => {
+        isResizing = false;
+        document.querySelectorAll('#split-view-container iframe').forEach(f => f.style.pointerEvents = 'auto');
+        document.removeEventListener('mousemove', onResizeMove);
+        document.removeEventListener('mouseup', onResizeEnd);
+        document.removeEventListener('touchmove', onResizeMove);
+        document.removeEventListener('touchend', onResizeEnd);
+
+        const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+        const parentWidth = splitViewContainer.offsetWidth;
+        if (clientX < 50) { // Snap right app to fullscreen
+            endSplitView(app2);
+        } else if (clientX > parentWidth - 50) { // Snap left app to fullscreen
+            endSplitView(app1);
+        }
+    };
+    
+    divider.addEventListener('mousedown', onResizeStart);
+    divider.addEventListener('touchstart', onResizeStart, { passive: false });
+
+    // Swipe up on the close area to go home
+    let swipeStartY = 0;
+    const onSwipeStart = (e) => { swipeStartY = e.touches ? e.touches[0].clientY : e.clientY; };
+    const onSwipeEnd = (e) => {
+        const swipeEndY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+        if (swipeStartY - swipeEndY > 50) endSplitView(null);
+    };
+    closeArea.addEventListener('click', () => endSplitView(null));
+    closeArea.addEventListener('touchstart', onSwipeStart, { passive: true });
+    closeArea.addEventListener('touchend', onSwipeEnd);
+}
+
+function endSplitView(appToKeepFullscreen = null) {
+    if (!isSplitViewActive) return;
+    
+    const appsInSplit = Array.from(splitViewContainer.querySelectorAll('.fullscreen-embed'));
+    
+    appsInSplit.forEach(app => {
+        if (app === appToKeepFullscreen) {
+            document.body.appendChild(app); // Move back to body
+            app.style.position = 'fixed';
+            app.style.width = '100%';
+            app.style.left = '0';
+            const swipeOverlay = document.getElementById('swipe-overlay');
+            if (swipeOverlay) swipeOverlay.style.display = 'block';
+        } else {
+            const url = app.dataset.embedUrl;
+            if (url) {
+                minimizedEmbeds[url] = app;
+                app.style.display = 'none';
+                document.body.appendChild(app);
+            } else {
+                app.remove();
+            }
+        }
+    });
+
+    splitViewContainer.style.display = 'none';
+    isSplitViewActive = false;
+
+    if (!appToKeepFullscreen) {
+        // If no app is kept, we are going home.
+        minimizeFullscreenEmbed();
+    }
+}
 
 function minimizeFullscreenEmbed() {
     // Restore the original favicon when minimizing an app
@@ -5906,21 +6056,26 @@ function setupDrawerInteractions() {
 	    const isFlickUp = avgVelocity > flickVelocityThreshold;
 	
 	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+
+        if (isSplitViewActive) {
+            endSplitView(null); // Swiping up from the bottom closes split view
+            isDragging = false;
+            return;
+        }
 	    
 	    if (openEmbed) {
 	        // LOGIC FOR FINISHING AN APP DRAG
-	        // Add transitions for the snap-back or close animation
 	        openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
 	
-	        // Condition to close: swipe up more than 20% of the screen OR a fast flick up
-	        if (movementPercentage > 20 || isFlickUp) {
+	        const isCloseSwipe = movementPercentage > 20 || isFlickUp;
+            const isDockSwipe = movementPercentage > 2.5 && !isCloseSwipe;
+	        
+	        if (isCloseSwipe) {
 	            // Animate to a shrunken state and then minimize
 	            openEmbed.style.transform = 'translateY(0px) scale(0.8)'; // Center and shrink
 	            openEmbed.style.opacity = '0';
 	            openEmbed.style.borderRadius = '25px';
-	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
 
-                // NEW: Revert background effects on close
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
 	
@@ -5941,7 +6096,20 @@ function setupDrawerInteractions() {
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
-	        } else {
+
+	        } else if (isDockSwipe) {
+                // Show dock on small swipe up from in-app
+                openEmbed.style.transform = 'translateY(0px) scale(1)'; // Snap back to fullscreen
+                openEmbed.style.opacity = '1';
+                openEmbed.style.borderRadius = '0px';
+                openEmbed.style.border = '0 solid var(--glass-border)';
+
+                dock.style.display = 'flex';
+                requestAnimationFrame(() => { dock.classList.add('show'); });
+                
+                if (dockHideTimeout) clearTimeout(dockHideTimeout);
+                dockHideTimeout = setTimeout(() => { dock.classList.remove('show'); }, 4000);
+            } else {
 	            // Animate back to the original fullscreen state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
