@@ -1067,7 +1067,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (appToOpen) {
                     // First, close the settings modal if it's open
                     closeControls();
-		    minimizeFullscreenEmbed();
                     // Then, open the app
                     createFullscreenEmbed(appToOpen.url);
                 }
@@ -5726,12 +5725,6 @@ function populateDock() {
         dockIcon.appendChild(img);
 	 
 	dockIcon.addEventListener('click', async () => {
-	    // Minimize current fullscreen embed if one is open
-	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-	    if (openEmbed) {
-	        minimizeFullscreenEmbed();
-	    }
-	
 	    // Open the new app
 	    createFullscreenEmbed(details.url);
 	    populateDock(); // Refresh the dock
