@@ -4,6 +4,45 @@ const DB_SCHEMAS = {
     'GuraAIDB': { version: 1, stores: [{ name: 'ChatHistory', options: { keyPath: 'id', autoIncrement: true } }] }
 };
 
+function setupServiceWorkerUpdateListener() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(reg => {
+            if (!reg) return;
+
+            // This fires when a new SW is found and starts installing
+            reg.onupdatefound = () => {
+                const newWorker = reg.installing;
+                if (newWorker) {
+                    // This fires when the new SW moves to the 'installed' state (i.e., it's now waiting)
+                    newWorker.onstatechange = () => {
+                        if (newWorker.state === 'installed') {
+                            // Check if there's a controller. If not, this is the first SW install.
+                            if (navigator.serviceWorker.controller) {
+                                // A new SW is waiting. Show the notification.
+                                showNotification('A new version of Polygol is available.', {
+                                    buttonText: 'Update & Reload',
+                                    buttonAction: () => {
+                                        newWorker.postMessage({ action: 'skipWaiting' });
+                                    }
+                                });
+                            }
+                        }
+                    };
+                }
+            };
+        });
+
+        // This fires when the new SW has taken control of the page
+        let refreshing;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                window.location.reload();
+                refreshing = true;
+            }
+        });
+    }
+}
+
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
 
 let availableWidgets; // Stores info about all possible widgets from apps
@@ -5097,21 +5136,17 @@ async function installApp(appData) {
 
     // 3. Robustly handle caching with the Service Worker.
     if ('serviceWorker' in navigator) {
-        // Show a message that installation has started.
         showPopup(currentLanguage.GURAPP_INSTALLING.replace('{appName}', appData.name));
 	    
         try {
-            // navigator.serviceWorker.ready is a promise that resolves when a SW is active.
             const registration = await navigator.serviceWorker.ready;
             
-            // Now we are sure there is an active service worker to talk to.
+            // Send the list of files to cache to the active service worker
             registration.active.postMessage({
                 action: 'cache-app',
                 files: appData.filesToCache
             });
             
-            // Optional: You could listen for a response from the SW to confirm caching.
-            // For now, we assume it works.
             console.log(`[App] Sent caching request to Service Worker for "${appData.name}".`);
 
         } catch (error) {
@@ -5160,10 +5195,18 @@ async function deleteApp(appName) {
         
         // Un-cache the files from the Service Worker
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-             navigator.serviceWorker.controller.postMessage({
-                action: 'uncache-app',
-                appName: appName
-            });
+             // We need to know which files to delete. This assumes appToDelete has a filesToCache property.
+             // This property should be saved to localStorage when the app is installed.
+             const userAppInfo = JSON.parse(localStorage.getItem('userInstalledAppsInfo') || '{}');
+             if (userAppInfo[appName] && userAppInfo[appName].filesToCache) {
+                 navigator.serviceWorker.controller.postMessage({
+                    action: 'uncache-app',
+                    filesToDelete: userAppInfo[appName].filesToCache
+                });
+                // Clean up the stored info
+                delete userAppInfo[appName];
+                localStorage.setItem('userInstalledAppsInfo', JSON.stringify(userAppInfo));
+             }
         }
 
         // Refresh the app drawer and dock
@@ -6900,6 +6943,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Call to check for automatic backup on page load
     checkForAutomaticBackup();
+
+    setupServiceWorkerUpdateListener(); 
 });
 
 window.addEventListener('load', checkFullscreen);
