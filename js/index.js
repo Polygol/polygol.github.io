@@ -1106,6 +1106,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
+		syncUiStates();
 		persistentClock.style.opacity = '0';
 		customizeModal.style.display = 'block';
 		blurOverlayControls.style.display = 'block';
