@@ -5108,13 +5108,11 @@ function updateFavicon(url) {
 }
 
 async function installApp(appData) {
-    // This object now only stores the file list for updates
     const userInstalledAppsInfo = JSON.parse(localStorage.getItem('userInstalledAppsInfo') || '{}');
-    const isUpdate = userInstalledAppsInfo[appData.name]; // Check if the app is already installed
+    const isUpdate = userInstalledAppsInfo[appData.name];
 
     if (isUpdate) {
         console.log(`Updating app: ${appData.name}`);
-        // Uncache old files before caching new ones
         const oldFiles = userInstalledAppsInfo[appData.name].filesToCache;
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({
@@ -5126,19 +5124,19 @@ async function installApp(appData) {
         console.log(`Installing new app: ${appData.name}`);
     }
 
-    // This part runs for both installs and updates
-    apps[appData.name] = { url: appData.url, icon: appData.icon };
+    // THE FIX IS HERE: Use appData.iconUrl instead of appData.icon
+    const iconPath = appData.iconUrl;
+
+    apps[appData.name] = { url: appData.url, icon: iconPath };
     const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
-    userApps[appData.name] = { url: appData.url, icon: appData.icon };
+    userApps[appData.name] = { url: appData.url, icon: iconPath };
     localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
 
-    // Update the info store, now without the version property
     userInstalledAppsInfo[appData.name] = {
         filesToCache: appData.filesToCache
     };
     localStorage.setItem('userInstalledAppsInfo', JSON.stringify(userInstalledAppsInfo));
 
-    // Cache the new files
     if ('serviceWorker' in navigator) {
         try {
             const registration = await navigator.serviceWorker.ready;
