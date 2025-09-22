@@ -7261,6 +7261,10 @@ function promptPWAInstall() { // Removed sourceWindow
     return 'PWA installation prompt initiated.';
 }
 
+function requestInstalledApps() {
+    return Object.keys(apps);
+}
+
 // --- Media Session Management Functions ---
 
 function showMediaWidget(metadata) {
