@@ -5108,56 +5108,57 @@ function updateFavicon(url) {
 }
 
 async function installApp(appData) {
-    if (apps[appData.name]) {
-        showPopup(currentLanguage.GURAPP_INSTALL_EXISTS.replace('{appName}', appData.name));
-        return;
+    // This object now also stores version and file list for updates
+    const userInstalledAppsInfo = JSON.parse(localStorage.getItem('userInstalledAppsInfo') || '{}');
+    const isUpdate = userInstalledAppsInfo[appData.name]; // Check if the app is already installed
+
+    if (isUpdate) {
+        console.log(`Updating app: ${appData.name}`);
+        // Uncache old files before caching new ones
+        const oldFiles = userInstalledAppsInfo[appData.name].filesToCache;
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                action: 'uncache-app',
+                filesToDelete: oldFiles
+            });
+        }
+    } else {
+        console.log(`Installing new app: ${appData.name}`);
     }
 
-    console.log(`Installing app: ${appData.name}`);
-
-    const iconFileName = appData.iconUrl.split('/').pop();
-
-    // 1. Add the new app to the in-memory object with the full icon URL.
-    apps[appData.name] = {
-        url: appData.url,
-        icon: appData.iconUrl 
-    };
-
-    // Also save the app's metadata with the FULL icon URL to localStorage.
+    // This part runs for both installs and updates
+    apps[appData.name] = { url: appData.url, icon: appData.icon };
     const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
-    userApps[appData.name] = { 
-        url: appData.url, 
-        icon: appData.iconUrl // Use the full URL here, NOT the extracted filename.
-    };
+    userApps[appData.name] = { url: appData.url, icon: appData.icon };
     localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
 
-    // 2. Refresh the UI immediately so the user sees the app appear.
-    createAppIcons();
-    populateDock();
+    // Update the version info store
+    userInstalledAppsInfo[appData.name] = {
+        version: appData.version,
+        filesToCache: appData.filesToCache
+    };
+    localStorage.setItem('userInstalledAppsInfo', JSON.stringify(userInstalledAppsInfo));
 
-    // 3. Robustly handle caching with the Service Worker.
+    // Cache the new files
     if ('serviceWorker' in navigator) {
-        showPopup(currentLanguage.GURAPP_INSTALLING.replace('{appName}', appData.name));
-	    
         try {
             const registration = await navigator.serviceWorker.ready;
-            
-            // Send the list of files to cache to the active service worker
             registration.active.postMessage({
                 action: 'cache-app',
                 files: appData.filesToCache
             });
-            
-            console.log(`[App] Sent caching request to Service Worker for "${appData.name}".`);
-
+            const message = isUpdate ? `App '${appData.name}' updated successfully!` : currentLanguage.GURAPP_INSTALLING.replace('{appName}', appData.name);
+            showPopup(message);
         } catch (error) {
-            console.error('Service Worker not ready or failed to send message:', error);
+            console.error('Service Worker not ready:', error);
             showPopup(currentLanguage.GURAPP_INSTALL_FAILED.replace('{appName}', appData.name));
         }
-
     } else {
         showPopup(currentLanguage.GURAPP_OFFLINE_NOT_SUPPORTED);
     }
+
+    createAppIcons();
+    populateDock();
 }
 
 async function deleteApp(appName) {
@@ -7308,7 +7309,8 @@ function promptPWAInstall() { // Removed sourceWindow
 }
 
 function requestInstalledApps() {
-    return Object.keys(apps);
+    // Return the full info object, not just names
+    return JSON.parse(localStorage.getItem('userInstalledAppsInfo') || '{}');
 }
 
 // --- Media Session Management Functions ---
