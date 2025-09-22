@@ -174,7 +174,6 @@ let isSlideshow = false;
 let minimizedEmbeds = {}; // Object to store minimized embeds by URL
 let appLastOpened = {};
 let currentSunShadow = ''; // To store the calculated sun shadow string
-let isSplitViewActive = false; 
 
 secondsSwitch.checked = showSeconds;
 
@@ -1067,6 +1066,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (appToOpen) {
                     // First, close the settings modal if it's open
                     closeControls();
+		    minimizeFullscreenEmbed();
                     // Then, open the app
                     createFullscreenEmbed(appToOpen.url);
                 }
@@ -5108,11 +5108,13 @@ function updateFavicon(url) {
 }
 
 async function installApp(appData) {
+    // This object now only stores the file list for updates
     const userInstalledAppsInfo = JSON.parse(localStorage.getItem('userInstalledAppsInfo') || '{}');
-    const isUpdate = userInstalledAppsInfo[appData.name];
+    const isUpdate = userInstalledAppsInfo[appData.name]; // Check if the app is already installed
 
     if (isUpdate) {
         console.log(`Updating app: ${appData.name}`);
+        // Uncache old files before caching new ones
         const oldFiles = userInstalledAppsInfo[appData.name].filesToCache;
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({
@@ -5124,19 +5126,19 @@ async function installApp(appData) {
         console.log(`Installing new app: ${appData.name}`);
     }
 
-    // THE FIX IS HERE: Use appData.iconUrl instead of appData.icon
-    const iconPath = appData.iconUrl;
-
-    apps[appData.name] = { url: appData.url, icon: iconPath };
+    // This part runs for both installs and updates
+    apps[appData.name] = { url: appData.url, icon: appData.icon };
     const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
-    userApps[appData.name] = { url: appData.url, icon: iconPath };
+    userApps[appData.name] = { url: appData.url, icon: appData.icon };
     localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
 
+    // Update the info store, now without the version property
     userInstalledAppsInfo[appData.name] = {
         filesToCache: appData.filesToCache
     };
     localStorage.setItem('userInstalledAppsInfo', JSON.stringify(userInstalledAppsInfo));
 
+    // Cache the new files
     if ('serviceWorker' in navigator) {
         try {
             const registration = await navigator.serviceWorker.ready;
@@ -5215,31 +5217,6 @@ async function deleteApp(appName) {
     } else {
         showPopup(currentLanguage.GURAPP_DELETE_FAILED.replace('{appName}', appName));
     }
-}
-
-function hideMainUI() {
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-        if (!el.dataset.originalDisplay) {
-            el.dataset.originalDisplay = window.getComputedStyle(el).display;
-        }
-        el.style.transition = 'opacity 0.3s ease';
-        el.style.opacity = '0';
-        setTimeout(() => {
-            el.classList.add('force-hide');
-        }, 300);
-    });
-}
-
-function showMainUI() {
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-	el.classList.remove('force-hide');
-        el.style.display = el.dataset.originalDisplay || ''; // Revert to original or default
-        el.style.transition = 'opacity 0.3s ease';
-
-        requestAnimationFrame(() => {
-            el.style.opacity = '1';
-        });
-    });
 }
 
 function createFullscreenEmbed(url) {
@@ -5444,7 +5421,16 @@ function createFullscreenEmbed(url) {
     });
     
     // Hide all main UI elements
-    hideMainUI();
+    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+        if (!el.dataset.originalDisplay) {
+            el.dataset.originalDisplay = window.getComputedStyle(el).display;
+        }
+        el.style.transition = 'opacity 0.3s ease';
+        el.style.opacity = '0';
+        setTimeout(() => {
+            el.classList.add('force-hide');
+        }, 300);
+    });
 	
     // Append the container to the DOM
     document.body.appendChild(embedContainer);
@@ -5484,191 +5470,12 @@ function createFullscreenEmbed(url) {
 
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
 createFullscreenEmbed = function(url) {
-  // Check if we should initiate split view
-  const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-  if (activeEmbed && !isSplitViewActive) {
-      initiateSplitView(activeEmbed, url);
-      return;
-  }
-  
   if (url === "#tasks") {
     showMinimizedEmbeds();
     return;
   }
   originalCreateFullscreenEmbed(url);
 };
-
-function initiateSplitView(existingEmbed, newAppUrl) {
-    isSplitViewActive = true;
-    const splitViewContainer = document.getElementById('split-view-container');
-    const splitViewDivider = document.getElementById('split-view-divider');
-    const closeArea = document.getElementById('split-view-close-area');
-    const swipeOverlay = document.getElementById('swipe-overlay'); // Get swipe overlay
-
-    // 1. Configure existing app (App 1)
-    const app1 = existingEmbed;
-    
-    // FIX: Forcefully reset any in-flight animation/drag styles before repositioning
-    app1.style.transition = 'none'; // Temporarily disable transitions
-    app1.style.transform = 'none';
-    app1.style.opacity = '1';
-    app1.style.borderRadius = '0px';
-    // Force reflow to apply the reset styles immediately
-    void app1.offsetWidth; 
-
-    // Now re-apply transitions for the split-screen animation
-    app1.style.transition = 'width 0.3s ease, left 0.3s ease, border-radius 0.3s ease';
-    app1.style.width = '50%';
-    app1.style.position = 'absolute'; // Ensure positioning is correct
-    app1.style.left = '0';
-
-    // 2. Create and configure new app (App 2)
-    const app2 = document.createElement('div');
-    const iframe2 = document.createElement('iframe');
-    const appName2 = Object.keys(apps).find(name => apps[name].url === newAppUrl);
-
-    iframe2.src = newAppUrl;
-    iframe2.setAttribute('data-gurasuraisu-iframe', 'true');
-    if (appName2) iframe2.dataset.appId = appName2;
-    iframe2.setAttribute('frameborder', '0');
-
-    app2.className = 'fullscreen-embed'; // Reuse class for consistent styling
-    app2.dataset.embedUrl = newAppUrl;
-    app2.appendChild(iframe2);
-    app2.style.width = '50%';
-    app2.style.height = '100%';
-    app2.style.left = '50%';
-    app2.style.top = '0';
-    app2.style.position = 'absolute';
-    app2.style.borderRadius = '0px';
-    app2.style.transition = 'width 0.3s ease, left 0.3s ease, border-radius 0.3s ease';
-
-    // 3. Move apps to split view container and show it
-    splitViewContainer.appendChild(app1);
-    splitViewContainer.appendChild(app2);
-    splitViewContainer.style.display = 'block'; 
-    splitViewDivider.style.left = 'calc(50% - 5px)';
-
-    // 4. Setup interaction listeners
-    setupSplitViewResizing(app1, app2, splitViewDivider, closeArea);
-
-    // FIX: The swipe overlay should cover the entire split view area to catch swipe-to-home gestures
-    if (swipeOverlay) {
-        swipeOverlay.style.display = 'block';
-        swipeOverlay.style.height = '100%'; 
-    }
-}
-
-function setupSplitViewResizing(app1, app2, divider, closeArea) {
-    let isResizing = false;
-
-    const onResizeStart = (e) => {
-        isResizing = true;
-        document.querySelectorAll('#split-view-container iframe').forEach(f => f.style.pointerEvents = 'none');
-        document.addEventListener('mousemove', onResizeMove);
-        document.addEventListener('mouseup', onResizeEnd);
-        document.addEventListener('touchmove', onResizeMove, { passive: false });
-        document.addEventListener('touchend', onResizeEnd);
-    };
-
-    const onResizeMove = (e) => {
-        if (!isResizing) return;
-        e.preventDefault();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const parentWidth = document.getElementById('split-view-container').offsetWidth; // FIX: Get element by ID
-        const newX = Math.max(150, Math.min(clientX, parentWidth - 150)); // Min app width
-        const newPercentage = (newX / parentWidth) * 100;
-
-        app1.style.width = `${newPercentage}%`;
-        app2.style.width = `${100 - newPercentage}%`;
-        app2.style.left = `${newPercentage}%`;
-        divider.style.left = `calc(${newPercentage}% - 5px)`;
-    };
-
-    const onResizeEnd = (e) => {
-        isResizing = false;
-        document.querySelectorAll('#split-view-container iframe').forEach(f => f.style.pointerEvents = 'auto');
-        document.removeEventListener('mousemove', onResizeMove);
-        document.removeEventListener('mouseup', onResizeEnd);
-        document.removeEventListener('touchmove', onResizeMove);
-        document.removeEventListener('touchend', onResizeEnd);
-
-        const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-        const parentWidth = splitViewContainer.offsetWidth;
-        if (clientX < 50) { // Snap right app to fullscreen
-            endSplitView(app2);
-        } else if (clientX > parentWidth - 50) { // Snap left app to fullscreen
-            endSplitView(app1);
-        }
-    };
-    
-    divider.addEventListener('mousedown', onResizeStart);
-    divider.addEventListener('touchstart', onResizeStart, { passive: false });
-
-    // Swipe up on the close area to go home
-    let swipeStartY = 0;
-    const onSwipeStart = (e) => { swipeStartY = e.touches ? e.touches[0].clientY : e.clientY; };
-    const onSwipeEnd = (e) => {
-        const swipeEndY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-        if (swipeStartY - swipeEndY > 50) endSplitView(null);
-    };
-    closeArea.addEventListener('click', () => endSplitView(null));
-    closeArea.addEventListener('touchstart', onSwipeStart, { passive: true });
-    closeArea.addEventListener('touchend', onSwipeEnd);
-}
-
-function endSplitView(appToKeepFullscreen = null) {
-    if (!isSplitViewActive) return;
-    const splitViewContainer = document.getElementById('split-view-container');
-    const swipeOverlay = document.getElementById('swipe-overlay');
-    
-    const appsInSplit = Array.from(splitViewContainer.querySelectorAll('.fullscreen-embed'));
-    
-    // Going home, so animate both apps away
-    if (!appToKeepFullscreen) {
-        appsInSplit.forEach(app => {
-            app.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
-            // Use the same animation as the single-app close gesture
-            app.style.transform = 'translateY(-40px) scale(0.85)';
-            app.style.opacity = '0';
-            app.style.borderRadius = '25px';
-        });
-
-        // Use a timeout to clean up after the animation completes
-        setTimeout(() => {
-            appsInSplit.forEach(app => {
-                const url = app.dataset.embedUrl;
-                if (url) minimizedEmbeds[url] = app;
-                app.style.display = 'none';
-                document.body.appendChild(app); // Move back to body for later recall
-            });
-            showMainUI();
-        }, 300);
-    } else {
-        // This part handles snapping one app to fullscreen
-        appsInSplit.forEach(app => {
-            if (app === appToKeepFullscreen) {
-                document.body.appendChild(app);
-                app.style.position = 'fixed';
-                app.style.width = '100%';
-                app.style.left = '0';
-                if (swipeOverlay) {
-                    swipeOverlay.style.display = 'block';
-                    swipeOverlay.style.height = '100%'; // Full height for single app
-                }
-            } else {
-                const url = app.dataset.embedUrl;
-                if (url) minimizedEmbeds[url] = app;
-                app.style.display = 'none';
-                document.body.appendChild(app);
-            }
-        });
-    }
-
-    splitViewContainer.innerHTML = '';
-    splitViewContainer.style.display = 'none';
-    isSplitViewActive = false;
-}
 
 function minimizeFullscreenEmbed() {
     // Restore the original favicon when minimizing an app
@@ -5700,7 +5507,15 @@ function minimizeFullscreenEmbed() {
     }
     
     // Restore all main UI elements
-    showMainUI();
+    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+	el.classList.remove('force-hide');
+        el.style.display = el.dataset.originalDisplay;
+        el.style.transition = 'opacity 0.3s ease';
+
+        requestAnimationFrame(() => {
+            el.style.opacity = '1';
+        });
+    });
     
     // Hide all fullscreen embeds that are not being displayed
     document.querySelectorAll('.fullscreen-embed:not([style*="display: block"])').forEach(embed => {
@@ -5761,6 +5576,12 @@ function populateDock() {
         dockIcon.appendChild(img);
 	 
 	dockIcon.addEventListener('click', async () => {
+	    // Minimize current fullscreen embed if one is open
+	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    if (openEmbed) {
+	        minimizeFullscreenEmbed();
+	    }
+	
 	    // Open the new app
 	    createFullscreenEmbed(details.url);
 	    populateDock(); // Refresh the dock
@@ -6074,7 +5895,7 @@ function setupDrawerInteractions() {
 	function endDrag() {
 	    if (!isDragging) return;
 	
-	    const deltaY = startY - currentY;
+	    const deltaY = startY - currentY; // Positive for upward swipe
 	    const deltaTime = Date.now() - dragStartTime;
 	    let avgVelocity = 0;
 	    if (velocities.length > 0) {
@@ -6086,24 +5907,20 @@ function setupDrawerInteractions() {
 	
 	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
 	    
-        if (isSplitViewActive) {
-            // This is now handled by the swipeOverlay listener below
-            isDragging = false;
-            return;
-        }
-		
 	    if (openEmbed) {
+	        // LOGIC FOR FINISHING AN APP DRAG
+	        // Add transitions for the snap-back or close animation
 	        openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
 	
-	        const isCloseSwipe = movementPercentage > 20 || isFlickUp;
-            const isDockSwipe = movementPercentage > 2.5 && !isCloseSwipe;
-	        
-	        if (isCloseSwipe) {
-	            // FIX: Match the flick animation with the long swipe animation
-	            openEmbed.style.transform = 'translateY(-40px) scale(0.85)';
+	        // Condition to close: swipe up more than 20% of the screen OR a fast flick up
+	        if (movementPercentage > 20 || isFlickUp) {
+	            // Animate to a shrunken state and then minimize
+	            openEmbed.style.transform = 'translateY(0px) scale(0.8)'; // Center and shrink
 	            openEmbed.style.opacity = '0';
 	            openEmbed.style.borderRadius = '25px';
+	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
 
+                // NEW: Revert background effects on close
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
 	
@@ -6111,53 +5928,36 @@ function setupDrawerInteractions() {
 	                minimizeFullscreenEmbed();
 	                swipeOverlay.style.display = 'none';
 	                swipeOverlay.style.pointerEvents = 'none';
-	                openEmbed.style.border = '0 solid var(--glass-border)';
+	                openEmbed.style.border = '0 solid var(--glass-border)'; // Clean up border after animation
 	            }, 300);
 	
+	            // Reset drawer & dock state
 	            dock.classList.remove('show');
+	            dock.style.boxShadow = 'none';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
 	            dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
 	            appDrawer.style.bottom = '-100%';
+	            appDrawer.style.opacity = '0';
+	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
-
-	        } else if (isDockSwipe) {
-                openEmbed.style.transform = 'translateY(0px) scale(1)';
-                openEmbed.style.opacity = '1';
-                openEmbed.style.borderRadius = '0px';
-                openEmbed.style.border = '0 solid var(--glass-border)';
-
-                dock.style.display = 'flex';
-                dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
-                drawerPill.style.opacity = '0';
-                requestAnimationFrame(() => { dock.classList.add('show'); });
-                
-                if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                dockHideTimeout = setTimeout(() => {
-                    dock.classList.remove('show');
-                    dock.style.boxShadow = 'none';
-                    drawerPill.style.opacity = '1';
-                    setTimeout(() => {
-                         if (!dock.classList.contains('show')) {
-                             dock.style.display = 'none';
-                         }
-                    }, 300);
-                }, 4000);
-            } else {
+	        } else {
+	            // Animate back to the original fullscreen state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
-	            openEmbed.style.border = '0 solid var(--glass-border)';
+	            openEmbed.style.border = '0 solid var(--glass-border)'; // Animate border removal
 	            
 	            appDrawer.style.opacity = '0';
 				persistentClock.style.opacity = '1';
+                // NEW: Apply opening effects on snap-back
                 const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
                 const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
                 const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
                 document.body.style.setProperty('--wallpaper-filter', openFilter);
                 document.body.style.setProperty('--bg-transform-scale', '1.25');
 	        }
-			
+
 			setTimeout(() => {
 		        const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
 		        if (activeEmbed) {
@@ -6182,12 +5982,24 @@ function setupDrawerInteractions() {
 	                dock.classList.add('show');
 	                dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
 	            });
-	            drawerPill.style.opacity = '0'; // Hide the pill
 	            appDrawer.style.bottom = '-100%';
 	            appDrawer.style.opacity = '0';
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
+                // Revert background effects
+                applyWallpaperEffects();
+                document.body.style.setProperty('--bg-transform-scale', '1.05');				
+			    // Restore all main UI elements
+			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+				el.classList.remove('force-hide');
+			        el.style.display = el.dataset.originalDisplay;
+			        el.style.transition = 'opacity 0.3s ease';
+			
+			        requestAnimationFrame(() => {
+			            el.style.opacity = '1';
+			        });
+			    });
 	        } else if (isSignificantSwipe) {
 	            dock.classList.remove('show');
 	            dock.style.boxShadow = 'none';
@@ -6198,17 +6010,43 @@ function setupDrawerInteractions() {
 	            appDrawer.classList.add('open');
 	            initialDrawerPosition = 0;
 	            interactionBlocker.style.display = 'none';
+                // Revert background effects
+                applyWallpaperEffects();
+                document.body.style.setProperty('--bg-transform-scale', '1.05');
+				// Hide UI elements
+				document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+			        if (!el.dataset.originalDisplay) {
+			            el.dataset.originalDisplay = window.getComputedStyle(el).display;
+			        }
+			        el.style.transition = 'opacity 0.3s ease';
+			        el.style.opacity = '0';
+			        setTimeout(() => {
+			            el.classList.add('force-hide');
+			        }, 300);
+			    });
 	        } else {
 	            dock.classList.remove('show');
 	            dock.style.boxShadow = 'none';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
 	            dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
-	            drawerPill.style.opacity = '1'; // Ensure pill is visible when dock is hidden
 	            appDrawer.style.bottom = '-100%';
 	            appDrawer.style.opacity = '0';
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
+                // Revert background effects
+                applyWallpaperEffects();
+                document.body.style.setProperty('--bg-transform-scale', '1.05');
+				// Restore all main UI elements
+			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+				el.classList.remove('force-hide');
+			        el.style.display = el.dataset.originalDisplay;
+			        el.style.transition = 'opacity 0.3s ease';
+			
+			        requestAnimationFrame(() => {
+			            el.style.opacity = '1';
+			        });
+			    });
 	        }
 	        
 	        swipeOverlay.style.display = 'none';
@@ -6242,8 +6080,6 @@ function setupDrawerInteractions() {
         }, { passive: true });
         
         swipeOverlay.addEventListener('touchstart', (e) => {
-            // FIX: check if already dragging before starting a new one
-            if (isDragging) return;
             touchStartY = e.touches[0].clientY;
             touchStartTime = Date.now();
         }, { passive: true });
@@ -6263,16 +6099,11 @@ function setupDrawerInteractions() {
             }
         }, { passive: false });
         
-        swipeOverlay.addEventListener('touchend', (e) => {
-            cancelLongPress();
+        swipeOverlay.addEventListener('touchend', () => {
+	    cancelLongPress();
+		
             if (isInSwipeMode) {
-                // Get final position for swipe check
-                const endY = e.changedTouches[0].clientY;
-                if (isSplitViewActive && (touchStartY - endY > 50)) {
-                    endSplitView(null); // Explicitly go home on swipe up
-                } else {
-                    endDrag();
-                }
+                endDrag();
                 isInSwipeMode = false;
             }
         });
@@ -6302,14 +6133,11 @@ function setupDrawerInteractions() {
             }
         });
         
-        swipeOverlay.addEventListener('mouseup', (e) => {
+        swipeOverlay.addEventListener('mouseup', () => {
             cancelLongPress();
+		
             if (isInSwipeMode) {
-                if (isSplitViewActive && (touchStartY - e.clientY > 50)) {
-                     endSplitView(null); // Explicitly go home on swipe up
-                } else {
-                    endDrag();
-                }
+                endDrag();
                 isInSwipeMode = false;
             }
         });
@@ -6478,26 +6306,13 @@ function setupDrawerInteractions() {
 const appDrawerObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            const isNowOpen = appDrawer.classList.contains('open');
-            // Check previous state to see if it changed
-            const wasOpen = mutation.oldValue ? mutation.oldValue.includes('open') : false;
-
-            if (isNowOpen && !wasOpen) {
-                hideMainUI();
-            } else if (!isNowOpen && wasOpen) {
-                // Only show the UI if an app isn't currently open fullscreen
-                const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-                if (!openEmbed) {
-                    showMainUI();
-                }
-            }
+            
         }
     });
 });
 
 appDrawerObserver.observe(appDrawer, {
-    attributes: true,
-    attributeOldValue: true // Required to check the previous state
+    attributes: true
 });
 
 function blackoutScreen() {
