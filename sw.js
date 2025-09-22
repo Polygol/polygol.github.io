@@ -91,8 +91,6 @@ self.addEventListener('message', event => {
             console.log(`[SW] Caching ${filesToCache.length} files for new app.`);
             event.waitUntil(
                 caches.open(CACHE_NAME).then(cache => {
-                    // THE FIX: Use cache.addAll here as well for simplicity and correctness.
-                    // This attempts a standard CORS request for each file.
                     return cache.addAll(filesToCache)
                         .then(() => console.log('[SW] App caching complete.'))
                         .catch(err => console.warn(`[SW] Failed to cache one or more app files. The app may not work offline.`, err));
@@ -110,7 +108,9 @@ self.addEventListener('message', event => {
                 caches.open(CACHE_NAME).then(cache => {
                     const deletePromises = filesToDelete.map(url => {
                         return cache.delete(url).then(wasDeleted => {
-                            console.log(`[SW] File ${url} ${wasDeleted ? 'deleted' : 'not found in cache'}.`);
+                            if (wasDeleted) {
+                                console.log(`[SW] Uncached: ${url}`);
+                            }
                         });
                     });
                     return Promise.allSettled(deletePromises);
@@ -119,7 +119,6 @@ self.addEventListener('message', event => {
         }
     }
 });
-
 
 // FETCH: Serve assets using a combination of strategies.
 self.addEventListener('fetch', event => {
