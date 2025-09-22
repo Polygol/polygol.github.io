@@ -1,4 +1,4 @@
-const CACHE_NAME = 'polygol-cache-v2';
+const CACHE_NAME = 'polygol-cache-v3'; // Bump version for new SW logic
 
 const ASSETS_TO_CACHE = [
   '/',
@@ -42,68 +42,67 @@ const ASSETS_TO_CACHE = [
   'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0',
 ];
 
-// INSTALL: Cache all core assets when the SW is first installed.
+// INSTALL: Cache assets. The new SW will wait to be activated.
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('[SW] Caching core assets.');
-
-        // Separate local assets from cross-origin assets
+        console.log('[SW] Caching core assets for new version.');
         const localAssets = ASSETS_TO_CACHE.filter(url => !url.startsWith('http'));
         const externalAssets = ASSETS_TO_CACHE.filter(url => url.startsWith('http'));
-
-        // --- Cache local assets using the simple cache.add() ---
+        
         const localCachePromise = cache.addAll(localAssets).catch(err => {
-            console.warn('[SW] Failed to cache one or more local assets.', err);
+            console.warn('[SW] Failed to cache one or more local assets during install.', err);
         });
 
-        // --- Cache external assets manually to handle opaque responses ---
         const externalCachePromises = externalAssets.map(url => {
-            return fetch(url, { mode: 'no-cors' }) // Use no-cors to get the resource
-                .then(response => {
-                    // cache.put() CAN handle opaque responses, unlike cache.add()
-                    return cache.put(url, response);
-                })
-                .catch(err => {
-                    console.warn(`[SW] Failed to fetch and cache external asset: ${url}`, err);
-                });
+            return fetch(url, { mode: 'no-cors' })
+                .then(response => cache.put(url, response))
+                .catch(err => console.warn(`[SW] Failed to cache external asset during install: ${url}`, err));
         });
 
-        // Wait for all caching operations to complete
-        return Promise.all([localCachePromise, ...externalCachePromises]);
+        return Promise.allSettled([localCachePromise, ...externalCachePromises]);
       })
   );
 });
 
-// ACTIVATE: Clean up old caches.
+// ACTIVATE: Clean up old caches when this SW finally activates.
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
+            console.log(`[SW] Deleting old cache: ${cacheName}`);
             return caches.delete(cacheName);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // Take control of open clients
   );
 });
 
-// *** NEW & IMPORTANT: Listen for messages from the app ***
+// MESSAGE: Listen for commands from the main application.
 self.addEventListener('message', event => {
-    // Check if the message is an instruction to cache a new app
-    if (event.data && event.data.action === 'cache-app') {
+    if (!event.data) return;
+
+    // Command to activate the new, waiting service worker
+    if (event.data.action === 'skipWaiting') {
+        console.log('[SW] Received skipWaiting command. Activating new version.');
+        self.skipWaiting();
+    }
+
+    // Command to cache a newly installed app's files
+    if (event.data.action === 'cache-app') {
         const filesToCache = event.data.files;
         if (filesToCache && filesToCache.length > 0) {
-            console.log(`[SW] Received request to cache app with ${filesToCache.length} files.`);
+            console.log(`[SW] Caching ${filesToCache.length} files for new app.`);
             event.waitUntil(
                 caches.open(CACHE_NAME).then(cache => {
-                    // Create requests that can handle cross-origin URLs
                     const cachePromises = filesToCache.map(url => {
-                        const request = new Request(url, { mode: 'no-cors' });
-                        return cache.add(request).catch(err => console.warn(`[SW] Failed to cache file: ${url}`, err));
+                        return fetch(url, { mode: 'no-cors' })
+                            .then(response => cache.put(url, response))
+                            .catch(err => console.warn(`[SW] Failed to cache file: ${url}`, err));
                     });
                     return Promise.allSettled(cachePromises)
                         .then(() => console.log('[SW] App caching complete.'));
@@ -112,70 +111,56 @@ self.addEventListener('message', event => {
         }
     }
 
-    // --- NEW: Handle un-caching an app ---
-    if (event.data && event.data.action === 'uncache-app') {
-        const appName = event.data.appName;
-        console.log(`[SW] Received request to un-cache app: ${appName}`);
-        // This is a simplified approach. A more robust way would be to get a list
-        // of files to delete from the main thread, as the SW doesn't know them.
-        // For now, we will log that the action was received.
-        // A full implementation would require passing appData.filesToCache to the SW to delete.
+    // Command to remove a deleted app's files from the cache
+    if (event.data.action === 'uncache-app') {
+        const filesToDelete = event.data.filesToDelete;
+        if (filesToDelete && filesToDelete.length > 0) {
+            console.log(`[SW] Deleting ${filesToDelete.length} files for uninstalled app.`);
+            event.waitUntil(
+                caches.open(CACHE_NAME).then(cache => {
+                    const deletePromises = filesToDelete.map(url => {
+                        return cache.delete(url).then(wasDeleted => {
+                            console.log(`[SW] File ${url} ${wasDeleted ? 'deleted' : 'not found in cache'}.`);
+                        });
+                    });
+                    return Promise.allSettled(deletePromises);
+                })
+            );
+        }
     }
 });
 
 
-// FETCH: Serve assets from cache first (Cache-First Strategy).
+// FETCH: Serve assets using a combination of strategies.
 self.addEventListener('fetch', event => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // --- Strategy 1: Network Only for external APIs ---
-    const externalApiUrls = [
-        'api.open-meteo.com',
-        'nominatim.openstreetmap.org'
-    ];
-    if (externalApiUrls.some(apiUrl => url.hostname.includes(apiUrl))) {
+    // Strategy 1: Network Only for external APIs
+    if (url.hostname === 'api.open-meteo.com' || url.hostname === 'nominatim.openstreetmap.org') {
         event.respondWith(fetch(request));
         return;
     }
 
-    // --- Strategy 2: Network-First for Gurapp HTML files ---
-    // This ensures the user always gets the latest version of the app if they are online.
-    // It checks if the path ends with a known Gurapp name followed by /index.html.
-    const isGurappHtml = /\/(chronos|ailuator|wordy|fantaskical|moments|music|clapper|waves|sketchpad|invitations|weather|camera|appstore)\/index\.html$/.test(url.pathname);
-
-    if (request.mode === 'navigate' || isGurappHtml) {
-        event.respondWith(
-            fetch(request)
-                .then(networkResponse => {
-                    // If network is successful, cache the new version and return it.
-                    return caches.open(CACHE_NAME).then(cache => {
-                        cache.put(request, networkResponse.clone());
-                        return networkResponse;
-                    });
-                })
-                .catch(() => {
-                    // If network fails (user is offline), serve the app from the cache.
-                    return caches.match(request);
-                })
-        );
-        return;
-    }
-
-    // --- Strategy 3: Stale-While-Revalidate for everything else (CSS, JS, images, fonts) ---
+    // Strategy 2: Cache First for everything else (core assets, fonts, app files)
+    // This is fast and reliable for offline use. Updates are handled by the new SW version.
     event.respondWith(
-        caches.open(CACHE_NAME).then(cache => {
-            return cache.match(request).then(cachedResponse => {
-                const fetchPromise = fetch(request).then(networkResponse => {
+        caches.match(request)
+            .then(cachedResponse => {
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+                // If not in cache, fetch from network, cache it, and return it.
+                return fetch(request).then(networkResponse => {
                     if (networkResponse && networkResponse.status === 200) {
-                        cache.put(request, networkResponse.clone());
+                       return caches.open(CACHE_NAME).then(cache => {
+                            // Use put for all requests, including opaque ones from CDNs
+                            cache.put(request, networkResponse.clone());
+                            return networkResponse;
+                        });
                     }
                     return networkResponse;
                 });
-
-                // Return cached response immediately if it exists, otherwise wait for network.
-                return cachedResponse || fetchPromise;
-            });
-        })
+            })
     );
 });
