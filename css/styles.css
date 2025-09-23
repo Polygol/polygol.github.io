@@ -1884,6 +1884,7 @@ input[type="checkbox"]:checked::before {
     opacity: 0;
     border-top: 1px solid var(--glass-border);
     border-radius: 25px 25px 0 0;
+	filter: blur(5px);
 }
 
 #app-drawer {
@@ -1911,6 +1912,8 @@ input[type="checkbox"]:checked::before {
 
         .app-drawer.open {
             bottom: 0;
+		    transform: none;
+		    filter: none;
         }
 
         .app-drawer-handle {
@@ -2367,6 +2370,7 @@ input[type="checkbox"]:checked::before {
 		        box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
 				height: calc(100% - 150px);
 				margin-bottom: 70px;
+				transform: scale(0.9);
             }
         }
             
