@@ -1411,7 +1411,7 @@ input[type="color"]::-moz-color-swatch {
     background-color: var(--search-background);
     backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
 	box-shadow: var(--sun-shadow);
-    border-radius: 18px;
+    border-radius: 28px;
     transition: background-color 0.2s, transform 0.1s;
     height: 32px;
     border: 1px solid var(--glass-border);
