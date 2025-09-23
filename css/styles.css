@@ -2368,8 +2368,8 @@ input[type="checkbox"]:checked::before {
                 border: 1px solid var(--glass-border);
 				border-radius: 40px;
 		        box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
-				height: calc(100% - 155px);
-				margin-bottom: 75px;
+				height: calc(100% - 160px);
+				margin-bottom: 80px;
 				transform: scale(0.9);
             }
         }
