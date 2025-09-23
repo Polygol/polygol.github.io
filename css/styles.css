@@ -1717,7 +1717,7 @@ input[type="checkbox"]:checked::before {
 	}
 
 	body.minimal-active .widget-instance iframe {
-		filter: grayscale(0.5);
+		filter: grayscale(1);
 	}
 
 	body.minimal-active .fullscreen-embed iframe {
@@ -2191,7 +2191,7 @@ input[type="checkbox"]:checked::before {
 .widget-instance {
     position: absolute;
     background: var(--search-background);
-    border-radius: 25px;
+    border-radius: 28px;
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 1px solid var(--glass-border);
