@@ -366,7 +366,6 @@ input[type="color"]::-moz-color-swatch {
     position: absolute;
     inset: 0;
     z-index: -1;
-    backdrop-filter: blur(0.1px);
 }
 
 .drawer-handle::after {
@@ -377,7 +376,7 @@ input[type="color"]::-moz-color-swatch {
     width: 100%;
     height: 100%;
     z-index: -2;
-    backdrop-filter: blur(1px);
+    backdrop-filter: blur(2.5px);
     mask-image: linear-gradient(
         to bottom,
         rgba(0, 0, 0, 0) 0%,
