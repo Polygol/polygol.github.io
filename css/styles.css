@@ -2363,6 +2363,9 @@ input[type="checkbox"]:checked::before {
                 left: 5vw;
                 width: 90vw;
                 border: 1px solid var(--glass-border);
+				border-radius: 25px;
+				height: calc(100% - 150px);
+				margin-bottom: 70px;
             }
         }
             
