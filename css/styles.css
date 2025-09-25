@@ -477,32 +477,29 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .container {
-    margin: 0 auto;
+    position: absolute;
+    top: var(--clock-pos-y, 50%);
+    left: var(--clock-pos-x, 50%);
+    transform: translate(-50%, -50%); /* Default: Center */
     text-align: center;
-    position: relative;
     transition: color 0.3s;
     user-select: none;
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 90vw; /* Give it a width to prevent overflow */
 }
 
 .container.align-left {
-    margin-left: 5vw;
-    margin-right: auto;
-    text-align: left;
-    display: flex !important;
-    flex-direction: column;
+    transform: translate(0, -50%);
     align-items: flex-start;
+    text-align: left;
 }
 
 .container.align-right {
-    margin-left: auto;
-    margin-right: 5vw;
-    text-align: right;
-    display: flex;
-    flex-direction: column !important;
+    transform: translate(-100%, -50%);
     align-items: flex-end;
+    text-align: right;
 }
 
 .container.align-left .info,
@@ -531,7 +528,7 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .clock {
-    font-size: clamp(10rem, 12vw, 12rem);
+    font-size: calc(clamp(10rem, 12vw, 12rem) * var(--clock-size-multiplier, 1));
     font-weight: 700;
     color: var(--text-color);
     cursor: pointer;
@@ -542,15 +539,26 @@ input[type="color"]::-moz-color-swatch {
     position: relative;
     border-radius: 10px;
     line-height: 1;
-	width: fit-content
+	width: fit-content;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clock .digit, .clock .colon {
+    display: inline-block;
+    text-align: center;
+    font-size: inherit;
+    line-height: inherit;
 }
 
 .clock .digit {
-    display: inline-block;
-    width: 1ch;
-    text-align: center;
-    font-size: inherit; /* Ensure digits inherit the responsive font size */
-    line-height: inherit; /* Maintain line height consistency */
+    width: 1ch; /* Only for digits to maintain monospace feel */
+}
+
+.clock .colon {
+    position: relative;
+    top: -0.05em; /* Fine-tune vertical alignment if needed */
 }
 
 .clock::before {
