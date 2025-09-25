@@ -1430,6 +1430,10 @@ function updateClockAndDate() {
     let dateElement = document.getElementById('date');
     let modalTitle = document.querySelector('#customizeModal h2');
     
+    // Get controls to check conditions for the AM/PM style override
+    const fontSelect = document.getElementById('font-select');
+    const roundnessSlider = document.getElementById('roundness-slider');
+    
     let now = new Date();
     
     let hours = now.getHours();
@@ -1440,16 +1444,17 @@ function updateClockAndDate() {
     let period = '';
     
     if (use12HourFormat) {
-        // 12-hour format
         period = hours >= 12 ? ' PM' : ' AM';
-        // FIX: Convert the result to a string immediately
         displayHours = String(hours % 12 || 12); 
     } else {
-        // 24-hour format
         displayHours = String(hours).padStart(2, '0');
     }
+
+    // --- NEW: Condition check for special AM/PM font ---
+    const useOpenRundeForAmPm = use12HourFormat && 
+                                fontSelect && fontSelect.value === 'Inter' && 
+                                roundnessSlider && parseInt(roundnessSlider.value, 10) > 0;
     
-    // Function to wrap each digit in a container for monospacing
     function wrapDigits(timeString) {
         return timeString.split('').map(char => {
             if (/\d/.test(char)) {
@@ -1460,35 +1465,45 @@ function updateClockAndDate() {
         }).join('');
     }
     
-    // Check if stacked layout is enabled
     const stackSwitch = document.getElementById('clock-stack-switch');
     const isStacked = stackSwitch && stackSwitch.checked;
-    const clock = document.querySelector('.clock');
     
     if (isStacked) {
-        // Stacked format: each time component on a new line with digit containers
-	document.querySelector('.clock').style.fontSize = 'clamp(10rem, 12vw, 12rem)';
+        document.querySelector('.clock').style.fontSize = 'clamp(10rem, 12vw, 12rem)';
+        const amPmText = period.trim();
+        const amPmHtml = useOpenRundeForAmPm 
+            ? `<span style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal;">${amPmText}</span>` 
+            : amPmText;
+
         if (showSeconds) {
             clockElement.innerHTML = `
                 <div>${wrapDigits(displayHours)}</div>
                 <div>${wrapDigits(minutes)}</div>
                 <div>${wrapDigits(seconds)}</div>
-                ${period ? `<div>${period.trim()}</div>` : ''}
+                ${period ? `<div>${amPmHtml}</div>` : ''}
             `;
         } else {
             clockElement.innerHTML = `
                 <div>${wrapDigits(displayHours)}</div>
                 <div>${wrapDigits(minutes)}</div>
-                ${period ? `<div>${period.trim()}</div>` : ''}
+                ${period ? `<div>${amPmHtml}</div>` : ''}
             `;
         }
     } else {
-        // Normal format: standard time display with digit containers
-	document.querySelector('.clock').style.fontSize = '';
+        document.querySelector('.clock').style.fontSize = '';
         const timeString = showSeconds ? 
-            `${displayHours}:${minutes}:${seconds}${period}` : 
-            `${displayHours}:${minutes}${period}`;
-        clockElement.innerHTML = wrapDigits(timeString);
+            `${displayHours}:${minutes}:${seconds}` : 
+            `${displayHours}:${minutes}`;
+        
+        let finalHtml = wrapDigits(timeString);
+        if (useOpenRundeForAmPm) {
+            // Add a styled span for the AM/PM text
+            finalHtml += `<span style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal;">${period}</span>`;
+        } else {
+            // Append the period as plain text
+            finalHtml += period;
+        }
+        clockElement.innerHTML = finalHtml;
     }
         
     let formattedDate = now.toLocaleDateString(undefined, {
