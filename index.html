@@ -252,8 +252,12 @@
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">rounded_corner</span></div>
                         <span class="setting-label">Roundness</span>
                     </div>
-                    <div class="setting-item" id="setting-alignment">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">align_horizontal_center</span></div>
+                    <div class="setting-item" id="setting-size">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">aspect_ratio</span></div>
+                        <span class="setting-label">Size</span>
+                    </div>
+                    <div class="setting-item" id="setting-position">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">open_with</span></div>
                         <span class="setting-label" data-lang-key="ALIGNMENT"></span>
                     </div>
                     <div class="setting-item" id="setting-clock-shadow">
@@ -290,6 +294,25 @@
                 <input type="range" min="50" max="150" value="100" class="wallpaper-effect-slider" id="wallpaper-contrast-slider">
                 <input type="range" min="20" max="100" value="100" class="weight-slider" id="weight-slider">
                 <input type="range" min="0" max="100" value="0" class="roundness-slider" id="roundness-slider">
+                <input type="range" min="-50" max="50" value="0" id="clock-size-slider">
+                <div id="position-controls-popup" class="control-popup-content">
+                    <div class="popup-control-row">
+                        <label for="clock-pos-x-slider">X</label>
+                        <input type="range" min="0" max="100" value="50" id="clock-pos-x-slider">
+                    </div>
+                     <div class="popup-control-row">
+                        <label for="clock-pos-y-slider">Y</label>
+                        <input type="range" min="0" max="100" value="50" id="clock-pos-y-slider">
+                    </div>
+                    <div class="popup-control-row">
+                         <label for="alignment-select">Preset</label>
+                         <select id="alignment-select">
+                            <option value="center" data-lang-key="ALIGN_CENTER">Center</option>
+                            <option value="left" data-lang-key="ALIGN_LEFT">Left</option>
+                            <option value="right" data-lang-key="ALIGN_RIGHT">Right</option>
+                        </select>
+                    </div>
+                </div>
                 <div id="clock-color-popup" class="control-popup-content">
                     <div class="popup-control-row">
                         <label for="clock-color-switch">Solid Color</label>
