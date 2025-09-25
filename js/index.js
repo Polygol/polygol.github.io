@@ -1049,6 +1049,15 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
 
+    const formatItem = document.getElementById('setting-format');
+    const formatPopup = document.getElementById('format-popup');
+    if (formatItem && formatPopup) {
+        formatItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlPopup(formatItem, formatPopup);
+        });
+    }
+
     // --- NEW: Special Handler for Widget Picker ---
     const widgetPickerItem = document.getElementById('setting-widgets');
     if (widgetPickerItem) {
@@ -1437,102 +1446,72 @@ function setupWeatherToggle() {
 }
 
 function updateClockAndDate() {
-    let clockElement = document.getElementById('clock');
-    let dateElement = document.getElementById('date');
-    let modalTitle = document.querySelector('#customizeModal h2');
-    
-    // Get controls to check conditions for the AM/PM style override
+    const clockElement = document.getElementById('clock');
+    const dateElement = document.getElementById('date');
+    const modalTitle = document.querySelector('#customizeModal h2');
+    if (!clockElement || !dateElement) return;
+
     const fontSelect = document.getElementById('font-select');
     const roundnessSlider = document.getElementById('roundness-slider');
-    
-    let now = new Date();
-    
-    let hours = now.getHours();
-    let minutes = String(now.getMinutes()).padStart(2, '0');
-    let seconds = String(now.getSeconds()).padStart(2, '0');
-    
-    let displayHours;
-    let period = '';
-    
-    if (use12HourFormat) {
-        period = hours >= 12 ? ' PM' : ' AM';
-        displayHours = String(hours % 12 || 12); 
-    } else {
-        displayHours = String(hours).padStart(2, '0');
+
+    // Get formats from localStorage with defaults
+    const clockFormat = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm A' : 'HH:mm');
+    const dateFormat = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
+
+    const now = moment();
+    const timeString = now.format(clockFormat);
+    const formattedDate = now.format(dateFormat);
+
+    const useOpenRundeForAmPm = document.getElementById('hour-switch').checked &&
+                                fontSelect && fontSelect.value === 'Inter' &&
+                                roundnessSlider && parseInt(roundnessSlider.value, 10) > 0;
+
+    function wrapTime(fullTimeStr) {
+        const amPmMatch = fullTimeStr.match(/\s?(am|pm)$/i);
+        const timeOnly = amPmMatch ? fullTimeStr.substring(0, amPmMatch.index) : fullTimeStr;
+        const period = amPmMatch ? amPmMatch[0] : '';
+        
+        let wrappedTime = timeOnly.split('').map(char => {
+            if (/\d/.test(char)) return `<span class="digit">${char}</span>`;
+            if (char === ':') return `<span class="colon">${char}</span>`;
+            return char;
+        }).join('');
+
+        if (period) {
+            const periodStyle = useOpenRundeForAmPm ? ` style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal;"` : '';
+            wrappedTime += `<span class="period"${periodStyle}>${period}</span>`;
+        }
+        return wrappedTime;
     }
 
-    // --- NEW: Condition check for special AM/PM font ---
-    const useOpenRundeForAmPm = use12HourFormat && 
-                                fontSelect && fontSelect.value === 'Inter' && 
-                                roundnessSlider && parseInt(roundnessSlider.value, 10) > 0;
-    
-    function wrapDigits(timeString) {
-        return timeString.split('').map(char => {
-            if (/\d/.test(char)) {
-                return `<span class="digit">${char}</span>`;
-            } else if (char === ':') {
-                 // Wrap colons in a specific class
-                return `<span class="colon">${char}</span>`;
-            } else {
-                return char;
-            }
-        }).join('');
-    }
-    
-    const stackSwitch = document.getElementById('clock-stack-switch');
-    const isStacked = stackSwitch && stackSwitch.checked;
-    
+    const isStacked = document.getElementById('clock-stack-switch')?.checked;
+
     if (isStacked) {
         document.querySelector('.clock').style.fontSize = 'clamp(10rem, 12vw, 12rem)';
-        const amPmText = period.trim();
-        const amPmHtml = useOpenRundeForAmPm 
-            ? `<span style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal;">${amPmText}</span>` 
-            : amPmText;
-
-        if (showSeconds) {
-            clockElement.innerHTML = `
-                <div>${wrapDigits(displayHours)}</div>
-                <div>${wrapDigits(minutes)}</div>
-                <div>${wrapDigits(seconds)}</div>
-                ${period ? `<div>${amPmHtml}</div>` : ''}
-            `;
-        } else {
-            clockElement.innerHTML = `
-                <div>${wrapDigits(displayHours)}</div>
-                <div>${wrapDigits(minutes)}</div>
-                ${period ? `<div>${amPmHtml}</div>` : ''}
-            `;
+        const parts = now.format('h mm ss A').split(' ');
+        const displayHours = document.getElementById('hour-switch').checked ? parts[0] : now.format('HH');
+        const amPmText = document.getElementById('hour-switch').checked ? parts[3] : '';
+        const amPmHtml = useOpenRundeForAmPm ? `<span style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal;">${amPmText}</span>` : amPmText;
+        
+        let html = `<div>${wrapTime(displayHours)}</div><div>${wrapTime(parts[1])}</div>`;
+        if (document.getElementById('seconds-switch').checked) {
+            html += `<div>${wrapTime(parts[2])}</div>`;
         }
+        if (amPmText) {
+            html += `<div>${amPmHtml}</div>`;
+        }
+        clockElement.innerHTML = html;
     } else {
         document.querySelector('.clock').style.fontSize = '';
-        const timeString = showSeconds ? 
-            `${displayHours}:${minutes}:${seconds}` : 
-            `${displayHours}:${minutes}`;
-        
-        let finalHtml = wrapDigits(timeString);
-        if (use12HourFormat && period.trim()) { // Check if period has content
-            if (useOpenRundeForAmPm) {
-                finalHtml += `<span class="period" style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal;">${period}</span>`;
-            } else {
-                // Always wrap in a span so CSS can target it
-                finalHtml += `<span class="period">${period}</span>`;
-            }
-        }
-        clockElement.innerHTML = finalHtml;
+        clockElement.innerHTML = wrapTime(timeString);
     }
         
-    let formattedDate = now.toLocaleDateString(undefined, {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric'
-    });
     dateElement.textContent = formattedDate;
     if (modalTitle) modalTitle.textContent = formattedDate;
 
-    // --- FIX to force mask repaint ---
+    // Force mask repaint fix
     if (clockElement.classList.contains('glass-effect')) {
         clockElement.classList.remove('glass-effect');
-        // Reading offsetHeight is a trick to force the browser to reflow
         void clockElement.offsetHeight; 
         clockElement.classList.add('glass-effect');
     }
@@ -2770,6 +2749,59 @@ function setupThemeSwitcher() {
     // Check and set initial theme
     const currentTheme = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('light-theme', currentTheme === 'light');
+}
+
+function setupFormatControls() {
+    const clockFormatInput = document.getElementById('clock-format-input');
+    const dateFormatInput = document.getElementById('date-format-input');
+    const secondsSwitch = document.getElementById('seconds-switch');
+    const hourSwitch = document.getElementById('hour-switch');
+
+    // Load saved formats or set defaults
+    clockFormatInput.value = localStorage.getItem('clockFormat') || (hourSwitch.checked ? 'h:mm A' : 'HH:mm');
+    dateFormatInput.value = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
+
+    // Listen for user input
+    clockFormatInput.addEventListener('input', () => {
+        localStorage.setItem('clockFormat', clockFormatInput.value);
+        updateClockAndDate();
+    });
+
+    dateFormatInput.addEventListener('input', () => {
+        localStorage.setItem('dateFormat', dateFormatInput.value);
+        updateClockAndDate();
+    });
+
+    // Make the toggles act as quick settings
+    secondsSwitch.addEventListener('change', function() {
+        let currentFormat = clockFormatInput.value;
+        if (this.checked) {
+            // Add seconds back if they are missing
+            if (!currentFormat.includes('ss')) {
+                currentFormat = currentFormat.replace(/mm(?!:)/, 'mm:ss');
+            }
+        } else {
+            // Remove seconds
+            currentFormat = currentFormat.replace(/[:.]ss/, '');
+        }
+        clockFormatInput.value = currentFormat;
+        clockFormatInput.dispatchEvent(new Event('input')); // Trigger save and update
+    });
+
+    hourSwitch.addEventListener('change', function() {
+        let currentFormat = clockFormatInput.value;
+        if (this.checked) { // 12-hour
+            currentFormat = currentFormat.replace(/HH/g, 'h').replace(/H/g, 'h');
+            if (!currentFormat.match(/\sA/i)) {
+                currentFormat += ' A';
+            }
+        } else { // 24-hour
+            currentFormat = currentFormat.replace(/h/g, 'H');
+            currentFormat = currentFormat.replace(/\sA/i, '').trim();
+        }
+        clockFormatInput.value = currentFormat;
+        clockFormatInput.dispatchEvent(new Event('input'));
+    });
 }
 
 // Load saved preference
@@ -5219,6 +5251,7 @@ function resetAndApplyDefaultClockStyles() {
 function initializeCustomization() {
     setupThemeSwitcher();
     setupFontSelection();
+    setupFormatControls();
 }
 
 // App definitions
