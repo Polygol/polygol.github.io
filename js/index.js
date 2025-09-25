@@ -4560,7 +4560,7 @@ function switchWallpaper(direction) {
     
     // Apply clock styles for this wallpaper if they exist
     if (wallpaper.clockStyles) {
-        // Update the UI elements
+        // Update UI elements
         const fontSelect = document.getElementById('font-select');
         const weightSlider = document.getElementById('weight-slider');
         const colorPicker = document.getElementById('clock-color-picker');
@@ -4577,14 +4577,23 @@ function switchWallpaper(direction) {
         const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
         const gradientSwitch = document.getElementById('clock-gradient-switch');
         const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
-        const glassSwitch = document.getElementById('clock-glass-switch');
-        const roundnessSlider = document.getElementById('roundness-slider');
+	    const roundnessSlider = document.getElementById('roundness-slider');
+	    const sizeSlider = document.getElementById('clock-size-slider');
+	    const posXSlider = document.getElementById('clock-pos-x-slider');
+	    const posYSlider = document.getElementById('clock-pos-y-slider');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
         if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
         if (colorPicker) colorPicker.value = wallpaper.clockStyles.color || '#ffffff';
         if (colorSwitch) colorSwitch.checked = wallpaper.clockStyles.colorEnabled || false;
         if (stackSwitch) stackSwitch.checked = wallpaper.clockStyles.stackEnabled || false;
+	    if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
+	    if (sizeSlider) sizeSlider.value = wallpaper.clockStyles.clockSize || '0';
+	    if (posXSlider) posXSlider.value = wallpaper.clockStyles.clockPosX || '50';
+	    if (posYSlider) posYSlider.value = wallpaper.clockStyles.clockPosY || '50';
+	    if (alignmentSelect) alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
+	    if (glassSwitch) glassSwitch.checked = wallpaper.clockStyles.glassEnabled || false;
+        if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
         
         if (secondsSwitch) {
             secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
@@ -4614,6 +4623,7 @@ function switchWallpaper(direction) {
         if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
         
         // Apply the styles
+		applyClockLayout();
         applyClockStyles();
         applyWallpaperEffects();
         applyAlignment(wallpaper.clockStyles.alignment || 'center');
@@ -4956,17 +4966,10 @@ function setupFontSelection() {
     });
 
     // --- Special handler for Alignment Preset Dropdown ---
-    alignmentSelect.addEventListener('change', () => {
-        const preset = alignmentSelect.value;
-        if (preset === 'left') {
-            posXSlider.value = 5;
-        } else if (preset === 'right') {
-            posXSlider.value = 95;
-        } else { // center
-            posXSlider.value = 50;
-        }
-        // Trigger input event on the slider to apply the change
-        posXSlider.dispatchEvent(new Event('input', { bubbles: true }));
+    alignmentSelect.addEventListener('change', async () => {
+        applyClockLayout();
+        await saveCurrentWallpaperSettings();
+        syncUiStates();
     });
 
     // Special logic: uncheck gradient if solid color is checked, and vice-versa
@@ -5001,8 +5004,7 @@ function setupFontSelection() {
 // Handle layout (size and position)
 function applyClockLayout() {
     const container = document.querySelector('.container');
-    const clockElement = document.getElementById('clock');
-    if (!container || !clockElement) return;
+    if (!container) return;
 
     const sizeSlider = document.getElementById('clock-size-slider');
     const posXSlider = document.getElementById('clock-pos-x-slider');
@@ -5010,15 +5012,15 @@ function applyClockLayout() {
     const alignmentSelect = document.getElementById('alignment-select');
 
     // 1. Apply Size
-    const sizeValue = parseInt(sizeSlider.value, 10); // from -50 to 50
-    const sizeMultiplier = 1 + (sizeValue / 100); // from 0.5 to 1.5
+    const sizeValue = parseInt(sizeSlider.value, 10);
+    const sizeMultiplier = 1 + (sizeValue / 100);
     container.style.setProperty('--clock-size-multiplier', sizeMultiplier);
 
-    // 2. Apply Position
+    // 2. Apply Position from sliders
     container.style.setProperty('--clock-pos-x', `${posXSlider.value}%`);
     container.style.setProperty('--clock-pos-y', `${posYSlider.value}%`);
 
-    // 3. Apply Alignment (by adding/removing classes for the transform)
+    // 3. Apply Alignment from preset dropdown
     container.classList.remove('align-left', 'align-right');
     const alignment = alignmentSelect.value;
     if (alignment === 'left' || alignment === 'right') {
