@@ -507,9 +507,8 @@ input[type="color"]::-moz-color-swatch {
     justify-content: flex-end;
 }
 
-.clock.glass-effect,
 .info.glass-effect .date,
-.clock.glass-effect .colon {
+.clock.glass-effect > span {
     color: var(--background-color-tr-op) !important;
     background: none !important; /* Ensure no other backgrounds interfere */
 
@@ -522,6 +521,15 @@ input[type="color"]::-moz-color-swatch {
     mask-composite: source-in;
 
     backdrop-filter: blur(5px) saturate(2) contrast(2) var(--edge-refraction-filter);
+}
+
+.clock.gradient-effect {
+    color: transparent;
+}
+.clock.gradient-effect > span {
+    background-image: linear-gradient(45deg, var(--gradient-color-1, #fff), var(--gradient-color-2, #000));
+    -webkit-background-clip: text;
+    background-clip: text;
 }
 
 .clock {
