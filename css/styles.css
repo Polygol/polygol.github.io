@@ -59,6 +59,13 @@
   src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Bold.woff2') format('woff2');
 }
 
+@font-face {
+  font-family: 'Inter Numeric';
+  src: url('/assets/fonts/InterNumeric.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 :root {
     --edge-refraction-filter: url('#edge-refraction-only');
     --sun-shadow: 0 0 0 0 transparent;
@@ -422,6 +429,7 @@ input[type="color"]::-moz-color-swatch {
     visibility: visible;
     transition: opacity 0.3s ease, visibility 0.3s ease;
     user-select: none;
+	font-family: 'Inter Numeric',
     font-variant-numeric: tabular-nums;
     display: flex;
     align-items: center; /* Keeps the image and text aligned */
