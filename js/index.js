@@ -1033,6 +1033,7 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-hour-format', 'hour-switch');
     connectGridItem('setting-style', 'font-select');
     connectGridItem('setting-weight', 'weight-slider');
+    connectGridItem('setting-roundness', 'roundness-slider');
     connectGridItem('setting-alignment', 'alignment-select');
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
@@ -3838,6 +3839,7 @@ function loadRecentWallpapers() {
         gradientEnabled: false,
         gradientColor: '#ffffff',
         glassEnabled: false,
+        roundness: '0',
         customFontName: null,
         customFontUrl: null,
         customLineHeight: null,
@@ -3880,6 +3882,10 @@ function loadRecentWallpapers() {
         }
         if (wallpaper.clockStyles.glassEnabled === undefined) {
             wallpaper.clockStyles.glassEnabled = false;
+            updated = true;
+        }
+        if (wallpaper.clockStyles.roundness === undefined) {
+            wallpaper.clockStyles.roundness = '0';
             updated = true;
         }
         if (wallpaper.clockStyles.customFontName === undefined) {
@@ -4533,6 +4539,7 @@ function switchWallpaper(direction) {
         const gradientSwitch = document.getElementById('clock-gradient-switch');
         const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
         const glassSwitch = document.getElementById('clock-glass-switch');
+        const roundnessSlider = document.getElementById('roundness-slider');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
         if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
@@ -4565,6 +4572,7 @@ function switchWallpaper(direction) {
         if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
         if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
         if (glassSwitch) glassSwitch.checked = wallpaper.clockStyles.glassEnabled || false;
+        if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
         
         // Apply the styles
         applyClockStyles();
@@ -4737,7 +4745,8 @@ function syncUiStates() {
     document.getElementById('setting-wallpaper-blur').classList.toggle('active', document.getElementById('wallpaper-blur-slider').value !== '0');
     document.getElementById('setting-wallpaper-brightness').classList.toggle('active', document.getElementById('wallpaper-brightness-slider').value !== '100');
     document.getElementById('setting-wallpaper-contrast-fx').classList.toggle('active', document.getElementById('wallpaper-contrast-slider').value !== '100');
-
+    document.getElementById('setting-roundness').classList.toggle('active', document.getElementById('roundness-slider').value !== '0');
+	
     // Sync special items
     const isColorActive = document.getElementById('clock-color-switch').checked || document.getElementById('clock-gradient-switch').checked || document.getElementById('clock-glass-switch').checked;
     document.getElementById('setting-clock-color').classList.toggle('active', isColorActive);
@@ -4779,6 +4788,7 @@ function setupFontSelection() {
     const gradientSwitch = document.getElementById('clock-gradient-switch');
     const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
     const glassSwitch = document.getElementById('clock-glass-switch');
+    const roundnessSlider = document.getElementById('roundness-slider');
 
     // --- Function to save all settings (triggered by user interaction) ---
     async function saveCurrentWallpaperSettings() {
@@ -4804,7 +4814,8 @@ function setupFontSelection() {
             shadowColor: shadowColorPicker.value,
             gradientEnabled: gradientSwitch.checked,
             gradientColor: gradientColorPicker.value,
-            glassEnabled: glassSwitch.checked
+            glassEnabled: glassSwitch.checked,
+            roundness: roundnessSlider.value
         };
 
         // Merge them, letting UI changes override existing values
@@ -4858,6 +4869,7 @@ function setupFontSelection() {
     gradientSwitch.checked = localStorage.getItem('gradientEnabled') === 'true';
     gradientColorPicker.value = localStorage.getItem('gradientColor') || '#ffffff';
     glassSwitch.checked = localStorage.getItem('glassEnabled') === 'true';
+    roundnessSlider.value = localStorage.getItem('roundness') || '0';
     // Note: Blur, brightness, and contrast sliders are handled by their own setup logic, but it's safe to include here too.
     blurSlider.value = localStorage.getItem('wallpaperBlur') || '0';
     brightnessSlider.value = localStorage.getItem('wallpaperBrightness') || '100';
@@ -4872,7 +4884,7 @@ function setupFontSelection() {
     const allControls = [
         fontSelect, weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
         blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
-        shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch
+        shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch, roundnessSlider
     ];
 
     allControls.forEach(control => {
@@ -4929,6 +4941,7 @@ function applyClockStyles() {
     const gradientSwitch = document.getElementById('clock-gradient-switch');
     const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
     const glassSwitch = document.getElementById('clock-glass-switch');
+    const roundnessSlider = document.getElementById('roundness-slider');
     
     if (!clockElement || !infoElement) return;
     
@@ -4938,11 +4951,33 @@ function applyClockStyles() {
     // Use custom font if available, otherwise use font from dropdown
     const fontFamily = currentStyles.customFontName || fontSelect.value;
     const fontWeight = parseInt(weightSlider.value, 10) * 10;
-    
-    clockElement.style.fontFamily = `'${fontFamily}', ${fontSelect.value}, Inter, sans-serif`;
-    clockElement.style.fontWeight = fontWeight;
-    infoElement.style.fontFamily = `'${fontFamily}', ${fontSelect.value}, Inter, sans-serif`;
+    const roundnessValue = parseInt(roundnessSlider.value, 10);
+    const selectedFont = fontSelect.value;
+    let clockFontFamily = `'${selectedFont}', Inter, sans-serif`;
+	
+    // --- NEW: Font and Roundness Logic ---
+    clockElement.style.fontVariationSettings = 'normal'; // Reset first
 
+    // Prioritize custom font from Terminal
+    if (currentStyles.customFontName) {
+        clockFontFamily = `'${currentStyles.customFontName}', ${selectedFont}, Inter, sans-serif`;
+    } 
+    // If the default font is selected, check roundness
+    else if (selectedFont === 'Inter') {
+        if (roundnessValue > 0) {
+            clockFontFamily = "'Inter Numeric', sans-serif";
+            const rondValue = roundnessValue / 100;
+            clockElement.style.fontVariationSettings = `'ROND' ${rondValue}`;
+        } else {
+            clockFontFamily = "'Inter', sans-serif"; // Fallback to regular Inter
+        }
+    }
+
+    clockElement.style.fontFamily = clockFontFamily;
+    clockElement.style.fontWeight = fontWeight;
+    // The date/info should always use a standard font
+    infoElement.style.fontFamily = `'${selectedFont}', Inter, sans-serif`;
+	
     // Reset all color/background/effect styles first
     clockElement.style.backgroundImage = 'none';
     clockElement.style.color = ''; // Revert to stylesheet color
@@ -5012,6 +5047,7 @@ function resetAndApplyDefaultClockStyles() {
         gradientEnabled: false,
         gradientColor: '#ffffff',
         glassEnabled: false,
+        roundness: '0',
 		customFontName: null,
         customFontUrl: null,
         customLineHeight: null,
@@ -5036,6 +5072,7 @@ function resetAndApplyDefaultClockStyles() {
     document.getElementById('clock-gradient-switch').checked = defaultStyles.gradientEnabled;
     document.getElementById('clock-gradient-color-picker').value = defaultStyles.gradientColor;
     document.getElementById('clock-glass-switch').checked = defaultStyles.glassEnabled;
+    document.getElementById('roundness-slider').value = defaultStyles.roundness;
 
     // Update global state variables
     showSeconds = defaultStyles.showSeconds;
