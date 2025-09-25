@@ -491,15 +491,11 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .container.align-left {
-    transform: translate(0, -50%);
     align-items: flex-start;
-    text-align: left;
 }
 
 .container.align-right {
-    transform: translate(-100%, -50%);
     align-items: flex-end;
-    text-align: right;
 }
 
 .container.align-left .info,
