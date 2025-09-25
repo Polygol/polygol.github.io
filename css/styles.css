@@ -61,8 +61,8 @@
 
 @font-face {
   font-family: 'Inter Numeric';
-  src: url('/assets/fonts/InterNumeric.ttf') format('truetype');
-  font-weight: normal;
+  src: url('/assets/fonts/InterNumeric.ttf') format('truetype-variations');
+  font-weight: 100 900; /* Define the supported variable weight range */
   font-style: normal;
 }
 
@@ -1519,7 +1519,7 @@ input[type="checkbox"]:checked::before {
     transition: background-color 0.2s, transform 0.1s;
 }
 
-.weight-slider, .wallpaper-effect-slider, #clock-shadow-blur-slider {
+.weight-slider, .roundness-slider, .wallpaper-effect-slider, #clock-shadow-blur-slider {
     -webkit-appearance: none;
     width: unset !important;
     height: 32px;
@@ -1532,7 +1532,7 @@ input[type="checkbox"]:checked::before {
     box-shadow: var(--sun-shadow), 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-.weight-slider::-webkit-slider-thumb, .wallpaper-effect-slider::-webkit-slider-thumb, #clock-shadow-blur-slider::-webkit-slider-thumb {
+.weight-slider::-webkit-slider-thumb, .roundness-slider::webkit-slider-thumb, .wallpaper-effect-slider::-webkit-slider-thumb, #clock-shadow-blur-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 18px;
@@ -1544,13 +1544,13 @@ input[type="checkbox"]:checked::before {
     transition: width 0.3s, height 0.3s, transform 0.3s;
 }
 
-.weight-slider::-webkit-slider-thumb:active, .wallpaper-effect-slider::-webkit-slider-thumb:active, #clock-shadow-blur-slider::-webkit-slider-thumb:active {
+.weight-slider::-webkit-slider-thumb:active, .roundness-slider::-webkit-slider-thumb:active, .wallpaper-effect-slider::-webkit-slider-thumb:active, #clock-shadow-blur-slider::-webkit-slider-thumb:active {
     width: 24px;
     height: 24px;
     transform: scale(1.1);
 }
 
-.weight-slider::-moz-range-thumb, .wallpaper-effect-slider::-moz-range-thumb, #clock-shadow-blur-slider::-moz-range-thumb {
+.weight-slider::-moz-range-thumb, .roundness-slider::-moz-range-thumb, .wallpaper-effect-slider::-moz-range-thumb, #clock-shadow-blur-slider::-moz-range-thumb {
     width: 18px;
     height: 18px;
     border-radius: 50%;
@@ -1560,7 +1560,7 @@ input[type="checkbox"]:checked::before {
     transition: width 0.3s, height 0.3s, transform 0.3s;
 }
 
-.weight-slider::-moz-range-thumb:active, .wallpaper-effect-slider::-moz-range-thumb:active, #clock-shadow-blur-slider::moz-range-thumb:active {
+.weight-slider::-moz-range-thumb:active, .roundness-slider::-moz-range-thumb:active, .wallpaper-effect-slider::-moz-range-thumb:active, #clock-shadow-blur-slider::moz-range-thumb:active {
     width: 24px;
     height: 24px;
     transform: scale(1.1);
