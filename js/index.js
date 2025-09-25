@@ -4949,34 +4949,48 @@ function applyClockStyles() {
                            recentWallpapers[currentWallpaperPosition].clockStyles : {};
     
     // Use custom font if available, otherwise use font from dropdown
-    const fontFamily = currentStyles.customFontName || fontSelect.value;
     const fontWeight = parseInt(weightSlider.value, 10) * 10;
     const roundnessValue = parseInt(roundnessSlider.value, 10);
     const selectedFont = fontSelect.value;
+    
     let clockFontFamily = `'${selectedFont}', Inter, sans-serif`;
-	
-    // --- NEW: Font and Roundness Logic ---
-    clockElement.style.fontVariationSettings = 'normal'; // Reset first
+    let infoFontFamily = `'${selectedFont}', Inter, sans-serif`; // Default for date
+    let roundnessAxis = 'ROND'; // Default to ROND for other fonts
 
-    // Prioritize custom font from Terminal
+    // Reset variation settings for all elements
+    clockElement.style.fontVariationSettings = 'normal';
+    infoElement.style.fontVariationSettings = 'normal';
+
+    // --- Main Font and Roundness Logic ---
+
+    // 1. Prioritize custom font from Terminal
     if (currentStyles.customFontName) {
         clockFontFamily = `'${currentStyles.customFontName}', ${selectedFont}, Inter, sans-serif`;
     } 
-    // If the default font is selected, check roundness
+    // 2. Handle standard fonts from the dropdown
     else if (selectedFont === 'Inter') {
+        roundnessAxis = 'RDNS'; // Inter family uses RDNS for roundness
         if (roundnessValue > 0) {
             clockFontFamily = "'Inter Numeric', sans-serif";
-            const rdnsValue = roundnessValue / 100;
-            clockElement.style.fontVariationSettings = `'RDNS' ${rdnsValue}`;
+            infoFontFamily = "'Open Runde', sans-serif"; // Special case: Use Open Runde for the date
         } else {
-            clockFontFamily = "'Inter', sans-serif"; // Fallback to regular Inter
+            clockFontFamily = "'Inter', sans-serif"; // No roundness, use standard Inter
+            infoFontFamily = "'Inter', sans-serif";
         }
+    } 
+    // For any other font, clockFontFamily and infoFontFamily are already correctly set.
+    // roundnessAxis is already defaulted to 'ROND'.
+
+    // --- Apply font variation settings if roundness is active ---
+    if (roundnessValue > 0) {
+        const roundValue = roundnessValue / 100;
+        clockElement.style.fontVariationSettings = `'${roundnessAxis}' ${roundValue}`;
     }
 
+    // --- Apply final styles to elements ---
     clockElement.style.fontFamily = clockFontFamily;
     clockElement.style.fontWeight = fontWeight;
-    // The date/info should always use a standard font
-    infoElement.style.fontFamily = `'${selectedFont}', Inter, sans-serif`;
+    infoElement.style.fontFamily = infoFontFamily;
 	
     // Reset all color/background/effect styles first
     clockElement.style.backgroundImage = 'none';
