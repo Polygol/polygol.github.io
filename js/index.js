@@ -4577,6 +4577,7 @@ function switchWallpaper(direction) {
         const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
         const gradientSwitch = document.getElementById('clock-gradient-switch');
         const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
+	    const glassSwitch = document.getElementById('clock-glass-switch');
 	    const roundnessSlider = document.getElementById('roundness-slider');
 	    const sizeSlider = document.getElementById('clock-size-slider');
 	    const posXSlider = document.getElementById('clock-pos-x-slider');
