@@ -429,7 +429,7 @@ input[type="color"]::-moz-color-swatch {
     visibility: visible;
     transition: opacity 0.3s ease, visibility 0.3s ease;
     user-select: none;
-	font-family: 'Inter Numeric',
+	font-family: 'Inter Numeric';
     font-variant-numeric: tabular-nums;
     display: flex;
     align-items: center; /* Keeps the image and text aligned */
