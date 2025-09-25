@@ -431,6 +431,7 @@ input[type="color"]::-moz-color-swatch {
     user-select: none;
 	font-family: 'Inter Numeric';
     font-variant-numeric: tabular-nums;
+	font-variation-settings: "RDNS" 1;
     display: flex;
     align-items: center; /* Keeps the image and text aligned */
     gap: 8px; /* Adds spacing between image and text */
