@@ -1532,7 +1532,7 @@ input[type="checkbox"]:checked::before {
     box-shadow: var(--sun-shadow), 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-.weight-slider::-webkit-slider-thumb, .roundness-slider::webkit-slider-thumb, .wallpaper-effect-slider::-webkit-slider-thumb, #clock-shadow-blur-slider::-webkit-slider-thumb {
+.weight-slider::-webkit-slider-thumb, .roundness-slider::-webkit-slider-thumb, .wallpaper-effect-slider::-webkit-slider-thumb, #clock-shadow-blur-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 18px;
