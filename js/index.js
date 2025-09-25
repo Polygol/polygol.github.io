@@ -1021,6 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Special handler for Position Popup ---
     const positionItem = document.getElementById('setting-position');
+    const positionPopup = document.getElementById('position-controls-popup');
     if (positionItem) {
         positionItem.addEventListener('click', (e) => {
             e.stopPropagation();
