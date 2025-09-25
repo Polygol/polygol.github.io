@@ -4770,11 +4770,19 @@ function syncUiStates() {
     document.getElementById('setting-weight').classList.toggle('active', document.getElementById('weight-slider').value !== '70');
     document.getElementById('setting-style').classList.toggle('active', document.getElementById('font-select').value !== 'Inter');
     document.getElementById('setting-wallpaper').classList.toggle('active', recentWallpapers.length > 0);
-    document.getElementById('setting-alignment').classList.toggle('active', document.getElementById('alignment-select').value !== 'center');
+    
+    // Update to use the new 'setting-position' ID and check all relevant sliders
+    const posX = document.getElementById('clock-pos-x-slider').value;
+    const posY = document.getElementById('clock-pos-y-slider').value;
+    document.getElementById('setting-position').classList.toggle('active', posX !== '50' || posY !== '50');
+    
     document.getElementById('setting-wallpaper-blur').classList.toggle('active', document.getElementById('wallpaper-blur-slider').value !== '0');
     document.getElementById('setting-wallpaper-brightness').classList.toggle('active', document.getElementById('wallpaper-brightness-slider').value !== '100');
     document.getElementById('setting-wallpaper-contrast-fx').classList.toggle('active', document.getElementById('wallpaper-contrast-slider').value !== '100');
+    
+    // Add roundness and size to sync
     document.getElementById('setting-roundness').classList.toggle('active', document.getElementById('roundness-slider').value !== '0');
+    document.getElementById('setting-size').classList.toggle('active', document.getElementById('clock-size-slider').value !== '0');
 	
     // Sync special items
     const isColorActive = document.getElementById('clock-color-switch').checked || document.getElementById('clock-gradient-switch').checked || document.getElementById('clock-glass-switch').checked;
