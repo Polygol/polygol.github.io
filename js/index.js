@@ -4966,8 +4966,8 @@ function applyClockStyles() {
     else if (selectedFont === 'Inter') {
         if (roundnessValue > 0) {
             clockFontFamily = "'Inter Numeric', sans-serif";
-            const rondValue = roundnessValue / 100;
-            clockElement.style.fontVariationSettings = `'ROND' ${rondValue}`;
+            const rdnsValue = roundnessValue / 100;
+            clockElement.style.fontVariationSettings = `'RDNS' ${rdnsValue}`;
         } else {
             clockFontFamily = "'Inter', sans-serif"; // Fallback to regular Inter
         }
