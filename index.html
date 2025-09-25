@@ -264,6 +264,10 @@
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">text_select_move_down</span></div>
                         <span class="setting-label" data-lang-key="SHADOW">Shadow</span>
                     </div>
+                    <div class="setting-item" id="setting-format">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">edit_calendar</span></div>
+                        <span class="setting-label" data-lang-key="FORMAT">Format</span>
+                    </div>
                 </div>
                 <div class="settings-grid wallpaper-settings" style="border-radius: 10px 10px 28px 28px;">
                     <div class="setting-item" id="setting-wallpaper">
@@ -341,6 +345,16 @@
                     <div class="popup-control-row">
                         <label for="clock-shadow-color-picker">Color</label>
                         <input type="color" id="clock-shadow-color-picker">
+                    </div>
+                </div>
+                <div id="format-popup" class="control-popup-content">
+                    <div class="popup-control-row" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+                        <label for="date-format-input" data-lang-key="DATE_FORMAT">Date Format</label>
+                        <input type="text" id="date-format-input" placeholder="e.g., dddd, MMMM D" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 12px; background: var(--transparent-color); border: 1px solid var(--glass-border); color: var(--text-color);">
+                    </div>
+                    <div class="popup-control-row" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+                        <label for="clock-format-input" data-lang-key="CLOCK_FORMAT">Clock Format</label>
+                        <input type="text" id="clock-format-input" placeholder="e.g., HH:mm:ss" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 12px; background: var(--transparent-color); border: 1px solid var(--glass-border); color: var(--text-color);">
                     </div>
                 </div>
                 <input type="checkbox" id="seconds-switch" checked>
