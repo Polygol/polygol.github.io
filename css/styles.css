@@ -512,7 +512,8 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .clock.glass-effect,
-.info.glass-effect .date {
+.info.glass-effect .date,
+.clock.glass-effect .colon {
     color: var(--background-color-tr-op) !important;
     background: none !important; /* Ensure no other backgrounds interfere */
 
@@ -558,7 +559,7 @@ input[type="color"]::-moz-color-swatch {
 
 .clock .colon {
     position: relative;
-    top: -0.05em; /* Fine-tune vertical alignment if needed */
+    top: -0.1em; /* Fine-tune vertical alignment if needed */
 }
 
 .clock::before {
