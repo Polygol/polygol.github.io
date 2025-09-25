@@ -1034,6 +1034,7 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-style', 'font-select');
     connectGridItem('setting-weight', 'weight-slider');
     connectGridItem('setting-roundness', 'roundness-slider');
+    connectGridItem('setting-size', 'clock-size-slider');
     connectGridItem('setting-alignment', 'alignment-select');
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
@@ -1459,6 +1460,9 @@ function updateClockAndDate() {
         return timeString.split('').map(char => {
             if (/\d/.test(char)) {
                 return `<span class="digit">${char}</span>`;
+            } else if (char === ':') {
+                 // Wrap colons in a specific class
+                return `<span class="colon">${char}</span>`;
             } else {
                 return char;
             }
@@ -4431,12 +4435,21 @@ async function jumpToWallpaper(index) {
         const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
         const gradientSwitch = document.getElementById('clock-gradient-switch');
         const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
+	    const roundnessSlider = document.getElementById('roundness-slider');
+	    const sizeSlider = document.getElementById('clock-size-slider');
+	    const posXSlider = document.getElementById('clock-pos-x-slider');
+	    const posYSlider = document.getElementById('clock-pos-y-slider');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
         if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
         if (colorPicker) colorPicker.value = wallpaper.clockStyles.color || '#ffffff';
         if (colorSwitch) colorSwitch.checked = wallpaper.clockStyles.colorEnabled || false;
         if (stackSwitch) stackSwitch.checked = wallpaper.clockStyles.stackEnabled || false;
+	    if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
+	    if (sizeSlider) sizeSlider.value = wallpaper.clockStyles.clockSize || '0';
+	    if (posXSlider) posXSlider.value = wallpaper.clockStyles.clockPosX || '50';
+	    if (posYSlider) posYSlider.value = wallpaper.clockStyles.clockPosY || '50';
+	    if (alignmentSelect) alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
         
         if (secondsSwitch) {
             secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
@@ -4465,6 +4478,7 @@ async function jumpToWallpaper(index) {
 
 
         // Apply the styles
+	    applyClockLayout();
         applyClockStyles();
         applyWallpaperEffects();
         applyAlignment(wallpaper.clockStyles.alignment || 'center');
@@ -4804,6 +4818,10 @@ function setupFontSelection() {
     const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
     const glassSwitch = document.getElementById('clock-glass-switch');
     const roundnessSlider = document.getElementById('roundness-slider');
+    const sizeSlider = document.getElementById('clock-size-slider');
+    const posXSlider = document.getElementById('clock-pos-x-slider');
+    const posYSlider = document.getElementById('clock-pos-y-slider');
+    const positionPopup = document.getElementById('position-controls-popup');
 
     // --- Function to save all settings (triggered by user interaction) ---
     async function saveCurrentWallpaperSettings() {
@@ -4820,8 +4838,11 @@ function setupFontSelection() {
             stackEnabled: stackSwitch.checked,
             showSeconds: document.getElementById('seconds-switch')?.checked,
             showWeather: document.getElementById('weather-switch')?.checked,
+            clockSize: sizeSlider.value,
+            clockPosX: posXSlider.value,
+            clockPosY: posYSlider.value,
             alignment: alignmentSelect.value,
-            wallpaperBlur: blurSlider.value,
+			wallpaperBlur: blurSlider.value,
             wallpaperBrightness: brightnessSlider.value,
             wallpaperContrast: contrastSlider.value,
             shadowEnabled: shadowSwitch.checked,
@@ -4877,8 +4898,11 @@ function setupFontSelection() {
     colorPicker.value = localStorage.getItem('color') || defaultColor; // FIX: Use 'color'
     colorSwitch.checked = localStorage.getItem('colorEnabled') === 'true';
     stackSwitch.checked = localStorage.getItem('stackEnabled') === 'true'; // FIX: Use 'stackEnabled'
-    alignmentSelect.value = localStorage.getItem('alignment') || 'center'; // FIX: Use 'alignment'
-    shadowSwitch.checked = localStorage.getItem('shadowEnabled') === 'true';
+    sizeSlider.value = localStorage.getItem('clockSize') || '0';
+    posXSlider.value = localStorage.getItem('clockPosX') || '50';
+    posYSlider.value = localStorage.getItem('clockPosY') || '50';
+    alignmentSelect.value = localStorage.getItem('alignment') || 'center';
+	shadowSwitch.checked = localStorage.getItem('shadowEnabled') === 'true';
     shadowBlurSlider.value = localStorage.getItem('shadowBlur') || '10';
     shadowColorPicker.value = localStorage.getItem('shadowColor') || '#000000';
     gradientSwitch.checked = localStorage.getItem('gradientEnabled') === 'true';
@@ -4899,19 +4923,42 @@ function setupFontSelection() {
     const allControls = [
         fontSelect, weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
         blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
-        shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch, roundnessSlider
+        shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch, roundnessSlider,
+        sizeSlider, posXSlider, posYSlider, alignmentSelect
     ];
 
     allControls.forEach(control => {
         const eventType = (control.type === 'checkbox' || control.tagName === 'SELECT') ? 'change' : 'input';
-        control.addEventListener(eventType, () => {
+        control.addEventListener(eventType, async () => {
+            applyClockLayout();
             applyClockStyles();
-            applyWallpaperEffects();
-            applyAlignment(alignmentSelect.value);
-            saveCurrentWallpaperSettings();
+            await saveCurrentWallpaperSettings();
             syncUiStates();
         });
     });
+
+    // --- Special handler for Alignment Preset Dropdown ---
+    alignmentSelect.addEventListener('change', () => {
+        const preset = alignmentSelect.value;
+        if (preset === 'left') {
+            posXSlider.value = 5;
+        } else if (preset === 'right') {
+            posXSlider.value = 95;
+        } else { // center
+            posXSlider.value = 50;
+        }
+        // Trigger input event on the slider to apply the change
+        posXSlider.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    // --- Special handler for Position Popup ---
+    const positionItem = document.getElementById('setting-position');
+    if (positionItem) {
+        positionItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlPopup(positionItem, positionPopup);
+        });
+    }
 
     // Special logic: uncheck gradient if solid color is checked, and vice-versa
     colorSwitch.addEventListener('change', () => {
@@ -4940,6 +4987,34 @@ function setupFontSelection() {
             syncUiStates();
         }
     });
+}
+
+// Handle layout (size and position)
+function applyClockLayout() {
+    const container = document.querySelector('.container');
+    const clockElement = document.getElementById('clock');
+    if (!container || !clockElement) return;
+
+    const sizeSlider = document.getElementById('clock-size-slider');
+    const posXSlider = document.getElementById('clock-pos-x-slider');
+    const posYSlider = document.getElementById('clock-pos-y-slider');
+    const alignmentSelect = document.getElementById('alignment-select');
+
+    // 1. Apply Size
+    const sizeValue = parseInt(sizeSlider.value, 10); // from -50 to 50
+    const sizeMultiplier = 1 + (sizeValue / 100); // from 0.5 to 1.5
+    container.style.setProperty('--clock-size-multiplier', sizeMultiplier);
+
+    // 2. Apply Position
+    container.style.setProperty('--clock-pos-x', `${posXSlider.value}%`);
+    container.style.setProperty('--clock-pos-y', `${posYSlider.value}%`);
+
+    // 3. Apply Alignment (by adding/removing classes for the transform)
+    container.classList.remove('align-left', 'align-right');
+    const alignment = alignmentSelect.value;
+    if (alignment === 'left' || alignment === 'right') {
+        container.classList.add(`align-${alignment}`);
+    }
 }
 
 function applyClockStyles() {
@@ -5067,6 +5142,9 @@ function resetAndApplyDefaultClockStyles() {
         showSeconds: true,
         showWeather: true,
         alignment: 'center',
+	    clockSize: '0',
+	    clockPosX: '50',
+	    clockPosY: '50',
         wallpaperBlur: '0',
         wallpaperBrightness: '100',
         wallpaperContrast: '100',
@@ -5091,7 +5169,7 @@ function resetAndApplyDefaultClockStyles() {
     document.getElementById('clock-stack-switch').checked = defaultStyles.stackEnabled;
     document.getElementById('seconds-switch').checked = defaultStyles.showSeconds;
     document.getElementById('weather-switch').checked = defaultStyles.showWeather;
-    document.getElementById('alignment-select').value = defaultStyles.alignment;
+	document.getElementById('alignment-select').value = defaultStyles.alignment;
     document.getElementById('wallpaper-blur-slider').value = defaultStyles.wallpaperBlur;
     document.getElementById('wallpaper-brightness-slider').value = defaultStyles.wallpaperBrightness;
     document.getElementById('wallpaper-contrast-slider').value = defaultStyles.wallpaperContrast;
@@ -5102,12 +5180,16 @@ function resetAndApplyDefaultClockStyles() {
     document.getElementById('clock-gradient-color-picker').value = defaultStyles.gradientColor;
     document.getElementById('clock-glass-switch').checked = defaultStyles.glassEnabled;
     document.getElementById('roundness-slider').value = defaultStyles.roundness;
+	document.getElementById('clock-size-slider').value = defaultStyles.clockSize;
+	document.getElementById('clock-pos-x-slider').value = defaultStyles.clockPosX;
+	document.getElementById('clock-pos-y-slider').value = defaultStyles.clockPosY;
 
     // Update global state variables
     showSeconds = defaultStyles.showSeconds;
     showWeather = defaultStyles.showWeather;
 
     // Apply the visual changes
+	applyClockLayout();
     applyClockStyles();
     applyWallpaperEffects();
     applyAlignment(defaultStyles.alignment);
