@@ -1019,6 +1019,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Special handler for Position Popup ---
+    const positionItem = document.getElementById('setting-position');
+    if (positionItem) {
+        positionItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlPopup(positionItem, positionPopup);
+        });
+    }
+
     // --- Connect all other settings ---
     connectGridItem('setting-wallpaper', 'uploadButton');
     connectGridItem('setting-wallpaper-blur', 'wallpaper-blur-slider');
@@ -4958,15 +4967,6 @@ function setupFontSelection() {
         // Trigger input event on the slider to apply the change
         posXSlider.dispatchEvent(new Event('input', { bubbles: true }));
     });
-
-    // --- Special handler for Position Popup ---
-    const positionItem = document.getElementById('setting-position');
-    if (positionItem) {
-        positionItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showControlPopup(positionItem, positionPopup);
-        });
-    }
 
     // Special logic: uncheck gradient if solid color is checked, and vice-versa
     colorSwitch.addEventListener('change', () => {
