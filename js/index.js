@@ -1510,12 +1510,13 @@ function updateClockAndDate() {
             `${displayHours}:${minutes}`;
         
         let finalHtml = wrapDigits(timeString);
-        if (useOpenRundeForAmPm) {
-            // Add a styled span for the AM/PM text
-            finalHtml += `<span style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal;">${period}</span>`;
-        } else {
-            // Append the period as plain text
-            finalHtml += period;
+        if (use12HourFormat && period.trim()) { // Check if period has content
+            if (useOpenRundeForAmPm) {
+                finalHtml += `<span class="period" style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal;">${period}</span>`;
+            } else {
+                // Always wrap in a span so CSS can target it
+                finalHtml += `<span class="period">${period}</span>`;
+            }
         }
         clockElement.innerHTML = finalHtml;
     }
@@ -5097,7 +5098,7 @@ function applyClockStyles() {
     // Reset all color/background/effect styles first
     clockElement.style.backgroundImage = 'none';
     clockElement.style.color = ''; // Revert to stylesheet color
-    clockElement.classList.remove('glass-effect');
+    clockElement.classList.remove('glass-effect', 'gradient-effect');
     
     infoElement.style.color = '';
     infoElement.classList.remove('glass-effect');
@@ -5112,10 +5113,9 @@ function applyClockStyles() {
     } else if (gradientSwitch && gradientSwitch.checked) {
         const color1 = colorPicker.value;
         const color2 = gradientColorPicker.value;
-        clockElement.style.backgroundImage = `linear-gradient(45deg, ${color1}, ${color2})`;
-        clockElement.style.webkitBackgroundClip = 'text';
-        clockElement.style.backgroundClip = 'text';
-        clockElement.style.color = 'transparent'; // Required for gradient to show
+        clockElement.style.setProperty('--gradient-color-1', color1);
+        clockElement.style.setProperty('--gradient-color-2', color2);
+        clockElement.classList.add('gradient-effect');
         infoElement.style.color = color1; // Use the primary color for the date
     } else if (colorSwitch && colorSwitch.checked) {
         clockElement.style.color = colorPicker.value;
