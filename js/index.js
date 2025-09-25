@@ -5204,7 +5204,6 @@ function resetAndApplyDefaultClockStyles() {
 	applyClockLayout();
     applyClockStyles();
     applyWallpaperEffects();
-    applyAlignment(defaultStyles.alignment);
     updateWeatherVisibility();
     updateClockAndDate();
 
