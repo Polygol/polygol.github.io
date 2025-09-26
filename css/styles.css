@@ -66,6 +66,34 @@
   font-style: normal;
 }
 
+/* --- Loading Screen Styles --- */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-color-dark); /* Match default theme */
+    z-index: 999999999999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+}
+
+.loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-logo {
+    width: 128px;
+    height: 128px;
+}
+
 :root {
     --edge-refraction-filter: url('#edge-refraction-only');
     --sun-shadow: 0 0 0 0 transparent;
