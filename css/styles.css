@@ -2282,7 +2282,6 @@ input[type="checkbox"]:checked::before {
 	box-shadow: var(--sun-shadow);
     width: 200px; /* Default size, can be overridden */
     height: 200px;
-    pointer-events: auto; /* Widgets are interactive */
     touch-action: none; /* Prevent page scroll on mobile */
 	box-sizing: border-box; 
 }
@@ -2297,6 +2296,7 @@ input[type="checkbox"]:checked::before {
     height: 100%;
     border: none;
     border-radius: 25px; /* Ensure iframe respects the border radius */
+	pointer-events: none;
 }
 
 .widget-instance-overlay {
