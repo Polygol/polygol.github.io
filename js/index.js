@@ -1273,7 +1273,7 @@ function updateTitle() {
     const weatherIconElement = document.getElementById('weather-icon');
 
     if (temperatureElement && weatherIconElement && weatherIconElement.dataset.weatherCode) {
-      const temperature = temperatureElement
+      const temperature = temperatureElement.textContent;
       const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
 
       if (weatherConditionsForTitle[weatherCode]) {
