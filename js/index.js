@@ -2813,10 +2813,6 @@ function setupFormatControls() {
     const secondsSwitch = document.getElementById('seconds-switch');
     const hourSwitch = document.getElementById('hour-switch');
 
-    // Load saved formats or set defaults
-    clockFormatInput.value = localStorage.getItem('clockFormat') || (hourSwitch.checked ? 'h:mm:ss A' : 'HH:mm:ss');
-    dateFormatInput.value = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
-
     // Listen for user input
     clockFormatInput.addEventListener('input', () => {
         localStorage.setItem('clockFormat', clockFormatInput.value);
@@ -4549,6 +4545,8 @@ async function jumpToWallpaper(index) {
 	    const posXSlider = document.getElementById('clock-pos-x-slider');
 	    const posYSlider = document.getElementById('clock-pos-y-slider');
 	    const clockFormatInput = document.getElementById('clock-format-input');
+        const dateFormatInput = document.getElementById('date-format-input');
+        const clockFormatInput = document.getElementById('clock-format-input');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
         if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
@@ -4560,8 +4558,8 @@ async function jumpToWallpaper(index) {
 	    if (posXSlider) posXSlider.value = wallpaper.clockStyles.clockPosX || '50';
 	    if (posYSlider) posYSlider.value = wallpaper.clockStyles.clockPosY || '50';
 	    if (alignmentSelect) alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
-	    if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'dddd, MMMM D';
-	    if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || 'h:mm A';
+        if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'dddd, MMMM D';
+        if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
         
         if (secondsSwitch) {
             secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
@@ -5060,6 +5058,8 @@ function setupFontSelection() {
     blurSlider.value = localStorage.getItem('wallpaperBlur') || '0';
     brightnessSlider.value = localStorage.getItem('wallpaperBrightness') || '100';
     contrastSlider.value = localStorage.getItem('wallpaperContrast') || '100';
+    document.getElementById('date-format-input').value = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
+    document.getElementById('clock-format-input').value = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm A' : 'HH:mm');
 
     // --- 2. Apply the visual styles based on the now-correct state of the controls ---
     applyClockLayout();
