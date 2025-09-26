@@ -5094,7 +5094,7 @@ function setupFontSelection() {
     ];
 
     allControls.forEach(control => {
-        const eventType = (control.type === 'checkbox' || con trol.tagName === 'SELECT') ? 'change' : 'input';
+        const eventType = (control.type === 'checkbox' || control.tagName === 'SELECT') ? 'change' : 'input';
         control.addEventListener(eventType, async () => {
             applyClockLayout();
             applyClockStyles();
