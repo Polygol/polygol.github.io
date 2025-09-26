@@ -1260,11 +1260,11 @@ function updateTitle() {
     const weatherIconElement = document.getElementById('weather-icon');
 
     if (temperatureElement && weatherIconElement && weatherIconElement.dataset.weatherCode) {
-      const temperature = temperatureElement.textContent.replace('°', '');
+      const temperature = temperatureElement
       const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
 
       if (weatherConditionsForTitle[weatherCode]) {
-        weatherString = ` | ${temperature}° ${weatherConditionsForTitle[weatherCode].icon}`;
+        weatherString = ` | ${temperature} ${weatherConditionsForTitle[weatherCode].icon}`;
       }
     }
   }
