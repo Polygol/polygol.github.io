@@ -540,7 +540,7 @@ input[type="color"]::-moz-color-swatch {
     user-select: none;
     font-variant-numeric: tabular-nums;
     transform: scale(1);
-    transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1) !important;
     position: relative;
     border-radius: 10px;
     line-height: 1;
@@ -555,7 +555,7 @@ input[type="color"]::-moz-color-swatch {
     text-align: center;
     font-size: inherit;
     line-height: inherit;
-    transition: none !important;
+	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1) !important;
 }
 
 .clock .digit {
@@ -567,7 +567,7 @@ input[type="color"]::-moz-color-swatch {
     top: -0.1em; /* Fine-tune vertical alignment if needed */
 }
 
-.clock::before {
+/* .clock::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -588,11 +588,10 @@ input[type="color"]::-moz-color-swatch {
     border-radius: inherit;
     mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
     -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
-}
+} */
 
         .clock:active {
             transform: scale(1.04);
-            transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
             filter: brightness(1.5);
         }
 
@@ -613,12 +612,12 @@ input[type="color"]::-moz-color-swatch {
     cursor: pointer;
     user-select: none;
     transform: scale(1);
-    transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1) !important;
     position: relative;
     border-radius: 10px;
 }
 
-.date::before {
+/* .date::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -639,11 +638,10 @@ input[type="color"]::-moz-color-swatch {
     border-radius: inherit;
     mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
     -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
-}
+} */
 
         .date:active {
             transform: scale(1.04);
-            transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
             filter: brightness(1.5);
         }
 
@@ -808,7 +806,6 @@ input[type="color"]::-moz-color-swatch {
 
 .weather-widget:active {
     transform: scale(1.04);
-    transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
     filter: brightness(1.5);
 }
 
