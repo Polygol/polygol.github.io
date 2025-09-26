@@ -4546,7 +4546,7 @@ async function jumpToWallpaper(index) {
 	    const roundnessSlider = document.getElementById('roundness-slider');
 	    const sizeSlider = document.getElementById('clock-size-slider');
 	    const posXSlider = document.getElementById('clock-pos-x-slider');
-	    const posYSlider = document.getElementById('clock-pos-y-slider');\
+	    const posYSlider = document.getElementById('clock-pos-y-slider');
 	    const clockFormatInput = document.getElementById('clock-format-input');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
