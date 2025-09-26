@@ -1520,7 +1520,7 @@ function updateClockAndDate() {
         let wrappedTime = wrapDigits(timeOnly);
 
         if (period) {
-            const periodStyle = useOpenRundeForAmPm ? ` style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal; transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1) !important;"` : '';
+            const periodStyle = useOpenRundeForAmPm ? `style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal; transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1), font-size 0.3s cubic-bezier(.3,1.2,.64,1) !important;"` : '';
             wrappedTime += `<span class="period"${periodStyle}>${period}</span>`;
         }
         return wrappedTime;
@@ -1548,7 +1548,7 @@ function updateClockAndDate() {
         if (periodFormat) {
             const amPmText = now.format(periodFormat[0]);
             const amPmHtml = useOpenRundeForAmPm 
-                ? `<span style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal;">${amPmText}</span>`
+                ? `<span style="style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal; transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1), font-size 0.3s cubic-bezier(.3,1.2,.64,1) !important;">${amPmText}</span>`
                 : amPmText;
             html += `<div>${amPmHtml}</div>`;
         }
