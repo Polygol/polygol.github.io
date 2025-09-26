@@ -5002,6 +5002,7 @@ function setupFontSelection() {
     contrastSlider.value = localStorage.getItem('wallpaperContrast') || '100';
 
     // --- 2. Apply the visual styles based on the now-correct state of the controls ---
+    applyClockLayout();
     applyClockStyles();
     applyWallpaperEffects();
     applyAlignment(alignmentSelect.value);
