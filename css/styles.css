@@ -520,7 +520,7 @@ input[type="color"]::-moz-color-swatch {
     mask-composite: source-in;
 
     backdrop-filter: blur(5px) saturate(2) contrast(2) var(--edge-refraction-filter);
-	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1) !important;
+	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1), font-size 0.3s cubic-bezier(.3,1.2,.64,1) !important;
 }
 
 .clock.gradient-effect {
@@ -540,7 +540,7 @@ input[type="color"]::-moz-color-swatch {
     user-select: none;
     font-variant-numeric: tabular-nums;
     transform: scale(1);
-	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1) !important;
+	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1), font-size 0.3s cubic-bezier(.3,1.2,.64,1) !important;
     position: relative;
     border-radius: 10px;
     line-height: 1;
@@ -555,7 +555,7 @@ input[type="color"]::-moz-color-swatch {
     text-align: center;
     font-size: inherit;
     line-height: inherit;
-	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1) !important;
+	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1), font-size 0.3s cubic-bezier(.3,1.2,.64,1) !important;
 }
 
 .clock .digit {
