@@ -7229,18 +7229,29 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupServiceWorkerUpdateListener(); 
 });
 
-window.addEventListener('load', checkFullscreen);
+window.onload = function() {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        // Add a class to trigger the fade-out animation
+        loadingScreen.classList.add('hidden');
+        
+        // Remove the element from the DOM after the transition is complete
+        setTimeout(() => {
+            loadingScreen.remove();
+        }, 500); // This duration must match the CSS transition time
+    }
+
+    ensureVideoLoaded();
+    consoleLoaded();
+	checkFullscreen();
+    promptToInstallPWA();
+};
 
 // Listen for fullscreen change events across different browsers
 document.addEventListener('fullscreenchange', checkFullscreen);
 document.addEventListener('webkitfullscreenchange', checkFullscreen);
 document.addEventListener('mozfullscreenchange', checkFullscreen);
 document.addEventListener('MSFullscreenChange', checkFullscreen);
-
-window.addEventListener('load', () => {
-    ensureVideoLoaded();
-    consoleLoaded();
-});
 
 // Close customizeModal when clicking outside
 blurOverlayControls.addEventListener('click', () => {
@@ -7257,10 +7268,6 @@ function closeControls() {
         blurOverlayControls.style.display = 'none';
     }, 300);
 }
-
-window.addEventListener('load', () => {
-    promptToInstallPWA();
-});
 
 setInterval(ensureVideoLoaded, 1000);
 
