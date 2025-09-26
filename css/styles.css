@@ -520,7 +520,7 @@ input[type="color"]::-moz-color-swatch {
     mask-composite: source-in;
 
     backdrop-filter: blur(5px) saturate(2) contrast(2) var(--edge-refraction-filter);
-    transition: scale 0.3s cubic-bezier(.3,1.2,.64,1) !IMPORTANT;
+	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1) !important;
 }
 
 .clock.gradient-effect {
