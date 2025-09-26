@@ -1446,36 +1446,48 @@ function setupWeatherToggle() {
 }
 
 function updateClockAndDate() {
-    const clockElement = document.getElementById('clock');
-    const dateElement = document.getElementById('date');
-    const modalTitle = document.querySelector('#customizeModal h2');
+    let clockElement = document.getElementById('clock');
+    let dateElement = document.getElementById('date');
+    let modalTitle = document.querySelector('#customizeModal h2');
     if (!clockElement || !dateElement) return;
 
     const fontSelect = document.getElementById('font-select');
     const roundnessSlider = document.getElementById('roundness-slider');
+    const hourSwitch = document.getElementById('hour-switch');
+    const secondsSwitch = document.getElementById('seconds-switch');
 
     // Get formats from localStorage with defaults
-    const clockFormat = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm A' : 'HH:mm');
+    const clockFormat = localStorage.getItem('clockFormat') || (hourSwitch.checked ? 'h:mm A' : 'HH:mm');
     const dateFormat = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
 
     const now = moment();
     const timeString = now.format(clockFormat);
     const formattedDate = now.format(dateFormat);
-
-    const useOpenRundeForAmPm = document.getElementById('hour-switch').checked &&
-                                fontSelect && fontSelect.value === 'Inter' &&
+    
+    // Condition for special AM/PM font
+    const useOpenRundeForAmPm = hourSwitch.checked && 
+                                fontSelect && fontSelect.value === 'Inter' && 
                                 roundnessSlider && parseInt(roundnessSlider.value, 10) > 0;
+    
+    function wrapDigits(timeString) {
+        return timeString.split('').map(char => {
+            if (/\d/.test(char)) {
+                return `<span class="digit">${char}</span>`;
+            } else if (char === ':') {
+                return `<span class="colon">${char}</span>`;
+            }
+            // Also wrap other separators for custom formats
+            if (/[.,]/.test(char)) return `<span class="separator">${char}</span>`;
+            return char;
+        }).join('');
+    }
 
     function wrapTime(fullTimeStr) {
         const amPmMatch = fullTimeStr.match(/\s?(am|pm)$/i);
         const timeOnly = amPmMatch ? fullTimeStr.substring(0, amPmMatch.index) : fullTimeStr;
         const period = amPmMatch ? amPmMatch[0] : '';
         
-        let wrappedTime = timeOnly.split('').map(char => {
-            if (/\d/.test(char)) return `<span class="digit">${char}</span>`;
-            if (char === ':') return `<span class="colon">${char}</span>`;
-            return char;
-        }).join('');
+        let wrappedTime = wrapDigits(timeOnly);
 
         if (period) {
             const periodStyle = useOpenRundeForAmPm ? ` style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal;"` : '';
@@ -1483,35 +1495,48 @@ function updateClockAndDate() {
         }
         return wrappedTime;
     }
-
+    
     const isStacked = document.getElementById('clock-stack-switch')?.checked;
-
+    
     if (isStacked) {
-        document.querySelector('.clock').style.fontSize = 'clamp(10rem, 12vw, 12rem)';
-        const parts = now.format('h mm ss A').split(' ');
-        const displayHours = document.getElementById('hour-switch').checked ? parts[0] : now.format('HH');
-        const amPmText = document.getElementById('hour-switch').checked ? parts[3] : '';
-        const amPmHtml = useOpenRundeForAmPm ? `<span style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal;">${amPmText}</span>` : amPmText;
+        let html = '';
         
-        let html = `<div>${wrapTime(displayHours)}</div><div>${wrapTime(parts[1])}</div>`;
-        if (document.getElementById('seconds-switch').checked) {
-            html += `<div>${wrapTime(parts[2])}</div>`;
-        }
-        if (amPmText) {
+        // Hour
+        let hourFormat = clockFormat.match(/[hH]{1,2}/);
+        if(hourFormat) html += `<div>${wrapDigits(now.format(hourFormat[0]))}</div>`;
+
+        // Minute
+        let minuteFormat = clockFormat.match(/m{1,2}/);
+        if(minuteFormat) html += `<div>${wrapDigits(now.format(minuteFormat[0]))}</div>`;
+        
+        // Second
+        let secondFormat = clockFormat.match(/s{1,2}/);
+        if(secondFormat) html += `<div>${wrapDigits(now.format(secondFormat[0]))}</div>`;
+
+        // AM/PM Period
+        let periodFormat = clockFormat.match(/a|A/);
+        if (periodFormat) {
+            const amPmText = now.format(periodFormat[0]);
+            const amPmHtml = useOpenRundeForAmPm 
+                ? `<span style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal;">${amPmText}</span>`
+                : amPmText;
             html += `<div>${amPmHtml}</div>`;
         }
+        
         clockElement.innerHTML = html;
+
     } else {
-        document.querySelector('.clock').style.fontSize = '';
+        // Non-stacked mode
         clockElement.innerHTML = wrapTime(timeString);
     }
         
     dateElement.textContent = formattedDate;
     if (modalTitle) modalTitle.textContent = formattedDate;
 
-    // Force mask repaint fix
+    // --- FIX to force mask repaint ---
     if (clockElement.classList.contains('glass-effect')) {
         clockElement.classList.remove('glass-effect');
+        // Reading offsetHeight is a trick to force the browser to reflow
         void clockElement.offsetHeight; 
         clockElement.classList.add('glass-effect');
     }
