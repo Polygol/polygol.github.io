@@ -429,7 +429,7 @@ input[type="color"]::-moz-color-swatch {
     visibility: visible;
     transition: opacity 0.3s ease, visibility 0.3s ease;
     user-select: none;
-	font-family: 'Inter Numeric';
+	font-family: 'Inter Numeric', 'Inter';
     font-variant-numeric: tabular-nums;
 	font-variation-settings: "RDNS" 1;
     display: flex;
