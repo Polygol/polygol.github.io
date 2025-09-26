@@ -4551,7 +4551,6 @@ async function jumpToWallpaper(index) {
 	    const posYSlider = document.getElementById('clock-pos-y-slider');
 	    const clockFormatInput = document.getElementById('clock-format-input');
         const dateFormatInput = document.getElementById('date-format-input');
-        const clockFormatInput = document.getElementById('clock-format-input');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
         if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
