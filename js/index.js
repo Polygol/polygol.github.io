@@ -179,6 +179,7 @@ let isSlideshow = false;
 let minimizedEmbeds = {}; // Object to store minimized embeds by URL
 let appLastOpened = {};
 let currentSunShadow = ''; // To store the calculated sun shadow string
+let isDuringFirstSetup = false; // Flag to prevent prompts during setup
 
 secondsSwitch.checked = showSeconds;
 
@@ -1740,6 +1741,14 @@ function isDaytimeForHour(timeString, timezone = 'UTC') {
     return hour >= 6 && hour <= 18;
 }
 
+function initializeGeolocationFeatures() {
+    console.log("Initializing features requiring geolocation permission.");
+    updateSunEffect();
+    setInterval(updateSunEffect, 10 * 60 * 1000); // Update every 10 minutes
+    updateSmallWeather();
+    setInterval(updateSmallWeather, 600000); // Update weather every 10 minutes
+}
+
 const clockElement = document.getElementById('clock');
 const weatherWidget = document.getElementById('weather');
 const dateElement = document.getElementById('date');
@@ -1762,8 +1771,6 @@ dateElement.addEventListener('click', () => {
 });
 
 startSynchronizedClockAndDate();
-setInterval(updateSmallWeather, 600000);
-updateSmallWeather();
 
 function showPopup(message) {
     const popup = document.createElement('div');
@@ -2332,10 +2339,10 @@ async function firstSetup() {
     await selectLanguage(selectedLanguage);
 
     if (!hasVisitedBefore) {
+        isDuringFirstSetup = true; // Set flag to block initial loads
         createSetupScreen(); // UI now uses the correct currentLanguage
     }
-
-    localStorage.setItem('hasVisitedBefore', 'true');
+    // Note: 'hasVisitedBefore' is now set inside createSetupScreen upon completion
 }
 
 function createSetupScreen() {
@@ -2562,6 +2569,9 @@ function createSetupScreen() {
                 setTimeout(() => {
                     setupContainer.remove();
                     goFullscreen()
+                    // Now that setup is done, run the permission-requesting functions
+                    isDuringFirstSetup = false;
+                    initializeGeolocationFeatures();
                 }, 500);
             } else {
                 currentPage++;
@@ -6761,7 +6771,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     initializeWallpaperTracking();
 
     // --- Perform initial setup that depends on the loaded data ---
-    firstSetup(); // This handles language
+    await firstSetup(); // This handles language and sets isDuringFirstSetup flag
     
     // --- Initialize UI components ---
     await initializeAndApplyWallpaper().catch(error => {
@@ -6779,9 +6789,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     updateNightMode();
     syncUiStates();
 
-	// --- Initialize sun effect and set it to update periodically ---
-    updateSunEffect();
-	setInterval(updateSunEffect, 10 * 60 * 1000); // Update every 10 minutes
+	// Initialize features that might require permissions
+    // This runs for returning users. For new users, it's called after setup is complete.
+    if (!isDuringFirstSetup) {
+        initializeGeolocationFeatures();
+    }
 	
     // Initialize control states
     const storedLightMode = localStorage.getItem('theme') || 'dark';
