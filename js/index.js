@@ -5063,7 +5063,7 @@ function setupFontSelection() {
     brightnessSlider.value = localStorage.getItem('wallpaperBrightness') || '100';
     contrastSlider.value = localStorage.getItem('wallpaperContrast') || '100';
     document.getElementById('date-format-input').value = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
-    document.getElementById('clock-format-input').value = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm A' : 'HH:mm');
+    document.getElementById('clock-format-input').value = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
 
     // --- 2. Apply the visual styles based on the now-correct state of the controls ---
     applyClockLayout();
