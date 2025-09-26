@@ -7238,7 +7238,7 @@ window.onload = function() {
         // Remove the element from the DOM after the transition is complete
         setTimeout(() => {
             loadingScreen.remove();
-        }, 500); // This duration must match the CSS transition time
+        }, 1000); // This duration must match the CSS transition time
     }
 
     ensureVideoLoaded();
