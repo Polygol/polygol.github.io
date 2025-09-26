@@ -245,42 +245,49 @@ function handleViewportResize() {
     renderWidgets();                  // Then, re-render with the corrected data
 }
 
+// index(13).js
+
 function saveWidgets() {
-    // This function now saves the current widget layout to the active wallpaper object.
-    // It's a "fire-and-forget" async function to avoid blocking UI updates.
+    // This function now saves the current widget layout.
+    // It saves to the active wallpaper object if one exists, otherwise saves to a default localStorage key.
     (async () => {
-        if (recentWallpapers.length === 0 || currentWallpaperPosition < 0) return;
+        if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0) {
+            const currentWallpaper = recentWallpapers[currentWallpaperPosition];
+            if (!currentWallpaper) return;
 
-        const currentWallpaper = recentWallpapers[currentWallpaperPosition];
-        if (!currentWallpaper) return;
+            // Update the layout in the main recentWallpapers array
+            currentWallpaper.widgetLayout = activeWidgets;
 
-        // Update the layout in the main recentWallpapers array
-        currentWallpaper.widgetLayout = activeWidgets;
+            // Save the entire updated array back to localStorage
+            saveRecentWallpapers();
 
-        // Save the entire updated array back to localStorage
-        saveRecentWallpapers();
-
-        // Also update the corresponding record in IndexedDB for persistence
-        if (currentWallpaper.id) { // Slideshows don't have individual IDs here
-            try {
-                const wallpaperRecord = await getWallpaper(currentWallpaper.id);
-                if (wallpaperRecord) {
-                    wallpaperRecord.widgetLayout = activeWidgets;
-                    await storeWallpaper(currentWallpaper.id, wallpaperRecord);
+            // Also update the corresponding record in IndexedDB for persistence
+            if (currentWallpaper.id) { // Slideshows don't have individual IDs here
+                try {
+                    const wallpaperRecord = await getWallpaper(currentWallpaper.id);
+                    if (wallpaperRecord) {
+                        wallpaperRecord.widgetLayout = activeWidgets;
+                        await storeWallpaper(currentWallpaper.id, wallpaperRecord);
+                    }
+                } catch (error) {
+                    console.error("Failed to save widget layout to IndexedDB:", error);
                 }
-            } catch (error) {
-                console.error("Failed to save widget layout to IndexedDB:", error);
             }
+        } else {
+            // No wallpaper, save to a default key in localStorage
+            localStorage.setItem('defaultWidgetLayout', JSON.stringify(activeWidgets));
         }
     })();
 }
 
 function loadWidgets() {
-    // This function now loads the widget layout from the current wallpaper.
+    // This function now loads the widget layout from the current wallpaper, or a default if no wallpaper exists.
     if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0 && recentWallpapers[currentWallpaperPosition]) {
         activeWidgets = recentWallpapers[currentWallpaperPosition].widgetLayout || [];
     } else {
-        activeWidgets = []; // Default to empty if no wallpapers
+        // No wallpaper, load from the default key in localStorage
+        const defaultLayout = localStorage.getItem('defaultWidgetLayout');
+        activeWidgets = defaultLayout ? JSON.parse(defaultLayout) : [];
     }
     renderWidgets();
 }
@@ -3558,17 +3565,8 @@ wallpaperInput.addEventListener("change", async event => {
     
     try {
         if (files.length === 1) {
-            localStorage.removeItem("wallpapers");
-            clearInterval(slideshowInterval);
-            slideshowInterval = null;
-            isSlideshow = false;
-            
-            let file = files[0];
-            if (["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "video/mp4"].includes(file.type)) {
-                saveWallpaper(file);
-            } else {
-                showPopup(currentLanguage.WALLPAPER_UPDATE_FAIL);
-            }
+            // The existing saveWallpaper function is now safe to call.
+            saveWallpaper(files[0]);
         } else {
             let processedWallpapers = [];
             for (let file of files) {
@@ -3601,8 +3599,36 @@ wallpaperInput.addEventListener("change", async event => {
             }
             
 	    if (processedWallpapers.length > 0) {
-	        // FIX: Reset clock styles to default for the new slideshow
-	        const defaultClockStyles = resetAndApplyDefaultClockStyles();
+	        // --- FIX: Capture current settings from localStorage instead of resetting ---
+	        const currentClockStyles = {
+                font: localStorage.getItem('font') || 'Inter',
+                weight: localStorage.getItem('weight') || '700',
+                color: localStorage.getItem('color') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
+                colorEnabled: localStorage.getItem('colorEnabled') === 'true',
+                stackEnabled: localStorage.getItem('stackEnabled') === 'true',
+                showSeconds: localStorage.getItem('showSeconds') !== 'false',
+                showWeather: localStorage.getItem('showWeather') !== 'false',
+                alignment: localStorage.getItem('alignment') || 'center',
+                clockSize: localStorage.getItem('clockSize') || '0',
+                clockPosX: localStorage.getItem('clockPosX') || '50',
+                clockPosY: localStorage.getItem('clockPosY') || '50',
+                wallpaperBlur: localStorage.getItem('wallpaperBlur') || '0',
+                wallpaperBrightness: localStorage.getItem('wallpaperBrightness') || '100',
+                wallpaperContrast: localStorage.getItem('wallpaperContrast') || '100',
+                shadowEnabled: localStorage.getItem('shadowEnabled') === 'true',
+                shadowBlur: localStorage.getItem('shadowBlur') || '10',
+                shadowColor: localStorage.getItem('shadowColor') || '#000000',
+                gradientEnabled: localStorage.getItem('gradientEnabled') === 'true',
+                gradientColor: localStorage.getItem('gradientColor') || '#ffffff',
+                glassEnabled: localStorage.getItem('glassEnabled') === 'true',
+                roundness: localStorage.getItem('roundness') || '0',
+                customFontName: localStorage.getItem('customFontName') || null,
+                customFontUrl: localStorage.getItem('customFontUrl') || null,
+                customLineHeight: localStorage.getItem('customLineHeight') || null,
+                customCSS: localStorage.getItem('customCSS') || null,
+                dateFormat: localStorage.getItem('dateFormat') || 'dddd, MMMM D',
+                clockFormat: localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss')
+            };
 	    
 	        localStorage.setItem("wallpapers", JSON.stringify(processedWallpapers));
 	        currentWallpaperIndex = 0;
@@ -3611,7 +3637,7 @@ wallpaperInput.addEventListener("change", async event => {
 	        recentWallpapers.unshift({
 	            isSlideshow: true,
 	            timestamp: Date.now(),
-	            clockStyles: defaultClockStyles // Store default clock styles for slideshow
+	            clockStyles: currentClockStyles // Store current settings for slideshow
 	        });
                 
                 while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
@@ -3623,7 +3649,7 @@ wallpaperInput.addEventListener("change", async event => {
                 applyWallpaper();
                 showPopup(currentLanguage.MULTIPLE_WALLPAPERS_UPDATED);
             } else {
-                showPopup(currentLanguage.NO_VALID_WALLPAPERS);
+                showPopup(currentLanguage.NO_VALID_WIDGETS);
             }
         }
     } catch (error) {
@@ -3697,35 +3723,63 @@ async function saveWallpaper(file) {
     try {
         const wallpaperId = `wallpaper_${Date.now()}`;
         
-        // FIX: Reset clock styles to default for the new wallpaper and get the defaults
-        const defaultClockStyles = resetAndApplyDefaultClockStyles();
+        // --- FIX: Capture the CURRENTLY configured styles instead of resetting ---
+        const currentClockStyles = {
+            font: localStorage.getItem('font') || 'Inter',
+            weight: localStorage.getItem('weight') || '700',
+            color: localStorage.getItem('color') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
+            colorEnabled: localStorage.getItem('colorEnabled') === 'true',
+            stackEnabled: localStorage.getItem('stackEnabled') === 'true',
+            showSeconds: localStorage.getItem('showSeconds') !== 'false',
+            showWeather: localStorage.getItem('showWeather') !== 'false',
+            alignment: localStorage.getItem('alignment') || 'center',
+            clockSize: localStorage.getItem('clockSize') || '0',
+            clockPosX: localStorage.getItem('clockPosX') || '50',
+            clockPosY: localStorage.getItem('clockPosY') || '50',
+            wallpaperBlur: localStorage.getItem('wallpaperBlur') || '0',
+            wallpaperBrightness: localStorage.getItem('wallpaperBrightness') || '100',
+            wallpaperContrast: localStorage.getItem('wallpaperContrast') || '100',
+            shadowEnabled: localStorage.getItem('shadowEnabled') === 'true',
+            shadowBlur: localStorage.getItem('shadowBlur') || '10',
+            shadowColor: localStorage.getItem('shadowColor') || '#000000',
+            gradientEnabled: localStorage.getItem('gradientEnabled') === 'true',
+            gradientColor: localStorage.getItem('gradientColor') || '#ffffff',
+            glassEnabled: localStorage.getItem('glassEnabled') === 'true',
+            roundness: localStorage.getItem('roundness') || '0',
+            customFontName: localStorage.getItem('customFontName') || null,
+            customFontUrl: localStorage.getItem('customFontUrl') || null,
+            customLineHeight: localStorage.getItem('customLineHeight') || null,
+            customCSS: localStorage.getItem('customCSS') || null,
+            dateFormat: localStorage.getItem('dateFormat') || 'dddd, MMMM D',
+            clockFormat: localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss')
+        };
         
         if (file.type.startsWith("video/")) {
             await storeWallpaper(wallpaperId, {
                 blob: file,
                 type: file.type,
-                clockStyles: defaultClockStyles // Pass the styles
+                clockStyles: currentClockStyles // Pass the styles
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
                 type: file.type,
                 isVideo: true,
                 timestamp: Date.now(),
-                clockStyles: defaultClockStyles // Store default settings
+                clockStyles: currentClockStyles // Store current settings
             });
         } else {
             let compressedData = await compressMedia(file);
             await storeWallpaper(wallpaperId, {
                 dataUrl: compressedData,
                 type: file.type,
-                clockStyles: defaultClockStyles // Pass the styles
+                clockStyles: currentClockStyles // Pass the styles
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
                 type: file.type,
                 isVideo: false,
                 timestamp: Date.now(),
-                clockStyles: defaultClockStyles // Store default settings
+                clockStyles: currentClockStyles // Store current settings
             });
         }
         
@@ -4988,11 +5042,6 @@ function setupFontSelection() {
 
     // --- Function to save all settings (triggered by user interaction) ---
     async function saveCurrentWallpaperSettings() {
-        // First, get the existing styles to preserve manual settings
-        const currentStyles = (recentWallpapers.length > 0 && currentWallpaperPosition >= 0 && recentWallpapers[currentWallpaperPosition] && recentWallpapers[currentWallpaperPosition].clockStyles) ? 
-                                { ...recentWallpapers[currentWallpaperPosition].clockStyles } : {};
-
-        // Then, get the settings from the UI controls
         const settingsFromUI = {
             font: fontSelect.value,
             weight: (parseInt(weightSlider.value, 10) * 10).toString(),
@@ -5019,39 +5068,40 @@ function setupFontSelection() {
             clockFormat: document.getElementById('clock-format-input').value
         };
 
-        // Merge them, letting UI changes override existing values
-        const finalSettings = { ...currentStyles, ...settingsFromUI };
-
-        // If user selects a standard font, clear the custom font fields
-        if (settingsFromUI.font !== currentStyles.customFontName) {
-            finalSettings.customFontName = null;
-            finalSettings.customFontUrl = null;
+        // Always save to individual localStorage keys. This acts as the "default" or "current" state.
+        for (const key in settingsFromUI) {
+            localStorage.setItem(key, settingsFromUI[key]);
         }
 
-        // Save to individual localStorage keys for immediate use
-        for (const key in finalSettings) {
-            // Only save keys that have a UI control, to avoid overwriting all manual settings
-            if (settingsFromUI.hasOwnProperty(key)) {
-                 localStorage.setItem(key, finalSettings[key]);
-            }
-        }
-
-        // Save the complete, merged object to the persistent wallpaper history
+        // If there's an active wallpaper, also save these settings specifically to it.
         if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0) {
-            if (recentWallpapers[currentWallpaperPosition]) {
-                 recentWallpapers[currentWallpaperPosition].clockStyles = finalSettings;
-                 saveRecentWallpapers();
+            const currentWallpaper = recentWallpapers[currentWallpaperPosition];
+            if (currentWallpaper) {
+                 // Preserve any non-UI settings by merging
+                const currentStyles = currentWallpaper.clockStyles || {};
+                const finalSettings = { ...currentStyles, ...settingsFromUI };
 
-                 // --- UPDATE IndexedDB record as well ---
-                 const currentWallpaperMeta = recentWallpapers[currentWallpaperPosition];
-                 if (currentWallpaperMeta.id) { // Only for non-slideshow wallpapers
-                     const wallpaperRecord = await getWallpaper(currentWallpaperMeta.id);
-                     if (wallpaperRecord) {
-                         wallpaperRecord.clockStyles = finalSettings;
-                         // The existing storeWallpaper function will handle the update correctly.
-                         await storeWallpaper(currentWallpaperMeta.id, wallpaperRecord);
-                     }
-                 }
+                // Clear custom font if a standard one is chosen
+                if (settingsFromUI.font !== currentStyles.customFontName) {
+                    finalSettings.customFontName = null;
+                    finalSettings.customFontUrl = null;
+                }
+
+                currentWallpaper.clockStyles = finalSettings;
+                saveRecentWallpapers();
+
+                // --- UPDATE IndexedDB record as well ---
+                if (currentWallpaper.id) { // Only for non-slideshow wallpapers
+                    try {
+                        const wallpaperRecord = await getWallpaper(currentWallpaper.id);
+                        if (wallpaperRecord) {
+                            wallpaperRecord.clockStyles = finalSettings;
+                            await storeWallpaper(currentWallpaper.id, wallpaperRecord);
+                        }
+                    } catch (error) {
+                         console.error("Failed to save clock styles to IndexedDB:", error);
+                    }
+                }
             }
         }
     }
