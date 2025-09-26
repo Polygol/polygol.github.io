@@ -6,6 +6,10 @@ const DB_SCHEMAS = {
 
 function setupServiceWorkerUpdateListener() {
     if ('serviceWorker' in navigator) {
+        // This flag is crucial. It checks if a controller was active on page load.
+        // If not, it's a first install, and we should not reload the page.
+        const isUpdate = navigator.serviceWorker.controller !== null;
+
         navigator.serviceWorker.getRegistration().then(reg => {
             if (!reg) return;
 
@@ -35,7 +39,8 @@ function setupServiceWorkerUpdateListener() {
         // This fires when the new SW has taken control of the page
         let refreshing;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
+            // Only reload the page if it's a genuine update.
+            if (!refreshing && isUpdate) {
                 window.location.reload();
                 refreshing = true;
             }
