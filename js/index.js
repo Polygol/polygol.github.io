@@ -240,12 +240,42 @@ function handleViewportResize() {
 }
 
 function saveWidgets() {
-    localStorage.setItem('activeWidgets', JSON.stringify(activeWidgets));
+    // This function now saves the current widget layout to the active wallpaper object.
+    // It's a "fire-and-forget" async function to avoid blocking UI updates.
+    (async () => {
+        if (recentWallpapers.length === 0 || currentWallpaperPosition < 0) return;
+
+        const currentWallpaper = recentWallpapers[currentWallpaperPosition];
+        if (!currentWallpaper) return;
+
+        // Update the layout in the main recentWallpapers array
+        currentWallpaper.widgetLayout = activeWidgets;
+
+        // Save the entire updated array back to localStorage
+        saveRecentWallpapers();
+
+        // Also update the corresponding record in IndexedDB for persistence
+        if (currentWallpaper.id) { // Slideshows don't have individual IDs here
+            try {
+                const wallpaperRecord = await getWallpaper(currentWallpaper.id);
+                if (wallpaperRecord) {
+                    wallpaperRecord.widgetLayout = activeWidgets;
+                    await storeWallpaper(currentWallpaper.id, wallpaperRecord);
+                }
+            } catch (error) {
+                console.error("Failed to save widget layout to IndexedDB:", error);
+            }
+        }
+    })();
 }
 
 function loadWidgets() {
-    const saved = localStorage.getItem('activeWidgets');
-    activeWidgets = saved ? JSON.parse(saved) : [];
+    // This function now loads the widget layout from the current wallpaper.
+    if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0 && recentWallpapers[currentWallpaperPosition]) {
+        activeWidgets = recentWallpapers[currentWallpaperPosition].widgetLayout || [];
+    } else {
+        activeWidgets = []; // Default to empty if no wallpapers
+    }
     renderWidgets();
 }
 
@@ -4479,11 +4509,16 @@ function handleDotDragEnd(e) {
 // New function to jump to a specific wallpaper by index
 async function jumpToWallpaper(index) {
     if (index < 0 || index >= recentWallpapers.length || index === currentWallpaperPosition) return;
+
+    // Save the widget layout for the current wallpaper before switching
+    saveWidgets();
     
     currentWallpaperPosition = index;
     saveCurrentPosition();
     
     let wallpaper = recentWallpapers[currentWallpaperPosition];
+
+    activeWidgets = wallpaper.widgetLayout || [];
     
     if (wallpaper.clockStyles) {
         // Update UI elements
@@ -4570,6 +4605,9 @@ async function jumpToWallpaper(index) {
         localStorage.removeItem("wallpapers");
         applyWallpaper();
     }
+
+    // Re-render the widgets for the new wallpaper
+    renderWidgets();
     
     updatePageIndicatorDots(false);
     resetIndicatorTimeout();
@@ -4589,8 +4627,11 @@ function checkWallpaperState() {
 
 function switchWallpaper(direction) {
     if (recentWallpapers.length === 0) return;
+
+    // Save the layout of the current (outgoing) wallpaper
+    saveWidgets();
     
-    // Calculate new position (existing logic)
+    // Calculate new position
     let newPosition = currentWallpaperPosition;
     
     if (direction === 'right') {
@@ -4608,11 +4649,16 @@ function switchWallpaper(direction) {
     }
     
     // Only proceed if position actually changed or we're reapplying
-    if (newPosition !== currentWallpaperPosition && direction !== 'none') {
+    if (newPosition !== currentWallpaperPosition || direction === 'none') {
         currentWallpaperPosition = newPosition;
+    } else {
+        return; // No change, no need to proceed
     }
     
     const wallpaper = recentWallpapers[currentWallpaperPosition];
+
+    // Load the widget layout for the NEW wallpaper
+    activeWidgets = wallpaper.widgetLayout || [];
 
     applyCustomWallpaperStyles(wallpaper.clockStyles);
     
@@ -4711,6 +4757,9 @@ function switchWallpaper(direction) {
         localStorage.removeItem('wallpapers');
         applyWallpaper();
     }
+
+    // Re-render the widgets for the new wallpaper
+    renderWidgets();
     
     updatePageIndicatorDots(false);
     resetIndicatorTimeout();
