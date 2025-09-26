@@ -1533,7 +1533,7 @@ input[type="checkbox"]:checked::before {
     transition: background-color 0.2s, transform 0.1s;
 }
 
-.weight-slider, .roundness-slider, .wallpaper-effect-slider, .clock-size-slider, #clock-pos-x-slider, #clock-pos-y-slider, #clock-shadow-blur-slider {
+.weight-slider, .roundness-slider, .wallpaper-effect-slider, #clock-size-slider, #clock-pos-x-slider, #clock-pos-y-slider, #clock-shadow-blur-slider {
     -webkit-appearance: none;
     width: unset !important;
     height: 32px;
@@ -1546,7 +1546,7 @@ input[type="checkbox"]:checked::before {
     box-shadow: var(--sun-shadow), 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-.weight-slider::-webkit-slider-thumb, .roundness-slider::-webkit-slider-thumb, .wallpaper-effect-slider::-webkit-slider-thumb, .clock-size-slider::-webkit-slider-thumb, #clock-pos-x-slider::-webkit-slider-thumb, #clock-pos-y-slider::-webkit-slider-thumb, #clock-shadow-blur-slider::-webkit-slider-thumb {
+.weight-slider::-webkit-slider-thumb, .roundness-slider::-webkit-slider-thumb, .wallpaper-effect-slider::-webkit-slider-thumb, #clock-size-slider::-webkit-slider-thumb, #clock-pos-x-slider::-webkit-slider-thumb, #clock-pos-y-slider::-webkit-slider-thumb, #clock-shadow-blur-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 18px;
@@ -1558,13 +1558,13 @@ input[type="checkbox"]:checked::before {
     transition: width 0.3s, height 0.3s, transform 0.3s;
 }
 
-.weight-slider::-webkit-slider-thumb:active, .roundness-slider::-webkit-slider-thumb:active, .wallpaper-effect-slider::-webkit-slider-thumb:active, .clock-size-slider::-webkit-slider-thumb:active, #clock-pos-x-slider::-webkit-slider-thumb:active, #clock-pos-y-slider::-webkit-slider-thumb:active, #clock-shadow-blur-slider::-webkit-slider-thumb:active {
+.weight-slider::-webkit-slider-thumb:active, .roundness-slider::-webkit-slider-thumb:active, .wallpaper-effect-slider::-webkit-slider-thumb:active, #clock-size-slider::-webkit-slider-thumb:active, #clock-pos-x-slider::-webkit-slider-thumb:active, #clock-pos-y-slider::-webkit-slider-thumb:active, #clock-shadow-blur-slider::-webkit-slider-thumb:active {
     width: 24px;
     height: 24px;
     transform: scale(1.1);
 }
 
-.weight-slider::-moz-range-thumb, .roundness-slider::-moz-range-thumb, .wallpaper-effect-slider::-moz-range-thumb, .clock-size-slider::-moz-range-thumb, #clock-pos-x-slider::-moz-range-thumb, #clock-pos-y-slider::-moz-range-thumb, #clock-shadow-blur-slider::-moz-range-thumb {
+.weight-slider::-moz-range-thumb, .roundness-slider::-moz-range-thumb, .wallpaper-effect-slider::-moz-range-thumb, #clock-size-slider::-moz-range-thumb, #clock-pos-x-slider::-moz-range-thumb, #clock-pos-y-slider::-moz-range-thumb, #clock-shadow-blur-slider::-moz-range-thumb {
     width: 18px;
     height: 18px;
     border-radius: 50%;
@@ -1574,7 +1574,7 @@ input[type="checkbox"]:checked::before {
     transition: width 0.3s, height 0.3s, transform 0.3s;
 }
 
-.weight-slider::-moz-range-thumb:active, .roundness-slider::-moz-range-thumb:active, .wallpaper-effect-slider::-moz-range-thumb:active, .clock-size-slider::-moz-range-thumb:active, #clock-pos-x-slider::-moz-range-thumb:active, #clock-pos-y-slider::-moz-range-thumb:active, #clock-shadow-blur-slider::moz-range-thumb:active {
+.weight-slider::-moz-range-thumb:active, .roundness-slider::-moz-range-thumb:active, .wallpaper-effect-slider::-moz-range-thumb:active, #clock-size-slider::-moz-range-thumb:active, #clock-pos-x-slider::-moz-range-thumb:active, #clock-pos-y-slider::-moz-range-thumb:active, #clock-shadow-blur-slider::moz-range-thumb:active {
     width: 24px;
     height: 24px;
     transform: scale(1.1);
