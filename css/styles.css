@@ -2041,19 +2041,19 @@ input[type="checkbox"]:checked::before {
             align-items: center;
             cursor: pointer;
             transition: transform 0.2s;
-            padding: 15px;
+            padding: 2vw 15px;
             border-radius: 25px;
             border: 1px solid transparent;
             user-select: none;
         }
 
         .app-icon img {
-            width: min(10vw, 128px);
-            height: min(10vw, 128px);
-            margin-bottom: 10px;
+			width: min(10vw, 512px);
+			height: min(10vw, 512px);
+            margin-bottom: 12px;
             object-fit: contain;
-	    transform: scale(1);
-	    transition: filter 0.2s,transform 0.2s;
+		    transform: scale(1);
+		    transition: filter 0.2s,transform 0.2s;
         }
 
         .app-icon:active img {
@@ -2063,8 +2063,8 @@ input[type="checkbox"]:checked::before {
 
         .app-icon span {
             text-align: center;
-            text-transform: capitalize;
             color: var(--text-color);
+			font-weight: 500;
         }
 
         .popup {
