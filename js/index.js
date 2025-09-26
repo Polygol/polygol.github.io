@@ -1486,13 +1486,14 @@ function updateClockAndDate() {
     const hourSwitch = document.getElementById('hour-switch');
     const secondsSwitch = document.getElementById('seconds-switch');
 
-    let now = new Date();
+	const now = moment();
 
+    // Get formats directly from the input fields, which hold the wallpaper-specific settings.
     const clockFormat = document.getElementById('clock-format-input').value;
     const dateFormat = document.getElementById('date-format-input').value;
 
-	let timeString = moment(now).format(clockFormat);
-    let formattedDate = moment(now).format(dateFormat);
+    const timeString = now.format(clockFormat);
+    const formattedDate = now.format(dateFormat);
     
     // Condition for special AM/PM font
     const useOpenRundeForAmPm = hourSwitch.checked && 
