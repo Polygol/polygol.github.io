@@ -4707,6 +4707,8 @@ function switchWallpaper(direction) {
 	    const sizeSlider = document.getElementById('clock-size-slider');
 	    const posXSlider = document.getElementById('clock-pos-x-slider');
 	    const posYSlider = document.getElementById('clock-pos-y-slider');
+        const clockFormatInput = document.getElementById('clock-format-input');
+        const dateFormatInput = document.getElementById('date-format-input');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
         if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
@@ -4720,6 +4722,8 @@ function switchWallpaper(direction) {
 	    if (alignmentSelect) alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
 	    if (glassSwitch) glassSwitch.checked = wallpaper.clockStyles.glassEnabled || false;
         if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
+        if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'dddd, MMMM D';
+        if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
         
         if (secondsSwitch) {
             secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
@@ -5090,7 +5094,7 @@ function setupFontSelection() {
     ];
 
     allControls.forEach(control => {
-        const eventType = (control.type === 'checkbox' || control.tagName === 'SELECT') ? 'change' : 'input';
+        const eventType = (control.type === 'checkbox' || con trol.tagName === 'SELECT') ? 'change' : 'input';
         control.addEventListener(eventType, async () => {
             applyClockLayout();
             applyClockStyles();
