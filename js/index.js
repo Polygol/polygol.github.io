@@ -2830,12 +2830,10 @@ function setupFormatControls() {
 
     // Listen for user input
     clockFormatInput.addEventListener('input', () => {
-        localStorage.setItem('clockFormat', clockFormatInput.value);
         updateClockAndDate();
     });
 
     dateFormatInput.addEventListener('input', () => {
-        localStorage.setItem('dateFormat', dateFormatInput.value);
         updateClockAndDate();
     });
 
@@ -4958,6 +4956,8 @@ function applyWallpaperEffects() {
     document.body.style.setProperty('--wallpaper-filter', filterString);
 }
 
+// index(13).js
+
 function setupFontSelection() {
     const clockElement = document.getElementById('clock');
     const infoElement = document.querySelector('.info');
@@ -4983,6 +4983,8 @@ function setupFontSelection() {
     const posXSlider = document.getElementById('clock-pos-x-slider');
     const posYSlider = document.getElementById('clock-pos-y-slider');
     const positionPopup = document.getElementById('position-controls-popup');
+    const clockFormatInput = document.getElementById('clock-format-input');
+    const dateFormatInput = document.getElementById('date-format-input');
 
     // --- Function to save all settings (triggered by user interaction) ---
     async function saveCurrentWallpaperSettings() {
@@ -5090,7 +5092,7 @@ function setupFontSelection() {
         fontSelect, weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
         blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
         shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch, roundnessSlider,
-        sizeSlider, posXSlider, posYSlider, alignmentSelect
+        sizeSlider, posXSlider, posYSlider, alignmentSelect, clockFormatInput, dateFormatInput
     ];
 
     allControls.forEach(control => {
