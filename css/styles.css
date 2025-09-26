@@ -2282,6 +2282,7 @@ input[type="checkbox"]:checked::before {
 	box-shadow: var(--sun-shadow);
     width: 200px; /* Default size, can be overridden */
     height: 200px;
+    pointer-events: auto;
     touch-action: none; /* Prevent page scroll on mobile */
 	box-sizing: border-box; 
 }
