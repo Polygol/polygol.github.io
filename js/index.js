@@ -1486,13 +1486,13 @@ function updateClockAndDate() {
     const hourSwitch = document.getElementById('hour-switch');
     const secondsSwitch = document.getElementById('seconds-switch');
 
-    // Get formats from localStorage with defaults
-    const clockFormat = localStorage.getItem('clockFormat') || (hourSwitch.checked ? 'h:mm A' : 'HH:mm');
-    const dateFormat = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
+    let now = new Date();
 
-    const now = moment();
-    const timeString = now.format(clockFormat);
-    const formattedDate = now.format(dateFormat);
+    const clockFormat = document.getElementById('clock-format-input').value;
+    const dateFormat = document.getElementById('date-format-input').value;
+
+	let timeString = moment(now).format(clockFormat);
+    let formattedDate = moment(now).format(dateFormat);
     
     // Condition for special AM/PM font
     const useOpenRundeForAmPm = hourSwitch.checked && 
@@ -2813,7 +2813,7 @@ function setupFormatControls() {
     const hourSwitch = document.getElementById('hour-switch');
 
     // Load saved formats or set defaults
-    clockFormatInput.value = localStorage.getItem('clockFormat') || (hourSwitch.checked ? 'h:mm A' : 'HH:mm');
+    clockFormatInput.value = localStorage.getItem('clockFormat') || (hourSwitch.checked ? 'h:mm:ss A' : 'HH:mm:ss');
     dateFormatInput.value = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
 
     // Listen for user input
@@ -4012,6 +4012,11 @@ function loadRecentWallpapers() {
              wallpaper.clockStyles.customCSS = null;
              updated = true;
         }
+        if (wallpaper.clockStyles.dateFormat === undefined) {
+            wallpaper.clockStyles.dateFormat = 'dddd, MMMM D';
+            wallpaper.clockStyles.clockFormat = 'H:mm:ss';
+            updated = true;
+        }
     });
     
     if (updated) {
@@ -4541,7 +4546,8 @@ async function jumpToWallpaper(index) {
 	    const roundnessSlider = document.getElementById('roundness-slider');
 	    const sizeSlider = document.getElementById('clock-size-slider');
 	    const posXSlider = document.getElementById('clock-pos-x-slider');
-	    const posYSlider = document.getElementById('clock-pos-y-slider');
+	    const posYSlider = document.getElementById('clock-pos-y-slider');\
+	    const clockFormatInput = document.getElementById('clock-format-input');
         
         if (fontSelect) fontSelect.value = wallpaper.clockStyles.font || 'Inter';
         if (weightSlider) weightSlider.value = parseInt(wallpaper.clockStyles.weight || '700') / 10;
@@ -4553,6 +4559,8 @@ async function jumpToWallpaper(index) {
 	    if (posXSlider) posXSlider.value = wallpaper.clockStyles.clockPosX || '50';
 	    if (posYSlider) posYSlider.value = wallpaper.clockStyles.clockPosY || '50';
 	    if (alignmentSelect) alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
+	    if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'dddd, MMMM D';
+	    if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || 'h:mm A';
         
         if (secondsSwitch) {
             secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
@@ -4987,7 +4995,9 @@ function setupFontSelection() {
             gradientEnabled: gradientSwitch.checked,
             gradientColor: gradientColorPicker.value,
             glassEnabled: glassSwitch.checked,
-            roundness: roundnessSlider.value
+            roundness: roundnessSlider.value,
+			dateFormat: document.getElementById('date-format-input').value,
+            clockFormat: document.getElementById('clock-format-input').value
         };
 
         // Merge them, letting UI changes override existing values
@@ -5069,6 +5079,7 @@ function setupFontSelection() {
         control.addEventListener(eventType, async () => {
             applyClockLayout();
             applyClockStyles();
+		    applyWallpaperEffects();
             await saveCurrentWallpaperSettings();
             syncUiStates();
         });
@@ -5277,7 +5288,9 @@ function resetAndApplyDefaultClockStyles() {
 		customFontName: null,
         customFontUrl: null,
         customLineHeight: null,
-        customCSS: null
+        customCSS: null,
+        dateFormat: 'dddd, MMMM D',
+        clockFormat: document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss'
     };
 
     // Update UI controls to their default values
@@ -5302,6 +5315,8 @@ function resetAndApplyDefaultClockStyles() {
 	document.getElementById('clock-size-slider').value = defaultStyles.clockSize;
 	document.getElementById('clock-pos-x-slider').value = defaultStyles.clockPosX;
 	document.getElementById('clock-pos-y-slider').value = defaultStyles.clockPosY;
+    document.getElementById('date-format-input').value = defaultStyles.dateFormat;
+    document.getElementById('clock-format-input').value = defaultStyles.clockFormat;
 
     // Update global state variables
     showSeconds = defaultStyles.showSeconds;
