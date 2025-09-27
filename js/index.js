@@ -3708,6 +3708,51 @@ function checkStorageQuota(data) {
 }
 
 /**
+ * Replaces an animated GIF background with its static first frame to pause animation.
+ */
+async function pauseGifBackground() {
+    if (document.body.dataset.wallpaperType === 'gif') {
+        const wallpaperId = document.body.dataset.wallpaperId;
+        if (wallpaperId) {
+            try {
+                const wallpaperRecord = await getWallpaper(wallpaperId);
+                if (wallpaperRecord && wallpaperRecord.firstFrameDataUrl) {
+                    // Store the current animated URL before overwriting it
+                    const currentAnimatedUrl = document.body.style.getPropertyValue('--bg-image');
+                    if (currentAnimatedUrl.includes('blob:')) {
+                        document.body.dataset.animatedGifUrl = currentAnimatedUrl;
+                    }
+
+                    // Set the static frame as the background
+                    document.body.style.setProperty('--bg-image', `url('${wallpaperRecord.firstFrameDataUrl}')`);
+                }
+            } catch (error) {
+                console.error("Failed to pause GIF background:", error);
+            }
+        }
+    }
+}
+
+/**
+ * Restores the animated GIF background if it was previously paused.
+ */
+function resumeGifBackground() {
+    if (document.body.dataset.wallpaperType === 'gif') {
+        const storedAnimatedUrl = document.body.dataset.animatedGifUrl;
+        if (storedAnimatedUrl) {
+            // Restore the animated GIF
+            document.body.style.setProperty('--bg-image', storedAnimatedUrl);
+            // Clean up the temporary data attribute
+            delete document.body.dataset.animatedGifUrl;
+        } else {
+            // Fallback if the URL wasn't stored, which can happen.
+            // Re-applying the wallpaper will regenerate the blob URL.
+            applyWallpaper();
+        }
+    }
+}
+
+/**
  * Extracts the first frame of a GIF as a data URL.
  * @param {File|Blob} file - The GIF file.
  * @returns {Promise<string>} A promise that resolves with the data URL of the first frame.
@@ -3883,7 +3928,24 @@ async function saveWallpaper(file) {
 
 async function applyWallpaper() {
     applyCustomWallpaperStyles(); 
+
+    // Clean up any previously stored animated GIF URL to prevent memory leaks
+    if (document.body.dataset.animatedGifUrl) {
+        const oldUrl = document.body.dataset.animatedGifUrl.replace(/url\(['"]?|['"]?\)/g, '');
+        URL.revokeObjectURL(oldUrl);
+    }
+    
+    // Revoke the ObjectURL of the previous background if it was a blob (GIF or Video)
+    const oldBg = document.body.style.getPropertyValue('--bg-image');
+    if (oldBg.includes('blob:')) {
+        URL.revokeObjectURL(oldBg.replace(/url\(['"]?|['"]?\)/g, ''));
+    }
 	
+    // Clear any existing wallpaper type data attributes
+    delete document.body.dataset.wallpaperType;
+    delete document.body.dataset.wallpaperId;
+    delete document.body.dataset.animatedGifUrl;
+
     let slideshowWallpapers = JSON.parse(localStorage.getItem("wallpapers"));
     if (slideshowWallpapers && slideshowWallpapers.length > 0) {
         async function displaySlideshow() {
@@ -3926,11 +3988,6 @@ async function applyWallpaper() {
                 } else {
                     let imageData = await getWallpaper(wallpaper.id);
                     if (imageData) {
-                        const oldBg = document.body.style.getPropertyValue('--bg-image');
-                        if (oldBg.includes('blob:')) {
-                            URL.revokeObjectURL(oldBg.replace(/url\(['"]?|['"]?\)/g, ''));
-                        }
-
                         let imageUrl;
                         if (imageData.blob) { // This will now handle GIFs
                             imageUrl = URL.createObjectURL(imageData.blob);
@@ -4010,9 +4067,11 @@ async function applyWallpaper() {
                 } else {
                     let imageData = await getWallpaper(currentWallpaper.id);
                     if (imageData) {
-                        const oldBg = document.body.style.getPropertyValue('--bg-image');
-                        if (oldBg.includes('blob:')) {
-                             URL.revokeObjectURL(oldBg.replace(/url\(['"]?|['"]?\)/g, ''));
+                        let imageUrl;
+                        if (imageData.blob) { // This now handles GIFs
+                             imageUrl = URL.createObjectURL(imageData.blob);
+                        } else if (imageData.dataUrl) {
+                             imageUrl = imageData.dataUrl;
                         }
 
                         let imageUrl;
@@ -5733,24 +5792,8 @@ async function createFullscreenEmbed(url) {
 
     isAppOpen = true;
 
-    // Pause GIF by swapping to its first frame
-    if (document.body.dataset.wallpaperType === 'gif') {
-        const wallpaperId = document.body.dataset.wallpaperId;
-        if (wallpaperId) {
-            const wallpaperRecord = await getWallpaper(wallpaperId);
-            if (wallpaperRecord && wallpaperRecord.firstFrameDataUrl) {
-                // Revoke previous object URL if it exists to prevent memory leak
-                const oldBg = document.body.style.getPropertyValue('--bg-image');
-                if (oldBg.includes('blob:')) {
-                    const oldUrl = oldBg.replace(/url\(['"]?|['"]?\)/g, '');
-                    URL.revokeObjectURL(oldUrl);
-                }
-                document.body.style.setProperty('--bg-image', `url('${wallpaperRecord.firstFrameDataUrl}')`);
-            }
-        }
-    }
-
-    // Animate wallpaper video/animation to slow down and then pause
+    // Pause background animations (Video and GIF)
+    await pauseGifBackground();
     const bgVideo = document.getElementById('background-video');
     if (bgVideo && !bgVideo.paused) {
         // Wait for the slowdown animation to finish before pausing
@@ -5984,12 +6027,8 @@ function minimizeFullscreenEmbed() {
 
     isAppOpen = false;
 
-    // If the wallpaper was a GIF, re-apply it to restart animation.
-    if (document.body.dataset.wallpaperType === 'gif') {
-        applyWallpaper();
-    }
-
-    // Resume wallpaper video/animation with a smooth speed-up
+    // Resume background animations (Video and GIF)
+    resumeGifBackground();
     const bgVideo = document.getElementById('background-video');
     if (bgVideo) {
         bgVideo.play().then(() => {
