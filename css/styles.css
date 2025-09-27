@@ -277,6 +277,10 @@ input[type="submit"]:active,
   filter: brightness(1.5);
 }
 
+        body.cursor-hidden * {
+            cursor: none !important;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--background-color);
