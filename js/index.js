@@ -5741,9 +5741,18 @@ async function createFullscreenEmbed(url) {
 
     // Allowlist override
     const allowlistDomains = ['kirbindustries.gitbook.io'];
-    const urlDomain = new URL(url).hostname;
-
-    const isAllowlisted = allowlistDomains.includes(urlDomain);
+	let urlDomain = '';
+	try {
+	    // Resolve relative URLs to absolute using the current origin
+	    const absoluteUrl = new URL(url, window.location.origin);
+	    urlDomain = absoluteUrl.hostname;
+	} catch (err) {
+	    console.warn('Invalid URL passed to createFullscreenEmbed:', url);
+	    showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
+	    return;
+	}
+	
+	const isAllowlisted = allowlistDomains.includes(urlDomain);
 
     // If not in apps AND not allowlisted, show error
     if (!appName && !isAllowlisted) {
@@ -5755,7 +5764,7 @@ async function createFullscreenEmbed(url) {
 
     // Fallback app details for allowlisted URLs
     let appDetails = appName ? apps[appName] : {
-        name: urlDomain,
+	    name: urlDomain || 'Custom App',
         icon: '/assets/appicon/default.png',
         url: url
     };
