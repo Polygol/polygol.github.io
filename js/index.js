@@ -7327,14 +7327,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // --- Cursor Inactivity Setup ---
-    const style = document.createElement('style');
-    style.textContent = `
-        body.cursor-hidden * {
-            cursor: none !important;
-        }
-    `;
-    document.head.appendChild(style);
-
     window.addEventListener('mousemove', showCursorAndResetTimer);
     showCursorAndResetTimer(); // Start the timer on initial load
 
