@@ -361,6 +361,34 @@ function removeWidget(index) {
     }
 }
 
+function isWidgetInTopRight() {
+    if (!activeWidgets || activeWidgets.length === 0) {
+        return false;
+    }
+
+    // Define the corner area. This can be adjusted.
+    const cornerWidth = 250; 
+    const cornerHeight = 100;
+    const cornerX = window.innerWidth - cornerWidth;
+    const cornerY = 0;
+
+    for (const widget of activeWidgets) {
+        // Get the widget's bounding box coordinates
+        const widgetRight = widget.x + widget.w;
+        const widgetBottom = widget.y + widget.h;
+
+        // Check for any intersection between the widget and the corner area
+        if (widget.x < cornerX + cornerWidth &&
+            widgetRight > cornerX &&
+            widget.y < cornerY + cornerHeight &&
+            widgetBottom > cornerY) {
+            return true; // A widget is in the corner.
+        }
+    }
+
+    return false; // No widgets are in the corner.
+}
+
 function renderWidgets() {
     const gridContainer = document.getElementById('widget-grid');
     if (!gridContainer) return;
@@ -551,6 +579,7 @@ function renderWidgets() {
                 widgetToUpdate.x = instance.offsetLeft;
                 widgetToUpdate.y = instance.offsetTop;
                 saveWidgets();
+                updatePersistentClock(); // Re-check clock visibility
             } else {
                 const widgetData = availableWidgets[activeWidgets[index].appName]?.find(w => w.widgetId === activeWidgets[index].widgetId);
                 if (!widgetData) return;
@@ -668,6 +697,7 @@ function renderWidgets() {
             widgetToUpdate.x = instance.offsetLeft; // Save the new X position
             widgetToUpdate.y = instance.offsetTop;  // Save the new Y position
             saveWidgets();
+		    updatePersistentClock(); // Re-check clock visibility
         };
 
         // Attach listeners to the handle
@@ -1203,8 +1233,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	    }
 	    
 	    persistentClock.textContent = `${displayHours}:${minutes}`;
+        persistentClock.style.display = 'flex'; // Ensure it's visible in apps/drawer
 	  } else {
-	    persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+        // On the home screen, check for widgets in the corner
+        if (isWidgetInTopRight()) {
+            persistentClock.style.opacity = '0';
+        } else {
+            persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+            persistentClock.style.opacity = '1';
+        }
 	  }
 	}
     
