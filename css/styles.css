@@ -337,7 +337,7 @@ body::before, #background-video {
     width: 100%;
     height: 100%;
     z-index: -1;
-    transition: background-color 0.3s, color 0.3s, background-image 0.5s, filter 1s, transform 1s ease;
+    transition: background-color 0.3s, color 0.3s, background-image 0.5s, filter 1s, transform 1s ease !important;
     background-image: var(--bg-image);
     background-size: cover;
     background-position: center;
