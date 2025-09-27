@@ -4073,13 +4073,6 @@ async function applyWallpaper() {
                         } else if (imageData.dataUrl) {
                              imageUrl = imageData.dataUrl;
                         }
-
-                        let imageUrl;
-                        if (imageData.blob) { // This now handles GIFs
-                             imageUrl = URL.createObjectURL(imageData.blob);
-                        } else if (imageData.dataUrl) {
-                             imageUrl = imageData.dataUrl;
-                        }
                         
                         if (imageUrl) {
                             let existingVideo = document.querySelector("#background-video");
