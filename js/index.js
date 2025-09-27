@@ -3539,7 +3539,8 @@ async function storeWallpaper(key, data) {
             type: data.type,
             version: "1.0",
             timestamp: Date.now(),
-            clockStyles: data.clockStyles || {} 
+            clockStyles: data.clockStyles || {},
+            widgetLayout: data.widgetLayout || [] // Ensure widget layout is saved
         };
         let request = store.put(wallpaperData, key);
         request.onerror = () => reject(request.error);
@@ -3658,7 +3659,8 @@ wallpaperInput.addEventListener("change", async event => {
 	        recentWallpapers.unshift({
 	            isSlideshow: true,
 	            timestamp: Date.now(),
-	            clockStyles: defaultClockStyles // Store default clock styles for slideshow
+	            clockStyles: defaultClockStyles, // Store default clock styles for slideshow
+	            widgetLayout: [] // Initialize an empty widget layout for the new slideshow
 	        });
                 
                 while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
@@ -3667,6 +3669,7 @@ wallpaperInput.addEventListener("change", async event => {
                 
                 saveRecentWallpapers();
                 currentWallpaperPosition = 0;
+                loadWidgets(); // Load the new empty widget layout
                 applyWallpaper();
                 showPopup(currentLanguage.MULTIPLE_WALLPAPERS_UPDATED);
             } else {
