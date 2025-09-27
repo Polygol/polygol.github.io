@@ -3983,6 +3983,9 @@ async function applyWallpaper() {
 }
 
 function ensureVideoLoaded() {
+    // Do not attempt to play the video if an app is open
+    if (isAppOpen) return;
+
     const video = document.querySelector('#background-video');
     if (video && video.paused) {
         video.play().catch(err => {
@@ -5620,6 +5623,8 @@ async function deleteApp(appName) {
     }
 }
 
+let isAppOpen = false;
+
 function createFullscreenEmbed(url) {
     // 1. Check if Gurapps are disabled entirely
     // This uses the 'gurappsEnabled' variable you already have.
@@ -5660,6 +5665,8 @@ function createFullscreenEmbed(url) {
     saveLastOpenedData();
 
     persistentClock.style.opacity = '1';
+
+    isAppOpen = true;
 
     // Pause wallpaper video/animation when an app opens
     const bgVideo = document.getElementById('background-video');
@@ -5891,6 +5898,8 @@ function minimizeFullscreenEmbed() {
     if (originalFaviconUrl) {
         updateFavicon(originalFaviconUrl);
     }
+
+    isAppOpen = false;
 
     // Resume wallpaper video/animation when an app closes
     const bgVideo = document.getElementById('background-video');
