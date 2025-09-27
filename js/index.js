@@ -361,56 +361,6 @@ function removeWidget(index) {
     }
 }
 
-/**
- * Checks if any active widget is positioned in the top-right corner of the screen.
- * Can optionally check a widget that is currently being dragged.
- * @param {object|null} draggedWidgetInfo - Info about the widget being moved, e.g., { index, x, y, w, h }.
- * @returns {boolean} True if a widget is in the corner, false otherwise.
- */
-function isWidgetInTopRight(draggedWidgetInfo = null) {
-    if (!activeWidgets && !draggedWidgetInfo) {
-        return false;
-    }
-
-    const cornerWidth = 250; 
-    const cornerHeight = 100;
-    const cornerX = window.innerWidth - cornerWidth;
-    const cornerY = 0;
-
-    // First, check the widget currently being dragged, if any
-    if (draggedWidgetInfo) {
-        const widgetRight = draggedWidgetInfo.x + draggedWidgetInfo.w;
-        const widgetBottom = draggedWidgetInfo.y + draggedWidgetInfo.h;
-        if (draggedWidgetInfo.x < cornerX + cornerWidth &&
-            widgetRight > cornerX &&
-            draggedWidgetInfo.y < cornerY + cornerHeight &&
-            widgetBottom > cornerY) {
-            return true; // The dragged widget is in the corner.
-        }
-    }
-    
-    // Then, check all the other static widgets
-    for (let i = 0; i < activeWidgets.length; i++) {
-        // Skip the widget if it's the one being dragged
-        if (draggedWidgetInfo && i === draggedWidgetInfo.index) {
-            continue;
-        }
-
-        const widget = activeWidgets[i];
-        const widgetRight = widget.x + widget.w;
-        const widgetBottom = widget.y + widget.h;
-
-        if (widget.x < cornerX + cornerWidth &&
-            widgetRight > cornerX &&
-            widget.y < cornerY + cornerHeight &&
-            widgetBottom > cornerY) {
-            return true; // A static widget is in the corner.
-        }
-    }
-
-    return false;
-}
-
 function renderWidgets() {
     const gridContainer = document.getElementById('widget-grid');
     if (!gridContainer) return;
@@ -469,9 +419,6 @@ function renderWidgets() {
             initialMouseY = clientY;
             initialWidgetX = instance.offsetLeft;
             initialWidgetY = instance.offsetTop;
-            
-            // Prepare the clock for home screen view during drag
-            persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
 
             longPressTimer = setTimeout(() => {
                 removeWidget(index);
@@ -586,10 +533,6 @@ function renderWidgets() {
                 instance.style.left = `${finalX}px`;
                 instance.style.top = `${finalY}px`;
             }
-
-            // Real-time check for clock visibility
-            const draggedWidgetInfo = { index, x: finalX, y: finalY, w: instance.offsetWidth, h: instance.offsetHeight };
-            persistentClock.style.opacity = isWidgetInTopRight(draggedWidgetInfo) ? '0' : '1';
         };
 		
         const onDragEnd = () => {
@@ -608,7 +551,6 @@ function renderWidgets() {
                 widgetToUpdate.x = instance.offsetLeft;
                 widgetToUpdate.y = instance.offsetTop;
                 saveWidgets();
-                updatePersistentClock(); // Re-check clock visibility
             } else {
                 const widgetData = availableWidgets[activeWidgets[index].appName]?.find(w => w.widgetId === activeWidgets[index].widgetId);
                 if (!widgetData) return;
@@ -726,7 +668,6 @@ function renderWidgets() {
             widgetToUpdate.x = instance.offsetLeft; // Save the new X position
             widgetToUpdate.y = instance.offsetTop;  // Save the new Y position
             saveWidgets();
-		    updatePersistentClock(); // Re-check clock visibility
         };
 
         // Attach listeners to the handle
@@ -844,45 +785,6 @@ function loadSavedData() {
 function saveLastOpenedData() {
     localStorage.setItem('appLastOpened', JSON.stringify(appLastOpened));
 }
-
-    const appDrawer = document.getElementById('app-drawer');
-    const persistentClock = document.querySelector('.persistent-clock');
-    const customizeModal = document.getElementById('customizeModal');
-    
-	function updatePersistentClock() {
-	  const isModalOpen = 
-	    (appDrawer && appDrawer.classList.contains('open')) ||
-	    document.querySelector('.fullscreen-embed[style*="display: block"]');
-	    
-	  if (isModalOpen) {
-	    const now = new Date();
-	    let hours = now.getHours();
-	    let minutes = String(now.getMinutes()).padStart(2, '0');
-	    
-	    let displayHours;
-	    
-	    if (use12HourFormat) {
-	      // 12-hour format without AM/PM
-	      displayHours = hours % 12 || 12;
-	    } else {
-	      // 24-hour format
-	      displayHours = String(hours).padStart(2, '0');
-	    }
-	    
-	    persistentClock.textContent = `${displayHours}:${minutes}`;
-        persistentClock.style.opacity = '1'; // Ensure clock is visible in apps/drawer
-	  } else {
-        // On the home screen, set content to the info icon
-        persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
-        
-        // Then, determine its visibility based on widgets
-        if (isWidgetInTopRight()) {
-            persistentClock.style.opacity = '0';
-        } else {
-            persistentClock.style.opacity = '1';
-        }
-	  }
-	}
 
 /**
  * Linearly interpolates between two RGB colors.
@@ -1109,6 +1011,8 @@ function getCurrentTime24() {
     return `${hours}:${minutes}:${seconds}`;
 }
 
+const persistentClock = document.getElementById('persistent-clock');
+
 document.addEventListener('DOMContentLoaded', () => {	
     // --- Get references to key elements ---
     const controlPopup = document.createElement('div');
@@ -1273,6 +1177,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+	
+    const appDrawer = document.getElementById('app-drawer');
+    const persistentClock = document.querySelector('.persistent-clock');
+    const customizeModal = document.getElementById('customizeModal');
+    
+	function updatePersistentClock() {
+	  const isModalOpen = 
+	    (appDrawer && appDrawer.classList.contains('open')) ||
+	    document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    
+	  if (isModalOpen) {
+	    const now = new Date();
+	    let hours = now.getHours();
+	    let minutes = String(now.getMinutes()).padStart(2, '0');
+	    
+	    let displayHours;
+	    
+	    if (use12HourFormat) {
+	      // 12-hour format without AM/PM
+	      displayHours = hours % 12 || 12;
+	    } else {
+	      // 24-hour format
+	      displayHours = String(hours).padStart(2, '0');
+	    }
+	    
+	    persistentClock.textContent = `${displayHours}:${minutes}`;
+	  } else {
+	    persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+	  }
+	}
     
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
@@ -2908,6 +2842,7 @@ async function getStoreDataForBackup(db, storeName) {
     });
 }
 
+const customizeModal = document.getElementById('customizeModal');
 const themeSwitch = document.getElementById('theme-switch');
 const wallpaperInput = document.getElementById('wallpaperInput');
 const uploadButton = document.getElementById('uploadButton');
@@ -6171,6 +6106,7 @@ function populateDock() {
     });
 }
 
+    const appDrawer = document.getElementById('app-drawer');
     const appGrid = document.getElementById('app-grid');
 
 // Function to create app icons
@@ -7566,16 +7502,9 @@ blurOverlayControls.addEventListener('click', () => {
 });
 
 function closeControls() {
+	persistentClock.style.opacity = '1';
     customizeModal.classList.remove('show'); // Start animation
     blurOverlayControls.classList.remove('show');
-
-    // Explicitly set the clock state for returning to the home screen
-    persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
-    if (isWidgetInTopRight()) {
-        persistentClock.style.opacity = '0';
-    } else {
-        persistentClock.style.opacity = '1';
-    }
 
     setTimeout(() => {
         customizeModal.style.display = 'none'; // Hide after animation
