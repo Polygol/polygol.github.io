@@ -54,12 +54,23 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
     // Conditionally add Gurasuraisu-specific styles.
     if (isInsideGurasuraisu) {
         css += `
-            * {
-                cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
+            :root {
+                /* Define the two cursor styles as variables */
+                --gurasu-cursor-visible: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto;
+                --gurasu-cursor-hidden: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) 0 0, none;
+                
+                /* Set the default active cursor */
+                --gurasu-active-cursor: var(--gurasu-cursor-visible);
             }
 
-            html.gurasuraisu-cursor-hidden * {
-                cursor: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) 0 0, none !IMPORTANT;
+            /* When the parent signals inactivity, change the active cursor variable */
+            html.gurasuraisu-cursor-hidden {
+                --gurasu-active-cursor: var(--gurasu-cursor-hidden);
+            }
+
+            /* Apply the active cursor to all elements */
+            * {
+                cursor: var(--gurasu-active-cursor) !important;
             }
         `;
     }
