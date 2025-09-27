@@ -57,7 +57,7 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
             :root {
                 /* Define the two cursor styles as variables */
                 --gurasu-cursor-visible: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto;
-                --gurasu-cursor-hidden: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) 0 0, none;
+                --gurasu-cursor-hidden: none;
                 
                 /* Set the default active cursor */
                 --gurasu-active-cursor: var(--gurasu-cursor-visible);
@@ -347,12 +347,15 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
 
-  // --- NEW: Listen for activity within the iframe and notify the parent ---
   if (isInsideGurasuraisu) {
     let lastActivitySignal = 0;
-    const throttleInterval = 500; // Send an update at most every 500ms
+    const throttleInterval = 500; // Throttle messages to the parent
 
-    const signalActivityToParent = () => {
+    const handleLocalActivity = () => {
+        // Step 1: Show this iframe's cursor immediately.
+        document.documentElement.classList.remove('gurasuraisu-cursor-hidden');
+
+        // Step 2: Notify the parent to reset the global hide timer (throttled).
         const now = Date.now();
         if (now - lastActivitySignal > throttleInterval) {
             window.parent.postMessage({ action: 'userActivity' }, window.location.origin);
@@ -360,10 +363,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // Listen for mouse movement, clicks, or key presses as signs of activity
-    window.addEventListener('mousemove', signalActivityToParent);
-    window.addEventListener('click', signalActivityToParent);
-    window.addEventListener('keydown', signalActivityToParent);
+    // Listen for any user activity within this iframe.
+    window.addEventListener('mousemove', handleLocalActivity);
+    window.addEventListener('click', handleLocalActivity);
+    window.addEventListener('keydown', handleLocalActivity);
   }
 });
 
