@@ -816,6 +816,43 @@ function saveLastOpenedData() {
     localStorage.setItem('appLastOpened', JSON.stringify(appLastOpened));
 }
 
+    const appDrawer = document.getElementById('app-drawer');
+    const persistentClock = document.querySelector('.persistent-clock');
+    const customizeModal = document.getElementById('customizeModal');
+    
+	function updatePersistentClock() {
+	  const isModalOpen = 
+	    (appDrawer && appDrawer.classList.contains('open')) ||
+	    document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    
+	  if (isModalOpen) {
+	    const now = new Date();
+	    let hours = now.getHours();
+	    let minutes = String(now.getMinutes()).padStart(2, '0');
+	    
+	    let displayHours;
+	    
+	    if (use12HourFormat) {
+	      // 12-hour format without AM/PM
+	      displayHours = hours % 12 || 12;
+	    } else {
+	      // 24-hour format
+	      displayHours = String(hours).padStart(2, '0');
+	    }
+	    
+	    persistentClock.textContent = `${displayHours}:${minutes}`;
+        persistentClock.style.display = 'flex'; // Ensure it's visible in apps/drawer
+	  } else {
+        // On the home screen, check for widgets in the corner
+        if (isWidgetInTopRight()) {
+            persistentClock.style.opacity = '0';
+        } else {
+            persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+            persistentClock.style.opacity = '1';
+        }
+	  }
+	}
+
 /**
  * Linearly interpolates between two RGB colors.
  * @param {Array<number>} color1 - The starting [R, G, B] color.
@@ -1207,43 +1244,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-	
-    const appDrawer = document.getElementById('app-drawer');
-    const persistentClock = document.querySelector('.persistent-clock');
-    const customizeModal = document.getElementById('customizeModal');
-    
-	function updatePersistentClock() {
-	  const isModalOpen = 
-	    (appDrawer && appDrawer.classList.contains('open')) ||
-	    document.querySelector('.fullscreen-embed[style*="display: block"]');
-	    
-	  if (isModalOpen) {
-	    const now = new Date();
-	    let hours = now.getHours();
-	    let minutes = String(now.getMinutes()).padStart(2, '0');
-	    
-	    let displayHours;
-	    
-	    if (use12HourFormat) {
-	      // 12-hour format without AM/PM
-	      displayHours = hours % 12 || 12;
-	    } else {
-	      // 24-hour format
-	      displayHours = String(hours).padStart(2, '0');
-	    }
-	    
-	    persistentClock.textContent = `${displayHours}:${minutes}`;
-        persistentClock.style.display = 'flex'; // Ensure it's visible in apps/drawer
-	  } else {
-        // On the home screen, check for widgets in the corner
-        if (isWidgetInTopRight()) {
-            persistentClock.style.opacity = '0';
-        } else {
-            persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
-            persistentClock.style.opacity = '1';
-        }
-	  }
-	}
     
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
