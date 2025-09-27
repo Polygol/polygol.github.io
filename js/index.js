@@ -3763,28 +3763,32 @@ async function saveWallpaper(file) {
             await storeWallpaper(wallpaperId, {
                 blob: file,
                 type: file.type,
-                clockStyles: defaultClockStyles // Pass the styles
+                clockStyles: defaultClockStyles,
+                widgetLayout: [] // Initialize with an empty layout
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
                 type: file.type,
                 isVideo: true,
                 timestamp: Date.now(),
-                clockStyles: defaultClockStyles // Store default settings
+                clockStyles: defaultClockStyles,
+                widgetLayout: [] // Also initialize here
             });
         } else {
             let compressedData = await compressMedia(file);
             await storeWallpaper(wallpaperId, {
                 dataUrl: compressedData,
                 type: file.type,
-                clockStyles: defaultClockStyles // Pass the styles
+                clockStyles: defaultClockStyles,
+                widgetLayout: [] // Initialize with an empty layout
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
                 type: file.type,
                 isVideo: false,
                 timestamp: Date.now(),
-                clockStyles: defaultClockStyles // Store default settings
+                clockStyles: defaultClockStyles,
+                widgetLayout: [] // Also initialize here
             });
         }
         
@@ -3801,6 +3805,7 @@ async function saveWallpaper(file) {
         
         saveRecentWallpapers();
         currentWallpaperPosition = 0;
+        loadWidgets(); // Load the new empty widget layout
         applyWallpaper();
         showPopup(currentLanguage.WALLPAPER_UPDATED);
 	syncUiStates();
