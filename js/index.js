@@ -2877,7 +2877,6 @@ async function getStoreDataForBackup(db, storeName) {
     });
 }
 
-const customizeModal = document.getElementById('customizeModal');
 const themeSwitch = document.getElementById('theme-switch');
 const wallpaperInput = document.getElementById('wallpaperInput');
 const uploadButton = document.getElementById('uploadButton');
@@ -6141,7 +6140,6 @@ function populateDock() {
     });
 }
 
-    const appDrawer = document.getElementById('app-drawer');
     const appGrid = document.getElementById('app-grid');
 
 // Function to create app icons
