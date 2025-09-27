@@ -361,32 +361,54 @@ function removeWidget(index) {
     }
 }
 
-function isWidgetInTopRight() {
-    if (!activeWidgets || activeWidgets.length === 0) {
+/**
+ * Checks if any active widget is positioned in the top-right corner of the screen.
+ * Can optionally check a widget that is currently being dragged.
+ * @param {object|null} draggedWidgetInfo - Info about the widget being moved, e.g., { index, x, y, w, h }.
+ * @returns {boolean} True if a widget is in the corner, false otherwise.
+ */
+function isWidgetInTopRight(draggedWidgetInfo = null) {
+    if (!activeWidgets && !draggedWidgetInfo) {
         return false;
     }
 
-    // Define the corner area. This can be adjusted.
     const cornerWidth = 250; 
     const cornerHeight = 100;
     const cornerX = window.innerWidth - cornerWidth;
     const cornerY = 0;
 
-    for (const widget of activeWidgets) {
-        // Get the widget's bounding box coordinates
+    // First, check the widget currently being dragged, if any
+    if (draggedWidgetInfo) {
+        const widgetRight = draggedWidgetInfo.x + draggedWidgetInfo.w;
+        const widgetBottom = draggedWidgetInfo.y + draggedWidgetInfo.h;
+        if (draggedWidgetInfo.x < cornerX + cornerWidth &&
+            widgetRight > cornerX &&
+            draggedWidgetInfo.y < cornerY + cornerHeight &&
+            widgetBottom > cornerY) {
+            return true; // The dragged widget is in the corner.
+        }
+    }
+    
+    // Then, check all the other static widgets
+    for (let i = 0; i < activeWidgets.length; i++) {
+        // Skip the widget if it's the one being dragged
+        if (draggedWidgetInfo && i === draggedWidgetInfo.index) {
+            continue;
+        }
+
+        const widget = activeWidgets[i];
         const widgetRight = widget.x + widget.w;
         const widgetBottom = widget.y + widget.h;
 
-        // Check for any intersection between the widget and the corner area
         if (widget.x < cornerX + cornerWidth &&
             widgetRight > cornerX &&
             widget.y < cornerY + cornerHeight &&
             widgetBottom > cornerY) {
-            return true; // A widget is in the corner.
+            return true; // A static widget is in the corner.
         }
     }
 
-    return false; // No widgets are in the corner.
+    return false;
 }
 
 function renderWidgets() {
@@ -447,6 +469,9 @@ function renderWidgets() {
             initialMouseY = clientY;
             initialWidgetX = instance.offsetLeft;
             initialWidgetY = instance.offsetTop;
+            
+            // Prepare the clock for home screen view during drag
+            persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
 
             longPressTimer = setTimeout(() => {
                 removeWidget(index);
@@ -561,6 +586,10 @@ function renderWidgets() {
                 instance.style.left = `${finalX}px`;
                 instance.style.top = `${finalY}px`;
             }
+
+            // Real-time check for clock visibility
+            const draggedWidgetInfo = { index, x: finalX, y: finalY, w: instance.offsetWidth, h: instance.offsetHeight };
+            persistentClock.style.opacity = isWidgetInTopRight(draggedWidgetInfo) ? '0' : '1';
         };
 		
         const onDragEnd = () => {
@@ -7539,9 +7568,14 @@ blurOverlayControls.addEventListener('click', () => {
 function closeControls() {
     customizeModal.classList.remove('show'); // Start animation
     blurOverlayControls.classList.remove('show');
-    
-    // Let the main logic decide if the clock should be visible again
-    updatePersistentClock(); 
+
+    // Explicitly set the clock state for returning to the home screen
+    persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+    if (isWidgetInTopRight()) {
+        persistentClock.style.opacity = '0';
+    } else {
+        persistentClock.style.opacity = '1';
+    }
 
     setTimeout(() => {
         customizeModal.style.display = 'none'; // Hide after animation
