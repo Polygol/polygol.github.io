@@ -6096,65 +6096,6 @@ function setupDrawerInteractions() {
     const drawerHandle = document.querySelector('.drawer-handle');
 	const appDrawerHandle = document.querySelector('.app-drawer-handle');
 
-    // --- NEW: Mouse-specific Click/Double-click Logic ---
-    if (intuitiveMouseControlsEnabled) {
-        let clickTimeout = null;
-
-        drawerPill.addEventListener('click', (e) => {
-            // This event now handles both single and double clicks
-            e.stopPropagation(); // Prevent event bubbling
-
-            if (!clickTimeout) {
-                // First click
-                clickTimeout = setTimeout(() => {
-                    // --- SINGLE CLICK ACTION ---
-                    const isOpenApp = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-                    if (!isOpenApp) {
-                        // On Home: Toggle the Dock
-                        const isDockVisible = dock.classList.contains('show');
-                        if (!isDockVisible) {
-                            dock.style.display = 'flex';
-                            requestAnimationFrame(() => {
-                                dock.classList.add('show');
-                                dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
-                            });
-                        } else {
-                            dock.classList.remove('show');
-                        }
-                    }
-                    clickTimeout = null; // Reset
-                }, 250); // Double-click window
-            }
-        });
-        
-        drawerPill.addEventListener('dblclick', (e) => {
-            e.stopPropagation();
-            clearTimeout(clickTimeout); // Cancel the pending single-click
-            clickTimeout = null;
-
-            // --- DOUBLE CLICK ACTION ---
-            const isOpenApp = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-            if (isOpenApp) {
-                // In App: Close the app
-                minimizeFullscreenEmbed();
-            } else {
-                // On Home: Toggle the App Drawer
-                appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-                if (appDrawer.classList.contains('open')) {
-                    appDrawer.style.bottom = '-100%';
-                    appDrawer.style.opacity = '0';
-                    appDrawer.classList.remove('open');
-                    initialDrawerPosition = -100;
-                } else {
-                    appDrawer.style.bottom = '0%';
-                    appDrawer.style.opacity = '1';
-                    appDrawer.classList.add('open');
-                    initialDrawerPosition = 0;
-                }
-            }
-        });
-    }
-
     const startLongPress = (e) => {
         // Only trigger long press if AI is enabled and not already dragging the drawer.
         if (isAiAssistantEnabled && !isDragging) {
@@ -6503,11 +6444,8 @@ function setupDrawerInteractions() {
 	        swipeOverlay.style.pointerEvents = 'none';
 	    }
 	
-        potentialDrag = false;
-        isDragging = false;
-        if(intuitiveMouseControlsEnabled) drawerPill.style.pointerEvents = 'auto'; // Re-enable clicks
-		
-		setTimeout(() => {
+	    isDragging = false;
+	    setTimeout(() => {
 	        isDrawerInMotion = false;
 	    }, 300);
 	}
@@ -6602,32 +6540,38 @@ function setupDrawerInteractions() {
     document.addEventListener('touchstart', (e) => {
         const touch = e.touches[0];
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Check if touch is on handle area
         if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
-            startPotentialDrag(touch.clientY, touch.clientX);
+            startDrag(touch.clientY);
             e.preventDefault();
         }
     }, { passive: false });
 
     document.addEventListener('touchmove', (e) => {
-        if (potentialDrag) {
+        if (isDragging) {
             e.preventDefault();
             moveDrawer(e.touches[0].clientY);
         }
     }, { passive: false });
 
-    document.addEventListener('touchend', endDrag);
+    document.addEventListener('touchend', () => {
+        endDrag();
+    });
 
     // Mouse Events for regular drawer interaction
     document.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         const element = document.elementFromPoint(e.clientX, e.clientY);
+        
+        // Check if click is on handle area
         if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
-             startPotentialDrag(e.clientY, e.clientX);
+            startDrag(e.clientY);
         }
     });
 
     document.addEventListener('mousemove', (e) => {
-        if (potentialDrag) {
+        if (isDragging) {
             moveDrawer(e.clientY);
         }
     });
@@ -6914,23 +6858,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadRecentWallpapers();
 });
 
-/**
- * Checks if the user is likely on a desktop with a mouse as the primary input.
- * Sets the global 'intuitiveMouseControlsEnabled' flag.
- */
-function detectInputMethod() {
-    // Check for common mobile strings in the user agent
-    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    // Check for touch event support, max touch points, and coarse pointer media query
-    const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
-
-    intuitiveMouseControlsEnabled = !isMobile && !hasTouch;
-    console.log(`Intuitive Mouse Controls Enabled: ${intuitiveMouseControlsEnabled}`);
-}
-
 document.addEventListener('DOMContentLoaded', async function() {
     // --- Load ALL data and settings first ---
-    detectInputMethod();
     loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
     loadSavedData();         // Load usage and lastOpened data
     loadRecentWallpapers();
