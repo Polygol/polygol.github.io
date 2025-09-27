@@ -5625,7 +5625,7 @@ async function deleteApp(appName) {
 
 let isAppOpen = false;
 
-function createFullscreenEmbed(url) {
+async function createFullscreenEmbed(url) {
     // 1. Check if Gurapps are disabled entirely
     // This uses the 'gurappsEnabled' variable you already have.
     if (!gurappsEnabled) {
@@ -5668,11 +5668,12 @@ function createFullscreenEmbed(url) {
 
     isAppOpen = true;
 
-    // Pause wallpaper video/animation when an app opens
+    // Animate wallpaper video/animation to slow down and then pause
     const bgVideo = document.getElementById('background-video');
-    if (bgVideo) {
-        bgVideo.playbackRate = 0.5; // Slow down
-        setTimeout(() => bgVideo.pause(), 300); // Pause after a short delay
+    if (bgVideo && !bgVideo.paused) {
+        // Wait for the slowdown animation to finish before pausing
+        await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
+        bgVideo.pause();
     }
 	
     // Check if we have this URL minimized already
@@ -5901,11 +5902,13 @@ function minimizeFullscreenEmbed() {
 
     isAppOpen = false;
 
-    // Resume wallpaper video/animation when an app closes
+    // Resume wallpaper video/animation with a smooth speed-up
     const bgVideo = document.getElementById('background-video');
     if (bgVideo) {
-        bgVideo.play();
-        bgVideo.playbackRate = 1.0; // Resume normal speed
+        bgVideo.play().then(() => {
+            // Animate from the slow speed back to normal
+            animatePlaybackRate(bgVideo, bgVideo.playbackRate, 1.0, 300);
+        }).catch(e => console.error("Video play failed on resume:", e));
     }
 	
     // IMPORTANT FIX: Be more specific about which embed to minimize
@@ -7936,6 +7939,41 @@ function updateMediaProgress(appName, progressState) {
             durationEl.textContent = formatTime(progressState.duration);
         }
     }
+}
+
+/**
+ * Smoothly animates the playbackRate of a video element over a given duration.
+ * @param {HTMLVideoElement} video - The video element to animate.
+ * @param {number} startRate - The starting playback rate.
+ * @param {number} endRate - The target playback rate.
+ * @param {number} duration - The animation duration in milliseconds.
+ * @returns {Promise<void>} A promise that resolves when the animation is complete.
+ */
+function animatePlaybackRate(video, startRate, endRate, duration) {
+    return new Promise(resolve => {
+        let startTime = null;
+
+        function step(currentTime) {
+            if (!startTime) startTime = currentTime;
+            const elapsedTime = currentTime - startTime;
+            const progress = Math.min(elapsedTime / duration, 1);
+
+            // Apply an ease-out function to make the transition smooth
+            const easedProgress = 1 - Math.pow(1 - progress, 3); // Ease-out cubic
+
+            const currentRate = startRate + (endRate - startRate) * easedProgress;
+            video.playbackRate = currentRate;
+
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            } else {
+                video.playbackRate = endRate; // Ensure it ends exactly on the target rate
+                resolve();
+            }
+        }
+
+        requestAnimationFrame(step);
+    });
 }
 
 const Gurasuraisu = {
