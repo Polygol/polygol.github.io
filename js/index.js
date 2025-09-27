@@ -7958,6 +7958,11 @@ window.addEventListener('message', async (event) => { // Make listener async
     const data = event.data;
     const sourceWindow = event.source;
 
+    if (data && data.action === 'userActivity') {
+        showCursorAndResetTimer();
+        return; // Message handled, no need to proceed further.
+    }
+
     // Handle a Gurapp announcing it's ready for settings
     if (data.type === 'gurapp-ready') {
         console.log('[Polygol] Gurapp is ready. Sending initial state.');
