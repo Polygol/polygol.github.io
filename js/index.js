@@ -3711,6 +3711,15 @@ function checkStorageQuota(data) {
 
 // Compression utility function
 async function compressMedia(file) {
+    if (file.type === 'image/gif') {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = event => resolve(event.target.result);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(file);
+        });
+    }
+	
     if (file.type.startsWith("image/")) {
         return new Promise((resolve) => {
             let img = new Image();
@@ -5039,6 +5048,7 @@ function applyWallpaperEffects() {
     const blurSlider = document.getElementById('wallpaper-blur-slider');
     const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
     const contrastSlider = document.getElementById('wallpaper-contrast-slider');
+    const videoWallpaper = document.getElementById('background-video');
 
     if (!blurSlider || !brightnessSlider || !contrastSlider) return;
 
@@ -5649,10 +5659,14 @@ function createFullscreenEmbed(url) {
     appLastOpened[appName] = Date.now();
     saveLastOpenedData();
 
-    // Refresh the dock to reflect the newly opened app.
-    populateDock();
-
     persistentClock.style.opacity = '1';
+
+    // Pause wallpaper video/animation when an app opens
+    const bgVideo = document.getElementById('background-video');
+    if (bgVideo) {
+        bgVideo.playbackRate = 0.5; // Slow down
+        setTimeout(() => bgVideo.pause(), 300); // Pause after a short delay
+    }
 	
     // Check if we have this URL minimized already
     if (minimizedEmbeds[url]) {
@@ -5735,6 +5749,8 @@ function createFullscreenEmbed(url) {
 	    if (iframe.contentWindow) {
 	        iframe.contentWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
 	    }
+
+	    populateDock();
         
         return;
     }
@@ -5854,6 +5870,8 @@ function createFullscreenEmbed(url) {
         interactionBlocker.style.display = 'none';
     }
 
+    populateDock();
+
 	setTimeout(() => {
         iframe.style.pointerEvents = 'auto';
     }, 100);
@@ -5872,6 +5890,13 @@ function minimizeFullscreenEmbed() {
     // Restore the original favicon when minimizing an app
     if (originalFaviconUrl) {
         updateFavicon(originalFaviconUrl);
+    }
+
+    // Resume wallpaper video/animation when an app closes
+    const bgVideo = document.getElementById('background-video');
+    if (bgVideo) {
+        bgVideo.play();
+        bgVideo.playbackRate = 1.0; // Resume normal speed
     }
 	
     // IMPORTANT FIX: Be more specific about which embed to minimize
