@@ -166,6 +166,46 @@ function consoleLoaded() {
     console.log(currentLanguage.LOAD_SUCCESS);
 }
 
+let cursorIdleTimeout;
+
+/**
+ * Sends a message to all active Gurapp iframes to update their cursor state.
+ * @param {boolean} isVisible - True to show the cursor, false to hide it.
+ */
+function broadcastCursorState(isVisible) {
+    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    iframes.forEach(iframe => {
+        if (iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'cursorStateUpdate', visible: isVisible }, window.location.origin);
+        }
+    });
+}
+
+/**
+ * Hides the cursor by adding a class to the body and broadcasting the state.
+ */
+function hideCursor() {
+    document.body.classList.add('cursor-hidden');
+    broadcastCursorState(false);
+}
+
+/**
+ * Shows the cursor, removes the hiding class, broadcasts the state,
+ * and resets the inactivity timer. This is called on mouse movement.
+ */
+function showCursorAndResetTimer() {
+    clearTimeout(cursorIdleTimeout); // Clear any existing timer
+
+    // If the cursor was hidden, make it visible again
+    if (document.body.classList.contains('cursor-hidden')) {
+        document.body.classList.remove('cursor-hidden');
+        broadcastCursorState(true);
+    }
+
+    // Set a new timer to hide the cursor after 10 seconds of inactivity
+    cursorIdleTimeout = setTimeout(hideCursor, 10000);
+}
+
 const secondsSwitch = document.getElementById('seconds-switch');
 let appUsage = {};
 const weatherSwitch = document.getElementById('weather-switch');
@@ -7285,6 +7325,18 @@ document.addEventListener('DOMContentLoaded', async function() {
             document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
         }
     }
+
+    // --- Cursor Inactivity Setup ---
+    const style = document.createElement('style');
+    style.textContent = `
+        body.cursor-hidden * {
+            cursor: none !important;
+        }
+    `;
+    document.head.appendChild(style);
+
+    window.addEventListener('mousemove', showCursorAndResetTimer);
+    showCursorAndResetTimer(); // Start the timer on initial load
 
     // --- 5. Final checks and ongoing processes ---
     preventLeaving();
