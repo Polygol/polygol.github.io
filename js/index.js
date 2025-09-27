@@ -6099,17 +6099,13 @@ function setupDrawerInteractions() {
     // --- NEW: Mouse-specific Click/Double-click Logic ---
     if (intuitiveMouseControlsEnabled) {
         let clickTimeout = null;
-        let clickCount = 0;
 
-        drawerPill.addEventListener('mousedown', (e) => {
-            // Prevent this from interfering with dragging
-            if (e.target !== drawerPill) return;
+        drawerPill.addEventListener('click', (e) => {
+            // This event now handles both single and double clicks
+            e.stopPropagation(); // Prevent event bubbling
 
-            // A click happened, so cancel any pending long press for the AI assistant
-            cancelLongPress(); 
-            clickCount++;
-
-            if (clickCount === 1) {
+            if (!clickTimeout) {
+                // First click
                 clickTimeout = setTimeout(() => {
                     // --- SINGLE CLICK ACTION ---
                     const isOpenApp = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
@@ -6124,39 +6120,37 @@ function setupDrawerInteractions() {
                             });
                         } else {
                             dock.classList.remove('show');
-                            dock.style.boxShadow = 'none';
-                            if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                            dockHideTimeout = setTimeout(() => {
-                                if (!dock.classList.contains('show')) dock.style.display = 'none';
-                            }, 300);
                         }
                     }
-                    clickCount = 0; // Reset after action
+                    clickTimeout = null; // Reset
                 }, 250); // Double-click window
-            } else if (clickCount === 2) {
-                // --- DOUBLE CLICK ACTION ---
-                clearTimeout(clickTimeout); // Cancel the single-click action
-                const isOpenApp = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+            }
+        });
+        
+        drawerPill.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            clearTimeout(clickTimeout); // Cancel the pending single-click
+            clickTimeout = null;
 
-                if (isOpenApp) {
-                    // In App: Close the app
-                    minimizeFullscreenEmbed();
+            // --- DOUBLE CLICK ACTION ---
+            const isOpenApp = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+            if (isOpenApp) {
+                // In App: Close the app
+                minimizeFullscreenEmbed();
+            } else {
+                // On Home: Toggle the App Drawer
+                appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+                if (appDrawer.classList.contains('open')) {
+                    appDrawer.style.bottom = '-100%';
+                    appDrawer.style.opacity = '0';
+                    appDrawer.classList.remove('open');
+                    initialDrawerPosition = -100;
                 } else {
-                    // On Home: Toggle the App Drawer
-                    appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-                    if (appDrawer.classList.contains('open')) {
-                        appDrawer.style.bottom = '-100%';
-                        appDrawer.style.opacity = '0';
-                        appDrawer.classList.remove('open');
-                        initialDrawerPosition = -100;
-                    } else {
-                        appDrawer.style.bottom = '0%';
-                        appDrawer.style.opacity = '1';
-                        appDrawer.classList.add('open');
-                        initialDrawerPosition = 0;
-                    }
+                    appDrawer.style.bottom = '0%';
+                    appDrawer.style.opacity = '1';
+                    appDrawer.classList.add('open');
+                    initialDrawerPosition = 0;
                 }
-                clickCount = 0; // Reset after action
             }
         });
     }
@@ -6509,8 +6503,11 @@ function setupDrawerInteractions() {
 	        swipeOverlay.style.pointerEvents = 'none';
 	    }
 	
-	    isDragging = false;
-	    setTimeout(() => {
+        potentialDrag = false;
+        isDragging = false;
+        if(intuitiveMouseControlsEnabled) drawerPill.style.pointerEvents = 'auto'; // Re-enable clicks
+		
+		setTimeout(() => {
 	        isDrawerInMotion = false;
 	    }, 300);
 	}
@@ -6605,38 +6602,32 @@ function setupDrawerInteractions() {
     document.addEventListener('touchstart', (e) => {
         const touch = e.touches[0];
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        
-        // Check if touch is on handle area
         if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
-            startDrag(touch.clientY);
+            startPotentialDrag(touch.clientY, touch.clientX);
             e.preventDefault();
         }
     }, { passive: false });
 
     document.addEventListener('touchmove', (e) => {
-        if (isDragging) {
+        if (potentialDrag) {
             e.preventDefault();
             moveDrawer(e.touches[0].clientY);
         }
     }, { passive: false });
 
-    document.addEventListener('touchend', () => {
-        endDrag();
-    });
+    document.addEventListener('touchend', endDrag);
 
     // Mouse Events for regular drawer interaction
     document.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         const element = document.elementFromPoint(e.clientX, e.clientY);
-        
-        // Check if click is on handle area
         if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
-            startDrag(e.clientY);
+             startPotentialDrag(e.clientY, e.clientX);
         }
     });
 
     document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
+        if (potentialDrag) {
             moveDrawer(e.clientY);
         }
     });
