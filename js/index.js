@@ -3623,7 +3623,7 @@ wallpaperInput.addEventListener("change", async event => {
                 if (["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "video/mp4"].includes(file.type)) {
                     const wallpaperId = `slideshow_${Date.now()}_${Math.random()}`;
                     
-                    if (file.type.startsWith("video/")) {
+                    if (file.type.startsWith("video/") || file.type === 'image/gif') {
                         await storeWallpaper(wallpaperId, {
                             blob: file,
                             type: file.type
@@ -3631,7 +3631,7 @@ wallpaperInput.addEventListener("change", async event => {
                         processedWallpapers.push({
                             id: wallpaperId,
                             type: file.type,
-                            isVideo: true
+                            isVideo: file.type.startsWith("video/")
                         });
                     } else {
                         let compressedData = await compressMedia(file);
@@ -3759,7 +3759,7 @@ async function saveWallpaper(file) {
         // FIX: Reset clock styles to default for the new wallpaper and get the defaults
         const defaultClockStyles = resetAndApplyDefaultClockStyles();
         
-        if (file.type.startsWith("video/")) {
+        if (file.type.startsWith("video/") || file.type === 'image/gif') {
             await storeWallpaper(wallpaperId, {
                 blob: file,
                 type: file.type,
@@ -3769,7 +3769,7 @@ async function saveWallpaper(file) {
             recentWallpapers.unshift({
                 id: wallpaperId,
                 type: file.type,
-                isVideo: true,
+                isVideo: file.type.startsWith("video/"),
                 timestamp: Date.now(),
                 clockStyles: defaultClockStyles,
                 widgetLayout: [] // Also initialize here
@@ -3859,16 +3859,25 @@ async function applyWallpaper() {
                     }
                 } else {
                     let imageData = await getWallpaper(wallpaper.id);
-                    if (imageData && imageData.dataUrl) {
-                        let existingVideo = document.querySelector("#background-video");
-                        if (existingVideo) {
-                            URL.revokeObjectURL(existingVideo.src);
-                            existingVideo.remove();
+                    if (imageData) {
+                        let imageUrl;
+                        if (imageData.blob) {
+                            imageUrl = URL.createObjectURL(imageData.blob);
+                        } else if (imageData.dataUrl) {
+                            imageUrl = imageData.dataUrl;
                         }
-                        document.body.style.setProperty('--bg-image', `url('${imageData.dataUrl}')`);
-                        document.body.style.backgroundSize = "cover";
-                        document.body.style.backgroundPosition = "center";
-                        document.body.style.backgroundRepeat = "no-repeat";
+
+                        if (imageUrl) {
+                            let existingVideo = document.querySelector("#background-video");
+                            if (existingVideo) {
+                                URL.revokeObjectURL(existingVideo.src);
+                                existingVideo.remove();
+                            }
+                            document.body.style.setProperty('--bg-image', `url('${imageUrl}')`);
+                            document.body.style.backgroundSize = "cover";
+                            document.body.style.backgroundPosition = "center";
+                            document.body.style.backgroundRepeat = "no-repeat";
+                        }
                     }
                 }
                 currentWallpaperIndex = (currentWallpaperIndex + 1) % slideshowWallpapers.length;
@@ -3924,16 +3933,25 @@ async function applyWallpaper() {
                     }
                 } else {
                     let imageData = await getWallpaper(currentWallpaper.id);
-                    if (imageData && imageData.dataUrl) {
-                        let existingVideo = document.querySelector("#background-video");
-                        if (existingVideo) {
-                            URL.revokeObjectURL(existingVideo.src);
-                            existingVideo.remove();
+                    if (imageData) {
+                        let imageUrl;
+                        if (imageData.blob) {
+                            imageUrl = URL.createObjectURL(imageData.blob);
+                        } else if (imageData.dataUrl) {
+                            imageUrl = imageData.dataUrl;
                         }
-                        document.body.style.setProperty('--bg-image', `url('${imageData.dataUrl}')`);
-                        document.body.style.backgroundSize = "cover";
-                        document.body.style.backgroundPosition = "center";
-                        document.body.style.backgroundRepeat = "no-repeat";
+                        
+                        if (imageUrl) {
+                            let existingVideo = document.querySelector("#background-video");
+                            if (existingVideo) {
+                                URL.revokeObjectURL(existingVideo.src);
+                                existingVideo.remove();
+                            }
+                            document.body.style.setProperty('--bg-image', `url('${imageUrl}')`);
+                            document.body.style.backgroundSize = "cover";
+                            document.body.style.backgroundPosition = "center";
+                            document.body.style.backgroundRepeat = "no-repeat";
+                        }
                     }
                 }
             } catch (error) {
