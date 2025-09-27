@@ -1078,8 +1078,6 @@ function getCurrentTime24() {
     return `${hours}:${minutes}:${seconds}`;
 }
 
-const persistentClock = document.getElementById('persistent-clock');
-
 document.addEventListener('DOMContentLoaded', () => {	
     // --- Get references to key elements ---
     const controlPopup = document.createElement('div');
