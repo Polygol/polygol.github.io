@@ -3966,13 +3966,6 @@ async function applyWallpaper() {
                         video.loop = true;
                         video.muted = true;
                         video.playsInline = true;
-                        video.style.position = "fixed";
-                        video.style.minWidth = "100%";
-                        video.style.minHeight = "100%";
-                        video.style.width = "auto";
-                        video.style.height = "auto";
-                        video.style.zIndex = "-1";
-                        video.style.objectFit = "cover";
                         
                         let videoUrl = URL.createObjectURL(videoData.blob);
                         video.src = videoUrl;
@@ -4045,13 +4038,6 @@ async function applyWallpaper() {
                         video.loop = true;
                         video.muted = true;
                         video.playsInline = true;
-                        video.style.position = "fixed";
-                        video.style.minWidth = "100%";
-                        video.style.minHeight = "100%";
-                        video.style.width = "auto";
-                        video.style.height = "auto";
-                        video.style.zIndex = "-1";
-                        video.style.objectFit = "cover";
                         
                         let videoUrl = URL.createObjectURL(videoData.blob);
                         video.src = videoUrl;
@@ -5751,14 +5737,28 @@ async function createFullscreenEmbed(url) {
     }
 
     // 2. Find the app's name from the URL. This also validates that the app is "installed".
-    const appName = Object.keys(apps).find(name => apps[name].url === url);
+    let appName = Object.keys(apps).find(name => apps[name].url === url);
 
-    // If the app is not found in our list, show an error and stop.
-    if (!appName) {
+    // Allowlist override
+    const allowlistDomains = ['kirbindustries.gitbook.io'];
+    const urlDomain = new URL(url).hostname;
+
+    const isAllowlisted = allowlistDomains.includes(urlDomain);
+
+    // If not in apps AND not allowlisted, show error
+    if (!appName && !isAllowlisted) {
         showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
         console.warn(`Attempted to open an unknown app URL: ${url}`);
+        window.open(url, '_blank');
         return;
     }
+
+    // Fallback app details for allowlisted URLs
+    let appDetails = appName ? apps[appName] : {
+        name: urlDomain,
+        icon: '/assets/appicon/default.png',
+        url: url
+    };
 
     // Update the favicon to the app's icon
     const appDetails = apps[appName];
@@ -5784,15 +5784,6 @@ async function createFullscreenEmbed(url) {
     persistentClock.style.opacity = '1';
 
     isAppOpen = true;
-
-    // Pause background animations (Video and GIF)
-    await pauseGifBackground();
-    const bgVideo = document.getElementById('background-video');
-    if (bgVideo && !bgVideo.paused) {
-        // Wait for the slowdown animation to finish before pausing
-        await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
-        bgVideo.pause();
-    }
 	
     // Check if we have this URL minimized already
     if (minimizedEmbeds[url]) {
@@ -5947,11 +5938,20 @@ async function createFullscreenEmbed(url) {
     });
     
     // Handle iframe loading error
-    iframe.addEventListener('error', () => {
-        embedFailed = true;
-        window.open(url, '_blank');
-        // Don't remove the container or close the embed
-    });
+	iframe.addEventListener('error', () => {
+	    embedFailed = true;
+	
+	    // Parse the domain from the URL
+	    const blockedDomain = 'kirbindustries.gitbook.io';
+	    const urlDomain = new URL(url).hostname;
+	
+	    // Only open a new tab if it's not the blocked domain
+	    if (urlDomain !== blockedDomain) {
+	        window.open(url, '_blank');
+	    }
+	
+	    // Don't remove the container or close the embed
+	});
     
     // Hide all main UI elements
     document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
@@ -5979,8 +5979,16 @@ async function createFullscreenEmbed(url) {
         embedContainer.style.transform = 'scale(1)';
         embedContainer.style.opacity = '1';
         embedContainer.style.borderRadius = '0px';
-        
     }, 10);
+
+    // Pause background animations (Video and GIF)
+    await pauseGifBackground();
+    const bgVideo = document.getElementById('background-video');
+    if (bgVideo && !bgVideo.paused) {
+        // Wait for the slowdown animation to finish before pausing
+        await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
+        bgVideo.pause();
+    }
     
     // Show the swipe overlay when opening an app
     const swipeOverlay = document.getElementById('swipe-overlay');
@@ -6980,7 +6988,7 @@ secondsSwitch.addEventListener('change', function() {
 });
 
 document.getElementById("versionButton").addEventListener("click", function() {
-    window.open("https://kirbindustries.gitbook.io/polygol", "_blank");
+	createFullscreenEmbed('https://kirbindustries.gitbook.io/polygol');
 });
 
 document.addEventListener('keydown', (event) => {
