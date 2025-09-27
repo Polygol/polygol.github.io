@@ -841,13 +841,15 @@ function saveLastOpenedData() {
 	    }
 	    
 	    persistentClock.textContent = `${displayHours}:${minutes}`;
-        persistentClock.style.display = 'flex'; // Ensure it's visible in apps/drawer
+        persistentClock.style.opacity = '1'; // Ensure clock is visible in apps/drawer
 	  } else {
-        // On the home screen, check for widgets in the corner
+        // On the home screen, set content to the info icon
+        persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+        
+        // Then, determine its visibility based on widgets
         if (isWidgetInTopRight()) {
             persistentClock.style.opacity = '0';
         } else {
-            persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
             persistentClock.style.opacity = '1';
         }
 	  }
@@ -7535,9 +7537,11 @@ blurOverlayControls.addEventListener('click', () => {
 });
 
 function closeControls() {
-	persistentClock.style.opacity = '1';
     customizeModal.classList.remove('show'); // Start animation
     blurOverlayControls.classList.remove('show');
+    
+    // Let the main logic decide if the clock should be visible again
+    updatePersistentClock(); 
 
     setTimeout(() => {
         customizeModal.style.display = 'none'; // Hide after animation
