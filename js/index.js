@@ -6923,6 +6923,20 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadRecentWallpapers();
 });
 
+/**
+ * Checks if the user is likely on a desktop with a mouse as the primary input.
+ * Sets the global 'intuitiveMouseControlsEnabled' flag.
+ */
+function detectInputMethod() {
+    // Check for common mobile strings in the user agent
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    // Check for touch event support, max touch points, and coarse pointer media query
+    const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.matchMedia('(pointer: coarse)').matches;
+
+    intuitiveMouseControlsEnabled = !isMobile && !hasTouch;
+    console.log(`Intuitive Mouse Controls Enabled: ${intuitiveMouseControlsEnabled}`);
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     // --- Load ALL data and settings first ---
     detectInputMethod();
