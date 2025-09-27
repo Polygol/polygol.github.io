@@ -5761,7 +5761,6 @@ async function createFullscreenEmbed(url) {
     };
 
     // Update the favicon to the app's icon
-    const appDetails = apps[appName];
     if (appDetails && appDetails.icon) {
         let iconUrl = appDetails.icon;
         if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/'))) {
