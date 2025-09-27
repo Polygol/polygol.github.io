@@ -5920,12 +5920,21 @@ async function createFullscreenEmbed(url) {
     // Try to detect if embedding is blocked
 	iframe.addEventListener('load', () => {
 	    let embedBlocked = false;
-	    const urlDomain = new URL(url).hostname;
+	
+	    let urlDomain = '';
+	    try {
+	        const absoluteUrl = new URL(url, window.location.origin); // Fix for relative URLs
+	        urlDomain = absoluteUrl.hostname;
+	    } catch (e) {
+	        console.warn('Invalid URL in iframe load handler:', url);
+	        embedFailed = true;
+	        return;
+	    }
 	
 	    try {
 	        const iframeContent = iframe.contentWindow.document;
 	
-	        // Look for typical anti-embed messages in the body
+	        // Look for typical anti-embed messages
 	        const bodyText = iframeContent.body?.textContent?.toLowerCase() || '';
 	        if (bodyText.includes('x-frame-options') || bodyText.includes('frame denied')) {
 	            embedBlocked = true;
@@ -5938,12 +5947,12 @@ async function createFullscreenEmbed(url) {
 	    if (embedBlocked) {
 	        embedFailed = true;
 	
-	        // Open new tab only if domain is not allowlisted
+	        const allowlistDomains = ['kirbindustries.gitbook.io'];
 	        if (!allowlistDomains.includes(urlDomain)) {
 	            window.open(url, '_blank');
 	        }
 	
-	        return; // Exit early if blocked
+	        return;
 	    }
 	
 	    // If iframe loaded successfully, send language to iframe
@@ -5952,7 +5961,7 @@ async function createFullscreenEmbed(url) {
 	        iframe.contentWindow.postMessage({
 	            type: 'languageUpdate',
 	            languageCode: currentLang
-	        }, '*'); // Consider using specific origin if needed
+	        }, '*');
 	    }
 	});
     
