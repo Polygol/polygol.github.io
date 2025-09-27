@@ -5909,43 +5909,51 @@ async function createFullscreenEmbed(url) {
     let embedFailed = false;
     
     // Try to detect if embedding is blocked
-    iframe.addEventListener('load', () => {
-       try {
-           // Attempt to access iframe content
-           const iframeContent = iframe.contentWindow.document;
-           
-           // Specific check for embedding blockage
-           if (iframeContent.body.textContent.includes('X-Frame-Options') || 
-               iframeContent.body.textContent.includes('frame denied')) {
-               embedFailed = true;
-               window.open(url, '_blank');
-           }
-       } catch (error) {
-           // If accessing content fails, it might be blocked
-           embedFailed = true;
-           window.open(url, '_blank');
-       }
-		
-       // Send current language to newly loaded iframe
-        const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
-        if (iframe.contentWindow) {
-            iframe.contentWindow.postMessage({
-                type: 'languageUpdate',
-                languageCode: currentLang
-            }, window.location.origin);
-        }
-    });
+	iframe.addEventListener('load', () => {
+	    let embedBlocked = false;
+	    const urlDomain = new URL(url).hostname;
+	
+	    try {
+	        const iframeContent = iframe.contentWindow.document;
+	
+	        // Look for typical anti-embed messages in the body
+	        const bodyText = iframeContent.body?.textContent?.toLowerCase() || '';
+	        if (bodyText.includes('x-frame-options') || bodyText.includes('frame denied')) {
+	            embedBlocked = true;
+	        }
+	    } catch (error) {
+	        // Cross-origin access failed. Likely blocked
+	        embedBlocked = true;
+	    }
+	
+	    if (embedBlocked) {
+	        embedFailed = true;
+	
+	        // Open new tab only if domain is not allowlisted
+	        if (!allowlistDomains.includes(urlDomain)) {
+	            window.open(url, '_blank');
+	        }
+	
+	        return; // Exit early if blocked
+	    }
+	
+	    // If iframe loaded successfully, send language to iframe
+	    const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
+	    if (iframe.contentWindow) {
+	        iframe.contentWindow.postMessage({
+	            type: 'languageUpdate',
+	            languageCode: currentLang
+	        }, '*'); // Consider using specific origin if needed
+	    }
+	});
     
     // Handle iframe loading error
 	iframe.addEventListener('error', () => {
 	    embedFailed = true;
-	
-	    // Parse the domain from the URL
-	    const blockedDomain = 'kirbindustries.gitbook.io';
 	    const urlDomain = new URL(url).hostname;
 	
-	    // Only open a new tab if it's not the blocked domain
-	    if (urlDomain !== blockedDomain) {
+	    // Only open a new tab if domain is not allowlisted
+	    if (!allowlistDomains.includes(urlDomain)) {
 	        window.open(url, '_blank');
 	    }
 	
@@ -6987,22 +6995,13 @@ secondsSwitch.addEventListener('change', function() {
 });
 
 document.getElementById("versionButton").addEventListener("click", function() {
+	closeControls();
 	createFullscreenEmbed('https://kirbindustries.gitbook.io/polygol');
 });
 
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
-        // Close all modals
-        [customizeModal].forEach(modal => {
-            if (modal.classList.contains('show')) {
-                modal.classList.remove('show');
-                blurOverlayControls.classList.remove('show');
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                    blurOverlayControls.style.display = 'none';
-                }, 300);
-            }
-        });
+		closeControls();
     }
 });
 
