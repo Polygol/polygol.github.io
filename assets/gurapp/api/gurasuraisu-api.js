@@ -346,6 +346,25 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
+
+  // --- NEW: Listen for activity within the iframe and notify the parent ---
+  if (isInsideGurasuraisu) {
+    let lastActivitySignal = 0;
+    const throttleInterval = 500; // Send an update at most every 500ms
+
+    const signalActivityToParent = () => {
+        const now = Date.now();
+        if (now - lastActivitySignal > throttleInterval) {
+            window.parent.postMessage({ action: 'userActivity' }, window.location.origin);
+            lastActivitySignal = now;
+        }
+    };
+    
+    // Listen for mouse movement, clicks, or key presses as signs of activity
+    window.addEventListener('mousemove', signalActivityToParent);
+    window.addEventListener('click', signalActivityToParent);
+    window.addEventListener('keydown', signalActivityToParent);
+  }
 });
 
 // Announce that the API is ready
