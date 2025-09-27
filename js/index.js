@@ -6096,6 +6096,71 @@ function setupDrawerInteractions() {
     const drawerHandle = document.querySelector('.drawer-handle');
 	const appDrawerHandle = document.querySelector('.app-drawer-handle');
 
+    // --- NEW: Mouse-specific Click/Double-click Logic ---
+    if (intuitiveMouseControlsEnabled) {
+        let clickTimeout = null;
+        let clickCount = 0;
+
+        drawerPill.addEventListener('mousedown', (e) => {
+            // Prevent this from interfering with dragging
+            if (e.target !== drawerPill) return;
+
+            // A click happened, so cancel any pending long press for the AI assistant
+            cancelLongPress(); 
+            clickCount++;
+
+            if (clickCount === 1) {
+                clickTimeout = setTimeout(() => {
+                    // --- SINGLE CLICK ACTION ---
+                    const isOpenApp = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+                    if (!isOpenApp) {
+                        // On Home: Toggle the Dock
+                        const isDockVisible = dock.classList.contains('show');
+                        if (!isDockVisible) {
+                            dock.style.display = 'flex';
+                            requestAnimationFrame(() => {
+                                dock.classList.add('show');
+                                dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
+                            });
+                        } else {
+                            dock.classList.remove('show');
+                            dock.style.boxShadow = 'none';
+                            if (dockHideTimeout) clearTimeout(dockHideTimeout);
+                            dockHideTimeout = setTimeout(() => {
+                                if (!dock.classList.contains('show')) dock.style.display = 'none';
+                            }, 300);
+                        }
+                    }
+                    clickCount = 0; // Reset after action
+                }, 250); // Double-click window
+            } else if (clickCount === 2) {
+                // --- DOUBLE CLICK ACTION ---
+                clearTimeout(clickTimeout); // Cancel the single-click action
+                const isOpenApp = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+
+                if (isOpenApp) {
+                    // In App: Close the app
+                    minimizeFullscreenEmbed();
+                } else {
+                    // On Home: Toggle the App Drawer
+                    appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+                    if (appDrawer.classList.contains('open')) {
+                        appDrawer.style.bottom = '-100%';
+                        appDrawer.style.opacity = '0';
+                        appDrawer.classList.remove('open');
+                        initialDrawerPosition = -100;
+                    } else {
+                        appDrawer.style.bottom = '0%';
+                        appDrawer.style.opacity = '1';
+                        appDrawer.classList.add('open');
+                        initialDrawerPosition = 0;
+                    }
+                }
+                clickCount = 0; // Reset after action
+            }
+        });
+    }
+
     const startLongPress = (e) => {
         // Only trigger long press if AI is enabled and not already dragging the drawer.
         if (isAiAssistantEnabled && !isDragging) {
@@ -6860,6 +6925,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('DOMContentLoaded', async function() {
     // --- Load ALL data and settings first ---
+    detectInputMethod();
     loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
     loadSavedData();         // Load usage and lastOpened data
     loadRecentWallpapers();
