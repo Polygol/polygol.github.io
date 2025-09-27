@@ -1478,7 +1478,7 @@ const weatherConditions = {
 
 function updateWeatherVisibility() {
     const weatherWidget = document.getElementById('weather');
-    weatherWidget.style.display = showWeather ? 'block' : 'none';
+    weatherWidget.style.display = showWeather ? 'flex' : 'none';
 }
 
 function setupWeatherToggle() {
