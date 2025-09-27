@@ -278,7 +278,7 @@ input[type="submit"]:active,
 }
 
         body.cursor-hidden * {
-            cursor: none !important;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px"></svg>'), auto !important;
         }
 
         body {
