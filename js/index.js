@@ -3605,8 +3605,17 @@ wallpaperInput.addEventListener("change", async event => {
     
     try {
         if (files.length === 1) {
-            // The existing saveWallpaper function is now safe to call.
-            saveWallpaper(files[0]);
+            localStorage.removeItem("wallpapers");
+            clearInterval(slideshowInterval);
+            slideshowInterval = null;
+            isSlideshow = false;
+            
+            let file = files[0];
+            if (["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "video/mp4"].includes(file.type)) {
+                saveWallpaper(file);
+            } else {
+                showPopup(currentLanguage.WALLPAPER_UPDATE_FAIL);
+            }
         } else {
             let processedWallpapers = [];
             for (let file of files) {
@@ -3639,36 +3648,8 @@ wallpaperInput.addEventListener("change", async event => {
             }
             
 	    if (processedWallpapers.length > 0) {
-	        // --- FIX: Capture current settings from localStorage instead of resetting ---
-	        const currentClockStyles = {
-                font: localStorage.getItem('font') || 'Inter',
-                weight: localStorage.getItem('weight') || '700',
-                color: localStorage.getItem('color') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
-                colorEnabled: localStorage.getItem('colorEnabled') === 'true',
-                stackEnabled: localStorage.getItem('stackEnabled') === 'true',
-                showSeconds: localStorage.getItem('showSeconds') !== 'false',
-                showWeather: localStorage.getItem('showWeather') !== 'false',
-                alignment: localStorage.getItem('alignment') || 'center',
-                clockSize: localStorage.getItem('clockSize') || '0',
-                clockPosX: localStorage.getItem('clockPosX') || '50',
-                clockPosY: localStorage.getItem('clockPosY') || '50',
-                wallpaperBlur: localStorage.getItem('wallpaperBlur') || '0',
-                wallpaperBrightness: localStorage.getItem('wallpaperBrightness') || '100',
-                wallpaperContrast: localStorage.getItem('wallpaperContrast') || '100',
-                shadowEnabled: localStorage.getItem('shadowEnabled') === 'true',
-                shadowBlur: localStorage.getItem('shadowBlur') || '10',
-                shadowColor: localStorage.getItem('shadowColor') || '#000000',
-                gradientEnabled: localStorage.getItem('gradientEnabled') === 'true',
-                gradientColor: localStorage.getItem('gradientColor') || '#ffffff',
-                glassEnabled: localStorage.getItem('glassEnabled') === 'true',
-                roundness: localStorage.getItem('roundness') || '0',
-                customFontName: localStorage.getItem('customFontName') || null,
-                customFontUrl: localStorage.getItem('customFontUrl') || null,
-                customLineHeight: localStorage.getItem('customLineHeight') || null,
-                customCSS: localStorage.getItem('customCSS') || null,
-                dateFormat: localStorage.getItem('dateFormat') || 'dddd, MMMM D',
-                clockFormat: localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss')
-            };
+	        // FIX: Reset clock styles to default for the new slideshow
+	        const defaultClockStyles = resetAndApplyDefaultClockStyles();
 	    
 	        localStorage.setItem("wallpapers", JSON.stringify(processedWallpapers));
 	        currentWallpaperIndex = 0;
@@ -3677,7 +3658,7 @@ wallpaperInput.addEventListener("change", async event => {
 	        recentWallpapers.unshift({
 	            isSlideshow: true,
 	            timestamp: Date.now(),
-	            clockStyles: currentClockStyles // Store current settings for slideshow
+	            clockStyles: defaultClockStyles // Store default clock styles for slideshow
 	        });
                 
                 while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
@@ -3689,7 +3670,7 @@ wallpaperInput.addEventListener("change", async event => {
                 applyWallpaper();
                 showPopup(currentLanguage.MULTIPLE_WALLPAPERS_UPDATED);
             } else {
-                showPopup(currentLanguage.NO_VALID_WIDGETS);
+                showPopup(currentLanguage.NO_VALID_WALLPAPERS);
             }
         }
     } catch (error) {
@@ -3772,63 +3753,35 @@ async function saveWallpaper(file) {
     try {
         const wallpaperId = `wallpaper_${Date.now()}`;
         
-        // --- FIX: Capture the CURRENTLY configured styles instead of resetting ---
-        const currentClockStyles = {
-            font: localStorage.getItem('font') || 'Inter',
-            weight: localStorage.getItem('weight') || '700',
-            color: localStorage.getItem('color') || getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff',
-            colorEnabled: localStorage.getItem('colorEnabled') === 'true',
-            stackEnabled: localStorage.getItem('stackEnabled') === 'true',
-            showSeconds: localStorage.getItem('showSeconds') !== 'false',
-            showWeather: localStorage.getItem('showWeather') !== 'false',
-            alignment: localStorage.getItem('alignment') || 'center',
-            clockSize: localStorage.getItem('clockSize') || '0',
-            clockPosX: localStorage.getItem('clockPosX') || '50',
-            clockPosY: localStorage.getItem('clockPosY') || '50',
-            wallpaperBlur: localStorage.getItem('wallpaperBlur') || '0',
-            wallpaperBrightness: localStorage.getItem('wallpaperBrightness') || '100',
-            wallpaperContrast: localStorage.getItem('wallpaperContrast') || '100',
-            shadowEnabled: localStorage.getItem('shadowEnabled') === 'true',
-            shadowBlur: localStorage.getItem('shadowBlur') || '10',
-            shadowColor: localStorage.getItem('shadowColor') || '#000000',
-            gradientEnabled: localStorage.getItem('gradientEnabled') === 'true',
-            gradientColor: localStorage.getItem('gradientColor') || '#ffffff',
-            glassEnabled: localStorage.getItem('glassEnabled') === 'true',
-            roundness: localStorage.getItem('roundness') || '0',
-            customFontName: localStorage.getItem('customFontName') || null,
-            customFontUrl: localStorage.getItem('customFontUrl') || null,
-            customLineHeight: localStorage.getItem('customLineHeight') || null,
-            customCSS: localStorage.getItem('customCSS') || null,
-            dateFormat: localStorage.getItem('dateFormat') || 'dddd, MMMM D',
-            clockFormat: localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss')
-        };
+        // FIX: Reset clock styles to default for the new wallpaper and get the defaults
+        const defaultClockStyles = resetAndApplyDefaultClockStyles();
         
         if (file.type.startsWith("video/")) {
             await storeWallpaper(wallpaperId, {
                 blob: file,
                 type: file.type,
-                clockStyles: currentClockStyles // Pass the styles
+                clockStyles: defaultClockStyles // Pass the styles
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
                 type: file.type,
                 isVideo: true,
                 timestamp: Date.now(),
-                clockStyles: currentClockStyles // Store current settings
+                clockStyles: defaultClockStyles // Store default settings
             });
         } else {
             let compressedData = await compressMedia(file);
             await storeWallpaper(wallpaperId, {
                 dataUrl: compressedData,
                 type: file.type,
-                clockStyles: currentClockStyles // Pass the styles
+                clockStyles: defaultClockStyles // Pass the styles
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
                 type: file.type,
                 isVideo: false,
                 timestamp: Date.now(),
-                clockStyles: currentClockStyles // Store current settings
+                clockStyles: defaultClockStyles // Store default settings
             });
         }
         
