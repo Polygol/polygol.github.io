@@ -61,21 +61,34 @@
     </div>
     
     <script>
-      (function() {
-        const onKeyDown = (e) => {
-          // If the F12 key is pressed, immediately redirect to recovery.
-          // This works even if the rest of the page's scripts are broken.
-          if (e.code === 'F12' && !window.location.pathname.includes('/recovery/')) {
-            console.log('F12 detected. Redirecting to Safe Mode...');
-            // Prevent the main app from trying to save any broken state.
-            window.onbeforeunload = null;
-            window.location.href = '/recovery/index.html';
-          }
-        };
-        // Use 'capture: true' to ensure this listener fires before any potentially
-        // broken listeners on the page.
-        window.addEventListener('keydown', onKeyDown, { capture: true });
-      })();
+        (function () {
+          const onKeyDown = (e) => {
+            if (e.code === 'F12' && !window.location.pathname.includes('/recovery/')) {
+              console.log('F12 detected. Redirecting to Safe Mode...');
+              window.onbeforeunload = null;
+              window.location.href = '/recovery/index.html';
+            }
+          };
+        
+          const onBootHelpClick = (e) => {
+            if (!window.location.pathname.includes('/recovery/')) {
+              console.log('.boot-help clicked. Redirecting to Safe Mode...');
+              window.onbeforeunload = null;
+              window.location.href = '/recovery/index.html';
+            }
+          };
+        
+          // Attach F12 recovery shortcut
+          window.addEventListener('keydown', onKeyDown, { capture: true });
+        
+          // Wait until DOM is ready before looking for `.boot-help`
+          document.addEventListener('DOMContentLoaded', () => {
+            const helpButton = document.querySelector('.boot-help');
+            if (helpButton) {
+              helpButton.addEventListener('click', onBootHelpClick, { once: true });
+            }
+          });
+        })();
     </script>
     
     <svg style="display: none">
