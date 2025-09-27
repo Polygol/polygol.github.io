@@ -57,6 +57,10 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
             * {
                 cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
             }
+
+            html.gurasuraisu-cursor-hidden * {
+                cursor: none !important;
+            }
         `;
     }
 
@@ -278,6 +282,9 @@ window.addEventListener('message', async (event) => {
         break;
       case 'sunUpdate':
         document.documentElement.style.setProperty('--sun-shadow', data.shadow);
+        break;
+      case 'cursorStateUpdate':
+        document.documentElement.classList.toggle('gurasuraisu-cursor-hidden', !data.visible);
         break;
       
       // --- NEW: Handles screenshot requests from the parent ---
