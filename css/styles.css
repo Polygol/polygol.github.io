@@ -329,6 +329,29 @@ body::before {
 	filter: var(--wallpaper-filter, none); /* Use the CSS custom property */
 }
 
+body::before, #background-video {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    transition: background-color 0.3s, color 0.3s, background-image 0.5s, filter 1s, transform 1s ease;
+    background-image: var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* Use the variable inherited from the body */
+	transform: scale(var(--bg-transform-scale));
+	filter: var(--wallpaper-filter, none); /* Use the CSS custom property */
+}
+
+/* Add object-fit for video specifically */
+#background-video {
+    object-fit: cover;
+}
+
 .force-hide {
     display: none !important;
 }
