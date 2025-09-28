@@ -7553,26 +7553,36 @@ function openControls() {
     }, 10);
 }
 
+/**
+ * Creates a dedicated, invisible gesture pane in the top-right corner
+ * to listen for the swipe-down gesture that opens the controls.
+ */
 function setupControlSwipeListener() {
     let touchStartY = 0;
-    const swipeAreaWidth = 150; // pixels from the right edge
-    const swipeAreaHeight = 50;  // pixels from the top edge
-    const swipeThreshold = 50;   // pixels down to trigger
+    const swipeThreshold = 40; // Pixels down to trigger
+
+    // Create the gesture pane element
+    const gesturePane = document.createElement('div');
+    gesturePane.id = 'control-gesture-pane';
+    gesturePane.style.position = 'fixed';
+    gesturePane.style.top = '0';
+    gesturePane.style.right = '0';
+    gesturePane.style.width = '150px'; // Wider area for easier activation
+    gesturePane.style.height = '50px';  // Taller area
+    gesturePane.style.zIndex = '99999'; // High z-index to be on top of iframes
+    // gesturePane.style.background = 'rgba(255, 0, 0, 0.2)'; // Uncomment for debugging the area
+    document.body.appendChild(gesturePane);
 
     function handleSwipeStart(e) {
-        const x = e.touches ? e.touches[0].clientX : e.clientX;
-        const y = e.touches ? e.touches[0].clientY : e.clientY;
-
-        if (y < swipeAreaHeight && x > (window.innerWidth - swipeAreaWidth)) {
-            touchStartY = y;
-            document.addEventListener('touchmove', handleSwipeMove, { passive: false });
-            document.addEventListener('touchend', handleSwipeEnd);
-            document.addEventListener('mousemove', handleSwipeMove);
-            document.addEventListener('mouseup', handleSwipeEnd);
-        }
+        touchStartY = e.touches ? e.touches[0].clientY : e.clientY;
+        document.addEventListener('touchmove', handleSwipeMove, { passive: false });
+        document.addEventListener('touchend', handleSwipeEnd);
+        document.addEventListener('mousemove', handleSwipeMove);
+        document.addEventListener('mouseup', handleSwipeEnd);
     }
 
     function handleSwipeMove(e) {
+        // Prevent default behavior like text selection during the swipe
         e.preventDefault();
     }
 
@@ -7590,8 +7600,9 @@ function setupControlSwipeListener() {
         document.removeEventListener('mouseup', handleSwipeEnd);
     }
 
-    document.addEventListener('touchstart', handleSwipeStart, { passive: true });
-    document.addEventListener('mousedown', handleSwipeStart);
+    // Attach listeners only to the specific gesture pane
+    gesturePane.addEventListener('touchstart', handleSwipeStart, { passive: true });
+    gesturePane.addEventListener('mousedown', handleSwipeStart);
 }
 
 function setupControlsSwipeClose() {
