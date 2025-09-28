@@ -1330,47 +1330,93 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	function setupControlsSwipeClose() {
 	    let touchStartY = 0;
-	    const swipeThreshold = 50; 
+	    let isSwiping = false;
+	    let wasSwipe = false; // Flag to distinguish tap from swipe
+	    const swipeThreshold = 50;
 	
-	    const elements = [
-	        document.getElementById('customizeModal'),
-	        document.getElementById('blurOverlayControls')
-	    ];
+	    const modal = document.getElementById('customizeModal');
+	    const overlay = document.getElementById('blurOverlayControls');
 	
 	    function handleSwipeStart(e) {
-	        const modal = document.getElementById('customizeModal');
-	        // **THE FIX**: Only initiate a swipe-to-close gesture if the modal's content is scrolled to the top.
-	        // This allows users to swipe up to scroll down through the content.
-	        if (modal.scrollTop > 0) {
+	        // **THE FIX**: Check if the modal is scrolled to the bottom.
+	        // This allows normal scrolling when the content is overflowing.
+	        // A small tolerance (1px) is used for reliability.
+	        const isScrolledToBottom = modal.scrollHeight - modal.scrollTop - modal.clientHeight < 1;
+	
+	        // Only activate swipe-to-close if the modal is not scrollable OR is scrolled to the bottom.
+	        if (modal.scrollHeight > modal.clientHeight && !isScrolledToBottom) {
 	            return;
 	        }
-	        
+	
+	        isSwiping = true;
+	        wasSwipe = false; // Reset on new touch
 	        touchStartY = e.touches ? e.touches[0].clientY : e.clientY;
+	
+	        // Use document to capture events reliably, even if cursor leaves the element
 	        document.addEventListener('touchmove', handleSwipeMove, { passive: false });
 	        document.addEventListener('touchend', handleSwipeEnd);
 	        document.addEventListener('mousemove', handleSwipeMove);
 	        document.addEventListener('mouseup', handleSwipeEnd);
+	
+	        // Prepare for manual animation
+	        customizeModal.style.transition = 'none';
+	        blurOverlayControls.style.transition = 'none';
 	    }
 	
 	    function handleSwipeMove(e) {
+	        if (!isSwiping) return;
 	        e.preventDefault();
+	        wasSwipe = true; // It's a swipe, not a tap
+	
+	        const y = e.touches ? e.touches[0].clientY : e.clientY;
+	        const deltaY = touchStartY - y; // Positive for upward swipe
+	        const progress = Math.min(1, Math.max(0, deltaY / (window.innerHeight * 0.3)));
+	        const currentScale = 1 - progress;
+	
+	        // **THE FIX**: Live update the styles for a smooth closing animation
+	        blurOverlayControls.style.opacity = currentScale;
+	        customizeModal.style.opacity = currentScale;
+	        customizeModal.style.transform = `scaleY(${currentScale})`;
 	    }
 	
 	    function handleSwipeEnd(e) {
+	        if (!isSwiping) return;
+	
 	        const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
 	        const deltaY = y - touchStartY;
 	
+	        // Restore transitions for the final snap
+	        customizeModal.style.transition = '';
+	        blurOverlayControls.style.transition = '';
+	        customizeModal.style.opacity = '';
+	        customizeModal.style.transform = '';
+	        blurOverlayControls.style.opacity = '';
+	
 	        if (deltaY < -swipeThreshold) {
 	            closeControls();
+	        } else {
+	            // If not swiped far enough, snap back to open
+	            customizeModal.classList.add('show');
+	            blurOverlayControls.classList.add('show');
 	        }
 	
+	        isSwiping = false;
 	        document.removeEventListener('touchmove', handleSwipeMove);
 	        document.removeEventListener('touchend', handleSwipeEnd);
 	        document.removeEventListener('mousemove', handleSwipeMove);
 	        document.removeEventListener('mouseup', handleSwipeEnd);
 	    }
 	
-	    elements.forEach(el => {
+	    // **THE FIX**: Add a separate, simple click listener for the tap action
+	    overlay.addEventListener('click', () => {
+	        // Only close on click if it wasn't the end of a swipe gesture
+	        if (!wasSwipe) {
+	            closeControls();
+	        }
+	    });
+	
+	    // Attach swipe listeners to both the modal and the overlay
+	    [modal, overlay].forEach(el => {
 	        if (el) {
 	            el.addEventListener('touchstart', handleSwipeStart, { passive: true });
 	            el.addEventListener('mousedown', handleSwipeStart);
@@ -6539,7 +6585,7 @@ function setupDrawerInteractions() {
 	        // Start effect after a small deadzone
 	        if (deltaY > 10) {
 		    cancelLongPress();
-		    persistentClock.style.opacity = '0';
+		    persistentClock.style.opacity = '0 !important';
 			
 	            // Progress is how far along the "close" gesture we are. 
 	            // A 20% screen height swipe is considered the full gesture.
