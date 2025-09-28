@@ -1284,6 +1284,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	synchronizePersistentClock();
 
     setupControlSwipeListener();
+    setupControlsSwipeClose();
 }); 
 
 // Function to update the document title
@@ -7593,7 +7594,58 @@ function setupControlSwipeListener() {
     document.addEventListener('mousedown', handleSwipeStart);
 }
 
+function setupControlsSwipeClose() {
+    let touchStartY = 0;
+    const swipeThreshold = 50; // Pixels to swipe up to trigger close
+
+    const elements = [
+        document.getElementById('customizeModal'),
+        document.getElementById('blurOverlayControls')
+    ];
+
+    function handleSwipeStart(e) {
+        touchStartY = e.touches ? e.touches[0].clientY : e.clientY;
+        document.addEventListener('touchmove', handleSwipeMove, { passive: false });
+        document.addEventListener('touchend', handleSwipeEnd);
+        document.addEventListener('mousemove', handleSwipeMove);
+        document.addEventListener('mouseup', handleSwipeEnd);
+    }
+
+    function handleSwipeMove(e) {
+        // Prevent page scroll while swiping the modal
+        e.preventDefault();
+    }
+
+    function handleSwipeEnd(e) {
+        const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+        const deltaY = y - touchStartY;
+
+        // Check for a significant swipe upwards
+        if (deltaY < -swipeThreshold) {
+            closeControls();
+        }
+
+        // Cleanup listeners
+        document.removeEventListener('touchmove', handleSwipeMove);
+        document.removeEventListener('touchend', handleSwipeEnd);
+        document.removeEventListener('mousemove', handleSwipeMove);
+        document.removeEventListener('mouseup', handleSwipeEnd);
+    }
+
+    elements.forEach(el => {
+        if (el) {
+            el.addEventListener('touchstart', handleSwipeStart, { passive: true });
+            el.addEventListener('mousedown', handleSwipeStart);
+        }
+    });
+}
+
 function closeControls() {
+    const customizeModal = document.getElementById('customizeModal');
+    const blurOverlayControls = document.getElementById('blurOverlayControls');
+
+    if (!customizeModal || !blurOverlayControls) return;
+
     customizeModal.classList.remove('show'); // Start animation
     blurOverlayControls.classList.remove('show');
 
