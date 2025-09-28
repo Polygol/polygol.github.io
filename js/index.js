@@ -988,39 +988,8 @@ function promptToInstallPWA() {
     }
 }
 
+// Add 12/24 hour format functionality
 let use12HourFormat = localStorage.getItem('use12HourFormat') === 'true'; // Default to 24-hour format if not set
-
-/**
- * Updates the persistent clock's visibility and content based on app/drawer state.
- */
-function updatePersistentClock() {
-    if (!persistentClock) return; // Failsafe if element not found yet
-
-    const isModalOpen =
-        (appDrawer && appDrawer.classList.contains('open')) ||
-        document.querySelector('.fullscreen-embed[style*="display: block"]');
-
-    if (isModalOpen) {
-        const now = new Date();
-        let hours = now.getHours();
-        let minutes = String(now.getMinutes()).padStart(2, '0');
-        let displayHours;
-
-        if (use12HourFormat) {
-            displayHours = hours % 12 || 12;
-        } else {
-            displayHours = String(hours).padStart(2, '0');
-        }
-
-        persistentClock.textContent = `${displayHours}:${minutes}`;
-        persistentClock.style.opacity = '1';
-        persistentClock.style.pointerEvents = 'none';
-    } else {
-        // Hide on the home screen
-        persistentClock.style.opacity = '0';
-        persistentClock.style.pointerEvents = 'none';
-    }
-}
 
 // Setup the hour format toggle
 const hourFormatSwitch = document.getElementById('hour-switch');
@@ -1209,8 +1178,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 	
+    const appDrawer = document.getElementById('app-drawer');
+    const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
-
+    
+	function updatePersistentClock() {
+	  const isModalOpen = 
+	    (appDrawer && appDrawer.classList.contains('open')) ||
+	    document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    
+	  if (isModalOpen) {
+	    const now = new Date();
+	    let hours = now.getHours();
+	    let minutes = String(now.getMinutes()).padStart(2, '0');
+	    
+	    let displayHours;
+	    
+	    if (use12HourFormat) {
+	      // 12-hour format without AM/PM
+	      displayHours = hours % 12 || 12;
+	    } else {
+	      // 24-hour format
+	      displayHours = String(hours).padStart(2, '0');
+	    }
+	    
+	    persistentClock.textContent = `${displayHours}:${minutes}`;
+        persistentClock.style.opacity = '1';
+        persistentClock.style.pointerEvents = 'none'; // It's a status indicator now, not a button
+	  } else {
+	    // Hide on the home screen
+	    persistentClock.style.opacity = '0';
+        persistentClock.style.pointerEvents = 'none';
+	  }
+	}
+    
+    // Make sure we re-attach the click event listener
+    persistentClock.addEventListener('click', () => {
+		syncUiStates();
+		persistentClock.style.opacity = '0';
+		customizeModal.style.display = 'block';
+		blurOverlayControls.style.display = 'block';
+	        setTimeout(() => {
+		        customizeModal.classList.add('show');
+	            blurOverlayControls.classList.add('show');
+	        }, 10);
+    });
+    
     // Setup observer to watch for embed visibility changes to update clock immediately
     const embedObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
@@ -7528,43 +7541,16 @@ blurOverlayControls.addEventListener('click', () => {
 });
 
 function openControls() {
-    const customizeModal = document.getElementById('customizeModal');
-    const blurOverlayControls = document.getElementById('blurOverlayControls');
-    if (!customizeModal || customizeModal.classList.contains('show') || isDuringFirstSetup) return;
-
-    syncUiStates();
-    // Prepare for animation
-    customizeModal.style.display = 'block';
-    customizeModal.style.opacity = '1';
-    customizeModal.style.transform = 'scaleY(1)';
-    blurOverlayControls.style.display = 'block';
+    // Don't open if already open or if setup is running
+    if (customizeModal.classList.contains('show') || isDuringFirstSetup) return;
     
-    // Set final styles to trigger CSS transitions
-    blurOverlayControls.style.backdropFilter = 'blur(1px)';
-    blurOverlayControls.style.backgroundColor = 'var(--overlay-color)';
-    customizeModal.classList.add('show');
-    blurOverlayControls.classList.add('show');
-
-    // Hide the clock when controls are fully open
-    if (persistentClock) persistentClock.style.opacity = '0';
-}
-
-function closeControls() {
-    const customizeModal = document.getElementById('customizeModal');
-    const blurOverlayControls = document.getElementById('blurOverlayControls');
-    if (!customizeModal || !blurOverlayControls) return;
-
-    // Trigger CSS close animations
-    customizeModal.classList.remove('show');
-    blurOverlayControls.classList.remove('show');
-
-    // Let CSS handle the animation of scale, opacity, and blur
+    syncUiStates();
+    customizeModal.style.display = 'block';
+    blurOverlayControls.style.display = 'block';
     setTimeout(() => {
-        customizeModal.style.display = 'none';
-        blurOverlayControls.style.display = 'none';
-        // Restore clock state (it will be hidden if on home screen)
-        updatePersistentClock(); 
-    }, 300);
+        customizeModal.classList.add('show');
+        blurOverlayControls.classList.add('show');
+    }, 10);
 }
 
 /**
@@ -7573,9 +7559,7 @@ function closeControls() {
  */
 function setupControlSwipeListener() {
     let touchStartY = 0;
-    let isSwiping = false;
-    const swipeOpenThreshold = 80; // Pixels down to trigger open
-    const maxBlur = 1; // Max blur in pixels
+    const swipeThreshold = 40; // Pixels down to trigger
 
     // Create the gesture pane element
     const gesturePane = document.createElement('div');
@@ -7589,39 +7573,8 @@ function setupControlSwipeListener() {
     // gesturePane.style.background = 'rgba(255, 0, 0, 0.2)'; // Uncomment for debugging the area
     document.body.appendChild(gesturePane);
 
-    // The full-screen overlay that activates DURING the swipe
-    const swipeCaptureOverlay = document.createElement('div');
-    swipeCaptureOverlay.id = 'swipe-capture-overlay';
-    swipeCaptureOverlay.style.position = 'fixed';
-    swipeCaptureOverlay.style.top = '0';
-    swipeCaptureOverlay.style.left = '0';
-    swipeCaptureOverlay.style.width = '100vw';
-    swipeCaptureOverlay.style.height = '100vh';
-    swipeCaptureOverlay.style.zIndex = '99998';
-    swipeCaptureOverlay.style.display = 'none';
-    document.body.appendChild(swipeCaptureOverlay);
-
-    const customizeModal = document.getElementById('customizeModal');
-    const blurOverlayControls = document.getElementById('blurOverlayControls');
-
     function handleSwipeStart(e) {
-        if (customizeModal.style.display === 'block') return;
-        isSwiping = true;
         touchStartY = e.touches ? e.touches[0].clientY : e.clientY;
-        
-        swipeCaptureOverlay.style.display = 'block';
-        blurOverlayControls.style.display = 'block';
-        
-        // Remove transitions for direct manipulation
-        blurOverlayControls.style.transition = 'none';
-        customizeModal.style.transition = 'none';
-
-        // Set initial state for the swipe
-        customizeModal.style.transformOrigin = 'bottom';
-        customizeModal.style.transform = 'scaleY(0.95)';
-        customizeModal.style.opacity = '0';
-        if (persistentClock) persistentClock.style.opacity = '0'; // Hide clock immediately on swipe start
-
         document.addEventListener('touchmove', handleSwipeMove, { passive: false });
         document.addEventListener('touchend', handleSwipeEnd);
         document.addEventListener('mousemove', handleSwipeMove);
@@ -7629,136 +7582,88 @@ function setupControlSwipeListener() {
     }
 
     function handleSwipeMove(e) {
-        if (!isSwiping) return;
+        // Prevent default behavior like text selection during the swipe
         e.preventDefault();
-
-        const y = e.touches ? e.touches[0].clientY : e.clientY;
-        const deltaY = Math.max(0, y - touchStartY);
-        const progress = Math.min(1, deltaY / swipeOpenThreshold);
-
-        // Directly manipulate blur and overlay color
-        blurOverlayControls.style.backdropFilter = `blur(${progress * maxBlur}px)`;
-        // Uses the --overlay-rgb variable for dynamic alpha. Assumes --overlay-rgb is defined in CSS.
-        blurOverlayControls.style.backgroundColor = `rgba(var(--overlay-rgb, 34, 34, 34), ${progress * 0.3})`;
-        
-        if (progress > 0.5) {
-            if (customizeModal.style.display !== 'block') {
-                syncUiStates();
-                customizeModal.style.display = 'block';
-            }
-            // Animate opacity and scale in the second half of the swipe
-            const secondHalfProgress = (progress - 0.5) * 2;
-            customizeModal.style.opacity = secondHalfProgress;
-            customizeModal.style.transform = `scaleY(${0.95 + (secondHalfProgress * 0.05)})`;
-        } else {
-            customizeModal.style.display = 'none';
-            customizeModal.style.opacity = '0';
-        }
     }
 
     function handleSwipeEnd(e) {
-        if (!isSwiping) return;
         const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
         const deltaY = y - touchStartY;
 
-        // Restore transitions for the snap animation
-        blurOverlayControls.style.transition = '';
-        customizeModal.style.transition = '';
-
-        if (deltaY > swipeOpenThreshold) {
-            openControls(); // Snap fully open
-        } else {
-            // Snap closed
-            closeControls();
+        if (deltaY > swipeThreshold) {
+            openControls();
         }
 
-        isSwiping = false;
-        swipeCaptureOverlay.style.display = 'none';
         document.removeEventListener('touchmove', handleSwipeMove);
         document.removeEventListener('touchend', handleSwipeEnd);
         document.removeEventListener('mousemove', handleSwipeMove);
         document.removeEventListener('mouseup', handleSwipeEnd);
     }
 
+    // Attach listeners only to the specific gesture pane
     gesturePane.addEventListener('touchstart', handleSwipeStart, { passive: true });
     gesturePane.addEventListener('mousedown', handleSwipeStart);
 }
 
 function setupControlsSwipeClose() {
     let touchStartY = 0;
-    let isClosingSwipe = false;
-    const swipeCloseThreshold = 80; // Pixels to swipe up to close
-    const maxBlur = 1;
+    const swipeThreshold = 50; // Pixels to swipe up to trigger close
 
-    const modal = document.getElementById('customizeModal');
-    const overlay = document.getElementById('blurOverlayControls');
+    const elements = [
+        document.getElementById('customizeModal'),
+        document.getElementById('blurOverlayControls')
+    ];
 
     function handleSwipeStart(e) {
-        const isContentScrolled = modal.scrollTop > 0;
-        const target = e.target;
-        
-        if (target === overlay || (modal.contains(target) && !isContentScrolled)) {
-            isClosingSwipe = true;
-            touchStartY = e.touches ? e.touches[0].clientY : e.clientY;
-
-            // Remove transitions for direct manipulation
-            overlay.style.transition = 'none';
-            modal.style.transition = 'none';
-            modal.style.transformOrigin = 'bottom';
-
-            document.addEventListener('touchmove', handleSwipeMove, { passive: false });
-            document.addEventListener('touchend', handleSwipeEnd);
-            document.addEventListener('mousemove', handleSwipeMove);
-            document.addEventListener('mouseup', handleSwipeEnd);
-        }
+        touchStartY = e.touches ? e.touches[0].clientY : e.clientY;
+        document.addEventListener('touchmove', handleSwipeMove, { passive: false });
+        document.addEventListener('touchend', handleSwipeEnd);
+        document.addEventListener('mousemove', handleSwipeMove);
+        document.addEventListener('mouseup', handleSwipeEnd);
     }
 
     function handleSwipeMove(e) {
-        if (!isClosingSwipe) return;
+        // Prevent page scroll while swiping the modal
         e.preventDefault();
-
-        const y = e.touches ? e.touches[0].clientY : e.clientY;
-        const deltaY = touchStartY - y; // Inverted for upward swipe
-        const progress = Math.min(1, Math.max(0, deltaY / swipeCloseThreshold));
-        
-        // Directly manipulate styles based on reverse progress
-        overlay.style.backdropFilter = `blur(${(1 - progress) * maxBlur}px)`;
-        overlay.style.backgroundColor = `rgba(var(--overlay-rgb, 34, 34, 34), ${(1 - progress) * 0.3})`;
-        modal.style.opacity = 1 - progress;
-        modal.style.transform = `scaleY(${1 - (progress * 0.05)})`;
     }
 
     function handleSwipeEnd(e) {
-        if (!isClosingSwipe) return;
-
         const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-        const deltaY = touchStartY - y;
+        const deltaY = y - touchStartY;
 
-        // Restore transitions
-        overlay.style.transition = '';
-        modal.style.transition = '';
-
-        if (deltaY > swipeCloseThreshold) {
-            closeControls(); // Snap closed
-        } else {
-            // Snap back open if swipe wasn't enough
-            modal.style.opacity = '1';
-            modal.style.transform = 'scaleY(1)';
-            overlay.style.backdropFilter = `blur(${maxBlur}px)`;
-            overlay.style.backgroundColor = 'var(--overlay-color)';
+        // Check for a significant swipe upwards
+        if (deltaY < -swipeThreshold) {
+            closeControls();
         }
-        
-        isClosingSwipe = false;
+
+        // Cleanup listeners
         document.removeEventListener('touchmove', handleSwipeMove);
         document.removeEventListener('touchend', handleSwipeEnd);
         document.removeEventListener('mousemove', handleSwipeMove);
         document.removeEventListener('mouseup', handleSwipeEnd);
     }
-    
-    overlay.addEventListener('touchstart', handleSwipeStart, { passive: true });
-    modal.addEventListener('touchstart', handleSwipeStart, { passive: true });
-    overlay.addEventListener('mousedown', handleSwipeStart);
-    modal.addEventListener('mousedown', handleSwipeStart);
+
+    elements.forEach(el => {
+        if (el) {
+            el.addEventListener('touchstart', handleSwipeStart, { passive: true });
+            el.addEventListener('mousedown', handleSwipeStart);
+        }
+    });
+}
+
+function closeControls() {
+    const customizeModal = document.getElementById('customizeModal');
+    const blurOverlayControls = document.getElementById('blurOverlayControls');
+
+    if (!customizeModal || !blurOverlayControls) return;
+
+    customizeModal.classList.remove('show'); // Start animation
+    blurOverlayControls.classList.remove('show');
+
+    setTimeout(() => {
+        customizeModal.style.display = 'none'; // Hide after animation
+        blurOverlayControls.style.display = 'none';
+    }, 300);
 }
 
 setInterval(ensureVideoLoaded, 1000);
