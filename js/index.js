@@ -6028,16 +6028,6 @@ function minimizeFullscreenEmbed() {
     }
 
     isAppOpen = false;
-
-    // Resume background animations (Video and Animated Images)
-    resumeAnimatedBackground();
-    const bgVideo = document.getElementById('background-video');
-    if (bgVideo) {
-        bgVideo.play().then(() => {
-            // Animate from the slow speed back to normal
-            animatePlaybackRate(bgVideo, bgVideo.playbackRate, 1.0, 300);
-        }).catch(e => console.error("Video play failed on resume:", e));
-    }
 	
     // IMPORTANT FIX: Be more specific about which embed to minimize
     // Only get embeds that are currently visible with display: block
@@ -6090,6 +6080,16 @@ function minimizeFullscreenEmbed() {
     const interactionBlocker = document.getElementById('interaction-blocker');
     if (interactionBlocker) {
         interactionBlocker.style.pointerEvents = 'auto';
+    }
+
+    // Resume background animations (Video and Animated Images)
+    resumeAnimatedBackground();
+    const bgVideo = document.getElementById('background-video');
+    if (bgVideo) {
+        bgVideo.play().then(() => {
+            // Animate from the slow speed back to normal
+            animatePlaybackRate(bgVideo, bgVideo.playbackRate, 1.0, 300);
+        }).catch(e => console.error("Video play failed on resume:", e));
     }
 }
 
