@@ -7560,13 +7560,19 @@ function openControls() {
 
     if (modal.classList.contains('show') || isDuringFirstSetup) return;
 
-    modal.scrollTop = 0; // Ensure modal opens at the top
+    modal.scrollTop = 0; // FIX: Ensure modal always opens at the top
 
     syncUiStates();
     modal.style.display = 'block';
     blurOverlay.style.display = 'block';
     if (persistentClock) persistentClock.style.opacity = '0';
     
+    // Remove any inline styles from gestures to allow CSS animation to run cleanly
+    modal.style.transform = '';
+    modal.style.opacity = '';
+    modal.style.filter = 'none';
+    blurOverlay.style.backdropFilter = '';
+
     requestAnimationFrame(() => {
         modal.classList.add('show');
         blurOverlay.classList.add('show');
@@ -7580,11 +7586,7 @@ function openControls() {
 function setupControlsGestures() {
     const modal = document.getElementById('customizeModal');
     const blurOverlay = document.getElementById('blurOverlayControls');
-
-    const gesturePane = document.createElement('div');
-    gesturePane.id = 'control-gesture-pane';
-    gesturePane.style.cssText = 'position: fixed; top: 0; right: 15px; width: 85px; height: 50px; z-index: 99999;';
-    document.body.appendChild(gesturePane);
+    const gesturePane = document.getElementById('control-gesture-pane');
 
     if (!gesturePane || !modal || !blurOverlay) return;
 
@@ -7592,9 +7594,18 @@ function setupControlsGestures() {
     const swipeThreshold = window.innerHeight * 0.20;
 
     function startDrag(e) {
-        if (modal.classList.contains('show') && modal.scrollTop > 0) return;
-        
-        isClosing = modal.classList.contains('show');
+        // FIX: Allow touch scrolling inside the modal
+        if (modal.classList.contains('show')) {
+            const isScrollable = modal.scrollHeight > modal.clientHeight;
+            // Only start a "close" drag if the modal isn't scrollable OR if it is, we are at the very top.
+            if (isScrollable && modal.scrollTop > 0) {
+                return; // Don't start drag, allow native scroll
+            }
+            isClosing = true;
+        } else {
+            isClosing = false;
+        }
+
         isDragging = true;
         startY = e.touches ? e.touches[0].clientY : e.clientY;
         
@@ -7633,8 +7644,9 @@ function setupControlsGestures() {
 
         modal.style.transform = `scaleY(${progress})`;
         modal.style.opacity = progress;
-        modal.style.filter = `blur(${modalBlur}px)`;
-        blurOverlay.style.backdropFilter = '1px';
+        // FIX: Use 'none' instead of blur(0px)
+        modal.style.filter = modalBlur > 0 ? `blur(${modalBlur}px)` : 'none';
+        blurOverlay.style.backdropFilter = overlayBlur > 0 ? `blur(${overlayBlur}px) saturate(2) var(--edge-refraction-filter)` : 'none';
     }
 
     function endDrag() {
@@ -7656,7 +7668,7 @@ function setupControlsGestures() {
         else closeControls(); // Snap back closed
     }
 
-    [gesturePane, modal, blurOverlay].forEach(el => {
+    [gesturePane, modal, blurOverlayControls].forEach(el => {
         el.addEventListener('touchstart', startDrag, { passive: true });
         el.addEventListener('mousedown', startDrag);
     });
@@ -7669,12 +7681,6 @@ function closeControls() {
 
     if (!customizeModal || !blurOverlayControls || !customizeModal.classList.contains('show')) return;
 
-    // Clear any inline styles from gestures before animating
-    customizeModal.style.transform = '';
-    customizeModal.style.opacity = '';
-    customizeModal.style.filter = '';
-    blurOverlayControls.style.backdropFilter = '';
-
     customizeModal.classList.remove('show');
     blurOverlayControls.classList.remove('show');
 
@@ -7682,11 +7688,12 @@ function closeControls() {
         customizeModal.style.display = 'none';
         blurOverlayControls.style.display = 'none';
         
+        // FIX: Check if an app is open. If so, restore the clock.
         const isAppOpen = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (persistentClock && !isAppOpen) {
+        if (persistentClock && isAppOpen) {
             persistentClock.style.opacity = '1';
         }
-    }, 300);
+    }, 300); // Match CSS transition duration
 }
 
 setInterval(ensureVideoLoaded, 1000);
