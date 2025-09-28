@@ -1181,67 +1181,68 @@ document.addEventListener('DOMContentLoaded', () => {
     const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
-    
+	
 	function updatePersistentClock() {
-	  const isModalOpen = 
-	    (appDrawer && appDrawer.classList.contains('open')) ||
-	    document.querySelector('.fullscreen-embed[style*="display: block"]') ||
-        (customizeModal && customizeModal.classList.contains('show')); // Updated
-	    
-	  if (isModalOpen) {
-	    const now = new Date();
-	    let hours = now.getHours();
-	    let minutes = String(now.getMinutes()).padStart(2, '0');
-	    
-	    let displayHours;
-	    
-	    if (use12HourFormat) {
-	      // 12-hour format without AM/PM
-	      displayHours = hours % 12 || 12;
-	    } else {
-	      // 24-hour format
-	      displayHours = String(hours).padStart(2, '0');
+	    const isModalOpen =
+	        (appDrawer && appDrawer.classList.contains('open')) ||
+	        document.querySelector('.fullscreen-embed[style*="display: block"]') ||
+	        (customizeModal && customizeModal.classList.contains('show')); // Check for 'show' class
+	
+	    // Hide clock if Controls are open or if on home screen
+	    if (isModalOpen && customizeModal.classList.contains('show')) {
+	        persistentClock.style.opacity = '0';
+	        persistentClock.style.pointerEvents = 'none';
+	        return;
 	    }
-	    
-	    persistentClock.textContent = `${displayHours}:${minutes}`;
-        persistentClock.style.opacity = '1';
-        persistentClock.style.pointerEvents = 'none'; // It's a status indicator now, not a button
-	  } else {
-	    // Hide on the home screen
-	    persistentClock.style.opacity = '0';
-        persistentClock.style.pointerEvents = 'none';
-	  }
+	
+	    if (isModalOpen) {
+	        const now = new Date();
+	        let hours = now.getHours();
+	        let minutes = String(now.getMinutes()).padStart(2, '0');
+	
+	        let displayHours;
+	
+	        if (use12HourFormat) {
+	            displayHours = hours % 12 || 12;
+	        } else {
+	            displayHours = String(hours).padStart(2, '0');
+	        }
+	
+	        persistentClock.textContent = `${displayHours}:${minutes}`;
+	        persistentClock.style.opacity = '1';
+	        persistentClock.style.pointerEvents = 'none';
+	    } else {
+	        persistentClock.style.opacity = '0';
+	        persistentClock.style.pointerEvents = 'none';
+	    }
 	}
 
-    function openControls() {
-        if (customizeModal.classList.contains('show') || isDuringFirstSetup) return;
-        
-        syncUiStates();
-        customizeModal.style.display = 'block';
-        blurOverlayControls.style.display = 'block';
-        // Scroll to top when opened
-        customizeModal.scrollTop = 0; 
-        
-        setTimeout(() => {
-            customizeModal.classList.add('show');
-            blurOverlayControls.classList.add('show');
-        }, 10);
-    }
+	function openControls() {
+	    if (customizeModal.classList.contains('show') || isDuringFirstSetup) return;
+	    
+	    syncUiStates();
+	    customizeModal.style.display = 'block';
+	    blurOverlayControls.style.display = 'block';
+	    
+	    // **FIX**: Always scroll to the top when opening
+	    customizeModal.scrollTop = 0;
+	
+	    setTimeout(() => {
+	        customizeModal.classList.add('show');
+	        blurOverlayControls.classList.add('show');
+	        updatePersistentClock(); // Re-check clock visibility
+	    }, 10);
+	}
 	
 	function setupControlSwipeListener() {
 	    let touchStartY = 0;
 	    let isSwiping = false;
-	    const swipeThreshold = 50; // Pixels down to trigger
+	    const swipeThreshold = 50; 
 	
 	    const gesturePane = document.getElementById('control-gesture-pane');
-	    if (!gesturePane) {
-	        const newPane = document.createElement('div');
-	        newPane.id = 'control-gesture-pane';
-	        document.body.appendChild(newPane);
-	    }
-	    const finalGesturePane = document.getElementById('control-gesture-pane');
+	    if (!gesturePane) return;
 	
-	    // Create the new full-screen overlay for better gesture handling
+	    // Create the full-screen overlay for better gesture handling if it doesn't exist
 	    let controlSwipeOverlay = document.getElementById('control-swipe-overlay');
 	    if (!controlSwipeOverlay) {
 	        controlSwipeOverlay = document.createElement('div');
@@ -1251,20 +1252,32 @@ document.addEventListener('DOMContentLoaded', () => {
 	        controlSwipeOverlay.style.left = '0';
 	        controlSwipeOverlay.style.width = '100%';
 	        controlSwipeOverlay.style.height = '100%';
-	        controlSwipeOverlay.style.zIndex = '9998'; // Below modal, above other content
+	        controlSwipeOverlay.style.zIndex = '9998'; 
 	        controlSwipeOverlay.style.display = 'none';
 	        document.body.appendChild(controlSwipeOverlay);
 	    }
 	
 	    function handleSwipeStart(e) {
 	        if (customizeModal.classList.contains('show')) return;
+	        
 	        isSwiping = true;
 	        touchStartY = e.touches ? e.touches[0].clientY : e.clientY;
 	
+	        // Prepare the elements for manual animation
 	        customizeModal.style.transition = 'none';
 	        blurOverlayControls.style.transition = 'none';
+	        
+	        // Make them visible but in their initial animated state
 	        customizeModal.style.display = 'block';
 	        blurOverlayControls.style.display = 'block';
+	        customizeModal.scrollTop = 0;
+	        
+	        customizeModal.style.opacity = '0';
+	        customizeModal.style.transform = 'scaleY(0)';
+	        blurOverlayControls.style.opacity = '0';
+	        blurOverlayControls.style.backdropFilter = 'blur(0px)';
+	
+	        // Show the overlay to capture all subsequent events
 	        controlSwipeOverlay.style.display = 'block';
 	
 	        controlSwipeOverlay.addEventListener('touchmove', handleSwipeMove, { passive: false });
@@ -1284,18 +1297,23 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	        blurOverlayControls.style.backdropFilter = `blur(${progress * 1}px)`;
 	        blurOverlayControls.style.opacity = progress;
-	
 	        customizeModal.style.opacity = progress;
 	        customizeModal.style.transform = `scaleY(${progress})`;
 	    }
 	
 	    function handleSwipeEnd(e) {
 	        if (!isSwiping) return;
-	        customizeModal.style.transition = '';
-	        blurOverlayControls.style.transition = '';
-	
+	        
 	        const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
 	        const deltaY = y - touchStartY;
+	
+	        // Remove inline styles to let CSS transitions take over for the final animation
+	        customizeModal.style.transition = '';
+	        blurOverlayControls.style.transition = '';
+	        customizeModal.style.opacity = '';
+	        customizeModal.style.transform = '';
+	        blurOverlayControls.style.opacity = '';
+	        blurOverlayControls.style.backdropFilter = '';
 	
 	        if (deltaY > swipeThreshold) {
 	            openControls();
@@ -1311,51 +1329,58 @@ document.addEventListener('DOMContentLoaded', () => {
 	        controlSwipeOverlay.removeEventListener('mouseup', handleSwipeEnd);
 	    }
 	
-	    finalGesturePane.addEventListener('touchstart', handleSwipeStart, { passive: true });
-	    finalGesturePane.addEventListener('mousedown', handleSwipeStart);
+	    gesturePane.addEventListener('touchstart', handleSwipeStart, { passive: true });
+	    gesturePane.addEventListener('mousedown', handleSwipeStart);
 	}
 	
-    function setupControlsSwipeClose() {
-        let touchStartY = 0;
-        const swipeThreshold = 50;
-    
-        const modal = document.getElementById('customizeModal');
-    
-        function handleSwipeStart(e) {
-            // THE FIX: Only start swipe-to-close if scrolled to the top.
-            if (modal.scrollTop > 0) {
-                return; 
-            }
-            touchStartY = e.touches ? e.touches[0].clientY : e.clientY;
-            document.addEventListener('touchmove', handleSwipeMove, { passive: false });
-            document.addEventListener('touchend', handleSwipeEnd);
-            document.addEventListener('mousemove', handleSwipeMove);
-            document.addEventListener('mouseup', handleSwipeEnd);
-        }
-    
-        function handleSwipeMove(e) {
-            e.preventDefault();
-        }
-    
-        function handleSwipeEnd(e) {
-            const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-            const deltaY = y - touchStartY;
-    
-            if (deltaY < -swipeThreshold) { // Check for upward swipe
-                closeControls();
-            }
-    
-            document.removeEventListener('touchmove', handleSwipeMove);
-            document.removeEventListener('touchend', handleSwipeEnd);
-            document.removeEventListener('mousemove', handleSwipeMove);
-            document.removeEventListener('mouseup', handleSwipeEnd);
-        }
-    
-        if (modal) {
-            modal.addEventListener('touchstart', handleSwipeStart, { passive: true });
-            modal.addEventListener('mousedown', handleSwipeStart);
-        }
-    }
+	function setupControlsSwipeClose() {
+	    let touchStartY = 0;
+	    const swipeThreshold = 50; 
+	
+	    const modal = document.getElementById('customizeModal');
+	
+	    function handleSwipeStart(e) {
+	        // **THE FIX**: Check if the modal is scrolled to the bottom.
+	        // This allows normal scrolling when the content is overflowing.
+	        const isScrolledToBottom = modal.scrollHeight - modal.scrollTop - modal.clientHeight < 1;
+	
+	        // Only activate swipe-to-close if the modal content is scrolled to the very bottom.
+	        if (!isScrolledToBottom) {
+	            return;
+	        }
+	
+	        isSwiping = true;
+	        touchStartY = e.touches ? e.touches[0].clientY : e.clientY;
+	        document.addEventListener('touchmove', handleSwipeMove, { passive: false });
+	        document.addEventListener('touchend', handleSwipeEnd);
+	        document.addEventListener('mousemove', handleSwipeMove);
+	        document.addEventListener('mouseup', handleSwipeEnd);
+	    }
+		
+	    function handleSwipeMove(e) {
+	        // If a swipe gesture is active, prevent the default scroll behavior.
+	        e.preventDefault();
+	    }
+	
+	    function handleSwipeEnd(e) {
+	        const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+	        const deltaY = y - touchStartY; // Negative value for swipe up
+	
+	        if (deltaY < -swipeThreshold) {
+	            closeControls();
+	        }
+	
+	        document.removeEventListener('touchmove', handleSwipeMove);
+	        document.removeEventListener('touchend', handleSwipeEnd);
+	        document.removeEventListener('mousemove', handleSwipeMove);
+	        document.removeEventListener('mouseup', handleSwipeEnd);
+	    }
+	
+	    if (modal) {
+	        modal.addEventListener('touchstart', handleSwipeStart, { passive: true });
+	        modal.addEventListener('mousedown', handleSwipeStart);
+	    }
+	}
 	
 	function closeControls() {
 	    const customizeModal = document.getElementById('customizeModal');
@@ -1365,22 +1390,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	    customizeModal.classList.remove('show');
 	    blurOverlayControls.classList.remove('show');
-	    
-	    // Animate opacity and transform back to initial state
-	    customizeModal.style.opacity = '0';
-	    customizeModal.style.transform = 'scaleY(0)';
-	    blurOverlayControls.style.opacity = '0';
-	
 	
 	    setTimeout(() => {
 	        customizeModal.style.display = 'none';
 	        blurOverlayControls.style.display = 'none';
-	        // Reset styles for next opening
-	        customizeModal.style.opacity = '';
-	        customizeModal.style.transform = '';
-	        blurOverlayControls.style.opacity = '';
-	        blurOverlayControls.style.backdropFilter = '';
-	        updatePersistentClock(); // Check if clock should be shown
+	        updatePersistentClock(); // Re-check clock visibility
 	    }, 300);
 	}
     
