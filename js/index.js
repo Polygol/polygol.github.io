@@ -989,7 +989,6 @@ function promptToInstallPWA() {
 }
 
 let appDrawer;
-let persistentClock;
 let use12HourFormat = localStorage.getItem('use12HourFormat') === 'true'; // Default to 24-hour format if not set
 
 /**
