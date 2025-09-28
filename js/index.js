@@ -1186,7 +1186,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	function updatePersistentClock() {
       // FIX: Explicitly hide the clock during an app-close drag, otherwise follow normal logic.
       if (isDraggingAppToClose) {
-        persistentClock.style.opacity = '0';
         return;
       }		
 		
