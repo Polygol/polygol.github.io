@@ -7566,8 +7566,8 @@ function setupControlSwipeListener() {
     gesturePane.id = 'control-gesture-pane';
     gesturePane.style.position = 'fixed';
     gesturePane.style.top = '0';
-    gesturePane.style.right = '0';
-    gesturePane.style.width = '150px'; // Wider area for easier activation
+    gesturePane.style.right = '15px';
+    gesturePane.style.width = '85px'; // Wider area for easier activation
     gesturePane.style.height = '50px';  // Taller area
     gesturePane.style.zIndex = '99999'; // High z-index to be on top of iframes
     // gesturePane.style.background = 'rgba(255, 0, 0, 0.2)'; // Uncomment for debugging the area
