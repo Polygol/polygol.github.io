@@ -7722,18 +7722,21 @@ function closeControls() {
 
     if (!customizeModal || !blurOverlayControls) return;
 
-    // Restore any JS-set inline styles for transition to take over
-    customizeModal.style.transition = ''; 
-    blurOverlayControls.style.transition = '';
+    // Remove any inline styles that might interfere with the CSS transition
+    customizeModal.style.transform = '';
+    customizeModal.style.opacity = '';
+    customizeModal.style.filter = '';
 
+    // Now, remove the class to trigger the animation defined in the stylesheet
     customizeModal.classList.remove('show');
     blurOverlayControls.classList.remove('show');
 
+    // Hide the elements after the CSS transition completes
     setTimeout(() => {
         customizeModal.style.display = 'none';
         blurOverlayControls.style.display = 'none';
-        if(persistentClock) persistentClock.style.opacity = '1';
-    }, 300);
+        if (persistentClock) persistentClock.style.opacity = '1';
+    }, 300); // This duration must match your CSS transition time
 }
 
 setInterval(ensureVideoLoaded, 1000);
