@@ -1335,7 +1335,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	function setupControlsSwipeClose() {
 	    let touchStartY = 0;
-	    const swipeThreshold = 50; 
+	    let isSwiping = false;
+	    const swipeThreshold = 50;
 	
 	    const modal = document.getElementById('customizeModal');
 	
@@ -1356,13 +1357,17 @@ document.addEventListener('DOMContentLoaded', () => {
 	        document.addEventListener('mousemove', handleSwipeMove);
 	        document.addEventListener('mouseup', handleSwipeEnd);
 	    }
-		
+	
 	    function handleSwipeMove(e) {
-	        // If a swipe gesture is active, prevent the default scroll behavior.
+	        if (!isSwiping) return;
+	        // Prevent the page from scrolling only when a close gesture has been initiated.
 	        e.preventDefault();
 	    }
 	
 	    function handleSwipeEnd(e) {
+	        if (!isSwiping) return;
+	        isSwiping = false;
+	
 	        const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
 	        const deltaY = y - touchStartY; // Negative value for swipe up
 	
