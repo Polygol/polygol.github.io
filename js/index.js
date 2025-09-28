@@ -1014,175 +1014,6 @@ function getCurrentTime24() {
 
 const persistentClock = document.getElementById('persistent-clock');
 
-document.addEventListener('DOMContentLoaded', () => {	
-    // --- Get references to key elements ---
-    const controlPopup = document.createElement('div');
-    controlPopup.className = 'control-popup';
-    document.body.appendChild(controlPopup);
-
-    const hiddenControlsContainer = document.getElementById('hidden-controls-container');
-
-    // --- Function to correctly hide the popup and return the control ---
-    function hideActivePopup() {
-        if (controlPopup.style.display === 'block' && controlPopup.firstElementChild) {
-            // **THE FIX**: Put the control back into its hidden container.
-            hiddenControlsContainer.appendChild(controlPopup.firstElementChild);
-            controlPopup.style.display = 'none';
-        }
-    }
-
-    // --- Function to show and position the popup ---
-    function showControlPopup(sourceElement, controlElement) {
-        if (controlPopup.style.display === 'block' && controlPopup.contains(controlElement)) {
-            hideActivePopup();
-            return;
-        }
-        hideActivePopup();
-
-        controlPopup.appendChild(controlElement);
-        const rect = sourceElement.getBoundingClientRect();
-        controlPopup.style.display = 'block';
-        const top = rect.bottom + 8;
-        const left = rect.left + (rect.width / 2) - (controlPopup.offsetWidth / 2);
-        controlPopup.style.top = `${top}px`;
-        controlPopup.style.left = `${left}px`;
-    }
-
-    // --- Global click listener to hide the popup ---
-    document.addEventListener('click', (e) => {
-        if (controlPopup.style.display === 'block' && !controlPopup.contains(e.target) && !e.target.closest('.setting-item')) {
-            hideActivePopup();
-        }
-    });
-	
-    // --- Helper to connect grid items to their controls ---
-    const connectGridItem = (gridItemId, controlId) => {
-        const gridItem = document.getElementById(gridItemId);
-        const control = document.getElementById(controlId);
-        if (!gridItem || !control) return;
-
-        const isPopupTrigger = control.nodeName === 'SELECT' || control.type === 'range';
-        const isToggle = control.type === 'checkbox';
-
-        if (isToggle) {
-            const updateActiveState = () => gridItem.classList.toggle('active', control.checked);
-            control.addEventListener('change', updateActiveState);
-            updateActiveState();
-        }
-        
-        gridItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (isPopupTrigger) {
-                showControlPopup(gridItem, control);
-            } else if (isToggle) {
-                control.checked = !control.checked;
-                control.dispatchEvent(new Event('change'));
-            } else {
-                control.click();
-            }
-        });
-    };
-
-    // --- Special handler for Clock Color & Gradient Popup ---
-    const clockColorItem = document.getElementById('setting-clock-color');
-    const clockColorPopup = document.getElementById('clock-color-popup');
-    if (clockColorItem && clockColorPopup) {
-        clockColorItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showControlPopup(clockColorItem, clockColorPopup);
-        });
-    }
-
-    // --- Special handler for Clock Shadow Popup ---
-    const clockShadowItem = document.getElementById('setting-clock-shadow');
-    const shadowControlsPopup = document.getElementById('shadow-controls-popup');
-    if (clockShadowItem && shadowControlsPopup) {
-        clockShadowItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showControlPopup(clockShadowItem, shadowControlsPopup);
-        });
-    }
-
-    // --- Special handler for Position Popup ---
-    const positionItem = document.getElementById('setting-position');
-    const positionPopup = document.getElementById('position-controls-popup');
-    if (positionItem) {
-        positionItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showControlPopup(positionItem, positionPopup);
-        });
-    }
-
-    // --- Connect all other settings ---
-    connectGridItem('setting-wallpaper', 'uploadButton');
-    connectGridItem('setting-wallpaper-blur', 'wallpaper-blur-slider');
-    connectGridItem('setting-wallpaper-brightness', 'wallpaper-brightness-slider');
-    connectGridItem('setting-wallpaper-contrast-fx', 'wallpaper-contrast-slider');
-    connectGridItem('setting-seconds', 'seconds-switch');
-    connectGridItem('setting-clock-stack', 'clock-stack-switch');
-    connectGridItem('setting-weather', 'weather-switch');
-    connectGridItem('setting-gurapps', 'gurapps-switch');
-    connectGridItem('setting-animation', 'animation-switch');
-    connectGridItem('setting-contrast', 'contrast-switch');
-    connectGridItem('setting-hour-format', 'hour-switch');
-    connectGridItem('setting-style', 'font-select');
-    connectGridItem('setting-weight', 'weight-slider');
-    connectGridItem('setting-roundness', 'roundness-slider');
-    connectGridItem('setting-size', 'clock-size-slider');
-    connectGridItem('setting-alignment', 'alignment-select');
-    connectGridItem('setting-language', 'language-switcher');
-    connectGridItem('setting-ai', 'ai-switch');
-
-    const formatItem = document.getElementById('setting-format');
-    const formatPopup = document.getElementById('format-popup');
-    if (formatItem && formatPopup) {
-        formatItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showControlPopup(formatItem, formatPopup);
-        });
-    }
-
-    // --- NEW: Special Handler for Widget Picker ---
-    const widgetPickerItem = document.getElementById('setting-widgets');
-    if (widgetPickerItem) {
-        widgetPickerItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-			closeControls();
-            openWidgetPicker();
-        });
-    }
-
-    // --- NEW: Add event listeners to close the widget drawer ---
-    const widgetDrawer = document.getElementById('widget-picker-drawer');
-    const widgetDrawerHandle = document.querySelector('.widget-drawer-handle');
-    const blurOverlayControls = document.getElementById('blurOverlayControls'); // Get overlay
-    if (widgetDrawer && widgetDrawerHandle && blurOverlayControls) {
-        widgetDrawerHandle.addEventListener('click', closeWidgetPicker);
-        blurOverlayControls.addEventListener('click', closeWidgetPicker); // Add this line
-    }
-
-    // Album Art click listener (using event delegation for reliability)
-    document.getElementById('media-session-widget').addEventListener('click', (e) => {
-        // Check if the click happened specifically on the album art
-        if (e.target.id === 'media-widget-art') {
-            if (activeMediaSessionApp) {
-                // Directly get the app details using the name as the key.
-                const appToOpen = apps[activeMediaSessionApp]; 
-                if (appToOpen) {
-                    // First, close the settings modal if it's open
-                    closeControls();
-		    minimizeFullscreenEmbed();
-                    // Then, open the app
-                    createFullscreenEmbed(appToOpen.url);
-                }
-            }
-        }
-    });
-	
-    const appDrawer = document.getElementById('app-drawer');
-    const persistentClock = document.querySelector('.persistent-clock');
-    const customizeModal = document.getElementById('customizeModal');
-	
 	function updatePersistentClock() {
 	    if (isAnimatingAppMinimize) return;
 		
@@ -1442,6 +1273,171 @@ document.addEventListener('DOMContentLoaded', () => {
 	        updatePersistentClock(); // Re-evaluate clock state after closing
 	    }, 300);
 	}
+
+document.addEventListener('DOMContentLoaded', () => {	
+    // --- Get references to key elements ---
+    const controlPopup = document.createElement('div');
+    controlPopup.className = 'control-popup';
+    document.body.appendChild(controlPopup);
+
+    const hiddenControlsContainer = document.getElementById('hidden-controls-container');
+
+    // --- Function to correctly hide the popup and return the control ---
+    function hideActivePopup() {
+        if (controlPopup.style.display === 'block' && controlPopup.firstElementChild) {
+            // **THE FIX**: Put the control back into its hidden container.
+            hiddenControlsContainer.appendChild(controlPopup.firstElementChild);
+            controlPopup.style.display = 'none';
+        }
+    }
+
+    // --- Function to show and position the popup ---
+    function showControlPopup(sourceElement, controlElement) {
+        if (controlPopup.style.display === 'block' && controlPopup.contains(controlElement)) {
+            hideActivePopup();
+            return;
+        }
+        hideActivePopup();
+
+        controlPopup.appendChild(controlElement);
+        const rect = sourceElement.getBoundingClientRect();
+        controlPopup.style.display = 'block';
+        const top = rect.bottom + 8;
+        const left = rect.left + (rect.width / 2) - (controlPopup.offsetWidth / 2);
+        controlPopup.style.top = `${top}px`;
+        controlPopup.style.left = `${left}px`;
+    }
+
+    // --- Global click listener to hide the popup ---
+    document.addEventListener('click', (e) => {
+        if (controlPopup.style.display === 'block' && !controlPopup.contains(e.target) && !e.target.closest('.setting-item')) {
+            hideActivePopup();
+        }
+    });
+	
+    // --- Helper to connect grid items to their controls ---
+    const connectGridItem = (gridItemId, controlId) => {
+        const gridItem = document.getElementById(gridItemId);
+        const control = document.getElementById(controlId);
+        if (!gridItem || !control) return;
+
+        const isPopupTrigger = control.nodeName === 'SELECT' || control.type === 'range';
+        const isToggle = control.type === 'checkbox';
+
+        if (isToggle) {
+            const updateActiveState = () => gridItem.classList.toggle('active', control.checked);
+            control.addEventListener('change', updateActiveState);
+            updateActiveState();
+        }
+        
+        gridItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isPopupTrigger) {
+                showControlPopup(gridItem, control);
+            } else if (isToggle) {
+                control.checked = !control.checked;
+                control.dispatchEvent(new Event('change'));
+            } else {
+                control.click();
+            }
+        });
+    };
+
+    // --- Special handler for Clock Color & Gradient Popup ---
+    const clockColorItem = document.getElementById('setting-clock-color');
+    const clockColorPopup = document.getElementById('clock-color-popup');
+    if (clockColorItem && clockColorPopup) {
+        clockColorItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlPopup(clockColorItem, clockColorPopup);
+        });
+    }
+
+    // --- Special handler for Clock Shadow Popup ---
+    const clockShadowItem = document.getElementById('setting-clock-shadow');
+    const shadowControlsPopup = document.getElementById('shadow-controls-popup');
+    if (clockShadowItem && shadowControlsPopup) {
+        clockShadowItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlPopup(clockShadowItem, shadowControlsPopup);
+        });
+    }
+
+    // --- Special handler for Position Popup ---
+    const positionItem = document.getElementById('setting-position');
+    const positionPopup = document.getElementById('position-controls-popup');
+    if (positionItem) {
+        positionItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlPopup(positionItem, positionPopup);
+        });
+    }
+
+    // --- Connect all other settings ---
+    connectGridItem('setting-wallpaper', 'uploadButton');
+    connectGridItem('setting-wallpaper-blur', 'wallpaper-blur-slider');
+    connectGridItem('setting-wallpaper-brightness', 'wallpaper-brightness-slider');
+    connectGridItem('setting-wallpaper-contrast-fx', 'wallpaper-contrast-slider');
+    connectGridItem('setting-seconds', 'seconds-switch');
+    connectGridItem('setting-clock-stack', 'clock-stack-switch');
+    connectGridItem('setting-weather', 'weather-switch');
+    connectGridItem('setting-gurapps', 'gurapps-switch');
+    connectGridItem('setting-animation', 'animation-switch');
+    connectGridItem('setting-contrast', 'contrast-switch');
+    connectGridItem('setting-hour-format', 'hour-switch');
+    connectGridItem('setting-style', 'font-select');
+    connectGridItem('setting-weight', 'weight-slider');
+    connectGridItem('setting-roundness', 'roundness-slider');
+    connectGridItem('setting-size', 'clock-size-slider');
+    connectGridItem('setting-alignment', 'alignment-select');
+    connectGridItem('setting-language', 'language-switcher');
+    connectGridItem('setting-ai', 'ai-switch');
+
+    const formatItem = document.getElementById('setting-format');
+    const formatPopup = document.getElementById('format-popup');
+    if (formatItem && formatPopup) {
+        formatItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlPopup(formatItem, formatPopup);
+        });
+    }
+
+    // --- NEW: Special Handler for Widget Picker ---
+    const widgetPickerItem = document.getElementById('setting-widgets');
+    if (widgetPickerItem) {
+        widgetPickerItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+			closeControls();
+            openWidgetPicker();
+        });
+    }
+
+    // --- NEW: Add event listeners to close the widget drawer ---
+    const widgetDrawer = document.getElementById('widget-picker-drawer');
+    const widgetDrawerHandle = document.querySelector('.widget-drawer-handle');
+    const blurOverlayControls = document.getElementById('blurOverlayControls'); // Get overlay
+    if (widgetDrawer && widgetDrawerHandle && blurOverlayControls) {
+        widgetDrawerHandle.addEventListener('click', closeWidgetPicker);
+        blurOverlayControls.addEventListener('click', closeWidgetPicker); // Add this line
+    }
+
+    // Album Art click listener (using event delegation for reliability)
+    document.getElementById('media-session-widget').addEventListener('click', (e) => {
+        // Check if the click happened specifically on the album art
+        if (e.target.id === 'media-widget-art') {
+            if (activeMediaSessionApp) {
+                // Directly get the app details using the name as the key.
+                const appToOpen = apps[activeMediaSessionApp]; 
+                if (appToOpen) {
+                    // First, close the settings modal if it's open
+                    closeControls();
+		    minimizeFullscreenEmbed();
+                    // Then, open the app
+                    createFullscreenEmbed(appToOpen.url);
+                }
+            }
+        }
+    });
 	
     // Setup observer to watch for embed visibility changes to update clock immediately
     const embedObserver = new MutationObserver((mutations) => {
@@ -3074,6 +3070,7 @@ async function getStoreDataForBackup(db, storeName) {
 }
 
 const customizeModal = document.getElementById('customizeModal');
+const appDrawer = document.getElementById('app-drawer');
 const themeSwitch = document.getElementById('theme-switch');
 const wallpaperInput = document.getElementById('wallpaperInput');
 const uploadButton = document.getElementById('uploadButton');
