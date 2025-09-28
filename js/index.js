@@ -1043,6 +1043,11 @@ const persistentClock = document.getElementById('persistent-clock');
 	        persistentClock.style.opacity = '1';
 	        persistentClock.style.pointerEvents = 'none';
 		}
+
+		if (!isAppVisible) {
+			persistentClock.style.opacity = '0';
+	        persistentClock.style.pointerEvents = 'none';
+		}
 	}
 
 	function openControls() {
