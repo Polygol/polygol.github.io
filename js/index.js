@@ -1252,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	        controlSwipeOverlay.style.left = '0';
 	        controlSwipeOverlay.style.width = '100%';
 	        controlSwipeOverlay.style.height = '100%';
-	        controlSwipeOverlay.style.zIndex = '9998'; 
+	        controlSwipeOverlay.style.zIndex = '99998'; 
 	        controlSwipeOverlay.style.display = 'none';
 	        document.body.appendChild(controlSwipeOverlay);
 	    }
