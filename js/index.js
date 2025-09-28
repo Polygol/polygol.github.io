@@ -6386,7 +6386,7 @@ function setupDrawerInteractions() {
 	
 	            // Animate background blur from 1px (blurry) to 0px (clear)
 	            const blurRadius = 1 - progress;
-	        } else 
+	        } else {
 				isDraggingAppToClose = false;
 			    cancelLongPress();
 	            // If dragging back down below the deadzone, reset to initial state
