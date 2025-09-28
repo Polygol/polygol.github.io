@@ -7554,11 +7554,6 @@ document.addEventListener('webkitfullscreenchange', checkFullscreen);
 document.addEventListener('mozfullscreenchange', checkFullscreen);
 document.addEventListener('MSFullscreenChange', checkFullscreen);
 
-// Close customizeModal when clicking outside
-blurOverlayControls.addEventListener('click', () => {
-    closeControls();
-});
-
 function openControls() {
     const modal = document.getElementById('customizeModal');
     const blurOverlay = document.getElementById('blurOverlayControls');
@@ -7640,7 +7635,7 @@ function setupControlsGestures() {
         modal.style.transform = `scaleY(${progress})`;
         modal.style.opacity = progress;
         modal.style.filter = `blur(${modalBlur}px)`;
-        blurOverlay.style.backdropFilter = `blur(${overlayBlur}px) saturate(2) var(--edge-refraction-filter)`;
+        blurOverlay.style.backdropFilter = '1px';
     }
 
     function endDrag() {
