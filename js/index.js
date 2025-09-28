@@ -6375,7 +6375,6 @@ function populateDock() {
     });
 }
 
-    const appDrawer = document.getElementById('app-drawer');
     const appGrid = document.getElementById('app-grid');
 
 // Function to create app icons
