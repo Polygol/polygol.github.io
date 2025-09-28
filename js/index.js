@@ -7553,7 +7553,7 @@ function openControls() {
         blurOverlay.style.transition = 'all 0.3s ease';
         modal.style.transform = 'scaleY(1)';
         modal.style.opacity = '1';
-        modal.style.filter = 'blur(0px)';
+        modal.style.filter = 'none';
         
         const baseOverlayColor = getComputedStyle(document.documentElement).getPropertyValue('--overlay-color');
         blurOverlay.style.backgroundColor = baseOverlayColor;
