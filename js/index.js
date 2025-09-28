@@ -7719,11 +7719,6 @@ document.addEventListener('webkitfullscreenchange', checkFullscreen);
 document.addEventListener('mozfullscreenchange', checkFullscreen);
 document.addEventListener('MSFullscreenChange', checkFullscreen);
 
-// Close customizeModal when clicking outside
-blurOverlayControls.addEventListener('click', () => {
-    closeControls();
-});
-
 setInterval(ensureVideoLoaded, 1000);
 
 function preventLeaving() {
