@@ -6354,8 +6354,8 @@ function setupDrawerInteractions() {
 	
 	        // Start effect after a small deadzone
 	        if (deltaY > 10) {
-			    cancelLongPress();
-			    if (persistentClock) persistentClock.style.opacity = '0'; // Hide clock when minimizing
+		    cancelLongPress();
+		    persistentClock.style.opacity = '0';
 			
 	            // Progress is how far along the "close" gesture we are. 
 	            // A 20% screen height swipe is considered the full gesture.
@@ -6377,15 +6377,16 @@ function setupDrawerInteractions() {
 	            openEmbed.style.transform = `translateY(${translateY}px) scale(${scale})`;
 	            openEmbed.style.opacity = 1 - (progress * 0.5); // Fade out slightly
 	            openEmbed.style.borderRadius = `${borderRadius}px`;
+	
+	            // Animate background blur from 1px (blurry) to 0px (clear)
+	            const blurRadius = 1 - progress;
 	        } else {
-			    cancelLongPress();
+		    cancelLongPress();
 	            // If dragging back down below the deadzone, reset to initial state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
 	            openEmbed.style.border = '0 solid var(--glass-border)';
-
-				if (persistentClock) persistentClock.style.opacity = '1'; // Restore clock if swipe is cancelled
 	        }
 	
 	        // Ensure the drawer UI is not visible
@@ -7549,11 +7550,10 @@ function openControls() {
     // Use requestAnimationFrame to ensure styles are applied before adding class
     requestAnimationFrame(() => {
         // Reset styles for animation
-        modal.style.transition = 'transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease';
+        modal.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
         blurOverlay.style.transition = 'all 0.3s ease';
         modal.style.transform = 'scaleY(1)';
         modal.style.opacity = '1';
-        modal.style.filter = 'none';
         
         const baseOverlayColor = getComputedStyle(document.documentElement).getPropertyValue('--overlay-color');
         blurOverlay.style.backgroundColor = baseOverlayColor;
@@ -7573,48 +7573,60 @@ function setupControlsGestures() {
     const blurOverlay = document.getElementById('blurOverlayControls');
     const persistentClock = document.getElementById('persistent-clock');
 
-    const gesturePane = document.getElementById('control-gesture-pane') || document.createElement('div');
-    if (!gesturePane.id) {
-        gesturePane.id = 'control-gesture-pane';
-        gesturePane.style.position = 'fixed';
-        gesturePane.style.top = '0';
-        gesturePane.style.right = '15px';
-        gesturePane.style.width = '85px';
-        gesturePane.style.height = '50px';
-        gesturePane.style.zIndex = '99999';
-        document.body.appendChild(gesturePane);
-    }
+    // Create the gesture pane element dynamically
+    const gesturePane = document.createElement('div');
+    gesturePane.id = 'control-gesture-pane';
+    gesturePane.style.position = 'fixed';
+    gesturePane.style.top = '0';
+    gesturePane.style.right = '15px';
+    gesturePane.style.width = '85px'; 
+    gesturePane.style.height = '50px'; 
+    gesturePane.style.zIndex = '99999'; 
+    document.body.appendChild(gesturePane);
 
-    if (!gesturePane || !modal || !blurOverlay) return;
+    if (!gesturePane || !modal || !blurOverlay || !persistentClock) return;
 
-    let startY = 0, currentY = 0, isDragging = false, isClosing = false;
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let isClosing = false;
     let animationFrameId = null;
-    let baseOverlayRgb = '0,0,0';
 
-    const swipeOpenThreshold = window.innerHeight * 0.25;
-    const swipeCloseThreshold = window.innerHeight * 0.20;
+    const swipeOpenThreshold = window.innerHeight * 0.25; 
+    const swipeCloseThreshold = window.innerHeight * 0.20; 
+    let initialScrollTop = 0;
 
     function startDrag(e) {
-        isClosing = modal.classList.contains('show');
+        const target = e.target;
+        
+        if (modal.classList.contains('show')) {
+            const isScrollable = modal.scrollHeight > modal.clientHeight;
+            const touchY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            // Only allow closing if not trying to scroll content that has room to scroll up
+            if (isScrollable && modal.scrollTop > 0 && (touchY > startY)) {
+                return;
+            }
+            isClosing = true;
+        } else {
+            isClosing = false;
+        }
+
         isDragging = true;
         startY = e.touches ? e.touches[0].clientY : e.clientY;
         currentY = startY;
-
-        // Get the computed overlay color based on the current theme
-        const computedColor = getComputedStyle(document.documentElement).getPropertyValue('--overlay-color').trim();
-        const match = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(computedColor);
-        if (match) baseOverlayRgb = `${match[1]}, ${match[2]}, ${match[3]}`;
-
+        initialScrollTop = modal.scrollTop;
+        
         modal.style.transition = 'none';
         blurOverlay.style.transition = 'none';
-
+        
         document.addEventListener('touchmove', dragMove, { passive: false });
         document.addEventListener('touchend', endDrag);
         document.addEventListener('mousemove', dragMove);
         document.addEventListener('mouseup', endDrag);
 
-        if (persistentClock) persistentClock.style.opacity = '0';
-
+        persistentClock.style.opacity = '0';
+        
         if (!isClosing) {
             syncUiStates();
             blurOverlay.style.display = 'block';
@@ -7625,23 +7637,26 @@ function setupControlsGestures() {
 
     function dragMove(e) {
         if (!isDragging) return;
-        
-        // Allow vertical scrolling inside the modal
-        if (isClosing && modal.scrollHeight > modal.clientHeight) {
-             const touchY = e.touches ? e.touches[0].clientY : e.clientY;
-             if (modal.scrollTop > 0 && touchY > startY) return;
-             if (modal.scrollTop < (modal.scrollHeight - modal.clientHeight) && touchY < startY) return;
-        }
 
-        e.preventDefault();
         currentY = e.touches ? e.touches[0].clientY : e.clientY;
+        let deltaY = currentY - startY;
+
+        if (isClosing) {
+            // If swiping up to close, check if we should scroll instead.
+            if (deltaY < 0 && modal.scrollHeight > modal.clientHeight) {
+                // If we are not at the bottom of the scroll, don't prevent default.
+                if (modal.scrollTop + modal.clientHeight < modal.scrollHeight) {
+                   return; // Allow native scrolling
+                }
+            }
+        }
+        
+        e.preventDefault();
         
         if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
         animationFrameId = requestAnimationFrame(() => {
-            let deltaY = currentY - startY;
             let progress = 0;
-
             if (isClosing) {
                 deltaY = Math.max(0, -deltaY);
                 progress = 1 - Math.min(1, deltaY / swipeCloseThreshold);
@@ -7650,39 +7665,54 @@ function setupControlsGestures() {
                 progress = Math.min(1, deltaY / swipeOpenThreshold);
             }
 
-            modal.style.transform = `scaleY(${progress})`;
-            modal.style.opacity = progress;
-            modal.style.filter = `blur(${ (1 - progress) * 5 }px)`;
+            const scaleY = progress;
+            const blur = progress * 1;
+            const overlayRgb = getComputedStyle(document.documentElement).getPropertyValue('--overlay-color').match(/\((.*),/)[1];
+            const overlayOpacity = progress * 0.5;
 
-            blurOverlay.style.backdropFilter = `blur(${progress}px)`;
-            blurOverlay.style.backgroundColor = `rgba(${baseOverlayRgb}, ${progress * 0.5})`;
+            modal.style.transform = `scaleY(${scaleY})`;
+            modal.style.opacity = progress > 0.5 ? 1 : progress * 2;
+            
+            blurOverlay.style.backdropFilter = `blur(${blur}px)`;
+            blurOverlay.style.backgroundColor = `rgba(${overlayRgb}, ${overlayOpacity})`;
         });
     }
 
     function endDrag() {
         if (!isDragging) return;
+        
+        const deltaY = currentY - startY;
+        
         isDragging = false;
         cancelAnimationFrame(animationFrameId);
-
+        
         document.removeEventListener('touchmove', dragMove);
         document.removeEventListener('touchend', endDrag);
         document.removeEventListener('mousemove', dragMove);
         document.removeEventListener('mouseup', endDrag);
+        
+        modal.style.transition = ''; // Let CSS handle it
+        blurOverlay.style.transition = '';
 
-        const deltaY = currentY - startY;
-        const threshold = isClosing ? -swipeCloseThreshold / 2 : swipeOpenThreshold / 2;
-
-        if ((isClosing && deltaY < threshold) || (!isClosing && deltaY > threshold)) {
-            openControls();
+        if (isClosing) {
+            if (deltaY < -swipeCloseThreshold / 2) {
+                closeControls();
+            } else {
+                openControls(); // Snap back open
+            }
         } else {
-            closeControls();
+            if (deltaY > swipeOpenThreshold / 2) {
+                openControls();
+            } else {
+                closeControls(); // Snap back closed
+            }
         }
     }
 
-    [gesturePane, modal, blurOverlayControls].forEach(el => {
-        el.addEventListener('touchstart', startDrag, { passive: true });
-        el.addEventListener('mousedown', startDrag);
-    });
+    gesturePane.addEventListener('touchstart', startDrag, { passive: true });
+    gesturePane.addEventListener('mousedown', startDrag);
+    modal.addEventListener('touchstart', startDrag, { passive: true });
+    modal.addEventListener('mousedown', startDrag);
 }
 
 function closeControls() {
@@ -7692,21 +7722,21 @@ function closeControls() {
 
     if (!customizeModal || !blurOverlayControls) return;
 
-    // Clear inline styles set by the gesture to allow CSS transition to take over
+    // Remove any inline styles that might interfere with the CSS transition
     customizeModal.style.transform = '';
     customizeModal.style.opacity = '';
     customizeModal.style.filter = '';
-    blurOverlayControls.style.backdropFilter = '';
-    blurOverlayControls.style.backgroundColor = '';
-    
+
+    // Now, remove the class to trigger the animation defined in the stylesheet
     customizeModal.classList.remove('show');
     blurOverlayControls.classList.remove('show');
 
+    // Hide the elements after the CSS transition completes
     setTimeout(() => {
         customizeModal.style.display = 'none';
         blurOverlayControls.style.display = 'none';
         if (persistentClock) persistentClock.style.opacity = '1';
-    }, 300);
+    }, 300); // This duration must match your CSS transition time
 }
 
 setInterval(ensureVideoLoaded, 1000);
