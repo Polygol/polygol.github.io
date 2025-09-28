@@ -6387,14 +6387,16 @@ function setupDrawerInteractions() {
 	            // Animate background blur from 1px (blurry) to 0px (clear)
 	            const blurRadius = 1 - progress;
 	        } else {
-				isDraggingAppToClose = false;
 			    cancelLongPress();
 	            // If dragging back down below the deadzone, reset to initial state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
 	            openEmbed.style.border = '0 solid var(--glass-border)';
-
+				
+				setTimeout(() => {
+				    isDraggingAppToClose = false;
+				}, 300);
 			    if (persistentClock) persistentClock.style.opacity = '1'; // Show the clock
 	        }
 	
@@ -6508,8 +6510,10 @@ function setupDrawerInteractions() {
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
 				
-				isDraggingAppToClose = false;
-	        } else {
+				setTimeout(() => {
+				    isDraggingAppToClose = false;
+				}, 300);
+			} else {
 	            // Animate back to the original fullscreen state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
@@ -6525,10 +6529,12 @@ function setupDrawerInteractions() {
                 document.body.style.setProperty('--wallpaper-filter', openFilter);
                 document.body.style.setProperty('--bg-transform-scale', '1.25');
 
-				if (persistentClock) persistentClock.style.opacity = '1';
+				setTimeout(() => {
+				    isDraggingAppToClose = false;
+				}, 300);
 
-				isDraggingAppToClose = false;
-	        }
+				if (persistentClock) persistentClock.style.opacity = '1';
+			}
 
 			setTimeout(() => {
 		        const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
