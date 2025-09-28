@@ -7707,6 +7707,7 @@ function closeControls() {
         blurOverlayControls.style.display = 'none';
         if (persistentClock) persistentClock.style.opacity = '1';
     }, 300);
+}
 
 setInterval(ensureVideoLoaded, 1000);
 
