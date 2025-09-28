@@ -6727,6 +6727,9 @@ function setupDrawerInteractions() {
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
+
+				persistentClock.style.opacity = '0';
+		        persistentClock.style.pointerEvents = 'none';
 	        } else {
 	            // Animate back to the original fullscreen state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
