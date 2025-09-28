@@ -3537,7 +3537,7 @@ async function storeWallpaper(key, data) {
             blob: data.blob || null,
             dataUrl: data.dataUrl || null,
             type: data.type,
-            firstFrameDataUrl: data.firstFrameDataUrl || null, // Add new field
+            firstFrameDataUrl: data.firstFrameDataUrl || null, // For animated images
             version: "1.0",
             timestamp: Date.now(),
             clockStyles: data.clockStyles || {},
@@ -3625,39 +3625,23 @@ wallpaperInput.addEventListener("change", async event => {
                     const wallpaperId = `slideshow_${Date.now()}_${Math.random()}`;
                     
                     if (file.type.startsWith("video/")) {
-                        await storeWallpaper(wallpaperId, {
-                            blob: file,
-                            type: file.type
-                        });
-                        processedWallpapers.push({
-                            id: wallpaperId,
-                            type: file.type,
-                            isVideo: true
-                        });
-                    } else if (file.type === 'image/gif') {
-                        const firstFrame = await extractGifFirstFrame(file);
+                        await storeWallpaper(wallpaperId, { blob: file, type: file.type });
+                        processedWallpapers.push({ id: wallpaperId, type: file.type, isVideo: true });
+                    } else if (file.type === 'image/gif' || file.type === 'image/webp') {
+                        const firstFrame = await extractFirstFrame(file);
                         await storeWallpaper(wallpaperId, {
                             blob: file,
                             type: file.type,
                             firstFrameDataUrl: firstFrame
                         });
-                        processedWallpapers.push({
-                            id: wallpaperId,
-                            type: file.type,
-                            isGif: true, // Mark as GIF
-                            isVideo: false
-                        });
+                        processedWallpapers.push({ id: wallpaperId, type: file.type, isVideo: false });
                     } else {
                         let compressedData = await compressMedia(file);
                         await storeWallpaper(wallpaperId, {
                             dataUrl: compressedData,
                             type: file.type
                         });
-                        processedWallpapers.push({
-                            id: wallpaperId,
-                            type: file.type,
-                            isVideo: false
-                        });
+                        processedWallpapers.push({ id: wallpaperId, type: file.type, isVideo: false });
                     }
                 }
             }
@@ -3708,56 +3692,51 @@ function checkStorageQuota(data) {
 }
 
 /**
- * Replaces an animated GIF background with its static first frame to pause animation.
+ * Replaces an animated image background with its static first frame to pause animation.
  */
-async function pauseGifBackground() {
-    if (document.body.dataset.wallpaperType === 'gif') {
+async function pauseAnimatedBackground() {
+    const wallpaperType = document.body.dataset.wallpaperType;
+    if (wallpaperType === 'gif' || wallpaperType === 'webp') {
         const wallpaperId = document.body.dataset.wallpaperId;
         if (wallpaperId) {
             try {
                 const wallpaperRecord = await getWallpaper(wallpaperId);
                 if (wallpaperRecord && wallpaperRecord.firstFrameDataUrl) {
-                    // Store the current animated URL before overwriting it
                     const currentAnimatedUrl = document.body.style.getPropertyValue('--bg-image');
                     if (currentAnimatedUrl.includes('blob:')) {
-                        document.body.dataset.animatedGifUrl = currentAnimatedUrl;
+                        document.body.dataset.animatedImageUrl = currentAnimatedUrl;
                     }
-
-                    // Set the static frame as the background
                     document.body.style.setProperty('--bg-image', `url('${wallpaperRecord.firstFrameDataUrl}')`);
                 }
             } catch (error) {
-                console.error("Failed to pause GIF background:", error);
+                console.error("Failed to pause animated background:", error);
             }
         }
     }
 }
 
 /**
- * Restores the animated GIF background if it was previously paused.
+ * Restores an animated image background if it was previously paused.
  */
-function resumeGifBackground() {
-    if (document.body.dataset.wallpaperType === 'gif') {
-        const storedAnimatedUrl = document.body.dataset.animatedGifUrl;
+function resumeAnimatedBackground() {
+    const wallpaperType = document.body.dataset.wallpaperType;
+    if (wallpaperType === 'gif' || wallpaperType === 'webp') {
+        const storedAnimatedUrl = document.body.dataset.animatedImageUrl;
         if (storedAnimatedUrl) {
-            // Restore the animated GIF
             document.body.style.setProperty('--bg-image', storedAnimatedUrl);
-            // Clean up the temporary data attribute
-            delete document.body.dataset.animatedGifUrl;
+            delete document.body.dataset.animatedImageUrl;
         } else {
-            // Fallback if the URL wasn't stored, which can happen.
-            // Re-applying the wallpaper will regenerate the blob URL.
             applyWallpaper();
         }
     }
 }
 
 /**
- * Extracts the first frame of a GIF as a data URL.
- * @param {File|Blob} file - The GIF file.
+ * Extracts the first frame of a GIF or animated WebP as a data URL.
+ * @param {File|Blob} file - The image file.
  * @returns {Promise<string>} A promise that resolves with the data URL of the first frame.
  */
-function extractGifFirstFrame(file) {
+function extractFirstFrame(file) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
@@ -3769,7 +3748,6 @@ function extractGifFirstFrame(file) {
             const ctx = canvas.getContext("2d");
             ctx.drawImage(img, 0, 0);
             
-            // It's safer to export as PNG for the static frame.
             const dataUrl = canvas.toDataURL("image/png");
             
             URL.revokeObjectURL(url);
@@ -3856,19 +3834,18 @@ async function saveWallpaper(file) {
                 blob: file,
                 type: file.type,
                 clockStyles: defaultClockStyles,
-                widgetLayout: [] // Initialize with an empty layout
+                widgetLayout: []
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
                 type: file.type,
                 isVideo: true,
-                isGif: false,
                 timestamp: Date.now(),
                 clockStyles: defaultClockStyles,
-                widgetLayout: [] // Also initialize here
+                widgetLayout: []
             });
-        } else if (file.type === 'image/gif') {
-            const firstFrame = await extractGifFirstFrame(file);
+        } else if (file.type === 'image/gif' || file.type === 'image/webp') {
+            const firstFrame = await extractFirstFrame(file);
             await storeWallpaper(wallpaperId, {
                 blob: file,
                 type: file.type,
@@ -3880,7 +3857,6 @@ async function saveWallpaper(file) {
                 id: wallpaperId,
                 type: file.type,
                 isVideo: false,
-                isGif: true, // Mark as GIF
                 timestamp: Date.now(),
                 clockStyles: defaultClockStyles,
                 widgetLayout: []
@@ -3944,7 +3920,7 @@ async function applyWallpaper() {
     // Clear any existing wallpaper type data attributes
     delete document.body.dataset.wallpaperType;
     delete document.body.dataset.wallpaperId;
-    delete document.body.dataset.animatedGifUrl;
+    delete document.body.dataset.animatedImageUrl;
 
     let slideshowWallpapers = JSON.parse(localStorage.getItem("wallpapers"));
     if (slideshowWallpapers && slideshowWallpapers.length > 0) {
@@ -3998,9 +3974,9 @@ async function applyWallpaper() {
                             document.body.style.backgroundSize = "cover";
                             document.body.style.backgroundPosition = "center";
                             document.body.style.backgroundRepeat = "no-repeat";
-
-                            if (imageData.type === 'image/gif') {
-                                document.body.dataset.wallpaperType = 'gif';
+							
+                            if (imageData.type === 'image/gif' || imageData.type === 'image/webp') {
+                                document.body.dataset.wallpaperType = imageData.type.split('/')[1]; // Sets 'gif' or 'webp'
                                 document.body.dataset.wallpaperId = wallpaper.id;
                             }
                         }
@@ -4071,8 +4047,8 @@ async function applyWallpaper() {
                             document.body.style.backgroundPosition = "center";
                             document.body.style.backgroundRepeat = "no-repeat";
     
-                            if (imageData.type === 'image/gif') {
-                                document.body.dataset.wallpaperType = 'gif';
+                            if (imageData.type === 'image/gif' || imageData.type === 'image/webp') {
+                                document.body.dataset.wallpaperType = imageData.type.split('/')[1]; // Sets 'gif' or 'webp'
                                 document.body.dataset.wallpaperId = currentWallpaper.id;
                             }
                         }
@@ -5836,13 +5812,6 @@ async function createFullscreenEmbed(url) {
 	        embedContainer.style.opacity = '1';
 	        embedContainer.style.borderRadius = '0px';
 	    }, 10);
-	    
-        // Trigger the animation
-        setTimeout(() => {
-            embedContainer.style.transform = 'scale(1)';
-            embedContainer.style.opacity = '1';
-            embedContainer.style.borderRadius = '0px';
-        }, 10);
         
         // Hide all main UI elements
         document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
@@ -5855,6 +5824,14 @@ async function createFullscreenEmbed(url) {
                 el.classList.add('force-hide');
             }, 300);
         });
+
+	    // Pause background animations (Video and Animated Images)
+	    await pauseAnimatedBackground();
+	    const bgVideo = document.getElementById('background-video');
+	    if (bgVideo && !bgVideo.paused) {
+	        await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
+	        bgVideo.pause();
+	    }
         
         // Show the swipe overlay when restoring an app
 	    const swipeOverlay = document.getElementById('swipe-overlay');
@@ -6006,11 +5983,10 @@ async function createFullscreenEmbed(url) {
         embedContainer.style.borderRadius = '0px';
     }, 10);
 
-    // Pause background animations (Video and GIF)
-    await pauseGifBackground();
+    // Pause background animations (Video and Animated Images)
+    await pauseAnimatedBackground();
     const bgVideo = document.getElementById('background-video');
     if (bgVideo && !bgVideo.paused) {
-        // Wait for the slowdown animation to finish before pausing
         await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
         bgVideo.pause();
     }
@@ -6053,8 +6029,8 @@ function minimizeFullscreenEmbed() {
 
     isAppOpen = false;
 
-    // Resume background animations (Video and GIF)
-    resumeGifBackground();
+    // Resume background animations (Video and Animated Images)
+    resumeAnimatedBackground();
     const bgVideo = document.getElementById('background-video');
     if (bgVideo) {
         bgVideo.play().then(() => {
