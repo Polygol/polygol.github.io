@@ -988,8 +988,41 @@ function promptToInstallPWA() {
     }
 }
 
-// Add 12/24 hour format functionality
+let appDrawer;
+let persistentClock;
 let use12HourFormat = localStorage.getItem('use12HourFormat') === 'true'; // Default to 24-hour format if not set
+
+/**
+ * Updates the persistent clock's visibility and content based on app/drawer state.
+ */
+function updatePersistentClock() {
+    if (!persistentClock) return; // Failsafe if element not found yet
+
+    const isModalOpen =
+        (appDrawer && appDrawer.classList.contains('open')) ||
+        document.querySelector('.fullscreen-embed[style*="display: block"]');
+
+    if (isModalOpen) {
+        const now = new Date();
+        let hours = now.getHours();
+        let minutes = String(now.getMinutes()).padStart(2, '0');
+        let displayHours;
+
+        if (use12HourFormat) {
+            displayHours = hours % 12 || 12;
+        } else {
+            displayHours = String(hours).padStart(2, '0');
+        }
+
+        persistentClock.textContent = `${displayHours}:${minutes}`;
+        persistentClock.style.opacity = '1';
+        persistentClock.style.pointerEvents = 'none';
+    } else {
+        // Hide on the home screen
+        persistentClock.style.opacity = '0';
+        persistentClock.style.pointerEvents = 'none';
+    }
+}
 
 // Setup the hour format toggle
 const hourFormatSwitch = document.getElementById('hour-switch');
@@ -1178,39 +1211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 	
-    const appDrawer = document.getElementById('app-drawer');
-    const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
-    
-	function updatePersistentClock() {
-	  const isModalOpen = 
-	    (appDrawer && appDrawer.classList.contains('open')) ||
-	    document.querySelector('.fullscreen-embed[style*="display: block"]');
-	    
-	  if (isModalOpen) {
-	    const now = new Date();
-	    let hours = now.getHours();
-	    let minutes = String(now.getMinutes()).padStart(2, '0');
-	    
-	    let displayHours;
-	    
-	    if (use12HourFormat) {
-	      // 12-hour format without AM/PM
-	      displayHours = hours % 12 || 12;
-	    } else {
-	      // 24-hour format
-	      displayHours = String(hours).padStart(2, '0');
-	    }
-	    
-	    persistentClock.textContent = `${displayHours}:${minutes}`;
-        persistentClock.style.opacity = '1';
-        persistentClock.style.pointerEvents = 'none'; // It's a status indicator now, not a button
-	  } else {
-	    // Hide on the home screen
-	    persistentClock.style.opacity = '0';
-        persistentClock.style.pointerEvents = 'none';
-	  }
-	}
 
     // Setup observer to watch for embed visibility changes to update clock immediately
     const embedObserver = new MutationObserver((mutations) => {
@@ -7665,46 +7666,45 @@ function setupControlSwipeListener() {
     gesturePane.addEventListener('mousedown', handleSwipeStart);
 }
 
+// index(16).js
+
 function setupControlsSwipeClose() {
     let touchStartY = 0;
     let isClosingSwipe = false;
-    const swipeThreshold = 50; 
+    const swipeThreshold = 50;
     const modal = document.getElementById('customizeModal');
     const overlay = document.getElementById('blurOverlayControls');
 
     function handleSwipeStart(e) {
+        // Determine if we should initiate a swipe-to-close or allow native scrolling.
         const target = e.target;
-        // Check if the modal is scrollable and if the user is not at the top.
         const isContentScrolled = modal.scrollTop > 0;
 
-        // Allow swipe-to-close only if:
-        // 1. The touch starts on the blur overlay.
-        // 2. The touch starts inside the modal, but the content is NOT scrolled.
+        // Allow swipe-to-close only if the touch starts on the blur overlay,
+        // OR if it starts inside the modal when the content is already scrolled to the top.
         if (target === overlay || (modal.contains(target) && !isContentScrolled)) {
             isClosingSwipe = true;
             touchStartY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            // Attach move/end listeners ONLY when a valid swipe has started.
             document.addEventListener('touchmove', handleSwipeMove, { passive: false });
             document.addEventListener('touchend', handleSwipeEnd);
             document.addEventListener('mousemove', handleSwipeMove);
             document.addEventListener('mouseup', handleSwipeEnd);
         }
+        // If the conditions aren't met (e.g., user is trying to scroll scrolled content),
+        // we do nothing, allowing the browser's default scroll behavior to take over.
     }
 
     function handleSwipeMove(e) {
-        if (!isClosingSwipe) return;
-        // This prevents the page from scrolling while swiping the modal away
-        e.preventDefault(); 
+        // Only prevent default scrolling if we are actively in a closing swipe gesture.
+        if (isClosingSwipe) {
+            e.preventDefault();
+        }
     }
 
     function handleSwipeEnd(e) {
-        if (!isClosingSwipe) {
-            // Cleanup just in case
-            document.removeEventListener('touchmove', handleSwipeMove);
-            document.removeEventListener('touchend', handleSwipeEnd);
-            document.removeEventListener('mousemove', handleSwipeMove);
-            document.removeEventListener('mouseup', handleSwipeEnd);
-            return;
-        };
+        if (!isClosingSwipe) return; // Do nothing if this wasn't a closing swipe.
 
         const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
         const deltaY = y - touchStartY;
@@ -7713,6 +7713,7 @@ function setupControlsSwipeClose() {
             closeControls();
         }
 
+        // Cleanup
         isClosingSwipe = false;
         document.removeEventListener('touchmove', handleSwipeMove);
         document.removeEventListener('touchend', handleSwipeEnd);
@@ -7720,7 +7721,7 @@ function setupControlsSwipeClose() {
         document.removeEventListener('mouseup', handleSwipeEnd);
     }
     
-    // Attach listeners to both elements to start the check
+    // Attach the starting listeners to both elements.
     overlay.addEventListener('touchstart', handleSwipeStart, { passive: true });
     modal.addEventListener('touchstart', handleSwipeStart, { passive: true });
     overlay.addEventListener('mousedown', handleSwipeStart);
