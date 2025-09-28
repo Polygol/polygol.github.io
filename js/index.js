@@ -1184,10 +1184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const customizeModal = document.getElementById('customizeModal');
     
 	function updatePersistentClock() {
-      if (isDraggingAppToClose) { 
-          persistentClock.style.opacity = '0';
-          return;
-      }
+      if (isDraggingAppToClose) return; // <-- FIX: Prevents updates during app drag-to-close
 		
 	  const isModalOpen = 
 	    (appDrawer && appDrawer.classList.contains('open')) ||
@@ -7565,12 +7562,13 @@ function openControls() {
 
     // Don't open if already open or if setup is running
     if (modal.classList.contains('show') || isDuringFirstSetup) return;
-    
+
     modal.scrollTop = 0; // Ensure modal opens at the top
+
     syncUiStates();
     modal.style.display = 'block';
     blurOverlay.style.display = 'block';
-    if(persistentClock) persistentClock.style.opacity = '0'; // Hide clock when controls are open
+    if (persistentClock) persistentClock.style.opacity = '0'; // Hide clock when controls are open
     
     // Use requestAnimationFrame to ensure styles are applied before adding class
     requestAnimationFrame(() => {
@@ -7618,7 +7616,7 @@ function setupControlsGestures() {
 
     function startDrag(e) {
         const target = e.target;
-        
+
         if (modal.classList.contains('show')) {
             const isScrollable = modal.scrollHeight > modal.clientHeight;
             const isAtTop = modal.scrollTop === 0;
@@ -7652,7 +7650,6 @@ function setupControlsGestures() {
             blurOverlay.style.display = 'block';
             modal.style.display = 'block';
             modal.style.opacity = '0';
-            modal.scrollTop = 0; // Ensure it starts at the top
         }
     }
 
