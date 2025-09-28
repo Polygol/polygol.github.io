@@ -7550,13 +7550,9 @@ function openControls() {
     // Use requestAnimationFrame to ensure styles are applied before adding class
     requestAnimationFrame(() => {
         // Reset styles for animation
-        modal.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-        blurOverlay.style.transition = 'all 0.3s ease';
         modal.style.transform = 'scaleY(1)';
         modal.style.opacity = '1';
         
-        const baseOverlayColor = getComputedStyle(document.documentElement).getPropertyValue('--overlay-color');
-        blurOverlay.style.backgroundColor = baseOverlayColor;
         blurOverlay.style.backdropFilter = 'blur(1px)';
         
         modal.classList.add('show');
@@ -7667,14 +7663,11 @@ function setupControlsGestures() {
 
             const scaleY = progress;
             const blur = progress * 1;
-            const overlayRgb = getComputedStyle(document.documentElement).getPropertyValue('--overlay-color').match(/\((.*),/)[1];
-            const overlayOpacity = progress * 0.5;
 
             modal.style.transform = `scaleY(${scaleY})`;
             modal.style.opacity = progress > 0.5 ? 1 : progress * 2;
             
             blurOverlay.style.backdropFilter = `blur(${blur}px)`;
-            blurOverlay.style.backgroundColor = `rgba(${overlayRgb}, ${overlayOpacity})`;
         });
     }
 
