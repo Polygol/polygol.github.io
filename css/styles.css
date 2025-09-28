@@ -541,37 +541,18 @@ input[type="color"]::-moz-color-swatch {
 	text-shadow: 0 0 2px var(--search-background);
 }
 
-.persistent-clock::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    backdrop-filter: blur(1px);
-    border-radius: inherit;
-}
-
-.persistent-clock::after {
-    content: "";
-    position: absolute;
-    width: 80%;
-    height: 80%;
-    top: 10%;
-    left: 10%;
-    z-index: -2;
-    backdrop-filter: blur(2.5px);
-    border-radius: inherit;
-    mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 70%);
-    -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 70%);
-}
-
-.persistent-clock:active {
-    transform: scale(1.04) scaleY(1.1);
-    transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-}
-
 .persistent-clock.show {
     opacity: 1;
     visibility: visible;
+}
+
+#control-gesture-pane {
+    position: fixed;
+    top: 0;
+    right: 15px;
+    width: 85px; /* Wider area for easier activation */
+    height: 50px; /* Taller area */
+    z-index: 99999; /* High z-index to be on top of iframes */
 }
 
 .container {
