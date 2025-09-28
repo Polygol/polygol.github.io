@@ -776,8 +776,8 @@ input[type="color"]::-moz-color-swatch {
             display: block;
             left: auto;
             bottom: auto;
-            transform-origin: top right;
-            transform: translateX(0) scale(0.9) scaleY(0.9);
+            transform-origin: top;
+            transform: scaleY(0);
             opacity: 0;
             filter: blur(5px);
             width: clamp(280px, 90%, 375px);
@@ -795,7 +795,7 @@ input[type="color"]::-moz-color-swatch {
 		}
 
         #customizeModal.modal.show {
-            transform: scale(1);
+            transform: scaleY(1);
             opacity: 1;
             filter: none;
         }
