@@ -1017,38 +1017,32 @@ const persistentClock = document.getElementById('persistent-clock');
 	function updatePersistentClock() {
 	    if (isAnimatingAppMinimize) return;
 		
-	    const isModalOpen =
-	        (appDrawer && appDrawer.classList.contains('open')) ||
-	        document.querySelector('.fullscreen-embed[style*="display: block"]') ||
-	        (customizeModal && customizeModal.classList.contains('show')); // Check for 'show' class
+		const isAppVisible = document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    const isControlsVisible = customizeModal && customizeModal.classList.contains('show');
 	
-	    // Hide clock if Controls are open or if on home screen
-	    if (isModalOpen && customizeModal.classList.contains('show')) {
+	    // **FIX**: Explicitly hide the clock when controls are open or on the home screen
+	    if (isControlsVisible) {
 	        persistentClock.style.opacity = '0';
-	        persistentClock.style.pointerEvents = 'none';
 	        return;
 	    }
-	
-	    if (isModalOpen) {
-	        const now = new Date();
-	        let hours = now.getHours();
-	        let minutes = String(now.getMinutes()).padStart(2, '0');
-	
-	        let displayHours;
-	
-	        if (use12HourFormat) {
-	            displayHours = hours % 12 || 12;
-	        } else {
-	            displayHours = String(hours).padStart(2, '0');
-	        }
-	
-	        persistentClock.textContent = `${displayHours}:${minutes}`;
+
+		if (isAppVisible) {
+		    const now = new Date();
+		    let hours = now.getHours();
+		    let minutes = String(now.getMinutes()).padStart(2, '0');
+		    
+		    let displayHours;
+		    
+		    if (use12HourFormat) {
+				displayHours = hours % 12 || 12;
+		    } else {
+		       displayHours = String(hours).padStart(2, '0');
+		    }
+			
+		    persistentClock.textContent = `${displayHours}:${minutes}`;
 	        persistentClock.style.opacity = '1';
 	        persistentClock.style.pointerEvents = 'none';
-	    } else {
-	        persistentClock.style.opacity = '0';
-	        persistentClock.style.pointerEvents = 'none';
-	    }
+		}
 	}
 
 	function openControls() {
@@ -1172,9 +1166,13 @@ const persistentClock = document.getElementById('persistent-clock');
 	    const overlay = document.getElementById('blurOverlayControls');
 	
 	    function handleSwipeStart(e) {
-	        // **THE FIX**: If the event target is the modal, check if it's scrollable.
-	        // If it is scrollable and NOT scrolled to the top, let the native scroll happen.
-	        if (e.currentTarget === modal && modal.scrollTop > 0) {
+	        // **THE FIX**: Check if the modal is scrolled to the bottom.
+	        // A small tolerance (1px) is used for reliability.
+	        const isScrolledToBottom = modal.scrollHeight - modal.scrollTop - modal.clientHeight < 1;
+	
+	        // Only activate swipe-to-close if the modal is not scrollable OR is scrolled to the bottom.
+	        // This allows normal touch scrolling when the user is not at the end of the content.
+	        if (modal.scrollHeight > modal.clientHeight && !isScrolledToBottom) {
 	            return;
 	        }
 	
@@ -1198,11 +1196,11 @@ const persistentClock = document.getElementById('persistent-clock');
 	        wasSwipe = true; // If we moved, it's a swipe
 	
 	        const y = e.touches ? e.touches[0].clientY : e.clientY;
-	        const deltaY = y - touchStartY;
-	        // **THE FIX**: Calculate upward swipe progress for live animation
-	        const upwardProgress = Math.min(1, Math.max(0, -deltaY / (window.innerHeight * 0.3)));
-	        const currentScale = 1 - upwardProgress;
+	        const deltaY = touchStartY - y; // Positive for upward swipe
+	        const progress = Math.min(1, Math.max(0, deltaY / (window.innerHeight * 0.3)));
+	        const currentScale = 1 - progress;
 	
+	        // **THE FIX**: Live update the styles for a smooth closing animation
 	        blurOverlayControls.style.opacity = currentScale;
 	        customizeModal.style.opacity = currentScale;
 	        customizeModal.style.transform = `scaleY(${currentScale})`;
@@ -1222,7 +1220,7 @@ const persistentClock = document.getElementById('persistent-clock');
 	        customizeModal.style.transform = '';
 	        blurOverlayControls.style.opacity = '';
 	
-	        if (deltaY < -swipeThreshold) {
+	        if (deltaY > swipeThreshold) { // Swipe up
 	            closeControls();
 	        } else {
 	            // If the swipe wasn't enough, snap back to the open state
@@ -6678,6 +6676,10 @@ function setupDrawerInteractions() {
 
 	function endDrag() {
 	    if (!isDragging) return;
+
+		setTimeout(() => {
+			isAnimatingAppMinimize = false;
+		}, 350);
 	
 	    const deltaY = startY - currentY; // Positive for upward swipe
 	    const deltaTime = Date.now() - dragStartTime;
@@ -6725,8 +6727,6 @@ function setupDrawerInteractions() {
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
-
-				isAnimatingAppMinimize = false;
 	        } else {
 	            // Animate back to the original fullscreen state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
@@ -6742,8 +6742,6 @@ function setupDrawerInteractions() {
                 const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
                 document.body.style.setProperty('--wallpaper-filter', openFilter);
                 document.body.style.setProperty('--bg-transform-scale', '1.25');
-
-				isAnimatingAppMinimize = false;
 	        }
 
 			setTimeout(() => {
