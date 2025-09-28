@@ -6579,8 +6579,8 @@ function setupDrawerInteractions() {
 	        // Start effect after a small deadzone
 	        if (deltaY > 10) {
 		    cancelLongPress();
-		    persistentClock.style.opacity = '0 !important';
 			isAnimatingAppMinimize = true;
+		    persistentClock.style.opacity = '0';
 			
 	            // Progress is how far along the "close" gesture we are. 
 	            // A 20% screen height swipe is considered the full gesture.
@@ -6613,8 +6613,8 @@ function setupDrawerInteractions() {
 	            openEmbed.style.borderRadius = '0px';
 	            openEmbed.style.border = '0 solid var(--glass-border)';
 	            
-			    persistentClock.style.opacity = '1';
 				isAnimatingAppMinimize = false;
+			    persistentClock.style.opacity = '1';
 	        }
 	
 	        // Ensure the drawer UI is not visible
@@ -6659,7 +6659,6 @@ function setupDrawerInteractions() {
 	        }
 		    
 			cancelLongPress();
-			persistentClock.style.opacity = '0';
 	
 	        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
 	        
@@ -6727,7 +6726,7 @@ function setupDrawerInteractions() {
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
 
-				isAnimatingAppMinimize = true;
+				isAnimatingAppMinimize = false;
 	        } else {
 	            // Animate back to the original fullscreen state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
@@ -6744,7 +6743,7 @@ function setupDrawerInteractions() {
                 document.body.style.setProperty('--wallpaper-filter', openFilter);
                 document.body.style.setProperty('--bg-transform-scale', '1.25');
 
-				isAnimatingAppMinimize = true;
+				isAnimatingAppMinimize = false;
 	        }
 
 			setTimeout(() => {
@@ -6759,7 +6758,6 @@ function setupDrawerInteractions() {
 	
 	    } else {
 	        // LOGIC FOR FINISHING A DRAWER DRAG (NO APP OPEN)
-			persistentClock.style.opacity = '1';
 	        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
 	
 	        const isSignificantSwipe = movementPercentage > 25 || isFlickUp;
