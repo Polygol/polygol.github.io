@@ -1203,8 +1203,12 @@ document.addEventListener('DOMContentLoaded', () => {
 	    }
 	    
 	    persistentClock.textContent = `${displayHours}:${minutes}`;
+        persistentClock.style.opacity = '1';
+        persistentClock.style.pointerEvents = 'none'; // It's a status indicator now, not a button
 	  } else {
-	    persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+	    // Hide on the home screen
+	    persistentClock.style.opacity = '0';
+        persistentClock.style.pointerEvents = 'none';
 	  }
 	}
     
@@ -1278,6 +1282,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	// Start the synchronized interval
 	synchronizePersistentClock();
+
+    setupControlSwipeListener();
 }); 
 
 // Function to update the document title
@@ -7533,8 +7539,61 @@ blurOverlayControls.addEventListener('click', () => {
     closeControls();
 });
 
+function openControls() {
+    // Don't open if already open or if setup is running
+    if (customizeModal.classList.contains('show') || isDuringFirstSetup) return;
+    
+    syncUiStates();
+    customizeModal.style.display = 'block';
+    blurOverlayControls.style.display = 'block';
+    setTimeout(() => {
+        customizeModal.classList.add('show');
+        blurOverlayControls.classList.add('show');
+    }, 10);
+}
+
+function setupControlSwipeListener() {
+    let touchStartY = 0;
+    const swipeAreaWidth = 150; // pixels from the right edge
+    const swipeAreaHeight = 50;  // pixels from the top edge
+    const swipeThreshold = 50;   // pixels down to trigger
+
+    function handleSwipeStart(e) {
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        const y = e.touches ? e.touches[0].clientY : e.clientY;
+
+        if (y < swipeAreaHeight && x > (window.innerWidth - swipeAreaWidth)) {
+            touchStartY = y;
+            document.addEventListener('touchmove', handleSwipeMove, { passive: false });
+            document.addEventListener('touchend', handleSwipeEnd);
+            document.addEventListener('mousemove', handleSwipeMove);
+            document.addEventListener('mouseup', handleSwipeEnd);
+        }
+    }
+
+    function handleSwipeMove(e) {
+        e.preventDefault();
+    }
+
+    function handleSwipeEnd(e) {
+        const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+        const deltaY = y - touchStartY;
+
+        if (deltaY > swipeThreshold) {
+            openControls();
+        }
+
+        document.removeEventListener('touchmove', handleSwipeMove);
+        document.removeEventListener('touchend', handleSwipeEnd);
+        document.removeEventListener('mousemove', handleSwipeMove);
+        document.removeEventListener('mouseup', handleSwipeEnd);
+    }
+
+    document.addEventListener('touchstart', handleSwipeStart, { passive: true });
+    document.addEventListener('mousedown', handleSwipeStart);
+}
+
 function closeControls() {
-	persistentClock.style.opacity = '1';
     customizeModal.classList.remove('show'); // Start animation
     blurOverlayControls.classList.remove('show');
 
