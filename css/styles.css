@@ -1035,8 +1035,9 @@ input[type="color"]::-moz-color-swatch {
 	padding: 0;
 	backdrop-filter: none;
 	background-color: transparent;
-	border: none;
-	box-shadow: none;
+    border-top: 2px solid var(--search-background);
+    box-shadow: none;
+    padding-top: 10px;
 }
 
 .setting-item {
