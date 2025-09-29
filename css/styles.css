@@ -1112,7 +1112,8 @@ input[type="color"]::-moz-color-swatch {
     color: var(--text-color);
     transition: color 0.2s;
     word-break: break-word;
-	display: none;
+    text-shadow: 0 0 4px var(--search-background);
+    margin-top: 10px;
 }
 
 .control-popup {
