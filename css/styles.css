@@ -1036,8 +1036,14 @@ input[type="color"]::-moz-color-swatch {
 	backdrop-filter: none;
 	background-color: transparent;
     border-top: 2px solid var(--search-background);
+	border-bottom: none;
     box-shadow: none;
     padding-top: 10px;
+}
+
+.settings-grid.wallpaper-settings {
+	border: none;
+    padding-bottom: 0;
 }
 
 .setting-item {
