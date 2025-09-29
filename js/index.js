@@ -7190,11 +7190,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         const tempValue = parseInt(value);
         if (tempValue <= -1) {
-            temperatureIcon.textContent = 'thermometer_minus'; // Cold
+            temperatureIcon.textContent = 'mode_cool'; // Cold
         } else if (tempValue >= 1) {
-            temperatureIcon.textContent = 'thermometer_add'; // Hot
+            temperatureIcon.textContent = 'mode_heat'; // Hot
         } else {
-            temperatureIcon.textContent = 'thermostat_auto'; // Neutral
+            temperatureIcon.textContent = 'thermometer'; // Neutral
         }
     }
     
