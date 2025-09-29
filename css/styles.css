@@ -1377,6 +1377,13 @@ input[type="color"]::-moz-color-swatch {
     grid-row: 2;
 }
 
+#setting-animation, #setting-contrast, #setting-hour-format, #setting-language {
+    grid-column: 2;
+    grid-row: 1;
+	width: 100%;
+    justify-content: center;
+}
+
 .qc-switch {
     appearance: none;
     width: 50px;
