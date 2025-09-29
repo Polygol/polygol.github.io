@@ -1023,19 +1023,15 @@ input[type="color"]::-moz-color-swatch {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
     gap: 10px;
-    padding: 15px 5px;
-    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-	box-shadow: var(--sun-shadow);
-    background-color: var(--search-background);
-    border: 1px solid var(--glass-border);
-    border-radius: 28px;
+    border-bottom: 2px solid var(--search-background);
+    border-radius: 0 !important;
+    padding-bottom: 10px;
 }
 
 .settings-grid.home-settings {
     margin-top: 10px;
 	display: flex;
 	flex-direction: column;
-	gap: 5px;
 	padding: 0;
 	backdrop-filter: none;
 	background-color: transparent;
@@ -1049,7 +1045,6 @@ input[type="color"]::-moz-color-swatch {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    aspect-ratio: 1 / 1;
     cursor: pointer;
     text-align: center;
     transition: background-color 0.2s, transform 0.1s, border-color 0.2s;
@@ -1070,7 +1065,7 @@ input[type="color"]::-moz-color-swatch {
 .setting-item.active .setting-icon-bg {
      background-color: var(--secondary-text-color);
      color: var(--background-color);
-     border-radius: 15px;
+     border-radius: 28px;
 }
 
 .setting-item.active .setting-icon-bg .material-symbols-rounded {
@@ -1083,16 +1078,21 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .setting-icon-bg {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background-color: var(--transparent-color);
+    justify-content: center;
+    /* margin-bottom: 8px; */
+    pointer-events: none;
     display: flex;
     align-items: center;
-    justify-content: center;
-    margin-bottom: 8px;
-    pointer-events: none;
-    transition: background-color 0.2s, color 0.2s;
+    padding: 15px 20px;
+    background-color: var(--search-background);
+    border-radius: 32px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s, filter 0.1s;
+    position: relative;
+    min-height: 32px;
+    height: 32px;
+    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+    box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
 }
 
@@ -1104,6 +1104,7 @@ input[type="color"]::-moz-color-swatch {
     color: var(--text-color);
     transition: color 0.2s;
     word-break: break-word;
+	display: none;
 }
 
 .control-popup {
