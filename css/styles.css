@@ -521,21 +521,66 @@ input[type="color"]::-moz-color-swatch {
     width: 120px;
     height: 20px;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     cursor: pointer;
     z-index: 9997;
     touch-action: manipulation;
     user-select: none;
+	--r: 14px;
+    --s: 10px;
+}
+
+#one-button-nav-l {
+    width: 60px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
 	background: var(--background-color-tr-op);
     backdrop-filter: blur(2.5px) saturate(2) var(--edge-refraction-filter);
     border: 1px solid var(--glass-border);
-	border-radius: 15px 15px 0 0;
+	border-radius: 15px 0 0 0;
     box-shadow: var(--sun-shadow);
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9), opacity 0.3s ease;
+	mask: calc(var(--s) + var(--r)) 0 var(--_m),
+    0 calc(var(--s) + var(--r)) var(--_m),
+    radial-gradient(var(--s) at 0 0,#0000 99%,#000 calc(100% + 1px)) 
+     var(--r) var(--r) no-repeat,
+    conic-gradient(at calc(var(--s) + 2*var(--r)) calc(var(--s) + 2*var(--r)),
+     #000 75%,#0000 0);
+}
+
+#one-button-nav-r {
+    width: 60px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+	background: var(--background-color-tr-op);
+    backdrop-filter: blur(2.5px) saturate(2) var(--edge-refraction-filter);
+    border: 1px solid var(--glass-border);
+	border-radius: 0 15px 0 0;
+    box-shadow: var(--sun-shadow);
+    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9), opacity 0.3s ease;
+	mask: right calc(var(--s) + var(--r)) top 0 var(--_m),
+    right calc(var(--s) + var(--r)) var(--_m),
+    radial-gradient(var(--s) at 100% 0,#0000 99%,#000 calc(100% + 1px)) 
+     calc(-1*var(--r)) var(--r) no-repeat,
+    conic-gradient(at calc(100% - var(--s) - 2*var(--r)) calc(var(--s) + 2*var(--r)),
+     #0000 25%,#000 0);
 }
 
 #one-button-nav-handle .nav-pill {
+	position: fixed;
+	left: 50%;
+	top: 50%;
     width: 100px;
     height: 8px;
     background-color: var(--background-color-tr);
