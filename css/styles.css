@@ -1543,14 +1543,10 @@ input[type="color"]::-moz-color-swatch {
     justify-content: space-between;
     align-items: center;
     margin-top: 10px;
-    padding: 15px 13px 15px 20px;
-    background-color: var(--search-background);
-    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-	box-shadow: var(--sun-shadow);
-    border-radius: 28px;
+    padding: 15px 0px 15px 4px;
     transition: background-color 0.2s, transform 0.1s;
     height: 32px;
-    border: 1px solid var(--glass-border);
+    border-top: 2px solid var(--search-background);
 }
 
 input[type="checkbox"] {
