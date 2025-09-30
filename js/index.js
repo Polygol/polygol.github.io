@@ -1134,6 +1134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-alignment', 'alignment-select');
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
+    connectGridItem('setting-one-button-nav', 'one-button-nav-switch');
 
     const formatItem = document.getElementById('setting-format');
     const formatPopup = document.getElementById('format-popup');
@@ -2858,6 +2859,7 @@ let slideshowInterval = null;
 let currentWallpaperIndex = 0;
 let minimalMode = localStorage.getItem('minimalMode') === 'true';
 let nightMode = localStorage.getItem('nightMode') === 'true';
+let oneButtonNavEnabled = localStorage.getItem('oneButtonNavEnabled') === 'true';
 let isAiAssistantEnabled = localStorage.getItem('aiAssistantEnabled') === 'true';
 let geminiApiKey = localStorage.getItem('geminiApiKey');
 let genAI; // Will be initialized if AI is enabled
@@ -3457,6 +3459,10 @@ gurappsSwitch.addEventListener("change", function() {
     localStorage.setItem("gurappsEnabled", gurappsEnabled);
     updateGurappsVisibility();
 });
+
+function updateOneButtonNavVisibility() {
+    document.body.classList.toggle('one-button-nav-active', oneButtonNavEnabled);
+}
 	
 function applyAlignment(alignment) {
     const container = document.querySelector('.container');
@@ -5715,6 +5721,12 @@ async function createFullscreenEmbed(url) {
         return; // Stop execution immediately
     }
 
+    // NEW: When one-button nav is active, disable gesture overlay for apps
+    const swipeOverlay = document.getElementById('swipe-overlay');
+    if (swipeOverlay) {
+        swipeOverlay.style.pointerEvents = oneButtonNavEnabled ? 'none' : 'auto';
+    }
+
     // 2. Find the app's name from the URL. This also validates that the app is "installed".
     let appName = Object.keys(apps).find(name => apps[name].url === url);
 
@@ -6024,7 +6036,7 @@ createFullscreenEmbed = function(url) {
   originalCreateFullscreenEmbed(url);
 };
 
-function minimizeFullscreenEmbed() {
+function minimizeFullscreenEmbed(animate = true) {
     // Restore the original favicon when minimizing an app
     if (originalFaviconUrl) {
         updateFavicon(originalFaviconUrl);
@@ -6037,21 +6049,34 @@ function minimizeFullscreenEmbed() {
     const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
     
     if (embedContainer) {
-        // Get the URL before hiding it
         const url = embedContainer.dataset.embedUrl;
-        if (url) {
-            // Store the embed in our minimized embeds object
-            minimizedEmbeds[url] = embedContainer;
 
-			// After animation completes, actually hide it completely, and restore user-set filter and scale
-            applyWallpaperEffects();
-            document.body.style.setProperty('--bg-transform-scale', '1.05');
-            embedContainer.style.display = 'none';
-			persistentClock.style.opacity = '1';
+        // If called from a non-gesture context, apply the simple slide-down animation.
+        if (animate) {
+            embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            embedContainer.style.transform = 'translateY(40px)';
+            embedContainer.style.opacity = '0';
+        }
+        // If animate is false (from a gesture), the animation is already handled by endDrag.
+
+        if (url) {
+            minimizedEmbeds[url] = embedContainer;
             
-            // Use a different z-index approach when minimized
-            embedContainer.style.pointerEvents = 'none';
-            embedContainer.style.zIndex = '0';
+            // Cleanup delay is 300ms if we animated, 0ms otherwise.
+            const cleanupDelay = animate ? 300 : 0;
+
+            setTimeout(() => {
+                applyWallpaperEffects();
+                document.body.style.setProperty('--bg-transform-scale', '1.05');
+                embedContainer.style.display = 'none';
+				persistentClock.style.opacity = '1';
+                
+                // Reset transform for the next time it opens
+                embedContainer.style.transform = 'scale(0.8)';
+                
+                embedContainer.style.pointerEvents = 'none';
+                embedContainer.style.zIndex = '0';
+            }, cleanupDelay);
         }
     }
     
@@ -6266,6 +6291,7 @@ function setupDrawerInteractions() {
 
     const startLongPress = (e) => {
         // Only trigger long press if AI is enabled and not already dragging the drawer.
+        if (oneButtonNavEnabled) return; // Disable for gesture mode
         if (isAiAssistantEnabled && !isDragging) {
              longPressTimer = setTimeout(() => {
                 showAiAssistant();
@@ -6484,7 +6510,7 @@ function setupDrawerInteractions() {
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
 	
 	            setTimeout(() => {
-	                minimizeFullscreenEmbed();
+	                minimizeFullscreenEmbed(false); // Call with false to skip animation
 	                swipeOverlay.style.display = 'none';
 	                swipeOverlay.style.pointerEvents = 'none';
 	                openEmbed.style.border = '0 solid var(--glass-border)'; // Clean up border after animation
@@ -6706,6 +6732,7 @@ function setupDrawerInteractions() {
 
     // Touch Events for regular drawer interaction
     document.addEventListener('touchstart', (e) => {
+		if (oneButtonNavEnabled) return;
         const touch = e.touches[0];
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
         
@@ -6717,6 +6744,7 @@ function setupDrawerInteractions() {
     }, { passive: false });
 
     document.addEventListener('touchmove', (e) => {
+		if (oneButtonNavEnabled) return;
         if (isDragging) {
             e.preventDefault();
             moveDrawer(e.touches[0].clientY);
@@ -6724,11 +6752,13 @@ function setupDrawerInteractions() {
     }, { passive: false });
 
     document.addEventListener('touchend', () => {
+		if (oneButtonNavEnabled) return;
         endDrag();
     });
 
     // Mouse Events for regular drawer interaction
     document.addEventListener('mousedown', (e) => {
+		if (oneButtonNavEnabled) return;
         if (e.button !== 0) return;
         const element = document.elementFromPoint(e.clientX, e.clientY);
         
@@ -6739,12 +6769,14 @@ function setupDrawerInteractions() {
     });
 
     document.addEventListener('mousemove', (e) => {
+		if (oneButtonNavEnabled) return;
         if (isDragging) {
             moveDrawer(e.clientY);
         }
     });
 
     document.addEventListener('mouseup', () => {
+		if (oneButtonNavEnabled) return;
         endDrag();
     });
 
@@ -6873,6 +6905,109 @@ const appDrawerObserver = new MutationObserver((mutations) => {
 appDrawerObserver.observe(appDrawer, {
     attributes: true
 });
+
+function setupOneButtonNav() {
+    const navButton = document.getElementById('one-button-nav-handle');
+    if (!navButton) return;
+
+    let clickTimeout = null;
+    let longPressTimeout = null;
+    const longPressDuration = 500;
+    let isLongPress = false;
+
+    const isAppOpen = () => document.querySelector('.fullscreen-embed[style*="display: block"]');
+    const isDrawerOpen = () => appDrawer.classList.contains('open');
+
+    const handleClick = () => {
+        if (isAppOpen()) {
+            minimizeFullscreenEmbed();
+        } else if (isDrawerOpen()) {
+            // Close app drawer
+            appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+            appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
+            appDrawer.classList.remove('open');
+            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+                el.classList.remove('force-hide');
+                el.style.display = el.dataset.originalDisplay || '';
+                el.style.transition = 'opacity 0.3s ease';
+                requestAnimationFrame(() => { el.style.opacity = '1'; });
+            });
+        } else {
+            // Toggle Dock on Home Screen
+            if (dock.classList.contains('show')) {
+                dock.classList.remove('show');
+            } else {
+                dock.style.display = 'flex';
+                requestAnimationFrame(() => {
+                    dock.classList.add('show');
+                });
+            }
+        }
+    };
+
+    const handleDoubleClick = () => {
+        if (!isAppOpen() && !isDrawerOpen()) {
+            // Open App Drawer
+            dock.classList.remove('show');
+            appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+            appDrawer.style.bottom = '0%';
+            appDrawer.style.opacity = '1';
+            appDrawer.classList.add('open');
+            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+                if (!el.dataset.originalDisplay) {
+                    el.dataset.originalDisplay = window.getComputedStyle(el).display;
+                }
+                el.style.transition = 'opacity 0.3s ease';
+                el.style.opacity = '0';
+                setTimeout(() => { el.classList.add('force-hide'); }, 300);
+            });
+        }
+    };
+
+    const handleLongPress = () => {
+        if (isAiAssistantEnabled) {
+            isLongPress = true;
+            showAiAssistant();
+        }
+    };
+
+    const onPointerDown = (e) => {
+        if (!oneButtonNavEnabled) return;
+        e.preventDefault();
+        isLongPress = false;
+        longPressTimeout = setTimeout(handleLongPress, longPressDuration);
+    };
+
+    const onPointerUp = (e) => {
+        if (!oneButtonNavEnabled) return;
+        clearTimeout(longPressTimeout);
+        if (isLongPress) {
+            e.preventDefault();
+            return;
+        }
+
+        if (clickTimeout) { // Double click
+            clearTimeout(clickTimeout);
+            clickTimeout = null;
+            handleDoubleClick();
+        } else { // Single click
+            clickTimeout = setTimeout(() => {
+                handleClick();
+                clickTimeout = null;
+            }, 250);
+        }
+    };
+
+    navButton.addEventListener('mousedown', onPointerDown);
+    navButton.addEventListener('touchstart', onPointerDown, { passive: false });
+
+    navButton.addEventListener('mouseup', onPointerUp);
+    navButton.addEventListener('touchend', onPointerUp);
+
+    navButton.addEventListener('mouseleave', () => clearTimeout(longPressTimeout));
+    navButton.addEventListener('touchmove', () => clearTimeout(longPressTimeout));
+}
 
 function blackoutScreen() {
   // Get the brightness overlay element
@@ -7032,6 +7167,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     await initializeAndApplyWallpaper().catch(error => {
         console.error("Error initializing wallpaper:", error);
     }); // Run this first to set localStorage and apply the correct wallpaper
+
+    const oneButtonNavSwitch = document.getElementById('one-button-nav-switch');
+    if (oneButtonNavSwitch) {
+        oneButtonNavSwitch.checked = oneButtonNavEnabled;
+        updateOneButtonNavVisibility(); // Set initial state
+    
+        oneButtonNavSwitch.addEventListener('change', function() {
+            oneButtonNavEnabled = this.checked;
+            localStorage.setItem('oneButtonNavEnabled', oneButtonNavEnabled);
+            updateOneButtonNavVisibility();
+        });
+    }
+    setupOneButtonNav();
     
     initAppDraw(); // Now this will use the fully populated 'apps' object
     initializeCustomization(); // Now reads correct styles and applies them to DOM
