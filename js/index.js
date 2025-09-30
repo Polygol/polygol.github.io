@@ -6935,6 +6935,12 @@ function setupOneButtonNav() {
             // Toggle Dock on Home Screen
             if (dock.classList.contains('show')) {
                 dock.classList.remove('show');
+                setTimeout(() => {
+                    // Check again in case it was re-opened quickly
+                    if (!dock.classList.contains('show')) {
+                        dock.style.display = 'none';
+                    }
+                }, 300); // Match CSS transition duration
             } else {
                 dock.style.display = 'flex';
                 requestAnimationFrame(() => {
@@ -6945,9 +6951,22 @@ function setupOneButtonNav() {
     };
 
     const handleDoubleClick = () => {
-        if (!isAppOpen() && !isDrawerOpen()) {
-            // Open App Drawer
+        if (isDrawerOpen()) {
+            // Close app drawer if it's already open
+            appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+            appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
+            appDrawer.classList.remove('open');
+            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+                el.classList.remove('force-hide');
+                el.style.display = el.dataset.originalDisplay || '';
+                el.style.transition = 'opacity 0.3s ease';
+                requestAnimationFrame(() => { el.style.opacity = '1'; });
+            });
+        } else if (!isAppOpen()) {
+            // Open App Drawer if no app is open and drawer is closed
             dock.classList.remove('show');
+            setTimeout(() => { dock.style.display = 'none'; }, 300);
             appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
             appDrawer.style.bottom = '0%';
             appDrawer.style.opacity = '1';
