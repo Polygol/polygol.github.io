@@ -6934,24 +6934,25 @@ function setupOneButtonNav() {
         if (isAppOpen()) {
             minimizeFullscreenEmbed();
         } else if (isDrawerOpen()) {
-            // Close app drawer using class toggle
+            // Close app drawer by removing the class
             appDrawer.classList.remove('open');
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
-                el.style.opacity = '1';
+                el.style.display = el.dataset.originalDisplay || '';
+                el.style.transition = 'opacity 0.3s ease';
+                requestAnimationFrame(() => { el.style.opacity = '1'; });
             });
         } else {
             // Toggle Dock on Home Screen
             if (dock.classList.contains('show')) {
                 dock.classList.remove('show');
                 setTimeout(() => {
-                    // Check again in case it was re-opened quickly
                     if (!dock.classList.contains('show')) {
                         dock.style.display = 'none';
                     }
                 }, 300); // Match CSS transition duration
             } else {
-                dock.style.display = 'flex'; // Set display before animating
+                dock.style.display = 'flex';
                 requestAnimationFrame(() => {
                     dock.classList.add('show');
                 });
@@ -6973,7 +6974,7 @@ function setupOneButtonNav() {
             // Open App Drawer
             if (dock.classList.contains('show')) {
                 dock.classList.remove('show');
-                setTimeout(() => { dock.style.display = 'none'; }, 300);
+                setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
             }
             appDrawer.classList.add('open');
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
