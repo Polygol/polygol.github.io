@@ -512,6 +512,54 @@ input[type="color"]::-moz-color-swatch {
     backdrop-filter: blur(1px) saturate(2) var(--edge-refraction-filter);
 }
 
+/* One Button Navigation Handle */
+#one-button-nav-handle {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 9997;
+    touch-action: manipulation;
+    user-select: none;
+    background-color: var(--search-background);
+    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+    border: 1px solid var(--glass-border);
+	border-radius: 25px 25px 0 0;
+    box-shadow: var(--sun-shadow);
+    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9), opacity 0.3s ease;
+}
+
+#one-button-nav-handle .nav-pill {
+    width: 50px;
+    height: 5px;
+    background-color: var(--text-color);
+    border-radius: 5px;
+    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+}
+
+#one-button-nav-handle:active .nav-pill {
+    transform: scale(0.9);
+}
+
+/* Swapping between gesture and button handles */
+body.one-button-nav-active .drawer-handle {
+    display: none !important;
+}
+
+body:not(.one-button-nav-active) #one-button-nav-handle {
+    display: none !important;
+}
+
+body.one-button-nav-active #one-button-nav-handle {
+    display: flex !important;
+}
+
 .persistent-clock {
     position: fixed;
     top: 20px;
