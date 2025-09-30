@@ -6799,7 +6799,7 @@ function setupDrawerInteractions() {
         const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
 
         // Close the drawer when clicking outside (on the body)
-        if (isDrawerOpen && !openEmbed && !appDrawer.contains(e.target) && !drawerHandle.contains(e.target)) {
+        if (isDrawerOpen && !openEmbed && !appDrawer.contains(e.target) && !drawerHandle.contains(e.target) && !oneButtonNavHandle.contains(e.target)) {
             appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
             appDrawer.style.bottom = '-100%';
             appDrawer.style.opacity = '0';
@@ -6821,7 +6821,7 @@ function setupDrawerInteractions() {
         }
 
         // Hide the bottom dock if it's visible and the click was outside of it
-        if (dock.classList.contains('show') && !dock.contains(e.target)) {
+        if (dock.classList.contains('show') && !dock.contains(e.target) && !oneButtonNavHandle.contains(e.target)) {
             dock.classList.remove('show');
             dock.style.boxShadow = 'none';
             drawerPill.style.opacity = '1';
