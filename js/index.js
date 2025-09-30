@@ -6300,6 +6300,7 @@ function setupDrawerInteractions() {
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
 	const appDrawerHandle = document.querySelector('.app-drawer-handle');
+    const oneButtonNavHandle = document.getElementById('one-button-nav-handle');
 
     const startLongPress = (e) => {
         // Only trigger long press if AI is enabled and not already dragging the drawer.
