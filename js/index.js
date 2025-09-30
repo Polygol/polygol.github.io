@@ -6976,7 +6976,13 @@ function setupOneButtonNav() {
                 dock.classList.remove('show');
                 setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
             }
-            appDrawer.classList.add('open');
+            
+            // **FIX:** Clear inline styles that might be left over from gesture interactions
+            appDrawer.style.bottom = '';
+            appDrawer.style.opacity = '';
+            
+            appDrawer.classList.add('open'); // Now the CSS class will take effect
+            
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 if (!el.dataset.originalDisplay) {
                     el.dataset.originalDisplay = window.getComputedStyle(el).display;
