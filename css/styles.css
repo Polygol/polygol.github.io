@@ -874,6 +874,7 @@ input[type="color"]::-moz-color-swatch {
             display: inline-flex;
             align-items: center; /* Align text and icon vertically */
             gap: 15px; /* Space between text and icon */
+			text-shadow: 0 0 4px var(--search-background);
         }
 
 
@@ -1589,15 +1590,17 @@ input[type="checkbox"]:checked::before {
 }
 
 #uploadButton, #versionButton, #resetButton {
-    background-color: var(--transparent-color);
+    background-color: var(--search-background);
     color: var(--text-color);
     font-family: 'Inter', sans-serif;
-    padding: 10px 12.5px;
+    padding: 10px 15px;
     border-radius: 25px;
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s;
     border: 1px solid var(--glass-border);
 	box-shadow: var(--sun-shadow);
+	backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+	font-weight: 500;
 }
 
 #font-select, #language-switcher, #alignment-select {
