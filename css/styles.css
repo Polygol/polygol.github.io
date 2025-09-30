@@ -559,6 +559,10 @@ body.one-button-nav-active #one-button-nav-handle {
     display: flex !important;
 }
 
+body.one-button-nav-active .dock.show {
+    bottom: 28px;
+}
+
 .persistent-clock {
     position: fixed;
     top: 20px;
