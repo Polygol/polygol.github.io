@@ -2100,6 +2100,7 @@ input[type="checkbox"]:checked::before {
             bottom: 0;
 		    transform: none;
 		    filter: none;
+			opacity: 1;
         }
 
         .app-drawer-handle {
