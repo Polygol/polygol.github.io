@@ -6096,6 +6096,7 @@ function minimizeFullscreenEmbed(animate = true) {
     });
     
     // Hide the swipe overlay when minimizing
+	const swipeOverlay = document.getElementById('swipe-overlay');
     if (swipeOverlay) {
         swipeOverlay.style.display = 'none';
         swipeOverlay.style.pointerEvents = 'none';
