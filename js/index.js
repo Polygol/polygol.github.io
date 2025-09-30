@@ -5714,7 +5714,10 @@ async function deleteApp(appName) {
 let isAppOpen = false;
 
 async function createFullscreenEmbed(url) {
-    // 1. Check if Gurapps are disabled entirely
+    // When opening a new app, cancel any pending cleanup from a previously closed app.
+    clearTimeout(minimizeCleanupTimeout);
+
+	// 1. Check if Gurapps are disabled entirely
     // This uses the 'gurappsEnabled' variable you already have.
     if (!gurappsEnabled) {
         showPopup(currentLanguage.GURAPP_OFF);
@@ -5788,6 +5791,10 @@ async function createFullscreenEmbed(url) {
     if (minimizedEmbeds[url]) {
         // Restore the minimized embed
         const embedContainer = minimizedEmbeds[url];
+
+	    // Remove from cache immediately to prevent re-entry issues
+        delete minimizedEmbeds[url];
+		
 		const iframe = embedContainer.querySelector('iframe'); // Get the iframe
 
 		if (iframe) iframe.style.pointerEvents = 'none';
@@ -6035,6 +6042,9 @@ createFullscreenEmbed = function(url) {
 };
 
 function minimizeFullscreenEmbed(animate = true) {
+    // Clear any pending cleanup from a previous call
+    clearTimeout(minimizeCleanupTimeout);
+	
     // Restore the original favicon when minimizing an app
     if (originalFaviconUrl) {
         updateFavicon(originalFaviconUrl);
@@ -6048,30 +6058,33 @@ function minimizeFullscreenEmbed(animate = true) {
     
     if (embedContainer) {
         const url = embedContainer.dataset.embedUrl;
-
-        // If called from a non-gesture context, apply the simple slide-down animation.
-        if (animate) {
-            embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            embedContainer.style.transform = 'translateY(40px)';
-            embedContainer.style.opacity = '0';
-        }
-        // If animate is false (from a gesture), the animation is already handled by endDrag.
-
         if (url) {
             minimizedEmbeds[url] = embedContainer;
+
+	        // If called from a non-gesture context, apply the simple slide-down animation.
+	        if (animate) {
+	            embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+	            embedContainer.style.transform = 'translateY(40px)';
+	            embedContainer.style.opacity = '0';
+	        }
+	        // If animate is false (from a gesture), the animation is already handled by endDrag.
             
             // Cleanup delay is 300ms if we animated, 0ms otherwise.
             const cleanupDelay = animate ? 300 : 0;
 
-            setTimeout(() => {
+			minimizeCleanupTimeout = setTimeout(() => {
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
-                embedContainer.style.display = 'none';
+                
+                // Only hide if it's still in the minimized cache (i.e., not being re-opened)
+                if (minimizedEmbeds[url] === embedContainer) {
+                    embedContainer.style.display = 'none';
+                }
+
 				persistentClock.style.opacity = '1';
-                
-                // Reset transform for the next time it opens
-                embedContainer.style.transform = 'scale(0.8)';
-                
+
+				embedContainer.style.display = 'none';
+				embedContainer.style.transform = 'scale(0.8)';
                 embedContainer.style.pointerEvents = 'none';
                 embedContainer.style.zIndex = '0';
             }, cleanupDelay);
@@ -6920,16 +6933,11 @@ function setupOneButtonNav() {
         if (isAppOpen()) {
             minimizeFullscreenEmbed();
         } else if (isDrawerOpen()) {
-            // Close app drawer
-            appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-            appDrawer.style.bottom = '-100%';
-            appDrawer.style.opacity = '0';
+            // Close app drawer using class toggle
             appDrawer.classList.remove('open');
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
-                el.style.display = el.dataset.originalDisplay || '';
-                el.style.transition = 'opacity 0.3s ease';
-                requestAnimationFrame(() => { el.style.opacity = '1'; });
+                el.style.opacity = '1';
             });
         } else {
             // Toggle Dock on Home Screen
@@ -6942,7 +6950,7 @@ function setupOneButtonNav() {
                     }
                 }, 300); // Match CSS transition duration
             } else {
-                dock.style.display = 'flex';
+                dock.style.display = 'flex'; // Set display before animating
                 requestAnimationFrame(() => {
                     dock.classList.add('show');
                 });
@@ -6951,31 +6959,26 @@ function setupOneButtonNav() {
     };
 
     const handleDoubleClick = () => {
+        if (isAppOpen()) return; // Don't do anything if an app is open
+
         if (isDrawerOpen()) {
-            // Close app drawer if it's already open
-            appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-            appDrawer.style.bottom = '-100%';
-            appDrawer.style.opacity = '0';
+            // Close app drawer
             appDrawer.classList.remove('open');
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
-                el.style.display = el.dataset.originalDisplay || '';
-                el.style.transition = 'opacity 0.3s ease';
-                requestAnimationFrame(() => { el.style.opacity = '1'; });
+                el.style.opacity = '1';
             });
-        } else if (!isAppOpen()) {
-            // Open App Drawer if no app is open and drawer is closed
-            dock.classList.remove('show');
-            setTimeout(() => { dock.style.display = 'none'; }, 300);
-            appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-            appDrawer.style.bottom = '0%';
-            appDrawer.style.opacity = '1';
+        } else {
+            // Open App Drawer
+            if (dock.classList.contains('show')) {
+                dock.classList.remove('show');
+                setTimeout(() => { dock.style.display = 'none'; }, 300);
+            }
             appDrawer.classList.add('open');
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 if (!el.dataset.originalDisplay) {
                     el.dataset.originalDisplay = window.getComputedStyle(el).display;
                 }
-                el.style.transition = 'opacity 0.3s ease';
                 el.style.opacity = '0';
                 setTimeout(() => { el.classList.add('force-hide'); }, 300);
             });
