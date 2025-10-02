@@ -1081,8 +1081,9 @@ body.one-button-nav-active .dock.show {
 }
 
 .settings-grid system-settings {
-    border: none;
-    padding-bottom: 0;
+    border-bottom: none;
+    border-top: 2px solid var(--search-background);
+    padding: 10px 0 0;
 }
 
 .settings-grid.home-settings {
