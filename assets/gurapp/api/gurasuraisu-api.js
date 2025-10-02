@@ -40,6 +40,43 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
           src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Bold.woff2') format('woff2');
         }
 
+        @font-face {
+          font-family: 'Inter Numeric';
+          src: url('/assets/fonts/InterNumeric.ttf') format('truetype-variations');
+          font-weight: 100 900; /* Define the supported variable weight range */
+          font-style: normal;
+        }
+        
+        /* Roboto */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap');
+        
+        /* DynaPuff */
+        @import url('https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&display=swap');
+        
+        /* DM Serif Display (400) */
+        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap');
+        
+        /* Iansui (400) */
+        @import url('https://fonts.googleapis.com/css2?family=Iansui&display=swap');
+        
+        /* JetBrains Mono */
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap');
+        
+        /* DotGothic16 (400) */
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+        
+        /* Patrick Hand (400) */
+        @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+        
+        /* Rampart One (400) */
+        @import url('https://fonts.googleapis.com/css2?family=Rampart+One&display=swap');
+        
+        /* Doto */
+        @import url('https://fonts.googleapis.com/css2?family=Doto:wght@400;700&display=swap'); 
+        
+        /* Nunito */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap');
+
         h1, h2, h3, h4, h5, h6 {
         	font-family: 'Open Runde', sans-serif;
         }
