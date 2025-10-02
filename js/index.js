@@ -5746,19 +5746,32 @@ async function createFullscreenEmbed(url) {
 	
 	const isAllowlisted = allowlistDomains.includes(urlDomain);
 
-    // If appName is not found, show popup and warn
-    if (!appName) {
-        showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
-        console.warn(`Attempted to open an unknown app URL: ${url}`);
-        return; // Do not open a new tab
-    }
-
-    // If appName is not found and the domain is not allowlisted, open in a new tab
-    if (!appName && !isAllowlisted) {
-        console.warn(`Attempted to open an unknown URL as an app: ${url}`);
-        window.open(url, '_blank'); // Open in a new tab
-        return; // Exit the function
-    }
+	// If appName is not found in apps
+	if (!appName) {
+	    // If the domain is allowlisted, allow the app creation
+	    if (isAllowlisted) {
+	        console.warn(`Allowlisted domain used, creating app for URL: ${url}`);
+	        // Create fallback app details
+	        appDetails = {
+	            name: urlDomain || 'Custom App', // Use the domain as the app name
+	            icon: '/assets/appicon/default.png', // Default icon
+	            url: url // Use the provided URL
+	        };
+	    } else {
+	        // If the domain is not allowlisted, show a warning and exit
+	        showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
+	        console.warn(`Attempted to open an unknown app URL: ${url}`);
+	        window.open(url, '_blank'); // Open in a new tab for unknown domains
+	        return; // Exit after attempting to open in a new tab
+	    }
+	} else {
+	    // If appName is found, retrieve its details from `apps`
+	    appDetails = apps[appName] || {
+	        name: appName, // Use the app name if found
+	        icon: '/assets/appicon/default.png',
+	        url: url
+	    };
+	}
 
     // Fallback app details for allowlisted URLs
     let appDetails = appName ? apps[appName] : {
