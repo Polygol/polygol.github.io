@@ -1080,6 +1080,11 @@ body.one-button-nav-active .dock.show {
     padding-bottom: 10px;
 }
 
+.settings-grid system-settings {
+    border: none;
+    padding-bottom: 0;
+}
+
 .settings-grid.home-settings {
     margin-top: 10px;
 	display: flex;
