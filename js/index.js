@@ -6083,13 +6083,12 @@ function minimizeFullscreenEmbed(animate = true) {
                 // Only hide if it's still in the minimized cache (i.e., not being re-opened)
                 if (minimizedEmbeds[url] === embedContainer) {
                     embedContainer.style.display = 'none';
+				    embedContainer.style.pointerEvents = 'none';
                 }
 
 				persistentClock.style.opacity = '1';
 
-				embedContainer.style.display = 'none';
 				embedContainer.style.transform = 'scale(0.8)';
-                embedContainer.style.pointerEvents = 'none';
                 embedContainer.style.zIndex = '0';
             }, cleanupDelay);
         }
