@@ -72,9 +72,6 @@ function applyLanguage(language) {
     document.querySelector('#temp_control_qc .qc-label').innerText = language.TONE;
     document.querySelector('#minimal_mode_qc .qc-label').innerText = language.MINIMAL;
     document.querySelector('#light_mode_qc .qc-label').innerText = language.DAYLIGHT;
-    document.querySelector('#setting-animation .qc-label').innerText = language.MOTION;
-    document.querySelector('#setting-contrast .qc-label').innerText = language.CONTRAST;
-    document.querySelector('#setting-language .qc-label').innerText = language.LANGPICK;
 
     // Dynamically update labels in the grid
     document.querySelectorAll('.setting-label[data-lang-key]').forEach(label => {
