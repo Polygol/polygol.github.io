@@ -5746,12 +5746,18 @@ async function createFullscreenEmbed(url) {
 	
 	const isAllowlisted = allowlistDomains.includes(urlDomain);
 
-    // If not in apps AND not allowlisted, show error
-    if (!appName && !isAllowlisted) {
+    // If appName is not found, show popup and warn
+    if (!appName) {
         showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
         console.warn(`Attempted to open an unknown app URL: ${url}`);
-        window.open(url, '_blank');
-        return;
+        return; // Do not open a new tab
+    }
+
+    // If appName is not found and the domain is not allowlisted, open in a new tab
+    if (!appName && !isAllowlisted) {
+        console.warn(`Attempted to open an unknown URL as an app: ${url}`);
+        window.open(url, '_blank'); // Open in a new tab
+        return; // Exit the function
     }
 
     // Fallback app details for allowlisted URLs
