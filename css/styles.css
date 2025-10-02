@@ -1080,7 +1080,7 @@ body.one-button-nav-active .dock.show {
     padding-bottom: 10px;
 }
 
-.settings-grid system-settings {
+.settings-grid.system-settings {
     border-bottom: none;
     border-top: 2px solid var(--search-background);
     padding: 10px 0 0;
