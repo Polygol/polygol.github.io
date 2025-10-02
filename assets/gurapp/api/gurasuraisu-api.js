@@ -42,7 +42,7 @@ const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttrib
 
         @font-face {
           font-family: 'Inter Numeric';
-          src: url('/assets/fonts/InterNumeric.ttf') format('truetype-variations');
+          src: url('https://github.com/Polygol/polygol.github.io/raw/refs/heads/main/assets/fonts/InterNumeric.ttf') format('truetype-variations');
           font-weight: 100 900; /* Define the supported variable weight range */
           font-style: normal;
         }
