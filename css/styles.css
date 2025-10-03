@@ -580,12 +580,18 @@ body.one-button-nav-active .dock.show {
 	font-variation-settings: "RDNS" 1;
     display: flex;
     align-items: center; /* Keeps the image and text aligned */
-    gap: 8px; /* Adds spacing between image and text */
+    gap: 0;
     cursor: pointer;
     transform: scale(1);
     transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
 	font-weight: bold;
 	transform-origin: top;
+}
+
+/* Fix for misaligned colon in persistent clock */
+.persistent-clock .persistent-colon {
+    position: relative;
+    top: -0.1em;
     -webkit-mask-image: linear-gradient(black, black);
     -webkit-mask-clip: text;
     -webkit-mask-composite: source-in;
@@ -594,10 +600,13 @@ body.one-button-nav-active .dock.show {
     backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
 }
 
-/* Fix for misaligned colon in persistent clock */
-.persistent-clock .persistent-colon {
-    position: relative;
-    top: -0.1em;
+.persistent-clock .persistent-clock-digit {
+    -webkit-mask-image: linear-gradient(black, black);
+    -webkit-mask-clip: text;
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(black, black);
+    mask-composite: source-in;
+    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
 }
 
 .persistent-clock:active {
