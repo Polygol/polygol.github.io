@@ -618,20 +618,24 @@ body.one-button-nav-active .dock.show {
     backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
 }
 
-.persistent-clock:hover, .persistent-clock:active, .persistent-clock:focus {
+.persistent-clock:hover .persistent-clock::before, .persistent-clock:active .persistent-clock::before, .persistent-clock:focus .persistent-clock::before {
 	width: 100px;
 	height: 250px;
-    transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+	background-color: var(--search-background);
+    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+    box-shadow: var(--sun-shadow);
+    border: 1px solid var(--glass-border);
+	border-radius: 28px;
+}
+
+.persistent-clock:hover, .persistent-clock:active, .persistent-clock:focus {
 	-webkit-mask-image: none;
 	-webkit-mask-clip: initial;
 	-webkit-mask-composite: initial;
 	mask-image: none;
 	mask-composite: initial;
 	color: transparent;
-	background-color: var(--search-background);
-    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-    box-shadow: var(--sun-shadow);
-    border: 1px solid var(--glass-border);
+    backdrop-filter: none;
 }
 
 .persistent-clock.show {
