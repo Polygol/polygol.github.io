@@ -501,15 +501,15 @@ input[type="color"]::-moz-color-swatch {
 }
 
 .nav-pill {
-    transform: scale(1);
+	transform: scale(1);
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9), opacity 0.3s ease, background-color 0.3s, width 0.3s;
     width: 100%;
     height: 5px;
-    background-color: var(--secondary-text-color);
+    background-color: var(--overlay-color);
     border-radius: 5px;
     opacity: 1;
     box-shadow: var(--sun-shadow), 0 0 0 1px var(--glass-border);
-    backdrop-filter: blur(1px) saturate(2) var(--edge-refraction-filter);
+    backdrop-filter: blur(1px) invert(1) hue-rotate(180deg);
 }
 
 /* One Button Navigation Handle */
@@ -589,29 +589,6 @@ body.one-button-nav-active .dock.show {
 	font-weight: bold;
 	transform-origin: top;
 	text-shadow: 0 0 2px var(--search-background);
-}
-
-.persistent-clock::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    backdrop-filter: blur(1px);
-    border-radius: inherit;
-}
-
-.persistent-clock::after {
-    content: "";
-    position: absolute;
-    width: 80%;
-    height: 80%;
-    top: 10%;
-    left: 10%;
-    z-index: -2;
-    backdrop-filter: blur(2.5px);
-    border-radius: inherit;
-    mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 70%);
-    -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 70%);
 }
 
 .persistent-clock:active {
