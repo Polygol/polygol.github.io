@@ -622,7 +622,9 @@ body.one-button-nav-active .dock.show {
     content: "";
 }
 
-.persistent-clock:hover .persistent-clock::before, .persistent-clock:active .persistent-clock::before, .persistent-clock:focus .persistent-clock::before {
+.persistent-clock:hover::before,
+.persistent-clock:active::before,
+.persistent-clock:focus::before {
 	width: 100px;
 	height: 250px;
 	background-color: var(--search-background);
