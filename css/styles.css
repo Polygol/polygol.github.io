@@ -609,9 +609,27 @@ body.one-button-nav-active .dock.show {
     backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
 }
 
+.persistent-clock .material-symbols-rounded {
+    -webkit-mask-image: linear-gradient(black, black);
+    -webkit-mask-clip: text;
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(black, black);
+    mask-composite: source-in;
+    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
+}
+
 .persistent-clock:active {
     transform: scale(1.04) scaleY(1.1);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+	-webkit-mask-image: none;
+	-webkit-mask-clip: initial;
+	-webkit-mask-composite: initial;
+	mask-image: none;
+	mask-composite: initial;
+	background-color: var(--search-background);
+    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+    box-shadow: var(--sun-shadow);
+    border: 1px solid var(--glass-border);
 }
 
 .persistent-clock.show {
