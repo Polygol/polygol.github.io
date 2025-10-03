@@ -631,8 +631,7 @@ body.one-button-nav-active .dock.show {
 .persistent-clock:hover::before,
 .persistent-clock:active::before,
 .persistent-clock:focus::before {
-	width: 100px;
-	height: 250px;
+	padding: 250px 100px; 
 	background-color: var(--search-background);
 	border-radius: 28px;
 }
