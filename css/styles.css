@@ -620,6 +620,12 @@ body.one-button-nav-active .dock.show {
 
 .persistent-clock::before {
     content: "";
+	pointer-events: none;
+	background-color: transparent;
+    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+    box-shadow: var(--sun-shadow);
+    border: 1px solid var(--glass-border);
+	border-radius: 50px;
 }
 
 .persistent-clock:hover::before,
@@ -628,9 +634,6 @@ body.one-button-nav-active .dock.show {
 	width: 100px;
 	height: 250px;
 	background-color: var(--search-background);
-    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-    box-shadow: var(--sun-shadow);
-    border: 1px solid var(--glass-border);
 	border-radius: 28px;
 }
 
@@ -642,6 +645,8 @@ body.one-button-nav-active .dock.show {
 	mask-composite: initial;
 	color: transparent;
     backdrop-filter: none;
+	visibility: hidden;
+	position: absolute;
 }
 
 .persistent-clock.show {
