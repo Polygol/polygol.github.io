@@ -618,9 +618,9 @@ body.one-button-nav-active .dock.show {
     backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
 }
 
-.persistent-clock:active, .persistent-clock:focus {
-	width: 100px
-	height: 250px
+.persistent-clock:hover, .persistent-clock:active, .persistent-clock:focus {
+	width: 100px;
+	height: 250px;
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
 	-webkit-mask-image: none;
 	-webkit-mask-clip: initial;
