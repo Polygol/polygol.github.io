@@ -533,7 +533,7 @@ input[type="color"]::-moz-color-swatch {
 #one-button-nav-handle .nav-pill {
     width: 30px;
     height: 10px;
-    background-color: var(--overlay-color);
+    background-color: transparent;
     border-radius: 5px;
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
     box-shadow: none;
