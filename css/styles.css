@@ -618,6 +618,10 @@ body.one-button-nav-active .dock.show {
     backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
 }
 
+.persistent-clock::before {
+    content: "";
+}
+
 .persistent-clock:hover .persistent-clock::before, .persistent-clock:active .persistent-clock::before, .persistent-clock:focus .persistent-clock::before {
 	width: 100px;
 	height: 250px;
