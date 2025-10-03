@@ -618,34 +618,9 @@ body.one-button-nav-active .dock.show {
     backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
 }
 
-.persistent-clock::before {
-    content: "";
-	pointer-events: none;
-	background-color: transparent;
-    backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-    box-shadow: var(--sun-shadow);
-    border: 1px solid var(--glass-border);
-	border-radius: 50px;
-}
-
-.persistent-clock:hover::before,
-.persistent-clock:active::before,
-.persistent-clock:focus::before {
-	padding: 250px 100px; 
-	background-color: var(--search-background);
-	border-radius: 28px;
-}
-
-.persistent-clock:hover, .persistent-clock:active, .persistent-clock:focus {
-	-webkit-mask-image: none;
-	-webkit-mask-clip: initial;
-	-webkit-mask-composite: initial;
-	mask-image: none;
-	mask-composite: initial;
-	color: transparent;
-    backdrop-filter: none;
-	visibility: hidden;
-	position: absolute;
+.persistent-clock:active {
+    transform: scale(1.04) scaleY(1.1);
+    transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
 
 .persistent-clock.show {
