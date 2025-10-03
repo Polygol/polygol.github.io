@@ -567,8 +567,8 @@ body.one-button-nav-active .dock.show {
     top: 20px;
     right: 20px;
     font-size: 1.2rem;
-    color: transparent;
-    background-color: var(--transparent-color);
+    color: var(--transparent-color);
+    background-color: transparent;
     padding: 8px 10px;
     border-radius: 50px;
     z-index: 9995;
