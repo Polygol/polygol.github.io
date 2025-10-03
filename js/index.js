@@ -1203,7 +1203,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	      displayHours = String(hours).padStart(2, '0');
 	    }
 	    
-	    persistentClock.innerHTML = `${displayHours}<span class="persistent-colon">:</span>${minutes}`;
+	    persistentClock.innerHTML = `<span class="persistent-clock-digit">${displayHours}</span><span class="persistent-colon">:</span><span class="persistent-clock-digit">${minutes}</span>`;
 	  } else {
 	    persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
 	  }
