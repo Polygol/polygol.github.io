@@ -2545,12 +2545,6 @@ input[type="checkbox"]:checked::before {
     z-index: 2; /* Must be above the iframe but below the drag overlay */
 }
 
-        @media (max-width: 800px) {
-            .clock {
-                font-size: clamp(4rem, 20vw, 20rem);
-            }
-        }
-
         @media (min-width: 800px) {
             .app-drawer {
                 left: 5vw;
