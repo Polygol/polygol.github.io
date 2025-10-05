@@ -5694,8 +5694,14 @@ async function createFullscreenEmbed(url) {
     // When opening a new app, cancel any pending cleanup from a previously closed app.
     clearTimeout(minimizeCleanupTimeout);
 
+    // Instantly hide any OTHER open app to prevent overlap
+    document.querySelectorAll('.fullscreen-embed[style*="display: block"]').forEach(openEmbed => {
+        if (openEmbed.dataset.embedUrl !== url) {
+            openEmbed.style.display = 'none';
+        }
+    });
+
 	// 1. Check if Gurapps are disabled entirely
-    // This uses the 'gurappsEnabled' variable you already have.
     if (!gurappsEnabled) {
         showPopup(currentLanguage.GURAPP_OFF);
         return; // Stop execution immediately
@@ -6044,36 +6050,34 @@ function minimizeFullscreenEmbed(animate = true) {
         if (url) {
             minimizedEmbeds[url] = embedContainer;
 
-	        // If called from a non-gesture context, apply the simple slide-down animation.
-	        if (animate) {
-	            embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-	            embedContainer.style.transform = 'translateY(40px)';
-	            embedContainer.style.opacity = '0';
-	        }
-	        // If animate is false (from a gesture), the animation is already handled by endDrag.
+            if (animate) {
+                embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                embedContainer.style.transform = 'translateY(40px)';
+                embedContainer.style.opacity = '0';
+            }
             
-            // Cleanup delay is 300ms if we animated, 0ms otherwise.
             const cleanupDelay = animate ? 300 : 0;
 
-			minimizeCleanupTimeout = setTimeout(() => {
+            // This timeout will run unless cancelled by a subsequent createFullscreenEmbed call.
+            minimizeCleanupTimeout = setTimeout(() => {
+                // This code block now ONLY runs when returning to the home screen.
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
                 
-                // Only hide if it's still in the minimized cache (i.e., not being re-opened)
-                if (minimizedEmbeds[url] === embedContainer) {
-                    embedContainer.style.display = 'none';
-				    embedContainer.style.pointerEvents = 'none';
-                }
-
-				persistentClock.style.opacity = '1';
-
-				embedContainer.style.transform = 'scale(0.8)';
+                embedContainer.style.display = 'none';
+            }, cleanupDelay);
+            
+            // These resets happen after the animation.
+            setTimeout(() => {
+                embedContainer.style.pointerEvents = 'none';
                 embedContainer.style.zIndex = '0';
+                embedContainer.style.transform = 'scale(0.8)';
             }, cleanupDelay);
         }
     }
     
     // Restore all main UI elements
+    persistentClock.style.opacity = '1';
     document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 	el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay;
