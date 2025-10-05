@@ -524,7 +524,7 @@ input[type="color"]::-moz-color-swatch {
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    z-index: 9997;
+    z-index: 9996;
     touch-action: manipulation;
     user-select: none;
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9), opacity 0.3s ease;
@@ -2395,7 +2395,6 @@ input[type="checkbox"]:checked::before {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 1px solid var(--glass-border);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
-	box-shadow: var(--sun-shadow);
     width: 200px; /* Default size, can be overridden */
     height: 200px;
     pointer-events: auto;
@@ -2427,9 +2426,16 @@ input[type="checkbox"]:checked::before {
     height: 100%;
     cursor: grab;
     z-index: 2; /* Sits on top of the iframe */
+	box-shadow: var(--sun-shadow);
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
 }
 
-.widget-instance-overlay:active {
+.widget-instance-overlay:active .widget-instance iframe, .widget-instance:active .widget-instance iframe, .widget-instance.is-dragging .widget-instance iframe {
+	transform: scale(1.04)
+}
+
+.widget-instance-overlay:active, .widget-instance:active .widget-instance-overlay, .widget-instance.is-dragging .widget-instance-overlay {
     cursor: grabbing;
 	filter: brightness(1.5);
 }
