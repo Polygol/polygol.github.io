@@ -219,6 +219,7 @@ let isSlideshow = false;
 let minimizedEmbeds = {}; // Object to store minimized embeds by URL
 let appLastOpened = {};
 let currentSunShadow = ''; // To store the calculated sun shadow string
+let currentSunShadowStrong = ''; // To store the intensified sun shadow string
 let isDuringFirstSetup = false; // Flag to prevent prompts during setup
 
 secondsSwitch.checked = showSeconds;
@@ -826,6 +827,8 @@ function updateSunEffect() {
         const SHADOW_DISTANCE = 1.0;             // A tight, 1px distance for the highlight
         const BLUR_RADIUS = 1.0;                 // A minimal blur to anti-alias the 1px line
         const SPREAD_RADIUS = 0.0;               // No spread, for a crisp line
+        const STRONG_BLUR_RADIUS = 1.0;          // Increased blur for a bigger glow
+        const STRONG_SPREAD_RADIUS = 2.0;        // Increased spread for thickness
         const MAX_SUN_ALPHA = isLightMode ? 0.95 : 0.7;   // Drastically increased opacity
         const MAX_MOON_ALPHA = isLightMode ? 0.75 : 0.5;  // Drastically increased moonlight opacity
 
@@ -839,6 +842,7 @@ function updateSunEffect() {
             const offsetX = Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
             const offsetY = Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
 
+            // A: Regular Shadow
             // 1. Primary soft glow from the light source
             const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
             // 2. Sharp specular highlight on the edge facing the light
@@ -848,6 +852,12 @@ function updateSunEffect() {
 
             currentSunShadow = `${causticGlow}, ${specularHighlight}, ${softGlow}`;
 
+            // B: Strong Shadow
+            const strongSoftGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${STRONG_BLUR_RADIUS}px ${STRONG_SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
+            const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 2px 1px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
+            const strongCaustic = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 8px 1px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.25 : 0.05})`;
+            currentSunShadowStrong = `${strongCaustic}, ${strongSpecular}, ${strongSoftGlow}`;
+
         } else {
             // --- NIGHT LOGIC (MOONLIGHT OR STARLIGHT) ---
             const moonPosition = SunCalc.getMoonPosition(now, latitude, longitude);
@@ -856,11 +866,18 @@ function updateSunEffect() {
             const STARLIGHT_COLOR = [200, 210, 230];
             const STARLIGHT_ALPHA = isLightMode ? 0.20 : 0.15;
             const [r_star, g_star, b_star] = STARLIGHT_COLOR;
-            
+
+			// A: Regular Starlight
             const starlightGlow = `inset 0px 1px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
             const starlightSpecular = `inset 0px 1px 1px 0px rgba(255, 255, 255, ${isLightMode ? 0.3 : 0.15})`;
             const starlightCaustic = `inset 0px -1px 4px 0px rgba(${r_star}, ${g_star}, ${b_star}, ${isLightMode ? 0.15 : 0.05})`;
             currentSunShadow = `${starlightCaustic}, ${starlightSpecular}, ${starlightGlow}`;
+
+		    // B: Strong Starlight
+            const strongStarlightGlow = `inset 0px 1px ${STRONG_BLUR_RADIUS}px ${STRONG_SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
+            const strongStarlightSpecular = `inset 0px 1px 2px 1px rgba(255, 255, 255, ${isLightMode ? 0.3 : 0.15})`;
+            const strongStarlightCaustic = `inset 0px -1px 6px 1px rgba(${r_star}, ${g_star}, ${b_star}, ${isLightMode ? 0.15 : 0.05})`;
+            currentSunShadowStrong = `${strongStarlightCaustic}, ${strongStarlightSpecular}, ${strongStarlightGlow}`;
             
             // If the moon is up, override starlight with brighter, directional moonlight.
             if (moonPosition.altitude > 0) {
@@ -875,19 +892,29 @@ function updateSunEffect() {
                 const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
                 const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px 0px rgba(255, 255, 255, ${isLightMode ? 0.4 : 0.2})`;
                 const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.2 : 0.1})`;
-                
+
+				// A: Regular Moonlight
                 currentSunShadow = `${causticGlow}, ${specularHighlight}, ${softGlow}`;
+
+			    // B: Strong Moonlight
+                const strongSoftGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${STRONG_BLUR_RADIUS}px ${STRONG_SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
+                const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 2px 1px rgba(255, 255, 255, ${isLightMode ? 0.4 : 0.2})`;
+                const strongCaustic = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 8px 1px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.2 : 0.1})`;
+                
+				currentSunShadowStrong = `${strongCaustic}, ${strongSpecular}, ${strongSoftGlow}`;
             }
         }
         
-        // Apply to the main page by setting the CSS variable and broadcast to iframes
+        // Apply to the main page by setting the CSS variables and broadcast to iframes
         document.body.style.setProperty('--sun-shadow', currentSunShadow);
+        document.body.style.setProperty('--sun-shadow-strong', currentSunShadowStrong);
         broadcastSunUpdate();
 
     }, error => {
         console.warn("Sun effect disabled: Could not get location.", error);
-        // Ensure the variable is cleared if location fails
+        // Ensure the variables are cleared if location fails
         document.body.style.setProperty('--sun-shadow', '0 0 0 0 transparent');
+        document.body.style.setProperty('--sun-shadow-strong', '0 0 0 0 transparent');
         broadcastSunUpdate();
     });
 }
@@ -945,7 +972,11 @@ function broadcastSunUpdate() {
     const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
     iframes.forEach(iframe => {
         if (iframe.contentWindow) {
-            iframe.contentWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
+            iframe.contentWindow.postMessage({
+                type: 'sunUpdate',
+                shadow: currentSunShadow,
+                shadowStrong: currentSunShadowStrong
+            }, window.location.origin);
         }
     });
 }
