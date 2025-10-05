@@ -643,6 +643,7 @@ body.one-button-nav-active .dock.show {
     height: auto;
 	corner-shape: inherit;
     border-radius: inherit;
+    transform: scale(1.15);
 }
 
 .app-icon-img::after {
