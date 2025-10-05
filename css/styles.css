@@ -636,6 +636,14 @@ body.one-button-nav-active .dock.show {
     overflow: hidden;
 }
 
+.app-icon-img img {
+    display: block;
+    width: 100%;
+    height: auto;
+	corner-shape: inherit;
+    border-radius: inherit;
+}
+
 .app-icon-img::after {
     content: "";
     position: absolute;
