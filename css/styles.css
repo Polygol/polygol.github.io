@@ -1256,6 +1256,7 @@ body.one-button-nav-active .dock.show {
     mix-blend-mode: luminosity;
     pointer-events: none;
 	box-shadow: none;
+    backdrop-filter: var(--edge-refraction-filter) blur(1px);
 }
 
 #media-widget-art {
@@ -1269,6 +1270,8 @@ body.one-button-nav-active .dock.show {
     cursor: pointer;
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
 	mix-blend-mode: overlay;
+    border-radius: inherit;
+    corner-shape: inherit;
 }
 
 #media-widget-art:active {
