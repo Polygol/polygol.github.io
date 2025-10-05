@@ -827,8 +827,8 @@ function updateSunEffect() {
         const SHADOW_DISTANCE = 1.0;             // A tight, 1px distance for the highlight
         const BLUR_RADIUS = 1.0;                 // A minimal blur to anti-alias the 1px line
         const SPREAD_RADIUS = 0.0;               // No spread, for a crisp line
-        const STRONG_BLUR_RADIUS = 1.0;          // Increased blur for a bigger glow
-        const STRONG_SPREAD_RADIUS = 2.0;        // Increased spread for thickness
+        const STRONG_BLUR_RADIUS = 2.0;          // Increased blur for a bigger glow
+        const STRONG_SPREAD_RADIUS = 1.0;        // Increased spread for thickness
         const MAX_SUN_ALPHA = isLightMode ? 0.95 : 0.7;   // Drastically increased opacity
         const MAX_MOON_ALPHA = isLightMode ? 0.75 : 0.5;  // Drastically increased moonlight opacity
 
