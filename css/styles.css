@@ -655,6 +655,7 @@ body.one-button-nav-active .dock.show {
 	corner-shape: inherit;
     border-radius: inherit;
     z-index: 1;
+    border: 1px solid var(--glass-border);
 }
 
 .container {
