@@ -1856,6 +1856,7 @@ function showPopup(message) {
         popup.style.padding = '0';
         
         const fullscreenBtn = document.createElement('button');
+	    fullscreenBtn.style.pointerEvents = 'auto';
         fullscreenBtn.style.padding = '10px 10px';
         fullscreenBtn.style.borderRadius = '25px';
         fullscreenBtn.style.border = 'var(--glass-border)';
