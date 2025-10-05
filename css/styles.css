@@ -1251,7 +1251,7 @@ body.one-button-nav-active .dock.show {
     right: 18px;
     width: 32px;
     height: 32px;
-    border-radius: 12px;
+    border-radius: 14px;
     z-index: 2;
     mix-blend-mode: luminosity;
     pointer-events: none;
