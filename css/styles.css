@@ -1133,7 +1133,8 @@ body.one-button-nav-active .dock.show {
 .setting-item.active .setting-icon-bg {
      background-color: var(--secondary-text-color);
      color: var(--background-color);
-     border-radius: 28px;
+     border-radius: 35px;
+     corner-shape: superellipse(1.5);
 }
 
 .setting-item.active .setting-icon-bg .material-symbols-rounded {
@@ -1195,7 +1196,8 @@ body.one-button-nav-active .dock.show {
     padding: 12px 18px 12px 16px;
     margin: 10px 0;
     background-color: var(--search-background);
-    border-radius: 28px;
+    border-radius: 35px;
+	corner-shape: superellipse(1.5);
     border: 1px solid var(--glass-border);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 	box-shadow: var(--sun-shadow);
@@ -1345,7 +1347,8 @@ body.one-button-nav-active .dock.show {
     border: 1px solid var(--glass-border);
     width: 42px;
     height: 42px;
-    border-radius: 16px;
+    border-radius: 25px;
+	corner-shape: superellipse(1.5);
 }
 
 /* Smart Home Controls Styles */
@@ -1382,7 +1385,8 @@ body.one-button-nav-active .dock.show {
 .qcontrol-item.active {
     background-color: var(--secondary-text-color);
     color: var(--background-color);
-    border-radius: 28px !important;
+    border-radius: 35px !important;
+    corner-shape: superellipse(1.5);
 }
 
 .qcontrol-item.active .qc-label {
@@ -1486,8 +1490,9 @@ body.one-button-nav-active .dock.show {
     border: 1px solid var(--glass-border);
     background-color: var(--modal-transparent);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    border-radius: 25px;
-    padding: 15px;
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
+	padding: 15px;
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 	box-shadow: var(--sun-shadow);
     width: 155px;
@@ -1754,7 +1759,8 @@ input[type="checkbox"]:checked::before {
     border: 1px solid var(--glass-border);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 	box-shadow: var(--sun-shadow);
-    border-radius: 25px;
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);	
 }
 
 .popup-control-row {
@@ -2072,7 +2078,8 @@ input[type="checkbox"]:checked::before {
     user-select: none;
     opacity: 0;
     border-top: 1px solid var(--glass-border);
-    border-radius: 25px 25px 0 0;
+    border-radius: 50px 50px 0 0;
+	corner-shape: superellipse(1.5);
 	filter: blur(5px);
 }
 
@@ -2200,8 +2207,9 @@ input[type="checkbox"]:checked::before {
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 			box-shadow: var(--sun-shadow);
             border: 1px solid var(--glass-border);
-            border-radius: 36px;
-            padding: 8px 10px;
+		    border-radius: 50px;
+		    corner-shape: superellipse(1.5);
+			padding: 8px 10px;
             gap: 6px;
             left: 50%;
             transition: all 0.3s cubic-bezier(.3,1.2,.64,1);
@@ -2383,7 +2391,6 @@ input[type="checkbox"]:checked::before {
 .widget-instance {
     position: absolute;
     background: var(--search-background);
-    border-radius: 28px;
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 1px solid var(--glass-border);
@@ -2394,6 +2401,8 @@ input[type="checkbox"]:checked::before {
     pointer-events: auto;
     touch-action: none; /* Prevent page scroll on mobile */
 	box-sizing: border-box; 
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
 }
 
 .widget-instance.is-dragging {
@@ -2405,8 +2414,9 @@ input[type="checkbox"]:checked::before {
     width: 100%;
     height: 100%;
     border: none;
-    border-radius: 25px; /* Ensure iframe respects the border radius */
 	pointer-events: none;
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
 }
 
 .widget-instance-overlay {
@@ -2522,7 +2532,8 @@ input[type="checkbox"]:checked::before {
     height: 150px;
 	overflow: auto;
     border: 1px solid var(--glass-border);
-    border-radius: 25px;
+    border-radius: 35px;
+	corner-shape: superellipse(1.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2550,7 +2561,8 @@ input[type="checkbox"]:checked::before {
                 left: 5vw;
                 width: 90vw;
                 border: 1px solid var(--glass-border);
-				border-radius: 40px;
+				border-radius: 50px;
+				corner-shape: superellipse(1.5);
 		        box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
 				height: calc(100% - 160px);
 				margin-bottom: 80px;
