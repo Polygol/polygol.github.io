@@ -1242,7 +1242,7 @@ body.one-button-nav-active .dock.show {
 	height: 0;
 }
 
-.media-widget-app-icon {
+.media-widget .app-icon-img {
     position: absolute;
     top: 18px;
     right: 18px;
