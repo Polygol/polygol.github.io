@@ -330,6 +330,7 @@ window.addEventListener('message', async (event) => {
         break;
       case 'sunUpdate':
         document.documentElement.style.setProperty('--sun-shadow', data.shadow);
+        document.documentElement.style.setProperty('--sun-shadow-strong', data.shadowStrong);
         break;
       case 'cursorStateUpdate':
         document.documentElement.classList.toggle('gurasuraisu-cursor-hidden', !data.visible);
