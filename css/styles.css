@@ -634,6 +634,7 @@ body.one-button-nav-active .dock.show {
     corner-shape: superellipse(1.25);
     border-radius: 35%;
     overflow: hidden;
+	position: relative;
 }
 
 .app-icon-img img {
@@ -2201,10 +2202,14 @@ input[type="checkbox"]:checked::before {
 		    border-radius: inherit;
 		    corner-shape: inherit;
         }
-		
+
+		.app-icon .app-icon-img {
+			transform: scale(0.9);
+		}
+
 		.app-icon .app-icon-img:active {
 		    filter: brightness(1.5);
-		    transform: scale(1.2);
+		    transform: scale(1.1);
 		}
 
         .app-icon span {
@@ -2238,7 +2243,7 @@ input[type="checkbox"]:checked::before {
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 			box-shadow: var(--sun-shadow);
             border: 1px solid var(--glass-border);
-		    border-radius: 50px;
+		    border-radius: 45px;
 		    corner-shape: superellipse(1.5);
 			padding: 8px 10px;
             gap: 6px;
@@ -2284,6 +2289,10 @@ input[type="checkbox"]:checked::before {
             height: 100%;
             object-fit: cover;
         }
+
+		.dock-icon .app-icon-img {
+			transform: scale(0.9);
+		}
 
         .dock-icon.drawer-opener::after {
             content: '';
