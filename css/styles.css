@@ -628,6 +628,26 @@ body.one-button-nav-active .dock.show {
     visibility: visible;
 }
 
+.app-icon-img {
+    border: 1px solid var(--glass-border);
+    aspect-ratio: 1 / 1;
+    corner-shape: superellipse(1.25);
+    border-radius: 35%;
+    overflow: hidden;
+}
+
+.app-icon-img::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    box-shadow: var(--sun-shadow);
+    pointer-events: none; /* so clicks pass through */
+	corner-shape: inherit;
+    border-radius: inherit;
+    z-index: 1;
+}
+
 .container {
     position: absolute;
     top: var(--clock-pos-y, 50%);
@@ -2164,21 +2184,24 @@ input[type="checkbox"]:checked::before {
         }
 
         .app-icon img {
-			width: min(10vw, 512px);
-			height: min(10vw, 512px);
-            margin-bottom: 12px;
-            object-fit: contain;
+		    width: 100%;
+		    height: 100%;
+		    object-fit: contain;
 		    transform: scale(1);
-		    transition: filter 0.2s,transform 0.2s;
+		    transition: filter 0.2s, transform 0.2s;
+		    scale: 1.15;
+		    border-radius: inherit;
+		    corner-shape: inherit;
         }
-
-        .app-icon:active img {
-            filter: brightness(1.5);
-            transform: scale(1.2);
-        }
+		
+		.app-icon .app-icon-img:active {
+		    filter: brightness(1.5);
+		    transform: scale(1.2);
+		}
 
         .app-icon span {
             text-align: center;
+			margin-top: 12px;
             color: var(--text-color);
 			font-weight: 500;
         }
