@@ -1827,11 +1827,13 @@ function showPopup(message) {
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'var(--search-background)';
-    popup.style.backdropFilter = 'blur(5px) saturate(2) var(--edge-refraction-filter)';
+	popup.style.pointerEvents = 'none'
+    popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(2.5px)';
     popup.style.boxShadow = 'var(--sun-shadow)';
     popup.style.color = 'var(--text-color)';
-    popup.style.padding = '20px';
+    popup.style.padding = '12px 8px';
     popup.style.borderRadius = '40px';
+	popup.style.cornerShape = 'round';
     popup.style.zIndex = '9999996';
     popup.style.transition = 'opacity 0.5s';
     popup.style.display = 'flex';
@@ -1840,30 +1842,6 @@ function showPopup(message) {
     popup.style.border = '1px solid var(--glass-border)';
     popup.style.filter = 'none';
 
-    // Check for specific words to determine icon
-    const checkWords = window.checkWords || ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'successfully', 'accepted', 'accept', 'yes'];
-    const closeWords = window.closeWords || ['failed', 'canceled', 'error', 'failure', 'fail', 'cancel', 'rejected', 'reject', 'not', 'no'];
-
-    let shouldShowIcon = false;
-    let iconType = '';
-    
-    // Check if message contains any of the trigger words
-    if (checkWords.some(word => message.toLowerCase().includes(word))) {
-        shouldShowIcon = true;
-        iconType = 'check';
-    } else if (closeWords.some(word => message.toLowerCase().includes(word))) {
-        shouldShowIcon = true;
-        iconType = 'close';
-    }
-    
-    // Add icon if needed
-    if (shouldShowIcon) {
-        const icon = document.createElement('span');
-        icon.className = 'material-symbols-rounded';
-        icon.textContent = iconType;
-        popup.appendChild(icon);
-    }
-    
     popup.appendChild(document.createTextNode(message));
     
     // Check if the message is about fullscreen and add a button if it is
@@ -2009,11 +1987,12 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.left = '50%';
     popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'var(--modal-background)';
-    popup.style.backdropFilter = 'blur(10px) saturate(2) var(--edge-refraction-filter)';
+    popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(10px)';
     popup.style.boxShadow = 'var(--sun-shadow), 0 0 10px rgba(0, 0, 0, 0.2)';
     popup.style.color = 'var(--text-color)';
     popup.style.padding = '16px';
-    popup.style.borderRadius = '25px';
+    popup.style.borderRadius = '35px';
+	popup.style.cornerShape = 'superellipse(1.5)';
     popup.style.zIndex = '9999996';
     popup.style.transition = 'opacity 0.5s';
     popup.style.display = 'flex';
@@ -8120,10 +8099,11 @@ function updateMediaWidgetState(playbackState) {
     if (playPauseIcon && playPauseButton) {
         if (playbackState === 'playing') {
             playPauseIcon.textContent = 'pause';
-            playPauseButton.style.borderRadius = '16px';
+            playPauseButton.style.borderRadius = '25px';
+			playPauseButton.style.cornerShape = 'superellipse(1.5)'
         } else {
             playPauseIcon.textContent = 'play_arrow';
-            playPauseButton.style.borderRadius = '42px';
+			playPauseButton.style.cornerShape = 'round'
         }
     }
 }
