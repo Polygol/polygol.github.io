@@ -652,7 +652,7 @@ body.one-button-nav-active .dock.show {
     position: absolute;
     top: 0; left: 0;
     right: 0; bottom: 0;
-    box-shadow: var(--sun-shadow);
+    box-shadow: var(--sun-shadow-strong);
     pointer-events: none; /* so clicks pass through */
 	corner-shape: inherit;
     border-radius: inherit;
