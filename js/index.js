@@ -7750,13 +7750,16 @@ document.addEventListener('DOMContentLoaded', async function() {
 window.onload = function() {
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) {
-        // Start fade-out animation
-        loadingScreen.classList.add('hidden');
-
-        // Wait for CSS transition before removing from DOM
+        // Forcefully wait 0.2 seconds before beginning fade out
         setTimeout(() => {
-            loadingScreen.remove();
-        }, 1000); // Match this to your CSS transition duration
+            // Start fade-out animation
+            loadingScreen.classList.add('hidden');
+
+            // Wait for CSS transition before removing from DOM
+            setTimeout(() => {
+                loadingScreen.remove();
+            }, 1000); // Match this to your CSS transition duration
+        }, 200); // Force initial 0.2 second delay before starting fade-out
     }
 
     ensureVideoLoaded();
