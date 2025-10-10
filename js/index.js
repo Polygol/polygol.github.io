@@ -8332,7 +8332,7 @@ const Gurasuraisu = {
 // --- NEW Permission Model ---
 // Maps trusted app IDs to their permission levels.
 const TRUSTED_APP_PERMISSIONS = {
-    'Settings': ['system-admin'] // Grant full permissions to the core settings app
+    'Settings': ['system-admin'], // Grant full permissions to the core settings app
     'Terminal': ['system-admin'], // Full access to everything
     'App Store': ['app-management']  // Can only manage apps
 };
