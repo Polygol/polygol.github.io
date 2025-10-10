@@ -1,11 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Check if running inside Polygol
-    const parentWindow = window.parent;
-    if (!parentWindow || !parentWindow.document.body.classList) {
-        document.body.innerHTML = '<h1>This app must be run inside Polygol.</h1>';
-        return;
-    }
-
     // --- Tab Switching Logic ---
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -19,28 +12,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- Direct Polygol Integration ---
-    const parentLS = parentWindow.localStorage;
+    // --- Gurasuraisu API Communication ---
+    const keysToRequest = [
+        'theme', 'animationsEnabled', 'highContrast',
+        'gurappsEnabled', 'aiAssistantEnabled', 'oneButtonNavEnabled',
+    ];
 
-    // --- Functions to Sync UI ---
-    function loadInitialSettings() {
-        document.querySelectorAll('.toggle-switch').forEach(control => {
-            const key = control.dataset.key;
-            const value = parentLS.getItem(key);
-            updateControl(key, value);
-        });
+    function requestInitialSettings() {
+        if (typeof Gurasuraisu === 'undefined') {
+            setTimeout(requestInitialSettings, 100);
+            return;
+        }
+        keysToRequest.forEach(key => Gurasuraisu.getLocalStorageItem(key));
     }
-    
+
+    // --- UI Update & Event Binding Logic ---
     function updateControl(key, value) {
         const control = document.querySelector(`[data-key="${key}"]`);
         if (!control) return;
 
         if (control.type === 'checkbox') {
-            let boolValue = (key === 'theme') ? (value === 'light') 
-                                              : (value === 'true' || value === null);
+            // Special handling for theme where 'light' means checked
+            let boolValue = (key === 'theme') 
+                ? (value === 'light') 
+                : (value === 'true' || value === null); // Default to true if not set
             control.checked = boolValue;
-        } else if (control.tagName === 'SELECT') {
-            control.value = value || 'EN';
         }
     }
 
@@ -50,39 +46,44 @@ document.addEventListener('DOMContentLoaded', () => {
         if (key === 'theme') {
             valueToSet = control.checked ? 'light' : 'dark';
         }
-        // Directly call the parent's setLocalStorageItem function
-        // This ensures the parent's own UI sync logic is triggered.
-        parentWindow.setLocalStorageItem(key, valueToSet.toString());
+        Gurasuraisu.setLocalStorageItem(key, valueToSet.toString());
     }
     
-    // --- Bind Event Listeners ---
     function bindEventListeners() {
         document.querySelectorAll('.toggle-switch').forEach(control => {
             control.addEventListener('change', () => handleSettingChange(control));
         });
 
         document.getElementById('btn-transfer').onclick = 
-            () => parentWindow.createFullscreenEmbed('/transfer/');
+            () => Gurasuraisu.openApp('/transfer/');
         
         document.getElementById('btn-recovery').onclick = 
-            () => parentWindow.createFullscreenEmbed('/recovery/');
+            () => Gurasuraisu.openApp('/recovery/');
     }
 
     // --- Real-time Syncing ---
-    // 1. Announce that the settings app is ready
-    parentWindow.postMessage({ type: 'settings-app-ready' }, window.location.origin);
-
-    // 2. Listen for updates pushed from the parent
     window.addEventListener('message', (event) => {
         if (event.origin !== window.location.origin) return;
         const { type, key, value } = event.data;
-        
-        if (type === 'settingUpdate') {
+
+        // Listen for initial values fetched via API
+        if (type === 'localStorageItemValue' && key) {
+            updateControl(key, value);
+        }
+        // Listen for real-time updates pushed from the parent
+        if (type === 'settingUpdate' && key) {
             updateControl(key, value);
         }
     });
-
+    
     // --- Initialization ---
-    loadInitialSettings();
-    bindEventListeners();
+    window.addEventListener('GurasuraisuReady', () => {
+        requestInitialSettings();
+        bindEventListeners();
+        
+        // Announce that the settings app is ready to receive real-time updates
+        if(window.parent) {
+            window.parent.postMessage({ type: 'settings-app-ready' }, window.location.origin);
+        }
+    });
 });
