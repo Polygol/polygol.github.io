@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Check if running inside Polygol
-    if (!window.parent || !window.parent.document.body.classList) {
+    const parentWindow = window.parent;
+    if (!parentWindow || !parentWindow.document.body.classList) {
         document.body.innerHTML = '<h1>This app must be run inside Polygol.</h1>';
         return;
     }
@@ -19,58 +20,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Direct Polygol Integration ---
-    const parentDoc = window.parent.document;
-    const parentLS = window.parent.localStorage;
-    const parentWindow = window.parent;
-
-    // Map settings keys to the IDs of the controls in the PARENT window
-    const parentControlMap = {
-        'animationsEnabled': 'animation-switch',
-        'highContrast': 'contrast-switch',
-        'gurappsEnabled': 'gurapps-switch',
-        'aiAssistantEnabled': 'ai-switch',
-        'oneButtonNavEnabled': 'one-button-nav-switch'
-    };
+    const parentLS = parentWindow.localStorage;
 
     // --- Functions to Sync UI ---
     function loadInitialSettings() {
         document.querySelectorAll('.toggle-switch').forEach(control => {
             const key = control.dataset.key;
             const value = parentLS.getItem(key);
-            
-            if (key === 'theme') {
-                control.checked = (value === 'light');
-            } else {
-                // Default to true for most toggles if they're not explicitly set to 'false'
-                control.checked = (value !== 'false');
-            }
+            updateControl(key, value);
         });
+    }
+    
+    function updateControl(key, value) {
+        const control = document.querySelector(`[data-key="${key}"]`);
+        if (!control) return;
+
+        if (control.type === 'checkbox') {
+            let boolValue = (key === 'theme') ? (value === 'light') 
+                                              : (value === 'true' || value === null);
+            control.checked = boolValue;
+        } else if (control.tagName === 'SELECT') {
+            control.value = value || 'EN';
+        }
     }
 
     function handleSettingChange(control) {
         const key = control.dataset.key;
-        const parentControlId = parentControlMap[key];
-        
-        // Special case for theme, which uses a clickable div in parent
+        let valueToSet = control.type === 'checkbox' ? control.checked : control.value;
         if (key === 'theme') {
-            const lightModeControl = parentDoc.getElementById('light_mode_qc');
-            const isParentLight = parentDoc.body.classList.contains('light-theme');
-            if (lightModeControl && (control.checked !== isParentLight)) {
-                lightModeControl.click();
-            }
-            return;
+            valueToSet = control.checked ? 'light' : 'dark';
         }
-
-        const parentControl = parentDoc.getElementById(parentControlId);
-        if (parentControl) {
-            parentControl.checked = control.checked;
-            // Trigger the parent's own change event to run all its logic
-            parentControl.dispatchEvent(new Event('change'));
-        } else {
-            console.warn(`Parent control for setting '${key}' not found.`);
-        }
+        // Directly call the parent's setLocalStorageItem function
+        // This ensures the parent's own UI sync logic is triggered.
+        parentWindow.setLocalStorageItem(key, valueToSet.toString());
     }
-
+    
     // --- Bind Event Listeners ---
     function bindEventListeners() {
         document.querySelectorAll('.toggle-switch').forEach(control => {
@@ -83,6 +67,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('btn-recovery').onclick = 
             () => parentWindow.createFullscreenEmbed('/recovery/');
     }
+
+    // --- Real-time Syncing ---
+    // 1. Announce that the settings app is ready
+    parentWindow.postMessage({ type: 'settings-app-ready' }, window.location.origin);
+
+    // 2. Listen for updates pushed from the parent
+    window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin) return;
+        const { type, key, value } = event.data;
+        
+        if (type === 'settingUpdate') {
+            updateControl(key, value);
+        }
+    });
 
     // --- Initialization ---
     loadInitialSettings();
