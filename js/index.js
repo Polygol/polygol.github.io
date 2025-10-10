@@ -177,6 +177,43 @@ let settingsAppWindow = null;
  * 'broadcast': An object defining the message to send to other Gurapps.
  */
 const SETTINGS_CONFIG = {
+    'silentMode': {
+        apply: (value) => {
+            isSilentMode = (value === 'true');
+            updateSilentModeIcon(isSilentMode);
+            // Re-initialize the showPopup override
+            if (isSilentMode) {
+                if (!window.originalShowPopup) window.originalShowPopup = window.showPopup;
+                window.showPopup = (message) => console.log('Silent ON; suppressing popup:', message);
+            } else {
+                if (window.originalShowPopup) window.showPopup = window.originalShowPopup;
+            }
+        }
+    },
+    'minimalMode': {
+        apply: (value) => {
+            minimalMode = (value === 'true');
+            updateMinimalMode();
+            updateMinimalModeIcon(minimalMode);
+        }
+    },
+    'nightMode': {
+        apply: (value) => {
+            nightMode = (value === 'true');
+            updateNightMode(); // This function already updates the icon
+        }
+    },
+    'page_brightness': {
+        apply: (value) => updateBrightness(value)
+    },
+    'display_temperature': {
+        apply: (value) => {
+            updateTemperature(value);
+            updateTemperatureIcon(value);
+            const tempValueEl = document.getElementById('thermostat-popup-value');
+            if (tempValueEl) tempValueEl.textContent = value;
+        }
+    },
     // --- Appearance ---
     'theme': {
         apply: (value) => document.body.classList.toggle('light-theme', value === 'light'),
@@ -5236,182 +5273,115 @@ function applyWallpaperEffects() {
 
 // index(13).js
 
-function setupFontSelection() {
-    const clockElement = document.getElementById('clock');
-    const infoElement = document.querySelector('.info');
-
-    // --- Get all control elements ---
-    const fontSelect = document.getElementById('font-select');
-    const weightSlider = document.getElementById('weight-slider');
-    const colorSwitch = document.getElementById('clock-color-switch');
-    const colorPicker = document.getElementById('clock-color-picker');
-    const stackSwitch = document.getElementById('clock-stack-switch');
-    const alignmentSelect = document.getElementById('alignment-select');
-    const blurSlider = document.getElementById('wallpaper-blur-slider');
-    const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
-    const contrastSlider = document.getElementById('wallpaper-contrast-slider');
-    const shadowSwitch = document.getElementById('clock-shadow-switch');
-    const shadowBlurSlider = document.getElementById('clock-shadow-blur-slider');
-    const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
-    const gradientSwitch = document.getElementById('clock-gradient-switch');
-    const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
-    const glassSwitch = document.getElementById('clock-glass-switch');
-    const roundnessSlider = document.getElementById('roundness-slider');
-    const sizeSlider = document.getElementById('clock-size-slider');
-    const posXSlider = document.getElementById('clock-pos-x-slider');
-    const posYSlider = document.getElementById('clock-pos-y-slider');
-    const positionPopup = document.getElementById('position-controls-popup');
-    const clockFormatInput = document.getElementById('clock-format-input');
-    const dateFormatInput = document.getElementById('date-format-input');
-
-    // --- Function to save all settings (triggered by user interaction) ---
-    async function saveCurrentWallpaperSettings() {
-        const settingsFromUI = {
-            font: fontSelect.value,
-            weight: (parseInt(weightSlider.value, 10) * 10).toString(),
-            color: colorPicker.value,
-            colorEnabled: colorSwitch.checked,
-            stackEnabled: stackSwitch.checked,
-            showSeconds: document.getElementById('seconds-switch')?.checked,
-            showWeather: document.getElementById('weather-switch')?.checked,
-            clockSize: sizeSlider.value,
-            clockPosX: posXSlider.value,
-            clockPosY: posYSlider.value,
-            alignment: alignmentSelect.value,
-			wallpaperBlur: blurSlider.value,
-            wallpaperBrightness: brightnessSlider.value,
-            wallpaperContrast: contrastSlider.value,
-            shadowEnabled: shadowSwitch.checked,
-            shadowBlur: shadowBlurSlider.value,
-            shadowColor: shadowColorPicker.value,
-            gradientEnabled: gradientSwitch.checked,
-            gradientColor: gradientColorPicker.value,
-            glassEnabled: glassSwitch.checked,
-            roundness: roundnessSlider.value,
-			dateFormat: document.getElementById('date-format-input').value,
-            clockFormat: document.getElementById('clock-format-input').value
-        };
-
-        // Always save to individual localStorage keys. This acts as the "default" or "current" state.
-        for (const key in settingsFromUI) {
-            localStorage.setItem(key, settingsFromUI[key]);
-        }
-
-        // If there's an active wallpaper, also save these settings specifically to it.
-        if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0) {
-            const currentWallpaper = recentWallpapers[currentWallpaperPosition];
-            if (currentWallpaper) {
-                 // Preserve any non-UI settings by merging
-                const currentStyles = currentWallpaper.clockStyles || {};
-                const finalSettings = { ...currentStyles, ...settingsFromUI };
-
-                // Clear custom font if a standard one is chosen
-                if (settingsFromUI.font !== currentStyles.customFontName) {
-                    finalSettings.customFontName = null;
-                    finalSettings.customFontUrl = null;
-                }
-
-                currentWallpaper.clockStyles = finalSettings;
-                saveRecentWallpapers();
-
-                // --- UPDATE IndexedDB record as well ---
-                if (currentWallpaper.id) { // Only for non-slideshow wallpapers
-                    try {
-                        const wallpaperRecord = await getWallpaper(currentWallpaper.id);
-                        if (wallpaperRecord) {
-                            wallpaperRecord.clockStyles = finalSettings;
-                            await storeWallpaper(currentWallpaper.id, wallpaperRecord);
-                        }
-                    } catch (error) {
-                         console.error("Failed to save clock styles to IndexedDB:", error);
-                    }
-                }
-            }
-        }
-    }
-
-    // --- 1. Load saved preferences and set the state of the UI controls ---
-    const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
-    fontSelect.value = localStorage.getItem('font') || 'Inter'; // FIX: Use 'font'
-    weightSlider.value = parseInt(localStorage.getItem('weight') || '700', 10) / 10; // FIX: Use 'weight'
-    colorPicker.value = localStorage.getItem('color') || defaultColor; // FIX: Use 'color'
-    colorSwitch.checked = localStorage.getItem('colorEnabled') === 'true';
-    stackSwitch.checked = localStorage.getItem('stackEnabled') === 'true'; // FIX: Use 'stackEnabled'
-    sizeSlider.value = localStorage.getItem('clockSize') || '0';
-    posXSlider.value = localStorage.getItem('clockPosX') || '50';
-    posYSlider.value = localStorage.getItem('clockPosY') || '50';
-    alignmentSelect.value = localStorage.getItem('alignment') || 'center';
-	shadowSwitch.checked = localStorage.getItem('shadowEnabled') === 'true';
-    shadowBlurSlider.value = localStorage.getItem('shadowBlur') || '10';
-    shadowColorPicker.value = localStorage.getItem('shadowColor') || '#000000';
-    gradientSwitch.checked = localStorage.getItem('gradientEnabled') === 'true';
-    gradientColorPicker.value = localStorage.getItem('gradientColor') || '#ffffff';
-    glassSwitch.checked = localStorage.getItem('glassEnabled') === 'true';
-    roundnessSlider.value = localStorage.getItem('roundness') || '0';
-    // Note: Blur, brightness, and contrast sliders are handled by their own setup logic, but it's safe to include here too.
-    blurSlider.value = localStorage.getItem('wallpaperBlur') || '0';
-    brightnessSlider.value = localStorage.getItem('wallpaperBrightness') || '100';
-    contrastSlider.value = localStorage.getItem('wallpaperContrast') || '100';
-    document.getElementById('date-format-input').value = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
-    document.getElementById('clock-format-input').value = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
-
-    // --- 2. Apply the visual styles based on the now-correct state of the controls ---
-    applyClockLayout();
-    applyClockStyles();
-    applyWallpaperEffects();
-    applyAlignment(alignmentSelect.value);
+function initializeSystemControls() {
+    // Select all elements that can change a setting
+    const allControls = document.querySelectorAll('[data-key]');
     
-    // --- 3. NOW, set up the event listeners for future user interactions ---
-    const allControls = [
-        fontSelect, weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
-        blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
-        shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch, roundnessSlider,
-        sizeSlider, posXSlider, posYSlider, alignmentSelect, clockFormatInput, dateFormatInput
-    ];
-
+    // --- 1. LOAD INITIAL VALUES ---
+    // Set the initial state of every control from localStorage
     allControls.forEach(control => {
-        const eventType = (control.type === 'checkbox' || control.tagName === 'SELECT') ? 'change' : 'input';
-        control.addEventListener(eventType, async () => {
-            applyClockLayout();
-            applyClockStyles();
-		    applyWallpaperEffects();
-            await saveCurrentWallpaperSettings();
-            syncUiStates();
+        const key = control.dataset.key;
+        const value = localStorage.getItem(key);
+
+        if (control.type === 'checkbox') {
+            let boolValue = (key === 'theme') ? (value === 'light') : (value === 'true');
+            // For toggles that might not exist in LS yet, default to their initial checked state
+            control.checked = (value === null) ? control.defaultChecked : boolValue;
+        } else if (control.classList.contains('qcontrol-item')) {
+            // This is for the quick control divs
+            let boolValue = (key === 'theme') ? (value === 'light') : (value === 'true');
+            control.classList.toggle('active', boolValue);
+        } else if (control.type === 'range') {
+            control.value = value || control.defaultValue;
+        } else if (control.type === 'color') {
+            control.value = value || '#ffffff';
+        } else if (control.tagName === 'SELECT') {
+            control.value = value || control.options[0].value;
+        } else if (control.type === 'text') {
+            control.value = value || '';
+        }
+    });
+
+    // --- 2. APPLY INITIAL VISUALS ---
+    // Run all apply functions to sync the UI with the loaded data
+    Object.keys(SETTINGS_CONFIG).forEach(key => {
+        const config = SETTINGS_CONFIG[key];
+        if (config.apply) {
+            config.apply(localStorage.getItem(key));
+        }
+    });
+    syncUiStates(); // Final visual sync
+
+    // --- 3. BIND GENERIC EVENT LISTENERS ---
+    allControls.forEach(control => {
+        const key = control.dataset.key;
+
+        // Determine event type
+        let eventType = 'change';
+        if (control.type === 'range' || control.type === 'text' || control.type === 'color') {
+            eventType = 'input';
+        } else if (control.classList.contains('qcontrol-item')) {
+            eventType = 'click';
+        }
+
+        control.addEventListener(eventType, () => {
+            let valueToSet;
+            if (control.classList.contains('qcontrol-item')) {
+                // Handle quick control DIV toggles
+                const currentValue = localStorage.getItem(key);
+                if (key === 'theme') {
+                    valueToSet = (currentValue === 'light') ? 'dark' : 'light';
+                } else {
+                    valueToSet = (currentValue === 'true') ? 'false' : 'true';
+                }
+            } else if (control.type === 'checkbox') {
+                valueToSet = control.checked;
+                if (key === 'theme') {
+                    valueToSet = control.checked ? 'light' : 'dark';
+                }
+            } else {
+                valueToSet = control.value;
+            }
+            // All roads lead to the central function
+            setLocalStorageItem(key, valueToSet.toString());
         });
     });
 
-    // --- Special handler for Alignment Preset Dropdown ---
-    alignmentSelect.addEventListener('change', async () => {
-        applyClockLayout();
-        await saveCurrentWallpaperSettings();
-        syncUiStates();
-    });
+    // Special logic for linked toggles (color/gradient/glass)
+    const colorSwitch = document.querySelector('[data-key="colorEnabled"]');
+    const gradientSwitch = document.querySelector('[data-key="gradientEnabled"]');
+    const glassSwitch = document.querySelector('[data-key="glassEnabled"]');
 
-    // Special logic: uncheck gradient if solid color is checked, and vice-versa
-    colorSwitch.addEventListener('change', () => {
-        if (colorSwitch.checked) {
-            gradientSwitch.checked = false;
-            glassSwitch.checked = false;
-            saveCurrentWallpaperSettings();
-            syncUiStates();
-        }
-    });
-
-    gradientSwitch.addEventListener('change', () => {
-        if (gradientSwitch.checked) {
-            colorSwitch.checked = false;
-            glassSwitch.checked = false;
-            saveCurrentWallpaperSettings();
-            syncUiStates();
-        }
-    });
-
-    glassSwitch.addEventListener('change', () => {
-        if (glassSwitch.checked) {
-            colorSwitch.checked = false;
-            gradientSwitch.checked = false;
-            saveCurrentWallpaperSettings();
-            syncUiStates();
+    if (colorSwitch && gradientSwitch && glassSwitch) {
+        colorSwitch.addEventListener('change', () => {
+            if (colorSwitch.checked) {
+                setLocalStorageItem('gradientEnabled', 'false');
+                setLocalStorageItem('glassEnabled', 'false');
+            }
+        });
+        gradientSwitch.addEventListener('change', () => {
+            if (gradientSwitch.checked) {
+                setLocalStorageItem('colorEnabled', 'false');
+                setLocalStorageItem('glassEnabled', 'false');
+            }
+        });
+        glassSwitch.addEventListener('change', () => {
+            if (glassSwitch.checked) {
+                setLocalStorageItem('colorEnabled', 'false');
+                setLocalStorageItem('gradientEnabled', 'false');
+            }
+        });
+    }
+    
+    // Modal open logic
+    document.querySelectorAll('[data-modal]').forEach(btn => {
+        const popupId = btn.dataset.modal;
+        const popup = document.getElementById(popupId);
+        if(popup) {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showControlPopup(btn, popup);
+            });
         }
     });
 }
@@ -5635,7 +5605,6 @@ function resetAndApplyDefaultClockStyles() {
 // Initialize theme and wallpaper on load
 function initializeCustomization() {
     setupThemeSwitcher();
-    setupFontSelection();
     setupFormatControls();
 }
 
@@ -7330,6 +7299,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // --- Load ALL data and settings first ---
     loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
     loadSavedData();         // Load usage and lastOpened data
+    initializeSystemControls();
     loadRecentWallpapers();
     loadAvailableWidgets(); 
     initializeWallpaperTracking();
