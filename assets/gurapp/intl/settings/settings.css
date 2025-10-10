@@ -64,12 +64,15 @@
             background-color: var(--background-color-tr);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             user-select: none;
-            position: relative;
-            overflow: hidden;
             transition: background-color 0.3s, color 0.3s, background-image 0.5s;
             color: var(--text-color);
+            align-items: center;
+            padding: 20px;
+            padding-top: 80px;
         }
+
 
         body::-webkit-scrollbar { width: 8px; }
         body::-webkit-scrollbar-track { background: transparent; }
