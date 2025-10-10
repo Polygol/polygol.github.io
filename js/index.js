@@ -5570,6 +5570,11 @@ let apps = {
     "App Store": {
         url: "/appstore/index.html",
         icon: "appstore.png"
+	},
+
+    "Settings": {
+        url: "/assets/gurapp/intl/settings/index.html",
+        icon: "settings.png"
 	}
 };
 
