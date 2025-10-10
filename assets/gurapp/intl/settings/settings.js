@@ -26,9 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function requestInitialSettings() {
         if (typeof Gurasuraisu === 'undefined') {
+            console.error("Gurasuraisu API not ready. Retrying...");
             setTimeout(requestInitialSettings, 100);
             return;
         }
+        // Ask the parent for the current value of every setting
         keysToRequest.forEach(key => Gurasuraisu.getLocalStorageItem(key));
     }
 
@@ -39,7 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         controls.forEach(control => {
             if (control.type === 'checkbox') {
-                let boolValue = (key === 'theme') ? (value === 'light') : (value === 'true' || value === null);
+                // For theme, 'light' is checked. For others, 'true' is checked.
+                // If a value is null (not set), most toggles should default to ON.
+                let boolValue = (key === 'theme') 
+                    ? (value === 'light') 
+                    : (value === 'true' || value === null);
                 control.checked = boolValue;
             } else if (control.type === 'range') {
                 control.value = value || control.defaultValue;
@@ -55,20 +61,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleSettingChange(control) {
         const key = control.dataset.key;
-        let valueToSet = control.value;
+        let valueToSet;
 
         if (control.type === 'checkbox') {
-            valueToSet = control.checked;
-            if (key === 'theme') {
-                valueToSet = control.checked ? 'light' : 'dark';
-            }
+            valueToSet = (key === 'theme') 
+                ? (control.checked ? 'light' : 'dark') 
+                : control.checked.toString();
+        } else {
+            valueToSet = control.value;
         }
-        Gurasuraisu.setLocalStorageItem(key, valueToSet.toString());
+        // Send the updated value back to the parent
+        Gurasuraisu.setLocalStorageItem(key, valueToSet);
     }
     
     function bindEventListeners() {
         document.querySelectorAll('.toggle-switch, .styled-select, .styled-slider, .color-picker, .form-input').forEach(control => {
-            const eventType = (control.type === 'range' || control.type === 'color' || control.tagName === 'SELECT') ? 'input' : 'change';
+            // Use 'input' for sliders/color pickers for real-time updates
+            const eventType = (control.type === 'range' || control.type === 'color' || control.type === 'text') ? 'input' : 'change';
             control.addEventListener(eventType, () => handleSettingChange(control));
         });
 
@@ -101,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.origin !== window.location.origin) return;
         const { type, key, value } = event.data;
 
-        // Listen for initial values fetched via API
+        // Listen for initial values fetched via API on load
         if (type === 'localStorageItemValue' && key) {
             updateControl(key, value);
         }
