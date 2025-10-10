@@ -177,44 +177,65 @@ let settingsAppWindow = null;
  * 'broadcast': An object defining the message to send to other Gurapps.
  */
 const SETTINGS_CONFIG = {
+    // --- Appearance ---
     'theme': {
         apply: (value) => document.body.classList.toggle('light-theme', value === 'light'),
-        broadcast: {
-            type: 'themeUpdate',
-            payload: (value) => ({ theme: value })
-        }
+        broadcast: { type: 'themeUpdate', payload: (value) => ({ theme: value }) }
     },
     'animationsEnabled': {
         apply: (value) => document.body.classList.toggle('reduce-animations', value !== 'true'),
-        broadcast: {
-            type: 'animationsUpdate',
-            payload: (value) => ({ enabled: value === 'true' })
-        }
+        broadcast: { type: 'animationsUpdate', payload: (value) => ({ enabled: value === 'true' }) }
     },
     'highContrast': {
         apply: (value) => document.documentElement.classList.toggle('gurasuraisu-high-contrast', value === 'true'),
-        broadcast: {
-            type: 'contrastUpdate',
-            payload: (value) => ({ enabled: value === 'true' })
-        }
+        broadcast: { type: 'contrastUpdate', payload: (value) => ({ enabled: value === 'true' }) }
     },
+    'selectedLanguage': {
+        apply: (value) => selectLanguage(value || 'EN')
+    },
+    // --- Functionality ---
     'gurappsEnabled': {
-        apply: (value) => {
-            gurappsEnabled = (value === 'true');
-            updateGurappsVisibility();
-        }
+        apply: (value) => { gurappsEnabled = (value === 'true'); updateGurappsVisibility(); }
     },
     'aiAssistantEnabled': {
         apply: (value) => {
             isAiAssistantEnabled = (value === 'true');
-            if (isAiAssistantEnabled) initializeAiAssistant();
-            else genAI = null;
+            if (isAiAssistantEnabled) initializeAiAssistant(); else genAI = null;
         }
     },
     'oneButtonNavEnabled': {
+        apply: (value) => { oneButtonNavEnabled = (value === 'true'); updateOneButtonNavVisibility(); }
+    },
+    // --- Home Screen: Clock ---
+    'font': { apply: () => applyClockStyles() },
+    'weight': { apply: () => applyClockStyles() },
+    'roundness': { apply: () => applyClockStyles() },
+    'showSeconds': { apply: (value) => { showSeconds = (value === 'true'); updateClockAndDate(); } },
+    'use12HourFormat': { apply: (value) => { use12HourFormat = (value === 'true'); updateClockAndDate(); } },
+    'stackEnabled': { apply: () => applyClockStyles() },
+    'colorEnabled': { apply: () => applyClockStyles() },
+    'gradientEnabled': { apply: () => applyClockStyles() },
+    'glassEnabled': { apply: () => applyClockStyles() },
+    'color': { apply: () => applyClockStyles() },
+    'gradientColor': { apply: () => applyClockStyles() },
+    'shadowEnabled': { apply: () => applyClockStyles() },
+    'shadowBlur': { apply: () => applyClockStyles() },
+    'shadowColor': { apply: () => applyClockStyles() },
+    'clockSize': { apply: () => applyClockLayout() },
+    'clockPosX': { apply: () => applyClockLayout() },
+    'clockPosY': { apply: () => applyClockLayout() },
+    'alignment': { apply: (value) => applyAlignment(value) },
+    'dateFormat': { apply: () => updateClockAndDate() },
+    'clockFormat': { apply: () => updateClockAndDate() },
+    // --- Home Screen: Wallpaper ---
+    'wallpaperBlur': { apply: () => applyWallpaperEffects() },
+    'wallpaperBrightness': { apply: () => applyWallpaperEffects() },
+    'wallpaperContrast': { apply: () => applyWallpaperEffects() },
+    // --- Home Screen: General ---
+    'showWeather': {
         apply: (value) => {
-            oneButtonNavEnabled = (value === 'true');
-            updateOneButtonNavVisibility();
+            showWeather = (value !== 'false');
+            updateWeatherVisibility();
         }
     }
 };
