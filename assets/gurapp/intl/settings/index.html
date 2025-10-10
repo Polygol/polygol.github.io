@@ -262,16 +262,24 @@
     <div class="modal-overlay" id="position-modal">
         <div class="modal-container">
             <h3>Position & Alignment</h3>
-            <div class="form-group slider-group">
-                <label>Horizontal (X)</label>
-                <input type="range" min="0" max="100" class="styled-slider" data-key="clockPosX">
+            <div class="setting-item modal-item slider-item">
+                <div class="setting-info">
+                    <span class="setting-label">Horizontal Position (X)</span>
+                </div>
+                <input type="range" min="0" max="100" value="50" 
+                       class="styled-slider" data-key="clockPosX">
             </div>
-            <div class="form-group slider-group">
-                <label>Vertical (Y)</label>
-                <input type="range" min="0" max="100" class="styled-slider" data-key="clockPosY">
+             <div class="setting-item modal-item slider-item">
+                <div class="setting-info">
+                    <span class="setting-label">Vertical Position (Y)</span>
+                </div>
+                <input type="range" min="0" max="100" value="50" 
+                       class="styled-slider" data-key="clockPosY">
             </div>
-            <div class="form-group">
-                <label>Text Alignment</label>
+            <div class="setting-item modal-item">
+                 <div class="setting-info">
+                    <span class="setting-label">Text Alignment</span>
+                </div>
                 <select class="styled-select" data-key="alignment">
                     <option value="center">Center</option>
                     <option value="left">Left</option>
@@ -285,28 +293,93 @@
         <div class="modal-container">
             <h3>Color & Effects</h3>
             <div class="setting-item modal-item">
-                <label>Solid Color</label>
-                <input type="color" class="color-picker" data-key="color">
-                <input type="checkbox" class="toggle-switch" data-key="colorEnabled">
+                <div class="setting-info">
+                    <span class="setting-label">Solid Color</span>
+                </div>
+                <div class="setting-control">
+                    <input type="color" class="color-picker" data-key="color">
+                    <input type="checkbox" class="toggle-switch" 
+                           data-key="colorEnabled">
+                </div>
             </div>
              <div class="setting-item modal-item">
-                <label>Gradient</label>
-                <input type="color" class="color-picker" data-key="gradientColor">
-                <input type="checkbox" class="toggle-switch" data-key="gradientEnabled">
+                <div class="setting-info">
+                    <span class="setting-label">Gradient</span>
+                    <span class="setting-description">
+                        Blends from solid color to this color.
+                    </span>
+                </div>
+                <div class="setting-control">
+                    <input type="color" class="color-picker" 
+                           data-key="gradientColor">
+                    <input type="checkbox" class="toggle-switch" 
+                           data-key="gradientEnabled">
+                </div>
             </div>
              <div class="setting-item modal-item">
-                <label>Glass Effect</label>
-                <input type="checkbox" class="toggle-switch" data-key="glassEnabled">
+                <div class="setting-info">
+                    <span class="setting-label">Glass Effect</span>
+                    <span class="setting-description">
+                        Uses the wallpaper to color the text.
+                    </span>
+                </div>
+                <input type="checkbox" class="toggle-switch" 
+                       data-key="glassEnabled">
             </div>
         </div>
     </div>
     
     <div class="modal-overlay" id="shadow-modal">
-        <!-- Shadow Modal Content -->
+        <div class="modal-container">
+            <h3>Text Shadow</h3>
+            <div class="setting-item modal-item">
+                <div class="setting-info">
+                    <span class="setting-label">Enable Shadow</span>
+                </div>
+                <input type="checkbox" class="toggle-switch" 
+                       data-key="shadowEnabled">
+            </div>
+            <div class="setting-item modal-item slider-item">
+                <div class="setting-info">
+                    <span class="setting-label">Blur Radius</span>
+                </div>
+                <input type="range" min="0" max="50" value="10" 
+                       class="styled-slider" data-key="shadowBlur">
+            </div>
+            <div class="setting-item modal-item">
+                <div class="setting-info">
+                    <span class="setting-label">Shadow Color</span>
+                </div>
+                <input type="color" class="color-picker" 
+                       data-key="shadowColor">
+            </div>
+        </div>
     </div>
     
     <div class="modal-overlay" id="format-modal">
-        <!-- Format Modal Content -->
+        <div class="modal-container">
+            <h3>Date & Time Format</h3>
+             <div class="setting-item modal-item">
+                <div class="setting-info">
+                    <span class="setting-label">Date Format</span>
+                    <span class="setting-description">
+                        Uses Moment.js format tokens.
+                    </span>
+                </div>
+                <input type="text" class="form-input" data-key="dateFormat" 
+                       placeholder="e.g., dddd, MMMM D">
+            </div>
+            <div class="setting-item modal-item">
+                <div class="setting-info">
+                    <span class="setting-label">Clock Format</span>
+                     <span class="setting-description">
+                         Quick toggles will override this.
+                     </span>
+                </div>
+                <input type="text" class="form-input" data-key="clockFormat" 
+                       placeholder="e.g., HH:mm:ss">
+            </div>
+        </div>
     </div>
     
     <script src="settings.js"></script>
