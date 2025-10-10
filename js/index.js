@@ -166,6 +166,59 @@ function consoleLoaded() {
     console.log(currentLanguage.LOAD_SUCCESS);
 }
 
+let settingsAppWindow = null; 
+
+// --- NEW: Scalable Settings Configuration Map ---
+/**
+ * This object maps a localStorage key to the actions that should be taken
+ * when that key's value changes. This eliminates the need for a large switch statement.
+ *
+ * 'apply': A function that applies the setting to the main Polygol UI.
+ * 'broadcast': An object defining the message to send to other Gurapps.
+ */
+const SETTINGS_CONFIG = {
+    'theme': {
+        apply: (value) => document.body.classList.toggle('light-theme', value === 'light'),
+        broadcast: {
+            type: 'themeUpdate',
+            payload: (value) => ({ theme: value })
+        }
+    },
+    'animationsEnabled': {
+        apply: (value) => document.body.classList.toggle('reduce-animations', value !== 'true'),
+        broadcast: {
+            type: 'animationsUpdate',
+            payload: (value) => ({ enabled: value === 'true' })
+        }
+    },
+    'highContrast': {
+        apply: (value) => document.documentElement.classList.toggle('gurasuraisu-high-contrast', value === 'true'),
+        broadcast: {
+            type: 'contrastUpdate',
+            payload: (value) => ({ enabled: value === 'true' })
+        }
+    },
+    'gurappsEnabled': {
+        apply: (value) => {
+            gurappsEnabled = (value === 'true');
+            updateGurappsVisibility();
+        }
+    },
+    'aiAssistantEnabled': {
+        apply: (value) => {
+            isAiAssistantEnabled = (value === 'true');
+            if (isAiAssistantEnabled) initializeAiAssistant();
+            else genAI = null;
+        }
+    },
+    'oneButtonNavEnabled': {
+        apply: (value) => {
+            oneButtonNavEnabled = (value === 'true');
+            updateOneButtonNavVisibility();
+        }
+    }
+};
+
 let cursorIdleTimeout;
 
 /**
@@ -7812,80 +7865,35 @@ function getLocalStorageItem(key) {
 }
 
 function setLocalStorageItem(key, value) {
+    // 1. Persist the change. The 'storage' event listener will handle syncing the Settings app.
     localStorage.setItem(key, value);
-    // Re-sync UI for common settings immediately
-    if (key === 'page_brightness') updateBrightness(value);
-    if (key === 'theme') {
-         document.body.classList.toggle('light-theme', value === 'light');
-         document.querySelectorAll('iframe').forEach((iframe) => {
-            iframe.contentWindow.postMessage({
-                type: 'themeUpdate',
-                theme: value
-            }, window.location.origin);
-        });
-    }
-    if (key === 'animationsEnabled') {
-        const enabled = value === 'true';
-        document.body.classList.toggle('reduce-animations', !enabled);
-        document.querySelectorAll('iframe').forEach((iframe) => {
-            iframe.contentWindow.postMessage({
-                type: 'animationsUpdate',
-                enabled: enabled
-            }, window.location.origin);
-        });
-    }
-    if (key === 'showSeconds') {
-        showSeconds = value === 'true';
-        updateClockAndDate();
-    }
-    if (key === 'showWeather') {
-        showWeather = value === 'true';
-        // Trigger update to show/hide widget and fetch data
-        const weatherSwitchEl = document.getElementById('weather-switch');
-        if (weatherSwitchEl) {
-            weatherSwitchEl.checked = showWeather;
-            weatherSwitchEl.dispatchEvent(new Event('change')); // Simulate change event
+
+    // 2. Look up the setting in the configuration map.
+    const config = SETTINGS_CONFIG[key];
+
+    if (config) {
+        // 3. Apply the setting's effect on the main Polygol UI.
+        if (config.apply) {
+            config.apply(value);
+        }
+
+        // 4. Broadcast the change to all other open Gurapps.
+        if (config.broadcast) {
+            const message = {
+                type: config.broadcast.type,
+                ...config.broadcast.payload(value)
+            };
+            document.querySelectorAll('iframe[data-gurasuraisu-iframe]').forEach(iframe => {
+                // Don't send the update back to the settings app that initiated it
+                if (iframe.contentWindow !== settingsAppWindow) {
+                    iframe.contentWindow.postMessage(message, window.location.origin);
+                }
+            });
         }
     }
-    if (key === 'use12HourFormat') {
-        use12HourFormat = value === 'true';
-        updateClockAndDate();
-    }
-    if (key === 'clockFont' || key === 'clockWeight' || key === 'clockColor' || key === 'clockColorEnabled' || key === 'clockStackEnabled') {
-        applyClockStyles();
-        updateClockAndDate();
-    }
-    if (key === 'highContrast') {
-        document.body.classList.toggle('high-contrast', value === 'true');
-    }
-    if (key === 'gurappsEnabled') {
-        gurappsEnabled = value === 'true';
-        updateGurappsVisibility();
-    }
-    if (key === 'minimalMode') {
-        minimalMode = value === 'true';
-        updateMinimalMode();
-    }
-    if (key === 'silentMode') {
-        // Re-initialize silent mode functionality
-        (function initSilentMode() {
-            const silentModeEnabled = localStorage.getItem('silentMode') === 'true';
-            if (silentModeEnabled) {
-                if (!window.originalShowPopup) {
-                    window.originalShowPopup = window.showPopup;
-                }
-                window.showPopup = function(msg) {
-                    console.log('Silent ON; suppressing popup:', msg);
-                };
-            } else {
-                if (window.originalShowPopup) {
-                    window.showPopup = window.originalShowPopup;
-                }
-            }
-        })();
-    }
-    syncUiStates(); // Update UI for other visual indicators
-    return `Setting '${key}' updated.`;
+
+    // 5. Sync the visual state of the quick controls modal (`customizeModal`).
+    syncUiStates();
 }
 
 function removeLocalStorageItem(key) {
@@ -8555,6 +8563,16 @@ window.addEventListener('message', async (event) => { // Make listener async
             console.warn(`Message target not found: No iframe for app "${targetApp}"`);
         }
         return; // Message handled
+    }
+});
+
+window.addEventListener('storage', (event) => {
+    if (settingsAppWindow) {
+        settingsAppWindow.postMessage({
+            type: 'settingUpdate',
+            key: event.key,
+            value: event.newValue
+        }, window.location.origin);
     }
 });
 
