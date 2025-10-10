@@ -282,6 +282,39 @@ const SETTINGS_CONFIG = {
     }
 };
 
+function updateBrightness(value) {
+    const brightnessOverlay = document.getElementById('brightness-overlay');
+    if (!brightnessOverlay) return;
+
+    // Use a default value of 100 if the provided value is null or invalid
+    const brightnessValue = parseInt(value, 10) || 100;
+    const darknessLevel = (100 - brightnessValue) / 100;
+    brightnessOverlay.style.backgroundColor = `rgba(0, 0, 0, ${darknessLevel})`;
+
+    const brightnessIcon = document.querySelector('.brightness-slider-container .material-symbols-rounded');
+    if (brightnessIcon) {
+        brightnessIcon.textContent = (brightnessValue <= 60) ? 'brightness_5' : 'brightness_7';
+    }
+}
+
+function updateTemperature(value) {
+    const temperatureOverlay = document.getElementById('temperature-overlay');
+    if (!temperatureOverlay) return;
+
+    const tempValue = parseInt(value, 10) || 0;
+    const intensity = Math.abs(tempValue) / 10;
+    let r, g, b, a;
+
+    if (tempValue < 0) { // Cool tint
+        r = 200; g = 220; b = 255; a = intensity;
+    } else if (tempValue > 0) { // Warm tint
+        r = 255; g = 220; b = 180; a = intensity;
+    } else { // Neutral
+        r = 0; g = 0; b = 0; a = 0;
+    }
+    temperatureOverlay.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
 function updateLightModeIcon(isLightMode) {
     const lightModeIcon = document.querySelector('#light_mode_qc .material-symbols-rounded');
     if (!lightModeIcon) return;
@@ -7471,265 +7504,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         brightnessSlider.value = storedBrightness;
         updateBrightness(storedBrightness);
     }
-    
-    // Initialize icons based on current states
-    updateLightModeIcon(lightModeSwitch.checked);
-    updateMinimalModeIcon(minimalModeSwitch.checked);
-    updateSilentModeIcon(silentModeSwitch.checked);
-    updateTemperatureIcon(storedTemperature);
-    
-    // Function to update light mode icon
-    function updateLightModeIcon(isLightMode) {
-        const lightModeIcon = lightModeControl.querySelector('.material-symbols-rounded');
-        if (!lightModeIcon) return;
-        
-        if (isLightMode) {
-            lightModeIcon.textContent = 'radio_button_checked'; // Light mode ON
-        } else {
-            lightModeIcon.textContent = 'radio_button_partial'; // Light mode OFF (dark mode)
-        }
-    }
-    
-    // Function to update minimal mode icon
-    function updateMinimalModeIcon(isMinimalMode) {
-        const minimalModeIcon = minimalModeControl.querySelector('.material-symbols-rounded');
-        if (!minimalModeIcon) return;
-        
-        if (isMinimalMode) {
-            minimalModeIcon.textContent = 'screen_record'; // Minimal mode ON
-        } else {
-            minimalModeIcon.textContent = 'filter_tilt_shift'; // Minimal mode OFF
-        }
-    }
-    
-    // Function to update silent mode icon
-    function updateSilentModeIcon(isSilentMode) {
-        const silentModeIcon = silentModeControl.querySelector('.material-symbols-rounded');
-        if (!silentModeIcon) return;
-        
-        if (isSilentMode) {
-            silentModeIcon.textContent = 'notifications_off'; // Silent mode ON
-        } else {
-            silentModeIcon.textContent = 'notifications'; // Silent mode OFF
-        }
-    }
-    
-    // Function to update the temperature icon based on value
-    function updateTemperatureIcon(value) {
-        const temperatureIcon = temperatureControl.querySelector('.material-symbols-rounded');
-        if (!temperatureIcon) return;
-        
-        const tempValue = parseInt(value);
-        if (tempValue <= -1) {
-            temperatureIcon.textContent = 'mode_cool'; // Cold
-        } else if (tempValue >= 1) {
-            temperatureIcon.textContent = 'mode_heat'; // Hot
-        } else {
-            temperatureIcon.textContent = 'thermometer'; // Neutral
-        }
-    }
-    
-    // Function to update brightness
-    function updateBrightness(value) {        
-        // Calculate darkness level (inverse of brightness)
-        const darknessLevel = (100 - value) / 100;
-        
-        // Update the overlay opacity
-        brightnessOverlay.style.backgroundColor = `rgba(0, 0, 0, ${darknessLevel})`;
-        
-        // Update the icon based on brightness level
-        const brightnessIcon = document.querySelector('label[for="brightness-control"] .material-symbols-rounded');
-        
-        if (brightnessIcon) {
-            if (value <= 60) {
-                brightnessIcon.textContent = 'wb_sunny'; // Low brightness icon
-            } else {
-                brightnessIcon.textContent = 'sunny'; // High brightness icon
-            }
-        }
-    }
-    
-    // Function to update temperature
-    function updateTemperature(value) {
-        // Convert to number to ensure proper comparison
-        const tempValue = parseInt(value);
-        
-        // Calculate intensity based on distance from 0
-        const intensity = Math.abs(tempValue) / 10;
-        
-        // Calculate RGB values for overlay
-        let r, g, b, a;
-        
-        if (tempValue < 0) {
-            // Cool/blue tint (more blue as value decreases)
-            r = 200;
-            g = 220;
-            b = 255;
-            a = intensity;
-        } else if (tempValue > 0) {
-            // Warm/yellow tint (more yellow as value increases)
-            r = 255;
-            g = 220;
-            b = 180;
-            a = intensity;
-        } else {
-            // Neutral (no tint at 0)
-            r = 255;
-            g = 255;
-            b = 255;
-            a = 0;
-        }
-        
-        // Update the overlay color
-        temperatureOverlay.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${a})`;
-    }
-
-	let sunEffectTimeout;
-    
-    // Event listener for light mode control
-    lightModeControl.addEventListener('click', function() {
-        lightModeSwitch.checked = !lightModeSwitch.checked;
-        this.classList.toggle('active');
-
-        const newTheme = lightModeSwitch.checked ? 'light' : 'dark';
-
-        // Update localStorage
-        localStorage.setItem('theme', newTheme);
-
-        // Update current document
-        document.body.classList.toggle('light-theme', newTheme === 'light');
-
-        // Update icon
-        updateLightModeIcon(lightModeSwitch.checked);
-
-        const iframes = document.querySelectorAll('iframe');
-        iframes.forEach((iframe) => {
-            iframe.contentWindow.postMessage({
-                type: 'themeUpdate',
-                theme: newTheme
-            }, window.location.origin);
-        });
-
-	    // Cancel any previous pending sun effect
-	    clearTimeout(sunEffectTimeout);
-	
-	    // Schedule a new sun effect after 3 seconds
-	    sunEffectTimeout = setTimeout(() => {
-	        updateSunEffect();
-	    }, 3000);
-	});
-    
-    // Event listener for minimal mode control
-    minimalModeControl.addEventListener('click', function() {
-        // Toggle minimalMode state
-        minimalMode = !minimalMode;
-
-        // Save state to localStorage (if needed)
-        localStorage.setItem('minimalMode', minimalMode);
-
-        // Update UI based on the new state
-        updateMinimalMode();
-
-        // Toggle active class for visual feedback
-        this.classList.toggle('active');
-        
-        // Update icon
-        updateMinimalModeIcon(minimalMode);
-    });
-
-    // Event listener for night mode control
-    nightModeControl.addEventListener('click', function() {
-        nightMode = !nightMode;
-        localStorage.setItem('nightMode', nightMode);
-        updateNightMode(); // This single call handles all state changes.
-    });
-
-    // Event listener for silent mode control
-    silentModeControl.addEventListener('click', function() {
-        silentModeSwitch.checked = !silentModeSwitch.checked;
-        this.classList.toggle('active');
-        
-        isSilentMode = silentModeSwitch.checked; // Update global flag
-        localStorage.setItem('silentMode', isSilentMode); // Save to localStorage
-        
-        // Update icon
-        updateSilentModeIcon(isSilentMode);
-        
-        // Only override showPopup based on silent mode state
-        if (isSilentMode) { // Silent mode is being turned ON
-            if (!window.originalShowPopup) {
-                window.originalShowPopup = window.showPopup;
-            }
-            window.showPopup = function(message) {
-                console.log('Silent ON; suppressing popup:', message);
-            };
-        } else { // Silent mode is being turned OFF
-            if (window.originalShowPopup) {
-                window.showPopup = window.originalShowPopup;
-            }
-        }
-        // showNotification is handled by its own internal logic, no override needed here.
-    });
-    
-    // Initialize silent mode on page load
-    (function initSilentMode() {
-        isSilentMode = localStorage.getItem('silentMode') === 'true'; // Initialize global flag
-        
-        if (isSilentMode) { // Silent mode is ON on page load
-            if (!window.originalShowPopup) {
-                window.originalShowPopup = window.showPopup;
-            }
-            window.showPopup = function(message) {
-                console.log('Silent ON; suppressing popup:', message);
-            };
-        }
-        // showNotification is handled by its own internal logic, no override needed here.
-    })();
-    
-    // Temperature control popup
-    temperatureControl.addEventListener('click', function(e) {
-        // If the popup is already open, and the click is NOT inside the popup or on the control, close it
-        if (
-            temperaturePopup.style.display === 'block' &&
-            !temperaturePopup.contains(e.target) &&
-            e.target !== temperatureControl
-        ) {
-            temperaturePopup.style.display = 'none';
-            return;
-        }
-
-        // Otherwise, open it as usual
-        const rect = temperatureControl.getBoundingClientRect();
-        temperaturePopup.style.top = `${rect.bottom + 5}px`;
-        temperaturePopup.style.left = `${rect.left + (rect.width / 2) - (155 / 2)}px`; // Center the popup
-        temperaturePopup.style.display = 'block';
-    });
-    
-    document.addEventListener('click', function(e) {
-        if (temperaturePopup.style.display === 'block' && 
-            !temperaturePopup.contains(e.target) && 
-            e.target !== temperatureControl) {
-            temperaturePopup.style.display = 'none';
-        }
-    });
-    
-    // Temperature slider event listener
-    temperatureSlider.addEventListener('input', function(e) {
-        const value = e.target.value;
-        temperaturePopupValue.textContent = `${value}`;
-        temperatureValue.textContent = `${value}`;
-        localStorage.setItem('display_temperature', value);
-        updateTemperatureIcon(value);
-        updateTemperature(value);
-	temperatureControl.classList.toggle('active', value !== '0');
-    });
-    
-    // Brightness control event listener
-    brightnessSlider.addEventListener('input', function(e) {
-        const value = e.target.value;
-        updateBrightness(value);
-        localStorage.setItem('page_brightness', value);
-    });
     
     // Add CSS for the overlays
     const style = document.createElement('style');
