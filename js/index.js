@@ -7806,57 +7806,85 @@ function preventLeaving() {
 }
 
 // --- Terminal Functions (Corrected Signatures) ---
+
 function getLocalStorageItem(key) {
     return localStorage.getItem(key);
 }
+
 function setLocalStorageItem(key, value) {
     localStorage.setItem(key, value);
-
-    // This map is crucial. It links the setting key to the function
-    // that visually updates the parent Polygol UI.
-    const settingActionMap = {
-        'theme': () => {
-            document.body.classList.toggle('light-theme', value === 'light');
-            updateLightModeIcon(value === 'light');
-            // The theme change also triggers a sun effect update
-            updateSunEffect();
-        },
-        'animationsEnabled': () => document.body.classList.toggle('reduce-animations', value !== 'true'),
-        'highContrast': () => document.body.classList.toggle('high-contrast', value === 'true'),
-        'gurappsEnabled': () => { gurappsEnabled = (value === 'true'); updateGurappsVisibility(); },
-        'aiAssistantEnabled': () => { isAiAssistantEnabled = (value === 'true'); if(isAiAssistantEnabled) initializeAiAssistant(); else genAI = null; },
-        'oneButtonNavEnabled': () => { oneButtonNavEnabled = (value === 'true'); updateOneButtonNavVisibility(); },
-        'showSeconds': () => { showSeconds = (value === 'true'); updateClockAndDate(); },
-        'showWeather': () => {
-            showWeather = (value === 'true');
-            updateWeatherVisibility();
-            if(showWeather) updateSmallWeather();
-        },
-        'use12HourFormat': () => { use12HourFormat = (value === 'true'); updateClockAndDate(); },
-        'clockSize': applyClockLayout,
-        'clockPosX': applyClockLayout,
-        'clockPosY': applyClockLayout,
-        'alignment': () => { applyAlignment(value); applyClockLayout(); },
-        'font': applyClockStyles, 'weight': applyClockStyles, 'roundness': applyClockStyles,
-        'color': applyClockStyles, 'colorEnabled': applyClockStyles,
-        'gradientColor': applyClockStyles, 'gradientEnabled': applyClockStyles,
-        'glassEnabled': applyClockStyles, 'stackEnabled': applyClockStyles,
-        'shadowEnabled': applyClockStyles, 'shadowBlur': applyClockStyles, 'shadowColor': applyClockStyles,
-        'dateFormat': updateClockAndDate, 'clockFormat': updateClockAndDate,
-        'wallpaperBlur': applyWallpaperEffects, 'wallpaperBrightness': applyWallpaperEffects, 'wallpaperContrast': applyWallpaperEffects
-    };
-
-    // Execute the corresponding UI update function
-    settingActionMap[key]?.();
-
-    // Broadcast the change to ALL other iframes so they can sync
-    document.querySelectorAll('iframe[data-gurasuraisu-iframe]').forEach(iframe => {
-        if (iframe.contentWindow && iframe.contentWindow !== event.source) { // Don't send back to sender
-            iframe.contentWindow.postMessage({ type: 'settingUpdate', key, value }, window.location.origin);
+    // Re-sync UI for common settings immediately
+    if (key === 'page_brightness') updateBrightness(value);
+    if (key === 'theme') {
+         document.body.classList.toggle('light-theme', value === 'light');
+         document.querySelectorAll('iframe').forEach((iframe) => {
+            iframe.contentWindow.postMessage({
+                type: 'themeUpdate',
+                theme: value
+            }, window.location.origin);
+        });
+    }
+    if (key === 'animationsEnabled') {
+        const enabled = value === 'true';
+        document.body.classList.toggle('reduce-animations', !enabled);
+        document.querySelectorAll('iframe').forEach((iframe) => {
+            iframe.contentWindow.postMessage({
+                type: 'animationsUpdate',
+                enabled: enabled
+            }, window.location.origin);
+        });
+    }
+    if (key === 'showSeconds') {
+        showSeconds = value === 'true';
+        updateClockAndDate();
+    }
+    if (key === 'showWeather') {
+        showWeather = value === 'true';
+        // Trigger update to show/hide widget and fetch data
+        const weatherSwitchEl = document.getElementById('weather-switch');
+        if (weatherSwitchEl) {
+            weatherSwitchEl.checked = showWeather;
+            weatherSwitchEl.dispatchEvent(new Event('change')); // Simulate change event
         }
-    });
-
-    syncUiStates(); // Update active states in the main control center UI
+    }
+    if (key === 'use12HourFormat') {
+        use12HourFormat = value === 'true';
+        updateClockAndDate();
+    }
+    if (key === 'clockFont' || key === 'clockWeight' || key === 'clockColor' || key === 'clockColorEnabled' || key === 'clockStackEnabled') {
+        applyClockStyles();
+        updateClockAndDate();
+    }
+    if (key === 'highContrast') {
+        document.body.classList.toggle('high-contrast', value === 'true');
+    }
+    if (key === 'gurappsEnabled') {
+        gurappsEnabled = value === 'true';
+        updateGurappsVisibility();
+    }
+    if (key === 'minimalMode') {
+        minimalMode = value === 'true';
+        updateMinimalMode();
+    }
+    if (key === 'silentMode') {
+        // Re-initialize silent mode functionality
+        (function initSilentMode() {
+            const silentModeEnabled = localStorage.getItem('silentMode') === 'true';
+            if (silentModeEnabled) {
+                if (!window.originalShowPopup) {
+                    window.originalShowPopup = window.showPopup;
+                }
+                window.showPopup = function(msg) {
+                    console.log('Silent ON; suppressing popup:', msg);
+                };
+            } else {
+                if (window.originalShowPopup) {
+                    window.showPopup = window.originalShowPopup;
+                }
+            }
+        })();
+    }
+    syncUiStates(); // Update UI for other visual indicators
     return `Setting '${key}' updated.`;
 }
 
@@ -8332,7 +8360,6 @@ const Gurasuraisu = {
 // --- NEW Permission Model ---
 // Maps trusted app IDs to their permission levels.
 const TRUSTED_APP_PERMISSIONS = {
-    'Settings': ['system-admin'], // Grant full permissions to the core settings app
     'Terminal': ['system-admin'], // Full access to everything
     'App Store': ['app-management']  // Can only manage apps
 };
@@ -8402,12 +8429,6 @@ window.addEventListener('message', async (event) => { // Make listener async
         return; // Message handled
     }
 
-    // NEW: Handle settings app connecting for real-time updates
-    if (data.type === 'settings-app-ready') {
-        console.log('[Polygol] Settings app is ready for real-time updates.');
-        return; // Just acknowledge, no action needed
-    }
-
     // Check if this is an API call from a Gurapp
     if (data && data.action === 'callGurasuraisuFunc' && data.functionName) {
         const funcName = data.functionName;
@@ -8456,8 +8477,6 @@ window.addEventListener('message', async (event) => { // Make listener async
             // Privileged Functions (already checked above)
             installApp, 
             deleteApp,
-		    getLocalStorageItem, // ADDED
-            setLocalStorageItem, // ADDED
             requestInstalledApps, // Added here
             getLocalStorageItem, 
             setLocalStorageItem,
@@ -8485,7 +8504,7 @@ window.addEventListener('message', async (event) => { // Make listener async
 
         if (typeof funcToCall === 'function') {
             try {
-                const result = await funcToCall.apply(window, [...args, sourceWindow]);
+                const result = await funcToCall.apply(window, args);
                 
                 let messageType = 'parentActionSuccess';
                 const typeMap = {
@@ -8500,18 +8519,22 @@ window.addEventListener('message', async (event) => { // Make listener async
                     'getIDBRecord': 'idbRecordValue',
                     'requestInstalledApps': 'installed-apps-list' // Added here
                 };
-				
                 if (funcName.startsWith('get') || funcName.startsWith('list') || funcName.startsWith('request')) {
                     messageType = typeMap[funcName] || 'commandOutput';
                 }
 
-                // Construct the response object with key and value for specific functions
-                const response = { type: messageType, key: args[0], value: result };
+                const response = { type: messageType };
                 
-                // Only send a response back if there was a result
-                if (result !== undefined) {
-                    sourceWindow.postMessage(response, window.location.origin);
+                if (funcName === 'requestInstalledApps') {
+                    response.apps = result;
+                } else if (funcName === 'listLocalStorageKeys') {
+                    response.keys = result;
+                // ... (rest of existing response logic) ...
+                } else {
+                     response.message = result;
                 }
+                
+                sourceWindow.postMessage(response, window.location.origin);
 
             } catch (error) {
                 sourceWindow.postMessage({ type: 'parentActionError', message: error.message }, window.location.origin);
