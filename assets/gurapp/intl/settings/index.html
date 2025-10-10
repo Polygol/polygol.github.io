@@ -192,43 +192,57 @@
                 </div>
                 <div class="setting-item slider-item">
                     <span class="setting-label">Weight</span>
-                    <input type="range" min="20" max="100" class="styled-slider" data-key="weight">
+                    <input type="range" min="20" max="100" 
+                           class="styled-slider" data-key="weight">
                 </div>
                 <div class="setting-item slider-item">
                     <span class="setting-label">Roundness</span>
-                    <input type="range" min="0" max="100" class="styled-slider" data-key="roundness">
+                    <input type="range" min="0" max="100" 
+                           class="styled-slider" data-key="roundness">
                 </div>
                 <div class="setting-item slider-item">
                     <span class="setting-label">Size</span>
-                    <input type="range" min="-50" max="50" class="styled-slider" data-key="clockSize">
+                    <input type="range" min="-50" max="50" 
+                           class="styled-slider" data-key="clockSize">
                 </div>
                 <div class="setting-item">
                     <span class="setting-label">Show Seconds</span>
-                    <input type="checkbox" class="toggle-switch" data-key="showSeconds">
+                    <input type="checkbox" class="toggle-switch" 
+                           data-key="showSeconds">
                 </div>
                 <div class="setting-item">
                     <span class="setting-label">12-Hour Format</span>
-                    <input type="checkbox" class="toggle-switch" data-key="use12HourFormat">
+                    <input type="checkbox" class="toggle-switch" 
+                           data-key="use12HourFormat">
                 </div>
                 <div class="setting-item">
                     <span class="setting-label">Stacked Layout</span>
-                    <input type="checkbox" class="toggle-switch" data-key="stackEnabled">
+                    <input type="checkbox" class="toggle-switch" 
+                           data-key="stackEnabled">
                 </div>
                 <div class="setting-item">
                     <span class="setting-label">Position & Alignment</span>
-                    <button class="action-btn" data-modal="position-modal">Adjust</button>
+                    <button class="action-btn" data-modal="position-modal">
+                        Adjust
+                    </button>
                 </div>
                 <div class="setting-item">
                     <span class="setting-label">Color & Effects</span>
-                    <button class="action-btn" data-modal="color-modal">Adjust</button>
+                    <button class="action-btn" data-modal="color-modal">
+                        Adjust
+                    </button>
                 </div>
                  <div class="setting-item">
                     <span class="setting-label">Text Shadow</span>
-                    <button class="action-btn" data-modal="shadow-modal">Adjust</button>
+                    <button class="action-btn" data-modal="shadow-modal">
+                        Adjust
+                    </button>
                 </div>
                 <div class="setting-item">
                     <span class="setting-label">Date & Time Format</span>
-                    <button class="action-btn" data-modal="format-modal">Adjust</button>
+                    <button class="action-btn" data-modal="format-modal">
+                        Adjust
+                    </button>
                 </div>
             </div>
 
@@ -236,15 +250,18 @@
                 <h2 class="section-title">Wallpaper</h2>
                 <div class="setting-item slider-item">
                     <span class="setting-label">Blur</span>
-                    <input type="range" min="0" max="20" class="styled-slider" data-key="wallpaperBlur">
+                    <input type="range" min="0" max="20" 
+                           class="styled-slider" data-key="wallpaperBlur">
                 </div>
                 <div class="setting-item slider-item">
                     <span class="setting-label">Brightness</span>
-                    <input type="range" min="50" max="150" class="styled-slider" data-key="wallpaperBrightness">
+                    <input type="range" min="50" max="150" 
+                           class="styled-slider" data-key="wallpaperBrightness">
                 </div>
                 <div class="setting-item slider-item">
                     <span class="setting-label">Contrast</span>
-                    <input type="range" min="50" max="150" class="styled-slider" data-key="wallpaperContrast">
+                    <input type="range" min="50" max="150" 
+                           class="styled-slider" data-key="wallpaperContrast">
                 </div>
             </div>
 
@@ -252,7 +269,8 @@
                 <h2 class="section-title">General</h2>
                 <div class="setting-item">
                     <span class="setting-label">Show Weather Widget</span>
-                    <input type="checkbox" class="toggle-switch" data-key="showWeather">
+                    <input type="checkbox" class="toggle-switch" 
+                           data-key="showWeather">
                 </div>
             </div>
         </div>
@@ -263,23 +281,17 @@
         <div class="modal-container">
             <h3>Position & Alignment</h3>
             <div class="setting-item modal-item slider-item">
-                <div class="setting-info">
-                    <span class="setting-label">Horizontal Position (X)</span>
-                </div>
-                <input type="range" min="0" max="100" value="50" 
-                       class="styled-slider" data-key="clockPosX">
+                <label>Horizontal (X)</label>
+                <input type="range" min="0" max="100" class="styled-slider" 
+                       data-key="clockPosX">
             </div>
-             <div class="setting-item modal-item slider-item">
-                <div class="setting-info">
-                    <span class="setting-label">Vertical Position (Y)</span>
-                </div>
-                <input type="range" min="0" max="100" value="50" 
-                       class="styled-slider" data-key="clockPosY">
+            <div class="setting-item modal-item slider-item">
+                <label>Vertical (Y)</label>
+                <input type="range" min="0" max="100" class="styled-slider" 
+                       data-key="clockPosY">
             </div>
             <div class="setting-item modal-item">
-                 <div class="setting-info">
-                    <span class="setting-label">Text Alignment</span>
-                </div>
+                <label>Text Alignment</label>
                 <select class="styled-select" data-key="alignment">
                     <option value="center">Center</option>
                     <option value="left">Left</option>
@@ -293,9 +305,7 @@
         <div class="modal-container">
             <h3>Color & Effects</h3>
             <div class="setting-item modal-item">
-                <div class="setting-info">
-                    <span class="setting-label">Solid Color</span>
-                </div>
+                <label>Solid Color</label>
                 <div class="setting-control">
                     <input type="color" class="color-picker" data-key="color">
                     <input type="checkbox" class="toggle-switch" 
@@ -303,12 +313,7 @@
                 </div>
             </div>
              <div class="setting-item modal-item">
-                <div class="setting-info">
-                    <span class="setting-label">Gradient</span>
-                    <span class="setting-description">
-                        Blends from solid color to this color.
-                    </span>
-                </div>
+                <label>Gradient</label>
                 <div class="setting-control">
                     <input type="color" class="color-picker" 
                            data-key="gradientColor">
@@ -317,12 +322,7 @@
                 </div>
             </div>
              <div class="setting-item modal-item">
-                <div class="setting-info">
-                    <span class="setting-label">Glass Effect</span>
-                    <span class="setting-description">
-                        Uses the wallpaper to color the text.
-                    </span>
-                </div>
+                <label>Glass Effect</label>
                 <input type="checkbox" class="toggle-switch" 
                        data-key="glassEnabled">
             </div>
@@ -333,25 +333,18 @@
         <div class="modal-container">
             <h3>Text Shadow</h3>
             <div class="setting-item modal-item">
-                <div class="setting-info">
-                    <span class="setting-label">Enable Shadow</span>
-                </div>
+                <label>Enable Shadow</label>
                 <input type="checkbox" class="toggle-switch" 
                        data-key="shadowEnabled">
             </div>
             <div class="setting-item modal-item slider-item">
-                <div class="setting-info">
-                    <span class="setting-label">Blur Radius</span>
-                </div>
-                <input type="range" min="0" max="50" value="10" 
-                       class="styled-slider" data-key="shadowBlur">
+                <label>Blur</label>
+                <input type="range" min="0" max="50" class="styled-slider" 
+                       data-key="shadowBlur">
             </div>
             <div class="setting-item modal-item">
-                <div class="setting-info">
-                    <span class="setting-label">Shadow Color</span>
-                </div>
-                <input type="color" class="color-picker" 
-                       data-key="shadowColor">
+                <label>Color</label>
+                <input type="color" class="color-picker" data-key="shadowColor">
             </div>
         </div>
     </div>
@@ -359,23 +352,13 @@
     <div class="modal-overlay" id="format-modal">
         <div class="modal-container">
             <h3>Date & Time Format</h3>
-             <div class="setting-item modal-item">
-                <div class="setting-info">
-                    <span class="setting-label">Date Format</span>
-                    <span class="setting-description">
-                        Uses Moment.js format tokens.
-                    </span>
-                </div>
+            <div class="setting-item modal-item">
+                <label for="dateFormatInput">Date Format</label>
                 <input type="text" class="form-input" data-key="dateFormat" 
                        placeholder="e.g., dddd, MMMM D">
             </div>
-            <div class="setting-item modal-item">
-                <div class="setting-info">
-                    <span class="setting-label">Clock Format</span>
-                     <span class="setting-description">
-                         Quick toggles will override this.
-                     </span>
-                </div>
+             <div class="setting-item modal-item">
+                <label for="clockFormatInput">Clock Format</label>
                 <input type="text" class="form-input" data-key="clockFormat" 
                        placeholder="e.g., HH:mm:ss">
             </div>
