@@ -67,24 +67,13 @@ let currentLanguage = LANG_EN; // Default to English
 
 function applyLanguage(language) {
     console.log('Applying language:', language);
+    document.querySelector('.modal-content h2').innerText = language.CONTROLS;
+    document.querySelector('#silent_switch_qc .qc-label').innerText = language.SILENT;
+    document.querySelector('#temp_control_qc .qc-label').innerText = language.TONE;
+    document.querySelector('#minimal_mode_qc .qc-label').innerText = language.MINIMAL;
+    document.querySelector('#light_mode_qc .qc-label').innerText = language.DAYLIGHT;
 
-    // A small helper to safely set text content on an element if it exists.
-    const safeSetText = (selector, text) => {
-        const element = document.querySelector(selector);
-        if (element) {
-            element.innerText = text;
-        }
-    };
-
-    // Use the safe helper for all UI text updates.
-    safeSetText('.modal-content h2', language.CONTROLS);
-    safeSetText('#silent_switch_qc .qc-label', language.SILENT);
-    safeSetText('#temp_control_qc .qc-label', language.TONE);
-    safeSetText('#minimal_mode_qc .qc-label', language.MINIMAL);
-    safeSetText('#light_mode_qc .qc-label', language.DAYLIGHT);
-    safeSetText('#thermostat-popup .adjust-label', language.ADJUST);
-
-    // This loop is already safe because it won't run if no elements are found.
+    // Dynamically update labels in the grid
     document.querySelectorAll('.setting-label[data-lang-key]').forEach(label => {
         const key = label.getAttribute('data-lang-key');
         if (language[key]) {
@@ -92,11 +81,11 @@ function applyLanguage(language) {
         }
     });
 
-    // Safely update elements that might not always be visible.
+    // Safely update elements that might not always be visible
     const versionButton = document.querySelector('.version-info button#versionButton');
     if (versionButton) versionButton.textContent = language.GET_DOCS;
     
-    // Safely update font and alignment dropdown options.
+    // Safely update font dropdown options
     const fontSelect = document.getElementById('font-select');
     if (fontSelect) {
         const options = {
@@ -119,7 +108,12 @@ function applyLanguage(language) {
         }
     }
 
-    // Update global variables for other parts of the system.
+    const adjustLabel = document.querySelector('#thermostat-popup .adjust-label');
+    if (adjustLabel) {
+        adjustLabel.textContent = language.ADJUST;
+    }
+
+    // Update checkWords and closeWords
     window.checkWords = language.CHECK_WORDS;
     window.closeWords = language.CLOSE_WORDS;
 }
@@ -170,186 +164,6 @@ consoleLicense()
 
 function consoleLoaded() {
     console.log(currentLanguage.LOAD_SUCCESS);
-}
-
-let settingsAppWindow = null; 
-
-// --- NEW: Scalable Settings Configuration Map ---
-/**
- * This object maps a localStorage key to the actions that should be taken
- * when that key's value changes. This eliminates the need for a large switch statement.
- *
- * 'apply': A function that applies the setting to the main Polygol UI.
- * 'broadcast': An object defining the message to send to other Gurapps.
- */
-const SETTINGS_CONFIG = {
-    'silentMode': {
-        apply: (value) => {
-            isSilentMode = (value === 'true');
-            updateSilentModeIcon(isSilentMode);
-            // Re-initialize the showPopup override logic
-            if (isSilentMode) {
-                if (!window.originalShowPopup) window.originalShowPopup = window.showPopup;
-                window.showPopup = (message) => console.log('Silent ON; suppressing popup:', message);
-            } else {
-                if (window.originalShowPopup) window.showPopup = window.originalShowPopup;
-            }
-        }
-    },
-    'minimalMode': {
-        apply: (value) => {
-            minimalMode = (value === 'true');
-            updateMinimalMode();
-            updateMinimalModeIcon(minimalMode); // Call the helper
-        }
-    },
-    'nightMode': {
-        apply: (value) => {
-            nightMode = (value === 'true');
-            updateNightMode(); // This function already updates its own icon
-        }
-    },
-    'page_brightness': {
-        apply: (value) => updateBrightness(value)
-    },
-    'display_temperature': {
-        apply: (value) => {
-            const val = value || '0';
-            updateTemperature(val);
-            updateTemperatureIcon(val);
-            const tempValueEl = document.getElementById('thermostat-popup-value');
-            if (tempValueEl) tempValueEl.textContent = val;
-        }
-    },
-    // --- Appearance ---
-    'theme': {
-        apply: (value) => {
-            const isLight = (value === 'light');
-            document.body.classList.toggle('light-theme', isLight);
-            updateLightModeIcon(isLight); // Call the helper
-        },
-        broadcast: { type: 'themeUpdate', payload: (value) => ({ theme: value }) }
-    },
-    'animationsEnabled': {
-        apply: (value) => document.body.classList.toggle('reduce-animations', value !== 'true'),
-        broadcast: { type: 'animationsUpdate', payload: (value) => ({ enabled: value === 'true' }) }
-    },
-    'highContrast': {
-        apply: (value) => document.documentElement.classList.toggle('gurasuraisu-high-contrast', value === 'true'),
-        broadcast: { type: 'contrastUpdate', payload: (value) => ({ enabled: value === 'true' }) }
-    },
-    'selectedLanguage': {
-        apply: (value) => selectLanguage(value || 'EN')
-    },
-    // --- Functionality ---
-    'gurappsEnabled': {
-        apply: (value) => { gurappsEnabled = (value === 'true'); updateGurappsVisibility(); }
-    },
-    'aiAssistantEnabled': {
-        apply: (value) => {
-            isAiAssistantEnabled = (value === 'true');
-            if (isAiAssistantEnabled) initializeAiAssistant(); else genAI = null;
-        }
-    },
-    'oneButtonNavEnabled': {
-        apply: (value) => { oneButtonNavEnabled = (value === 'true'); updateOneButtonNavVisibility(); }
-    },
-    // --- Home Screen: Clock ---
-    'font': { apply: () => applyClockStyles() },
-    'weight': { apply: () => applyClockStyles() },
-    'roundness': { apply: () => applyClockStyles() },
-    'showSeconds': { apply: (value) => { showSeconds = (value === 'true'); updateClockAndDate(); } },
-    'use12HourFormat': { apply: (value) => { use12HourFormat = (value === 'true'); updateClockAndDate(); } },
-    'stackEnabled': { apply: () => applyClockStyles() },
-    'colorEnabled': { apply: () => applyClockStyles() },
-    'gradientEnabled': { apply: () => applyClockStyles() },
-    'glassEnabled': { apply: () => applyClockStyles() },
-    'color': { apply: () => applyClockStyles() },
-    'gradientColor': { apply: () => applyClockStyles() },
-    'shadowEnabled': { apply: () => applyClockStyles() },
-    'shadowBlur': { apply: () => applyClockStyles() },
-    'shadowColor': { apply: () => applyClockStyles() },
-    'clockSize': { apply: () => applyClockLayout() },
-    'clockPosX': { apply: () => applyClockLayout() },
-    'clockPosY': { apply: () => applyClockLayout() },
-    'alignment': { apply: (value) => applyAlignment(value) },
-    'dateFormat': { apply: () => updateClockAndDate() },
-    'clockFormat': { apply: () => updateClockAndDate() },
-    // --- Home Screen: Wallpaper ---
-    'wallpaperBlur': { apply: () => applyWallpaperEffects() },
-    'wallpaperBrightness': { apply: () => applyWallpaperEffects() },
-    'wallpaperContrast': { apply: () => applyWallpaperEffects() },
-    // --- Home Screen: General ---
-    'showWeather': {
-        apply: (value) => {
-            showWeather = (value !== 'false');
-            updateWeatherVisibility();
-        }
-    }
-};
-
-function updateBrightness(value) {
-    const brightnessOverlay = document.getElementById('brightness-overlay');
-    if (!brightnessOverlay) return;
-
-    // Use a default value of 100 if the provided value is null or invalid
-    const brightnessValue = parseInt(value, 10) || 100;
-    const darknessLevel = (100 - brightnessValue) / 100;
-    brightnessOverlay.style.backgroundColor = `rgba(0, 0, 0, ${darknessLevel})`;
-
-    const brightnessIcon = document.querySelector('.brightness-slider-container .material-symbols-rounded');
-    if (brightnessIcon) {
-        brightnessIcon.textContent = (brightnessValue <= 60) ? 'brightness_5' : 'brightness_7';
-    }
-}
-
-function updateTemperature(value) {
-    const temperatureOverlay = document.getElementById('temperature-overlay');
-    if (!temperatureOverlay) return;
-
-    const tempValue = parseInt(value, 10) || 0;
-    const intensity = Math.abs(tempValue) / 10;
-    let r, g, b, a;
-
-    if (tempValue < 0) { // Cool tint
-        r = 200; g = 220; b = 255; a = intensity;
-    } else if (tempValue > 0) { // Warm tint
-        r = 255; g = 220; b = 180; a = intensity;
-    } else { // Neutral
-        r = 0; g = 0; b = 0; a = 0;
-    }
-    temperatureOverlay.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${a})`;
-}
-
-function updateLightModeIcon(isLightMode) {
-    const lightModeIcon = document.querySelector('#light_mode_qc .material-symbols-rounded');
-    if (!lightModeIcon) return;
-    lightModeIcon.textContent = isLightMode ? 'light_mode' : 'dark_mode';
-}
-
-function updateMinimalModeIcon(isMinimalMode) {
-    const minimalModeIcon = document.querySelector('#minimal_mode_qc .material-symbols-rounded');
-    if (!minimalModeIcon) return;
-    minimalModeIcon.textContent = isMinimalMode ? 'screen_record' : 'filter_tilt_shift';
-}
-
-function updateSilentModeIcon(isSilentMode) {
-    const silentModeIcon = document.querySelector('#silent_switch_qc .material-symbols-rounded');
-    if (!silentModeIcon) return;
-    silentModeIcon.textContent = isSilentMode ? 'notifications_off' : 'notifications';
-}
-
-function updateTemperatureIcon(value) {
-    const temperatureIcon = document.querySelector('#temp_control_qc .material-symbols-rounded');
-    if (!temperatureIcon) return;
-    const tempValue = parseInt(value, 10);
-    if (tempValue <= -1) {
-        temperatureIcon.textContent = 'mode_cool';
-    } else if (tempValue >= 1) {
-        temperatureIcon.textContent = 'mode_heat';
-    } else {
-        temperatureIcon.textContent = 'thermometer';
-    }
 }
 
 let cursorIdleTimeout;
@@ -5348,115 +5162,182 @@ function applyWallpaperEffects() {
 
 // index(13).js
 
-function initializeSystemControls() {
-    // Select all elements that can change a setting
-    const allControls = document.querySelectorAll('[data-key]');
-    
-    // --- 1. LOAD INITIAL VALUES ---
-    // Set the initial state of every control from localStorage
-    allControls.forEach(control => {
-        const key = control.dataset.key;
-        const value = localStorage.getItem(key);
+function setupFontSelection() {
+    const clockElement = document.getElementById('clock');
+    const infoElement = document.querySelector('.info');
 
-        if (control.type === 'checkbox') {
-            let boolValue = (key === 'theme') ? (value === 'light') : (value === 'true');
-            // For toggles that might not exist in LS yet, default to their initial checked state
-            control.checked = (value === null) ? control.defaultChecked : boolValue;
-        } else if (control.classList.contains('qcontrol-item')) {
-            // This is for the quick control divs
-            let boolValue = (key === 'theme') ? (value === 'light') : (value === 'true');
-            control.classList.toggle('active', boolValue);
-        } else if (control.type === 'range') {
-            control.value = value || control.defaultValue;
-        } else if (control.type === 'color') {
-            control.value = value || '#ffffff';
-        } else if (control.tagName === 'SELECT') {
-            control.value = value || control.options[0].value;
-        } else if (control.type === 'text') {
-            control.value = value || '';
+    // --- Get all control elements ---
+    const fontSelect = document.getElementById('font-select');
+    const weightSlider = document.getElementById('weight-slider');
+    const colorSwitch = document.getElementById('clock-color-switch');
+    const colorPicker = document.getElementById('clock-color-picker');
+    const stackSwitch = document.getElementById('clock-stack-switch');
+    const alignmentSelect = document.getElementById('alignment-select');
+    const blurSlider = document.getElementById('wallpaper-blur-slider');
+    const brightnessSlider = document.getElementById('wallpaper-brightness-slider');
+    const contrastSlider = document.getElementById('wallpaper-contrast-slider');
+    const shadowSwitch = document.getElementById('clock-shadow-switch');
+    const shadowBlurSlider = document.getElementById('clock-shadow-blur-slider');
+    const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
+    const gradientSwitch = document.getElementById('clock-gradient-switch');
+    const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
+    const glassSwitch = document.getElementById('clock-glass-switch');
+    const roundnessSlider = document.getElementById('roundness-slider');
+    const sizeSlider = document.getElementById('clock-size-slider');
+    const posXSlider = document.getElementById('clock-pos-x-slider');
+    const posYSlider = document.getElementById('clock-pos-y-slider');
+    const positionPopup = document.getElementById('position-controls-popup');
+    const clockFormatInput = document.getElementById('clock-format-input');
+    const dateFormatInput = document.getElementById('date-format-input');
+
+    // --- Function to save all settings (triggered by user interaction) ---
+    async function saveCurrentWallpaperSettings() {
+        const settingsFromUI = {
+            font: fontSelect.value,
+            weight: (parseInt(weightSlider.value, 10) * 10).toString(),
+            color: colorPicker.value,
+            colorEnabled: colorSwitch.checked,
+            stackEnabled: stackSwitch.checked,
+            showSeconds: document.getElementById('seconds-switch')?.checked,
+            showWeather: document.getElementById('weather-switch')?.checked,
+            clockSize: sizeSlider.value,
+            clockPosX: posXSlider.value,
+            clockPosY: posYSlider.value,
+            alignment: alignmentSelect.value,
+			wallpaperBlur: blurSlider.value,
+            wallpaperBrightness: brightnessSlider.value,
+            wallpaperContrast: contrastSlider.value,
+            shadowEnabled: shadowSwitch.checked,
+            shadowBlur: shadowBlurSlider.value,
+            shadowColor: shadowColorPicker.value,
+            gradientEnabled: gradientSwitch.checked,
+            gradientColor: gradientColorPicker.value,
+            glassEnabled: glassSwitch.checked,
+            roundness: roundnessSlider.value,
+			dateFormat: document.getElementById('date-format-input').value,
+            clockFormat: document.getElementById('clock-format-input').value
+        };
+
+        // Always save to individual localStorage keys. This acts as the "default" or "current" state.
+        for (const key in settingsFromUI) {
+            localStorage.setItem(key, settingsFromUI[key]);
         }
-    });
 
-    // --- 2. APPLY INITIAL VISUALS ---
-    // Run all apply functions to sync the UI with the loaded data
-    Object.keys(SETTINGS_CONFIG).forEach(key => {
-        const config = SETTINGS_CONFIG[key];
-        if (config.apply) {
-            config.apply(localStorage.getItem(key));
-        }
-    });
-    syncUiStates(); // Final visual sync
+        // If there's an active wallpaper, also save these settings specifically to it.
+        if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0) {
+            const currentWallpaper = recentWallpapers[currentWallpaperPosition];
+            if (currentWallpaper) {
+                 // Preserve any non-UI settings by merging
+                const currentStyles = currentWallpaper.clockStyles || {};
+                const finalSettings = { ...currentStyles, ...settingsFromUI };
 
-    // --- 3. BIND GENERIC EVENT LISTENERS ---
-    allControls.forEach(control => {
-        const key = control.dataset.key;
-
-        // Determine event type
-        let eventType = 'change';
-        if (control.type === 'range' || control.type === 'text' || control.type === 'color') {
-            eventType = 'input';
-        } else if (control.classList.contains('qcontrol-item')) {
-            eventType = 'click';
-        }
-
-        control.addEventListener(eventType, () => {
-            let valueToSet;
-            if (control.classList.contains('qcontrol-item')) {
-                // Handle quick control DIV toggles
-                const currentValue = localStorage.getItem(key);
-                if (key === 'theme') {
-                    valueToSet = (currentValue === 'light') ? 'dark' : 'light';
-                } else {
-                    valueToSet = (currentValue === 'true') ? 'false' : 'true';
+                // Clear custom font if a standard one is chosen
+                if (settingsFromUI.font !== currentStyles.customFontName) {
+                    finalSettings.customFontName = null;
+                    finalSettings.customFontUrl = null;
                 }
-            } else if (control.type === 'checkbox') {
-                valueToSet = control.checked;
-                if (key === 'theme') {
-                    valueToSet = control.checked ? 'light' : 'dark';
+
+                currentWallpaper.clockStyles = finalSettings;
+                saveRecentWallpapers();
+
+                // --- UPDATE IndexedDB record as well ---
+                if (currentWallpaper.id) { // Only for non-slideshow wallpapers
+                    try {
+                        const wallpaperRecord = await getWallpaper(currentWallpaper.id);
+                        if (wallpaperRecord) {
+                            wallpaperRecord.clockStyles = finalSettings;
+                            await storeWallpaper(currentWallpaper.id, wallpaperRecord);
+                        }
+                    } catch (error) {
+                         console.error("Failed to save clock styles to IndexedDB:", error);
+                    }
                 }
-            } else {
-                valueToSet = control.value;
             }
-            // All roads lead to the central function
-            setLocalStorageItem(key, valueToSet.toString());
-        });
-    });
-
-    // Special logic for linked toggles (color/gradient/glass)
-    const colorSwitch = document.querySelector('[data-key="colorEnabled"]');
-    const gradientSwitch = document.querySelector('[data-key="gradientEnabled"]');
-    const glassSwitch = document.querySelector('[data-key="glassEnabled"]');
-
-    if (colorSwitch && gradientSwitch && glassSwitch) {
-        colorSwitch.addEventListener('change', () => {
-            if (colorSwitch.checked) {
-                setLocalStorageItem('gradientEnabled', 'false');
-                setLocalStorageItem('glassEnabled', 'false');
-            }
-        });
-        gradientSwitch.addEventListener('change', () => {
-            if (gradientSwitch.checked) {
-                setLocalStorageItem('colorEnabled', 'false');
-                setLocalStorageItem('glassEnabled', 'false');
-            }
-        });
-        glassSwitch.addEventListener('change', () => {
-            if (glassSwitch.checked) {
-                setLocalStorageItem('colorEnabled', 'false');
-                setLocalStorageItem('gradientEnabled', 'false');
-            }
-        });
+        }
     }
+
+    // --- 1. Load saved preferences and set the state of the UI controls ---
+    const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
+    fontSelect.value = localStorage.getItem('font') || 'Inter'; // FIX: Use 'font'
+    weightSlider.value = parseInt(localStorage.getItem('weight') || '700', 10) / 10; // FIX: Use 'weight'
+    colorPicker.value = localStorage.getItem('color') || defaultColor; // FIX: Use 'color'
+    colorSwitch.checked = localStorage.getItem('colorEnabled') === 'true';
+    stackSwitch.checked = localStorage.getItem('stackEnabled') === 'true'; // FIX: Use 'stackEnabled'
+    sizeSlider.value = localStorage.getItem('clockSize') || '0';
+    posXSlider.value = localStorage.getItem('clockPosX') || '50';
+    posYSlider.value = localStorage.getItem('clockPosY') || '50';
+    alignmentSelect.value = localStorage.getItem('alignment') || 'center';
+	shadowSwitch.checked = localStorage.getItem('shadowEnabled') === 'true';
+    shadowBlurSlider.value = localStorage.getItem('shadowBlur') || '10';
+    shadowColorPicker.value = localStorage.getItem('shadowColor') || '#000000';
+    gradientSwitch.checked = localStorage.getItem('gradientEnabled') === 'true';
+    gradientColorPicker.value = localStorage.getItem('gradientColor') || '#ffffff';
+    glassSwitch.checked = localStorage.getItem('glassEnabled') === 'true';
+    roundnessSlider.value = localStorage.getItem('roundness') || '0';
+    // Note: Blur, brightness, and contrast sliders are handled by their own setup logic, but it's safe to include here too.
+    blurSlider.value = localStorage.getItem('wallpaperBlur') || '0';
+    brightnessSlider.value = localStorage.getItem('wallpaperBrightness') || '100';
+    contrastSlider.value = localStorage.getItem('wallpaperContrast') || '100';
+    document.getElementById('date-format-input').value = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
+    document.getElementById('clock-format-input').value = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
+
+    // --- 2. Apply the visual styles based on the now-correct state of the controls ---
+    applyClockLayout();
+    applyClockStyles();
+    applyWallpaperEffects();
+    applyAlignment(alignmentSelect.value);
     
-    // Modal open logic
-    document.querySelectorAll('[data-modal]').forEach(btn => {
-        const popupId = btn.dataset.modal;
-        const popup = document.getElementById(popupId);
-        if(popup) {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                showControlPopup(btn, popup);
-            });
+    // --- 3. NOW, set up the event listeners for future user interactions ---
+    const allControls = [
+        fontSelect, weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
+        blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
+        shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch, roundnessSlider,
+        sizeSlider, posXSlider, posYSlider, alignmentSelect, clockFormatInput, dateFormatInput
+    ];
+
+    allControls.forEach(control => {
+        const eventType = (control.type === 'checkbox' || control.tagName === 'SELECT') ? 'change' : 'input';
+        control.addEventListener(eventType, async () => {
+            applyClockLayout();
+            applyClockStyles();
+		    applyWallpaperEffects();
+            await saveCurrentWallpaperSettings();
+            syncUiStates();
+        });
+    });
+
+    // --- Special handler for Alignment Preset Dropdown ---
+    alignmentSelect.addEventListener('change', async () => {
+        applyClockLayout();
+        await saveCurrentWallpaperSettings();
+        syncUiStates();
+    });
+
+    // Special logic: uncheck gradient if solid color is checked, and vice-versa
+    colorSwitch.addEventListener('change', () => {
+        if (colorSwitch.checked) {
+            gradientSwitch.checked = false;
+            glassSwitch.checked = false;
+            saveCurrentWallpaperSettings();
+            syncUiStates();
+        }
+    });
+
+    gradientSwitch.addEventListener('change', () => {
+        if (gradientSwitch.checked) {
+            colorSwitch.checked = false;
+            glassSwitch.checked = false;
+            saveCurrentWallpaperSettings();
+            syncUiStates();
+        }
+    });
+
+    glassSwitch.addEventListener('change', () => {
+        if (glassSwitch.checked) {
+            colorSwitch.checked = false;
+            gradientSwitch.checked = false;
+            saveCurrentWallpaperSettings();
+            syncUiStates();
         }
     });
 }
@@ -5680,6 +5561,7 @@ function resetAndApplyDefaultClockStyles() {
 // Initialize theme and wallpaper on load
 function initializeCustomization() {
     setupThemeSwitcher();
+    setupFontSelection();
     setupFormatControls();
 }
 
@@ -7374,7 +7256,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     // --- Load ALL data and settings first ---
     loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
     loadSavedData();         // Load usage and lastOpened data
-    initializeSystemControls();
     loadRecentWallpapers();
     loadAvailableWidgets(); 
     initializeWallpaperTracking();
@@ -7510,6 +7391,265 @@ document.addEventListener('DOMContentLoaded', async function() {
         brightnessSlider.value = storedBrightness;
         updateBrightness(storedBrightness);
     }
+    
+    // Initialize icons based on current states
+    updateLightModeIcon(lightModeSwitch.checked);
+    updateMinimalModeIcon(minimalModeSwitch.checked);
+    updateSilentModeIcon(silentModeSwitch.checked);
+    updateTemperatureIcon(storedTemperature);
+    
+    // Function to update light mode icon
+    function updateLightModeIcon(isLightMode) {
+        const lightModeIcon = lightModeControl.querySelector('.material-symbols-rounded');
+        if (!lightModeIcon) return;
+        
+        if (isLightMode) {
+            lightModeIcon.textContent = 'radio_button_checked'; // Light mode ON
+        } else {
+            lightModeIcon.textContent = 'radio_button_partial'; // Light mode OFF (dark mode)
+        }
+    }
+    
+    // Function to update minimal mode icon
+    function updateMinimalModeIcon(isMinimalMode) {
+        const minimalModeIcon = minimalModeControl.querySelector('.material-symbols-rounded');
+        if (!minimalModeIcon) return;
+        
+        if (isMinimalMode) {
+            minimalModeIcon.textContent = 'screen_record'; // Minimal mode ON
+        } else {
+            minimalModeIcon.textContent = 'filter_tilt_shift'; // Minimal mode OFF
+        }
+    }
+    
+    // Function to update silent mode icon
+    function updateSilentModeIcon(isSilentMode) {
+        const silentModeIcon = silentModeControl.querySelector('.material-symbols-rounded');
+        if (!silentModeIcon) return;
+        
+        if (isSilentMode) {
+            silentModeIcon.textContent = 'notifications_off'; // Silent mode ON
+        } else {
+            silentModeIcon.textContent = 'notifications'; // Silent mode OFF
+        }
+    }
+    
+    // Function to update the temperature icon based on value
+    function updateTemperatureIcon(value) {
+        const temperatureIcon = temperatureControl.querySelector('.material-symbols-rounded');
+        if (!temperatureIcon) return;
+        
+        const tempValue = parseInt(value);
+        if (tempValue <= -1) {
+            temperatureIcon.textContent = 'mode_cool'; // Cold
+        } else if (tempValue >= 1) {
+            temperatureIcon.textContent = 'mode_heat'; // Hot
+        } else {
+            temperatureIcon.textContent = 'thermometer'; // Neutral
+        }
+    }
+    
+    // Function to update brightness
+    function updateBrightness(value) {        
+        // Calculate darkness level (inverse of brightness)
+        const darknessLevel = (100 - value) / 100;
+        
+        // Update the overlay opacity
+        brightnessOverlay.style.backgroundColor = `rgba(0, 0, 0, ${darknessLevel})`;
+        
+        // Update the icon based on brightness level
+        const brightnessIcon = document.querySelector('label[for="brightness-control"] .material-symbols-rounded');
+        
+        if (brightnessIcon) {
+            if (value <= 60) {
+                brightnessIcon.textContent = 'wb_sunny'; // Low brightness icon
+            } else {
+                brightnessIcon.textContent = 'sunny'; // High brightness icon
+            }
+        }
+    }
+    
+    // Function to update temperature
+    function updateTemperature(value) {
+        // Convert to number to ensure proper comparison
+        const tempValue = parseInt(value);
+        
+        // Calculate intensity based on distance from 0
+        const intensity = Math.abs(tempValue) / 10;
+        
+        // Calculate RGB values for overlay
+        let r, g, b, a;
+        
+        if (tempValue < 0) {
+            // Cool/blue tint (more blue as value decreases)
+            r = 200;
+            g = 220;
+            b = 255;
+            a = intensity;
+        } else if (tempValue > 0) {
+            // Warm/yellow tint (more yellow as value increases)
+            r = 255;
+            g = 220;
+            b = 180;
+            a = intensity;
+        } else {
+            // Neutral (no tint at 0)
+            r = 255;
+            g = 255;
+            b = 255;
+            a = 0;
+        }
+        
+        // Update the overlay color
+        temperatureOverlay.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${a})`;
+    }
+
+	let sunEffectTimeout;
+    
+    // Event listener for light mode control
+    lightModeControl.addEventListener('click', function() {
+        lightModeSwitch.checked = !lightModeSwitch.checked;
+        this.classList.toggle('active');
+
+        const newTheme = lightModeSwitch.checked ? 'light' : 'dark';
+
+        // Update localStorage
+        localStorage.setItem('theme', newTheme);
+
+        // Update current document
+        document.body.classList.toggle('light-theme', newTheme === 'light');
+
+        // Update icon
+        updateLightModeIcon(lightModeSwitch.checked);
+
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach((iframe) => {
+            iframe.contentWindow.postMessage({
+                type: 'themeUpdate',
+                theme: newTheme
+            }, window.location.origin);
+        });
+
+	    // Cancel any previous pending sun effect
+	    clearTimeout(sunEffectTimeout);
+	
+	    // Schedule a new sun effect after 3 seconds
+	    sunEffectTimeout = setTimeout(() => {
+	        updateSunEffect();
+	    }, 3000);
+	});
+    
+    // Event listener for minimal mode control
+    minimalModeControl.addEventListener('click', function() {
+        // Toggle minimalMode state
+        minimalMode = !minimalMode;
+
+        // Save state to localStorage (if needed)
+        localStorage.setItem('minimalMode', minimalMode);
+
+        // Update UI based on the new state
+        updateMinimalMode();
+
+        // Toggle active class for visual feedback
+        this.classList.toggle('active');
+        
+        // Update icon
+        updateMinimalModeIcon(minimalMode);
+    });
+
+    // Event listener for night mode control
+    nightModeControl.addEventListener('click', function() {
+        nightMode = !nightMode;
+        localStorage.setItem('nightMode', nightMode);
+        updateNightMode(); // This single call handles all state changes.
+    });
+
+    // Event listener for silent mode control
+    silentModeControl.addEventListener('click', function() {
+        silentModeSwitch.checked = !silentModeSwitch.checked;
+        this.classList.toggle('active');
+        
+        isSilentMode = silentModeSwitch.checked; // Update global flag
+        localStorage.setItem('silentMode', isSilentMode); // Save to localStorage
+        
+        // Update icon
+        updateSilentModeIcon(isSilentMode);
+        
+        // Only override showPopup based on silent mode state
+        if (isSilentMode) { // Silent mode is being turned ON
+            if (!window.originalShowPopup) {
+                window.originalShowPopup = window.showPopup;
+            }
+            window.showPopup = function(message) {
+                console.log('Silent ON; suppressing popup:', message);
+            };
+        } else { // Silent mode is being turned OFF
+            if (window.originalShowPopup) {
+                window.showPopup = window.originalShowPopup;
+            }
+        }
+        // showNotification is handled by its own internal logic, no override needed here.
+    });
+    
+    // Initialize silent mode on page load
+    (function initSilentMode() {
+        isSilentMode = localStorage.getItem('silentMode') === 'true'; // Initialize global flag
+        
+        if (isSilentMode) { // Silent mode is ON on page load
+            if (!window.originalShowPopup) {
+                window.originalShowPopup = window.showPopup;
+            }
+            window.showPopup = function(message) {
+                console.log('Silent ON; suppressing popup:', message);
+            };
+        }
+        // showNotification is handled by its own internal logic, no override needed here.
+    })();
+    
+    // Temperature control popup
+    temperatureControl.addEventListener('click', function(e) {
+        // If the popup is already open, and the click is NOT inside the popup or on the control, close it
+        if (
+            temperaturePopup.style.display === 'block' &&
+            !temperaturePopup.contains(e.target) &&
+            e.target !== temperatureControl
+        ) {
+            temperaturePopup.style.display = 'none';
+            return;
+        }
+
+        // Otherwise, open it as usual
+        const rect = temperatureControl.getBoundingClientRect();
+        temperaturePopup.style.top = `${rect.bottom + 5}px`;
+        temperaturePopup.style.left = `${rect.left + (rect.width / 2) - (155 / 2)}px`; // Center the popup
+        temperaturePopup.style.display = 'block';
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (temperaturePopup.style.display === 'block' && 
+            !temperaturePopup.contains(e.target) && 
+            e.target !== temperatureControl) {
+            temperaturePopup.style.display = 'none';
+        }
+    });
+    
+    // Temperature slider event listener
+    temperatureSlider.addEventListener('input', function(e) {
+        const value = e.target.value;
+        temperaturePopupValue.textContent = `${value}`;
+        temperatureValue.textContent = `${value}`;
+        localStorage.setItem('display_temperature', value);
+        updateTemperatureIcon(value);
+        updateTemperature(value);
+	temperatureControl.classList.toggle('active', value !== '0');
+    });
+    
+    // Brightness control event listener
+    brightnessSlider.addEventListener('input', function(e) {
+        const value = e.target.value;
+        updateBrightness(value);
+        localStorage.setItem('page_brightness', value);
+    });
     
     // Add CSS for the overlays
     const style = document.createElement('style');
@@ -7672,35 +7812,80 @@ function getLocalStorageItem(key) {
 }
 
 function setLocalStorageItem(key, value) {
-    // 1. Persist the change. The 'storage' event listener will handle syncing the Settings app.
     localStorage.setItem(key, value);
-
-    // 2. Look up the setting in the configuration map.
-    const config = SETTINGS_CONFIG[key];
-
-    if (config) {
-        // 3. Apply the setting's effect on the main Polygol UI.
-        if (config.apply) {
-            config.apply(value);
-        }
-
-        // 4. Broadcast the change to all other open Gurapps.
-        if (config.broadcast) {
-            const message = {
-                type: config.broadcast.type,
-                ...config.broadcast.payload(value)
-            };
-            document.querySelectorAll('iframe[data-gurasuraisu-iframe]').forEach(iframe => {
-                // Don't send the update back to the settings app that initiated it
-                if (iframe.contentWindow !== settingsAppWindow) {
-                    iframe.contentWindow.postMessage(message, window.location.origin);
-                }
-            });
+    // Re-sync UI for common settings immediately
+    if (key === 'page_brightness') updateBrightness(value);
+    if (key === 'theme') {
+         document.body.classList.toggle('light-theme', value === 'light');
+         document.querySelectorAll('iframe').forEach((iframe) => {
+            iframe.contentWindow.postMessage({
+                type: 'themeUpdate',
+                theme: value
+            }, window.location.origin);
+        });
+    }
+    if (key === 'animationsEnabled') {
+        const enabled = value === 'true';
+        document.body.classList.toggle('reduce-animations', !enabled);
+        document.querySelectorAll('iframe').forEach((iframe) => {
+            iframe.contentWindow.postMessage({
+                type: 'animationsUpdate',
+                enabled: enabled
+            }, window.location.origin);
+        });
+    }
+    if (key === 'showSeconds') {
+        showSeconds = value === 'true';
+        updateClockAndDate();
+    }
+    if (key === 'showWeather') {
+        showWeather = value === 'true';
+        // Trigger update to show/hide widget and fetch data
+        const weatherSwitchEl = document.getElementById('weather-switch');
+        if (weatherSwitchEl) {
+            weatherSwitchEl.checked = showWeather;
+            weatherSwitchEl.dispatchEvent(new Event('change')); // Simulate change event
         }
     }
-
-    // 5. Sync the visual state of the quick controls modal (`customizeModal`).
-    syncUiStates();
+    if (key === 'use12HourFormat') {
+        use12HourFormat = value === 'true';
+        updateClockAndDate();
+    }
+    if (key === 'clockFont' || key === 'clockWeight' || key === 'clockColor' || key === 'clockColorEnabled' || key === 'clockStackEnabled') {
+        applyClockStyles();
+        updateClockAndDate();
+    }
+    if (key === 'highContrast') {
+        document.body.classList.toggle('high-contrast', value === 'true');
+    }
+    if (key === 'gurappsEnabled') {
+        gurappsEnabled = value === 'true';
+        updateGurappsVisibility();
+    }
+    if (key === 'minimalMode') {
+        minimalMode = value === 'true';
+        updateMinimalMode();
+    }
+    if (key === 'silentMode') {
+        // Re-initialize silent mode functionality
+        (function initSilentMode() {
+            const silentModeEnabled = localStorage.getItem('silentMode') === 'true';
+            if (silentModeEnabled) {
+                if (!window.originalShowPopup) {
+                    window.originalShowPopup = window.showPopup;
+                }
+                window.showPopup = function(msg) {
+                    console.log('Silent ON; suppressing popup:', msg);
+                };
+            } else {
+                if (window.originalShowPopup) {
+                    window.showPopup = window.originalShowPopup;
+                }
+            }
+        })();
+    }
+    syncUiStates(); // Update UI for other visual indicators
+    return `Setting '${key}' updated.`;
 }
 
 function removeLocalStorageItem(key) {
@@ -8317,11 +8502,11 @@ window.addEventListener('message', async (event) => { // Make listener async
 
         const funcToCall = allowedFunctions[funcName];
 
-		if (typeof funcToCall === 'function') {
+        if (typeof funcToCall === 'function') {
             try {
                 const result = await funcToCall.apply(window, args);
                 
-                // Define a map for specific response message types.
+                let messageType = 'parentActionSuccess';
                 const typeMap = {
                     'getLocalStorageItem': 'localStorageItemValue',
                     'listLocalStorageKeys': 'localStorageKeysList',
@@ -8332,36 +8517,27 @@ window.addEventListener('message', async (event) => { // Make listener async
                     'listIDBDatabases': 'idbDatabasesList',
                     'listIDBStores': 'idbStoresList',
                     'getIDBRecord': 'idbRecordValue',
-                    'requestInstalledApps': 'installed-apps-list'
+                    'requestInstalledApps': 'installed-apps-list' // Added here
                 };
+                if (funcName.startsWith('get') || funcName.startsWith('list') || funcName.startsWith('request')) {
+                    messageType = typeMap[funcName] || 'commandOutput';
+                }
 
-                // Determine the message type, defaulting for simple success messages.
-                const messageType = typeMap[funcName] || 'parentActionSuccess';
                 const response = { type: messageType };
-
-                // Populate the response with the correct data structure based on the function.
-                if (funcName === 'getLocalStorageItem') {
-                    // Special case: The settings app needs the original key back.
-                    response.key = args[0]; // The key is the first argument passed.
-                    response.value = result;
-                } else if (funcName === 'requestInstalledApps') {
+                
+                if (funcName === 'requestInstalledApps') {
                     response.apps = result;
                 } else if (funcName === 'listLocalStorageKeys') {
                     response.keys = result;
+                // ... (rest of existing response logic) ...
                 } else {
-                    // For all other functions (including lists, gets, and simple commands),
-                    // the result is sent in the 'message' property.
-                    response.message = result;
+                     response.message = result;
                 }
                 
-                if (sourceWindow) {
-                    sourceWindow.postMessage(response, window.location.origin);
-                }
+                sourceWindow.postMessage(response, window.location.origin);
 
             } catch (error) {
-                if (sourceWindow) {
-                    sourceWindow.postMessage({ type: 'parentActionError', message: error.message }, window.location.origin);
-                }
+                sourceWindow.postMessage({ type: 'parentActionError', message: error.message }, window.location.origin);
             }
         } else {
             console.warn(`A Gurapp attempted to call a disallowed or non-existent function: "${funcName}"`);
@@ -8379,16 +8555,6 @@ window.addEventListener('message', async (event) => { // Make listener async
             console.warn(`Message target not found: No iframe for app "${targetApp}"`);
         }
         return; // Message handled
-    }
-});
-
-window.addEventListener('storage', (event) => {
-    if (settingsAppWindow) {
-        settingsAppWindow.postMessage({
-            type: 'settingUpdate',
-            key: event.key,
-            value: event.newValue
-        }, window.location.origin);
     }
 });
 
