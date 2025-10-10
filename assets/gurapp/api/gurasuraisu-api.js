@@ -302,7 +302,15 @@ const Gurasuraisu = {
   getIDBRecord: function(dbName, storeName, key) { this._call('getIDBRecord', [dbName, storeName, key]); },
   setIDBRecord: function(dbName, storeName, jsonData) { this._call('setIDBRecord', [dbName, storeName, jsonData]); },
   removeIDBRecord: function(dbName, storeName, key) { this._call('removeIDBRecord', [dbName, storeName, key]); },
-  clearIDBStore: function(dbName, storeName) { this._call('clearIDBStore', [dbName, storeName]); }
+  clearIDBStore: function(dbName, storeName) { this._call('clearIDBStore', [dbName, storeName]); },
+
+  // --- Functions for Settings Management ---
+  getLocalStorageItem: function(key) {
+    this._call('getLocalStorageItem', [key]);
+  },
+  setLocalStorageItem: function(key, value) {
+    this._call('setLocalStorageItem', [key, value]);
+  }
 };
 
 // --- Event Listener for Messages FROM Gurasuraisu ---
