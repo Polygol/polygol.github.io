@@ -181,7 +181,7 @@ const SETTINGS_CONFIG = {
         apply: (value) => {
             isSilentMode = (value === 'true');
             updateSilentModeIcon(isSilentMode);
-            // Re-initialize the showPopup override
+            // Re-initialize the showPopup override logic
             if (isSilentMode) {
                 if (!window.originalShowPopup) window.originalShowPopup = window.showPopup;
                 window.showPopup = (message) => console.log('Silent ON; suppressing popup:', message);
@@ -194,13 +194,13 @@ const SETTINGS_CONFIG = {
         apply: (value) => {
             minimalMode = (value === 'true');
             updateMinimalMode();
-            updateMinimalModeIcon(minimalMode);
+            updateMinimalModeIcon(minimalMode); // Call the helper
         }
     },
     'nightMode': {
         apply: (value) => {
             nightMode = (value === 'true');
-            updateNightMode(); // This function already updates the icon
+            updateNightMode(); // This function already updates its own icon
         }
     },
     'page_brightness': {
@@ -208,15 +208,20 @@ const SETTINGS_CONFIG = {
     },
     'display_temperature': {
         apply: (value) => {
-            updateTemperature(value);
-            updateTemperatureIcon(value);
+            const val = value || '0';
+            updateTemperature(val);
+            updateTemperatureIcon(val);
             const tempValueEl = document.getElementById('thermostat-popup-value');
-            if (tempValueEl) tempValueEl.textContent = value;
+            if (tempValueEl) tempValueEl.textContent = val;
         }
     },
     // --- Appearance ---
     'theme': {
-        apply: (value) => document.body.classList.toggle('light-theme', value === 'light'),
+        apply: (value) => {
+            const isLight = (value === 'light');
+            document.body.classList.toggle('light-theme', isLight);
+            updateLightModeIcon(isLight); // Call the helper
+        },
         broadcast: { type: 'themeUpdate', payload: (value) => ({ theme: value }) }
     },
     'animationsEnabled': {
@@ -276,6 +281,37 @@ const SETTINGS_CONFIG = {
         }
     }
 };
+
+function updateLightModeIcon(isLightMode) {
+    const lightModeIcon = document.querySelector('#light_mode_qc .material-symbols-rounded');
+    if (!lightModeIcon) return;
+    lightModeIcon.textContent = isLightMode ? 'light_mode' : 'dark_mode';
+}
+
+function updateMinimalModeIcon(isMinimalMode) {
+    const minimalModeIcon = document.querySelector('#minimal_mode_qc .material-symbols-rounded');
+    if (!minimalModeIcon) return;
+    minimalModeIcon.textContent = isMinimalMode ? 'screen_record' : 'filter_tilt_shift';
+}
+
+function updateSilentModeIcon(isSilentMode) {
+    const silentModeIcon = document.querySelector('#silent_switch_qc .material-symbols-rounded');
+    if (!silentModeIcon) return;
+    silentModeIcon.textContent = isSilentMode ? 'notifications_off' : 'notifications';
+}
+
+function updateTemperatureIcon(value) {
+    const temperatureIcon = document.querySelector('#temp_control_qc .material-symbols-rounded');
+    if (!temperatureIcon) return;
+    const tempValue = parseInt(value, 10);
+    if (tempValue <= -1) {
+        temperatureIcon.textContent = 'mode_cool';
+    } else if (tempValue >= 1) {
+        temperatureIcon.textContent = 'mode_heat';
+    } else {
+        temperatureIcon.textContent = 'thermometer';
+    }
+}
 
 let cursorIdleTimeout;
 
