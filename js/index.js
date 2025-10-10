@@ -7806,20 +7806,20 @@ function preventLeaving() {
 }
 
 // --- Terminal Functions (Corrected Signatures) ---
-function getLocalStorageItem(key, sourceWindow) {
-    const value = localStorage.getItem(key);
-    // The response is now sent from the main message handler
-    return value;
+function getLocalStorageItem(key) {
+    return localStorage.getItem(key);
 }
-
 function setLocalStorageItem(key, value) {
     localStorage.setItem(key, value);
 
-    // Apply the change visually
-    const controlMap = {
+    // This map is crucial. It links the setting key to the function
+    // that visually updates the parent Polygol UI.
+    const settingActionMap = {
         'theme': () => {
             document.body.classList.toggle('light-theme', value === 'light');
             updateLightModeIcon(value === 'light');
+            // The theme change also triggers a sun effect update
+            updateSunEffect();
         },
         'animationsEnabled': () => document.body.classList.toggle('reduce-animations', value !== 'true'),
         'highContrast': () => document.body.classList.toggle('high-contrast', value === 'true'),
@@ -7827,40 +7827,36 @@ function setLocalStorageItem(key, value) {
         'aiAssistantEnabled': () => { isAiAssistantEnabled = (value === 'true'); if(isAiAssistantEnabled) initializeAiAssistant(); else genAI = null; },
         'oneButtonNavEnabled': () => { oneButtonNavEnabled = (value === 'true'); updateOneButtonNavVisibility(); },
         'showSeconds': () => { showSeconds = (value === 'true'); updateClockAndDate(); },
-        'showWeather': () => { showWeather = (value === 'true'); updateWeatherVisibility(); if(showWeather) updateSmallWeather(); },
+        'showWeather': () => {
+            showWeather = (value === 'true');
+            updateWeatherVisibility();
+            if(showWeather) updateSmallWeather();
+        },
         'use12HourFormat': () => { use12HourFormat = (value === 'true'); updateClockAndDate(); },
         'clockSize': applyClockLayout,
         'clockPosX': applyClockLayout,
         'clockPosY': applyClockLayout,
-        'alignment': applyClockLayout,
-        'font': applyClockStyles,
-        'weight': applyClockStyles,
-        'roundness': applyClockStyles,
-        'color': applyClockStyles,
-        'colorEnabled': applyClockStyles,
-        'gradientColor': applyClockStyles,
-        'gradientEnabled': applyClockStyles,
-        'glassEnabled': applyClockStyles,
-        'stackEnabled': applyClockStyles,
-        'shadowEnabled': applyClockStyles,
-        'shadowBlur': applyClockStyles,
-        'shadowColor': applyClockStyles,
-        'dateFormat': updateClockAndDate,
-        'clockFormat': updateClockAndDate,
-        'wallpaperBlur': applyWallpaperEffects,
-        'wallpaperBrightness': applyWallpaperEffects,
-        'wallpaperContrast': applyWallpaperEffects,
+        'alignment': () => { applyAlignment(value); applyClockLayout(); },
+        'font': applyClockStyles, 'weight': applyClockStyles, 'roundness': applyClockStyles,
+        'color': applyClockStyles, 'colorEnabled': applyClockStyles,
+        'gradientColor': applyClockStyles, 'gradientEnabled': applyClockStyles,
+        'glassEnabled': applyClockStyles, 'stackEnabled': applyClockStyles,
+        'shadowEnabled': applyClockStyles, 'shadowBlur': applyClockStyles, 'shadowColor': applyClockStyles,
+        'dateFormat': updateClockAndDate, 'clockFormat': updateClockAndDate,
+        'wallpaperBlur': applyWallpaperEffects, 'wallpaperBrightness': applyWallpaperEffects, 'wallpaperContrast': applyWallpaperEffects
     };
 
-    controlMap[key]?.();
+    // Execute the corresponding UI update function
+    settingActionMap[key]?.();
 
-    // Broadcast the change to all iframes
+    // Broadcast the change to ALL other iframes so they can sync
     document.querySelectorAll('iframe[data-gurasuraisu-iframe]').forEach(iframe => {
-        if (iframe.contentWindow) {
+        if (iframe.contentWindow && iframe.contentWindow !== event.source) { // Don't send back to sender
             iframe.contentWindow.postMessage({ type: 'settingUpdate', key, value }, window.location.origin);
         }
     });
 
+    syncUiStates(); // Update active states in the main control center UI
     return `Setting '${key}' updated.`;
 }
 
@@ -8336,6 +8332,7 @@ const Gurasuraisu = {
 // --- NEW Permission Model ---
 // Maps trusted app IDs to their permission levels.
 const TRUSTED_APP_PERMISSIONS = {
+    'Settings': ['system-admin'] // Grant full permissions to the core settings app
     'Terminal': ['system-admin'], // Full access to everything
     'App Store': ['app-management']  // Can only manage apps
 };
@@ -8405,15 +8402,10 @@ window.addEventListener('message', async (event) => { // Make listener async
         return; // Message handled
     }
 
-    // --- NEW: Handle settings app announcing it's ready for real-time updates ---
+    // NEW: Handle settings app connecting for real-time updates
     if (data.type === 'settings-app-ready') {
-        if (sourceWindow) {
-            // Add this window to a list of subscribers for real-time updates
-            // (For simplicity, we'll just broadcast to all iframes, but this is where
-            // you could manage a specific list of listeners)
-            console.log('[Polygol] Settings app connected for real-time updates.');
-        }
-        return;
+        console.log('[Polygol] Settings app is ready for real-time updates.');
+        return; // Just acknowledge, no action needed
     }
 
     // Check if this is an API call from a Gurapp
@@ -8508,10 +8500,15 @@ window.addEventListener('message', async (event) => { // Make listener async
                     'getIDBRecord': 'idbRecordValue',
                     'requestInstalledApps': 'installed-apps-list' // Added here
                 };
-                
-                const response = { type: messageType, key: args[0], value: result };
+				
+                if (funcName.startsWith('get') || funcName.startsWith('list') || funcName.startsWith('request')) {
+                    messageType = typeMap[funcName] || 'commandOutput';
+                }
 
-                // Only send a response if there is a result to send
+                // Construct the response object with key and value for specific functions
+                const response = { type: messageType, key: args[0], value: result };
+                
+                // Only send a response back if there was a result
                 if (result !== undefined) {
                     sourceWindow.postMessage(response, window.location.origin);
                 }
