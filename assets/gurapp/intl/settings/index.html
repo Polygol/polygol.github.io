@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" 
+          content="width=device-width, initial-scale=1.0, 
+                   maximum-scale=1.0, user-scalable=no" />
+    <title>Settings</title>
+    <link rel="icon" href="/assets/appicon/system.png" type="image/png">
+    <link rel="stylesheet" 
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="css/settings.css">
+</head>
+<body data-app-name="Settings">
+    <div class="container">
+        <div class="toolbar">
+            <button class="tab-btn active" data-tab="system">
+                <span class="material-symbols-rounded">tune</span>System
+            </button>
+            <button class="tab-btn" data-tab="home">
+                <span class="material-symbols-rounded">home</span>Home
+            </button>
+        </div>
+
+        <!-- System Tab -->
+        <div class="tab-content active" id="system-content">
+            <div class="setting-section">
+                <h2 class="section-title">Appearance</h2>
+                <div class="setting-item" id="setting-theme">
+                    <div class="setting-info">
+                        <span class="setting-label">Light Theme</span>
+                        <span class="setting-description">
+                            Switch between light and dark themes.
+                        </span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" 
+                               data-key="theme">
+                    </div>
+                </div>
+                <div class="setting-item" id="setting-animationsEnabled">
+                     <div class="setting-info">
+                        <span class="setting-label">Animations</span>
+                        <span class="setting-description">
+                            Enable or disable system-wide animations.
+                        </span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" 
+                               data-key="animationsEnabled">
+                    </div>
+                </div>
+                 <div class="setting-item" id="setting-highContrast">
+                     <div class="setting-info">
+                        <span class="setting-label">High Contrast</span>
+                        <span class="setting-description">
+                            Increases legibility and removes transparency.
+                        </span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" 
+                               data-key="highContrast">
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-section">
+                <h2 class="section-title">Functionality</h2>
+                 <div class="setting-item" id="setting-gurappsEnabled">
+                     <div class="setting-info">
+                        <span class="setting-label">Gurapps</span>
+                        <span class="setting-description">
+                            Enable or disable the app drawer and dock.
+                        </span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" 
+                               data-key="gurappsEnabled">
+                    </div>
+                </div>
+                 <div class="setting-item" id="setting-aiAssistantEnabled">
+                     <div class="setting-info">
+                        <span class="setting-label">GuraAI Assistant</span>
+                        <span class="setting-description">
+                            Enable the AI assistant with vision capabilities.
+                        </span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" 
+                               data-key="aiAssistantEnabled">
+                    </div>
+                </div>
+                 <div class="setting-item" id="setting-oneButtonNavEnabled">
+                     <div class="setting-info">
+                        <span class="setting-label">One-Button Nav</span>
+                        <span class="setting-description">
+                            Use a single button for home, back, and apps.
+                        </span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" 
+                               data-key="oneButtonNavEnabled">
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-section">
+                <h2 class="section-title">Data & Recovery</h2>
+                 <div class="setting-item">
+                     <div class="setting-info">
+                        <span class="setting-label">System Transfer</span>
+                        <span class="setting-description">
+                            Export or import your Polygol data.
+                        </span>
+                    </div>
+                    <div class="setting-control">
+                        <button class="action-btn" id="btn-transfer">
+                            Open
+                        </button>
+                    </div>
+                </div>
+                <div class="setting-item">
+                     <div class="setting-info">
+                        <span class="setting-label">Recovery Mode</span>
+                        <span class="setting-description">
+                           Factory reset Polygol if it's not working.
+                        </span>
+                    </div>
+                    <div class="setting-control">
+                        <button class="action-btn" id="btn-recovery">
+                            Open
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/settings.js"></script>
+</body>
+</html>
