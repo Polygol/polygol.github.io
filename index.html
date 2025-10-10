@@ -172,36 +172,39 @@
                     </button>
                 </div>
             </div>
-            
             <div class="qc-sliders">
                 <div class="brightness-slider-container">
                     <label for="brightness-control" class="cust-label">
                         <span class="material-symbols-rounded" style="font-size: 20px;">sunny</span>
                     </label>
-                    <input type="range" min="20" max="100" value="100" class="brightness-slider" id="brightness-control" data-key="page_brightness">
+                    <input type="range" min="20" max="100" value="100" class="brightness-slider" id="brightness-control">
                 </div>
             </div>
             <div class="quick-controls">
-                <div class="qcontrol-item" id="silent_switch_qc" data-key="silentMode">
+                <div class="qcontrol-item" id="silent_switch_qc">
                     <span class="material-symbols-rounded">notifications_off</span>
                     <span class="qc-label">LANG_SILENT</span>
+                    <input type="checkbox" id="silent_switch" class="qc-switch" hidden>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <div class="qcontrol-item" id="temp_control_qc" data-key="display_temperature">
+                    <div class="qcontrol-item" id="temp_control_qc">
                         <span class="material-symbols-rounded" style="margin: 0;">thermometer</span>
+                        <span class="qc-label">LANG_TONE</span>
                         <span id="thermostat-value" style="display: none;">0</span>
                     </div>
-                    <div class="qcontrol-item" id="night-mode-qc" data-key="nightMode">
+                    <div class="qcontrol-item" id="night-mode-qc">
                         <span class="material-symbols-rounded" style="margin: 0;">bedtime</span>
                     </div>
                 </div>
-                <div class="qcontrol-item" id="minimal_mode_qc" data-key="minimalMode">
+                <div class="qcontrol-item" id="minimal_mode_qc">
                     <span class="material-symbols-rounded">filter_tilt_shift</span>
                     <span class="qc-label">LANG_MINIMAL</span>
+                    <input type="checkbox" id="focus-switch" class="qc-switch" hidden>
                 </div>
-                <div class="qcontrol-item" id="light_mode_qc" data-key="theme">
+                <div class="qcontrol-item" id="light_mode_qc">
                     <span class="material-symbols-rounded">contrast</span>
                     <span class="qc-label">LANG_DAYLIGHT</span>
+                    <input type="checkbox" id="theme-switch" class="qc-switch" hidden>
                 </div>
             </div>
 
@@ -335,9 +338,6 @@
 
             <!-- All original controls are moved here and hidden -->
             <div id="hidden-controls-container" style="display: none;">
-                <input type="checkbox" id="silent_switch" data-key="silentMode" hidden>
-                <input type="checkbox" id="focus-switch" data-key="minimalMode" hidden>
-                <input type="checkbox" id="theme-switch" data-key="theme" hidden>
                 <input type="file" id="wallpaperInput" accept=".png, .jpeg, .jpg, .webp, .gif, .mp4" multiple>
                 <button id="uploadButton">Add</button>
                 <input type="range" min="0" max="20" value="0" class="wallpaper-effect-slider" id="wallpaper-blur-slider">
@@ -468,7 +468,7 @@
                 <span class="adjust-label">LANG_ADJUST</span>
             </div>
             <div class="thermostat-slider-container">
-                <input type="range" min="-10" max="10" value="0" class="thermostat-slider" id="thermostat-control" data-key="display_temperature">
+                <input type="range" min="-10" max="10" value="0" class="thermostat-slider" id="thermostat-control">
                 <div id="thermostat-popup-value">0</div>
             </div>
         </div>
