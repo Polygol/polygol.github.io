@@ -188,14 +188,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px;
+    padding: 12px 16px;
     background-color: var(--search-background);
     border: 1px solid var(--glass-border);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
     box-shadow: var(--sun-shadow);
     border-radius: 35px;
     corner-shape: superellipse(1.5);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .setting-info {
