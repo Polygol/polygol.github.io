@@ -7806,85 +7806,61 @@ function preventLeaving() {
 }
 
 // --- Terminal Functions (Corrected Signatures) ---
-
-function getLocalStorageItem(key) {
-    return localStorage.getItem(key);
+function getLocalStorageItem(key, sourceWindow) {
+    const value = localStorage.getItem(key);
+    // The response is now sent from the main message handler
+    return value;
 }
 
 function setLocalStorageItem(key, value) {
     localStorage.setItem(key, value);
-    // Re-sync UI for common settings immediately
-    if (key === 'page_brightness') updateBrightness(value);
-    if (key === 'theme') {
-         document.body.classList.toggle('light-theme', value === 'light');
-         document.querySelectorAll('iframe').forEach((iframe) => {
-            iframe.contentWindow.postMessage({
-                type: 'themeUpdate',
-                theme: value
-            }, window.location.origin);
-        });
-    }
-    if (key === 'animationsEnabled') {
-        const enabled = value === 'true';
-        document.body.classList.toggle('reduce-animations', !enabled);
-        document.querySelectorAll('iframe').forEach((iframe) => {
-            iframe.contentWindow.postMessage({
-                type: 'animationsUpdate',
-                enabled: enabled
-            }, window.location.origin);
-        });
-    }
-    if (key === 'showSeconds') {
-        showSeconds = value === 'true';
-        updateClockAndDate();
-    }
-    if (key === 'showWeather') {
-        showWeather = value === 'true';
-        // Trigger update to show/hide widget and fetch data
-        const weatherSwitchEl = document.getElementById('weather-switch');
-        if (weatherSwitchEl) {
-            weatherSwitchEl.checked = showWeather;
-            weatherSwitchEl.dispatchEvent(new Event('change')); // Simulate change event
+
+    // Apply the change visually
+    const controlMap = {
+        'theme': () => {
+            document.body.classList.toggle('light-theme', value === 'light');
+            updateLightModeIcon(value === 'light');
+        },
+        'animationsEnabled': () => document.body.classList.toggle('reduce-animations', value !== 'true'),
+        'highContrast': () => document.body.classList.toggle('high-contrast', value === 'true'),
+        'gurappsEnabled': () => { gurappsEnabled = (value === 'true'); updateGurappsVisibility(); },
+        'aiAssistantEnabled': () => { isAiAssistantEnabled = (value === 'true'); if(isAiAssistantEnabled) initializeAiAssistant(); else genAI = null; },
+        'oneButtonNavEnabled': () => { oneButtonNavEnabled = (value === 'true'); updateOneButtonNavVisibility(); },
+        'showSeconds': () => { showSeconds = (value === 'true'); updateClockAndDate(); },
+        'showWeather': () => { showWeather = (value === 'true'); updateWeatherVisibility(); if(showWeather) updateSmallWeather(); },
+        'use12HourFormat': () => { use12HourFormat = (value === 'true'); updateClockAndDate(); },
+        'clockSize': applyClockLayout,
+        'clockPosX': applyClockLayout,
+        'clockPosY': applyClockLayout,
+        'alignment': applyClockLayout,
+        'font': applyClockStyles,
+        'weight': applyClockStyles,
+        'roundness': applyClockStyles,
+        'color': applyClockStyles,
+        'colorEnabled': applyClockStyles,
+        'gradientColor': applyClockStyles,
+        'gradientEnabled': applyClockStyles,
+        'glassEnabled': applyClockStyles,
+        'stackEnabled': applyClockStyles,
+        'shadowEnabled': applyClockStyles,
+        'shadowBlur': applyClockStyles,
+        'shadowColor': applyClockStyles,
+        'dateFormat': updateClockAndDate,
+        'clockFormat': updateClockAndDate,
+        'wallpaperBlur': applyWallpaperEffects,
+        'wallpaperBrightness': applyWallpaperEffects,
+        'wallpaperContrast': applyWallpaperEffects,
+    };
+
+    controlMap[key]?.();
+
+    // Broadcast the change to all iframes
+    document.querySelectorAll('iframe[data-gurasuraisu-iframe]').forEach(iframe => {
+        if (iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'settingUpdate', key, value }, window.location.origin);
         }
-    }
-    if (key === 'use12HourFormat') {
-        use12HourFormat = value === 'true';
-        updateClockAndDate();
-    }
-    if (key === 'clockFont' || key === 'clockWeight' || key === 'clockColor' || key === 'clockColorEnabled' || key === 'clockStackEnabled') {
-        applyClockStyles();
-        updateClockAndDate();
-    }
-    if (key === 'highContrast') {
-        document.body.classList.toggle('high-contrast', value === 'true');
-    }
-    if (key === 'gurappsEnabled') {
-        gurappsEnabled = value === 'true';
-        updateGurappsVisibility();
-    }
-    if (key === 'minimalMode') {
-        minimalMode = value === 'true';
-        updateMinimalMode();
-    }
-    if (key === 'silentMode') {
-        // Re-initialize silent mode functionality
-        (function initSilentMode() {
-            const silentModeEnabled = localStorage.getItem('silentMode') === 'true';
-            if (silentModeEnabled) {
-                if (!window.originalShowPopup) {
-                    window.originalShowPopup = window.showPopup;
-                }
-                window.showPopup = function(msg) {
-                    console.log('Silent ON; suppressing popup:', msg);
-                };
-            } else {
-                if (window.originalShowPopup) {
-                    window.showPopup = window.originalShowPopup;
-                }
-            }
-        })();
-    }
-    syncUiStates(); // Update UI for other visual indicators
+    });
+
     return `Setting '${key}' updated.`;
 }
 
@@ -8429,6 +8405,17 @@ window.addEventListener('message', async (event) => { // Make listener async
         return; // Message handled
     }
 
+    // --- NEW: Handle settings app announcing it's ready for real-time updates ---
+    if (data.type === 'settings-app-ready') {
+        if (sourceWindow) {
+            // Add this window to a list of subscribers for real-time updates
+            // (For simplicity, we'll just broadcast to all iframes, but this is where
+            // you could manage a specific list of listeners)
+            console.log('[Polygol] Settings app connected for real-time updates.');
+        }
+        return;
+    }
+
     // Check if this is an API call from a Gurapp
     if (data && data.action === 'callGurasuraisuFunc' && data.functionName) {
         const funcName = data.functionName;
@@ -8477,6 +8464,8 @@ window.addEventListener('message', async (event) => { // Make listener async
             // Privileged Functions (already checked above)
             installApp, 
             deleteApp,
+		    getLocalStorageItem, // ADDED
+            setLocalStorageItem, // ADDED
             requestInstalledApps, // Added here
             getLocalStorageItem, 
             setLocalStorageItem,
@@ -8504,7 +8493,7 @@ window.addEventListener('message', async (event) => { // Make listener async
 
         if (typeof funcToCall === 'function') {
             try {
-                const result = await funcToCall.apply(window, args);
+                const result = await funcToCall.apply(window, [...args, sourceWindow]);
                 
                 let messageType = 'parentActionSuccess';
                 const typeMap = {
@@ -8519,22 +8508,13 @@ window.addEventListener('message', async (event) => { // Make listener async
                     'getIDBRecord': 'idbRecordValue',
                     'requestInstalledApps': 'installed-apps-list' // Added here
                 };
-                if (funcName.startsWith('get') || funcName.startsWith('list') || funcName.startsWith('request')) {
-                    messageType = typeMap[funcName] || 'commandOutput';
-                }
+                
+                const response = { type: messageType, key: args[0], value: result };
 
-                const response = { type: messageType };
-                
-                if (funcName === 'requestInstalledApps') {
-                    response.apps = result;
-                } else if (funcName === 'listLocalStorageKeys') {
-                    response.keys = result;
-                // ... (rest of existing response logic) ...
-                } else {
-                     response.message = result;
+                // Only send a response if there is a result to send
+                if (result !== undefined) {
+                    sourceWindow.postMessage(response, window.location.origin);
                 }
-                
-                sourceWindow.postMessage(response, window.location.origin);
 
             } catch (error) {
                 sourceWindow.postMessage({ type: 'parentActionError', message: error.message }, window.location.origin);
