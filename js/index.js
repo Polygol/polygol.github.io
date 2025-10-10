@@ -8531,11 +8531,11 @@ window.addEventListener('message', async (event) => { // Make listener async
 
         const funcToCall = allowedFunctions[funcName];
 
-        if (typeof funcToCall === 'function') {
+		if (typeof funcToCall === 'function') {
             try {
                 const result = await funcToCall.apply(window, args);
                 
-                let messageType = 'parentActionSuccess';
+                // Define a map for specific response message types.
                 const typeMap = {
                     'getLocalStorageItem': 'localStorageItemValue',
                     'listLocalStorageKeys': 'localStorageKeysList',
@@ -8546,27 +8546,36 @@ window.addEventListener('message', async (event) => { // Make listener async
                     'listIDBDatabases': 'idbDatabasesList',
                     'listIDBStores': 'idbStoresList',
                     'getIDBRecord': 'idbRecordValue',
-                    'requestInstalledApps': 'installed-apps-list' // Added here
+                    'requestInstalledApps': 'installed-apps-list'
                 };
-                if (funcName.startsWith('get') || funcName.startsWith('list') || funcName.startsWith('request')) {
-                    messageType = typeMap[funcName] || 'commandOutput';
-                }
 
+                // Determine the message type, defaulting for simple success messages.
+                const messageType = typeMap[funcName] || 'parentActionSuccess';
                 const response = { type: messageType };
-                
-                if (funcName === 'requestInstalledApps') {
+
+                // Populate the response with the correct data structure based on the function.
+                if (funcName === 'getLocalStorageItem') {
+                    // Special case: The settings app needs the original key back.
+                    response.key = args[0]; // The key is the first argument passed.
+                    response.value = result;
+                } else if (funcName === 'requestInstalledApps') {
                     response.apps = result;
                 } else if (funcName === 'listLocalStorageKeys') {
                     response.keys = result;
-                // ... (rest of existing response logic) ...
                 } else {
-                     response.message = result;
+                    // For all other functions (including lists, gets, and simple commands),
+                    // the result is sent in the 'message' property.
+                    response.message = result;
                 }
                 
-                sourceWindow.postMessage(response, window.location.origin);
+                if (sourceWindow) {
+                    sourceWindow.postMessage(response, window.location.origin);
+                }
 
             } catch (error) {
-                sourceWindow.postMessage({ type: 'parentActionError', message: error.message }, window.location.origin);
+                if (sourceWindow) {
+                    sourceWindow.postMessage({ type: 'parentActionError', message: error.message }, window.location.origin);
+                }
             }
         } else {
             console.warn(`A Gurapp attempted to call a disallowed or non-existent function: "${funcName}"`);
