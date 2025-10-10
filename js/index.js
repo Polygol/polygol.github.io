@@ -67,13 +67,24 @@ let currentLanguage = LANG_EN; // Default to English
 
 function applyLanguage(language) {
     console.log('Applying language:', language);
-    document.querySelector('.modal-content h2').innerText = language.CONTROLS;
-    document.querySelector('#silent_switch_qc .qc-label').innerText = language.SILENT;
-    document.querySelector('#temp_control_qc .qc-label').innerText = language.TONE;
-    document.querySelector('#minimal_mode_qc .qc-label').innerText = language.MINIMAL;
-    document.querySelector('#light_mode_qc .qc-label').innerText = language.DAYLIGHT;
 
-    // Dynamically update labels in the grid
+    // A small helper to safely set text content on an element if it exists.
+    const safeSetText = (selector, text) => {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.innerText = text;
+        }
+    };
+
+    // Use the safe helper for all UI text updates.
+    safeSetText('.modal-content h2', language.CONTROLS);
+    safeSetText('#silent_switch_qc .qc-label', language.SILENT);
+    safeSetText('#temp_control_qc .qc-label', language.TONE);
+    safeSetText('#minimal_mode_qc .qc-label', language.MINIMAL);
+    safeSetText('#light_mode_qc .qc-label', language.DAYLIGHT);
+    safeSetText('#thermostat-popup .adjust-label', language.ADJUST);
+
+    // This loop is already safe because it won't run if no elements are found.
     document.querySelectorAll('.setting-label[data-lang-key]').forEach(label => {
         const key = label.getAttribute('data-lang-key');
         if (language[key]) {
@@ -81,11 +92,11 @@ function applyLanguage(language) {
         }
     });
 
-    // Safely update elements that might not always be visible
+    // Safely update elements that might not always be visible.
     const versionButton = document.querySelector('.version-info button#versionButton');
     if (versionButton) versionButton.textContent = language.GET_DOCS;
     
-    // Safely update font dropdown options
+    // Safely update font and alignment dropdown options.
     const fontSelect = document.getElementById('font-select');
     if (fontSelect) {
         const options = {
@@ -108,12 +119,7 @@ function applyLanguage(language) {
         }
     }
 
-    const adjustLabel = document.querySelector('#thermostat-popup .adjust-label');
-    if (adjustLabel) {
-        adjustLabel.textContent = language.ADJUST;
-    }
-
-    // Update checkWords and closeWords
+    // Update global variables for other parts of the system.
     window.checkWords = language.CHECK_WORDS;
     window.closeWords = language.CLOSE_WORDS;
 }
