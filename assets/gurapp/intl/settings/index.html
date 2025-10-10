@@ -171,7 +171,144 @@
                 </div>
             </div>
         </div>
+
+        <!-- Home Screen Tab -->
+        <div class="tab-content" id="home-content">
+            <div class="setting-section">
+                <h2 class="section-title">Clock</h2>
+                <div class="setting-item">
+                    <span class="setting-label">Font</span>
+                    <select class="styled-select" data-key="font">
+                        <option value="Inter">Default</option>
+                        <option value="Open Runde">Work</option>
+                        <option value="DynaPuff">Puffy</option>
+                        <option value="DM Serif Display">Classic</option>
+                        <option value="Iansui">Strokes</option>
+                        <option value="JetBrains Mono">Mono</option>
+                        <option value="DotGothic16">Pixel</option>
+                        <option value="Patrick Hand">Written</option>
+                        <option value="Rampart One">Raised</option>
+                    </select>
+                </div>
+                <div class="setting-item slider-item">
+                    <span class="setting-label">Weight</span>
+                    <input type="range" min="20" max="100" class="styled-slider" data-key="weight">
+                </div>
+                <div class="setting-item slider-item">
+                    <span class="setting-label">Roundness</span>
+                    <input type="range" min="0" max="100" class="styled-slider" data-key="roundness">
+                </div>
+                <div class="setting-item slider-item">
+                    <span class="setting-label">Size</span>
+                    <input type="range" min="-50" max="50" class="styled-slider" data-key="clockSize">
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">Show Seconds</span>
+                    <input type="checkbox" class="toggle-switch" data-key="showSeconds">
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">12-Hour Format</span>
+                    <input type="checkbox" class="toggle-switch" data-key="use12HourFormat">
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">Stacked Layout</span>
+                    <input type="checkbox" class="toggle-switch" data-key="stackEnabled">
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">Position & Alignment</span>
+                    <button class="action-btn" data-modal="position-modal">Adjust</button>
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">Color & Effects</span>
+                    <button class="action-btn" data-modal="color-modal">Adjust</button>
+                </div>
+                 <div class="setting-item">
+                    <span class="setting-label">Text Shadow</span>
+                    <button class="action-btn" data-modal="shadow-modal">Adjust</button>
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">Date & Time Format</span>
+                    <button class="action-btn" data-modal="format-modal">Adjust</button>
+                </div>
+            </div>
+
+            <div class="setting-section">
+                <h2 class="section-title">Wallpaper</h2>
+                <div class="setting-item slider-item">
+                    <span class="setting-label">Blur</span>
+                    <input type="range" min="0" max="20" class="styled-slider" data-key="wallpaperBlur">
+                </div>
+                <div class="setting-item slider-item">
+                    <span class="setting-label">Brightness</span>
+                    <input type="range" min="50" max="150" class="styled-slider" data-key="wallpaperBrightness">
+                </div>
+                <div class="setting-item slider-item">
+                    <span class="setting-label">Contrast</span>
+                    <input type="range" min="50" max="150" class="styled-slider" data-key="wallpaperContrast">
+                </div>
+            </div>
+
+             <div class="setting-section">
+                <h2 class="section-title">General</h2>
+                <div class="setting-item">
+                    <span class="setting-label">Show Weather Widget</span>
+                    <input type="checkbox" class="toggle-switch" data-key="showWeather">
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Modals for Complex Settings -->
+    <div class="modal-overlay" id="position-modal">
+        <div class="modal-container">
+            <h3>Position & Alignment</h3>
+            <div class="form-group slider-group">
+                <label>Horizontal (X)</label>
+                <input type="range" min="0" max="100" class="styled-slider" data-key="clockPosX">
+            </div>
+            <div class="form-group slider-group">
+                <label>Vertical (Y)</label>
+                <input type="range" min="0" max="100" class="styled-slider" data-key="clockPosY">
+            </div>
+            <div class="form-group">
+                <label>Text Alignment</label>
+                <select class="styled-select" data-key="alignment">
+                    <option value="center">Center</option>
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="color-modal">
+        <div class="modal-container">
+            <h3>Color & Effects</h3>
+            <div class="setting-item modal-item">
+                <label>Solid Color</label>
+                <input type="color" class="color-picker" data-key="color">
+                <input type="checkbox" class="toggle-switch" data-key="colorEnabled">
+            </div>
+             <div class="setting-item modal-item">
+                <label>Gradient</label>
+                <input type="color" class="color-picker" data-key="gradientColor">
+                <input type="checkbox" class="toggle-switch" data-key="gradientEnabled">
+            </div>
+             <div class="setting-item modal-item">
+                <label>Glass Effect</label>
+                <input type="checkbox" class="toggle-switch" data-key="glassEnabled">
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="shadow-modal">
+        <!-- Shadow Modal Content -->
+    </div>
+    
+    <div class="modal-overlay" id="format-modal">
+        <!-- Format Modal Content -->
+    </div>
+    
     <script src="settings.js"></script>
 </body>
 </html>
