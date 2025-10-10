@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
         'font', 'weight', 'roundness', 'clockSize', 'showSeconds', 
         'use12HourFormat', 'stackEnabled', 'clockPosX', 'clockPosY', 
         'alignment', 'colorEnabled', 'gradientEnabled', 'glassEnabled',
-        'color', 'gradientColor', 'shadowEnabled', 'shadowBlur', 'shadowColor',
-        'dateFormat', 'clockFormat', 'wallpaperBlur', 'wallpaperBrightness', 
-        'wallpaperContrast', 'showWeather'
+        'color', 'gradientColor', 'shadowEnabled', 'shadowBlur', 
+        'shadowColor', 'dateFormat', 'clockFormat', 'wallpaperBlur', 
+        'wallpaperBrightness', 'wallpaperContrast', 'showWeather'
     ];
 
     function requestInitialSettings() {
@@ -39,7 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         controls.forEach(control => {
             if (control.type === 'checkbox') {
-                let boolValue = (key === 'theme') ? (value === 'light') : (value === 'true' || value === null);
+                let boolValue = (key === 'theme') ? (value === 'light') 
+                                                  : (value === 'true' || value === null);
                 control.checked = boolValue;
             } else if (control.type === 'range') {
                 control.value = value || control.defaultValue;
@@ -68,7 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function bindEventListeners() {
         document.querySelectorAll('.toggle-switch, .styled-select, .styled-slider, .color-picker, .form-input').forEach(control => {
-            const eventType = (control.type === 'range' || control.type === 'color') ? 'input' : 'change';
+            const eventType = (control.type === 'range' || control.type === 'color') 
+                              ? 'input' : 'change';
             control.addEventListener(eventType, () => handleSettingChange(control));
         });
 
@@ -100,11 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.origin !== window.location.origin) return;
         const { type, key, value } = event.data;
 
-        // Listen for initial values fetched via API
         if (type === 'localStorageItemValue' && key) {
             updateControl(key, value);
         }
-        // Listen for real-time updates pushed from the parent
         if (type === 'settingUpdate' && key) {
             updateControl(key, value);
         }
@@ -115,9 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
         requestInitialSettings();
         bindEventListeners();
         
-        // Announce that the settings app is ready to receive real-time updates
         if(window.parent) {
-            window.parent.postMessage({ type: 'settings-app-ready' }, window.location.origin);
+            window.parent.postMessage({ type: 'settings-app-ready' }, 
+                                      window.location.origin);
         }
     });
 });
