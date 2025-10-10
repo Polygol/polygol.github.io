@@ -263,6 +263,95 @@
     transform: translateX(20px);
 }
 
+/* --- Styles for Sliders, Selects, and Modals --- */
+.slider-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+}
+.styled-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 30px;
+    background: var(--transparent-color);
+    border-radius: 15px;
+    padding: 0 5px;
+    border: 1px solid var(--glass-border);
+}
+.styled-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--secondary-text-color);
+    cursor: pointer;
+}
+.styled-select {
+    background-color: var(--transparent-color);
+    color: var(--text-color);
+    padding: 8px 16px;
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
+}
+.modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+.modal-container {
+    background-color: var(--search-background);
+    padding: 25px;
+    border-radius: 30px;
+    border: 1px solid var(--glass-border);
+    width: 90%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.modal-container h3 {
+    font-family: 'Open Runde';
+    text-align: center;
+    margin-bottom: 10px;
+}
+.modal-item {
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    padding: 10px;
+}
+.color-picker {
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    width: 30px; height: 30px;
+    padding: 0; background: none;
+    border-radius: 50%; cursor: pointer;
+    overflow: hidden;
+}
+.color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+.color-picker::-webkit-color-swatch { border: 1px solid var(--glass-border); border-radius: 50%; }
+
 /* --- Interaction & Animation --- */
 button, .toggle-switch {
    transform: scale(1);
