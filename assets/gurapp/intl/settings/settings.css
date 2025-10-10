@@ -1,21 +1,32 @@
-/* Base styles adapted from Fantaskical and Polygol */
+/* --- Base Variables & Theme --- */
 :root {
     --edge-refraction-filter: url('#edge-refraction-only');
-    /* (All color variables from styles.css should be copied here) */
+    --sun-shadow: 0 0 0 0 transparent;
+    
+    /* Dark Theme (Default) Variables */
     --background-color-dark: #1c1c1c;
+    --background-color-dark-tr: rgba(28, 28, 28, 0.7);
     --text-color-dark: #f9f9f9;
     --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
     --search-background-dark: rgba(51, 51, 51, 0.5);
+    --dark-transparent: rgba(255, 255, 255, 0.1); 
     --glass-border-dark: rgba(100, 100, 100, 0.2);
+    
+    /* Light Theme Variables */
     --background-color-light: #f0f0f0;
+    --background-color-light-tr: rgba(240, 240, 240, 0.7);
     --text-color-light: #333333;
     --secondary-text-color-light: rgba(0, 0, 0, 0.7);
     --search-background-light: rgba(220, 220, 220, 0.5);
+    --light-transparent: rgba(255, 255, 255, 0.1);
     --glass-border-light: rgba(200, 200, 200, 0.2);
+    
+    /* Default to Dark Theme */
     --background-color: var(--background-color-dark);
     --text-color: var(--text-color-dark);
     --secondary-text-color: var(--secondary-text-color-dark);
     --search-background: var(--search-background-dark);
+    --transparent-color: var(--dark-transparent);
     --glass-border: var(--glass-border-dark);
 }
 
@@ -24,7 +35,21 @@ body.light-theme {
     --text-color: var(--text-color-light);
     --secondary-text-color: var(--secondary-text-color-light);
     --search-background: var(--search-background-light);
+    --transparent-color: var(--light-transparent);
     --glass-border: var(--glass-border-light);
+}
+
+/* --- Global & Basic Elements --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.material-symbols-rounded {
+    vertical-align: middle;
 }
 
 body {
@@ -39,101 +64,231 @@ body {
    color: var(--text-color);
 }
 
-/* Styles copied from Fantaskical for consistency */
-.container { width: 100%; max-width: 700px; }
-.toolbar {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    position: fixed;
-    top: 0px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
-    width: 100%;
-    height: 80px;
-    align-items: center;
+body::-webkit-scrollbar { width: 8px; }
+body::-webkit-scrollbar-track { background: transparent; }
+body::-webkit-scrollbar-thumb {
+    background-color: var(--search-background);
+    border-radius: 25px;
 }
+
+.container {
+   width: 100%;
+   max-width: 700px; /* Wider for settings */
+}
+
+/* --- Toolbar & Tab Switcher --- */
+.toolbar {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  flex-direction: row;
+  gap: 12px;
+  padding: 15px 20px;
+  position: fixed;
+  top: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: 100%;
+  flex-wrap: wrap;
+  height: 80px;
+}
+
 .toolbar::after {
-    content: ""; position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%; z-index: -2;
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -2;
     backdrop-filter: blur(2.5px);
     mask-image: linear-gradient(to bottom, #000 50%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 50%, transparent 100%);
 }
+        
 .tab-btn {
     background-color: var(--search-background);
-    color: transparent; border-radius: 35px;
-    padding: 12px 16px; font-size: 0; cursor: pointer;
-    display: flex; align-items: center;
+    color: transparent;
+    border-radius: 35px;
+    padding: 12px 16px;
+    font-size: 0;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1) ! IMPORTANT;
+    display: flex;
+    align-items: center;
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
 }
+
 .tab-btn.active {
     background-color: var(--secondary-text-color);
     color: var(--background-color);
-    font-family: 'Open Runde'; font-weight: 500;
-    padding: 10px 18px 10px 16px; font-size: revert; gap: 12px;
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
+    font-family: 'Open Runde';
+    font-weight: 500;
+    padding: 10px 18px 10px 16px;
+    font-size: revert;
+    gap: 12px;
 }
+
 .toolbar .tab-btn .material-symbols-rounded {
-    color: var(--text-color); font-size: 20px;
+    transition: color 0.3s;
+    color: var(--text-color);
+    font-size: 20px;
 }
+
 .toolbar .tab-btn.active .material-symbols-rounded {
     color: var(--background-color) !important;
 }
+
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-
-/* New styles for the Settings app */
+/* --- Settings Specific Styles --- */
 .setting-section {
     margin-bottom: 30px;
 }
+
 .section-title {
     font-family: 'Open Runde', sans-serif;
-    font-weight: 600; font-size: 1.1rem;
+    font-weight: 600;
+    font-size: 1.1rem;
     color: var(--secondary-text-color);
-    margin-bottom: 15px; padding-left: 10px;
+    margin-bottom: 15px;
+    padding-left: 10px;
 }
+
 .setting-item {
-    display: flex; justify-content: space-between;
-    align-items: center; padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
     background-color: var(--search-background);
     border: 1px solid var(--glass-border);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
-    border-radius: 25px; margin-bottom: 10px;
+    box-shadow: var(--sun-shadow);
+    border-radius: 25px;
+    margin-bottom: 10px;
 }
+
 .setting-info {
-    display: flex; flex-direction: column; gap: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
+
 .setting-label {
-    font-weight: 500; color: var(--text-color);
+    font-weight: 500;
+    color: var(--text-color);
 }
+
 .setting-description {
-    font-size: 0.85rem; color: var(--secondary-text-color);
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
 }
-.action-btn, .styled-select {
+
+.setting-control {
+    display: flex;
+    align-items: center;
+}
+
+.action-btn {
     background-color: var(--transparent-color);
-    color: var(--text-color); padding: 8px 16px;
-    border: 1px solid var(--glass-border); border-radius: 20px;
-    cursor: pointer; font-weight: 500;
+    color: var(--text-color);
+    padding: 8px 16px;
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
 }
-.styled-select { -webkit-appearance: none; appearance: none; }
+
 .toggle-switch {
-    appearance: none; width: 50px; height: 30px;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 50px;
+    height: 30px;
     background-color: var(--transparent-color);
     border: 1px solid var(--glass-border);
-    border-radius: 15px; position: relative; cursor: pointer;
+    border-radius: 15px;
+    position: relative;
+    cursor: pointer;
     transition: background-color 0.3s;
 }
+
 .toggle-switch::before {
-    content: ''; position: absolute;
-    width: 22px; height: 22px;
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
     background-color: var(--secondary-text-color);
-    border-radius: 50%; top: 3px; left: 3px;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
     transition: transform 0.3s, background-color 0.3s;
 }
-.toggle-switch:checked { background-color: var(--secondary-text-color); }
+
+.toggle-switch:checked {
+    background-color: var(--secondary-text-color);
+}
+
 .toggle-switch:checked::before {
     background-color: var(--background-color);
     transform: translateX(20px);
+}
+
+/* --- Interaction & Animation --- */
+button, .toggle-switch {
+   transform: scale(1);
+   transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+}
+
+button:active, .toggle-switch:active {
+   transform: scale(0.96);
+   transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+   filter: brightness(1.5);
+}
+
+.reduce-animations * {
+   animation: none !important;
+   transition: opacity 0.3s ease !important;
+   transition-property: opacity !important;
+}
+
+.reduce-animations button,
+.reduce-animations .toggle-switch {
+   transform: scale(1) !important;
+   transition: opacity 0.3s ease !important;
+}
+
+.reduce-animations button:active,
+.reduce-animations .toggle-switch:active {
+   transform: scale(0.98) !important;
+   transition: none !important;
+   filter: brightness(1.5) !important;
+}
+
+/* --- Responsive Media Queries --- */
+@media (max-width: 500px) {
+    .toolbar {
+        justify-content: flex-start;
+        overflow-x: auto;
+    }
+
+    .tab-btn {
+        font-size: 0;
+        padding: 12px 16px;
+        gap: 0 !important;
+    }
+
+    .tab-btn.active {
+        font-size: revert;
+        padding: 10px 18px 10px 16px;
+    }
+    
+    .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
 }
