@@ -16,25 +16,6 @@ function initializeSettingsApp() {
         'page-data': 'Data & Recovery'
     };
 
-    // --- Tab Switching Logic ---
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            
-            const activeTab = button.dataset.tab;
-            if (activeTab === 'home') {
-                pageContainer.style.display = 'block';
-                tabContents.forEach(c => c.style.display = 'none');
-            } else {
-                pageContainer.style.display = 'none';
-                tabContents.forEach(c => c.style.display = 'none');
-                const tabId = activeTab + '-content';
-                document.getElementById(tabId).style.display = 'block';
-            }
-        });
-    });
-
     function navigateTo(pageId) {
         const currentPageId = navigationStack[navigationStack.length - 1];
         const currentPage = document.getElementById(currentPageId);
@@ -94,81 +75,8 @@ function initializeSettingsApp() {
     function updateHeader() {
         const currentPageId = navigationStack[navigationStack.length - 1];
         pageTitle.textContent = pageTitles[currentPageId] || 'Settings';
-        backBtn.style.display = navigationStack.length > 1 ? 'block' : 'none';
+        backBtn.style.display = navigationStack.length > 1 ? 'flex' : 'none';
     }
-
-    // --- Search Logic ---
-    const searchInput = document.getElementById('search-input');
-    const searchResultsList = document.getElementById('search-results-list');
-
-    searchInput.addEventListener('input', () => {
-        const query = searchInput.value.toLowerCase();
-        searchResultsList.innerHTML = '';
-        if (query.length < 2) return;
-
-        document.querySelectorAll('.page .setting-item').forEach(item => {
-            const label = item.querySelector('.setting-label')?.textContent.toLowerCase();
-            const description = item.querySelector('.setting-description')?.textContent.toLowerCase();
-            
-            if ((label && label.includes(query)) || (description && description.includes(query))) {
-                const resultItem = item.cloneNode(true);
-                const pageId = item.closest('.page').id;
-                
-                resultItem.addEventListener('click', () => {
-                    // Switch to home tab and navigate to the correct page
-                    document.querySelector('.tab-btn[data-tab="home"]').click();
-                    navigateTo(pageId);
-                });
-                searchResultsList.appendChild(resultItem);
-            }
-        });
-    });
-    
-    // --- Preset Saving/Loading Logic ---
-    const savePresetBtn = document.getElementById('save-preset-btn');
-    const presetsList = document.getElementById('presets-list');
-
-    function loadAndRenderPresets() {
-        const presets = JSON.parse(localStorage.getItem('settingPresets') || '{}');
-        presetsList.innerHTML = '';
-        Object.keys(presets).forEach(name => {
-            const presetItem = document.createElement('div');
-            presetItem.className = 'setting-item';
-            presetItem.innerHTML = `<span class="setting-label">${name}</span>`;
-            presetItem.addEventListener('click', () => {
-                if (confirm(`Apply the "${name}" preset?`)) {
-                    applyPreset(name);
-                }
-            });
-            presetsList.appendChild(presetItem);
-        });
-    }
-
-    function applyPreset(name) {
-        const presets = JSON.parse(localStorage.getItem('settingPresets') || '{}');
-        const preset = presets[name];
-        if (preset) {
-            Object.keys(preset).forEach(key => {
-                Gurasuraisu.setLocalStorageItem(key, preset[key]);
-            });
-            alert(`"${name}" preset applied.`);
-        }
-    }
-
-    savePresetBtn.addEventListener('click', () => {
-        const name = prompt("Enter a name for this preset:");
-        if (name) {
-            const presets = JSON.parse(localStorage.getItem('settingPresets') || '{}');
-            const currentSettings = {};
-            document.querySelectorAll('[data-key]').forEach(control => {
-                const key = control.dataset.key;
-                currentSettings[key] = localStorage.getItem(key) || control.value;
-            });
-            presets[name] = currentSettings;
-            localStorage.setItem('settingPresets', JSON.stringify(presets));
-            loadAndRenderPresets();
-        }
-    });
 
     // --- UI Update & Event Binding Logic ---
     function updateControl(key, value) {
