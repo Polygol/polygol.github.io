@@ -50,132 +50,121 @@
     </svg>
     
     <div class="container">
-        <div class="toolbar">
-            <button class="tab-btn active" data-tab="system">
-                <span class="material-symbols-rounded">tune</span>System
-            </button>
-            <button class="tab-btn" data-tab="home">
-                <span class="material-symbols-rounded">home</span>Home
-            </button>
+    <div class="toolbar">
+        <button class="tab-btn active" data-tab="home">
+            <span class="material-symbols-rounded">home</span>Home
+        </button>
+        <button class="tab-btn" data-tab="saved">
+            <span class="material-symbols-rounded">bookmark</span>Saved
+        </button>
+        <button class="tab-btn" data-tab="search">
+            <span class="material-symbols-rounded">search</span>Search
+        </button>
+    </div>
+
+    <div class="header">
+        <button class="back-btn" style="display: none;">
+            <span class="material-symbols-rounded">arrow_back_ios_new</span>
+        </button>
+        <h1 class="page-title">Settings</h1>
+    </div>
+
+    <div class="pages-container">
+        <!-- Main Settings Page -->
+        <div class="page active" id="main-settings">
+            <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-display">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">
+                            brightness_medium
+                        </span>
+                        <span class="setting-label">Display</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-homescreen">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">phone_iphone</span>
+                        <span class="setting-label">Home Screen</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
+            <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-system">
+                    <div class="setting-info">
+                         <span class="material-symbols-rounded">tune</span>
+                        <span class="setting-label">System</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
+             <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-data">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">database</span>
+                        <span class="setting-label">Data & Recovery</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
         </div>
 
-        <!-- System Tab -->
-        <div class="tab-content active" id="system-content">
+        <!-- Display Page -->
+        <div class="page" id="page-display">
             <div class="setting-section">
                 <h2 class="section-title">Appearance</h2>
                 <div class="setting-item" id="setting-theme">
-                    <div class="setting-info">
-                        <span class="setting-label">Light Theme</span>
-                        <span class="setting-description">
-                            Switch between light and dark themes.
-                        </span>
-                    </div>
+                    <span class="setting-label">Light Theme</span>
                     <div class="setting-control">
                         <input type="checkbox" class="toggle-switch" 
                                data-key="theme">
                     </div>
                 </div>
                 <div class="setting-item" id="setting-animationsEnabled">
-                     <div class="setting-info">
-                        <span class="setting-label">Animations</span>
-                        <span class="setting-description">
-                            Enable or disable system-wide animations.
-                        </span>
-                    </div>
+                    <span class="setting-label">Animations</span>
                     <div class="setting-control">
                         <input type="checkbox" class="toggle-switch" 
                                data-key="animationsEnabled">
                     </div>
                 </div>
-                 <div class="setting-item" id="setting-highContrast">
-                     <div class="setting-info">
-                        <span class="setting-label">High Contrast</span>
-                        <span class="setting-description">
-                            Increases legibility and removes transparency.
-                        </span>
-                    </div>
+                <div class="setting-item" id="setting-highContrast">
+                    <span class="setting-label">High Contrast</span>
                     <div class="setting-control">
                         <input type="checkbox" class="toggle-switch" 
                                data-key="highContrast">
                     </div>
                 </div>
             </div>
+        </div>
 
+        <!-- Home Screen Page -->
+        <div class="page" id="page-homescreen">
             <div class="setting-section">
-                <h2 class="section-title">Functionality</h2>
-                 <div class="setting-item" id="setting-gurappsEnabled">
-                     <div class="setting-info">
-                        <span class="setting-label">Gurapps</span>
-                        <span class="setting-description">
-                            Enable or disable the app drawer and dock.
-                        </span>
+                 <div class="setting-item nav-item" data-page="page-clock">
+                    <div class="setting-info">
+                        <span class="setting-label">Clock</span>
                     </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" 
-                               data-key="gurappsEnabled">
-                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
-                 <div class="setting-item" id="setting-aiAssistantEnabled">
-                     <div class="setting-info">
-                        <span class="setting-label">GuraAI Assistant</span>
-                        <span class="setting-description">
-                            Enable the AI assistant with vision capabilities.
-                        </span>
+                 <div class="setting-item nav-item" data-page="page-wallpaper">
+                    <div class="setting-info">
+                        <span class="setting-label">Wallpaper</span>
                     </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" 
-                               data-key="aiAssistantEnabled">
-                    </div>
-                </div>
-                 <div class="setting-item" id="setting-oneButtonNavEnabled">
-                     <div class="setting-info">
-                        <span class="setting-label">One-Button Nav</span>
-                        <span class="setting-description">
-                            Use a single button for home, back, and apps.
-                        </span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" 
-                               data-key="oneButtonNavEnabled">
-                    </div>
-                </div>
-            </div>
-
-            <div class="setting-section">
-                <h2 class="section-title">Data & Recovery</h2>
-                 <div class="setting-item">
-                     <div class="setting-info">
-                        <span class="setting-label">System Transfer</span>
-                        <span class="setting-description">
-                            Export or import your Polygol data.
-                        </span>
-                    </div>
-                    <div class="setting-control">
-                        <button class="action-btn" id="btn-transfer">
-                            Open
-                        </button>
-                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
                 <div class="setting-item">
-                     <div class="setting-info">
-                        <span class="setting-label">Recovery Mode</span>
-                        <span class="setting-description">
-                           Factory reset Polygol if it's not working.
-                        </span>
-                    </div>
-                    <div class="setting-control">
-                        <button class="action-btn" id="btn-recovery">
-                            Open
-                        </button>
-                    </div>
+                    <span class="setting-label">Show Weather Widget</span>
+                    <input type="checkbox" class="toggle-switch" 
+                           data-key="showWeather">
                 </div>
             </div>
         </div>
 
-        <!-- Home Screen Tab -->
-        <div class="tab-content" id="home-content">
+        <!-- Clock Settings Page -->
+        <div class="page" id="page-clock">
             <div class="setting-section">
-                <h2 class="section-title">Clock</h2>
+                <h2 class="section-title">Style</h2>
                 <div class="setting-item">
                     <span class="setting-label">Font</span>
                     <select class="styled-select" data-key="font">
@@ -183,11 +172,6 @@
                         <option value="Open Runde">Work</option>
                         <option value="DynaPuff">Puffy</option>
                         <option value="DM Serif Display">Classic</option>
-                        <option value="Iansui">Strokes</option>
-                        <option value="JetBrains Mono">Mono</option>
-                        <option value="DotGothic16">Pixel</option>
-                        <option value="Patrick Hand">Written</option>
-                        <option value="Rampart One">Raised</option>
                     </select>
                 </div>
                 <div class="setting-item slider-item">
@@ -195,16 +179,9 @@
                     <input type="range" min="20" max="100" 
                            class="styled-slider" data-key="weight">
                 </div>
-                <div class="setting-item slider-item">
-                    <span class="setting-label">Roundness</span>
-                    <input type="range" min="0" max="100" 
-                           class="styled-slider" data-key="roundness">
-                </div>
-                <div class="setting-item slider-item">
-                    <span class="setting-label">Size</span>
-                    <input type="range" min="-50" max="50" 
-                           class="styled-slider" data-key="clockSize">
-                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Format & Layout</h2>
                 <div class="setting-item">
                     <span class="setting-label">Show Seconds</span>
                     <input type="checkbox" class="toggle-switch" 
@@ -221,146 +198,31 @@
                            data-key="stackEnabled">
                 </div>
                 <div class="setting-item">
-                    <span class="setting-label">Position & Alignment</span>
-                    <button class="action-btn" data-modal="position-modal">
-                        Adjust
-                    </button>
-                </div>
-                <div class="setting-item">
-                    <span class="setting-label">Color & Effects</span>
-                    <button class="action-btn" data-modal="color-modal">
-                        Adjust
-                    </button>
-                </div>
-                 <div class="setting-item">
-                    <span class="setting-label">Text Shadow</span>
-                    <button class="action-btn" data-modal="shadow-modal">
-                        Adjust
-                    </button>
-                </div>
-                <div class="setting-item">
-                    <span class="setting-label">Date & Time Format</span>
-                    <button class="action-btn" data-modal="format-modal">
-                        Adjust
-                    </button>
+                    <span class="setting-label">Date Format</span>
+                    <input type="text" class="form-input" data-key="dateFormat"
+                           placeholder="e.g., dddd, MMMM D">
                 </div>
             </div>
+        </div>
 
-            <div class="setting-section">
-                <h2 class="section-title">Wallpaper</h2>
-                <div class="setting-item slider-item">
-                    <span class="setting-label">Blur</span>
-                    <input type="range" min="0" max="20" 
-                           class="styled-slider" data-key="wallpaperBlur">
-                </div>
-                <div class="setting-item slider-item">
-                    <span class="setting-label">Brightness</span>
-                    <input type="range" min="50" max="150" 
-                           class="styled-slider" data-key="wallpaperBrightness">
-                </div>
-                <div class="setting-item slider-item">
-                    <span class="setting-label">Contrast</span>
-                    <input type="range" min="50" max="150" 
-                           class="styled-slider" data-key="wallpaperContrast">
-                </div>
-            </div>
-
+        <!-- System Page -->
+        <div class="page" id="page-system">
              <div class="setting-section">
-                <h2 class="section-title">General</h2>
-                <div class="setting-item">
-                    <span class="setting-label">Show Weather Widget</span>
-                    <input type="checkbox" class="toggle-switch" 
-                           data-key="showWeather">
+                <h2 class="section-title">Functionality</h2>
+                 <div class="setting-item" id="setting-gurappsEnabled">
+                    <span class="setting-label">Gurapps</span>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" 
+                               data-key="gurappsEnabled">
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modals for Complex Settings -->
-    <div class="modal-overlay" id="position-modal">
-        <div class="modal-container">
-            <h3>Position & Alignment</h3>
-            <div class="setting-item modal-item slider-item">
-                <label>Horizontal (X)</label>
-                <input type="range" min="0" max="100" class="styled-slider" 
-                       data-key="clockPosX">
-            </div>
-            <div class="setting-item modal-item slider-item">
-                <label>Vertical (Y)</label>
-                <input type="range" min="0" max="100" class="styled-slider" 
-                       data-key="clockPosY">
-            </div>
-            <div class="setting-item modal-item">
-                <label>Text Alignment</label>
-                <select class="styled-select" data-key="alignment">
-                    <option value="center">Center</option>
-                    <option value="left">Left</option>
-                    <option value="right">Right</option>
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="color-modal">
-        <div class="modal-container">
-            <h3>Color & Effects</h3>
-            <div class="setting-item modal-item">
-                <label>Solid Color</label>
-                <div class="setting-control">
-                    <input type="color" class="color-picker" data-key="color">
-                    <input type="checkbox" class="toggle-switch" 
-                           data-key="colorEnabled">
+                 <div class="setting-item" id="setting-aiAssistantEnabled">
+                    <span class="setting-label">GuraAI Assistant</span>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" 
+                               data-key="aiAssistantEnabled">
+                    </div>
                 </div>
-            </div>
-             <div class="setting-item modal-item">
-                <label>Gradient</label>
-                <div class="setting-control">
-                    <input type="color" class="color-picker" 
-                           data-key="gradientColor">
-                    <input type="checkbox" class="toggle-switch" 
-                           data-key="gradientEnabled">
-                </div>
-            </div>
-             <div class="setting-item modal-item">
-                <label>Glass Effect</label>
-                <input type="checkbox" class="toggle-switch" 
-                       data-key="glassEnabled">
-            </div>
-        </div>
-    </div>
-    
-    <div class="modal-overlay" id="shadow-modal">
-        <div class="modal-container">
-            <h3>Text Shadow</h3>
-            <div class="setting-item modal-item">
-                <label>Enable Shadow</label>
-                <input type="checkbox" class="toggle-switch" 
-                       data-key="shadowEnabled">
-            </div>
-            <div class="setting-item modal-item slider-item">
-                <label>Blur</label>
-                <input type="range" min="0" max="50" class="styled-slider" 
-                       data-key="shadowBlur">
-            </div>
-            <div class="setting-item modal-item">
-                <label>Color</label>
-                <input type="color" class="color-picker" data-key="shadowColor">
-            </div>
-        </div>
-    </div>
-    
-    <div class="modal-overlay" id="format-modal">
-        <div class="modal-container">
-            <h3>Date & Time Format</h3>
-            <div class="setting-item modal-item">
-                <label for="dateFormatInput">Date Format</label>
-                <input type="text" class="form-input" data-key="dateFormat" 
-                       placeholder="e.g., dddd, MMMM D">
-            </div>
-             <div class="setting-item modal-item">
-                <label for="clockFormatInput">Clock Format</label>
-                <input type="text" class="form-input" data-key="clockFormat" 
-                       placeholder="e.g., HH:mm:ss">
             </div>
         </div>
     </div>
