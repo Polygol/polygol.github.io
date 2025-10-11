@@ -319,6 +319,14 @@ const Gurasuraisu = {
    */
   setSettingValue: function(key, value) {
     this._call('setLocalStorageItem', [key, value]);
+  },
+
+  /**
+   * Asks the parent Polygol to check for a new service worker version
+   * and trigger the update flow.
+   */
+  forceUpdate: function() {
+    this._call('forceUpdatePolygol', []);
   }
 };
 
