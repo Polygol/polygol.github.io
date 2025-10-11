@@ -138,6 +138,7 @@
         
         .page.exiting {
             transform: translateX(-25%);
+            height: 0;
             opacity: 0;
         }
         
@@ -148,8 +149,8 @@
         }
 
         .nav-item .setting-info .material-symbols-rounded {
-            font-size: 24px;
-            opacity: 1;
+            font-size: 24px !important;
+            opacity: 1 !important;
         }
 
         .setting-item.nav-item .material-symbols-rounded {
