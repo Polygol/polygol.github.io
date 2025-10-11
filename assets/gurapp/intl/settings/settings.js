@@ -26,11 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function requestInitialSettings() {
         if (typeof Gurasuraisu === 'undefined') {
-            console.error("Gurasuraisu API not ready. Retrying...");
+            console.error("Gurasuraisu API not found. Retrying...");
             setTimeout(requestInitialSettings, 100);
             return;
         }
-        // Ask the parent for the current value of every setting
         keysToRequest.forEach(key => Gurasuraisu.getLocalStorageItem(key));
     }
 
@@ -41,8 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         controls.forEach(control => {
             if (control.type === 'checkbox') {
-                // For theme, 'light' is checked. For others, 'true' is checked.
-                // If a value is null (not set), most toggles should default to ON.
+                // Special case for theme: 'light' is checked, 'dark' is not.
+                // For others, 'true' is checked. If value is null, default to checked.
                 let boolValue = (key === 'theme') 
                     ? (value === 'light') 
                     : (value === 'true' || value === null);
@@ -64,27 +63,30 @@ document.addEventListener('DOMContentLoaded', () => {
         let valueToSet;
 
         if (control.type === 'checkbox') {
-            valueToSet = (key === 'theme') 
-                ? (control.checked ? 'light' : 'dark') 
-                : control.checked.toString();
+            // Special case for theme
+            if (key === 'theme') {
+                valueToSet = control.checked ? 'light' : 'dark';
+            } else {
+                valueToSet = control.checked.toString();
+            }
         } else {
             valueToSet = control.value;
         }
-        // Send the updated value back to the parent
         Gurasuraisu.setLocalStorageItem(key, valueToSet);
     }
     
     function bindEventListeners() {
-        document.querySelectorAll('.toggle-switch, .styled-select, .styled-slider, .color-picker, .form-input').forEach(control => {
-            // Use 'input' for sliders/color pickers for real-time updates
+        const allControls = document.querySelectorAll(
+            '.toggle-switch, .styled-select, .styled-slider, .color-picker, .form-input'
+        );
+        allControls.forEach(control => {
             const eventType = (control.type === 'range' || control.type === 'color' || control.type === 'text') ? 'input' : 'change';
             control.addEventListener(eventType, () => handleSettingChange(control));
         });
 
         // Modal triggers
         document.querySelectorAll('[data-modal]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
+            btn.addEventListener('click', () => {
                 const modalId = btn.dataset.modal;
                 document.getElementById(modalId)?.classList.add('show');
             });
@@ -107,10 +109,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Real-time Syncing ---
     window.addEventListener('message', (event) => {
+        // Basic security check
         if (event.origin !== window.location.origin) return;
+
         const { type, key, value } = event.data;
 
-        // Listen for initial values fetched via API on load
+        // Listen for initial values fetched via API call
         if (type === 'localStorageItemValue' && key) {
             updateControl(key, value);
         }
@@ -131,3 +135,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+--- END OF FILE settings.js ---
