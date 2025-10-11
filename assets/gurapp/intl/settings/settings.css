@@ -245,6 +245,35 @@
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
+/* Search and Presets */
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 16px;
+    background-color: var(--search-background);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    box-shadow: var(--sun-shadow);
+    border-radius: 35px;
+    margin-bottom: 20px;
+}
+
+#search-input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-color);
+    font-size: 1rem;
+    width: 100%;
+}
+
+.search-results, #presets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 /* --- Settings Specific Styles --- */
 .setting-section {
     margin-bottom: 30px;
