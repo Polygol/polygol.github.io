@@ -2980,7 +2980,7 @@ function handleAnimationChange() {
     iframes.forEach((iframe) => {
         iframe.contentWindow.postMessage({
             type: 'animationsUpdate',
-            enabled: animationsEnabled  // true or false
+            enabled: enableAnimations
         }, window.location.origin);
     });
 }
