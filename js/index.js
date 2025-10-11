@@ -8457,6 +8457,51 @@ function setControlValueAndDispatch(key, value) {
 window.addEventListener('message', async (event) => { // Make listener async
     if (event.origin !== window.location.origin) return;
 
+	// All functions that can be called from an iframe must be listed here.
+	const allowedFunctions = {
+		// Public Functions
+		showPopup, 
+		showNotification, 
+		minimizeFullscreenEmbed, 
+		createFullscreenEmbed, 
+		blackoutScreen,
+		registerWidget, 
+		triggerWallpaperUpload: () => document.getElementById('wallpaperInput').click(),
+		registerMediaSession, 
+		clearMediaSession,
+		updateMediaPlaybackState, 
+		updateMediaProgress,
+
+		// Privileged Functions (already checked above)
+		installApp, 
+		deleteApp,
+		requestInstalledApps, // Added here
+		getLocalStorageItem, 
+		setLocalStorageItem,
+		removeLocalStorageItem, 
+		listLocalStorageKeys, 
+		clearLocalStorage, 
+		listCommonSettings,
+		listRecentWallpapers, 
+		removeWallpaperAtIndex, 
+        clearAllWallpapers, 
+        switchWallpaperParent,
+        getCurrentTimeParent, 
+        rebootGurasuraisu, 
+        promptPWAInstall, 
+        executeParentJS,
+        listIDBDatabases, 
+        listIDBStores, 
+        getIDBRecord, 
+        setIDBRecord, 
+        removeIDBRecord, 
+        clearIDBStore,
+		setSettingValue: (key, value) => {
+            setControlValueAndDispatch(key, value);
+            return `Setting '${key}' remotely updated.`;
+        },
+    };
+
     const data = event.data;
     const sourceWindow = event.source;
 
@@ -8565,53 +8610,7 @@ window.addEventListener('message', async (event) => { // Make listener async
                 }
                 return; // Stop processing immediately.
             }
-        }
-
-        // All functions that can be called from an iframe must be listed here.
-        const allowedFunctions = {
-            // Public Functions
-            showPopup, 
-            showNotification, 
-            minimizeFullscreenEmbed, 
-            createFullscreenEmbed, 
-            blackoutScreen,
-            registerWidget, 
-			triggerWallpaperUpload: () => document.getElementById('wallpaperInput').click(),
-            registerMediaSession, 
-            clearMediaSession,
-            updateMediaPlaybackState, 
-            updateMediaProgress,
-
-            // Privileged Functions (already checked above)
-            installApp, 
-            deleteApp,
-            requestInstalledApps, // Added here
-            getLocalStorageItem, 
-            setLocalStorageItem,
-            removeLocalStorageItem, 
-            listLocalStorageKeys, 
-            clearLocalStorage, 
-            listCommonSettings,
-            listRecentWallpapers, 
-            removeWallpaperAtIndex, 
-            clearAllWallpapers, 
-            switchWallpaperParent,
-            getCurrentTimeParent, 
-            rebootGurasuraisu, 
-            promptPWAInstall, 
-            executeParentJS,
-            listIDBDatabases, 
-            listIDBStores, 
-            getIDBRecord, 
-            setIDBRecord, 
-            removeIDBRecord, 
-            clearIDBStore,
-			setSettingValue: (key, value) => {
-                setControlValueAndDispatch(key, value);
-                return `Setting '${key}' remotely updated.`;
-            },
-        };
-		
+		}
 
         const funcToCall = allowedFunctions[funcName];
 
