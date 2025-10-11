@@ -144,6 +144,11 @@
             gap: 15px;
         }
 
+        .setting-item.nav-item .material-symbols-rounded {
+            font-size: 12px;
+            opacity: 0.5;
+        }
+
         body::-webkit-scrollbar { width: 8px; }
         body::-webkit-scrollbar-track { background: transparent; }
         body::-webkit-scrollbar-thumb {
