@@ -7576,9 +7576,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Event listener for night mode control
     nightModeControl.addEventListener('click', function() {
         nightMode = !nightMode;
-	    const value = nightMode.toString(); // Define value before using it
         localStorage.setItem('nightMode', nightMode);
-		broadcastSettingUpdate('nightMode', value);
+        broadcastSettingUpdate('nightMode', nightMode.toString());
         updateNightMode(); // This single call handles all state changes.
     });
 
@@ -7667,11 +7666,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     
     // Brightness control event listener
-    brightnessSlider.addEventListener('input', function(e) {
-        const value = e.target.value;
-        updateBrightness(value);
-        localStorage.setItem('page_brightness', value);
-		broadcastSettingUpdate('page_brightness', value);
+    brightnessSlider.addEventListener('input', (e) => {
+        updateBrightness(e.target.value);
+        localStorage.setItem('page_brightness', e.target.value);
+        broadcastSettingUpdate('page_brightness', e.target.value);
     });
     
     // Add CSS for the overlays
@@ -7707,6 +7705,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (languageSwitcher) {
         languageSwitcher.addEventListener('change', function () {
             selectLanguage(this.value);
+		    broadcastSettingUpdate('selectedLanguage', this.value);
         });
     }
 
@@ -8393,7 +8392,13 @@ const controlIdMap = {
     'wallpaperBlur': 'wallpaper-blur-slider',
     'wallpaperBrightness': 'wallpaper-brightness-slider',
     'wallpaperContrast': 'wallpaper-contrast-slider',
-    'showWeather': 'weather-switch'
+    'showWeather': 'weather-switch',
+    'page_brightness': 'brightness-control',
+    'display_temperature': 'thermostat-control',
+    'nightMode': 'night-mode-qc', // Using the container as the clickable element
+    'minimalMode': 'minimal_mode_qc',
+    'silentMode': 'silent_switch_qc',
+    'selectedLanguage': 'language-switcher'
 };
 
 // --- NEW: Function to broadcast a setting update to the settings app ---
@@ -8552,6 +8557,7 @@ window.addEventListener('message', async (event) => { // Make listener async
             createFullscreenEmbed, 
             blackoutScreen,
             registerWidget, 
+			triggerWallpaperUpload: () => document.getElementById('wallpaperInput').click(),
             registerMediaSession, 
             clearMediaSession,
             updateMediaPlaybackState, 
