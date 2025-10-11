@@ -61,7 +61,7 @@
         
     <div class="pages-container">
         <!-- Main Settings Page -->
-        <div class="page active" id="main-settings">
+        <div class="page active" id="main-settings">            
             <div class="setting-section">
                 <div class="setting-item nav-item" data-page="page-display">
                     <div class="setting-info">
@@ -98,10 +98,45 @@
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
             </div>
+            <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-general">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">language</span>
+                        <span class="setting-label">General</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-about">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">info</span>
+                        <span class="setting-label">About</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
         </div>
 
         <!-- Display Page -->
         <div class="page" id="page-display">
+        <div class="setting-section">
+            <h2 class="section-title">Screen</h2>
+            <div class="setting-item slider-item">
+                <span class="setting-label">Brightness</span>
+                <input type="range" min="20" max="100" class="styled-slider" 
+                       data-key="page_brightness">
+            </div>
+            <div class="setting-item slider-item">
+                <span class="setting-label">Tone</span>
+                <input type="range" min="-10" max="10" class="styled-slider" 
+                       data-key="display_temperature">
+            </div>
+            <div class="setting-item" id="setting-nightMode">
+                <span class="setting-label">Night Mode</span>
+                <div class="setting-control">
+                    <input type="checkbox" class="toggle-switch" 
+                           data-key="nightMode">
+                </div>
+            </div>            
             <div class="setting-section">
                 <h2 class="section-title">Appearance</h2>
                 <div class="setting-item" id="setting-theme">
@@ -187,6 +222,16 @@
                     <input type="checkbox" class="toggle-switch" 
                            data-key="stackEnabled">
                 </div>
+                <div class="setting-item slider-item">
+                    <span class="setting-label">Roundness</span>
+                    <input type="range" min="0" max="100" class="styled-slider" 
+                           data-key="roundness">
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">Clock Format</span>
+                    <input type="text" class="form-input" data-key="clockFormat" 
+                           placeholder="e.g., HH:mm:ss">
+                </div>
                 <div class="setting-item">
                     <span class="setting-label">Date Format</span>
                     <input type="text" class="form-input" data-key="dateFormat"
@@ -225,6 +270,17 @@
         </div>
         <!-- Wallpaper Settings Page -->
         <div class="page" id="page-wallpaper">
+            <div class="setting-section">
+                 <div class="setting-item">
+                    <span class="setting-label">Upload Wallpaper</span>
+                    <button class="action-btn" id="btn-upload-wallpaper">
+                        Upload
+                    </button>
+                    <input type="file" id="wallpaper-input" 
+                           accept=".png, .jpeg, .jpg, .webp, .gif, .mp4" multiple 
+                           style="display: none;">
+                </div>
+            </div>
              <div class="setting-section">
                 <h2 class="section-title">Effects</h2>
                 <div class="setting-item slider-item">
@@ -236,6 +292,11 @@
                     <span class="setting-label">Brightness</span>
                     <input type="range" min="50" max="150" class="styled-slider" 
                            data-key="wallpaperBrightness">
+                </div>
+                <div class="setting-item slider-item">
+                    <span class="setting-label">Contrast</span>
+                    <input type="range" min="50" max="150" class="styled-slider" 
+                           data-key="wallpaperContrast">
                 </div>
             </div>
         </div>
@@ -250,12 +311,49 @@
                                data-key="gurappsEnabled">
                     </div>
                 </div>
-                 <div class="setting-item" id="setting-aiAssistantEnabled">
+                <div class="setting-item" id="setting-aiAssistantEnabled">
                     <span class="setting-label">GuraAI Assistant</span>
                     <div class="setting-control">
                         <input type="checkbox" class="toggle-switch" 
                                data-key="aiAssistantEnabled">
                     </div>
+                </div>
+                <div class="setting-item" id="setting-oneButtonNavEnabled">
+                    <span class="setting-label">One-Button Nav</span>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" 
+                               data-key="oneButtonNavEnabled">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- General Page -->
+        <div class="page" id="page-general">
+            <div class="setting-section">
+                <div class="setting-item">
+                    <span class="setting-label">Language</span>
+                    <select class="styled-select" data-key="selectedLanguage">
+                        <option value="EN">English</option>
+                        <option value="JP">日本語</option>
+                        <option value="DE">Deutsch</option>
+                        <option value="ES">Español</option>
+                        <option value="KO">한국어</option>
+                        <option value="ZH">中文</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <!-- About Page -->
+        <div class="page" id="page-about">
+            <div class="setting-section">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Polygol 16</span>
+                        <span class="setting-description">
+                            View documentation and release notes.
+                        </span>
+                    </div>
+                    <button class="action-btn" id="btn-version">Details</button>
                 </div>
             </div>
         </div>
