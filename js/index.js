@@ -7574,11 +7574,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 
     // Event listener for night mode control
-    nightModeControl.addEventListener('click', function() {
+    nightModeControl.addEventListener('click', () => {
         nightMode = !nightMode;
         localStorage.setItem('nightMode', nightMode);
         broadcastSettingUpdate('nightMode', nightMode.toString());
-        updateNightMode(); // This single call handles all state changes.
+        updateNightMode();
     });
 
     // Event listener for silent mode control
