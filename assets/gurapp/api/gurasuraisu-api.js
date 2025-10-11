@@ -426,6 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Announce that the API is ready
+window.GURASURAISU_API_READY = true;
 const readyEvent = new CustomEvent('GurasuraisuReady');
 window.dispatchEvent(readyEvent);
 
