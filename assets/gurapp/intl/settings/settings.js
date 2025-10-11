@@ -37,15 +37,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateControl(key, value) {
         const controls = document.querySelectorAll(`[data-key="${key}"]`);
         if (controls.length === 0) return;
-
+    
         controls.forEach(control => {
             if (control.type === 'checkbox') {
-                // Special case for theme: 'light' is checked, 'dark' is not.
-                // For others, 'true' is checked. If value is null, default to checked.
-                let boolValue = (key === 'theme') 
-                    ? (value === 'light') 
-                    : (value === 'true' || value === null);
-                control.checked = boolValue;
+                // Special case for theme, which uses a string value
+                if (key === 'theme') {
+                    control.checked = (value === 'light');
+                } else {
+                    // For all other toggles, only the string 'true' should be considered "on".
+                    // This correctly handles 'false' and null (unset) values as "off".
+                    control.checked = (value === 'true');
+                }
             } else if (control.type === 'range') {
                 control.value = value || control.defaultValue;
             } else if (control.type === 'color') {
