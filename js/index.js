@@ -7865,6 +7865,19 @@ function clearLocalStorage() {
     }
 }
 
+function getEffectiveSettingValue(key) {
+    const rawValue = localStorage.getItem(key);
+    // Handle toggles that default to 'true' if they are null/undefined
+    const defaultsTrue = [
+        'gurappsEnabled', 'animationsEnabled', 'showSeconds', 'showWeather', 'aiAssistantEnabled'
+    ];
+    if (defaultsTrue.includes(key)) {
+        return (rawValue !== 'false').toString();
+    }
+    // For other keys, return the raw value or an empty string
+    return rawValue || '';
+}
+
 function listCommonSettings() {
     return {
         'theme': localStorage.getItem('theme'),
@@ -8465,11 +8478,11 @@ window.addEventListener('message', async (event) => { // Make listener async
         if (sourceAppId === 'Settings') {
             console.log('[Polygol] Settings app is ready. Sending all current settings.');
             Object.keys(controlIdMap).forEach(key => {
-                const value = localStorage.getItem(key);
+                const effectiveValue = getEffectiveSettingValue(key); // Use the new helper
                 sourceWindow.postMessage({ 
                     type: 'localStorageItemValue', 
                     key: key, 
-                    value: value 
+                    value: effectiveValue
                 }, window.location.origin);
             });
         }
