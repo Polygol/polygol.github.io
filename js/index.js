@@ -8395,6 +8395,89 @@ const FUNCTION_PERMISSIONS = {
     'clearIDBStore': 'system-admin'
 };
 
+// --- NEW: Map for remote control from the settings app ---
+// Maps the 'data-key' from the settings app to the control 'id' in index.html
+const controlIdMap = {
+    'theme': 'theme-switch',
+    'animationsEnabled': 'animation-switch',
+    'highContrast': 'contrast-switch',
+    'gurappsEnabled': 'gurapps-switch',
+    'aiAssistantEnabled': 'ai-switch',
+    'oneButtonNavEnabled': 'one-button-nav-switch',
+    'font': 'font-select',
+    'weight': 'weight-slider',
+    'roundness': 'roundness-slider',
+    'clockSize': 'clock-size-slider',
+    'showSeconds': 'seconds-switch',
+    'use12HourFormat': 'hour-switch',
+    'stackEnabled': 'clock-stack-switch',
+    'clockPosX': 'clock-pos-x-slider',
+    'clockPosY': 'clock-pos-y-slider',
+    'alignment': 'alignment-select',
+    'colorEnabled': 'clock-color-switch',
+    'gradientEnabled': 'clock-gradient-switch',
+    'glassEnabled': 'clock-glass-switch',
+    'color': 'clock-color-picker',
+    'gradientColor': 'clock-gradient-color-picker',
+    'shadowEnabled': 'clock-shadow-switch',
+    'shadowBlur': 'clock-shadow-blur-slider',
+    'shadowColor': 'clock-shadow-color-picker',
+    'dateFormat': 'date-format-input',
+    'clockFormat': 'clock-format-input',
+    'wallpaperBlur': 'wallpaper-blur-slider',
+    'wallpaperBrightness': 'wallpaper-brightness-slider',
+    'wallpaperContrast': 'wallpaper-contrast-slider',
+    'showWeather': 'weather-switch'
+};
+
+// --- NEW: Function to broadcast a setting update to the settings app ---
+function broadcastSettingUpdate(key, value) {
+    // Find the settings app iframe
+    const settingsAppIframe = document.querySelector('iframe[src*="/settings/"]');
+    if (settingsAppIframe && settingsAppIframe.contentWindow) {
+        settingsAppIframe.contentWindow.postMessage({
+            type: 'settingUpdate',
+            key: key,
+            value: value
+        }, window.location.origin);
+    }
+}
+
+// --- NEW: Function to programmatically change a control's value and dispatch an event ---
+function setControlValueAndDispatch(key, value) {
+    const controlId = controlIdMap[key];
+    if (!controlId) {
+        console.warn(`[Polygol] No control found for setting key: '${key}'`);
+        return;
+    }
+
+    const control = document.getElementById(controlId);
+    if (!control) {
+        console.warn(`[Polygol] Control element with ID '${controlId}' not found.`);
+        return;
+    }
+
+    let eventType = 'change'; // Default event type
+
+    if (control.type === 'checkbox') {
+        // Convert string 'true'/'false' or theme 'light'/'dark' to boolean
+        const isChecked = (key === 'theme') ? (value === 'light') : (value === 'true');
+        if (control.checked !== isChecked) {
+            control.checked = isChecked;
+        } else {
+            return; // No change needed
+        }
+    } else if (control.type === 'range' || control.type === 'color' || control.type === 'text') {
+        control.value = value;
+        eventType = 'input'; // Use 'input' for sliders and color pickers for real-time updates
+    } else if (control.tagName === 'SELECT') {
+        control.value = value;
+    }
+
+    // Dispatch the event to trigger the existing logic in index.js
+    control.dispatchEvent(new Event(eventType, { bubbles: true }));
+}
+
 window.addEventListener('message', async (event) => { // Make listener async
     if (event.origin !== window.location.origin) return;
 
@@ -8427,6 +8510,18 @@ window.addEventListener('message', async (event) => { // Make listener async
         sourceWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
 
         return; // Message handled
+    }
+
+    if (data.type === 'settings-app-ready') {
+        console.log('[Polygol] Settings app is ready. Sending all current settings.');
+        if (!sourceWindow) return;
+        
+        // Send all tracked settings to the new settings app so its UI is in sync
+        Object.keys(controlIdMap).forEach(key => {
+            const value = localStorage.getItem(key);
+            sourceWindow.postMessage({ type: 'localStorageItemValue', key, value }, window.location.origin);
+        });
+        return;
     }
 
     // Check if this is an API call from a Gurapp
@@ -8498,7 +8593,12 @@ window.addEventListener('message', async (event) => { // Make listener async
             setIDBRecord, 
             removeIDBRecord, 
             clearIDBStore,
+			setSettingValue: (key, value) => {
+                setControlValueAndDispatch(key, value);
+                return `Setting '${key}' remotely updated.`;
+            },
         };
+		
 
         const funcToCall = allowedFunctions[funcName];
 
