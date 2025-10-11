@@ -304,11 +304,20 @@ const Gurasuraisu = {
   removeIDBRecord: function(dbName, storeName, key) { this._call('removeIDBRecord', [dbName, storeName, key]); },
   clearIDBStore: function(dbName, storeName) { this._call('clearIDBStore', [dbName, storeName]); },
 
-  // --- Functions for Settings Management ---
   getLocalStorageItem: function(key) {
     this._call('getLocalStorageItem', [key]);
   },
   setLocalStorageItem: function(key, value) {
+    this._call('setLocalStorageItem', [key, value]);
+  }
+
+  /**
+   * Asks the parent Polygol to change a specific setting value.
+   * This is the correct way for the settings app to apply changes.
+   * @param {string} key - The localStorage key of the setting.
+   * @param {string} value - The new value for the setting.
+   */
+  setSettingValue: function(key, value) {
     this._call('setLocalStorageItem', [key, value]);
   }
 };
