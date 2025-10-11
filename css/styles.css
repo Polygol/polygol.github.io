@@ -1116,6 +1116,7 @@ body.one-button-nav-active .dock.show {
 }
 
 .settings-grid.system-settings {
+	display: none;
     border-bottom: none;
     border-top: 2px solid var(--search-background);
     padding: 10px 0 0;
