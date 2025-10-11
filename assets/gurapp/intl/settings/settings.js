@@ -119,20 +119,15 @@ function initializeSettingsApp() {
             control.addEventListener(eventType, () => handleSettingChange(control));
         });
 
+        // Use postMessage for custom parent functions        
         const wallpaperInput = document.getElementById('wallpaper-input');
         document.getElementById('btn-upload-wallpaper').onclick = () => 
-            wallpaperInput.click();
-        wallpaperInput.addEventListener('change', (event) => {
-            if(event.target.files.length > 0) {
-                 // NOTE: Files cannot be sent directly through postMessage.
-                 // This action now tells the parent to click ITS OWN hidden input.
-                 Gurasuraisu.callGurasuraisuFunc('triggerWallpaperUpload');
-            }
-        });
-    
+            window.parent.postMessage({ action: 'triggerWallpaperUpload' }, 
+                                       window.location.origin);
+        
+        // This just opens a URL, so Gurasuraisu.openApp is correct
         document.getElementById('btn-version').onclick = () => 
-            Gurasuraisu.callGurasuraisuFunc('createFullscreenEmbed', 
-                               ['https://kirbindustries.gitbook.io/polygol']);
+            Gurasuraisu.openApp('https://kirbindustries.gitbook.io/polygol');
 
         document.getElementById('btn-transfer').onclick = () => Gurasuraisu.openApp('/transfer/index.html');
         document.getElementById('btn-recovery').onclick = () => Gurasuraisu.openApp('/recovery/index.html');
