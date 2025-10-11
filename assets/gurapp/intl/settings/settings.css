@@ -70,9 +70,79 @@
             color: var(--text-color);
             align-items: center;
             padding: 20px;
-            padding-top: 80px;
+            padding-top: 140px;
         }
 
+        .header {
+            display: flex;
+            align-items: center;
+            position: fixed;
+            top: 80px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 700px;
+            z-index: 999;
+            padding: 0 10px;
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .page-title {
+            font-family: 'Open Runde', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            flex-grow: 1;
+            text-align: left;
+            margin: 0;
+            padding-left: 10px;
+        }
+        
+        .pages-container {
+            width: 100%;
+            max-width: 700px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .page {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .page.active {
+            display: flex;
+            position: relative;
+            transform: translateX(0);
+        }
+        
+        .page.entering {
+            display: flex;
+            transform: translateX(100%);
+        }
+        
+        .page.exiting {
+            transform: translateX(-100%);
+        }
+        
+        .nav-item .setting-info {
+            flex-direction: row;
+            align-items: center;
+            gap: 15px;
+        }
 
         body::-webkit-scrollbar { width: 8px; }
         body::-webkit-scrollbar-track { background: transparent; }
