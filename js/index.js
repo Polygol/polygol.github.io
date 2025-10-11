@@ -61,19 +61,38 @@ async function forceUpdatePolygol() {
             return 'Update check failed: No registration found.';
         }
 
-        await registration.update(); // This tells the browser to check for a new SW version.
+        // --- THE FIX: We don't check registration.installing here. ---
+        // Instead, we attach a listener that will fire ONLY IF an update is found.
+        registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+                // Listen for when the new worker has finished installing
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed') {
+                        // The existing 'onupdatefound' listener in setupServiceWorkerUpdateListener
+                        // will now correctly detect this new worker and show the "Update & Reload" prompt.
+                        // We just give the user initial feedback.
+                        showPopup('Update found! The system will prompt you to reload shortly.');
+                    }
+                });
+            }
+        });
 
-        // After the update check, 'installing' will be populated if a new version was found.
-        if (registration.installing) {
-            // The existing 'onupdatefound' listener will handle the rest!
-            // We just give the user feedback that the process has started.
-            showPopup('Update found! The system will prompt you to reload shortly.');
-            return 'Update found and is installing.';
-        } else {
-            // If there's no 'installing' worker, it means we're on the latest version.
-            showPopup('Polygol is up to date.');
-            return 'No update available.';
-        }
+        // Now, trigger the update check. The listener above will handle the result.
+        await registration.update();
+
+        // After a brief moment, if no 'updatefound' event has fired, we can assume
+        // we are on the latest version. We use a timeout for this check.
+        setTimeout(() => {
+            // If there's still no new worker installing, it means no update was found.
+            if (!registration.installing) {
+                showPopup('Polygol is up to date.');
+            }
+        }, 2000); // 2-second timeout to wait for the update check to complete.
+
+
+        return 'Update check initiated.';
+
     } catch (error) {
         console.error('[SW] Force update failed:', error);
         showNotification('Update check failed. See console for details.', { icon: 'error' });
