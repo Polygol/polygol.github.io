@@ -972,52 +972,6 @@ function updateSunEffect() {
 }
 
 /**
- * Applies the calculated sun shadow to all relevant elements on the main page.
- */
-function applySunShadowToPage() {
-    const SUN_SHADOW_ID = '/* sun-shadow */';
-    // Find all elements and check their computed styles
-    const allElements = document.querySelectorAll('*');
-
-    allElements.forEach(el => {
-        try {
-            const style = window.getComputedStyle(el);
-            // CORRECTED CHECK: Look for the resolved fragment identifier of the SVG filter.
-            if (style.backdropFilter && style.backdropFilter.includes('#edge-refraction-only')) {
-                let currentShadow = el.style.boxShadow;
-                
-                // Remove old sun shadow if it exists to prevent duplication
-                const oldSunShadowIndex = currentShadow.indexOf(SUN_SHADOW_ID);
-                if (oldSunShadowIndex !== -1) {
-                    const shadowStartIndex = currentShadow.lastIndexOf('inset', oldSunShadowIndex);
-                    if (shadowStartIndex !== -1) {
-                        let shadowEndIndex = currentShadow.indexOf(',', oldSunShadowIndex);
-                        if (shadowEndIndex !== -1) {
-                            // Remove the shadow and the trailing comma/space
-                            currentShadow = currentShadow.substring(0, shadowStartIndex) + currentShadow.substring(shadowEndIndex + 1).trim();
-                        } else {
-                            // It was the only shadow
-                            currentShadow = '';
-                        }
-                    }
-                }
-                
-                // Apply new shadow, preserving existing styles
-                if (currentSunShadow) {
-                    const newShadow = `${currentSunShadow} ${SUN_SHADOW_ID}`;
-                    // Use a comma if there are other shadows present
-                    el.style.boxShadow = currentShadow ? `${newShadow}, ${currentShadow}` : newShadow;
-                } else {
-                    el.style.boxShadow = currentShadow;
-                }
-            }
-        } catch (e) {
-            // Failsafe for elements that don't have computed styles (e.g., <script>)
-        }
-    });
-}
-
-/**
  * Sends the updated sun shadow value to all active Gurapp iframes.
  */
 function broadcastSunUpdate() {
