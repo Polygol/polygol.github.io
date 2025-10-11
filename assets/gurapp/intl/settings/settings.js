@@ -157,7 +157,6 @@ function initializeSettingsApp() {
 
     // --- INITIALIZATION ---
     bindEventListeners();
-    loadAndRenderPresets();
     updateHeader();
     // Announce readiness to the parent, which will trigger the initial settings sync.
     if (window.parent) {
