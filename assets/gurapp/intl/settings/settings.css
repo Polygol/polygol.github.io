@@ -283,6 +283,7 @@
     height: 30px;
     background-color: var(--transparent-color);
     border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
     border-radius: 15px;
     position: relative;
     cursor: pointer;
@@ -295,6 +296,8 @@
     width: 18px;
     height: 18px;
     background-color: var(--secondary-text-color);
+    box-shadow: var(--sun-shadow);
+    outline: 1px solid var(--glass-border);
     border-radius: 50%;
     top: 5px;
     left: 6px;
@@ -326,8 +329,9 @@
     height: 30px;
     background: var(--transparent-color);
     border-radius: 15px;
-    padding: 0 5px;
+    padding: 0 6px;
     border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
 }
 .styled-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -337,7 +341,8 @@
     border-radius: 50%;
     background: var(--secondary-text-color);
     cursor: pointer;
-    border: 1px solid var(--glass-border);
+    outline: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
     transition: width 0.3s, height 0.3s, transform 0.3s;
 }
 .styled-slider::-webkit-slider-thumb:active {
@@ -351,7 +356,8 @@
     border-radius: 50%;
     background: var(--secondary-text-color);
     cursor: pointer;
-    border: 1px solid var(--glass-border);
+    outline: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
     transition: width 0.3s, height 0.3s, transform 0.3s;
 }
 .styled-slider::-moz-range-thumb:active {
@@ -364,6 +370,7 @@
     color: var(--text-color);
     padding: 8px 16px;
     border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
     border-radius: 20px;
     -webkit-appearance: none;
     appearance: none;
@@ -381,7 +388,6 @@ input.form-input {
     border: 1px solid var(--glass-border);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
     box-shadow: var(--sun-shadow);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     cursor: pointer;
     transform: scale(1);
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
