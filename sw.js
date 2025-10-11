@@ -20,7 +20,6 @@ const ASSETS_TO_CACHE = [
   '/assets/gurapp/intl/settings/index.html',
   '/assets/gurapp/intl/settings/settings.css',
   '/assets/gurapp/intl/settings/settings.js',
-  '/appstore/index.html',
   '/assets/appicon/appstore.png',
   '/assets/appicon/system.png',
   '/assets/appicon/transfer.png',
