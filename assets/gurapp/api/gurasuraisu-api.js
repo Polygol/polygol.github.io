@@ -309,7 +309,7 @@ const Gurasuraisu = {
   },
   setLocalStorageItem: function(key, value) {
     this._call('setLocalStorageItem', [key, value]);
-  }
+  },
 
   /**
    * Asks the parent Polygol to change a specific setting value.
