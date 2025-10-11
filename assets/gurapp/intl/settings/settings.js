@@ -131,6 +131,13 @@ function initializeSettingsApp() {
 
         document.getElementById('btn-transfer').onclick = () => Gurasuraisu.openApp('/transfer/index.html');
         document.getElementById('btn-recovery').onclick = () => Gurasuraisu.openApp('/recovery/index.html');
+    
+        document.getElementById('btn-force-update').onclick = () => {
+            // Show immediate feedback in the settings app
+            Gurasuraisu.showPopup('Checking for updates'); 
+            // Call the new API function
+            Gurasuraisu.forceUpdate();
+        };
 
         document.querySelectorAll('[data-modal]').forEach(btn => {
             btn.addEventListener('click', () => document.getElementById(btn.dataset.modal)?.classList.add('show'));
