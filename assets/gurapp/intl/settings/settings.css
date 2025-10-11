@@ -328,10 +328,10 @@
 .styled-slider {
     -webkit-appearance: none;
     width: 100%;
-    height: 30px;
+    height: 34px;
     background: var(--transparent-color);
-    border-radius: 15px;
-    padding: 0 6px;
+    border-radius: 20px;
+    padding: 0 8px;
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
 }
