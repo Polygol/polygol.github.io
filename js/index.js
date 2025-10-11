@@ -5840,6 +5840,7 @@ let isAppOpen = false;
 
 async function createFullscreenEmbed(url) {
 	minimizeFullscreenEmbed();
+	closeControls();
 	
     // When opening a new app, cancel any pending cleanup from a previously closed app.
     clearTimeout(minimizeCleanupTimeout);
@@ -7199,16 +7200,11 @@ function blackoutScreen() {
   // Add it to the document
   document.body.appendChild(blockingOverlay);
 
-  // Start fade-out animation
-  customizeModal.classList.remove('show');
-  blurOverlayControls.classList.remove('show');
+  closeControls();
+  minimizeFullscreenEmbed();
 
   // Wait for the animation to finish before hiding elements and pausing media
   setTimeout(() => {
-      // Hide elements
-      customizeModal.style.display = 'none';
-      blurOverlayControls.style.display = 'none';
-
       // Pause all videos, embeds, and animations
       document.querySelectorAll('video, iframe, canvas, [data-animation]').forEach(el => {
           if (el.tagName === 'VIDEO') {
@@ -7259,10 +7255,7 @@ function blackoutScreen() {
         delete el.dataset.animationState;
       }
     });
-    
-    // Call the minimize function
-    minimizeFullscreenEmbed();
-    
+        
     // Remove the blocking overlay
     document.body.removeChild(blockingOverlay);
   }
