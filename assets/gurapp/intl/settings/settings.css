@@ -386,7 +386,6 @@ input.form-input {
     outline: none;
     transition: background-color 0.2s, transform 0.1s;
     border: 1px solid var(--glass-border);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
     box-shadow: var(--sun-shadow);
     cursor: pointer;
     transform: scale(1);
