@@ -1,5 +1,81 @@
 function initializeSettingsApp() {
-    // All of the app's logic is now safely inside this function.
+    const navigationStack = ['main-settings'];
+
+    const pagesContainer = document.querySelector('.pages-container');
+    const pageTitle = document.querySelector('.page-title');
+    const backBtn = document.querySelector('.back-btn');
+
+    const pageTitles = {
+        'main-settings': 'Settings',
+        'page-display': 'Display',
+        'page-homescreen': 'Home Screen',
+        'page-clock': 'Clock',
+        'page-wallpaper': 'Wallpaper',
+        'page-system': 'System',
+        'page-data': 'Data & Recovery'
+    };
+
+    function navigateTo(pageId) {
+        const currentPageId = navigationStack[navigationStack.length - 1];
+        const currentPage = document.getElementById(currentPageId);
+        const nextPage = document.getElementById(pageId);
+
+        if (!nextPage || !currentPage) return;
+
+        currentPage.classList.add('exiting');
+        
+        nextPage.style.display = 'flex';
+        requestAnimationFrame(() => {
+            nextPage.classList.add('entering');
+            requestAnimationFrame(() => {
+                nextPage.classList.remove('entering');
+                nextPage.classList.add('active');
+            });
+        });
+
+        setTimeout(() => {
+            currentPage.classList.remove('active');
+            currentPage.classList.remove('exiting');
+            currentPage.style.display = 'none';
+        }, 300);
+
+        navigationStack.push(pageId);
+        updateHeader();
+    }
+
+    function navigateBack() {
+        if (navigationStack.length <= 1) return;
+
+        const currentPageId = navigationStack.pop();
+        const previousPageId = navigationStack[navigationStack.length - 1];
+        const currentPage = document.getElementById(currentPageId);
+        const previousPage = document.getElementById(previousPageId);
+
+        if (!currentPage || !previousPage) return;
+
+        previousPage.style.display = 'flex';
+        previousPage.classList.add('exiting'); // Temporarily put it off-screen
+        
+        requestAnimationFrame(() => {
+            currentPage.classList.add('entering'); // Slide out current page
+            previousPage.classList.remove('exiting');
+            previousPage.classList.add('active');
+        });
+
+        setTimeout(() => {
+            currentPage.classList.remove('active');
+            currentPage.classList.remove('entering');
+            currentPage.style.display = 'none';
+        }, 300);
+
+        updateHeader();
+    }
+
+    function updateHeader() {
+        const currentPageId = navigationStack[navigationStack.length - 1];
+        pageTitle.textContent = pageTitles[currentPageId] || 'Settings';
+        backBtn.style.display = navigationStack.length > 1 ? 'block' : 'none';
+    }
     
     // --- Tab Switching Logic ---
     const tabButtons = document.querySelectorAll('.tab-btn');
@@ -40,18 +116,19 @@ function initializeSettingsApp() {
     }
 
     function bindEventListeners() {
+        document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+            item.addEventListener('click', () => {
+                navigateTo(item.dataset.page);
+            });
+        });
+
+        backBtn.addEventListener('click', navigateBack);
+        
         document.querySelectorAll('.toggle-switch, .styled-select, .styled-slider, .color-picker, .form-input').forEach(control => {
             const eventType = (['range', 'color', 'text'].includes(control.type)) ? 'input' : 'change';
             control.addEventListener(eventType, () => handleSettingChange(control));
         });
-        document.querySelectorAll('[data-modal]').forEach(btn => {
-            btn.addEventListener('click', () => document.getElementById(btn.dataset.modal)?.classList.add('show'));
-        });
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) overlay.classList.remove('show');
-            });
-        });
+
         document.getElementById('btn-transfer').onclick = () => Gurasuraisu.openApp('/transfer/index.html');
         document.getElementById('btn-recovery').onclick = () => Gurasuraisu.openApp('/recovery/index.html');
     }
