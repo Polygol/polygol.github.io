@@ -124,13 +124,15 @@ function initializeSettingsApp() {
             wallpaperInput.click();
         wallpaperInput.addEventListener('change', (event) => {
             if(event.target.files.length > 0) {
-                 Gurasuraisu.callApp('System', 'uploadWallpaper', 
-                                    [...event.target.files]);
+                 // NOTE: Files cannot be sent directly through postMessage.
+                 // This action now tells the parent to click ITS OWN hidden input.
+                 Gurasuraisu.callGurasuraisuFunc('triggerWallpaperUpload');
             }
         });
-
+    
         document.getElementById('btn-version').onclick = () => 
-            Gurasuraisu.openApp('https://kirbindustries.gitbook.io/polygol');
+            Gurasuraisu.callGurasuraisuFunc('createFullscreenEmbed', 
+                               ['https://kirbindustries.gitbook.io/polygol']);
 
         document.getElementById('btn-transfer').onclick = () => Gurasuraisu.openApp('/transfer/index.html');
         document.getElementById('btn-recovery').onclick = () => Gurasuraisu.openApp('/recovery/index.html');
