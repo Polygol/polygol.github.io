@@ -8314,6 +8314,7 @@ const Gurasuraisu = {
 // --- NEW Permission Model ---
 // Maps trusted app IDs to their permission levels.
 const TRUSTED_APP_PERMISSIONS = {
+    'Settings': ['system-admin'], // Full access to everything
     'Terminal': ['system-admin'], // Full access to everything
     'App Store': ['app-management']  // Can only manage apps
 };
@@ -8445,23 +8446,45 @@ window.addEventListener('message', async (event) => { // Make listener async
 
     // Handle a Gurapp announcing it's ready for settings
     if (data.type === 'gurapp-ready') {
-        console.log('[Polygol] Gurapp is ready. Sending initial state.');
         if (!sourceWindow) return;
 
-        // Send current theme
+        // Find which app sent the message
+        let sourceAppId = null;
+        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+        for (const iframe of iframes) {
+            if (iframe.contentWindow === sourceWindow) {
+                sourceAppId = iframe.dataset.appId;
+                break;
+            }
+        }
+
+        console.log(`[Polygol] Received 'gurapp-ready' from: ${sourceAppId || 'Unknown App'}`);
+
+        // --- Core Logic ---
+        // If the ready message is from the Settings app, send ALL settings.
+        if (sourceAppId === 'Settings') {
+            console.log('[Polygol] Settings app is ready. Sending all current settings.');
+            Object.keys(controlIdMap).forEach(key => {
+                const value = localStorage.getItem(key);
+                sourceWindow.postMessage({ 
+                    type: 'localStorageItemValue', 
+                    key: key, 
+                    value: value 
+                }, window.location.origin);
+            });
+        }
+
+        // For ALL apps (including Settings), send the standard initial state.
         const currentTheme = localStorage.getItem('theme') || 'dark';
         sourceWindow.postMessage({ type: 'themeUpdate', theme: currentTheme }, window.location.origin);
 
-        // Send current animation setting
         const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
         sourceWindow.postMessage({ type: 'animationsUpdate', enabled: animationsEnabled }, window.location.origin);
         
-        // Send current contrast setting
         const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
         sourceWindow.postMessage({ type: 'contrastUpdate', enabled: highContrastEnabled }, window.location.origin);
 
-        // Send current sun shadow
-        sourceWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
+        sourceWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow, shadowStrong: currentSunShadowStrong }, window.location.origin);
 
         return; // Message handled
     }
