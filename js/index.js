@@ -7559,6 +7559,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Toggle minimalMode state
         minimalMode = !minimalMode;
 
+	    const value = minimalMode.toString(); // Define value before using it
+
         // Save state to localStorage (if needed)
         localStorage.setItem('minimalMode', minimalMode);
 	    broadcastSettingUpdate('minimalMode', value);
@@ -7576,6 +7578,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Event listener for night mode control
     nightModeControl.addEventListener('click', function() {
         nightMode = !nightMode;
+	    const value = nightMode.toString(); // Define value before using it
         localStorage.setItem('nightMode', nightMode);
 		broadcastSettingUpdate('nightMode', value);
         updateNightMode(); // This single call handles all state changes.
@@ -7585,7 +7588,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     silentModeControl.addEventListener('click', function() {
         silentModeSwitch.checked = !silentModeSwitch.checked;
         this.classList.toggle('active');
-        
+
+		const value = isSilentMode.toString(); // Define value before using it
+		
         isSilentMode = silentModeSwitch.checked; // Update global flag
         localStorage.setItem('silentMode', isSilentMode); // Save to localStorage
 		broadcastSettingUpdate('silentMode', value);
