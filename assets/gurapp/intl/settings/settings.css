@@ -77,13 +77,13 @@
             display: flex;
             align-items: center;
             position: fixed;
-            top: 80px; 
+            top: 24px; 
             left: 50%;
             transform: translateX(-50%);
             width: 100%;
             max-width: 700px;
             z-index: 999;
-            padding: 0 10px;
+            padding: 0 28px;
         }
         
         .back-btn {
@@ -103,7 +103,7 @@
             flex-grow: 1;
             text-align: left;
             margin: 0;
-            padding-left: 10px;
+            padding-left: 15px;
         }
         
         .pages-container {
@@ -209,43 +209,6 @@
             -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0) 100%);
         }
 
-        .tab-btn {
-            background-color: var(--search-background);
-            color: transparent;
-            border-radius: 35px;
-            padding: 12px 16px;
-            font-size: 0;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1) ! IMPORTANT;
-            display: flex;
-            align-items: center;
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
-            box-shadow: var(--sun-shadow);
-            border: 1px solid var(--glass-border);
-        }
-
-        .tab-btn.active {
-            background-color: var(--secondary-text-color);
-            color: var(--background-color);
-            border-radius: 35px;
-            corner-shape: superellipse(1.5);
-            font-family: 'Open Runde';
-            font-weight: 500;
-            padding: 10px 18px 10px 16px;
-            font-size: revert;
-            gap: 12px;
-        }
-
-        .toolbar .tab-btn .material-symbols-rounded {
-            transition: color 0.3s;
-            color: var(--text-color);
-            font-size: 20px;
-        }
-
-        .toolbar .tab-btn.active .material-symbols-rounded {
-            color: var(--background-color) !important;
-        }
-
 .container {
    width: 100%;
    max-width: 700px; /* Wider for settings */
@@ -285,7 +248,7 @@
 
 /* --- Settings Specific Styles --- */
 .setting-section {
-    margin-bottom: 30px;
+    margin-bottom: 12px;
 }
 
 .section-title {
@@ -501,17 +464,6 @@ button:active, .toggle-switch:active {
     .toolbar {
         justify-content: flex-start;
         overflow-x: auto;
-    }
-
-    .tab-btn {
-        font-size: 0;
-        padding: 12px 16px;
-        gap: 0 !important;
-    }
-
-    .tab-btn.active {
-        font-size: revert;
-        padding: 10px 18px 10px 16px;
     }
     
     .setting-item {
