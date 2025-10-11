@@ -8436,7 +8436,7 @@ function setControlValueAndDispatch(key, value) {
     }
 
     if (control.type === 'checkbox') {
-        const isChecked = (value === 'true');
+        const isChecked = (key === 'theme') ? (value === 'light') : (value === 'true');
         if (control.checked !== isChecked) {
             control.checked = isChecked;
         } else { return; } // No change needed, prevent event loop
