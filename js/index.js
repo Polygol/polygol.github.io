@@ -8417,35 +8417,40 @@ function broadcastSettingUpdate(key, value) {
 // --- NEW: Function to programmatically change a control's value and dispatch an event ---
 function setControlValueAndDispatch(key, value) {
     const controlId = controlIdMap[key];
-    if (!controlId) {
-        console.warn(`[Polygol] No control found for setting key: '${key}'`);
-        return;
-    }
+    if (!controlId) return;
 
     const control = document.getElementById(controlId);
-    if (!control) {
-        console.warn(`[Polygol] Control element with ID '${controlId}' not found.`);
-        return;
-    }
+    if (!control) return;
 
-    let eventType = 'change'; // Default event type
+    let eventType = 'change';
+
+    // Handle special toggle-like DIVs (Night Mode, Minimal, Silent)
+    if (control.classList.contains('qcontrol-item')) {
+        const currentStateIsActive = control.classList.contains('active');
+        const targetStateIsActive = (value === 'true');
+        // Only click if the state needs to change
+        if (currentStateIsActive !== targetStateIsActive) {
+            control.click();
+        }
+        return; // The click handler will do the rest.
+    }
 
     if (control.type === 'checkbox') {
-        // Convert string 'true'/'false' or theme 'light'/'dark' to boolean
-        const isChecked = (key === 'theme') ? (value === 'light') : (value === 'true');
+        const isChecked = (value === 'true');
         if (control.checked !== isChecked) {
             control.checked = isChecked;
-        } else {
-            return; // No change needed
-        }
-    } else if (control.type === 'range' || control.type === 'color' || control.type === 'text') {
-        control.value = value;
-        eventType = 'input'; // Use 'input' for sliders and color pickers for real-time updates
+        } else { return; } // No change needed, prevent event loop
+    } else if (['range', 'color', 'text'].includes(control.type)) {
+        if (control.value !== value) {
+            control.value = value;
+            eventType = 'input';
+        } else { return; }
     } else if (control.tagName === 'SELECT') {
-        control.value = value;
+        if (control.value !== value) {
+            control.value = value;
+        } else { return; }
     }
 
-    // Dispatch the event to trigger the existing logic in index.js
     control.dispatchEvent(new Event(eventType, { bubbles: true }));
 }
 
@@ -8454,6 +8459,20 @@ window.addEventListener('message', async (event) => { // Make listener async
 
     const data = event.data;
     const sourceWindow = event.source;
+
+    if (data.action) {
+        const funcToCall = allowedFunctions[data.action];
+        if (typeof funcToCall === 'function') {
+            try {
+                // Pass arguments if they exist
+                const result = await funcToCall.apply(window, data.args || []);
+                // Send success back if needed
+            } catch (error) {
+                console.error(`Error executing action '${data.action}':`, error);
+            }
+            return; // Action handled
+        }
+    }
 
     if (data && data.action === 'userActivity') {
         showCursorAndResetTimer();
