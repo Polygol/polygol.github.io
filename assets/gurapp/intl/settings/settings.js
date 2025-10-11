@@ -126,12 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Initialization ---
     window.addEventListener('GurasuraisuReady', () => {
-        requestInitialSettings();
         bindEventListeners();
-        
-        // Announce that the settings app is ready to receive real-time updates
-        if(window.parent) {
-            window.parent.postMessage({ type: 'settings-app-ready' }, window.location.origin);
-        }
     });
 });
