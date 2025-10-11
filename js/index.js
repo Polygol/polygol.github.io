@@ -7522,37 +7522,35 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Event listener for light mode control
     lightModeControl.addEventListener('click', function() {
-        lightModeSwitch.checked = !lightModeSwitch.checked;
-        this.classList.toggle('active');
+        // This simulates a click on the label, which is the correct behavior.
+        lightModeSwitch.click(); 
+    });
+	
+    themeSwitch.addEventListener('change', function() {
+        const isLight = this.checked;
+        const newTheme = isLight ? 'light' : 'dark';
 
-        const newTheme = lightModeSwitch.checked ? 'light' : 'dark';
-
-        // Update localStorage
+        // Update UI, localStorage, and broadcast
+        lightModeControl.classList.toggle('active', isLight);
         localStorage.setItem('theme', newTheme);
-	    broadcastSettingUpdate('theme', newTheme);
+        broadcastSettingUpdate('theme', newTheme);
+        document.body.classList.toggle('light-theme', isLight);
+        updateLightModeIcon(isLight);
 
-        // Update current document
-        document.body.classList.toggle('light-theme', newTheme === 'light');
-
-        // Update icon
-        updateLightModeIcon(lightModeSwitch.checked);
-
-        const iframes = document.querySelectorAll('iframe');
+        // Inform all iframes of the specific theme update
+        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
         iframes.forEach((iframe) => {
-            iframe.contentWindow.postMessage({
-                type: 'themeUpdate',
-                theme: newTheme
-            }, window.location.origin);
+            if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    type: 'themeUpdate',
+                    theme: newTheme
+                }, window.location.origin);
+            }
         });
 
-	    // Cancel any previous pending sun effect
-	    clearTimeout(sunEffectTimeout);
-	
-	    // Schedule a new sun effect after 3 seconds
-	    sunEffectTimeout = setTimeout(() => {
-	        updateSunEffect();
-	    }, 3000);
-	});
+        clearTimeout(sunEffectTimeout);
+	    sunEffectTimeout = setTimeout(updateSunEffect, 3000);
+    });
     
     // Event listener for minimal mode control
     minimalModeControl.addEventListener('click', function() {
