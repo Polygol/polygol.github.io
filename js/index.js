@@ -5839,6 +5839,8 @@ async function deleteApp(appName) {
 let isAppOpen = false;
 
 async function createFullscreenEmbed(url) {
+	minimizeFullscreenEmbed();
+	
     // When opening a new app, cancel any pending cleanup from a previously closed app.
     clearTimeout(minimizeCleanupTimeout);
 
