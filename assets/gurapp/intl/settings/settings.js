@@ -13,7 +13,9 @@ function initializeSettingsApp() {
         'page-clock': 'Clock',
         'page-wallpaper': 'Wallpaper',
         'page-system': 'System',
-        'page-data': 'Data & Recovery'
+        'page-data': 'Data & Recovery',
+        'page-general': 'General',
+        'page-about': 'About'
     };
 
     function navigateTo(pageId) {
@@ -116,6 +118,19 @@ function initializeSettingsApp() {
             const eventType = (['range', 'color', 'text'].includes(control.type)) ? 'input' : 'change';
             control.addEventListener(eventType, () => handleSettingChange(control));
         });
+
+        const wallpaperInput = document.getElementById('wallpaper-input');
+        document.getElementById('btn-upload-wallpaper').onclick = () => 
+            wallpaperInput.click();
+        wallpaperInput.addEventListener('change', (event) => {
+            if(event.target.files.length > 0) {
+                 Gurasuraisu.callApp('System', 'uploadWallpaper', 
+                                    [...event.target.files]);
+            }
+        });
+
+        document.getElementById('btn-version').onclick = () => 
+            Gurasuraisu.openApp('https://kirbindustries.gitbook.io/polygol');
 
         document.getElementById('btn-transfer').onclick = () => Gurasuraisu.openApp('/transfer/index.html');
         document.getElementById('btn-recovery').onclick = () => Gurasuraisu.openApp('/recovery/index.html');
