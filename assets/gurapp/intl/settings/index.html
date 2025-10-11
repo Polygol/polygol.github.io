@@ -127,12 +127,18 @@
                            data-key="page_brightness">
                 </div>
                 <div class="setting-item slider-item">
-                    <span class="setting-label">Tone</span>
+                    <div class="setting-info">
+                        <span class="setting-label">Tone</span>
+                        <span class="setting-description">Adjust screen temperature</span>
+                    </div>
                     <input type="range" min="-10" max="10" class="styled-slider" 
                            data-key="display_temperature">
                 </div>
                 <div class="setting-item" id="setting-nightMode">
-                    <span class="setting-label">Night Mode</span>
+                    <div class="setting-info">
+                        <span class="setting-label">Night Mode</span>
+                        <span class="setting-description">Adjust the screen to be more clearer</span>
+                    </div>
                     <div class="setting-control">
                         <input type="checkbox" class="toggle-switch" 
                                data-key="nightMode">
@@ -141,21 +147,30 @@
                 <div class="setting-section">
                     <h2 class="section-title">Appearance</h2>
                     <div class="setting-item" id="setting-theme">
-                        <span class="setting-label">Light Theme</span>
+                        <div class="setting-info">
+                            <span class="setting-label">Daylight</span>
+                            <span class="setting-description">Switch between light and dark themes</span>
+                        </div>
                         <div class="setting-control">
                             <input type="checkbox" class="toggle-switch" 
                                    data-key="theme">
                         </div>
                     </div>
                     <div class="setting-item" id="setting-animationsEnabled">
-                        <span class="setting-label">Animations</span>
+                        <div class="setting-info">
+                            <span class="setting-label">Motion</span>
+                            <span class="setting-description">Enable animations</span>
+                        </div>
                         <div class="setting-control">
                             <input type="checkbox" class="toggle-switch" 
                                    data-key="animationsEnabled">
                         </div>
                     </div>
                     <div class="setting-item" id="setting-highContrast">
-                        <span class="setting-label">High Contrast</span>
+                        <div class="setting-info">
+                            <span class="setting-label">Contrast</span>
+                            <span class="setting-description">Enable High Contrast</span>
+                        </div>
                         <div class="setting-control">
                             <input type="checkbox" class="toggle-switch" 
                                    data-key="highContrast">
@@ -182,7 +197,10 @@
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
                 <div class="setting-item">
-                    <span class="setting-label">Show Weather Widget</span>
+                    <div class="setting-info">
+                        <span class="setting-label">Show Weather Widget on Home Screen</span>
+                        <span class="setting-description">Weather data is pulled from Open-Meteo</span>
+                    </div>
                     <input type="checkbox" class="toggle-switch" 
                            data-key="showWeather">
                 </div>
@@ -194,7 +212,10 @@
             <div class="setting-section">
                 <h2 class="section-title">Style</h2>
                 <div class="setting-item">
-                    <span class="setting-label">Font</span>
+                    <div class="setting-info">
+                        <span class="setting-label">Style</span>
+                        <span class="setting-description">Choose a font to display the clock in</span>
+                    </div>
                     <select class="styled-select" data-key="font">
                         <option value="Inter" data-lang="Default">Default</option>
                         <option value="Open Runde" data-lang="Work">Work</option>
@@ -210,32 +231,39 @@
                     </select>
                 </div>
                 <div class="setting-item slider-item">
-                    <span class="setting-label">Weight</span>
+                    <div class="setting-info">
+                        <span class="setting-label">Weight</span>
+                        <span class="setting-description">Adjust font weight if supported</span>
+                    </div>
                     <input type="range" min="20" max="100" 
                            class="styled-slider" data-key="weight">
+                </div>
+                <div class="setting-item slider-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Roundness</span>
+                        <span class="setting-description">Adjust the font roundness if supported</span>
+                    </div>
+                    <input type="range" min="0" max="100" class="styled-slider" 
+                           data-key="roundness">
                 </div>
             </div>
             <div class="setting-section">
                 <h2 class="section-title">Format & Layout</h2>
                 <div class="setting-item">
-                    <span class="setting-label">Show Seconds</span>
+                    <div class="setting-info">
+                        <span class="setting-label">Show Seconds</span>
+                        <span class="setting-description">Overrides Clock Format</span>
+                    </div>
                     <input type="checkbox" class="toggle-switch" 
                            data-key="showSeconds">
                 </div>
                 <div class="setting-item">
-                    <span class="setting-label">12-Hour Format</span>
-                    <input type="checkbox" class="toggle-switch" 
-                           data-key="use12HourFormat">
-                </div>
-                <div class="setting-item">
-                    <span class="setting-label">Stacked Layout</span>
+                    <div class="setting-info">
+                        <span class="setting-label">Stacked Clock</span>
+                        <span class="setting-description">Use a stacked clock layout</span>
+                    </div>
                     <input type="checkbox" class="toggle-switch" 
                            data-key="stackEnabled">
-                </div>
-                <div class="setting-item slider-item">
-                    <span class="setting-label">Roundness</span>
-                    <input type="range" min="0" max="100" class="styled-slider" 
-                           data-key="roundness">
                 </div>
                 <div class="setting-item">
                     <span class="setting-label">Clock Format</span>
@@ -282,9 +310,12 @@
         <div class="page" id="page-wallpaper">
             <div class="setting-section">
                  <div class="setting-item">
-                    <span class="setting-label">Upload Wallpaper</span>
-                    <button class="action-btn" id="btn-upload-wallpaper">
-                        Upload
+                    <div class="setting-info">
+                        <span class="setting-label">Wallpaper</span>
+                        <span class="setting-description">Supports PNG, JPEG, JPG, WEBP, GIF and MP4 files<br>Attach multiple files to create a slideshow</span>
+                    </div>
+                     <button class="action-btn" id="btn-upload-wallpaper">
+                        Add
                     </button>
                     <input type="file" id="wallpaper-input" 
                            accept=".png, .jpeg, .jpg, .webp, .gif, .mp4" multiple 
@@ -343,7 +374,10 @@
             <span>Manage your overall setup and perferences for Polygol</span>
             <div class="setting-section">
                 <div class="setting-item">
-                    <span class="setting-label">Language</span>
+                    <div class="setting-info">
+                        <span class="setting-label">Language</span>
+                        <span class="setting-description">Gurapps and other system components are currently not supported</span>
+                    </div>
                     <select class="styled-select" data-key="selectedLanguage">
                         <option value="EN">English</option>
                         <option value="JP">日本語</option>
@@ -352,6 +386,14 @@
                         <option value="KO">한국어</option>
                         <option value="ZH">中文</option>
                     </select>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">12 hour format</span>
+                        <span class="setting-description">Overrides Clock Format</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" 
+                           data-key="use12HourFormat">
                 </div>
             </div>
         </div>
@@ -362,9 +404,7 @@
                 <div class="setting-item">
                     <div class="setting-info">
                         <span class="setting-label">Polygol 16</span>
-                        <span class="setting-description">
-                            View documentation and release notes.
-                        </span>
+                        <span class="setting-description">View documentation and release notes</span>
                     </div>
                     <button class="action-btn" id="btn-version">Details</button>
                 </div>
@@ -377,6 +417,7 @@
                 <div class="setting-item">
                      <div class="setting-info">
                         <span class="setting-label">System Transfer</span>
+                        <span class="setting-description">Backup, transfer and restore your data</span>
                     </div>
                     <div class="setting-control">
                         <button class="action-btn" id="btn-transfer">
@@ -387,6 +428,7 @@
                 <div class="setting-item">
                      <div class="setting-info">
                         <span class="setting-label">Recovery Mode</span>
+                        <span class="setting-description">Factory reset Polygol</span>
                     </div>
                     <div class="setting-control">
                         <button class="action-btn" id="btn-recovery">
