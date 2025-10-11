@@ -5839,41 +5839,34 @@ async function createFullscreenEmbed(url) {
     // 2. Find the app's name from the URL. This also validates that the app is "installed".
     let appName = Object.keys(apps).find(name => apps[name].url === url);
 
-    // Allowlist override
-    const allowlistDomains = ['kirbindustries.gitbook.io'];
-	let urlDomain = '';
-	try {
-	    // Resolve relative URLs to absolute using the current origin
-	    const absoluteUrl = new URL(url, window.location.origin);
-	    urlDomain = absoluteUrl.hostname;
-	} catch (err) {
-	    console.warn('Invalid URL passed to createFullscreenEmbed:', url);
-	    showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
-	    return;
-	}
-	
-	const isAllowlisted = allowlistDomains.includes(urlDomain);
+    // --- START of MODIFICATION ---
+    // NEW: Define special internal tool URLs that are always allowed to open.
+    const internalToolUrls = [
+        '/recovery/index.html',
+        '/transfer/index.html',
+        'https://kirbindustries.gitbook.io/polygol'
+    ];
+    const isInternalTool = internalToolUrls.includes(url);
 
-    // If appName is not found, show popup and warn
-    if (!appName) {
-        showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
+    // If the URL is not for an installed app and not an internal tool, block it.
+    if (!appName && !isInternalTool) {
         console.warn(`Attempted to open an unknown app URL: ${url}`);
-        return; // Do not open a new tab
+        showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
+        return; 
     }
 
-    // If appName is not found and the domain is not allowlisted, open in a new tab
-    if (!appName && !isAllowlisted) {
-        console.warn(`Attempted to open an unknown URL as an app: ${url}`);
-        window.open(url, '_blank'); // Open in a new tab
-        return; // Exit the function
+    // Fallback app details for tools/allowlisted URLs
+    let appDetails;
+    if (appName) {
+        appDetails = apps[appName];
+    } else { // It must be an internal tool to get this far
+        appDetails = {
+            name: 'System Tool',
+            icon: '/assets/appicon/system.png', // A generic system icon
+            url: url
+        };
+        appName = 'System Tool'; // Assign a temporary name for tracking
     }
-
-    // Fallback app details for allowlisted URLs
-    let appDetails = appName ? apps[appName] : {
-	    name: urlDomain || 'Custom App',
-        icon: '/assets/appicon/default.png',
-        url: url
-    };
 
     // Update the favicon to the app's icon
     if (appDetails && appDetails.icon) {
