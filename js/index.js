@@ -1026,12 +1026,15 @@ let use12HourFormat = localStorage.getItem('use12HourFormat') === 'true'; // Def
 const hourFormatSwitch = document.getElementById('hour-switch');
 hourFormatSwitch.checked = use12HourFormat; // Initialize the switch state
 
-// Add event listener for the hour format toggle
-hourFormatSwitch.addEventListener('change', function() {
-  use12HourFormat = this.checked;
-  localStorage.setItem('use12HourFormat', use12HourFormat);
-  updateClockAndDate(); // Update clock immediately after change
-});
+// Name the listener for clarity
+function handleHourFormatChange() {
+    use12HourFormat = this.checked;
+    const value = use12HourFormat.toString();
+    localStorage.setItem('use12HourFormat', value);
+    broadcastSettingUpdate('use12HourFormat', value);
+    updateClockAndDate();
+}
+hourFormatSwitch.addEventListener('change', handleHourFormatChange);
 
 // Function to get current time in 24-hour format (HH:MM:SS)
 function getCurrentTime24() {
@@ -2940,9 +2943,11 @@ if (highContrastEnabled) {
 }
 
 // Event listener for contrast toggle
-contrastSwitch.addEventListener('change', function() {
+function handleContrastChange() {
     const highContrast = this.checked;
-    localStorage.setItem('highContrast', highContrast);
+    const value = highContrast.toString();
+    localStorage.setItem('highContrast', value);
+    broadcastSettingUpdate('highContrast', value);
     document.body.classList.toggle('high-contrast', highContrast);
     
     // Inform iframes
@@ -2953,7 +2958,8 @@ contrastSwitch.addEventListener('change', function() {
             enabled: highContrast
         }, window.location.origin);
     });
-});
+}
+contrastSwitch.addEventListener('change', handleContrastChange);
 
 // Load saved preference (default to true/on if not set)
 const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
@@ -2963,9 +2969,11 @@ if (!animationsEnabled) {
     document.body.classList.add('reduce-animations');
 }
 // Event listener for animation toggle
-animationSwitch.addEventListener('change', function() {
+function handleAnimationChange() {
     const enableAnimations = this.checked;
-    localStorage.setItem('animationsEnabled', enableAnimations);
+    const value = enableAnimations.toString();
+    localStorage.setItem('animationsEnabled', value);
+    broadcastSettingUpdate('animationsEnabled', value);
     document.body.classList.toggle('reduce-animations', !enableAnimations);
     
     const iframes = document.querySelectorAll('iframe');
@@ -2975,7 +2983,8 @@ animationSwitch.addEventListener('change', function() {
             enabled: animationsEnabled  // true or false
         }, window.location.origin);
     });
-});
+}
+animationSwitch.addEventListener('change', handleAnimationChange);
 
 const AI_DB_NAME = 'GuraAIDB';
 const AI_STORE_NAME = 'ChatHistory';
@@ -3463,11 +3472,14 @@ function updateGurappsVisibility() {
 }
 
 gurappsSwitch.checked = gurappsEnabled;
-gurappsSwitch.addEventListener("change", function() {
+function handleGurappsToggle() {
     gurappsEnabled = this.checked;
-    localStorage.setItem("gurappsEnabled", gurappsEnabled);
+    const value = gurappsEnabled.toString();
+    localStorage.setItem("gurappsEnabled", value);
+    broadcastSettingUpdate('gurappsEnabled', value); // <-- ADD THIS
     updateGurappsVisibility();
-});
+}
+gurappsSwitch.addEventListener("change", handleGurappsToggle);
 
 function updateOneButtonNavVisibility() {
     document.body.classList.toggle('one-button-nav-active', oneButtonNavEnabled);
@@ -5218,10 +5230,12 @@ function setupFontSelection() {
             clockFormat: document.getElementById('clock-format-input').value
         };
 
-        // Always save to individual localStorage keys. This acts as the "default" or "current" state.
-        for (const key in settingsFromUI) {
-            localStorage.setItem(key, settingsFromUI[key]);
-        }
+	    // Save to localStorage and broadcast each change to the settings app
+	    for (const key in settingsFromUI) {
+	        const value = settingsFromUI[key];
+	        localStorage.setItem(key, value);
+	        broadcastSettingUpdate(key, value); // Broadcasts the update
+	    }
 
         // If there's an active wallpaper, also save these settings specifically to it.
         if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0) {
@@ -7515,6 +7529,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Update localStorage
         localStorage.setItem('theme', newTheme);
+	    broadcastSettingUpdate('theme', newTheme);
 
         // Update current document
         document.body.classList.toggle('light-theme', newTheme === 'light');
@@ -7546,6 +7561,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Save state to localStorage (if needed)
         localStorage.setItem('minimalMode', minimalMode);
+	    broadcastSettingUpdate('minimalMode', value);
 
         // Update UI based on the new state
         updateMinimalMode();
@@ -7561,6 +7577,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     nightModeControl.addEventListener('click', function() {
         nightMode = !nightMode;
         localStorage.setItem('nightMode', nightMode);
+		broadcastSettingUpdate('nightMode', value);
         updateNightMode(); // This single call handles all state changes.
     });
 
@@ -7571,6 +7588,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         isSilentMode = silentModeSwitch.checked; // Update global flag
         localStorage.setItem('silentMode', isSilentMode); // Save to localStorage
+		broadcastSettingUpdate('silentMode', value);
         
         // Update icon
         updateSilentModeIcon(isSilentMode);
@@ -7639,6 +7657,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         temperaturePopupValue.textContent = `${value}`;
         temperatureValue.textContent = `${value}`;
         localStorage.setItem('display_temperature', value);
+		broadcastSettingUpdate('display_temperature', value);
         updateTemperatureIcon(value);
         updateTemperature(value);
 	temperatureControl.classList.toggle('active', value !== '0');
@@ -7649,6 +7668,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const value = e.target.value;
         updateBrightness(value);
         localStorage.setItem('page_brightness', value);
+		broadcastSettingUpdate('page_brightness', value);
     });
     
     // Add CSS for the overlays
