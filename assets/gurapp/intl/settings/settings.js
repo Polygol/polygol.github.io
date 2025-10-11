@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let valueToSet;
 
         if (control.type === 'checkbox') {
-            // Special case for theme
             if (key === 'theme') {
                 valueToSet = control.checked ? 'light' : 'dark';
             } else {
@@ -72,7 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             valueToSet = control.value;
         }
-        Gurasuraisu.setLocalStorageItem(key, valueToSet);
+        // REPLACE the old call with this new one:
+        Gurasuraisu.setSettingValue(key, valueToSet);
     }
     
     function bindEventListeners() {
