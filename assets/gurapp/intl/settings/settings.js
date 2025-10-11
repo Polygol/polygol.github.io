@@ -1,5 +1,6 @@
-window.addEventListener('GurasuraisuReady', () => {
-    
+function initializeSettingsApp() {
+    console.log('[Settings App] Gurasuraisu API is ready. Initializing...');
+
     // --- Tab Switching Logic ---
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -20,20 +21,13 @@ window.addEventListener('GurasuraisuReady', () => {
 
         controls.forEach(control => {
             if (control.type === 'checkbox') {
-                if (key === 'theme') {
-                    control.checked = (value === 'light');
-                } else {
-                    // This correctly handles 'false' and null (unset) as "off".
-                    control.checked = (value === 'true');
-                }
-            } else if (control.type === 'range') {
-                control.value = value || control.defaultValue;
-            } else if (control.type === 'color') {
-                control.value = value || '#ffffff';
+                control.checked = (key === 'theme') ? (value === 'light') : (value === 'true');
+            } else if (control.type === 'range' || control.type === 'color' || control.type === 'text') {
+                control.value = value || '';
+                if (control.type === 'range' && !value) control.value = control.defaultValue;
+                if (control.type === 'color' && !value) control.value = '#ffffff';
             } else if (control.tagName === 'SELECT') {
                 control.value = value || control.options[0].value;
-            } else { // text inputs
-                control.value = value || '';
             }
         });
     }
@@ -49,6 +43,7 @@ window.addEventListener('GurasuraisuReady', () => {
         } else {
             valueToSet = control.value;
         }
+        // Use the correct API function to send the setting change to the parent
         Gurasuraisu.setLocalStorageItem(key, valueToSet);
     }
     
@@ -80,10 +75,22 @@ window.addEventListener('GurasuraisuReady', () => {
         const { type, key, value } = event.data;
 
         if (type === 'localStorageItemValue' || type === 'settingUpdate') {
-            if (key) updateControl(key, value);
+            if (key) {
+                 console.log(`[Settings App] Received setting '${key}' with value '${value}'`);
+                 updateControl(key, value);
+            }
         }
     });
     
     // --- Initialization ---
     bindEventListeners();
-});
+}
+
+
+// This is the robust entry point. It checks if the API is already loaded.
+// If yes, run immediately. If not, wait for the event.
+if (window.Gurasuraisu && typeof window.Gurasuraisu.showPopup === 'function') {
+    initializeSettingsApp();
+} else {
+    window.addEventListener('GurasuraisuReady', initializeSettingsApp, { once: true });
+}
