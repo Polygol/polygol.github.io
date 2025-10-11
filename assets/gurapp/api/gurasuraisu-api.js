@@ -423,14 +423,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('click', handleLocalActivity);
     window.addEventListener('keydown', handleLocalActivity);
   }
+
+  // Tell the parent that this app is ready to receive settings
+  if (isInsideGurasuraisu) {
+    window.parent.postMessage({ type: 'gurapp-ready' }, window.location.origin);
+  }
 });
 
 // Announce that the API is ready
 window.GURASURAISU_API_READY = true;
 const readyEvent = new CustomEvent('GurasuraisuReady');
 window.dispatchEvent(readyEvent);
-
-// Tell the parent that this app is ready to receive settings
-if (isInsideGurasuraisu) {
-    window.parent.postMessage({ type: 'gurapp-ready' }, window.location.origin);
-}
