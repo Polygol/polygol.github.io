@@ -7832,80 +7832,9 @@ function getLocalStorageItem(key) {
 }
 
 function setLocalStorageItem(key, value) {
-    localStorage.setItem(key, value);
-    // Re-sync UI for common settings immediately
-    if (key === 'page_brightness') updateBrightness(value);
-    if (key === 'theme') {
-         document.body.classList.toggle('light-theme', value === 'light');
-         document.querySelectorAll('iframe').forEach((iframe) => {
-            iframe.contentWindow.postMessage({
-                type: 'themeUpdate',
-                theme: value
-            }, window.location.origin);
-        });
-    }
-    if (key === 'animationsEnabled') {
-        const enabled = value === 'true';
-        document.body.classList.toggle('reduce-animations', !enabled);
-        document.querySelectorAll('iframe').forEach((iframe) => {
-            iframe.contentWindow.postMessage({
-                type: 'animationsUpdate',
-                enabled: enabled
-            }, window.location.origin);
-        });
-    }
-    if (key === 'showSeconds') {
-        showSeconds = value === 'true';
-        updateClockAndDate();
-    }
-    if (key === 'showWeather') {
-        showWeather = value === 'true';
-        // Trigger update to show/hide widget and fetch data
-        const weatherSwitchEl = document.getElementById('weather-switch');
-        if (weatherSwitchEl) {
-            weatherSwitchEl.checked = showWeather;
-            weatherSwitchEl.dispatchEvent(new Event('change')); // Simulate change event
-        }
-    }
-    if (key === 'use12HourFormat') {
-        use12HourFormat = value === 'true';
-        updateClockAndDate();
-    }
-    if (key === 'clockFont' || key === 'clockWeight' || key === 'clockColor' || key === 'clockColorEnabled' || key === 'clockStackEnabled') {
-        applyClockStyles();
-        updateClockAndDate();
-    }
-    if (key === 'highContrast') {
-        document.body.classList.toggle('high-contrast', value === 'true');
-    }
-    if (key === 'gurappsEnabled') {
-        gurappsEnabled = value === 'true';
-        updateGurappsVisibility();
-    }
-    if (key === 'minimalMode') {
-        minimalMode = value === 'true';
-        updateMinimalMode();
-    }
-    if (key === 'silentMode') {
-        // Re-initialize silent mode functionality
-        (function initSilentMode() {
-            const silentModeEnabled = localStorage.getItem('silentMode') === 'true';
-            if (silentModeEnabled) {
-                if (!window.originalShowPopup) {
-                    window.originalShowPopup = window.showPopup;
-                }
-                window.showPopup = function(msg) {
-                    console.log('Silent ON; suppressing popup:', msg);
-                };
-            } else {
-                if (window.originalShowPopup) {
-                    window.showPopup = window.originalShowPopup;
-                }
-            }
-        })();
-    }
-    syncUiStates(); // Update UI for other visual indicators
-    return `Setting '${key}' updated.`;
+    setControlValueAndDispatch(key, value);
+    // Return a confirmation message
+    return `Setting '${key}' was remotely triggered.`;
 }
 
 function removeLocalStorageItem(key) {
