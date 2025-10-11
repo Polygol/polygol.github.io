@@ -372,8 +372,6 @@
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
     border-radius: 20px;
-    -webkit-appearance: none;
-    appearance: none;
     cursor: pointer;
 }
 input.form-input {
