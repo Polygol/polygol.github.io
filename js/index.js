@@ -48,6 +48,39 @@ function setupServiceWorkerUpdateListener() {
     }
 }
 
+async function forceUpdatePolygol() {
+    if (!('serviceWorker' in navigator)) {
+        showNotification('Service Worker not supported.', { icon: 'error' });
+        return 'Update check failed: Service Worker not supported.';
+    }
+
+    try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (!registration) {
+            showNotification('No active Service Worker found.', { icon: 'error' });
+            return 'Update check failed: No registration found.';
+        }
+
+        await registration.update(); // This tells the browser to check for a new SW version.
+
+        // After the update check, 'installing' will be populated if a new version was found.
+        if (registration.installing) {
+            // The existing 'onupdatefound' listener will handle the rest!
+            // We just give the user feedback that the process has started.
+            showPopup('Update found! The system will prompt you to reload shortly.');
+            return 'Update found and is installing.';
+        } else {
+            // If there's no 'installing' worker, it means we're on the latest version.
+            showPopup('Polygol is up to date.');
+            return 'No update available.';
+        }
+    } catch (error) {
+        console.error('[SW] Force update failed:', error);
+        showNotification('Update check failed. See console for details.', { icon: 'error' });
+        return 'Update check failed.';
+    }
+}
+
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
 
 let availableWidgets; // Stores info about all possible widgets from apps
@@ -8357,7 +8390,8 @@ const FUNCTION_PERMISSIONS = {
     'getIDBRecord': 'system-admin',
     'setIDBRecord': 'system-admin',
     'removeIDBRecord': 'system-admin',
-    'clearIDBStore': 'system-admin'
+    'clearIDBStore': 'system-admin',
+    'forceUpdatePolygol': 'system-admin'
 };
 
 // --- NEW: Map for remote control from the settings app ---
@@ -8500,6 +8534,7 @@ window.addEventListener('message', async (event) => { // Make listener async
             setControlValueAndDispatch(key, value);
             return `Setting '${key}' remotely updated.`;
         },
+		forceUpdatePolygol
     };
 
     const data = event.data;
