@@ -8329,6 +8329,7 @@ const Gurasuraisu = {
     callApp: (appName, action) => {
         const iframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
         if (iframe) {
+            const targetOrigin = getOriginFromUrl(iframe.src);
             iframe.contentWindow.postMessage({ type: 'media-control', action: action }, targetOrigin);
         }
     }
