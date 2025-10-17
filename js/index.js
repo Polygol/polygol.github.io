@@ -2099,12 +2099,13 @@ function createOnScreenPopup(message, options = {}) {
                 const { appName, functionName, args } = options.gurappAction;
                 const gurappIframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
                 if (gurappIframe && gurappIframe.contentWindow) {
+					const targetOrigin = getOriginFromUrl(gurappIframe.src);
                     // Send a message to the specific Gurapp iframe to trigger the function
                     gurappIframe.contentWindow.postMessage({
                         type: 'gurapp-action-request',
                         functionName: functionName,
                         args: args || []
-                    }, window.location.origin);
+                    }, targetOrigin);
                     console.log(`[raisu] Sent action '${functionName}' to Gurapp '${appName}'.`);
                 } else {
                     console.warn(`[raisu] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
@@ -8327,7 +8328,7 @@ const Gurasuraisu = {
     callApp: (appName, action) => {
         const iframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
         if (iframe) {
-            iframe.contentWindow.postMessage({ type: 'media-control', action: action }, window.location.origin);
+            iframe.contentWindow.postMessage({ type: 'media-control', action: action }, targetOrigin);
         }
     }
 };
