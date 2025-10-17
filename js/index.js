@@ -197,10 +197,11 @@ function selectLanguage(languageCode) {
         const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
         iframes.forEach(iframe => {
             if (iframe.contentWindow) {
+                const targetOrigin = getOriginFromUrl(iframe.src);
                 iframe.contentWindow.postMessage({
                     type: 'languageUpdate',
                     languageCode: languageCode
-                }, window.location.origin);
+                }, targetOrigin);
             }
         });
 
@@ -228,7 +229,11 @@ function broadcastCursorState(isVisible) {
     const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
     iframes.forEach(iframe => {
         if (iframe.contentWindow) {
-            iframe.contentWindow.postMessage({ type: 'cursorStateUpdate', visible: isVisible }, window.location.origin);
+            const targetOrigin = getOriginFromUrl(iframe.src);
+            iframe.contentWindow.postMessage({ 
+                type: 'cursorStateUpdate', 
+                visible: isVisible 
+            }, targetOrigin);
         }
     });
 }
@@ -978,11 +983,12 @@ function broadcastSunUpdate() {
     const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
     iframes.forEach(iframe => {
         if (iframe.contentWindow) {
+            const targetOrigin = getOriginFromUrl(iframe.src);
             iframe.contentWindow.postMessage({
                 type: 'sunUpdate',
                 shadow: currentSunShadow,
                 shadowStrong: currentSunShadowStrong
-            }, window.location.origin);
+            }, targetOrigin);
         }
     });
 }
@@ -2960,14 +2966,18 @@ function handleContrastChange() {
     document.body.classList.toggle('high-contrast', highContrast);
     
     // Inform iframes
-    const iframes = document.querySelectorAll('iframe');
+    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
     iframes.forEach((iframe) => {
-        iframe.contentWindow.postMessage({
-            type: 'contrastUpdate',
-            enabled: highContrast
-        }, window.location.origin);
+        if (iframe.contentWindow) {
+            const targetOrigin = getOriginFromUrl(iframe.src);
+            iframe.contentWindow.postMessage({
+                type: 'contrastUpdate',
+                enabled: highContrast
+            }, targetOrigin);
+        }
     });
 }
+
 contrastSwitch.addEventListener('change', handleContrastChange);
 
 // Load saved preference (default to true/on if not set)
@@ -2985,14 +2995,18 @@ function handleAnimationChange() {
     broadcastSettingUpdate('animationsEnabled', value);
     document.body.classList.toggle('reduce-animations', !enableAnimations);
     
-    const iframes = document.querySelectorAll('iframe');
+    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
     iframes.forEach((iframe) => {
-        iframe.contentWindow.postMessage({
-            type: 'animationsUpdate',
-            enabled: enableAnimations
-        }, window.location.origin);
+        if (iframe.contentWindow) {
+            const targetOrigin = getOriginFromUrl(iframe.src);
+            iframe.contentWindow.postMessage({
+                type: 'animationsUpdate',
+                enabled: enableAnimations
+            }, targetOrigin);
+        }
     });
 }
+
 animationSwitch.addEventListener('change', handleAnimationChange);
 
 const AI_DB_NAME = 'GuraAIDB';
@@ -8401,15 +8415,17 @@ const controlIdMap = {
 
 // --- NEW: Function to broadcast a setting update to the settings app ---
 function broadcastSettingUpdate(key, value) {
-    // Find the settings app iframe
-    const settingsAppIframe = document.querySelector('iframe[src*="/settings/"]');
-    if (settingsAppIframe && settingsAppIframe.contentWindow) {
-        settingsAppIframe.contentWindow.postMessage({
-            type: 'settingUpdate',
-            key: key,
-            value: value
-        }, window.location.origin);
-    }
+    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    iframes.forEach(iframe => {
+        if (iframe.contentWindow) {
+            const targetOrigin = getOriginFromUrl(iframe.src);
+            iframe.contentWindow.postMessage({
+                type: 'settingUpdate',
+                key: key,
+                value: value
+            }, targetOrigin);
+        }
+    });
 }
 
 // --- NEW: Function to programmatically change a control's value and dispatch an event ---
@@ -8452,9 +8468,15 @@ function setControlValueAndDispatch(key, value) {
     control.dispatchEvent(new Event(eventType, { bubbles: true }));
 }
 
-window.addEventListener('message', async (event) => { // Make listener async
-    if (event.origin !== window.location.origin) return;
+function getOriginFromUrl(url) {
+    try {
+        return new URL(url).origin;
+    } catch (e) {
+        return window.location.origin; // Fallback for relative URLs
+    }
+}
 
+window.addEventListener('message', async (event) => { // Make listener async
 	// All functions that can be called from an iframe must be listed here.
 	const allowedFunctions = {
 		// Public Functions
@@ -8527,6 +8549,8 @@ window.addEventListener('message', async (event) => { // Make listener async
     if (data.type === 'gurapp-ready') {
         if (!sourceWindow) return;
 
+	    const targetOrigin = event.origin; // Use the actual origin of the sender
+
         // Find which app sent the message
         let sourceAppId = null;
         const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
@@ -8541,29 +8565,29 @@ window.addEventListener('message', async (event) => { // Make listener async
 
         // --- Core Logic ---
         // If the ready message is from the Settings app, send ALL settings.
-        if (sourceAppId === 'Settings') {
-            console.log('[Polygol] Settings app is ready. Sending all current settings.');
-            Object.keys(controlIdMap).forEach(key => {
-                const effectiveValue = getEffectiveSettingValue(key); // Use the new helper
-                sourceWindow.postMessage({ 
-                    type: 'localStorageItemValue', 
-                    key: key, 
-                    value: effectiveValue
-                }, window.location.origin);
-            });
-        }
+	    // When sending messages back, use the correct targetOrigin
+	    if (sourceAppId === 'Settings') {
+	        Object.keys(controlIdMap).forEach(key => {
+	            const effectiveValue = getEffectiveSettingValue(key);
+	            sourceWindow.postMessage({ 
+	                type: 'localStorageItemValue', 
+	                key: key, 
+	                value: effectiveValue
+	            }, targetOrigin);
+	        });
+	    }
 
         // For ALL apps (including Settings), send the standard initial state.
         const currentTheme = localStorage.getItem('theme') || 'dark';
-        sourceWindow.postMessage({ type: 'themeUpdate', theme: currentTheme }, window.location.origin);
+        sourceWindow.postMessage({ type: 'themeUpdate', theme: currentTheme }, targetOrigin);
 
         const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
-        sourceWindow.postMessage({ type: 'animationsUpdate', enabled: animationsEnabled }, window.location.origin);
+        sourceWindow.postMessage({ type: 'animationsUpdate', enabled: animationsEnabled }, targetOrigin);
         
         const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
-        sourceWindow.postMessage({ type: 'contrastUpdate', enabled: highContrastEnabled }, window.location.origin);
+        sourceWindow.postMessage({ type: 'contrastUpdate', enabled: highContrastEnabled }, targetOrigin);
 
-        sourceWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow, shadowStrong: currentSunShadowStrong }, window.location.origin);
+        sourceWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow, shadowStrong: currentSunShadowStrong }, targetOrigin);
 
         return; // Message handled
     }
