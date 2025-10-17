@@ -4,7 +4,7 @@
  * with the parent Gurasuraisu (Polygol) window and use its core functions.
  */
 
-const isInsideGurasuraisu = window.frameElement && window.frameElement.hasAttribute('data-gurasuraisu-iframe');
+const isInsideGurasuraisu = window.self !== window.top;
 
 // Gurasuraisu Font and Cursor Injection
 // This block runs as soon as the script is loaded by the Gurapp.
