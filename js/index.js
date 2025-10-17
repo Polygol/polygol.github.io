@@ -3231,7 +3231,8 @@ function createCompositeScreenshot() {
         };
 
         window.addEventListener('message', iframeListener);
-        iframe.contentWindow.postMessage({ type: 'request-screenshot' }, window.location.origin);
+	    const targetOrigin = getOriginFromUrl(iframe.src);
+        iframe.contentWindow.postMessage({ type: 'request-screenshot' }, targetOrigin);
         
         setTimeout(() => {
             window.removeEventListener('message', iframeListener);
@@ -8600,7 +8601,7 @@ window.addEventListener('message', async (event) => { // Make listener async
         // Send all tracked settings to the new settings app so its UI is in sync
         Object.keys(controlIdMap).forEach(key => {
             const value = localStorage.getItem(key);
-            sourceWindow.postMessage({ type: 'localStorageItemValue', key, value }, window.location.origin);
+            sourceWindow.postMessage({ type: 'localStorageItemValue', key, value }, event.origin);
         });
         return;
     }
@@ -8630,7 +8631,7 @@ window.addEventListener('message', async (event) => { // Make listener async
                 const errorMessage = `SECURITY VIOLATION: App '${sourceAppId || 'Unknown'}' attempted to call function '${funcName}' without required permission '${requiredPermission}'. Access denied.`;
                 console.error(errorMessage);
                 if(sourceWindow) {
-                    sourceWindow.postMessage({ type: 'parentActionError', message: `Access Denied: Missing permission '${requiredPermission}'.` }, window.location.origin);
+                    sourceWindow.postMessage({ type: 'parentActionError', message: `Access Denied: Missing permission '${requiredPermission}'.` }, event.origin);
                 }
                 return; // Stop processing immediately.
             }
@@ -8670,10 +8671,10 @@ window.addEventListener('message', async (event) => { // Make listener async
                      response.message = result;
                 }
                 
-                sourceWindow.postMessage(response, window.location.origin);
+                sourceWindow.postMessage(response, event.origin);
 
             } catch (error) {
-                sourceWindow.postMessage({ type: 'parentActionError', message: error.message }, window.location.origin);
+                sourceWindow.postMessage({ type: 'parentActionError', message: error.message }, event.origin);
             }
         } else {
             console.warn(`A Gurapp attempted to call a disallowed or non-existent function: "${funcName}"`);
@@ -8686,7 +8687,8 @@ window.addEventListener('message', async (event) => { // Make listener async
     if (targetApp) {
         const iframe = document.querySelector(`iframe[data-app-id="${targetApp}"]`);
         if (iframe) {
-            iframe.contentWindow.postMessage(payload, window.location.origin);
+			const targetOrigin = getOriginFromUrl(iframe.src);
+            iframe.contentWindow.postMessage(payload, targetOrigin);
         } else {
             console.warn(`Message target not found: No iframe for app "${targetApp}"`);
         }
