@@ -6015,9 +6015,10 @@ async function createFullscreenEmbed(url) {
     // Flag to track embedding status
     let embedFailed = false;
     
-    // Try to detect if embedding is blocked
 	iframe.addEventListener('load', () => {
-	    let embedBlocked = false;
+	    /* Don't try to detect if embedding is blocked
+		
+		let embedBlocked = false;
 	
 	    let urlDomain = '';
 	    try {
@@ -6051,7 +6052,7 @@ async function createFullscreenEmbed(url) {
 	        }
 	
 	        return;
-	    }
+	    } */
 	
 	    // If iframe loaded successfully, send language to iframe
 	    const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
