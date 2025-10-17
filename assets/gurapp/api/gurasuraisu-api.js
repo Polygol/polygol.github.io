@@ -337,7 +337,7 @@ const Gurasuraisu = {
  * or animation setting changes, and applies them to the Gurapp.
  */
 window.addEventListener('message', async (event) => {
-  if (event.origin !== window.location.origin) {
+  if (event.source !== window.parent) {
     return;
   }
 
