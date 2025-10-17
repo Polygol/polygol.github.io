@@ -122,8 +122,7 @@ function initializeSettingsApp() {
         // Use postMessage for custom parent functions        
         const wallpaperInput = document.getElementById('wallpaper-input');
         document.getElementById('btn-upload-wallpaper').onclick = () => 
-            window.parent.postMessage({ action: 'triggerWallpaperUpload' }, 
-                                       window.location.origin);
+            window.parent.postMessage({ action: 'triggerWallpaperUpload' }, '*');
         
         // This just opens a URL, so Gurasuraisu.openApp is correct
         document.getElementById('btn-version').onclick = () => 
