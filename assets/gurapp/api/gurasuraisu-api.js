@@ -151,7 +151,7 @@ const Gurasuraisu = {
         action: 'callGurasuraisuFunc',
         functionName: functionName,
         args: args
-      }, window.location.origin);
+      }, '*');
     } else {
       // Use the fallback if it exists, otherwise use the default fallback
       const fallback = _fallbacks[functionName] || (() => _fallbacks.default(functionName));
@@ -377,7 +377,7 @@ window.addEventListener('message', async (event) => {
             window.parent.postMessage({
                 type: 'screenshot-response',
                 screenshotDataUrl: screenshotDataUrl
-            }, window.location.origin);
+            }, '*');
         } catch (e) {
             console.error("This Gurapp failed to generate its screenshot:", e);
         }
@@ -421,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Step 2: Notify the parent to reset the global hide timer (throttled).
         const now = Date.now();
         if (now - lastActivitySignal > throttleInterval) {
-            window.parent.postMessage({ action: 'userActivity' }, window.location.origin);
+            window.parent.postMessage({ action: 'userActivity' }, '*');
             lastActivitySignal = now;
         }
     };
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Tell the parent that this app is ready to receive settings
   if (isInsideGurasuraisu) {
-    window.parent.postMessage({ type: 'gurapp-ready' }, window.location.origin);
+    window.parent.postMessage({ type: 'gurapp-ready' }, '*');
   }
 });
 
