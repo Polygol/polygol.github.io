@@ -7555,10 +7555,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
         iframes.forEach((iframe) => {
             if (iframe.contentWindow) {
+				const targetOrigin = getOriginFromUrl(iframe.src);
                 iframe.contentWindow.postMessage({
                     type: 'themeUpdate',
                     theme: newTheme
-                }, window.location.origin);
+                }, targetOrigin);
             }
         });
 
