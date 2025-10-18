@@ -289,7 +289,7 @@ const Gurasuraisu = {
    */
   onMediaControl: function(actions) {
     window.addEventListener('message', (event) => {
-      if (event.origin !== window.location.origin) return;
+      if (event.source !== window.parent) return;
         if (event.data.type === 'media-control' && actions[event.data.action]) {
           actions[event.data.action]();
         }
