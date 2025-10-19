@@ -2243,44 +2243,6 @@ function addToNotificationShade(message, options = {}) {
         iframe.style.height = options.height || '120px';
         iframe.style.border = 'none';
         iframe.style.borderRadius = '28px';
-        iframe.style.pointerEvents = 'none'; // The iframe itself is not interactive
-
-        // --- NEW: Add swipe overlay on top of the iframe ---
-        const swipeOverlay = document.createElement('div');
-        swipeOverlay.className = 'live-activity-swipe-overlay';
-        swipeOverlay.style.position = 'absolute';
-        swipeOverlay.style.top = '0';
-        swipeOverlay.style.left = '0';
-        swipeOverlay.style.width = '100%';
-        swipeOverlay.style.height = '100%';
-        swipeOverlay.style.zIndex = '1';
-        swipeOverlay.style.cursor = 'grab';
-
-        notification.style.padding = '0';
-        notification.style.position = 'relative'; // For absolute positioning of overlay
-        notification.appendChild(iframe);
-        notification.appendChild(swipeOverlay);
-
-        // --- FIX: Attach swipe listeners to the overlay, not the main div ---
-        let startX = 0, currentX = 0;
-        swipeOverlay.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
-        swipeOverlay.addEventListener('touchmove', (e) => {
-            currentX = e.touches[0].clientX;
-            const diff = currentX - startX;
-            if (diff > 0) {
-                notification.style.transform = `translateX(${diff}px)`;
-                notification.style.opacity = 1 - (diff / 200);
-            }
-        }, { passive: true });
-        swipeOverlay.addEventListener('touchend', () => {
-            const diff = currentX - startX;
-            if (diff > 100) {
-                closeNotification(notification);
-            } else {
-                notification.style.transform = 'translateX(0)';
-                notification.style.opacity = '1';
-            }
-        });
     } else {
 	    // Content container
 	    const contentContainer = document.createElement('div');
