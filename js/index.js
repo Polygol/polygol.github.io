@@ -2251,7 +2251,6 @@ function addToNotificationShade(message, options = {}) {
 	    // Content container
 	    const contentContainer = document.createElement('div');
 	    contentContainer.style.display = 'flex';
-	    contentContainer.style.alignItems = 'center';
 	    contentContainer.style.gap = '10px';
 	    contentContainer.style.width = '100%';
 	    
