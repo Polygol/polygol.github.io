@@ -8588,6 +8588,25 @@ function startLiveActivity(options) {
 }
 
 /**
+ * Forwards an update message from a main app to its corresponding live activity iframe.
+ * @param {string} activityId - The ID of the activity to update.
+ * @param {object} data - The payload to send to the iframe.
+ */
+function updateLiveActivity(activityId, data) {
+    const activity = activeLiveActivities[activityId];
+    if (activity) {
+        const notificationElem = document.querySelector(`.live-activity-notification[data-activity-id="${activityId}"]`);
+        if (notificationElem) {
+            const iframe = notificationElem.querySelector('iframe');
+            if (iframe && iframe.contentWindow) {
+                const targetOrigin = getOriginFromUrl(iframe.src);
+                iframe.contentWindow.postMessage({ type: 'live-activity-update', ...data }, targetOrigin);
+            }
+        }
+    }
+}
+
+/**
  * Stops an active Live Activity.
  * @param {string} activityId - The ID of the activity to stop.
  */
@@ -8636,12 +8655,13 @@ window.addEventListener('message', async (event) => { // Make listener async
 		updateMediaPlaybackState, 
 		updateMediaProgress,
 	    startLiveActivity,
+	    updateLiveActivity, // Forward updates
         stopLiveActivity,
 
 		// Privileged Functions (already checked above)
 		installApp, 
 		deleteApp,
-		requestInstalledApps, // Added here
+		requestInstalledApps, 
 		getLocalStorageItem, 
 		setLocalStorageItem,
 		removeLocalStorageItem, 
