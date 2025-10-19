@@ -988,6 +988,9 @@ body.one-button-nav-active .dock.show {
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
     border: 1px solid var(--glass-border);
 	gap: 10px;
+    font-size: 1.2rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
 }
 
 .weather-widget:active {
