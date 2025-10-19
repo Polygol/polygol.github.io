@@ -115,6 +115,7 @@ if (initialFaviconLink) {
 
 let activeMediaSessionApp = null; // To track which app controls the media widget
 let mediaSessionStack = []; // A stack to manage multiple media sessions
+let activeLiveActivities = {}; // Stores info about active activities by ID
 
 let currentLanguage = LANG_EN; // Default to English
 
@@ -2235,116 +2236,132 @@ function addToNotificationShade(message, options = {}) {
     notification.style.gap = '10px';
     notification.style.border = '1px solid var(--glass-border)';
     notification.style.pointerEvents = 'auto';
-    
-    // Content container
-    const contentContainer = document.createElement('div');
-    contentContainer.style.display = 'flex';
-    contentContainer.style.alignItems = 'center';
-    contentContainer.style.gap = '10px';
-    contentContainer.style.width = '100%';
-    
-    let iconType = 'notifications';
 
-    let iconTypeForShade = 'notifications'; // Default icon
-    if (options.icon) { // Prefer explicit icon from options
-        iconTypeForShade = options.icon;
+    if (options.liveActivityUrl) {
+        notification.classList.add('live-activity-notification'); // For custom styling
+        notification.dataset.activityId = options.activityId; // For later removal
+
+        const iframe = document.createElement('iframe');
+        iframe.src = options.liveActivityUrl;
+        iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+        iframe.style.width = '100%';
+        iframe.style.height = options.height || '120px'; // Default height
+        iframe.style.border = 'none';
+        iframe.style.borderRadius = '28px'; // Match inner radius
+
+        notification.style.padding = '0'; // Remove padding for iframe to fit
+        notification.appendChild(iframe);
     } else {
-        iconTypeForShade = 'notifications';
-    }
-    
-    // Create icon
-    const icon = document.createElement('span');
-    icon.className = 'material-symbols-rounded';
-    icon.textContent = iconTypeForShade;
-    icon.style.fontSize = '24px';
-    contentContainer.appendChild(icon);
-    
-    // Create message text
-    const messageText = document.createElement('div');
-    messageText.style.flex = '1';
-    messageText.style.wordBreak = 'break-word';
-    messageText.textContent = message;
-    contentContainer.appendChild(messageText);
-    
-    // Close button
-    const closeBtn = document.createElement('span');
-    closeBtn.className = 'material-symbols-rounded';
-    closeBtn.textContent = 'cancel';
-    closeBtn.style.cursor = 'pointer';
-    closeBtn.style.fontSize = '16px';
-    closeBtn.style.opacity = '0.5';
-    closeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeNotification(notification);
-    });
-    closeBtn.style.transition = 'opacity 0.2s';
+	    // Content container
+	    const contentContainer = document.createElement('div');
+	    contentContainer.style.display = 'flex';
+	    contentContainer.style.alignItems = 'center';
+	    contentContainer.style.gap = '10px';
+	    contentContainer.style.width = '100%';
+	    
+	    let iconType = 'notifications';
 	
-    contentContainer.appendChild(closeBtn);
-
-    function closeNotification(notif) {
-        // Animate out
-        notif.style.opacity = '0';
-        notif.style.transform = 'translateX(50px)';
-        
-        // Remove after animation completes
-        setTimeout(() => {
-            if (shade.contains(notif)) {
-                shade.removeChild(notif);
-            }
-        }, 300);
-    }
-    
-    notification.appendChild(contentContainer);
-    
-    // Add action button if specified
-    if (options.buttonText) {
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.display = 'flex';
-        buttonContainer.style.justifyContent = 'flex-end';
-        
-        const actionButton = document.createElement('button');
-        actionButton.textContent = options.buttonText;
-        actionButton.style.padding = '8px 16px';
-        actionButton.style.borderRadius = '18px';
-        actionButton.style.border = '1px solid var(--glass-border)';
-        actionButton.style.backgroundColor = 'var(--text-color)';
-        actionButton.style.color = 'var(--background-color)';
-        actionButton.style.cursor = 'pointer';
-        actionButton.style.fontFamily = 'Inter, sans-serif';
-        actionButton.style.fontSize = '14px';
-        actionButton.style.transition = 'background-color 0.2s';
-        
-        // Handle local action or Gurapp-specific action
-        if (options.buttonAction && typeof options.buttonAction === 'function') { // For parent-local actions
-            actionButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                options.buttonAction();
-                closeNotification(notification);
-            });
-        } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) { // For Gurapp-specific actions
-            actionButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const { appName, functionName, args } = options.gurappAction;
-                const gurappIframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
-                if (gurappIframe && gurappIframe.contentWindow) {
-                    // Send a message to the specific Gurapp iframe to trigger the function
-                    gurappIframe.contentWindow.postMessage({
-                        type: 'gurapp-action-request',
-                        functionName: functionName,
-                        args: args || []
-                    }, window.location.origin);
-                    console.log(`[Polygol] Sent action '${functionName}' to Gurapp '${appName}'.`);
-                } else {
-                    console.warn(`[Polygol] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
-                    showPopup(`Error: Could not perform action for ${appName}.`);
-                }
-                closeNotification(notification); // Close the notification after click
-            });
-        }
-        
-        buttonContainer.appendChild(actionButton);
-        notification.appendChild(buttonContainer);
-    }
+	    let iconTypeForShade = 'notifications'; // Default icon
+	    if (options.icon) { // Prefer explicit icon from options
+	        iconTypeForShade = options.icon;
+	    } else {
+	        iconTypeForShade = 'notifications';
+	    }
+	    
+	    // Create icon
+	    const icon = document.createElement('span');
+	    icon.className = 'material-symbols-rounded';
+	    icon.textContent = iconTypeForShade;
+	    icon.style.fontSize = '24px';
+	    contentContainer.appendChild(icon);
+	    
+	    // Create message text
+	    const messageText = document.createElement('div');
+	    messageText.style.flex = '1';
+	    messageText.style.wordBreak = 'break-word';
+	    messageText.textContent = message;
+	    contentContainer.appendChild(messageText);
+	    
+	    // Close button
+	    const closeBtn = document.createElement('span');
+	    closeBtn.className = 'material-symbols-rounded';
+	    closeBtn.textContent = 'cancel';
+	    closeBtn.style.cursor = 'pointer';
+	    closeBtn.style.fontSize = '16px';
+	    closeBtn.style.opacity = '0.5';
+	    closeBtn.addEventListener('click', (e) => {
+	        e.stopPropagation();
+	        closeNotification(notification);
+	    });
+	    closeBtn.style.transition = 'opacity 0.2s';
+		
+	    contentContainer.appendChild(closeBtn);
+	
+	    function closeNotification(notif) {
+	        // Animate out
+	        notif.style.opacity = '0';
+	        notif.style.transform = 'translateX(50px)';
+	        
+	        // Remove after animation completes
+	        setTimeout(() => {
+	            if (shade.contains(notif)) {
+	                shade.removeChild(notif);
+	            }
+	        }, 300);
+	    }
+	    
+	    notification.appendChild(contentContainer);
+	    
+	    // Add action button if specified
+	    if (options.buttonText) {
+	        const buttonContainer = document.createElement('div');
+	        buttonContainer.style.display = 'flex';
+	        buttonContainer.style.justifyContent = 'flex-end';
+	        
+	        const actionButton = document.createElement('button');
+	        actionButton.textContent = options.buttonText;
+	        actionButton.style.padding = '8px 16px';
+	        actionButton.style.borderRadius = '18px';
+	        actionButton.style.border = '1px solid var(--glass-border)';
+	        actionButton.style.backgroundColor = 'var(--text-color)';
+	        actionButton.style.color = 'var(--background-color)';
+	        actionButton.style.cursor = 'pointer';
+	        actionButton.style.fontFamily = 'Inter, sans-serif';
+	        actionButton.style.fontSize = '14px';
+	        actionButton.style.transition = 'background-color 0.2s';
+	        
+	        // Handle local action or Gurapp-specific action
+	        if (options.buttonAction && typeof options.buttonAction === 'function') { // For parent-local actions
+	            actionButton.addEventListener('click', (e) => {
+	                e.stopPropagation();
+	                options.buttonAction();
+	                closeNotification(notification);
+	            });
+	        } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) { // For Gurapp-specific actions
+	            actionButton.addEventListener('click', (e) => {
+	                e.stopPropagation();
+	                const { appName, functionName, args } = options.gurappAction;
+	                const gurappIframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
+	                if (gurappIframe && gurappIframe.contentWindow) {
+	                    // Send a message to the specific Gurapp iframe to trigger the function
+	                    gurappIframe.contentWindow.postMessage({
+	                        type: 'gurapp-action-request',
+	                        functionName: functionName,
+	                        args: args || []
+	                    }, window.location.origin);
+	                    console.log(`[Polygol] Sent action '${functionName}' to Gurapp '${appName}'.`);
+	                } else {
+	                    console.warn(`[Polygol] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
+	                    showPopup(`Error: Could not perform action for ${appName}.`);
+	                }
+	                closeNotification(notification); // Close the notification after click
+	            });
+	        }
+	        
+	        buttonContainer.appendChild(actionButton);
+	        notification.appendChild(buttonContainer);
+	    }
+	}
     
     // Add swipe capability
     let startX = 0;
@@ -2396,7 +2413,9 @@ function addToNotificationShade(message, options = {}) {
     return {
         close: () => closeNotification(notification),
         update: (newMessage) => {
-            messageText.textContent = newMessage;
+            if (!options.liveActivityUrl) { // Can't update an iframe's content this way
+                messageText.textContent = newMessage;
+            }
         }
     };
 }
@@ -8524,6 +8543,70 @@ function setControlValueAndDispatch(key, value) {
     control.dispatchEvent(new Event(eventType, { bubbles: true }));
 }
 
+/**
+ * Starts a new Live Activity.
+ * @param {object} options - Configuration for the activity.
+ * @param {string} options.activityId - A unique ID from the calling app for this activity.
+ * @param {string} options.url - The URL for the iframe content.
+ * @param {boolean} [options.homescreen=false] - If true, this activity can show a summary on the homescreen.
+ * @param {string} [options.height='120px'] - The height of the activity in the notification shade.
+ */
+function startLiveActivity(options) {
+    if (!options || !options.activityId || !options.url) {
+        console.error('[Live Activity] Start failed: activityId and url are required.');
+        return;
+    }
+
+    // If an activity with this ID already exists, stop it first.
+    if (activeLiveActivities[options.activityId]) {
+        stopLiveActivity(options.activityId);
+    }
+
+    const notificationControl = addToNotificationShade('', {
+        liveActivityUrl: options.url,
+        activityId: options.activityId,
+        height: options.height
+    });
+
+    activeLiveActivities[options.activityId] = {
+        options: options,
+        notificationControl: notificationControl
+    };
+
+    // If it's a homescreen activity, show the container.
+    if (options.homescreen) {
+        const homescreenWidget = document.getElementById('live-activity-homescreen');
+        if (homescreenWidget) {
+            homescreenWidget.style.display = 'flex';
+        }
+    }
+}
+
+/**
+ * Stops an active Live Activity.
+ * @param {string} activityId - The ID of the activity to stop.
+ */
+function stopLiveActivity(activityId) {
+    const activity = activeLiveActivities[activityId];
+    if (activity) {
+        activity.notificationControl.close(); // Closes the notification shade item.
+
+        // If this was the active homescreen activity, hide the widget.
+        if (activity.options.homescreen) {
+            const homescreenWidget = document.getElementById('live-activity-homescreen');
+            if (homescreenWidget) {
+                homescreenWidget.style.display = 'none';
+                const iconEl = homescreenWidget.querySelector('.material-symbols-rounded');
+                const textEl = homescreenWidget.querySelector('span:last-child');
+                if (iconEl) iconEl.textContent = '';
+                if (textEl) textEl.textContent = '';
+            }
+        }
+
+        delete activeLiveActivities[activityId];
+    }
+}
+
 function getOriginFromUrl(url) {
     try {
         return new URL(url).origin;
@@ -8547,6 +8630,8 @@ window.addEventListener('message', async (event) => { // Make listener async
 		clearMediaSession,
 		updateMediaPlaybackState, 
 		updateMediaProgress,
+	    startLiveActivity,
+        stopLiveActivity,
 
 		// Privileged Functions (already checked above)
 		installApp, 
@@ -8657,6 +8742,18 @@ window.addEventListener('message', async (event) => { // Make listener async
             const value = localStorage.getItem(key);
             sourceWindow.postMessage({ type: 'localStorageItemValue', key, value }, event.origin);
         });
+        return;
+    }
+
+    // Handle homescreen updates from a Live Activity iframe
+    if (data.type === 'live-activity-homescreen-update') {
+        const homescreenWidget = document.getElementById('live-activity-homescreen');
+        if (homescreenWidget) {
+            const iconEl = homescreenWidget.querySelector('.material-symbols-rounded');
+            const textEl = homescreenWidget.querySelector('span:last-child');
+            if (iconEl) iconEl.textContent = data.icon || '';
+            if (textEl) textEl.textContent = data.text || '';
+        }
         return;
     }
 
