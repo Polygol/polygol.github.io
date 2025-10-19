@@ -197,7 +197,16 @@ const Gurasuraisu = {
     },
 
     /**
-     * NEW: Pushes updated data to a running Live Activity.
+     * Checks if a live activity with the given ID is currently active for this app.
+     * @param {string} activityId - The unique ID of the activity.
+     * @returns {boolean} - True if the activity is active, false otherwise.
+     */
+    isActive: function(activityId) {
+      return _myActiveActivities.has(activityId);
+    },
+
+    /**
+     * Pushes updated data to a running Live Activity.
      * The parent OS will forward this data to the correct iframe.
      * @param {string} activityId - The unique ID of the activity.
      * @param {object} data - The data payload to send (e.g., { timeLeft: 120 }).
