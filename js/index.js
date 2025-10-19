@@ -2233,19 +2233,54 @@ function addToNotificationShade(message, options = {}) {
     notification.style.pointerEvents = 'auto';
 
     if (options.liveActivityUrl) {
-        notification.classList.add('live-activity-notification'); // For custom styling
-        notification.dataset.activityId = options.activityId; // For later removal
+        notification.classList.add('live-activity-notification');
+        notification.dataset.activityId = options.activityId;
 
         const iframe = document.createElement('iframe');
         iframe.src = options.liveActivityUrl;
         iframe.setAttribute('data-gurasuraisu-iframe', 'true');
         iframe.style.width = '100%';
-        iframe.style.height = options.height || '120px'; // Default height
+        iframe.style.height = options.height || '120px';
         iframe.style.border = 'none';
-        iframe.style.borderRadius = '28px'; // Match inner radius
+        iframe.style.borderRadius = '28px';
+        iframe.style.pointerEvents = 'none'; // The iframe itself is not interactive
 
-        notification.style.padding = '0'; // Remove padding for iframe to fit
+        // --- NEW: Add swipe overlay on top of the iframe ---
+        const swipeOverlay = document.createElement('div');
+        swipeOverlay.className = 'live-activity-swipe-overlay';
+        swipeOverlay.style.position = 'absolute';
+        swipeOverlay.style.top = '0';
+        swipeOverlay.style.left = '0';
+        swipeOverlay.style.width = '100%';
+        swipeOverlay.style.height = '100%';
+        swipeOverlay.style.zIndex = '1';
+        swipeOverlay.style.cursor = 'grab';
+
+        notification.style.padding = '0';
+        notification.style.position = 'relative'; // For absolute positioning of overlay
         notification.appendChild(iframe);
+        notification.appendChild(swipeOverlay);
+
+        // --- FIX: Attach swipe listeners to the overlay, not the main div ---
+        let startX = 0, currentX = 0;
+        swipeOverlay.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+        swipeOverlay.addEventListener('touchmove', (e) => {
+            currentX = e.touches[0].clientX;
+            const diff = currentX - startX;
+            if (diff > 0) {
+                notification.style.transform = `translateX(${diff}px)`;
+                notification.style.opacity = 1 - (diff / 200);
+            }
+        }, { passive: true });
+        swipeOverlay.addEventListener('touchend', () => {
+            const diff = currentX - startX;
+            if (diff > 100) {
+                closeNotification(notification);
+            } else {
+                notification.style.transform = 'translateX(0)';
+                notification.style.opacity = '1';
+            }
+        });
     } else {
 	    // Content container
 	    const contentContainer = document.createElement('div');
@@ -7812,6 +7847,22 @@ document.addEventListener('DOMContentLoaded', async function() {
             const eqPos = cookie.indexOf("=");
             const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
             document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        }
+    }
+
+    // NEW: Dynamically create the homescreen live activity widget container if it doesn't exist
+    if (!document.getElementById('live-activity-homescreen')) {
+        const clockWidgetsContainer = document.querySelector('.clockwidgets');
+        if (clockWidgetsContainer) {
+            const homescreenWidget = document.createElement('div');
+            homescreenWidget.id = 'live-activity-homescreen';
+            homescreenWidget.className = 'weather-widget'; // Reuse existing styles
+            homescreenWidget.style.display = 'none'; // Initially hidden
+            homescreenWidget.innerHTML = `
+                <span class="material-symbols-rounded"></span>
+                <span></span>
+            `;
+            clockWidgetsContainer.appendChild(homescreenWidget);
         }
     }
 
