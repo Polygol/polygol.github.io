@@ -141,9 +141,9 @@ function applyLanguage(language) {
     const fontSelect = document.getElementById('font-select');
     if (fontSelect) {
         const options = {
-            "Inter": "DEFAULT", "Open Runde": "WORK", "DynaPuff": "PUFFY", "DM Serif Display": "CLASSIC",
-            "Iansui": "STROKES", "JetBrains Mono": "MONO", "DotGothic16": "PIXEL",
-            "Patrick Hand": "WRITTEN", "Rampart One": "RAISED", "Doto": "DOT", "Nunito": "ROUND"
+            "Inter": "DEFAULT", "Bricolage Grotesque": "WORK", "DynaPuff": "PUFFY", "Domine": "CLASSIC",
+            "Climate Crisis": "STROKES", "JetBrains Mono": "MONO", "DotGothic16": "PIXEL",
+            "Playpen Sans": "WRITTEN", "Jaro": "RAISED", "Doto": "DOT", "Nunito": "ROUND"
         };
         for (const [value, langKey] of Object.entries(options)) {
             const optionEl = fontSelect.querySelector(`option[value="${value}"]`);
