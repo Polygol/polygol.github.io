@@ -181,6 +181,47 @@ const Gurasuraisu = {
   },
 
   /**
+   * Namespace for Live Activity functions.
+   */
+  liveActivity: {
+    /**
+     * Starts a Live Activity.
+     * @param {object} options - Configuration object.
+     * @param {string} options.activityId - A unique ID for this activity within your app.
+     * @param {string} options.url - The URL of the HTML page for the activity's iframe.
+     * @param {boolean} [options.homescreen=false] - Set to true if this activity should appear on the homescreen.
+     * @param {string} [options.height='120px'] - The desired height of the activity in the notification shade.
+     */
+    start: function(options) {
+      Gurasuraisu._call('startLiveActivity', [options]);
+    },
+
+    /**
+     * Stops a running Live Activity.
+     * @param {string} activityId - The unique ID of the activity you want to stop.
+     */
+    stop: function(activityId) {
+      Gurasuraisu._call('stopLiveActivity', [activityId]);
+    },
+    
+    /**
+     * (For use inside a Live Activity iframe) Pushes updated summary data to the parent homescreen.
+     * @param {object} data - The data to display.
+     * @param {string} data.icon - The Material Symbols icon name.
+     * @param {string} data.text - The text to display.
+     */
+    pushHomescreenUpdate: function(data) {
+        if (isInsideGurasuraisu) {
+            window.parent.postMessage({
+                type: 'live-activity-homescreen-update',
+                icon: data.icon,
+                text: data.text
+            }, '*');
+        }
+    }
+  },
+
+  /**
    * Requests the parent window to minimize the current Gurapp.
    */
   minimize: function() {
