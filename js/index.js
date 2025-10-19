@@ -1221,9 +1221,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 appNameToOpen = localStorage.getItem('lastMediaSessionApp');
             }
 
-            // 3. Verify the app exists and then open it.
-            if (appNameToOpen && apps[appNameToOpen]) {
-                const appToOpen = apps[appNameToOpen];
+            // Find the correct, case-sensitive key from the apps object
+            let canonicalAppName = null;
+            if (appNameToOpen) {
+                canonicalAppName = Object.keys(apps).find(
+                    key => key.toLowerCase() === appNameToOpen.toLowerCase()
+                );
+            }
+
+            // 3. Verify the canonical app name was found and then open it.
+            if (canonicalAppName && apps[canonicalAppName]) {
+                const appToOpen = apps[canonicalAppName];
                 closeControls();
                 minimizeFullscreenEmbed();
                 createFullscreenEmbed(appToOpen.url);
