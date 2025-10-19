@@ -2332,18 +2332,28 @@ function addToNotificationShade(message, options = {}) {
 	                options.buttonAction();
 	                closeNotification(notification);
 	            });
-	        } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) { // For Gurapp-specific actions
+	        } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) {
 	            actionButton.addEventListener('click', (e) => {
 	                e.stopPropagation();
 	                const { appName, functionName, args } = options.gurappAction;
-	                const gurappIframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
+	
+	                // FIX: Case-insensitive iframe lookup
+	                let gurappIframe = null;
+	                const allIframes = document.querySelectorAll('iframe[data-app-id]');
+	                for (const iframe of allIframes) {
+	                    if (iframe.dataset.appId.toLowerCase() === appName.toLowerCase()) {
+	                        gurappIframe = iframe;
+	                        break;
+	                    }
+	                }
+	
 	                if (gurappIframe && gurappIframe.contentWindow) {
-	                    // Send a message to the specific Gurapp iframe to trigger the function
+	                    const targetOrigin = getOriginFromUrl(gurappIframe.src);
 	                    gurappIframe.contentWindow.postMessage({
 	                        type: 'gurapp-action-request',
 	                        functionName: functionName,
 	                        args: args || []
-	                    }, window.location.origin);
+	                    }, targetOrigin);
 	                    console.log(`[Polygol] Sent action '${functionName}' to Gurapp '${appName}'.`);
 	                } else {
 	                    console.warn(`[Polygol] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
