@@ -2218,6 +2218,19 @@ function addToNotificationShade(message, options = {}) {
     notification.style.border = '1px solid var(--glass-border)';
     notification.style.pointerEvents = 'auto';
 
+	function closeNotification(notif) {
+	    // Animate out
+	    notification.style.opacity = '0';
+	    notification.style.transform = 'translateX(50px)';
+	        
+	    // Remove after animation completes
+	    setTimeout(() => {
+	        if (shade.contains(notification)) {
+	            shade.removeChild(notification);
+	        }
+	    }, 300);
+	}
+
     if (options.liveActivityUrl) {
         notification.classList.add('live-activity-notification');
         notification.dataset.activityId = options.activityId;
@@ -2274,19 +2287,6 @@ function addToNotificationShade(message, options = {}) {
 	    closeBtn.style.transition = 'opacity 0.2s';
 		
 	    contentContainer.appendChild(closeBtn);
-	
-	    function closeNotification(notif) {
-	        // Animate out
-	        notif.style.opacity = '0';
-	        notif.style.transform = 'translateX(50px)';
-	        
-	        // Remove after animation completes
-	        setTimeout(() => {
-	            if (shade.contains(notif)) {
-	                shade.removeChild(notif);
-	            }
-	        }, 300);
-	    }
 	    
 	    notification.appendChild(contentContainer);
 	    
@@ -8612,17 +8612,19 @@ function updateLiveActivity(activityId, data) {
 function stopLiveActivity(activityId) {
     const activity = activeLiveActivities[activityId];
     if (activity) {
-        activity.notificationControl.close(); // Closes the notification shade item.
+        // This will now correctly call the scoped close function from the refactored addToNotificationShade
+        activity.notificationControl.close(); 
 
-        // If this was the active homescreen activity, hide the widget.
+        // If this was the active homescreen activity, hide the widget and clear it.
         if (activity.options.homescreen) {
             const homescreenWidget = document.getElementById('live-activity-homescreen');
             if (homescreenWidget) {
+                // FIX: Hide the container and clear its inner content completely.
                 homescreenWidget.style.display = 'none';
-                const iconEl = homescreenWidget.querySelector('.material-symbols-rounded');
-                const textEl = homescreenWidget.querySelector('span:last-child');
-                if (iconEl) iconEl.textContent = '';
-                if (textEl) textEl.textContent = '';
+                homescreenWidget.innerHTML = `
+                    <span class="material-symbols-rounded"></span>
+                    <span></span>
+                `;
             }
         }
 
