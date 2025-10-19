@@ -197,6 +197,16 @@ const Gurasuraisu = {
     },
 
     /**
+     * NEW: Pushes updated data to a running Live Activity.
+     * The parent OS will forward this data to the correct iframe.
+     * @param {string} activityId - The unique ID of the activity.
+     * @param {object} data - The data payload to send (e.g., { timeLeft: 120 }).
+     */
+    update: function(activityId, data) {
+      Gurasuraisu._call('updateLiveActivity', [activityId, data]);
+    },
+
+    /**
      * Stops a running Live Activity.
      * @param {string} activityId - The unique ID of the activity you want to stop.
      */
