@@ -2222,6 +2222,7 @@ function addToNotificationShade(message, options = {}) {
 	    // Animate out
 	    notification.style.opacity = '0';
 	    notification.style.transform = 'translateX(50px)';
+	    notification.style.height = '0px';
 	        
 	    // Remove after animation completes
 	    setTimeout(() => {
