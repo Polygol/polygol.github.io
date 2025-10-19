@@ -1279,7 +1279,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
-	    hideAllOnScreenNotifications();
 		syncUiStates();
 		persistentClock.style.opacity = '0';
 		customizeModal.style.display = 'block';
@@ -1289,17 +1288,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	            blurOverlayControls.classList.add('show');
 	        }, 10);
     });
-
-    // Add click listener for homescreen live activity
-    const homescreenLiveActivity = document.getElementById('live-activity-homescreen');
-    if (homescreenLiveActivity) {
-        homescreenLiveActivity.addEventListener('click', () => {
-            const appName = homescreenLiveActivity.dataset.appName;
-            if (appName && apps[appName]) {
-                createFullscreenEmbed(apps[appName].url);
-            }
-        });
-    }
     
     // Setup observer to watch for embed visibility changes to update clock immediately
     const embedObserver = new MutationObserver((mutations) => {
@@ -2047,18 +2035,13 @@ function showNotification(message, options = {}) {
 
 // Creates a temporary on-screen popup (similar to original showPopup)
 function createOnScreenPopup(message, options = {}) {
-    hideAllOnScreenNotifications();
-	
     const popup = document.createElement('div');
     popup.className = 'on-screen-notification';
     popup.style.position = 'fixed';
     popup.style.top = '20px';
     popup.style.left = '50%';
-    popup.style.opacity = '0'; // Start invisible for animation
-	popup.style.filter = 'blur(2.5px)'; // Start blurred for animation
-    popup.style.maxWidth = '400px';
-    popup.style.width = '90%';
-    popup.style.transform = 'translateX(-50%) translateY(-150%)'; // Start off-screen
+    popup.style.width = 'clamp(200px, 90%, 500px)';
+    popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'var(--modal-background)';
     popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(5px)';
     popup.style.boxShadow = 'var(--sun-shadow), 0 0 10px rgba(0, 0, 0, 0.2)';
@@ -2067,17 +2050,15 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.borderRadius = '35px';
 	popup.style.cornerShape = 'superellipse(1.5)';
     popup.style.zIndex = '9999996';
-    popup.style.transition = 'all 0.3s cubic-bezier(.3,1.2,.64,1)';
+    popup.style.transition = 'opacity 0.5s';
     popup.style.display = 'flex';
-    popup.style.alignItems = 'flex-start';
+    popup.style.alignItems = 'center';
     popup.style.gap = '16px';
     popup.style.border = '1px solid var(--glass-border)';
 
     const closeMe = () => {
         clearTimeout(timeoutId); // Clear auto-dismiss timer
         popup.style.opacity = '0';
-        popup.style.filter = 'blur(2.5px)';
-	    popup.style.transform = 'translateX(-50%) translateY(-150%)'; // Animate out
         setTimeout(() => {
             if (document.body.contains(popup)) {
                 document.body.removeChild(popup);
@@ -2086,42 +2067,104 @@ function createOnScreenPopup(message, options = {}) {
         }, 500);
     };
     
-    const title = message;
-    const appName = options.appName || 'System';
-    const description = options.description || '';
-    const appData = appName === 'System' ? { icon: '/assets/appicon/settings.png' } : apps[appName];
-
-    let iconSrc = '/assets/appicon/settings.png';
-    if (appData && appData.icon) {
-        const tempSrc = appData.icon;
-        if (tempSrc.startsWith('http') || tempSrc.startsWith('/')) {
-            iconSrc = tempSrc;
-        } else {
-            iconSrc = `/assets/appicon/${tempSrc}`;
-        }
+    // Check for specific words to determine icon
+    const checkWords = window.checkWords || ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'successfully', 'accepted', 'accept', 'yes'];
+    const closeWords = window.closeWords || ['failed', 'canceled', 'error', 'failure', 'fail', 'cancel', 'rejected', 'reject', 'not', 'no'];
+    
+    let iconType = '';
+    if (options.icon) {
+        iconType = options.icon;
+    } else if (checkWords.some(word => message.toLowerCase().includes(word))) {
+        iconType = 'check_circle';
+    } else if (closeWords.some(word => message.toLowerCase().includes(word))) {
+        iconType = 'error';
+    } else {
+        iconType = 'info';
     }
+    
+    // Add icon
+    const icon = document.createElement('span');
+    icon.className = 'material-symbols-rounded';
+    icon.textContent = iconType;
+    popup.appendChild(icon);
+    
+    // Add message text
+    const messageText = document.createElement('div');
+    messageText.textContent = message;
+    popup.appendChild(messageText);
+    
+    // Check if a button should be added
+    if (options.buttonText) {
+        const actionButton = document.createElement('button');
+        actionButton.textContent = options.buttonText;
+        actionButton.style.marginLeft = '10px';
+        actionButton.style.padding = '8px 16px';
+        actionButton.style.borderRadius = '18px';
+        actionButton.style.border = '1px solid var(--glass-border)';
+	    actionButton.style.boxShadow = 'var(--sun-shadow)';
+        actionButton.style.backgroundColor = 'var(--text-color)';
+        actionButton.style.color = 'var(--background-color)';
+        actionButton.style.cursor = 'pointer';
+        
+        // Handle local action or Gurapp-specific action
+        if (options.buttonAction && typeof options.buttonAction === 'function') {
+            actionButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                options.buttonAction();
+                closeMe(); // FIX: Call the local close function
+            });
+        } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) {
+            actionButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const { appName, functionName, args } = options.gurappAction;
 
-    const collapsedView = document.createElement('div');
-    collapsedView.style.cssText = 'display: flex; align-items: center; justify-content: space-between; width: 100%;';
-    collapsedView.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
-            <img src="${iconSrc}" style="width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;" onerror="this.style.display='none'">
-            <div style="display: flex; flex-direction: column; overflow: hidden; justify-content: center; gap: 2px;">
-                 <span style="font-size: 13px; font-weight: 500;">${appName}</span>
-                 <span style="font-size: 15px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; opacity: 0.8;">${title}</span>
-            </div>
-        </div>
-    `;
+                // FIX: Case-insensitive iframe lookup
+                let gurappIframe = null;
+                const allIframes = document.querySelectorAll('iframe[data-app-id]');
+                for (const iframe of allIframes) {
+                    if (iframe.dataset.appId.toLowerCase() === appName.toLowerCase()) {
+                        gurappIframe = iframe;
+                        break;
+                    }
+                }
 
-    popup.appendChild(collapsedView);
+                if (gurappIframe && gurappIframe.contentWindow) {
+                    const targetOrigin = getOriginFromUrl(gurappIframe.src);
+                    gurappIframe.contentWindow.postMessage({
+                        type: 'gurapp-action-request',
+                        functionName: functionName,
+                        args: args || []
+                    }, targetOrigin);
+                    console.log(`[Polygol] Sent action '${functionName}' to Gurapp '${appName}'.`);
+                } else {
+                    console.warn(`[Polygol] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
+                    showPopup(`Error: Could not perform action for ${appName}.`);
+                }
+                closeMe(); // FIX: Call the local close function
+            });
+        }
+        
+        popup.appendChild(actionButton);
+    }
+    
+    // Get all existing popups
+    const existingPopups = document.querySelectorAll('.on-screen-notification');
+    
+    // If there is already a popup, remove the oldest one
+    if (existingPopups.length >= 1) {
+        document.body.removeChild(existingPopups[0]);
+    }
+    
+    // Recalculate positions for all popups
+    const remainingPopups = document.querySelectorAll('.on-screen-notification');
+    remainingPopups.forEach((p, index) => {
+        p.style.top = `${20 + (index * 70)}px`;
+    });
+    
+    // Position the new popup
+    popup.style.top = `${20 + (remainingPopups.length * 70)}px`;
+    
     document.body.appendChild(popup);
-	
-    // Animate in after a brief moment
-    setTimeout(() => {
-        popup.style.opacity = '1';
-		popup.style.filter = 'none';
-        popup.style.transform = 'translateX(-50%) translateY(0)';
-    }, 50);
     
     // Auto-dismiss on-screen popup
     const timeoutId = setTimeout(closeMe, 10000);
@@ -2133,21 +2176,6 @@ function createOnScreenPopup(message, options = {}) {
             messageText.textContent = newMessage;
         }
     };
-}
-
-function hideAllOnScreenNotifications() {
-    const notifications = document.querySelectorAll('.on-screen-notification');
-    notifications.forEach(notif => {
-        // Trigger its close animation
-        notif.style.opacity = '0';
-	    notif.style.filter = 'blur(2.5px)';
-        notif.style.transform = 'translateX(-50%) translateY(-150%)';
-        setTimeout(() => {
-            if (notif.parentElement) {
-                notif.parentElement.removeChild(notif);
-            }
-        }, 500);
-    });
 }
 
 // Adds a notification to the notification shade
@@ -2194,7 +2222,6 @@ function addToNotificationShade(message, options = {}) {
 	function closeNotification(notif) {
 	    // Animate out
 	    notification.style.opacity = '0';
-	    notification.style.filter = 'blur(2.5px)';
 	    notification.style.transform = 'translateX(50px)';
 	    notification.style.height = '0px';
 	        
@@ -2220,82 +2247,54 @@ function addToNotificationShade(message, options = {}) {
 
         notification.style.padding = '0'; // Remove padding for iframe to fit
         notification.appendChild(iframe);
-
-	    // Add long-press to open app for Live Activities
-        let longPressTimer;
-        const startLongPress = () => {
-            longPressTimer = setTimeout(() => {
-                if (options.appName && apps[options.appName]) {
-                    createFullscreenEmbed(apps[options.appName].url);
-                }
-            }, 500); // 500ms for long press
-        };
-        const cancelLongPress = () => clearTimeout(longPressTimer);
-
-        notification.addEventListener('mousedown', startLongPress);
-        notification.addEventListener('mouseup', cancelLongPress);
-        notification.addEventListener('mouseleave', cancelLongPress);
-        notification.addEventListener('touchstart', startLongPress, { passive: true });
-        notification.addEventListener('touchend', cancelLongPress);
-        notification.addEventListener('touchmove', cancelLongPress); // Cancel on scroll
     } else {
-	    // --- Standard Notification ---
-	    const title = message;
-	    const appName = options.appName || 'System';
-	    const description = options.description || '';
-	    const appData = appName === 'System' ? { icon: '/assets/appicon/settings.png' } : apps[appName];
+	    // Content container
+	    const contentContainer = document.createElement('div');
+	    contentContainer.style.display = 'flex';
+	    contentContainer.style.alignItems = 'center';
+	    contentContainer.style.gap = '10px';
+	    contentContainer.style.width = '100%';
 	    
-	    let iconSrc = '/assets/appicon/settings.png';
-	    if (appData && appData.icon) {
-	        const tempSrc = appData.icon;
-	        if (tempSrc.startsWith('http') || tempSrc.startsWith('/')) {
-	            iconSrc = tempSrc;
-	        } else {
-	            iconSrc = `/assets/appicon/${tempSrc}`;
-	        }
+	    let iconType = 'notifications';
+	
+	    let iconTypeForShade = 'notifications'; // Default icon
+	    if (options.icon) { // Prefer explicit icon from options
+	        iconTypeForShade = options.icon;
+	    } else {
+	        iconTypeForShade = 'notifications';
 	    }
-	
-	    notification.innerHTML = ''; // Clear previous content attempts.
-	
-	    // 1. Header Row (App Name | Timestamp)
-	    const header = document.createElement('div');
-	    header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; font-size: 13px;';
-	    header.innerHTML = `
-	        <span style="font-weight: 500;">${appName}</span>
-	        <span style="opacity: 0.7;">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-	    `;
-	
-	    // 2. Body Row (Icon | Text & Button Column)
-	    const body = document.createElement('div');
-	    body.style.cssText = 'display: flex; align-items: flex-start; gap: 12px;';
-	
-	    // 2a. Icon
-	    const iconImg = document.createElement('img');
-	    iconImg.src = iconSrc;
-	    iconImg.style.cssText = 'width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;';
-	    iconImg.onerror = () => { iconImg.style.display = 'none'; };
-	
-	    // 2b. Content Column
-	    const contentColumn = document.createElement('div');
-	    contentColumn.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
 	    
-	    const textContent = document.createElement('div');
-	    textContent.innerHTML = `
-	        <div style="font-weight: 500;">${title}</div>
-	        <p style="margin: 4px 0 0 0; font-size: 14px; opacity: 0.8; line-height: 1.4;">${description}</p>
-	    `;
-	
-	    contentColumn.appendChild(textContent);
-
-        // 2. Click-to-open functionality
-        notification.addEventListener('click', (e) => {
-            if (e.target.closest('button, a, .material-symbols-rounded')) return;
-            if (options.appName && apps[options.appName]) {
-                createFullscreenEmbed(apps[options.appName].url);
-                closeNotification();
-            }
-        });
-		    
+	    // Create icon
+	    const icon = document.createElement('span');
+	    icon.className = 'material-symbols-rounded';
+	    icon.textContent = iconTypeForShade;
+	    icon.style.fontSize = '24px';
+	    contentContainer.appendChild(icon);
+	    
+	    // Create message text
+	    const messageText = document.createElement('div');
+	    messageText.style.flex = '1';
+	    messageText.style.wordBreak = 'break-word';
+	    messageText.textContent = message;
+	    contentContainer.appendChild(messageText);
+	    
+	    // Close button
+	    const closeBtn = document.createElement('span');
+	    closeBtn.className = 'material-symbols-rounded';
+	    closeBtn.textContent = 'cancel';
+	    closeBtn.style.cursor = 'pointer';
+	    closeBtn.style.fontSize = '16px';
+	    closeBtn.style.opacity = '0.5';
+	    closeBtn.addEventListener('click', (e) => {
+	        e.stopPropagation();
+	        closeNotification(notification);
+	    });
+	    closeBtn.style.transition = 'opacity 0.2s';
+		
+	    contentContainer.appendChild(closeBtn);
+	    
+	    notification.appendChild(contentContainer);
+	    
 	    // Add action button if specified
 	    if (options.buttonText) {
 	        const buttonContainer = document.createElement('div');
@@ -7872,7 +7871,6 @@ blurOverlayControls.addEventListener('click', () => {
 });
 
 function closeControls() {
-    hideAllOnScreenNotifications(); // Also hide when controls are closed.
 	persistentClock.style.opacity = '1';
     customizeModal.classList.remove('show'); // Start animation
     blurOverlayControls.classList.remove('show');
@@ -8576,10 +8574,9 @@ function startLiveActivity(options) {
     const notificationControl = addToNotificationShade('', {
         liveActivityUrl: options.url,
         activityId: options.activityId,
-        height: options.height,
-        appName: options.appName // Pass appName to the notification
+        height: options.height
     });
-	
+
     activeLiveActivities[options.activityId] = {
         options: options,
         notificationControl: notificationControl
@@ -8783,10 +8780,6 @@ window.addEventListener('message', async (event) => { // Make listener async
     if (data.type === 'live-activity-homescreen-update') {
         const homescreenWidget = document.getElementById('live-activity-homescreen');
         if (homescreenWidget) {
-            // Store the app name to enable click-to-open
-            if (data.appName) {
-                homescreenWidget.dataset.appName = data.appName;
-            }
             const iconEl = homescreenWidget.querySelector('.material-symbols-rounded');
             const textEl = homescreenWidget.querySelector('span:last-child');
             if (iconEl) iconEl.textContent = data.icon || '';
