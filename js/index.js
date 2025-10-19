@@ -1279,6 +1279,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
+	    hideAllOnScreenNotifications();
 		syncUiStates();
 		persistentClock.style.opacity = '0';
 		customizeModal.style.display = 'block';
@@ -1288,6 +1289,17 @@ document.addEventListener('DOMContentLoaded', () => {
 	            blurOverlayControls.classList.add('show');
 	        }, 10);
     });
+
+    // Add click listener for homescreen live activity
+    const homescreenLiveActivity = document.getElementById('live-activity-homescreen');
+    if (homescreenLiveActivity) {
+        homescreenLiveActivity.addEventListener('click', () => {
+            const appName = homescreenLiveActivity.dataset.appName;
+            if (appName && apps[appName]) {
+                createFullscreenEmbed(apps[appName].url);
+            }
+        });
+    }
     
     // Setup observer to watch for embed visibility changes to update clock immediately
     const embedObserver = new MutationObserver((mutations) => {
@@ -2040,8 +2052,10 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.position = 'fixed';
     popup.style.top = '20px';
     popup.style.left = '50%';
+    popup.style.opacity = '0'; // Start invisible for animation
+	popup.style.filter = 'blur(2.5px)'; // Start blurred for animation
     popup.style.width = 'clamp(200px, 90%, 500px)';
-    popup.style.transform = 'translateX(-50%)';
+    popup.style.transform = 'translateX(-50%) translateY(-150%)'; // Start off-screen
     popup.style.backgroundColor = 'var(--modal-background)';
     popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(5px)';
     popup.style.boxShadow = 'var(--sun-shadow), 0 0 10px rgba(0, 0, 0, 0.2)';
@@ -2050,7 +2064,7 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.borderRadius = '35px';
 	popup.style.cornerShape = 'superellipse(1.5)';
     popup.style.zIndex = '9999996';
-    popup.style.transition = 'opacity 0.5s';
+    popup.style.transition = 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
     popup.style.display = 'flex';
     popup.style.alignItems = 'flex-start';
     popup.style.gap = '16px';
@@ -2059,6 +2073,8 @@ function createOnScreenPopup(message, options = {}) {
     const closeMe = () => {
         clearTimeout(timeoutId); // Clear auto-dismiss timer
         popup.style.opacity = '0';
+        popup.style.filter = 'blur(2.5px)';
+	    popup.style.transform = 'translateX(-50%) translateY(-150%)'; // Animate out
         setTimeout(() => {
             if (document.body.contains(popup)) {
                 document.body.removeChild(popup);
@@ -2165,6 +2181,13 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.top = `${20 + (remainingPopups.length * 70)}px`;
     
     document.body.appendChild(popup);
+
+    // Animate in after a brief moment
+    setTimeout(() => {
+        popup.style.opacity = '1';
+		popup.style.filter = 'none';
+        popup.style.transform = 'translateX(-50%) translateY(0)';
+    }, 50);
     
     // Auto-dismiss on-screen popup
     const timeoutId = setTimeout(closeMe, 10000);
@@ -2176,6 +2199,21 @@ function createOnScreenPopup(message, options = {}) {
             messageText.textContent = newMessage;
         }
     };
+}
+
+function hideAllOnScreenNotifications() {
+    const notifications = document.querySelectorAll('.on-screen-notification');
+    notifications.forEach(notif => {
+        // Trigger its close animation
+        notif.style.opacity = '0';
+	    notif.style.filter = 'blur(2.5px)';
+        notif.style.transform = 'translateX(-50%) translateY(-150%)';
+        setTimeout(() => {
+            if (notif.parentElement) {
+                notif.parentElement.removeChild(notif);
+            }
+        }, 500);
+    });
 }
 
 // Adds a notification to the notification shade
@@ -2222,6 +2260,7 @@ function addToNotificationShade(message, options = {}) {
 	function closeNotification(notif) {
 	    // Animate out
 	    notification.style.opacity = '0';
+	    notification.style.filter = 'blur(2.5px)';
 	    notification.style.transform = 'translateX(50px)';
 	    notification.style.height = '0px';
 	        
@@ -2247,7 +2286,62 @@ function addToNotificationShade(message, options = {}) {
 
         notification.style.padding = '0'; // Remove padding for iframe to fit
         notification.appendChild(iframe);
+
+	    // Add long-press to open app for Live Activities
+        let longPressTimer;
+        const startLongPress = () => {
+            longPressTimer = setTimeout(() => {
+                if (options.appName && apps[options.appName]) {
+                    createFullscreenEmbed(apps[options.appName].url);
+                }
+            }, 500); // 500ms for long press
+        };
+        const cancelLongPress = () => clearTimeout(longPressTimer);
+
+        notification.addEventListener('mousedown', startLongPress);
+        notification.addEventListener('mouseup', cancelLongPress);
+        notification.addEventListener('mouseleave', cancelLongPress);
+        notification.addEventListener('touchstart', startLongPress, { passive: true });
+        notification.addEventListener('touchend', cancelLongPress);
+        notification.addEventListener('touchmove', cancelLongPress); // Cancel on scroll
     } else {
+        // --- Standard Notification ---
+        const appName = options.appName || 'System';
+        const appData = apps[appName];
+
+        // 1. Add Header (App Icon, Name, Timestamp)
+        const header = document.createElement('div');
+        header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; opacity: 0.8; font-size: 13px; margin-bottom: 8px;';
+        const appInfo = document.createElement('div');
+        appInfo.style.cssText = 'display: flex; align-items: center; gap: 8px; font-weight: 500;';
+
+        if (appData && appData.icon) {
+            const appIcon = document.createElement('img');
+            appIcon.src = appData.icon.startsWith('/') ? appData.icon : `/assets/appicon/${appData.icon}`;
+            appIcon.style.cssText = 'width: 20px; height: 20px; border-radius: 5px;';
+            appInfo.appendChild(appIcon);
+        }
+        
+        const appNameEl = document.createElement('span');
+        appNameEl.textContent = appName;
+        appInfo.appendChild(appNameEl);
+        
+        const timestamp = document.createElement('span');
+        timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        header.appendChild(appInfo);
+        header.appendChild(timestamp);
+        notification.appendChild(header);
+
+        // 2. Click-to-open functionality
+        notification.addEventListener('click', (e) => {
+            if (e.target.closest('button, a')) return; // Ignore clicks on buttons
+            if (options.appName && apps[options.appName]) {
+                createFullscreenEmbed(apps[options.appName].url);
+                closeNotification(notification);
+            }
+        });
+		
 	    // Content container
 	    const contentContainer = document.createElement('div');
 	    contentContainer.style.display = 'flex';
@@ -7870,6 +7964,7 @@ blurOverlayControls.addEventListener('click', () => {
 });
 
 function closeControls() {
+    hideAllOnScreenNotifications(); // Also hide when controls are closed.
 	persistentClock.style.opacity = '1';
     customizeModal.classList.remove('show'); // Start animation
     blurOverlayControls.classList.remove('show');
@@ -8573,9 +8668,10 @@ function startLiveActivity(options) {
     const notificationControl = addToNotificationShade('', {
         liveActivityUrl: options.url,
         activityId: options.activityId,
-        height: options.height
+        height: options.height,
+        appName: options.appName // Pass appName to the notification
     });
-
+	
     activeLiveActivities[options.activityId] = {
         options: options,
         notificationControl: notificationControl
@@ -8779,6 +8875,10 @@ window.addEventListener('message', async (event) => { // Make listener async
     if (data.type === 'live-activity-homescreen-update') {
         const homescreenWidget = document.getElementById('live-activity-homescreen');
         if (homescreenWidget) {
+            // Store the app name to enable click-to-open
+            if (data.appName) {
+                homescreenWidget.dataset.appName = data.appName;
+            }
             const iconEl = homescreenWidget.querySelector('.material-symbols-rounded');
             const textEl = homescreenWidget.querySelector('span:last-child');
             if (iconEl) iconEl.textContent = data.icon || '';
