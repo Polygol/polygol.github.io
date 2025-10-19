@@ -2232,16 +2232,19 @@ function addToNotificationShade(message, options = {}) {
 	}
 
     if (options.liveActivityUrl) {
-        notification.classList.add('live-activity-notification');
-        notification.dataset.activityId = options.activityId;
+        notification.classList.add('live-activity-notification'); // For custom styling
+        notification.dataset.activityId = options.activityId; // For later removal
 
         const iframe = document.createElement('iframe');
         iframe.src = options.liveActivityUrl;
         iframe.setAttribute('data-gurasuraisu-iframe', 'true');
         iframe.style.width = '100%';
-        iframe.style.height = options.height || '120px';
+        iframe.style.height = options.height || '120px'; // Default height
         iframe.style.border = 'none';
-        iframe.style.borderRadius = '28px';
+        iframe.style.borderRadius = '28px'; // Match inner radius
+
+        notification.style.padding = '0'; // Remove padding for iframe to fit
+        notification.appendChild(iframe);
     } else {
 	    // Content container
 	    const contentContainer = document.createElement('div');
