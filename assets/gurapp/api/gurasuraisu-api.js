@@ -5,6 +5,9 @@
  */
 
 const isInsideGurasuraisu = window.self !== window.top;
+let _mediaControlActions = {};
+let _actionRequestHandlers = {};
+const _myActiveActivities = new Set(); // NEW: Tracks this app's active activities
 
 // Gurasuraisu Font and Cursor Injection
 // This block runs as soon as the script is loaded by the Gurapp.
@@ -193,6 +196,9 @@ const Gurasuraisu = {
      * @param {string} [options.height='120px'] - The desired height of the activity in the notification shade.
      */
     start: function(options) {
+      if (options && options.activityId) {
+        _myActiveActivities.add(options.activityId); // Add to local tracker
+      }
       Gurasuraisu._call('startLiveActivity', [options]);
     },
 
@@ -220,6 +226,9 @@ const Gurasuraisu = {
      * @param {string} activityId - The unique ID of the activity you want to stop.
      */
     stop: function(activityId) {
+      if (activityId) {
+        _myActiveActivities.delete(activityId); // Remove from local tracker
+      }
       Gurasuraisu._call('stopLiveActivity', [activityId]);
     },
     
