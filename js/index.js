@@ -2068,6 +2068,17 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.alignItems = 'center';
     popup.style.gap = '16px';
     popup.style.border = '1px solid var(--glass-border)';
+
+    const closeMe = () => {
+        clearTimeout(timeoutId); // Clear auto-dismiss timer
+        popup.style.opacity = '0';
+        setTimeout(() => {
+            if (document.body.contains(popup)) {
+                document.body.removeChild(popup);
+                // Readjust positions of any remaining popups
+            }
+        }, 500);
+    };
     
     // Check for specific words to determine icon
     const checkWords = window.checkWords || ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'successfully', 'accepted', 'accept', 'yes'];
@@ -2109,31 +2120,40 @@ function createOnScreenPopup(message, options = {}) {
         actionButton.style.cursor = 'pointer';
         
         // Handle local action or Gurapp-specific action
-        if (options.buttonAction && typeof options.buttonAction === 'function') { // For parent-local actions
+        if (options.buttonAction && typeof options.buttonAction === 'function') {
             actionButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 options.buttonAction();
-                closeNotification(notification);
+                closeMe(); // FIX: Call the local close function
             });
-        } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) { // For Gurapp-specific actions
+        } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) {
             actionButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const { appName, functionName, args } = options.gurappAction;
-                const gurappIframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
+
+                // FIX: Case-insensitive iframe lookup
+                let gurappIframe = null;
+                const allIframes = document.querySelectorAll('iframe[data-app-id]');
+                for (const iframe of allIframes) {
+                    if (iframe.dataset.appId.toLowerCase() === appName.toLowerCase()) {
+                        gurappIframe = iframe;
+                        break;
+                    }
+                }
+
                 if (gurappIframe && gurappIframe.contentWindow) {
-					const targetOrigin = getOriginFromUrl(gurappIframe.src);
-                    // Send a message to the specific Gurapp iframe to trigger the function
+                    const targetOrigin = getOriginFromUrl(gurappIframe.src);
                     gurappIframe.contentWindow.postMessage({
                         type: 'gurapp-action-request',
                         functionName: functionName,
                         args: args || []
                     }, targetOrigin);
-                    console.log(`[raisu] Sent action '${functionName}' to Gurapp '${appName}'.`);
+                    console.log(`[Polygol] Sent action '${functionName}' to Gurapp '${appName}'.`);
                 } else {
-                    console.warn(`[raisu] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
+                    console.warn(`[Polygol] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
                     showPopup(`Error: Could not perform action for ${appName}.`);
                 }
-                closeNotification(notification); // Close the notification after click
+                closeMe(); // FIX: Call the local close function
             });
         }
         
@@ -2159,37 +2179,12 @@ function createOnScreenPopup(message, options = {}) {
     
     document.body.appendChild(popup);
     
-    // Auto-dismiss on-screen popup after 10 seconds
-    const timeoutId = setTimeout(() => {
-        popup.style.opacity = '0';
-        setTimeout(() => {
-            if (document.body.contains(popup)) {
-                document.body.removeChild(popup);
-                // Readjust positions of remaining popups
-                const remainingPopups = document.querySelectorAll('.on-screen-notification');
-                remainingPopups.forEach((p, index) => {
-                    p.style.top = `${20 + (index * 70)}px`;
-                });
-            }
-        }, 500);
-    }, 10000);
+    // Auto-dismiss on-screen popup
+    const timeoutId = setTimeout(closeMe, 10000);
     
     // Return control methods
     return {
-        close: () => {
-            clearTimeout(timeoutId);
-            popup.style.opacity = '0';
-            setTimeout(() => {
-                if (document.body.contains(popup)) {
-                    document.body.removeChild(popup);
-                    // Readjust positions of remaining popups
-                    const remainingPopups = document.querySelectorAll('.on-screen-notification');
-                    remainingPopups.forEach((p, index) => {
-                        p.style.top = `${20 + (index * 70)}px`;
-                    });
-                }
-            }, 500);
-        },
+        close: closeMe,
         update: (newMessage) => {
             messageText.textContent = newMessage;
         }
