@@ -2040,6 +2040,7 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.position = 'fixed';
     popup.style.top = '20px';
     popup.style.left = '50%';
+    popup.style.width = 'clamp(200px, 90%, 500px)';
     popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'var(--modal-background)';
     popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(5px)';
