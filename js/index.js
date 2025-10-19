@@ -114,6 +114,7 @@ if (initialFaviconLink) {
 }
 
 let activeMediaSessionApp = null; // To track which app controls the media widget
+let mediaSessionStack = []; // A stack to manage multiple media sessions
 
 let currentLanguage = LANG_EN; // Default to English
 
@@ -8150,15 +8151,12 @@ function hideMediaWidget() {
     const widget = document.getElementById('media-session-widget');
     if (!widget) return;
 
-    // localStorage.removeItem('lastMediaMetadata');
-    // localStorage.removeItem('lastMediaSessionApp');
-
     widget.style.opacity = '0';
     widget.style.transform = 'scale(0.95)';
     setTimeout(() => {
         widget.style.display = 'none';
 
-        // Reset new elements
+        // Reset UI elements to default state for the next use
         const appIconEl = document.getElementById('media-widget-app-icon');
         if (appIconEl) appIconEl.style.display = 'none';
         const currentTimeEl = document.getElementById('media-widget-current-time');
@@ -8172,13 +8170,68 @@ function hideMediaWidget() {
         const playPauseBtn = document.getElementById('media-widget-play-pause');
         const nextBtn = document.getElementById('media-widget-next');
 
-        if(prevBtn) { prevBtn.disabled = false; prevBtn.style.opacity = '1'; }
-        if(playPauseBtn) { playPauseBtn.disabled = false; playPauseBtn.style.opacity = '1'; }
-        if(nextBtn) { nextBtn.disabled = false; nextBtn.style.opacity = '1'; }
+        if(prevBtn) { prevBtn.disabled = false; prevBtn.style.display = 'block'; }
+        if(playPauseBtn) { playPauseBtn.disabled = false; playPauseBtn.style.display = 'block'; }
+        if(nextBtn) { nextBtn.disabled = false; nextBtn.style.display = 'block'; }
     }, 300);
+}
 
-    // Clear actions when the widget is hidden
-    activeMediaSessionApp = null;
+/**
+ * Central function to update the media widget based on the current session stack.
+ * This should be called any time the stack is modified.
+ * @private
+ */
+function _updateActiveMediaSession() {
+    if (mediaSessionStack.length === 0) {
+        // If stack is empty, hide the widget and clear all state.
+        activeMediaSessionApp = null;
+        hideMediaWidget();
+        // localStorage.removeItem('lastMediaMetadata');
+        // localStorage.removeItem('lastMediaSessionApp');
+        return;
+    }
+
+    // Get the session at the top of the stack.
+    const activeSession = mediaSessionStack[mediaSessionStack.length - 1];
+    const { appName, metadata, supportedActions } = activeSession;
+    
+    // Update global state and localStorage.
+    activeMediaSessionApp = appName;
+    localStorage.setItem('lastMediaSessionApp', appName);
+
+    // Update the widget's UI with the new session's data.
+    showMediaWidget(metadata);
+    updateMediaWidgetState('paused'); // Default to paused on change.
+
+    const appIconEl = document.getElementById('media-widget-app-icon');
+    if (appIconEl && apps[appName] && apps[appName].icon) {
+        let iconUrl = apps[appName].icon;
+        if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/'))) {
+            iconUrl = `/assets/appicon/${iconUrl}`;
+        }
+        appIconEl.src = iconUrl;
+        appIconEl.style.display = 'block';
+    } else if (appIconEl) {
+        appIconEl.style.display = 'none';
+    }
+
+    // Update control button visibility and state.
+    const prevBtn = document.getElementById('media-widget-prev');
+    const playPauseBtn = document.getElementById('media-widget-play-pause');
+    const nextBtn = document.getElementById('media-widget-next');
+
+    if (prevBtn) {
+        prevBtn.disabled = !supportedActions.includes('prev');
+        prevBtn.style.display = prevBtn.disabled ? 'none' : 'block';
+    }
+    if (playPauseBtn) {
+        playPauseBtn.disabled = !supportedActions.includes('playPause');
+        playPauseBtn.style.display = playPauseBtn.disabled ? 'none' : 'block';
+    }
+    if (nextBtn) {
+        nextBtn.disabled = !supportedActions.includes('next');
+        nextBtn.style.display = nextBtn.disabled ? 'none' : 'block';
+    }
 }
 
 function updateMediaWidgetState(playbackState) {
@@ -8201,63 +8254,41 @@ function updateMediaWidgetState(playbackState) {
 function registerMediaSession(appName, metadata, supportedActions = []) {
     if (!appName) return;
 
-    // --- FIX: Find the canonical app name with a case-insensitive search ---
+    // Find the canonical app name with a case-insensitive search
     const canonicalAppName = Object.keys(apps).find(key => key.toLowerCase() === appName.toLowerCase());
 
     if (!canonicalAppName) {
         console.warn(`[Polygol Media] Received media session request from an unknown app: "${appName}"`);
-        return; // If the app isn't found, do nothing.
+        return;
     } 
 	
-	if (!appName) return;
+	// Remove any previous session from the same app to prevent duplicates
+    mediaSessionStack = mediaSessionStack.filter(session => session.appName !== canonicalAppName);
 
-    activeMediaSessionApp = canonicalAppName;
-    localStorage.setItem('lastMediaSessionApp', appName); // Store the last app that controlled media
-    showMediaWidget(metadata);
-
-    // Get the app icon using the correct, canonical name
-    const appIconEl = document.getElementById('media-widget-app-icon');
-    if (appIconEl && apps[canonicalAppName] && apps[canonicalAppName].icon) {
-        let iconUrl = apps[canonicalAppName].icon;
-        if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/'))) {
-            iconUrl = `/assets/appicon/${iconUrl}`;
-        }
-        appIconEl.src = iconUrl;
-        appIconEl.style.display = 'block';
-    } else if (appIconEl) {
-        appIconEl.style.display = 'none';
-    }
-
-    // Get references to the control buttons
-    const prevBtn = document.getElementById('media-widget-prev');
-    const playPauseBtn = document.getElementById('media-widget-play-pause');
-    const nextBtn = document.getElementById('media-widget-next');
-
-    // Enable or disable buttons based on the 'supportedActions' array
-    if (prevBtn) {
-        prevBtn.disabled = !supportedActions.includes('prev');
-        prevBtn.style.display = prevBtn.disabled ? 'none' : 'block';
-    }
-	
-    if (playPauseBtn) {
-        playPauseBtn.disabled = !supportedActions.includes('playPause');
-        playPauseBtn.style.display = playPauseBtn.disabled ? 'none' : 'block';
-    }
-	
-    if (nextBtn) {
-        nextBtn.disabled = !supportedActions.includes('next');
-        nextBtn.style.display = nextBtn.disabled ? 'none' : 'block';
-    }
-
-    // 4. Set the initial playback state (usually 'paused')
-    updateMediaWidgetState('paused');
+    // Push the new session to the top of the stack
+    mediaSessionStack.push({
+        appName: canonicalAppName,
+        metadata: metadata,
+        supportedActions: supportedActions
+    });
+    
+    // Update the UI based on the new stack state
+    _updateActiveMediaSession();
 }
 
 // A function to clear the session, called when an app is closed/minimized
 function clearMediaSession(appName) {
-    if (activeMediaSessionApp === appName) {
-        console.log(`[Polygol] Clearing media session for "${appName}".`);
-        hideMediaWidget();
+    if (!appName) return;
+
+    // Find the canonical app name to ensure we remove the right one
+    const canonicalAppName = Object.keys(apps).find(key => key.toLowerCase() === appName.toLowerCase());
+    
+    if (canonicalAppName) {
+        console.log(`[Polygol] Deregistering media session for "${canonicalAppName}".`);
+        // Filter the app out of the stack
+        mediaSessionStack = mediaSessionStack.filter(session => session.appName !== canonicalAppName);
+        // Update the UI based on the new stack state
+        _updateActiveMediaSession();
     }
 }
 
