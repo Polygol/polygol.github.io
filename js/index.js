@@ -2239,66 +2239,53 @@ function addToNotificationShade(message, options = {}) {
         notification.addEventListener('touchend', cancelLongPress);
         notification.addEventListener('touchmove', cancelLongPress); // Cancel on scroll
     } else {
-	    // --- Standard Expandable Notification ---
-        const title = message;
-        const appName = options.appName || 'System';
-        const description = options.description || '';
-        const appData = appName === 'System' ? { icon: '/assets/appicon/settings.png' } : apps[appName];
-        
-        let iconSrc = '/assets/appicon/settings.png';
-        if (appData && appData.icon) {
-            const tempSrc = appData.icon;
-            if (tempSrc.startsWith('http') || tempSrc.startsWith('/')) {
-                iconSrc = tempSrc;
-            } else {
-                iconSrc = `/assets/appicon/${tempSrc}`;
-            }
-        }
-
-        const collapsedView = document.createElement('div');
-        collapsedView.style.cssText = 'display: flex; align-items: center; justify-content: space-between; width: 100%; cursor: pointer;';
-        collapsedView.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
-                <img src="${iconSrc}" style="width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;" onerror="this.style.display='none'">
-                <div style="display: flex; flex-direction: column; overflow: hidden; justify-content: center;">
-                    <span style="font-size: 13px; font-weight: 500;">${appName}</span>
-                    <span style="font-size: 15px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; opacity: 0.8;">${title}</span>
-                </div>
-            </div>
-            <span class="material-symbols-rounded" style="padding: 4px; font-size: 24px;">expand_more</span>
-        `;
-
-        const expandedView = document.createElement('div');
-        expandedView.style.cssText = 'display: none; flex-direction: column; width: 100%; gap: 8px;';
-        const buttonHtml = options.buttonText ? `<div class="notification-actions" style="margin-top: 8px; display: flex; justify-content: flex-start;"></div>` : '';
-
-        expandedView.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                <span style="font-weight: 500;">${appName}</span>
-                <span style="opacity: 0.7;">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            </div>
-            <div style="display: flex; gap: 12px; align-items: flex-start;">
-                 <img src="${iconSrc}" style="width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;" onerror="this.style.display='none'">
-                 <div style="display: flex; flex-direction: column;">
-                    <span style="font-weight: 500;">${title}</span>
-                    <p style="margin: 4px 0 0 0; font-size: 14px; opacity: 0.8; line-height: 1.4;">${description || ''}</p>
-                 </div>
-            </div>
-            ${buttonHtml}
-        `;
-
-        notification.appendChild(collapsedView);
-        notification.appendChild(expandedView);
-
-        const expandBtn = collapsedView.querySelector('.material-symbols-rounded');
-        const toggleExpand = () => {
-            const isExpanded = expandedView.style.display !== 'none';
-            expandedView.style.display = isExpanded ? 'none' : 'flex';
-            collapsedView.style.display = isExpanded ? 'flex' : 'none';
-            expandBtn.textContent = isExpanded ? 'expand_more' : 'expand_less';
-        };
-
-        collapsedView.addEventListener('click', toggleExpand);
+	    // --- Standard Notification ---
+	    const title = message;
+	    const appName = options.appName || 'System';
+	    const description = options.description || '';
+	    const appData = appName === 'System' ? { icon: '/assets/appicon/settings.png' } : apps[appName];
+	    
+	    let iconSrc = '/assets/appicon/settings.png';
+	    if (appData && appData.icon) {
+	        const tempSrc = appData.icon;
+	        if (tempSrc.startsWith('http') || tempSrc.startsWith('/')) {
+	            iconSrc = tempSrc;
+	        } else {
+	            iconSrc = `/assets/appicon/${tempSrc}`;
+	        }
+	    }
+	
+	    notification.innerHTML = ''; // Clear previous content attempts.
+	
+	    // 1. Header Row (App Name | Timestamp)
+	    const header = document.createElement('div');
+	    header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; font-size: 13px;';
+	    header.innerHTML = `
+	        <span style="font-weight: 500;">${appName}</span>
+	        <span style="opacity: 0.7;">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+	    `;
+	
+	    // 2. Body Row (Icon | Text & Button Column)
+	    const body = document.createElement('div');
+	    body.style.cssText = 'display: flex; align-items: flex-start; gap: 12px;';
+	
+	    // 2a. Icon
+	    const iconImg = document.createElement('img');
+	    iconImg.src = iconSrc;
+	    iconImg.style.cssText = 'width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;';
+	    iconImg.onerror = () => { iconImg.style.display = 'none'; };
+	
+	    // 2b. Content Column
+	    const contentColumn = document.createElement('div');
+	    contentColumn.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+	    
+	    const textContent = document.createElement('div');
+	    textContent.innerHTML = `
+	        <div style="font-weight: 500;">${title}</div>
+	        <p style="margin: 4px 0 0 0; font-size: 14px; opacity: 0.8; line-height: 1.4;">${description}</p>
+	    `;
+	
+	    contentColumn.appendChild(textContent);
 
         // 2. Click-to-open functionality
         notification.addEventListener('click', (e) => {
