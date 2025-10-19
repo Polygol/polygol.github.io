@@ -1211,16 +1211,28 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('media-session-widget').addEventListener('click', (e) => {
         // Check if the click happened specifically on the album art
         if (e.target.id === 'media-widget-art') {
+            let appNameToOpen = null;
+
+            // 1. Prioritize the app with the currently active session.
             if (activeMediaSessionApp) {
-                // Directly get the app details using the name as the key.
-                const appToOpen = apps[activeMediaSessionApp]; 
-                if (appToOpen) {
-                    // First, close the settings modal if it's open
-                    closeControls();
-		    minimizeFullscreenEmbed();
-                    // Then, open the app
-                    createFullscreenEmbed(appToOpen.url);
-                }
+                appNameToOpen = activeMediaSessionApp;
+            } else {
+                // 2. Fallback to the last app that controlled media, from localStorage.
+                appNameToOpen = localStorage.getItem('lastMediaSessionApp');
+            }
+
+            // 3. Verify the app exists and then open it.
+            if (appNameToOpen && apps[appNameToOpen]) {
+                const appToOpen = apps[appNameToOpen];
+                closeControls();
+                minimizeFullscreenEmbed();
+                createFullscreenEmbed(appToOpen.url);
+            } else {
+                // 4. If no app is found, provide a sensible default action.
+                console.warn('[Media Widget] No active or cached app found. Falling back to default Music app.');
+                closeControls();
+                minimizeFullscreenEmbed();
+                createFullscreenEmbed('/music/index.html');
             }
         }
     });
