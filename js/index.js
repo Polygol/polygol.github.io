@@ -2047,6 +2047,8 @@ function showNotification(message, options = {}) {
 
 // Creates a temporary on-screen popup (similar to original showPopup)
 function createOnScreenPopup(message, options = {}) {
+    hideAllOnScreenNotifications();
+	
     const popup = document.createElement('div');
     popup.className = 'on-screen-notification';
     popup.style.position = 'fixed';
@@ -2084,107 +2086,36 @@ function createOnScreenPopup(message, options = {}) {
         }, 500);
     };
     
-    // --- App Icon ---
+    const title = message;
     const appName = options.appName || 'System';
+    const description = options.description || '';
     const appData = appName === 'System' ? { icon: '/assets/appicon/settings.png' } : apps[appName];
 
+    let iconSrc = '/assets/appicon/settings.png';
     if (appData && appData.icon) {
-        const appIcon = document.createElement('img');
-        const iconSrc = appData.icon;
-        
-        if (iconSrc.startsWith('http') || iconSrc.startsWith('/')) {
-            appIcon.src = iconSrc;
+        const tempSrc = appData.icon;
+        if (tempSrc.startsWith('http') || tempSrc.startsWith('/')) {
+            iconSrc = tempSrc;
         } else {
-            appIcon.src = `/assets/appicon/${iconSrc}`;
+            iconSrc = `/assets/appicon/${tempSrc}`;
         }
-        
-        // Add a fallback in case the image fails to load
-        appIcon.onerror = () => { appIcon.style.display = 'none'; }; // Or set to a default fallback icon
-        
-        appIcon.style.cssText = 'width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;';
-        popup.appendChild(appIcon);
     }
 
-    // --- Container for Text and Buttons ---
-    const contentContainer = document.createElement('div');
-    contentContainer.style.cssText = 'display: flex; flex-direction: column; gap: 8px; flex-grow: 1;';
+    const collapsedView = document.createElement('div');
+    collapsedView.style.cssText = 'display: flex; align-items: center; justify-content: space-between; width: 100%;';
+    collapsedView.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
+            <img src="${iconSrc}" style="width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;" onerror="this.style.display='none'">
+            <div style="display: flex; flex-direction: column; overflow: hidden; justify-content: center; gap: 2px;">
+                 <span style="font-size: 13px; font-weight: 500;">${appName}</span>
+                 <span style="font-size: 15px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; opacity: 0.8;">${title}</span>
+            </div>
+        </div>
+    `;
 
-    // --- Header Text (App Name) ---
-    const appNameEl = document.createElement('div');
-    appNameEl.textContent = appName;
-    appNameEl.style.cssText = 'font-weight: 500; font-size: 13px; opacity: 0.8;';
-    
-    // --- Message Text ---
-    const messageText = document.createElement('div');
-    messageText.textContent = message;
-    
-    contentContainer.appendChild(appNameEl);
-    contentContainer.appendChild(messageText);
-    
-    // Check if a button should be added
-    if (options.buttonText) {
-        const actionButton = document.createElement('button');
-        actionButton.textContent = options.buttonText;
-        actionButton.style.marginLeft = '10px';
-        actionButton.style.padding = '8px 16px';
-        actionButton.style.borderRadius = '18px';
-        actionButton.style.border = '1px solid var(--glass-border)';
-	    actionButton.style.boxShadow = 'var(--sun-shadow)';
-        actionButton.style.backgroundColor = 'var(--text-color)';
-        actionButton.style.color = 'var(--background-color)';
-        actionButton.style.cursor = 'pointer';
-        
-        // Handle local action or Gurapp-specific action
-        if (options.buttonAction && typeof options.buttonAction === 'function') {
-            actionButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                options.buttonAction();
-                closeMe(); // FIX: Call the local close function
-            });
-        } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) {
-            actionButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const { appName, functionName, args } = options.gurappAction;
-
-                // FIX: Case-insensitive iframe lookup
-                let gurappIframe = null;
-                const allIframes = document.querySelectorAll('iframe[data-app-id]');
-                for (const iframe of allIframes) {
-                    if (iframe.dataset.appId.toLowerCase() === appName.toLowerCase()) {
-                        gurappIframe = iframe;
-                        break;
-                    }
-                }
-
-                if (gurappIframe && gurappIframe.contentWindow) {
-                    const targetOrigin = getOriginFromUrl(gurappIframe.src);
-                    gurappIframe.contentWindow.postMessage({
-                        type: 'gurapp-action-request',
-                        functionName: functionName,
-                        args: args || []
-                    }, targetOrigin);
-                    console.log(`[Polygol] Sent action '${functionName}' to Gurapp '${appName}'.`);
-                } else {
-                    console.warn(`[Polygol] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
-                    showPopup(`Error: Could not perform action for ${appName}.`);
-                }
-                closeMe(); // FIX: Call the local close function
-            });
-        }
-        
-        popup.appendChild(actionButton);
-    }
-    
-    // Get all existing popups
-    const existingPopups = document.querySelectorAll('.on-screen-notification');
-    
-    // If there is already a popup, remove the oldest one
-    if (existingPopups.length >= 1) {
-        document.body.removeChild(existingPopups[0]);
-    }
-    
+    popup.appendChild(collapsedView);
     document.body.appendChild(popup);
-
+	
     // Animate in after a brief moment
     setTimeout(() => {
         popup.style.opacity = '1';
@@ -2311,10 +2242,10 @@ function addToNotificationShade(message, options = {}) {
 	    // --- Standard Expandable Notification ---
         const title = message;
         const appName = options.appName || 'System';
-        const appData = appName === 'System' ? { icon: '/assets/appicon/settings.png' } : apps[appName];
         const description = options.description || '';
-		
-        let iconSrc = '/assets/appicon/settings.png'; // Default system icon
+        const appData = appName === 'System' ? { icon: '/assets/appicon/settings.png' } : apps[appName];
+        
+        let iconSrc = '/assets/appicon/settings.png';
         if (appData && appData.icon) {
             const tempSrc = appData.icon;
             if (tempSrc.startsWith('http') || tempSrc.startsWith('/')) {
@@ -2323,37 +2254,34 @@ function addToNotificationShade(message, options = {}) {
                 iconSrc = `/assets/appicon/${tempSrc}`;
             }
         }
-		
-        notification.innerHTML = ''; // Clear default content
-        notification.style.cursor = 'pointer';
 
-        // --- Create Views using innerHTML for simplicity ---
         const collapsedView = document.createElement('div');
-        collapsedView.style.cssText = 'display: flex; align-items: center; justify-content: space-between; width: 100%;';
+        collapsedView.style.cssText = 'display: flex; align-items: center; justify-content: space-between; width: 100%; cursor: pointer;';
         collapsedView.innerHTML = `
             <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
-                <img src="${iconSrc}" style="width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;">
+                <img src="${iconSrc}" style="width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;" onerror="this.style.display='none'">
                 <div style="display: flex; flex-direction: column; overflow: hidden; justify-content: center;">
-                    <span style="font-size: 14px; font-weight: 500; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${title}</span>
+                    <span style="font-size: 13px; font-weight: 500;">${appName}</span>
+                    <span style="font-size: 15px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; opacity: 0.8;">${title}</span>
                 </div>
             </div>
-            <span class="material-symbols-rounded" style="cursor: pointer; padding: 4px;">expand_more</span>
+            <span class="material-symbols-rounded" style="padding: 4px; font-size: 24px;">expand_more</span>
         `;
 
         const expandedView = document.createElement('div');
         expandedView.style.cssText = 'display: none; flex-direction: column; width: 100%; gap: 8px;';
-        const buttonHtml = options.buttonText ? `<div class="notification-actions" style="margin-top: 8px; display: flex; justify-content: flex-end;"></div>` : '';
+        const buttonHtml = options.buttonText ? `<div class="notification-actions" style="margin-top: 8px; display: flex; justify-content: flex-start;"></div>` : '';
 
         expandedView.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                <span>${appName}</span>
+                <span style="font-weight: 500;">${appName}</span>
                 <span style="opacity: 0.7;">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
             <div style="display: flex; gap: 12px; align-items: flex-start;">
-                 <img src="${iconSrc}" style="width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;">
+                 <img src="${iconSrc}" style="width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;" onerror="this.style.display='none'">
                  <div style="display: flex; flex-direction: column;">
                     <span style="font-weight: 500;">${title}</span>
-                    <p style="margin: 4px 0 0 0; font-size: 14px; opacity: 0.8; line-height: 1.4;">${description}</p>
+                    <p style="margin: 4px 0 0 0; font-size: 14px; opacity: 0.8; line-height: 1.4;">${description || ''}</p>
                  </div>
             </div>
             ${buttonHtml}
@@ -2363,24 +2291,21 @@ function addToNotificationShade(message, options = {}) {
         notification.appendChild(expandedView);
 
         const expandBtn = collapsedView.querySelector('.material-symbols-rounded');
-
         const toggleExpand = () => {
             const isExpanded = expandedView.style.display !== 'none';
             expandedView.style.display = isExpanded ? 'none' : 'flex';
             collapsedView.style.display = isExpanded ? 'flex' : 'none';
+            expandBtn.textContent = isExpanded ? 'expand_more' : 'expand_less';
         };
 
-        expandBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleExpand();
-        });
+        collapsedView.addEventListener('click', toggleExpand);
 
         // 2. Click-to-open functionality
         notification.addEventListener('click', (e) => {
-            if (e.target.closest('button, a')) return; // Ignore clicks on buttons
+            if (e.target.closest('button, a, .material-symbols-rounded')) return;
             if (options.appName && apps[options.appName]) {
                 createFullscreenEmbed(apps[options.appName].url);
-                closeNotification(notification);
+                closeNotification();
             }
         });
 		    
