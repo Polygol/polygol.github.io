@@ -2033,20 +2033,6 @@ function showNotification(message, options = {}) {
     };
 }
 
-    // Function to close a notification
-    function closeNotification(notif) {
-        // Animate out
-        notif.style.opacity = '0';
-        notif.style.transform = 'translateX(50px)';
-        
-        // Remove after animation completes
-        setTimeout(() => {
-            if (shade.contains(notif)) {
-                shade.removeChild(notif);
-            }
-        }, 300);
-    }
-
 // Creates a temporary on-screen popup (similar to original showPopup)
 function createOnScreenPopup(message, options = {}) {
     const popup = document.createElement('div');
