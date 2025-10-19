@@ -2054,7 +2054,8 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.left = '50%';
     popup.style.opacity = '0'; // Start invisible for animation
 	popup.style.filter = 'blur(2.5px)'; // Start blurred for animation
-    popup.style.width = 'clamp(200px, 90%, 500px)';
+    popup.style.maxWidth = '400px';
+    popup.style.width = '90%';
     popup.style.transform = 'translateX(-50%) translateY(-150%)'; // Start off-screen
     popup.style.backgroundColor = 'var(--modal-background)';
     popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(5px)';
@@ -2064,7 +2065,7 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.borderRadius = '35px';
 	popup.style.cornerShape = 'superellipse(1.5)';
     popup.style.zIndex = '9999996';
-    popup.style.transition = 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
+    popup.style.transition = 'all 0.3s cubic-bezier(.3,1.2,.64,1)';
     popup.style.display = 'flex';
     popup.style.alignItems = 'flex-start';
     popup.style.gap = '16px';
@@ -2083,31 +2084,42 @@ function createOnScreenPopup(message, options = {}) {
         }, 500);
     };
     
-    // Check for specific words to determine icon
-    const checkWords = window.checkWords || ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'successfully', 'accepted', 'accept', 'yes'];
-    const closeWords = window.closeWords || ['failed', 'canceled', 'error', 'failure', 'fail', 'cancel', 'rejected', 'reject', 'not', 'no'];
-    
-    let iconType = '';
-    if (options.icon) {
-        iconType = options.icon;
-    } else if (checkWords.some(word => message.toLowerCase().includes(word))) {
-        iconType = 'check_circle';
-    } else if (closeWords.some(word => message.toLowerCase().includes(word))) {
-        iconType = 'error';
-    } else {
-        iconType = 'info';
+    // --- App Icon ---
+    const appName = options.appName || 'System';
+    const appData = appName === 'System' ? { icon: '/assets/appicon/settings.png' } : apps[appName];
+
+    if (appData && appData.icon) {
+        const appIcon = document.createElement('img');
+        const iconSrc = appData.icon;
+        
+        if (iconSrc.startsWith('http') || iconSrc.startsWith('/')) {
+            appIcon.src = iconSrc;
+        } else {
+            appIcon.src = `/assets/appicon/${iconSrc}`;
+        }
+        
+        // Add a fallback in case the image fails to load
+        appIcon.onerror = () => { appIcon.style.display = 'none'; }; // Or set to a default fallback icon
+        
+        appIcon.style.cssText = 'width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;';
+        popup.appendChild(appIcon);
     }
+
+    // --- Container for Text and Buttons ---
+    const contentContainer = document.createElement('div');
+    contentContainer.style.cssText = 'display: flex; flex-direction: column; gap: 8px; flex-grow: 1;';
+
+    // --- Header Text (App Name) ---
+    const appNameEl = document.createElement('div');
+    appNameEl.textContent = appName;
+    appNameEl.style.cssText = 'font-weight: 500; font-size: 13px; opacity: 0.8;';
     
-    // Add icon
-    const icon = document.createElement('span');
-    icon.className = 'material-symbols-rounded';
-    icon.textContent = iconType;
-    popup.appendChild(icon);
-    
-    // Add message text
+    // --- Message Text ---
     const messageText = document.createElement('div');
     messageText.textContent = message;
-    popup.appendChild(messageText);
+    
+    contentContainer.appendChild(appNameEl);
+    contentContainer.appendChild(messageText);
     
     // Check if a button should be added
     if (options.buttonText) {
@@ -2170,15 +2182,6 @@ function createOnScreenPopup(message, options = {}) {
     if (existingPopups.length >= 1) {
         document.body.removeChild(existingPopups[0]);
     }
-    
-    // Recalculate positions for all popups
-    const remainingPopups = document.querySelectorAll('.on-screen-notification');
-    remainingPopups.forEach((p, index) => {
-        p.style.top = `${20 + (index * 70)}px`;
-    });
-    
-    // Position the new popup
-    popup.style.top = `${20 + (remainingPopups.length * 70)}px`;
     
     document.body.appendChild(popup);
 
@@ -2305,33 +2308,72 @@ function addToNotificationShade(message, options = {}) {
         notification.addEventListener('touchend', cancelLongPress);
         notification.addEventListener('touchmove', cancelLongPress); // Cancel on scroll
     } else {
-        // --- Standard Notification ---
+	    // --- Standard Expandable Notification ---
+        const title = message;
         const appName = options.appName || 'System';
-        const appData = apps[appName];
-
-        // 1. Add Header (App Icon, Name, Timestamp)
-        const header = document.createElement('div');
-        header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; opacity: 0.8; font-size: 13px; margin-bottom: 8px;';
-        const appInfo = document.createElement('div');
-        appInfo.style.cssText = 'display: flex; align-items: center; gap: 8px; font-weight: 500;';
-
+        const appData = appName === 'System' ? { icon: '/assets/appicon/settings.png' } : apps[appName];
+        const description = options.description || '';
+		
+        let iconSrc = '/assets/appicon/settings.png'; // Default system icon
         if (appData && appData.icon) {
-            const appIcon = document.createElement('img');
-            appIcon.src = appData.icon.startsWith('/') ? appData.icon : `/assets/appicon/${appData.icon}`;
-            appIcon.style.cssText = 'width: 20px; height: 20px; border-radius: 5px;';
-            appInfo.appendChild(appIcon);
+            const tempSrc = appData.icon;
+            if (tempSrc.startsWith('http') || tempSrc.startsWith('/')) {
+                iconSrc = tempSrc;
+            } else {
+                iconSrc = `/assets/appicon/${tempSrc}`;
+            }
         }
-        
-        const appNameEl = document.createElement('span');
-        appNameEl.textContent = appName;
-        appInfo.appendChild(appNameEl);
-        
-        const timestamp = document.createElement('span');
-        timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+		
+        notification.innerHTML = ''; // Clear default content
+        notification.style.cursor = 'pointer';
 
-        header.appendChild(appInfo);
-        header.appendChild(timestamp);
-        notification.appendChild(header);
+        // --- Create Views using innerHTML for simplicity ---
+        const collapsedView = document.createElement('div');
+        collapsedView.style.cssText = 'display: flex; align-items: center; justify-content: space-between; width: 100%;';
+        collapsedView.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
+                <img src="${iconSrc}" style="width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;">
+                <div style="display: flex; flex-direction: column; overflow: hidden; justify-content: center;">
+                    <span style="font-size: 14px; font-weight: 500; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${title}</span>
+                </div>
+            </div>
+            <span class="material-symbols-rounded" style="cursor: pointer; padding: 4px;">expand_more</span>
+        `;
+
+        const expandedView = document.createElement('div');
+        expandedView.style.cssText = 'display: none; flex-direction: column; width: 100%; gap: 8px;';
+        const buttonHtml = options.buttonText ? `<div class="notification-actions" style="margin-top: 8px; display: flex; justify-content: flex-end;"></div>` : '';
+
+        expandedView.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                <span>${appName}</span>
+                <span style="opacity: 0.7;">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+                 <img src="${iconSrc}" style="width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;">
+                 <div style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 500;">${title}</span>
+                    <p style="margin: 4px 0 0 0; font-size: 14px; opacity: 0.8; line-height: 1.4;">${description}</p>
+                 </div>
+            </div>
+            ${buttonHtml}
+        `;
+
+        notification.appendChild(collapsedView);
+        notification.appendChild(expandedView);
+
+        const expandBtn = collapsedView.querySelector('.material-symbols-rounded');
+
+        const toggleExpand = () => {
+            const isExpanded = expandedView.style.display !== 'none';
+            expandedView.style.display = isExpanded ? 'none' : 'flex';
+            collapsedView.style.display = isExpanded ? 'flex' : 'none';
+        };
+
+        expandBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleExpand();
+        });
 
         // 2. Click-to-open functionality
         notification.addEventListener('click', (e) => {
@@ -2341,53 +2383,7 @@ function addToNotificationShade(message, options = {}) {
                 closeNotification(notification);
             }
         });
-		
-	    // Content container
-	    const contentContainer = document.createElement('div');
-	    contentContainer.style.display = 'flex';
-	    contentContainer.style.gap = '10px';
-	    contentContainer.style.width = '100%';
-	    
-	    let iconType = 'notifications';
-	
-	    let iconTypeForShade = 'notifications'; // Default icon
-	    if (options.icon) { // Prefer explicit icon from options
-	        iconTypeForShade = options.icon;
-	    } else {
-	        iconTypeForShade = 'notifications';
-	    }
-	    
-	    // Create icon
-	    const icon = document.createElement('span');
-	    icon.className = 'material-symbols-rounded';
-	    icon.textContent = iconTypeForShade;
-	    icon.style.fontSize = '24px';
-	    contentContainer.appendChild(icon);
-	    
-	    // Create message text
-	    const messageText = document.createElement('div');
-	    messageText.style.flex = '1';
-	    messageText.style.wordBreak = 'break-word';
-	    messageText.textContent = message;
-	    contentContainer.appendChild(messageText);
-	    
-	    // Close button
-	    const closeBtn = document.createElement('span');
-	    closeBtn.className = 'material-symbols-rounded';
-	    closeBtn.textContent = 'cancel';
-	    closeBtn.style.cursor = 'pointer';
-	    closeBtn.style.fontSize = '16px';
-	    closeBtn.style.opacity = '0.5';
-	    closeBtn.addEventListener('click', (e) => {
-	        e.stopPropagation();
-	        closeNotification(notification);
-	    });
-	    closeBtn.style.transition = 'opacity 0.2s';
-		
-	    contentContainer.appendChild(closeBtn);
-	    
-	    notification.appendChild(contentContainer);
-	    
+		    
 	    // Add action button if specified
 	    if (options.buttonText) {
 	        const buttonContainer = document.createElement('div');
