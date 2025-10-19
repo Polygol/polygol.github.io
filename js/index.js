@@ -2052,7 +2052,7 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.zIndex = '9999996';
     popup.style.transition = 'opacity 0.5s';
     popup.style.display = 'flex';
-    popup.style.alignItems = 'center';
+    popup.style.alignItems = 'flex-start';
     popup.style.gap = '16px';
     popup.style.border = '1px solid var(--glass-border)';
 
