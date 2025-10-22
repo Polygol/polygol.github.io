@@ -14,7 +14,31 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
 (function() {
     const style = document.createElement('style');
     let css = `
-        /* Inject Open Runde Font Faces via jsDelivr CDN */
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
+        
+        *::-webkit-scrollbar {
+            width: 8px; /* Thin scrollbar */
+        }
+        
+        *::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        *::-webkit-scrollbar-thumb {
+        	background-color: var(--search-background);
+        	border-radius: 50px;
+        }
+
+        /* Inject Font Faces */
+        
+        /* Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+        /* Material Symbols */
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0');  
+    
         @font-face {
           font-family: 'Open Runde';
           font-style: normal;
@@ -45,7 +69,7 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
 
         @font-face {
           font-family: 'Inter Numeric';
-          src: url('https://github.com/Polygol/polygol.github.io/raw/refs/heads/main/assets/fonts/InterNumeric.ttf') format('truetype-variations');
+          src: url('/assets/fonts/InterNumeric.ttf') format('truetype-variations');
           font-weight: 100 900; /* Define the supported variable weight range */
           font-style: normal;
         }
@@ -53,14 +77,17 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
         /* Roboto */
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap');
         
+        /* Bricolage Grotesque */
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+        
         /* DynaPuff */
         @import url('https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&display=swap');
         
-        /* DM Serif Display (400) */
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap');
+        /* Domine */
+        @import url('https://fonts.googleapis.com/css2?family=Domine:wght@400..700&display=swap');
         
-        /* Iansui (400) */
-        @import url('https://fonts.googleapis.com/css2?family=Iansui&display=swap');
+        /* Climate Crisis */
+        @import url('https://fonts.googleapis.com/css2?family=Climate+Crisis&display=swap');
         
         /* JetBrains Mono */
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap');
@@ -68,17 +95,19 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
         /* DotGothic16 (400) */
         @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
         
-        /* Patrick Hand (400) */
-        @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+        /* Playpen Sans */
+        @import url('https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@100..800&display=swap');
         
-        /* Rampart One (400) */
-        @import url('https://fonts.googleapis.com/css2?family=Rampart+One&display=swap');
+        /* Jaro */
+        @import url('https://fonts.googleapis.com/css2?family=Jaro:opsz@6..72&display=swap');
         
         /* Doto */
         @import url('https://fonts.googleapis.com/css2?family=Doto:wght@400;700&display=swap'); 
         
         /* Nunito */
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap');
+
+        /* Set Font Faces */
 
         h1, h2, h3, h4, h5, h6 {
         	font-family: 'Open Runde', sans-serif;
