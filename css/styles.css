@@ -519,7 +519,7 @@ input[type="color"]::-moz-color-swatch {
     left: 50%;
     transform: translateX(-50%);
     width: 200px;
-    height: 28px;
+    height: 25px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -532,11 +532,9 @@ input[type="color"]::-moz-color-swatch {
 
 #one-button-nav-handle .nav-pill {
     width: 30px;
-    height: 10px;
-    background-color: transparent;
+    height: 5px;
     border-radius: 5px;
     transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
-    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
 }
 
 #one-button-nav-handle:active .nav-pill {
