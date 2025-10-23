@@ -5939,7 +5939,7 @@ async function createFullscreenEmbed(url) {
         embedContainer.style.transition = 'none';
         
         // Set initial state with rounded corners
-        embedContainer.style.transform = 'scale(0.8)';
+        embedContainer.style.transform = 'scale(0.5)';
         embedContainer.style.opacity = '0';
         embedContainer.style.borderRadius = '35px';
 		embedContainer.style.cornerShape = 'superellipse(1.5)';
@@ -6029,7 +6029,7 @@ async function createFullscreenEmbed(url) {
     embedContainer.className = 'fullscreen-embed';
     
     // Set initial styles BEFORE adding to DOM (removed filter)
-    embedContainer.style.transform = 'scale(0.8)'; 
+    embedContainer.style.transform = 'scale(0.5)'; 
     embedContainer.style.opacity = '0';
     embedContainer.style.borderRadius = '35px';
 	embedContainer.style.cornerShape = 'superellipse(1.5)';
@@ -6226,7 +6226,7 @@ function minimizeFullscreenEmbed(animate = true) {
 
 				persistentClock.style.opacity = '1';
 
-				embedContainer.style.transform = 'scale(0.8)';
+				embedContainer.style.transform = 'scale(0.5)';
                 embedContainer.style.zIndex = '0';
             }, cleanupDelay);
         }
@@ -6663,7 +6663,7 @@ function setupDrawerInteractions() {
 	        // Condition to close: swipe up more than 20% of the screen OR a fast flick up
 	        if (movementPercentage > 20 || isFlickUp) {
 	            // Animate to a shrunken state and then minimize
-	            openEmbed.style.transform = 'translateY(-40px) scale(0.8)'; // Center and shrink
+	            openEmbed.style.transform = 'translateY(-40px) scale(0.5)'; // Center and shrink
 	            openEmbed.style.opacity = '0';
 	            openEmbed.style.borderRadius = '35px';
 				openEmbed.style.cornerShape = 'superellipse(1.5)';
