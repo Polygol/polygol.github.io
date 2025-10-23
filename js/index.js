@@ -5941,8 +5941,10 @@ async function createFullscreenEmbed(url) {
         // Set initial state with rounded corners
         embedContainer.style.transform = 'scale(0.8)';
         embedContainer.style.opacity = '0';
-        embedContainer.style.borderRadius = '25px';
-        embedContainer.style.overflow = 'hidden';
+        embedContainer.style.borderRadius = '35px';
+		embedContainer.style.cornerShape = 'superellipse(1.5)';
+		embedContainer.style.border = '1px solid var(--glass-border)';
+        embedContainer.style.overflow = 'clip';
         embedContainer.style.display = 'block';
 
 		const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
@@ -5966,6 +5968,8 @@ async function createFullscreenEmbed(url) {
 	        embedContainer.style.transform = 'scale(1)';
 	        embedContainer.style.opacity = '1';
 	        embedContainer.style.borderRadius = '0px';
+			embedContainer.style.cornerShape = 'square';
+			embedContainer.style.border = 'none';
 	    }, 10);
         
         // Hide all main UI elements
@@ -6027,9 +6031,11 @@ async function createFullscreenEmbed(url) {
     // Set initial styles BEFORE adding to DOM (removed filter)
     embedContainer.style.transform = 'scale(0.8)'; 
     embedContainer.style.opacity = '0';
-    embedContainer.style.borderRadius = '25px';
-    embedContainer.style.overflow = 'hidden';
-    embedContainer.style.display = 'block';
+    embedContainer.style.borderRadius = '35px';
+	embedContainer.style.cornerShape = 'superellipse(1.5)';
+	embedContainer.style.border = '1px solid var(--glass-border)';
+    embedContainer.style.overflow = 'clip';
+	embedContainer.style.display = 'block';
         
     // IMPORTANT FIX: Set proper z-index and pointer events
     embedContainer.style.pointerEvents = 'auto';
@@ -6136,6 +6142,8 @@ async function createFullscreenEmbed(url) {
         embedContainer.style.transform = 'scale(1)';
         embedContainer.style.opacity = '1';
         embedContainer.style.borderRadius = '0px';
+		embedContainer.style.cornerShape = 'square';
+		embedContainer.style.border = 'none';
     }, 10);
 
     // Pause background animations (Video and Animated Images)
@@ -6546,8 +6554,8 @@ function setupDrawerInteractions() {
 	            // Scale down from 1 to 0.8 as you drag
 	            const scale = 1 - (progress * 0.2);
 	
-	            // Add border radius up to 25px
-	            const borderRadius = progress * 25;
+	            // Add border radius up to 28px
+	            const borderRadius = progress * 28;
 	
 	            // Apply the border now that we're dragging
 	            openEmbed.style.border = '1px solid var(--glass-border)';
@@ -6555,6 +6563,7 @@ function setupDrawerInteractions() {
 	            // Set the new styles
 	            openEmbed.style.transform = `translateY(${translateY}px) scale(${scale})`;
 	            openEmbed.style.opacity = 1 - (progress * 0.5); // Fade out slightly
+				openEmbed.style.cornerShape = 'superellipse(1.5)';
 	            openEmbed.style.borderRadius = `${borderRadius}px`;
 	
 	            // Animate background blur from 1px (blurry) to 0px (clear)
@@ -6565,7 +6574,8 @@ function setupDrawerInteractions() {
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
-	            openEmbed.style.border = '0 solid var(--glass-border)';
+	            openEmbed.style.border = 'none';
+				openEmbed.style.cornerShape = 'square';
 	            
 		    persistentClock.style.opacity = '1';
 	        }
@@ -6655,7 +6665,9 @@ function setupDrawerInteractions() {
 	            // Animate to a shrunken state and then minimize
 	            openEmbed.style.transform = 'translateY(-40px) scale(0.8)'; // Center and shrink
 	            openEmbed.style.opacity = '0';
-	            openEmbed.style.borderRadius = '25px';
+	            openEmbed.style.borderRadius = '35px';
+				openEmbed.style.cornerShape = 'superellipse(1.5)';
+				openEmbed.style.border = '1px solid var(--glass-border)';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
 
                 // NEW: Revert background effects on close
@@ -6666,7 +6678,7 @@ function setupDrawerInteractions() {
 	                minimizeFullscreenEmbed(false); // Call with false to skip animation
 	                swipeOverlay.style.display = 'none';
 	                swipeOverlay.style.pointerEvents = 'none';
-	                openEmbed.style.border = '0 solid var(--glass-border)'; // Clean up border after animation
+	                openEmbed.style.border = 'none'; // Clean up border after animation
 	            }, 300);
 	
 	            // Reset drawer & dock state
@@ -6684,7 +6696,8 @@ function setupDrawerInteractions() {
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
-	            openEmbed.style.border = '0 solid var(--glass-border)'; // Animate border removal
+				openEmbed.style.cornerShape = 'square';
+	            openEmbed.style.border = 'none'; // Animate border removal
 	            
 	            appDrawer.style.opacity = '0';
 				persistentClock.style.opacity = '1';
