@@ -2476,11 +2476,8 @@ input[type="checkbox"]:checked::before {
     corner-shape: superellipse(1.5);
 }
 
-.widget-instance-overlay:active .widget-instance iframe, .widget-instance:active .widget-instance iframe, .widget-instance.is-dragging .widget-instance iframe {
+.widget-instance-overlay:active .widget-instance, .widget-instance.is-dragging .widget-instance {
 	transform: scale(1.04)
-}
-
-.widget-instance-overlay:active, .widget-instance:active .widget-instance-overlay, .widget-instance.is-dragging .widget-instance-overlay {
     cursor: grabbing;
 	filter: brightness(1.5);
 }
@@ -2617,6 +2614,18 @@ input[type="checkbox"]:checked::before {
 		        box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
 				height: calc(100% - 160px);
 				margin-bottom: 80px;
+				transform: scale(0.9);
+            }
+        }
+
+		@media (max-height: 600px) {
+            .app-drawer {
+                border: 1px solid var(--glass-border);
+				border-radius: 50px 50px 0 0 !important;
+				corner-shape: superellipse(1.5);
+		        box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
+				height: calc(100% - 80px) !important;
+				margin-bottom: 0 !important;
 				transform: scale(0.9);
             }
         }
