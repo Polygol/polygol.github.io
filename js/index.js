@@ -5940,6 +5940,7 @@ async function createFullscreenEmbed(url) {
         
         // Set initial state with rounded corners
         embedContainer.style.transform = 'scale(0.5)';
+        embedContainer.style.filter = 'blur(1px)';
         embedContainer.style.opacity = '0';
         embedContainer.style.borderRadius = '35px';
 		embedContainer.style.cornerShape = 'superellipse(1.5)';
@@ -5966,6 +5967,7 @@ async function createFullscreenEmbed(url) {
 	    // Clear background blur and trigger the animation
 	    setTimeout(() => {
 	        embedContainer.style.transform = 'scale(1)';
+			embedContainer.style.filter = 'none';
 	        embedContainer.style.opacity = '1';
 	        embedContainer.style.borderRadius = '0px';
 			embedContainer.style.cornerShape = 'square';
@@ -6028,8 +6030,9 @@ async function createFullscreenEmbed(url) {
     const embedContainer = document.createElement('div');
     embedContainer.className = 'fullscreen-embed';
     
-    // Set initial styles BEFORE adding to DOM (removed filter)
+    // Set initial styles BEFORE adding to DOM
     embedContainer.style.transform = 'scale(0.5)'; 
+    embedContainer.style.filter = 'blur(1px)';
     embedContainer.style.opacity = '0';
     embedContainer.style.borderRadius = '35px';
 	embedContainer.style.cornerShape = 'superellipse(1.5)';
@@ -6140,6 +6143,7 @@ async function createFullscreenEmbed(url) {
     // Clear background blur and trigger the animation
     setTimeout(() => {
         embedContainer.style.transform = 'scale(1)';
+		embedContainer.style.filter = 'none';
         embedContainer.style.opacity = '1';
         embedContainer.style.borderRadius = '0px';
 		embedContainer.style.cornerShape = 'square';
@@ -6206,7 +6210,8 @@ function minimizeFullscreenEmbed(animate = true) {
 	        // If called from a non-gesture context, apply the simple slide-down animation.
 	        if (animate) {
 	            embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-	            embedContainer.style.transform = 'translateY(40px)';
+	            embedContainer.style.transform = 'scale(0.8) translateY(40px)';
+				embedContainer.style.filter = 'blur(1px)';
 	            embedContainer.style.opacity = '0';
 	        }
 	        // If animate is false (from a gesture), the animation is already handled by endDrag.
@@ -6664,6 +6669,7 @@ function setupDrawerInteractions() {
 	        if (movementPercentage > 20 || isFlickUp) {
 	            // Animate to a shrunken state and then minimize
 	            openEmbed.style.transform = 'translateY(-40px) scale(0.5)'; // Center and shrink
+				openEmbed.style.filter = 'blur(1px)';
 	            openEmbed.style.opacity = '0';
 	            openEmbed.style.borderRadius = '35px';
 				openEmbed.style.cornerShape = 'superellipse(1.5)';
@@ -6694,6 +6700,7 @@ function setupDrawerInteractions() {
 	        } else {
 	            // Animate back to the original fullscreen state
 	            openEmbed.style.transform = 'translateY(0px) scale(1)';
+				openEmbed.style.filter = 'none';
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.borderRadius = '0px';
 				openEmbed.style.cornerShape = 'square';
