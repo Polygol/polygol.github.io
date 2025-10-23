@@ -2243,7 +2243,7 @@ function addToNotificationShade(message, options = {}) {
         iframe.style.width = '100%';
         iframe.style.height = options.height || '120px'; // Default height
         iframe.style.border = 'none';
-        iframe.style.borderRadius = '28px'; // Match inner radius
+        iframe.style.borderRadius = '25px'; // Match inner radius
 
         notification.style.padding = '0'; // Remove padding for iframe to fit
         notification.appendChild(iframe);
@@ -6554,8 +6554,8 @@ function setupDrawerInteractions() {
 	            // Scale down from 1 to 0.8 as you drag
 	            const scale = 1 - (progress * 0.2);
 	
-	            // Add border radius up to 28px
-	            const borderRadius = progress * 28;
+	            // Add border radius up to 35px
+	            const borderRadius = progress * 35;
 	
 	            // Apply the border now that we're dragging
 	            openEmbed.style.border = '1px solid var(--glass-border)';
