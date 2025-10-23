@@ -5949,7 +5949,7 @@ async function createFullscreenEmbed(url) {
 
 		const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
 	    const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
-	    const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+	    const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
 	    document.body.style.setProperty('--wallpaper-filter', openFilter);
 	    document.body.style.setProperty('--bg-transform-scale', '1.25');
         
@@ -6044,7 +6044,7 @@ async function createFullscreenEmbed(url) {
 
     const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
     const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
-    const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+    const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
     document.body.style.setProperty('--wallpaper-filter', openFilter);
     document.body.style.setProperty('--bg-transform-scale', '1.25');
     
@@ -6704,7 +6704,7 @@ function setupDrawerInteractions() {
                 // NEW: Apply opening effects on snap-back
                 const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
                 const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
-                const openFilter = `blur(50px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+                const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
                 document.body.style.setProperty('--wallpaper-filter', openFilter);
                 document.body.style.setProperty('--bg-transform-scale', '1.25');
 	        }
