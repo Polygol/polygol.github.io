@@ -5845,11 +5845,23 @@ async function deleteApp(appName) {
 let isAppOpen = false;
 
 async function createFullscreenEmbed(url) {
-	minimizeFullscreenEmbed();
+    // PREVENT DUPLICATES & HANDLE SWITCHING
+    const currentlyOpenEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+    if (currentlyOpenEmbed) {
+        // If the app we want to open is already the one that's open, do nothing.
+        if (currentlyOpenEmbed.dataset.embedUrl === url) {
+            return; 
+        }
+        // Otherwise, an app is open and we want to switch, so minimize the current one.
+        minimizeFullscreenEmbed();
+    }
+
 	closeControls();
 	
-    // When opening a new app, cancel any pending cleanup from a previously closed app.
-    clearTimeout(minimizeCleanupTimeout);
+    // If we are restoring this app from a minimized state, we must cancel its cleanup timer.
+    if (minimizedEmbeds[url]) {
+        clearTimeout(minimizeCleanupTimeout);
+    }
 
 	// 1. Check if Gurapps are disabled entirely
     // This uses the 'gurappsEnabled' variable you already have.
