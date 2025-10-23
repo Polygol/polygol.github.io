@@ -5961,7 +5961,15 @@ async function createFullscreenEmbed(url) {
         void embedContainer.offsetWidth;
         
         // Add transition for all properties (removed filter)
-        embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+		embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+
+        // Pause background animations (Video and Animated Images)
+        await pauseAnimatedBackground();
+        const bgVideo = document.getElementById('background-video');
+        if (bgVideo && !bgVideo.paused) {
+            await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
+            bgVideo.pause();
+        }
 		
 	    // Clear background blur and trigger the animation
 	    setTimeout(() => {
@@ -5984,14 +5992,6 @@ async function createFullscreenEmbed(url) {
             }, 300);
         });
 
-	    // Pause background animations (Video and Animated Images)
-	    await pauseAnimatedBackground();
-	    const bgVideo = document.getElementById('background-video');
-	    if (bgVideo && !bgVideo.paused) {
-	        await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
-	        bgVideo.pause();
-	    }
-        
         // Show the swipe overlay when restoring an app
 	    if (swipeOverlay) {
 	        swipeOverlay.style.display = 'block';
@@ -6136,6 +6136,14 @@ async function createFullscreenEmbed(url) {
     
     // Now add the transition AFTER the element is in the DOM (removed filter)
     embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+
+    // Pause background animations (Video and Animated Images)
+    await pauseAnimatedBackground();
+    const bgVideo = document.getElementById('background-video');
+    if (bgVideo && !bgVideo.paused) {
+        await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
+        bgVideo.pause();
+    }
     
     // Clear background blur and trigger the animation
     setTimeout(() => {
@@ -6145,14 +6153,6 @@ async function createFullscreenEmbed(url) {
 		embedContainer.style.cornerShape = 'square';
 		embedContainer.style.border = 'none';
     }, 10);
-
-    // Pause background animations (Video and Animated Images)
-    await pauseAnimatedBackground();
-    const bgVideo = document.getElementById('background-video');
-    if (bgVideo && !bgVideo.paused) {
-        await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
-        bgVideo.pause();
-    }
     
     // Show the swipe overlay when opening an app
     if (swipeOverlay) {
@@ -8861,8 +8861,20 @@ window.addEventListener('message', async (event) => { // Make listener async
                     response.apps = result;
                 } else if (funcName === 'listLocalStorageKeys') {
                     response.keys = result;
-                // ... (rest of existing response logic) ...
-                } else {
+	            } else if (funcName === 'getLocalStorageItem') {
+	                response.key = args[0]; // Include the key in the response
+	                response.value = result;
+	            } else if (funcName === 'listCommonSettings') {
+	                response.settings = result;
+	            } else if (funcName === 'listRecentWallpapers') {
+	                response.wallpapers = result;
+	            } else if (funcName === 'listIDBDatabases') {
+	                response.databases = result;
+	            } else if (funcName === 'listIDBStores') {
+	                response.stores = result;
+	            } else if (funcName === 'getIDBRecord') {
+	                response.data = result;
+				} else {
                      response.message = result;
                 }
                 
