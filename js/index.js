@@ -7873,10 +7873,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 	    document.getElementById('wallpaper-brightness-slider').value = effects.brightness;
 	    document.getElementById('wallpaper-contrast-slider').value = effects.contrast;
 	    
-	    // Re-apply wallpaper effects as they might be theme-dependent
-	    applyWallpaperEffects();
-		syncUiStates();
-	}); 
+	    // Only re-apply effects and sync UI if no app is open
+	    if (!document.querySelector('.fullscreen-embed[style*="display: block"]')) {
+	        // Re-apply wallpaper effects as they are theme-dependent
+	        applyWallpaperEffects();
+	        syncUiStates();
+	    }
+	});
 	
     // Event listener for minimal mode control
     minimalModeControl.addEventListener('click', function() {
