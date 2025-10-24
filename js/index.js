@@ -4071,19 +4071,36 @@ async function saveWallpaper(file, customStyles = null) {
     try {
         const wallpaperId = `wallpaper_${Date.now()}`;
 
-        // Use custom styles if provided, otherwise reset to default and get them
-        const stylesToApply = customStyles ? customStyles : resetAndApplyDefaultClockStyles();
-        
-        // If applying a preset, manually update the UI controls to match
+        // Use custom styles if provided, otherwise reset UI to default and get those styles.
+        const stylesToApply = customStyles || resetAndApplyDefaultClockStyles();
+
+        // If applying a preset, we need to manually update the UI controls and re-render the clock.
+        // This ensures the visuals match immediately, before the new wallpaper is saved and applied.
         if (customStyles) {
+            // Manually set the value of each UI control from the preset styles.
+            // This avoids dispatching events which could incorrectly save settings to the old wallpaper.
             Object.keys(stylesToApply).forEach(key => {
-                 if (controlIdMap[key]) setControlValueAndDispatch(key, stylesToApply[key]);
+                const controlId = controlIdMap[key];
+                const control = controlId ? document.getElementById(controlId) : null;
+                if (!control) return;
+
+                const value = stylesToApply[key];
+                if (control.type === 'checkbox') {
+                     control.checked = (value === true || value === 'true');
+                } else if (key === 'weight') {
+                     control.value = parseInt(value, 10) / 10;
+                } else {
+                    control.value = value;
+                }
             });
-            applyClockStyles();
+            
+            // After updating controls, directly call all rendering functions to apply the new look.
             applyClockLayout();
+            applyClockStyles();
             applyWallpaperEffects();
+            updateClockAndDate();
         }
-        
+
         if (file.type.startsWith("video/")) {
             await storeWallpaper(wallpaperId, {
                 blob: file,
