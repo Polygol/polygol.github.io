@@ -5579,9 +5579,13 @@ function setupFontSelection() {
     glassSwitch.checked = localStorage.getItem('glassEnabled') === 'true';
     roundnessSlider.value = localStorage.getItem('roundness') || '0';
     // Note: Blur, brightness, and contrast sliders are handled by their own setup logic, but it's safe to include here too.
-    blurSlider.value = localStorage.getItem('wallpaperBlur') || '0';
-    brightnessSlider.value = localStorage.getItem('wallpaperBrightness') || '100';
-    contrastSlider.value = localStorage.getItem('wallpaperContrast') || '100';
+    const isLightModeOnLoad = document.body.classList.contains('light-theme');
+    const initialTheme = isLightModeOnLoad ? 'light' : 'dark';
+    const initialWallpaper = recentWallpapers[currentWallpaperPosition];
+    const initialEffects = initialWallpaper?.clockStyles?.wallpaperEffects?.[initialTheme] || { blur: '0', brightness: '100', contrast: '100' };
+    blurSlider.value = initialEffects.blur;
+    brightnessSlider.value = initialEffects.brightness;
+    contrastSlider.value = initialEffects.contrast;
     document.getElementById('date-format-input').value = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
     document.getElementById('clock-format-input').value = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
 
@@ -7862,9 +7866,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         clearTimeout(sunEffectTimeout);
 	    sunEffectTimeout = setTimeout(updateSunEffect, 3000);
 		
+	    // Update sliders to match the new theme's values
+	    const currentWallpaper = recentWallpapers[currentWallpaperPosition];
+	    const effects = currentWallpaper?.clockStyles?.wallpaperEffects?.[newTheme] || { blur: '0', brightness: '100', contrast: '100' };
+	    document.getElementById('wallpaper-blur-slider').value = effects.blur;
+	    document.getElementById('wallpaper-brightness-slider').value = effects.brightness;
+	    document.getElementById('wallpaper-contrast-slider').value = effects.contrast;
+	    
 	    // Re-apply wallpaper effects as they might be theme-dependent
 	    applyWallpaperEffects();
-	});    
+	}); 
+	
     // Event listener for minimal mode control
     minimalModeControl.addEventListener('click', function() {
         // Toggle minimalMode state
