@@ -321,14 +321,14 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
                 --gurasu-cursor-visible: var(--gurasu-cursor-light);
             }
         
-            /* When the parent signals inactivity, change the active cursor variable */
-            html.gurasuraisu-cursor-hidden {
-                --gurasu-active-cursor: var(--gurasu-cursor-hidden);
-            }
-
-            /* Apply the active cursor to all elements */
+            /* Apply the correct visible cursor to all elements by default */
             * {
-                cursor: var(--gurasu-active-cursor) !important;
+                cursor: var(--gurasu-cursor-visible) !important;
+            }
+    
+            /* When the parent signals inactivity, override all elements to have the hidden cursor */
+            html.gurasuraisu-cursor-hidden * {
+                cursor: var(--gurasu-cursor-hidden) !important;
             }
         `;
     }
