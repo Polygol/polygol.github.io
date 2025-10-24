@@ -239,6 +239,14 @@ body.high-contrast * {
 	backdrop-filter: none !important;
 }
 
+body.high-contrast .persistent-clock {
+	color: var(--text-color);
+}
+
+body.high-contrast .nav-pill {
+	background-color: var(--text-color);
+}
+
 * {
   transition: all 0.3s cubic-bezier(.3,1.2,.64,1) !IMPORTANT; /* Temporary */
   -webkit-tap-highlight-color: transparent;
