@@ -2619,7 +2619,7 @@ input[type="checkbox"]:checked::before {
 
 #wallpaper-picker-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 15px;
 }
 
@@ -2640,8 +2640,8 @@ input[type="checkbox"]:checked::before {
 
 .wallpaper-picker-thumbnail {
     width: 100%;
-    padding-top: 177.77%; /* 16:9 Aspect Ratio */
-    background-size: cover;
+    aspect-ratio: 16 / 9;
+	background-size: cover;
     background-position: center;
     border: 1px solid var(--glass-border);
     border-radius: 25px;
@@ -2656,9 +2656,6 @@ input[type="checkbox"]:checked::before {
 
 .upload-item .wallpaper-picker-thumbnail {
     background-color: var(--search-background);
-    padding-top: 0; /* Override for non-image item */
-    height: 150px; /* Give it a fixed height */
-    width: 150px;
 }
 
 .upload-item .material-symbols-rounded {
