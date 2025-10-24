@@ -307,8 +307,8 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
         css += `
             :root {
                 /* Define the two cursor styles as variables */
-                --gurasu-cursor-dark: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(255,255,255,0.5);stroke:rgba(0,0,0,0.5);stroke-width:1"/></svg>') 10 10, auto;
-                --gurasu-cursor-light: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.7);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto;
+                --gurasu-cursor-dark: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(255,255,255,0.7);stroke:rgba(0,0,0,0.5);stroke-width:1"/></svg>') 10 10, auto;
+                --gurasu-cursor-light: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto;
                 --gurasu-cursor-hidden: none;
                 
                 /* Set the default active cursor (for dark theme) */
