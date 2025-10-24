@@ -235,6 +235,40 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
             --background-color-light-tr: var(--background-color-light);
         }
 
+        /* When animations are disabled */
+        .reduce-animations * {
+            /* Disable all animations */
+            animation: none !important;
+        
+            /* Disable all transitions except opacity */
+            transition: opacity 0.3s ease !important;
+            transition-property: opacity !important;
+        }
+        
+        /* Special handling for clickable elements */
+        .reduce-animations [onclick],
+        .reduce-animations button,
+        .reduce-animations a,
+        .reduce-animations input[type="button"],
+        .reduce-animations input[type="submit"],
+        .reduce-animations .clickable {
+            /* Keep initial state but remove transition */
+            transform: scale(1) !important;
+            transition: opacity 0.3s ease !important;
+        }
+        
+        /* Keep active state functional but without animation */
+        .reduce-animations [onclick]:active,
+        .reduce-animations button:active,
+        .reduce-animations a:active,
+        .reduce-animations input[type="button"]:active,
+        .reduce-animations input[type="submit"]:active,
+        .reduce-animations .clickable:active {
+            /* Apply scale instantly without transition */
+            transform: scale(0.98) !important;
+            transition: none !important;
+        }
+
         input[type="color"] {
             -webkit-appearance: none;
             appearance: none;
