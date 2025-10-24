@@ -113,10 +113,154 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
         	font-family: 'Open Runde', sans-serif;
         }
 
+        .material-symbols-rounded {
+            font-variation-settings:
+                'FILL' 1,
+                'wght' 700,
+                'GRAD' 0,
+                'opsz' 24;
+            vertical-align: middle;
+        }
+
+        :root {
+            --edge-refraction-filter: url('#edge-refraction-only');
+            --sun-shadow: 0 0 0 0 transparent;
+            
+            /* Dark Theme (Default) Variables */
+            --background-color-dark: #1c1c1c;
+            --background-color-dark-tr: rgba(28, 28, 28, 0.7);
+            --text-color-dark: #f9f9f9;
+            --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
+            --modal-background-dark: rgba(51, 51, 51, 0.8);
+            --modal-transparent-dark: rgba(51, 51, 51, 0.7);
+            --search-background-dark: rgba(51, 51, 51, 0.5);
+            --dark-overlay: rgba(51, 51, 51, 0.2);
+            --dark-transparent: rgba(255, 255, 255, 0.1); 
+            --glass-border-dark: rgba(100, 100, 100, 0.2);
+            
+            /* Light Theme Variables */
+            --background-color-light: #f0f0f0;
+        	--background-color-light-tr: rgba(240, 240, 240, 0.7);
+            --text-color-light: #333333;
+            --secondary-text-color-light: rgba(0, 0, 0, 0.7);
+            --modal-background-light: rgba(220, 220, 220, 0.8);
+            --modal-transparent-light: rgba(240, 240, 240, 0.7);
+            --search-background-light: rgba(220, 220, 220, 0.5);
+            --light-overlay: rgba(220, 220, 220, 0.2);
+            --light-transparent: rgba(255, 255, 255, 0.1); 
+            --glass-border-light: rgba(200, 200, 200, 0.2);
+            
+            /* High Contrast Dark Theme Variables */
+            --background-color-dark-highcontrast: #1c1c1c;
+            --background-color-dark-tr-highcontrast: #1c1c1c;
+            --text-color-dark-highcontrast: #f9f9f9;
+            --secondary-text-color-dark-highcontrast: #b3b3b3;
+            --modal-background-dark-highcontrast: #333333;
+            --modal-transparent-dark-highcontrast: #333333;
+            --search-background-dark-highcontrast: #333333;
+            --dark-overlay-highcontrast: #1c1c1c;
+            --dark-transparent-highcontrast: #000000;
+            
+            /* High Contrast Light Theme Variables */
+            --background-color-light-highcontrast: #f0f0f0;
+            --background-color-light-tr-highcontrast: #f0f0f0;
+            --text-color-light-highcontrast: #333333;
+            --secondary-text-color-light-highcontrast: #4d4d4d;
+            --modal-background-light-highcontrast: #dcdcdc;
+            --modal-transparent-light-highcontrast: #f0f0f0;
+            --search-background-light-highcontrast: #dcdcdc;
+            --light-overlay-highcontrast: #f0f0f0;
+            --light-transparent-highcontrast: #ffffff;
+            
+            /* Base Variables */
+            --base-font-size: clamp(16px, 2vw + 1rem, 24px);
+            
+            /* Default to Dark Theme */
+            --background-color: var(--background-color-dark);
+            --background-color-tr: var(--background-color-dark-tr);
+            --background-color-tr-op: var(--background-color-light-tr);
+            --text-color: var(--text-color-dark);
+            --secondary-text-color: var(--secondary-text-color-dark);
+            --modal-background: var(--modal-background-dark);
+            --modal-transparent: var(--modal-transparent-dark);
+            --search-background: var(--search-background-dark);
+            --overlay-color: var(--dark-overlay);
+            --transparent-color: var(--dark-transparent);
+            --glass-border: var(--glass-border-dark);
+        }
+        
+        body.light-theme {
+            --background-color: var(--background-color-light);
+            --background-color-tr: var(--background-color-light-tr);
+            --background-color-tr-op: var(--background-color-dark-tr);
+            --text-color: var(--text-color-light);
+            --secondary-text-color: var(--secondary-text-color-light);
+            --modal-background: var(--modal-background-light);
+            --modal-transparent: var(--modal-transparent-light);
+            --search-background: var(--search-background-light);
+            --search-background-op: var(--search-background-dark);
+            --overlay-color: var(--light-overlay);
+            --transparent-color: var(--light-transparent);
+            --glass-border: var(--glass-border-light);
+        }
+        
+        /* For dark theme (default) with high contrast */
+        body.gurasuraisu-high-contrast:not(.light-theme) {
+            --background-color-tr: var(--background-color-dark-tr-highcontrast);
+            --background-color-tr-op: var(--background-color-light-tr-highcontrast);
+            --secondary-text-color: var(--secondary-text-color-dark-highcontrast);
+            --modal-background: var(--modal-background-dark-highcontrast);
+            --modal-transparent: var(--modal-transparent-dark-highcontrast);
+            --search-background: var(--search-background-dark-highcontrast);
+            --overlay-color: var(--dark-overlay-highcontrast);
+            --transparent-color: var(--dark-transparent-highcontrast);
+            backdrop-filter: none !important;
+        }
+        
+        /* For light theme with high contrast */
+        body.gurasuraisu-high-contrast.light-theme {
+            --background-color-tr: var(--background-color-light-tr-highcontrast);
+            --background-color-tr-op: var(--background-color-dark-tr-highcontrast);
+            --secondary-text-color: var(--secondary-text-color-light-highcontrast);
+            --modal-background: var(--modal-background-light-highcontrast);
+            --modal-transparent: var(--modal-transparent-light-highcontrast);
+            --search-background: var(--search-background-light-highcontrast);
+            --overlay-color: var(--light-overlay-highcontrast);
+            --transparent-color: var(--light-transparent-highcontrast);
+            backdrop-filter: none !important;
+        }
+
         :root.standalone,
         :root.gurasuraisu-high-contrast {
             --background-color-dark-tr: var(--background-color-dark);
             --background-color-light-tr: var(--background-color-light);
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            appearance: none;
+            border: 1px solid var(--glass-border);
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            background: none;
+            border-radius: 999px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        
+        input[type="color"]::-webkit-color-swatch {
+          border: none;
+          border-radius: 999px;
+        }
+        
+        input[type="color"]::-moz-color-swatch {
+          border: 1px solid var(--glass-border);
+          border-radius: 999px;
         }
     `;
     
