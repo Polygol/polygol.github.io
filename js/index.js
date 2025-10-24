@@ -4,6 +4,60 @@ const DB_SCHEMAS = {
     'GuraAIDB': { version: 1, stores: [{ name: 'ChatHistory', options: { keyPath: 'id', autoIncrement: true } }] }
 };
 
+// Wallpaper presets with associated clock styles
+const WALLPAPER_PRESETS = [
+    {
+        name: 'Sprayed Glass',
+        thumbnailUrl: '/assets/img/wallpapers/thumb_sg1.png',
+        fullUrl: '/assets/img/wallpapers/Sprayed%20Glass.png',
+        clockStyles: {
+            font: 'Inter', weight: '1000', colorEnabled: false,
+            stackEnabled: false, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: true, roundness: '1'
+        }
+    },
+    {
+        name: 'Polyhills',
+        thumbnailUrl: '/assets/img/wallpapers/thumb_p1.png',
+        fullUrl: '/assets/img/wallpapers/Polyhills.png',
+        clockStyles: {
+            font: 'Inter', weight: '700', colorEnabled: false,
+            stackEnabled: false, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: false, roundness: '100'
+        }
+    },
+    {
+        name: 'Clouds',
+        thumbnailUrl: '/assets/img/wallpapers/thumb_c1.png',
+        fullUrl: '/assets/img/wallpapers/Clouds.png',
+        clockStyles: {
+            font: 'Climate Crisis', weight: '700', colorEnabled: false,
+            stackEnabled: true, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: true, roundness: '0'
+        }
+    },
+    {
+        name: 'Broadway Top',
+        thumbnailUrl: '/assets/img/wallpapers/thumb_bt1.png',
+        fullUrl: '/assets/img/wallpapers/Broadway%20Top.png',
+        clockStyles: {
+            font: 'Domine', weight: '700', color: '#bfe5bd', colorEnabled: true,
+            stackEnabled: true, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: false, roundness: '0'
+        }
+    },
+    {
+        name: 'Castelo de Óbidos',
+        thumbnailUrl: '/assets/img/wallpapers/thumb_cdo1.png',
+        fullUrl: '/assets/img/wallpapers/Castelo%20de%20Óbidos.png',
+        clockStyles: {
+            font: 'Bricolage Grotesque', weight: '200', color: '#cbfff7', colorEnabled: true,
+            stackEnabled: false, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: false, roundness: '0'
+        }
+    }
+];
+
 function setupServiceWorkerUpdateListener() {
     if ('serviceWorker' in navigator) {
         // This flag is crucial. It checks if a controller was active on page load.
@@ -817,6 +871,86 @@ function closeWidgetPicker() {
     }, 300);
 }
 
+async function applyPresetWallpaper(preset) {
+    closeWallpaperPicker();
+    showPopup(currentLanguage.APPLYING_WALLPAPER || 'Applying new wallpaper...');
+
+    try {
+        const response = await fetch(preset.fullUrl);
+        if (!response.ok) throw new Error('Failed to fetch wallpaper image.');
+
+        const blob = await response.blob();
+        const filename = preset.fullUrl.split('/').pop();
+        const file = new File([blob], filename, { type: blob.type });
+
+        await saveWallpaper(file, preset.clockStyles);
+
+    } catch (error) {
+        console.error('Failed to apply preset wallpaper:', error);
+        showPopup(currentLanguage.WALLPAPER_APPLY_FAIL || 'Failed to apply wallpaper.');
+    }
+}
+
+function openWallpaperPicker() {
+    const drawer = document.getElementById('wallpaper-picker-drawer');
+    const grid = document.getElementById('wallpaper-picker-grid');
+    const blurOverlay = document.getElementById('blurOverlayControls');
+    if (!drawer || !grid || !blurOverlay) return;
+    
+    closeControls();
+    grid.innerHTML = ''; 
+
+    const uploadItem = document.createElement('div');
+    uploadItem.className = 'wallpaper-picker-item upload-item';
+    uploadItem.innerHTML = `
+        <div class="wallpaper-picker-thumbnail">
+            <span class="material-symbols-rounded">upload_file</span>
+        </div>
+        <span class="wallpaper-picker-title">${currentLanguage.UPLOAD_CUSTOM || 'Upload Custom'}</span>
+    `;
+    uploadItem.addEventListener('click', () => {
+        uploadButton.click();
+    });
+    grid.appendChild(uploadItem);
+
+    WALLPAPER_PRESETS.forEach(preset => {
+        const item = document.createElement('div');
+        item.className = 'wallpaper-picker-item';
+
+        const thumbnail = document.createElement('div');
+        thumbnail.className = 'wallpaper-picker-thumbnail';
+        thumbnail.style.backgroundImage = `url('${preset.thumbnailUrl}')`;
+        
+        const title = document.createElement('span');
+        title.className = 'wallpaper-picker-title';
+        title.textContent = preset.name;
+
+        item.appendChild(thumbnail);
+        item.appendChild(title);
+
+        item.addEventListener('click', () => applyPresetWallpaper(preset));
+        grid.appendChild(item);
+    });
+    
+    blurOverlay.style.display = 'block';
+    drawer.classList.add('open');
+    setTimeout(() => {
+        blurOverlay.classList.add('show');
+    }, 10);
+}
+
+function closeWallpaperPicker() {
+    const drawer = document.getElementById('wallpaper-picker-drawer');
+    const blurOverlay = document.getElementById('blurOverlayControls');
+    if (!drawer || !blurOverlay) return;
+
+    drawer.classList.remove('open');
+    blurOverlay.classList.remove('show');
+    setTimeout(() => {
+        blurOverlay.style.display = 'none';
+    }, 300);
+}
+
 function registerWidget(widgetData) {
     if (!availableWidgets[widgetData.appName]) {
         availableWidgets[widgetData.appName] = [];
@@ -1161,7 +1295,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Connect all other settings ---
-    connectGridItem('setting-wallpaper', 'uploadButton');
     connectGridItem('setting-wallpaper-blur', 'wallpaper-blur-slider');
     connectGridItem('setting-wallpaper-brightness', 'wallpaper-brightness-slider');
     connectGridItem('setting-wallpaper-contrast-fx', 'wallpaper-contrast-slider');
@@ -1200,13 +1333,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NEW: Add event listeners to close the widget drawer ---
+	// --- Special handler for Wallpaper Picker ---
+    const wallpaperPickerItem = document.getElementById('setting-wallpaper');
+    if (wallpaperPickerItem) {
+        wallpaperPickerItem.addEventListener('click', () => {
+            closeControls();
+            openWallpaperPicker();
+        });
+    }
+
+	// --- Add event listeners to close drawers ---
+    const blurOverlayControls = document.getElementById('blurOverlayControls');
+
     const widgetDrawer = document.getElementById('widget-picker-drawer');
-    const widgetDrawerHandle = document.querySelector('.widget-drawer-handle');
-    const blurOverlayControls = document.getElementById('blurOverlayControls'); // Get overlay
-    if (widgetDrawer && widgetDrawerHandle && blurOverlayControls) {
-        widgetDrawerHandle.addEventListener('click', closeWidgetPicker);
-        blurOverlayControls.addEventListener('click', closeWidgetPicker); // Add this line
+    if (widgetDrawer) {
+        const handle = widgetDrawer.querySelector('.widget-drawer-handle');
+        if (handle) handle.addEventListener('click', closeWidgetPicker);
+    }
+
+    const wallpaperDrawer = document.getElementById('wallpaper-picker-drawer');
+     if (wallpaperDrawer) {
+        const handle = wallpaperDrawer.querySelector('.wallpaper-drawer-handle');
+        if (handle) handle.addEventListener('click', closeWallpaperPicker);
+    }
+
+    // Generic overlay click to close any/all open drawers
+    if (blurOverlayControls) {
+        blurOverlayControls.addEventListener('click', () => {
+            closeWidgetPicker();
+            closeWallpaperPicker();
+        });
     }
 
     // Album Art click listener (using event delegation for reliability)
@@ -3690,6 +3846,7 @@ async function getVideo() {
 }
 
 wallpaperInput.addEventListener("change", async event => {
+	closeWallpaperPicker(); // Close picker after a file is selected
     let files = Array.from(event.target.files);
     if (files.length === 0) return;
     
@@ -3910,18 +4067,28 @@ async function compressMedia(file) {
     });
 }
 
-async function saveWallpaper(file) {
+async function saveWallpaper(file, customStyles = null) {
     try {
         const wallpaperId = `wallpaper_${Date.now()}`;
+
+        // Use custom styles if provided, otherwise reset to default and get them
+        const stylesToApply = customStyles ? customStyles : resetAndApplyDefaultClockStyles();
         
-        // FIX: Reset clock styles to default for the new wallpaper and get the defaults
-        const defaultClockStyles = resetAndApplyDefaultClockStyles();
+        // If applying a preset, manually update the UI controls to match
+        if (customStyles) {
+            Object.keys(stylesToApply).forEach(key => {
+                 if (controlIdMap[key]) setControlValueAndDispatch(key, stylesToApply[key]);
+            });
+            applyClockStyles();
+            applyClockLayout();
+            applyWallpaperEffects();
+        }
         
         if (file.type.startsWith("video/")) {
             await storeWallpaper(wallpaperId, {
                 blob: file,
                 type: file.type,
-                clockStyles: defaultClockStyles,
+                clockStyles: stylesToApply,
                 widgetLayout: []
             });
             recentWallpapers.unshift({
@@ -3929,7 +4096,7 @@ async function saveWallpaper(file) {
                 type: file.type,
                 isVideo: true,
                 timestamp: Date.now(),
-                clockStyles: defaultClockStyles,
+                clockStyles: stylesToApply,
                 widgetLayout: []
             });
         } else if (file.type === 'image/gif' || file.type === 'image/webp') {
@@ -3938,7 +4105,7 @@ async function saveWallpaper(file) {
                 blob: file,
                 type: file.type,
                 firstFrameDataUrl: firstFrame,
-                clockStyles: defaultClockStyles,
+                clockStyles: stylesToApply,
                 widgetLayout: []
             });
             recentWallpapers.unshift({
@@ -3946,7 +4113,7 @@ async function saveWallpaper(file) {
                 type: file.type,
                 isVideo: false,
                 timestamp: Date.now(),
-                clockStyles: defaultClockStyles,
+                clockStyles: stylesToApply,
                 widgetLayout: []
             });
         } else {
@@ -3954,7 +4121,7 @@ async function saveWallpaper(file) {
             await storeWallpaper(wallpaperId, {
                 dataUrl: compressedData,
                 type: file.type,
-                clockStyles: defaultClockStyles,
+                clockStyles: stylesToApply,
                 widgetLayout: [] // Initialize with an empty layout
             });
             recentWallpapers.unshift({
@@ -3962,7 +4129,7 @@ async function saveWallpaper(file) {
                 type: file.type,
                 isVideo: false,
                 timestamp: Date.now(),
-                clockStyles: defaultClockStyles,
+                clockStyles: stylesToApply,
                 widgetLayout: [] // Also initialize here
             });
         }
