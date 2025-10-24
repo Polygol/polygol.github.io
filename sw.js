@@ -44,6 +44,16 @@ const ASSETS_TO_CACHE = [
   'https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap',
   'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0',
   'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0',
+  "/assets/img/wallpapers/thumb_sg1.png",
+  "/assets/img/wallpapers/Sprayed%20Glass.png",
+  "/assets/img/wallpapers/thumb_p1.png",
+  "/assets/img/wallpapers/Polyhills.png",
+  "/assets/img/wallpapers/thumb_c1.png",
+  "/assets/img/wallpapers/Clouds.png",
+  "/assets/img/wallpapers/thumb_bt1.png",
+  "/assets/img/wallpapers/Broadway%20Top.png",
+  "/assets/img/wallpapers/thumb_cdo1.png",
+  "/assets/img/wallpapers/Castelo%20de%20Óbidos.png"
 ];
 
 // INSTALL: Cache all assets. This now uses a single, simpler call.
