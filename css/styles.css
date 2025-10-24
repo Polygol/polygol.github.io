@@ -206,6 +206,7 @@ body.light-theme {
     --overlay-color: var(--light-overlay);
     --transparent-color: var(--light-transparent);
     --glass-border: var(--glass-border-light);
+	--polygol-cursor-visible: var(--polygol-cursor-light);
 }
 
 /* For dark theme (default) with high contrast */
@@ -290,11 +291,13 @@ input[type="submit"]:active,
 }
 
         body {
-            --polygol-cursor-visible: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto;
-            --polygol-cursor-hidden: none;
+            --polygol-cursor-dark: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(255,255,255,0.5);stroke:rgba(0,0,0,0.5);stroke-width:1"/></svg>') 10 10, auto;
+            --polygol-cursor-light: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto;
+			--polygol-cursor-hidden: none;
 
-            /* Set the default active cursor */
-            --polygol-active-cursor: var(--polygol-cursor-visible);
+	        /* Set the default active cursor (for dark theme) */
+	        --polygol-cursor-visible: var(--polygol-cursor-dark);
+	        --polygol-active-cursor: var(--polygol-cursor-visible);
 			
             font-family: 'Inter', sans-serif;
             background-color: var(--background-color);
