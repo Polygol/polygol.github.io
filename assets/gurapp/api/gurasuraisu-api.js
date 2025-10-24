@@ -205,7 +205,7 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
         }
         
         /* For dark theme (default) with high contrast */
-        body.gurasuraisu-high-contrast:not(.light-theme) {
+        html.gurasuraisu-high-contrast body:not(.light-theme) {
             --background-color-tr: var(--background-color-dark-tr-highcontrast);
             --background-color-tr-op: var(--background-color-light-tr-highcontrast);
             --secondary-text-color: var(--secondary-text-color-dark-highcontrast);
@@ -218,7 +218,7 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
         }
         
         /* For light theme with high contrast */
-        body.gurasuraisu-high-contrast.light-theme {
+        html.gurasuraisu-high-contrast body.light-theme {
             --background-color-tr: var(--background-color-light-tr-highcontrast);
             --background-color-tr-op: var(--background-color-dark-tr-highcontrast);
             --secondary-text-color: var(--secondary-text-color-light-highcontrast);
@@ -230,8 +230,7 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
             backdrop-filter: none !important;
         }
 
-        :root.standalone,
-        :root.gurasuraisu-high-contrast {
+        :root.standalone {
             --background-color-dark-tr: var(--background-color-dark);
             --background-color-light-tr: var(--background-color-light);
         }
