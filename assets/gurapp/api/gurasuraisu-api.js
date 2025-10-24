@@ -214,7 +214,7 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
             --search-background: var(--search-background-dark-highcontrast);
             --overlay-color: var(--dark-overlay-highcontrast);
             --transparent-color: var(--dark-transparent-highcontrast);
-            backdrop-filter: none !important;
+            --glass-border: var(--secondary-text-color-dark-highcontrast);
         }
         
         /* For light theme with high contrast */
@@ -227,6 +227,11 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
             --search-background: var(--search-background-light-highcontrast);
             --overlay-color: var(--light-overlay-highcontrast);
             --transparent-color: var(--light-transparent-highcontrast);
+            --glass-border: var(--secondary-text-color-light-highcontrast);
+        }
+
+        /* Universal backdrop-filter removal for high contrast */
+        html.gurasuraisu-high-contrast * {
             backdrop-filter: none !important;
         }
 
