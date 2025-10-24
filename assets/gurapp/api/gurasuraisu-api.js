@@ -14,23 +14,6 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
 (function() {
     const style = document.createElement('style');
     let css = `
-        * {
-          -webkit-tap-highlight-color: transparent;
-        }
-        
-        *::-webkit-scrollbar {
-            width: 8px; /* Thin scrollbar */
-        }
-        
-        *::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        
-        *::-webkit-scrollbar-thumb {
-        	background-color: var(--search-background);
-        	border-radius: 50px;
-        }
-
         /* Inject Font Faces */
         
         /* Inter */
@@ -38,7 +21,40 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
 
         /* Material Symbols */
         @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0');  
-    
+        
+        /* Roboto */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap');
+        
+        /* Bricolage Grotesque */
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+        
+        /* DynaPuff */
+        @import url('https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&display=swap');
+        
+        /* Domine */
+        @import url('https://fonts.googleapis.com/css2?family=Domine:wght@400..700&display=swap');
+        
+        /* Climate Crisis */
+        @import url('https://fonts.googleapis.com/css2?family=Climate+Crisis&display=swap');
+        
+        /* JetBrains Mono */
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap');
+        
+        /* DotGothic16 (400) */
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+        
+        /* Playpen Sans */
+        @import url('https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@100..800&display=swap');
+        
+        /* Jaro */
+        @import url('https://fonts.googleapis.com/css2?family=Jaro:opsz@6..72&display=swap');
+        
+        /* Doto */
+        @import url('https://fonts.googleapis.com/css2?family=Doto:wght@400;700&display=swap'); 
+        
+        /* Nunito */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap');
+
         @font-face {
           font-family: 'Open Runde';
           font-style: normal;
@@ -73,39 +89,23 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
           font-weight: 100 900; /* Define the supported variable weight range */
           font-style: normal;
         }
+    
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
         
-        /* Roboto */
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap');
+        *::-webkit-scrollbar {
+            width: 8px; /* Thin scrollbar */
+        }
         
-        /* Bricolage Grotesque */
-        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+        *::-webkit-scrollbar-track {
+            background: transparent;
+        }
         
-        /* DynaPuff */
-        @import url('https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&display=swap');
-        
-        /* Domine */
-        @import url('https://fonts.googleapis.com/css2?family=Domine:wght@400..700&display=swap');
-        
-        /* Climate Crisis */
-        @import url('https://fonts.googleapis.com/css2?family=Climate+Crisis&display=swap');
-        
-        /* JetBrains Mono */
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap');
-        
-        /* DotGothic16 (400) */
-        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
-        
-        /* Playpen Sans */
-        @import url('https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@100..800&display=swap');
-        
-        /* Jaro */
-        @import url('https://fonts.googleapis.com/css2?family=Jaro:opsz@6..72&display=swap');
-        
-        /* Doto */
-        @import url('https://fonts.googleapis.com/css2?family=Doto:wght@400;700&display=swap'); 
-        
-        /* Nunito */
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap');
+        *::-webkit-scrollbar-thumb {
+        	background-color: var(--search-background);
+        	border-radius: 50px;
+        }
 
         /* Set Font Faces */
 
