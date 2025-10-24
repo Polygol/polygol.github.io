@@ -2634,10 +2634,6 @@ input[type="checkbox"]:checked::before {
     transition: background-color 0.2s;
 }
 
-.wallpaper-picker-item:hover {
-    background-color: var(--transparent-color);
-}
-
 .wallpaper-picker-thumbnail {
     width: 100%;
     aspect-ratio: 16 / 9;
