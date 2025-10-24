@@ -7875,6 +7875,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 	    
 	    // Re-apply wallpaper effects as they might be theme-dependent
 	    applyWallpaperEffects();
+		syncUiStates();
 	}); 
 	
     // Event listener for minimal mode control
