@@ -2604,6 +2604,74 @@ input[type="checkbox"]:checked::before {
     z-index: 2; /* Must be above the iframe but below the drag overlay */
 }
 
+.wallpaper-drawer-handle {
+    width: 100%;
+    padding: 15px 0;
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.wallpaper-drawer-handle .app-drawer-handle {
+    top: 0;
+}
+
+#wallpaper-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.wallpaper-picker-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 18px;
+    transition: background-color 0.2s;
+}
+
+.wallpaper-picker-item:hover {
+    background-color: var(--transparent-color);
+}
+
+.wallpaper-picker-thumbnail {
+    width: 100%;
+    padding-top: 177.77%; /* 16:9 Aspect Ratio */
+    background-size: cover;
+    background-position: center;
+    border: 1px solid var(--glass-border);
+    border-radius: 25px;
+    corner-shape: superellipse(1.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    box-shadow: var(--sun-shadow);
+    overflow: hidden;
+}
+
+.upload-item .wallpaper-picker-thumbnail {
+    background-color: var(--search-background);
+    padding-top: 0; /* Override for non-image item */
+    height: 150px; /* Give it a fixed height */
+    width: 150px;
+}
+
+.upload-item .material-symbols-rounded {
+    font-size: 48px;
+    color: var(--secondary-text-color);
+}
+
+.wallpaper-picker-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
         @media (min-width: 800px) {
             .app-drawer {
                 left: 5vw;
