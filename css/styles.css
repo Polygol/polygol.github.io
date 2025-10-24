@@ -235,7 +235,7 @@ body.high-contrast.light-theme {
 }
 
 /* Universal backdrop-filter removal for high contrast */
-body.high-contrast * {
+body.high-contrast *:not(#brightness-overlay):not(#temperature-overlay) {
 	backdrop-filter: none !important;
 }
 
