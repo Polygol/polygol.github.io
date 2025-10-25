@@ -103,26 +103,39 @@
             <!-- Part 3: Apply the turbulence only to the edge mask -->
             <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"></feComposite>
         
-            <!-- Part 4: Create a displacement map that is neutral (50% gray) in the center
-                 and has the turbulence pattern at the edges. This prevents the center of the
-                 graphic from being distorted. -->
-            <feFlood flood-color="#808080" result="neutral_base"></feFlood>
-            <feMerge result="displacement_map">
-                <feMergeNode in="neutral_base"></feMergeNode>
-                <feMergeNode in="edge_turbulence"></feMergeNode>
+            <!-- Part 4: Create the full edge refraction effect -->
+            <!-- Pass 1: A positive scale refracts the top and left edges. -->
+            <feDisplacementMap result="disp_positive" yChannelSelector="G" xChannelSelector="R" scale="10" in2="edge_turbulence" in="SourceGraphic"></feDisplacementMap>
+            <!-- Pass 2: A negative scale refracts the bottom and right edges. -->
+            <feDisplacementMap in="SourceGraphic" in2="edge_turbulence" scale="-10" xChannelSelector="R" yChannelSelector="G" result="disp_negative"></feDisplacementMap>
+            <!-- Blend the two passes to get the complete refraction effect. -->
+            <feBlend in="disp_positive" in2="disp_negative" mode="lighten" result="refraction_effect"></feBlend>
+    
+            <!-- Part 5: Create the non-displaced center graphic -->
+            <feDisplacementMap in="SourceGraphic" in2="edge_turbulence" scale="0" xChannelSelector="R" yChannelSelector="G" result="centered_graphic"></feDisplacementMap>
+            
+            <!-- Part 6: Create a mask for the center, leaving a 20px border -->
+            <!-- Start with a solid rectangle -->
+            <feFlood flood-color="white" result="full_rect"></feFlood>
+            <!-- Erode it by 20px to create the inset center mask -->
+            <feMorphology in="full_rect" operator="erode" radius="10" result="center_mask"></feMorphology>
+            
+            <!-- Part 7: Combine the two effects using the mask -->
+            <!-- Keep the refracted effect only where it is *outside* the center mask (i.e., the border) -->
+            <feComposite in="refraction_effect" in2="center_mask" operator="out" result="border_part"></feComposite>
+            <!-- Keep the centered graphic only where it is *inside* the center mask -->
+            <feComposite result="center_part" operator="in" in2="center_mask" in="centered_graphic"></feComposite>
+            
+            <!-- Part 8: Merge the final border and center parts together -->
+            <feMerge result="final_image">
+                <feMergeNode in="border_part"></feMergeNode>
+                <feMergeNode in="center_part"></feMergeNode>
             </feMerge>
-        
-            <!-- Part 5: Apply the displacement twice and combine the results. -->
-            <!-- Pass 1: A positive scale refracts the top and left edges inward correctly. -->
-            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="15" xChannelSelector="R" yChannelSelector="G" result="disp_positive"></feDisplacementMap>
-            
-            <!-- Pass 2: A negative scale refracts the bottom and right edges inward correctly. -->
-            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="-15" xChannelSelector="R" yChannelSelector="G" result="disp_negative"></feDisplacementMap>
-            
-            <!-- Part 6: Blend the two results. The 'lighten' mode takes the non-transparent pixels
-                 from both passes. Since the "incorrect" refractions are pushed into transparent
-                 areas, this effectively combines the correctly refracted edges from both passes. -->
-            <feBlend in="disp_positive" in2="disp_negative" mode="lighten"></feBlend>
+    
+            <!-- Part 9: Adjust final opacity -->
+            <feComponentTransfer in="final_image" result="final_output">
+                <feFuncA type="linear" slope="0.95"></feFuncA>
+            </feComponentTransfer>
         </filter>
     </svg>
 
