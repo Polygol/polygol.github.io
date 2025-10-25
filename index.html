@@ -105,9 +105,9 @@
         
             <!-- Part 4: Create the full edge refraction effect -->
             <!-- Pass 1: A positive scale refracts the top and left edges. -->
-            <feDisplacementMap result="disp_positive" yChannelSelector="G" xChannelSelector="R" scale="10" in2="edge_turbulence" in="SourceGraphic"></feDisplacementMap>
+            <feDisplacementMap result="disp_positive" yChannelSelector="G" xChannelSelector="R" scale="15" in2="edge_turbulence" in="SourceGraphic"></feDisplacementMap>
             <!-- Pass 2: A negative scale refracts the bottom and right edges. -->
-            <feDisplacementMap in="SourceGraphic" in2="edge_turbulence" scale="-10" xChannelSelector="R" yChannelSelector="G" result="disp_negative"></feDisplacementMap>
+            <feDisplacementMap in="SourceGraphic" in2="edge_turbulence" scale="-15" xChannelSelector="R" yChannelSelector="G" result="disp_negative"></feDisplacementMap>
             <!-- Blend the two passes to get the complete refraction effect. -->
             <feBlend in="disp_positive" in2="disp_negative" mode="lighten" result="refraction_effect"></feBlend>
     
