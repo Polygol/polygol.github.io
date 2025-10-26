@@ -2545,6 +2545,11 @@ input[type="checkbox"]:checked::before {
 	pointer-events: auto;
 }
 
+.widget-drawer.open .drawer-handle,
+.widget-drawer.open #one-button-nav-handle {
+	display: none !important
+}
+
 .widget-drawer-handle {
     width: 100%;
     padding: 15px 0;
