@@ -6226,21 +6226,23 @@ async function createFullscreenEmbed(url) {
         '/transfer/index.html',
         'https://kirbindustries.gitbook.io/polygol'
     ];
-    const isInternalTool = internalToolUrls.includes(url);
-
-    // If the URL is not for an installed app and not an internal tool, block it.
-    if (!appName && !isInternalTool) {
-        console.warn(`Attempted to open an unknown app URL: ${url}`);
-        showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
-        return; 
-    }
-
-    // Fallback app details for tools/allowlisted URLs
-    let appDetails;
-    if (appName) {
-        appDetails = apps[appName];
-    } else { // It must be an internal tool to get this far
-        appDetails = {
+	
+	const isInternalTool = internalToolUrls.includes(url);
+	const isGoogleForm = url.startsWith('https://docs.google.com/forms/');
+	
+	// If the URL is not for an installed app, an internal tool, or a Google Form, block it.
+	if (!appName && !isInternalTool && !isGoogleForm) {
+	    console.warn(`Attempted to open an unknown app or non-allowlisted URL: ${url}`);
+	    showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
+	    return;
+	}
+	
+	// Fallback app details for tools/allowlisted URLs
+	let appDetails;
+	if (appName) {
+	    appDetails = apps[appName];
+	} else { // It must be an internal tool or Google Form to get this far
+	    appDetails = {
             name: 'System Tool',
             icon: '/assets/appicon/system.png', // A generic system icon
             url: url
