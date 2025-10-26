@@ -4,6 +4,8 @@ const DB_SCHEMAS = {
     'GuraAIDB': { version: 1, stores: [{ name: 'ChatHistory', options: { keyPath: 'id', autoIncrement: true } }] }
 };
 
+const WALLPAPER_SUBMISSION_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeSYSJalaX0HCZe0helcK5NCuc0U47tQc6KaO1OAsBs5HxK1A/viewform?embedded=true';
+
 // Wallpaper presets with associated clock styles
 const WALLPAPER_PRESETS = [
     {
@@ -1462,6 +1464,14 @@ document.addEventListener('DOMContentLoaded', () => {
      if (wallpaperDrawer) {
         const handle = wallpaperDrawer.querySelector('.wallpaper-drawer-handle');
         if (handle) handle.addEventListener('click', closeWallpaperPicker);
+    }
+
+	const wallpaperSubmitBtn = document.getElementById('wallpaper-submit-btn');
+    if (wallpaperSubmitBtn) {
+        wallpaperSubmitBtn.addEventListener('click', () => {
+            closeWallpaperPicker();
+            createFullscreenEmbed(WALLPAPER_SUBMISSION_URL);
+        });
     }
 
     // Generic overlay click to close any/all open drawers
