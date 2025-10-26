@@ -971,13 +971,6 @@ async function applyPresetWallpaper(preset) {
     }
 }
 
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-}
-
 function openWallpaperPicker() {
     const drawer = document.getElementById('wallpaper-picker-drawer');
     const content = drawer.querySelector('.widget-drawer-content');
@@ -1006,7 +999,10 @@ function openWallpaperPicker() {
 
     // 2. Shuffle a copy of the presets array
     const shuffledPresets = [...WALLPAPER_PRESETS];
-    shuffleArray(shuffledPresets);
+    for (let i = shuffledPresets.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledPresets[i], shuffledPresets[j]] = [shuffledPresets[j], shuffledPresets[i]];
+    }
 
     // 3. Create and append items for each shuffled preset
     shuffledPresets.forEach(preset => {
@@ -1547,9 +1543,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
 		syncUiStates();
-		customizeModal.scrollTop = 0; // Scroll to top
 		persistentClock.style.opacity = '0';
 		customizeModal.style.display = 'block';
+		customizeModal.scrollTop = 0; // Scroll to top
 		blurOverlayControls.style.display = 'block';
 	        setTimeout(() => {
 		        customizeModal.classList.add('show');
