@@ -8,6 +8,10 @@ const DB_SCHEMAS = {
 const WALLPAPER_PRESETS = [
     {
         name: 'Sprayed Glass',
+        description: 'Oops, sorry, I spilled the glass.',
+        artist: '', // Internal, we made it
+        sourceUrl: '', // Internal, no source
+        license: '', // Internal, license is same as repo
         thumbnailUrl: '/assets/img/wallpapers/thumb_sg1.png',
         fullUrl: '/assets/img/wallpapers/Sprayed%20Glass.png',
         clockStyles: {
@@ -22,6 +26,10 @@ const WALLPAPER_PRESETS = [
     },
     {
         name: 'Polyhills',
+        description: 'The classic Polygol hills background. Yummy?',
+        artist: '', // Internal, we made it
+        sourceUrl: '', // Internal, no source
+        license: '', // Internal, license is same as repo
         thumbnailUrl: '/assets/img/wallpapers/thumb_p1.png',
         fullUrl: '/assets/img/wallpapers/Polyhills.png',
         clockStyles: {
@@ -36,6 +44,10 @@ const WALLPAPER_PRESETS = [
     },
     {
         name: 'Clouds',
+        description: 'Fluffy fluddly floofy cloudy clouds',
+        artist: '', // Internal, we made it
+        sourceUrl: '', // Internal, no source
+        license: '', // Internal, license is same as repo
         thumbnailUrl: '/assets/img/wallpapers/thumb_c1.png',
         fullUrl: '/assets/img/wallpapers/Clouds.png',
         clockStyles: {
@@ -49,7 +61,49 @@ const WALLPAPER_PRESETS = [
         }
     },
     {
+        name: 'Gaty and Two',
+        description: 'Oh my fence!',
+        artist: 'HTwins.net',
+        sourceUrl: 'https://youtu.be/xXvSiWCCvhQ&t=987', 
+        license: '© 2023 Jacknjellify',
+        thumbnailUrl: '/assets/img/wallpapers/thumb_gat1E.png',
+        fullUrl: '/assets/img/wallpapers/Gaty%20and%20Two%20%28E%29.png',
+        clockStyles: {
+            font: 'Inter', weight: '1000', colorEnabled: false,
+            stackEnabled: false, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: true, roundness: '100',
+			clockPosX: '0', clockPosY: '20',
+			wallpaperEffects: {
+                light: { blur: '0', brightness: '100', contrast: '100' },
+                dark: { blur: '0', brightness: '50', contrast: '150' }
+            }
+        }
+    },
+    {
+        name: 'Depressed Two',
+        description: 'h',
+        artist: 'HTwins.net',
+        sourceUrl: 'https://youtu.be/yyjAYG89-N0&t=1535', 
+        license: '© 2025 Jacknjellify',
+        thumbnailUrl: '/assets/img/wallpapers/thumb_dt1E.png',
+        fullUrl: '/assets/img/wallpapers/Depressed%20Two%20%28E%29.png',
+        clockStyles: {
+            font: 'Inter', weight: '1000', colorEnabled: false,
+            stackEnabled: false, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: true, roundness: '100',
+			clockPosX: '0', clockPosY: '20',
+			wallpaperEffects: {
+                light: { blur: '0', brightness: '100', contrast: '100' },
+                dark: { blur: '0', brightness: '50', contrast: '150' }
+            }
+        }
+    },
+    {
         name: 'Broadway Top',
+        description: 'Historic folly, by Capability Brown, with exhibitions and links to the Arts and Craft Movement.',
+        artist: '', // Internal, we made it
+        sourceUrl: '', // Internal, no source
+        license: '', // Internal, license is same as repo
         thumbnailUrl: '/assets/img/wallpapers/thumb_bt1.png',
         fullUrl: '/assets/img/wallpapers/Broadway%20Top.png',
         clockStyles: {
@@ -64,6 +118,10 @@ const WALLPAPER_PRESETS = [
     },
     {
         name: 'Castelo de Óbidos',
+        description: 'Grand medieval castle with roots dating to the 9th century & hotel rooms you can book inside.',
+        artist: '', // Internal, we made it
+        sourceUrl: '', // Internal, no source
+        license: '', // Internal, license is same as repo
         thumbnailUrl: '/assets/img/wallpapers/thumb_cdo1.png',
         fullUrl: '/assets/img/wallpapers/Castelo%20de%20Óbidos.png',
         clockStyles: {
@@ -911,47 +969,75 @@ async function applyPresetWallpaper(preset) {
     }
 }
 
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
 function openWallpaperPicker() {
     const drawer = document.getElementById('wallpaper-picker-drawer');
     const grid = document.getElementById('wallpaper-picker-grid');
     const blurOverlay = document.getElementById('blurOverlayControls');
     if (!drawer || !grid || !blurOverlay) return;
-    
-    closeControls();
-    grid.innerHTML = ''; 
 
+    closeControls();
+    grid.innerHTML = '';
+
+    // 1. Always add the Upload item first
     const uploadItem = document.createElement('div');
     uploadItem.className = 'wallpaper-picker-item upload-item';
     uploadItem.innerHTML = `
         <div class="wallpaper-picker-thumbnail">
             <span class="material-symbols-rounded">upload_file</span>
         </div>
-        <span class="wallpaper-picker-title">${currentLanguage.UPLOAD_CUSTOM || 'Upload Custom'}</span>
     `;
     uploadItem.addEventListener('click', () => {
         uploadButton.click();
+        closeWallpaperPicker(); 
     });
     grid.appendChild(uploadItem);
 
-    WALLPAPER_PRESETS.forEach(preset => {
+    // 2. Shuffle a copy of the presets array
+    const shuffledPresets = [...WALLPAPER_PRESETS];
+    shuffleArray(shuffledPresets);
+
+    // 3. Create and append items for each shuffled preset
+    shuffledPresets.forEach(preset => {
         const item = document.createElement('div');
         item.className = 'wallpaper-picker-item';
-
-        const thumbnail = document.createElement('div');
-        thumbnail.className = 'wallpaper-picker-thumbnail';
-        thumbnail.style.backgroundImage = `url('${preset.thumbnailUrl}')`;
-        
-        const title = document.createElement('span');
-        title.className = 'wallpaper-picker-title';
-        title.textContent = preset.name;
-
-        item.appendChild(thumbnail);
-        item.appendChild(title);
-
         item.addEventListener('click', () => applyPresetWallpaper(preset));
+
+        let detailsHTML = `<span class="wallpaper-picker-title">${preset.name}</span>`;
+
+        if (preset.description) {
+            detailsHTML += `<p class="wallpaper-picker-description">${preset.description}</p>`;
+        }
+        if (preset.artist) {
+            detailsHTML += `<p class="wallpaper-picker-artist">By ${preset.artist}</p>`;
+        }
+
+        let linksHTML = '';
+        if (preset.sourceUrl) {
+            linksHTML += `<a href="${preset.sourceUrl}" target="_blank" class="wallpaper-picker-badge" onclick="event.stopPropagation()">Source</a>`;
+        }
+        if (preset.license) {
+            linksHTML += `<span class="wallpaper-picker-badge">${preset.license}</span>`;
+        }
+        if (linksHTML) {
+            detailsHTML += `<div class="wallpaper-picker-links">${linksHTML}</div>`;
+        }
+
+        item.innerHTML = `
+            <div class="wallpaper-picker-thumbnail" style="background-image: url('${preset.thumbnailUrl}')"></div>
+            <div class="wallpaper-picker-details">
+                ${detailsHTML}
+            </div>
+        `;
         grid.appendChild(item);
     });
-    
+
     blurOverlay.style.display = 'block';
     drawer.classList.add('open');
     setTimeout(() => {
