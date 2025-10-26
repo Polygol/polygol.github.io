@@ -1023,7 +1023,7 @@ function openWallpaperPicker() {
 
         let linksHTML = '';
         if (preset.sourceUrl) {
-            linksHTML += `<a href="${preset.sourceUrl}" target="_blank" class="wallpaper-picker-badge" onclick="event.stopPropagation()">Source</a>`;
+            linksHTML += `<a href="${preset.sourceUrl}" target="_blank" class="wallpaper-picker-badge" onclick="event.stopPropagation()">Source<span class="material-symbols-rounded">arrow_outward</span></a>`;
         }
         if (preset.license) {
             linksHTML += `<span class="wallpaper-picker-badge">${preset.license}</span>`;
