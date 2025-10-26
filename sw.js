@@ -1,4 +1,4 @@
-const CACHE_NAME = 'polygol-cache-v4'; // Bump version for new SW logic
+const CACHE_NAME = 'polygol-cache-v4.1';
 
 const ASSETS_TO_CACHE = [
   '/assets/img/regular-expressive-onload.webp',
