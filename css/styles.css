@@ -2559,7 +2559,7 @@ input[type="checkbox"]:checked::before {
 }
 
 .widget-drawer-header {
-    padding: 15px 30px 15px;
+    padding: 15px 40px 15px;
     flex-shrink: 0;
     display: flex;
     justify-content: space-between;
@@ -2580,6 +2580,10 @@ input[type="checkbox"]:checked::before {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.drawer-header-button .material-symbols-rounded {
+	font-size: 18px;
 }
 
 .widget-drawer-header h2 {
