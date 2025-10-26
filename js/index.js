@@ -873,10 +873,12 @@ function renderWidgets() {
 
 function openWidgetPicker() {
     const drawer = document.getElementById('widget-picker-drawer');
+    const content = drawer.querySelector('.widget-drawer-content');
     const grid = document.getElementById('widget-picker-grid');
     const blurOverlay = document.getElementById('blurOverlayControls');
-    if (!drawer || !grid || !blurOverlay) return;
+    if (!drawer || !grid || !blurOverlay || !content) return;
     
+    content.scrollTop = 0; // Scroll to top
     grid.innerHTML = ''; // Clear old items
 
     // Check if there are any available widgets
@@ -978,11 +980,13 @@ function shuffleArray(array) {
 
 function openWallpaperPicker() {
     const drawer = document.getElementById('wallpaper-picker-drawer');
+    const content = drawer.querySelector('.widget-drawer-content');
     const grid = document.getElementById('wallpaper-picker-grid');
     const blurOverlay = document.getElementById('blurOverlayControls');
-    if (!drawer || !grid || !blurOverlay) return;
+    if (!drawer || !grid || !blurOverlay || !content) return;
 
     closeControls();
+    content.scrollTop = 0; // Scroll to top
     grid.innerHTML = '';
 
     // 1. Always add the Upload item first
@@ -990,8 +994,9 @@ function openWallpaperPicker() {
     uploadItem.className = 'wallpaper-picker-item upload-item';
     uploadItem.innerHTML = `
         <div class="wallpaper-picker-thumbnail">
-            <span class="material-symbols-rounded">upload_file</span>
+            <span class="material-symbols-rounded">add</span>
         </div>
+	    <span class="wallpaper-picker-title">${currentLanguage.UPLOAD_CUSTOM || 'Add from Files'}</span>
     `;
     uploadItem.addEventListener('click', () => {
         uploadButton.click();
@@ -1542,6 +1547,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
 		syncUiStates();
+		customizeModal.scrollTop = 0; // Scroll to top
 		persistentClock.style.opacity = '0';
 		customizeModal.style.display = 'block';
 		blurOverlayControls.style.display = 'block';
