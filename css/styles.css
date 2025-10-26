@@ -583,7 +583,7 @@ body.one-button-nav-active .dock.show {
     top: 20px;
     right: 20px;
     font-size: 1.2rem;
-    color: transparent;
+    color: var(--text-color);
     background-color: transparent;
     padding: 8px 10px;
     border-radius: 50px;
@@ -608,30 +608,39 @@ body.one-button-nav-active .dock.show {
 .persistent-clock .persistent-colon {
     position: relative;
     top: -0.07em;
-    -webkit-mask-image: linear-gradient(black, black);
-    -webkit-mask-clip: text;
-    -webkit-mask-composite: source-in;
-    mask-image: linear-gradient(black, black);
-    mask-composite: source-in;
-    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
 }
 
-.persistent-clock .persistent-clock-digit {
-    -webkit-mask-image: linear-gradient(black, black);
-    -webkit-mask-clip: text;
-    -webkit-mask-composite: source-in;
-    mask-image: linear-gradient(black, black);
-    mask-composite: source-in;
-    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
-}
-
-.persistent-clock .material-symbols-rounded {
-    -webkit-mask-image: linear-gradient(black, black);
-    -webkit-mask-clip: text;
-    -webkit-mask-composite: source-in;
-    mask-image: linear-gradient(black, black);
-    mask-composite: source-in;
-    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
+@supports (backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px)) {
+	.persistent-clock {
+	    color: transparent;
+	}
+	
+	.persistent-clock .persistent-colon {
+	    -webkit-mask-image: linear-gradient(black, black);
+	    -webkit-mask-clip: text;
+	    -webkit-mask-composite: source-in;
+	    mask-image: linear-gradient(black, black);
+	    mask-composite: source-in;
+	    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
+	}
+	
+	.persistent-clock .persistent-clock-digit {
+	    -webkit-mask-image: linear-gradient(black, black);
+	    -webkit-mask-clip: text;
+	    -webkit-mask-composite: source-in;
+	    mask-image: linear-gradient(black, black);
+	    mask-composite: source-in;
+	    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
+	}
+	
+	.persistent-clock .material-symbols-rounded {
+	    -webkit-mask-image: linear-gradient(black, black);
+	    -webkit-mask-clip: text;
+	    -webkit-mask-composite: source-in;
+	    mask-image: linear-gradient(black, black);
+	    mask-composite: source-in;
+	    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
+	}
 }
 
 .persistent-clock:active {
