@@ -2574,12 +2574,15 @@ input[type="checkbox"]:checked::before {
     border-radius: 50%;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    width: 40px;
     height: 40px;
     border: 1px solid var(--glass-border);
     display: flex;
     align-items: center;
     justify-content: center;
+	gap: 10px;
+    padding: 0 18px 0 15px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
 }
 
 .drawer-header-button .material-symbols-rounded {
