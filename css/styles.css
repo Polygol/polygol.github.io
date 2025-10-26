@@ -610,7 +610,7 @@ body.one-button-nav-active .dock.show {
     top: -0.07em;
 }
 
-@supports (backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px)) {
+@supports (-webkit-mask-clip: text) {
 	.persistent-clock {
 	    color: transparent;
 	}
