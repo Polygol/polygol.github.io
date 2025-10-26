@@ -240,6 +240,10 @@ body.high-contrast *:not(#brightness-overlay):not(#temperature-overlay) {
 	backdrop-filter: none !important;
 }
 
+body.glass-effects-disabled {
+    --edge-refraction-filter: none;
+}
+
 body.high-contrast .persistent-clock {
 	color: var(--text-color);
 }
