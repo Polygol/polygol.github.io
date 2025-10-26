@@ -3186,6 +3186,7 @@ const wallpaperInput = document.getElementById('wallpaperInput');
 const uploadButton = document.getElementById('uploadButton');
 const SLIDESHOW_INTERVAL = 600000; // 10 minutes in milliseconds
 const gurappsSwitch = document.getElementById("gurapps-switch");
+const animationSwitch = document.getElementById('animation-switch');
 let gurappsEnabled = localStorage.getItem("gurappsEnabled") !== "false";
 let slideshowInterval = null;
 let currentWallpaperIndex = 0;
