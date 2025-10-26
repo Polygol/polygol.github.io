@@ -2729,17 +2729,22 @@ input[type="checkbox"]:checked::before {
 }
 
 .wallpaper-picker-badge {
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 8px;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 14px;
+	corner-shape: superellipse(1.5);
     background-color: var(--search-background);
     color: var(--secondary-text-color);
     text-decoration: none;
     border: 1px solid var(--glass-border);
 }
 
+.wallpaper-picker-badge .material-symbols-rounded {
+	font-size: 14px;
+	margin-left: 4px;
+}
+
 .wallpaper-picker-title {
-    font-size: 14px;
     font-weight: 500;
     color: var(--text-color);
 }
