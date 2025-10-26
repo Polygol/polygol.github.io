@@ -2560,8 +2560,26 @@ input[type="checkbox"]:checked::before {
 
 .widget-drawer-header {
     padding: 15px 30px 15px;
-    text-align: center;
     flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.drawer-header-button {
+    background-color: var(--search-background);
+    color: var(--text-color);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    box-shadow: var(--sun-shadow);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .widget-drawer-header h2 {
