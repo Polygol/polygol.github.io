@@ -2533,7 +2533,7 @@ input[type="checkbox"]:checked::before {
     width: 100%;
     height: 100%;
     background-color: var(--background-color);
-    z-index: 9995;
+    z-index: 9996;
     transition: opacity 0.4s cubic-bezier(0.2, 0, 0.38, 0.9);
     display: flex;
     flex-direction: column;
@@ -2543,11 +2543,6 @@ input[type="checkbox"]:checked::before {
 .widget-drawer.open {
 	opacity: 1;
 	pointer-events: auto;
-}
-
-.widget-drawer.open .drawer-handle,
-.widget-drawer.open #one-button-nav-handle {
-	display: none !important
 }
 
 .widget-drawer-handle {
