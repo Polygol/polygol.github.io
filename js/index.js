@@ -6253,7 +6253,7 @@ async function createFullscreenEmbed(url) {
     // Update the favicon to the app's icon
     if (appDetails && appDetails.icon) {
         let iconUrl = appDetails.icon;
-        if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/'))) {
+        if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
             // If it's a local filename, prepend the path
             iconUrl = `/assets/appicon/${iconUrl}`;
         }
@@ -6650,8 +6650,8 @@ function populateDock() {
         img.alt = name;
 
 	const iconSource = details.icon;
-        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('/'))) {
-            // If it's a full URL or a root-relative path, use it directly.
+        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('/') || iconSource.startsWith('data:'))) {
+            // If it's a full URL, a root-relative path, or a data URI, use it directly.
             img.src = iconSource;
         } else if (iconSource) {
             // Otherwise, assume it's a local filename and prepend the default path.
@@ -6709,7 +6709,7 @@ function createAppIcons() {
         const iconSource = app.details.icon;
 
         // 2. Check the source type and set img.src only ONCE.
-        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('/'))) {
+        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('/') || iconSource.startsWith('data:'))) {
             // If it's an absolute URL or a root-relative path, use it directly.
             img.src = iconSource;
         } else if (iconSource) {
