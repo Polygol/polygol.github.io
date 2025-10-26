@@ -1412,7 +1412,7 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-weather', 'weather-switch');
     connectGridItem('setting-gurapps', 'gurapps-switch');
     connectGridItem('setting-animation', 'animation-switch');
-    connectGridItem('setting-contrast', 'contrast-switch');
+	connectGridItem('setting-glass', 'glass-slider');
     connectGridItem('setting-hour-format', 'hour-switch');
     connectGridItem('setting-style', 'font-select');
     connectGridItem('setting-weight', 'weight-slider');
@@ -3186,8 +3186,6 @@ const wallpaperInput = document.getElementById('wallpaperInput');
 const uploadButton = document.getElementById('uploadButton');
 const SLIDESHOW_INTERVAL = 600000; // 10 minutes in milliseconds
 const gurappsSwitch = document.getElementById("gurapps-switch");
-const contrastSwitch = document.getElementById('contrast-switch');
-const animationSwitch = document.getElementById('animation-switch');
 let gurappsEnabled = localStorage.getItem("gurappsEnabled") !== "false";
 let slideshowInterval = null;
 let currentWallpaperIndex = 0;
@@ -3195,7 +3193,6 @@ let minimalMode = localStorage.getItem('minimalMode') === 'true';
 let nightMode = localStorage.getItem('nightMode') === 'true';
 let oneButtonNavEnabled = localStorage.getItem('oneButtonNavEnabled') === 'true';
 let isAiAssistantEnabled = localStorage.getItem('aiAssistantEnabled') === 'true';
-let glassEffectsEnabled = localStorage.getItem('glassEffectsEnabled') !== 'false'; // Default to true
 let geminiApiKey = localStorage.getItem('geminiApiKey');
 let genAI; // Will be initialized if AI is enabled
 let minimizeCleanupTimeout = null;
@@ -3256,38 +3253,6 @@ function setupFormatControls() {
         clockFormatInput.dispatchEvent(new Event('input'));
     });
 }
-
-// Load saved preference
-const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
-contrastSwitch.checked = highContrastEnabled;
-
-// Apply high contrast if enabled (initial state)
-if (highContrastEnabled) {
-    document.body.classList.add('high-contrast');
-}
-
-// Event listener for contrast toggle
-function handleContrastChange() {
-    const highContrast = this.checked;
-    const value = highContrast.toString();
-    localStorage.setItem('highContrast', value);
-    broadcastSettingUpdate('highContrast', value);
-    document.body.classList.toggle('high-contrast', highContrast);
-    
-    // Inform iframes
-    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
-    iframes.forEach((iframe) => {
-        if (iframe.contentWindow) {
-            const targetOrigin = getOriginFromUrl(iframe.src);
-            iframe.contentWindow.postMessage({
-                type: 'contrastUpdate',
-                enabled: highContrast
-            }, targetOrigin);
-        }
-    });
-}
-
-contrastSwitch.addEventListener('change', handleContrastChange);
 
 // Load saved preference (default to true/on if not set)
 const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
@@ -3818,8 +3783,24 @@ function updateOneButtonNavVisibility() {
     document.body.classList.toggle('one-button-nav-active', oneButtonNavEnabled);
 }
 
-function updateGlassEffects() {
-    document.body.classList.toggle('glass-effects-disabled', !glassEffectsEnabled);
+function applyGlassEffects() {
+    const value = localStorage.getItem('glassEffects') === null ? 100 : parseInt(localStorage.getItem('glassEffects'), 10);
+
+    const slider = document.getElementById('glass-slider');
+    if (slider) {
+        slider.value = value;
+    }
+
+    document.body.classList.remove('high-contrast', 'glass-effects-disabled');
+    document.documentElement.style.setProperty('--edge-refraction-filter', `url('#edge-refraction-only')`); // Default
+
+    if (value === 0) {
+        document.body.classList.add('high-contrast');
+    } else if (value < 100) {
+        const blurAmount = ((value - 1) / 98) * 50;
+        document.documentElement.style.setProperty('--edge-refraction-filter', `blur(${blurAmount.toFixed(2)}px)`);
+        document.body.classList.add('glass-effects-disabled');
+    }
 }
 	
 function applyAlignment(alignment) {
@@ -7714,31 +7695,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     setupOneButtonNav();
 
-	const glassEffectsSwitch = document.getElementById('glass-effects-switch');
-	if (glassEffectsSwitch) {
-	    glassEffectsSwitch.checked = glassEffectsEnabled;
-	    updateGlassEffects(); // Apply on load
-	
-	    glassEffectsSwitch.addEventListener('change', function() {
-	        glassEffectsEnabled = this.checked;
-	        const value = glassEffectsEnabled.toString();
-	        localStorage.setItem('glassEffectsEnabled', value);
-	        broadcastSettingUpdate('glassEffectsEnabled', value);
-	        updateGlassEffects();
-	
-	        // Broadcast specifically to all Gurapps
-	        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
-	        iframes.forEach(iframe => {
-	            if (iframe.contentWindow) {
-	                const targetOrigin = getOriginFromUrl(iframe.src);
-	                iframe.contentWindow.postMessage({
-	                    type: 'glassEffectsUpdate',
-	                    enabled: glassEffectsEnabled
-	                }, targetOrigin);
-	            }
-	        });
-	    });
-	}
+	const glassSlider = document.getElementById('glass-slider');
+    if (glassSlider) {
+        applyGlassEffects(); // Apply on load
+        glassSlider.addEventListener('input', function() {
+            const value = this.value;
+            localStorage.setItem('glassEffects', value);
+            broadcastSettingUpdate('glassEffects', value);
+            applyGlassEffects();
+        });
+    }
     
     initAppDraw(); // Now this will use the fully populated 'apps' object
     initializeCustomization(); // Now reads correct styles and applies them to DOM
@@ -8873,7 +8839,7 @@ const FUNCTION_PERMISSIONS = {
 const controlIdMap = {
     'theme': 'theme-switch',
     'animationsEnabled': 'animation-switch',
-    'highContrast': 'contrast-switch',
+    'glassEffects': 'glass-slider',
     'gurappsEnabled': 'gurapps-switch',
     'aiAssistantEnabled': 'ai-switch',
     'oneButtonNavEnabled': 'one-button-nav-switch',
@@ -8900,7 +8866,6 @@ const controlIdMap = {
     'wallpaperBlur': 'wallpaper-blur-slider',
     'wallpaperBrightness': 'wallpaper-brightness-slider',
     'wallpaperContrast': 'wallpaper-contrast-slider',
-	'glassEffectsEnabled': 'glass-effects-switch',
     'showWeather': 'weather-switch',
     'page_brightness': 'brightness-control',
     'display_temperature': 'thermostat-control',
