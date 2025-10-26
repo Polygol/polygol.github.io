@@ -235,6 +235,10 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
             backdrop-filter: none !important;
         }
 
+        html.gurasuraisu-glass-disabled {
+            --edge-refraction-filter: none;
+        }
+
         :root.standalone {
             --background-color-dark-tr: var(--background-color-dark);
             --background-color-light-tr: var(--background-color-light);
@@ -647,7 +651,10 @@ window.addEventListener('message', async (event) => {
       case 'cursorStateUpdate':
         document.documentElement.classList.toggle('gurasuraisu-cursor-hidden', !data.visible);
         break;
-      
+      case 'glassEffectsUpdate':
+        document.documentElement.classList.toggle('gurasuraisu-glass-disabled', !data.enabled);
+        break;
+          
       // --- NEW: Handles screenshot requests from the parent ---
       case 'request-screenshot':
         try {
