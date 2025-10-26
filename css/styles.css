@@ -2571,7 +2571,7 @@ input[type="checkbox"]:checked::before {
     color: var(--text-color);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
     box-shadow: var(--sun-shadow);
-    border-radius: 50%;
+    border-radius: 40px;
     cursor: pointer;
     transition: background-color 0.3s ease;
     height: 40px;
