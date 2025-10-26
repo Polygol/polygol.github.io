@@ -3195,6 +3195,7 @@ let minimalMode = localStorage.getItem('minimalMode') === 'true';
 let nightMode = localStorage.getItem('nightMode') === 'true';
 let oneButtonNavEnabled = localStorage.getItem('oneButtonNavEnabled') === 'true';
 let isAiAssistantEnabled = localStorage.getItem('aiAssistantEnabled') === 'true';
+let glassEffectsEnabled = localStorage.getItem('glassEffectsEnabled') !== 'false'; // Default to true
 let geminiApiKey = localStorage.getItem('geminiApiKey');
 let genAI; // Will be initialized if AI is enabled
 let minimizeCleanupTimeout = null;
@@ -3815,6 +3816,10 @@ gurappsSwitch.addEventListener("change", handleGurappsToggle);
 
 function updateOneButtonNavVisibility() {
     document.body.classList.toggle('one-button-nav-active', oneButtonNavEnabled);
+}
+
+function updateGlassEffects() {
+    document.body.classList.toggle('glass-effects-disabled', !glassEffectsEnabled);
 }
 	
 function applyAlignment(alignment) {
@@ -7708,6 +7713,32 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
     setupOneButtonNav();
+
+	const glassEffectsSwitch = document.getElementById('glass-effects-switch');
+	if (glassEffectsSwitch) {
+	    glassEffectsSwitch.checked = glassEffectsEnabled;
+	    updateGlassEffects(); // Apply on load
+	
+	    glassEffectsSwitch.addEventListener('change', function() {
+	        glassEffectsEnabled = this.checked;
+	        const value = glassEffectsEnabled.toString();
+	        localStorage.setItem('glassEffectsEnabled', value);
+	        broadcastSettingUpdate('glassEffectsEnabled', value);
+	        updateGlassEffects();
+	
+	        // Broadcast specifically to all Gurapps
+	        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+	        iframes.forEach(iframe => {
+	            if (iframe.contentWindow) {
+	                const targetOrigin = getOriginFromUrl(iframe.src);
+	                iframe.contentWindow.postMessage({
+	                    type: 'glassEffectsUpdate',
+	                    enabled: glassEffectsEnabled
+	                }, targetOrigin);
+	            }
+	        });
+	    });
+	}
     
     initAppDraw(); // Now this will use the fully populated 'apps' object
     initializeCustomization(); // Now reads correct styles and applies them to DOM
@@ -8869,6 +8900,7 @@ const controlIdMap = {
     'wallpaperBlur': 'wallpaper-blur-slider',
     'wallpaperBrightness': 'wallpaper-brightness-slider',
     'wallpaperContrast': 'wallpaper-contrast-slider',
+	'glassEffectsEnabled': 'glass-effects-switch',
     'showWeather': 'weather-switch',
     'page_brightness': 'brightness-control',
     'display_temperature': 'thermostat-control',
@@ -9139,6 +9171,9 @@ window.addEventListener('message', async (event) => { // Make listener async
         
         const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
         sourceWindow.postMessage({ type: 'contrastUpdate', enabled: highContrastEnabled }, targetOrigin);
+
+		const glassEffectsEnabled = localStorage.getItem('glassEffectsEnabled') !== 'false';
+		sourceWindow.postMessage({ type: 'glassEffectsUpdate', enabled: glassEffectsEnabled }, targetOrigin);
 
         sourceWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow, shadowStrong: currentSunShadowStrong }, targetOrigin);
 
