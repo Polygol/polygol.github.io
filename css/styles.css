@@ -2686,7 +2686,7 @@ input[type="checkbox"]:checked::before {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
     box-shadow: var(--sun-shadow);
     overflow: hidden;
 }
@@ -2701,7 +2701,6 @@ input[type="checkbox"]:checked::before {
 }
 
 .wallpaper-picker-details {
-    margin-top: 10px;
     display: flex;
     flex-direction: column;
     gap: 4px;
