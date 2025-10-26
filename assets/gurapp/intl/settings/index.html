@@ -171,23 +171,13 @@
                         <input type="checkbox" class="toggle-switch" data-key="animationsEnabled">
                     </div>
                 </div>
-                <div class="setting-item" id="setting-highContrast">
-                    <div class="setting-info">
-                        <span class="setting-label">Contrast</span>
-                        <span class="setting-description">Enable High Contrast</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" data-key="highContrast">
-                    </div>
-                </div>
-                <div class="setting-item" id="setting-glassEffectsEnabled">
+                <div class="setting-item slider-item">
                     <div class="setting-info">
                         <span class="setting-label">Dynamic Glass</span>
-                        <span class="setting-description">Disable for better performance</span>
+                        <span class="setting-description">Adjust intensity of Glass</span>
                     </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" data-key="glassEffectsEnabled" checked>
-                    </div>
+                    <input type="range" min="0" max="100" class="styled-slider" 
+                           data-key="glassEffects">
                 </div>
             </div>
         </div>
