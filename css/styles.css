@@ -241,7 +241,7 @@ body.high-contrast *:not(#brightness-overlay):not(#temperature-overlay) {
 }
 
 body.glass-effects-disabled {
-    --edge-refraction-filter: none;
+    --edge-refraction-filter: grayscale(0) /* Use nonsense */;
 }
 
 body.high-contrast .persistent-clock {
