@@ -71,7 +71,7 @@ const WALLPAPER_PRESETS = [
         clockStyles: {
             font: 'Inter', weight: '1000', colorEnabled: false,
             stackEnabled: false, alignment: 'center', shadowEnabled: false,
-            gradientEnabled: false, glassEnabled: true, roundness: '100',
+            gradientEnabled: false, glassEnabled: true, roundness: '100', clockSize: '-20',
 			clockPosX: '50', clockPosY: '20',
 			wallpaperEffects: {
                 light: { blur: '0', brightness: '100', contrast: '100' },
@@ -90,7 +90,7 @@ const WALLPAPER_PRESETS = [
         clockStyles: {
             font: 'Inter', weight: '1000', colorEnabled: false,
             stackEnabled: false, alignment: 'center', shadowEnabled: false,
-            gradientEnabled: false, glassEnabled: true, roundness: '100',
+            gradientEnabled: false, glassEnabled: true, roundness: '100', clockSize: '-20',
 			clockPosX: '50', clockPosY: '20',
 			wallpaperEffects: {
                 light: { blur: '0', brightness: '100', contrast: '100' },
