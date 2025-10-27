@@ -35,6 +35,56 @@
                     });
             });
         }
+    
+        // Show a message if loading is slow
+        setTimeout(() => {
+            const loadingScreen = document.getElementById('loading-screen');
+            const bootCredits = document.getElementById('boot-credits');
+            if (loadingScreen && bootCredits) { // Check if loading is still happening
+                bootCredits.innerHTML = `
+                    Polygol is loading. Do not close this tab.<br>
+                    Polygolは読み込み中です。このタブを閉じないでください。<br>
+                    Polygol wird geladen. Schließen Sie diesen Tab nicht.<br>
+                    Polygol se está cargando. No cierre esta pestaña.<br>
+                    Polygol을 로드하는 중입니다. 이 탭을 닫지 마십시오.<br>
+                    Polygol 正在加载。请勿关闭此选项卡。
+                `;
+            }
+        }, 5000); // 5 seconds
+    
+        // Catch crashes during load
+        window.onerror = function(message, source, lineno, colno, error) {
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.innerHTML = ''; 
+                loadingScreen.style.gap = '20px';
+    
+                const errorContainer = document.createElement('div');
+                errorContainer.style.textAlign = 'center';
+                errorContainer.style.fontFamily = 'monospace';
+                errorContainer.style.maxWidth = '90%';
+    
+                const errorMessage = error ? `${error.name}: ${error.message}` : message;
+    
+                errorContainer.innerHTML = `
+                    <h2 style="color: white; font-family: 'Inter', sans-serif; margin-bottom: 20px;">
+                        Polygol cannot load.<br>
+                        Polygolを読み込めません。<br>
+                        Polygol kann nicht geladen werden.<br>
+                        Polygol no se puede cargar.<br>
+                        Polygol을 로드할 수 없습니다.<br>
+                        Polygol 无法加载。
+                    </h2>
+                    <pre style="color: #ff8a80; background: #222; padding: 10px; border-radius: 5px;">${errorMessage}</pre>
+                    <p style="color: white; font-family: 'Inter', sans-serif; margin-top: 20px;">
+                        Open Recovery Mode at <a href="/recovery/" style="color: #82b1ff;">https://polygol.github.io/recovery/</a><br>
+                        Report this to our GitHub. <a href="https://github.com/Polygol/polygol.github.io/issues" style="color: #82b1ff;">https://github.com/Polygol/polygol.github.io/issues</a>
+                    </p>
+                `;
+                loadingScreen.appendChild(errorContainer);
+                return true; // Suppress default browser error handler
+            }
+        };
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
