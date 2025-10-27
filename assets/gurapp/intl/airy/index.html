@@ -261,7 +261,7 @@
             }
 
             // Tell parent we are ready, so it sends the initial theme.
-            Gurasuraisu.signalReady(); 
+            Gurasuraisu.postMessageToParent({ type: 'gurapp-ready' });
 
             nextBtn.addEventListener('click', () => {
                 if (currentPageIndex < pages.length - 1) {
