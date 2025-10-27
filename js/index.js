@@ -2745,6 +2745,20 @@ function createSetupScreen() {
     const setupContainer = document.createElement('div');
     setupContainer.className = 'setup-screen';
 
+    // Ambient Music and Attribution
+    const audio = document.createElement('audio');
+    audio.id = 'setup-music';
+    audio.src = '/assets/sound/setup/swinging.mp3';
+    audio.loop = true;
+    audio.play().catch(e => console.warn("Autoplay was prevented by the browser."));
+
+    const attribution = document.createElement('div');
+    attribution.className = 'setup-music-attribution';
+    attribution.innerHTML = 'Down With That • Twin Musicom (CC BY 4.0)';
+    
+    setupContainer.appendChild(audio);
+    setupContainer.appendChild(attribution);
+
     const setupPages = [
         {
             title: "SETUP_HI_THERE",
@@ -2965,6 +2979,20 @@ function createSetupScreen() {
             if (currentPage === setupPages.length - 1) {
                 // --- ONBOARDING FLOW ---
                 localStorage.setItem('hasVisitedBefore', 'true');
+
+                // Fade out music with the screen
+                const setupMusic = document.getElementById('setup-music');
+                if (setupMusic) {
+                    const fadeOutInterval = setInterval(() => {
+                        if (setupMusic.volume > 0.1) {
+                            setupMusic.volume -= 0.1;
+                        } else {
+                            setupMusic.pause();
+                            clearInterval(fadeOutInterval);
+                        }
+                    }, 50);
+                }
+				
                 setupContainer.style.opacity = '0';
                 setTimeout(() => {
                     setupContainer.remove();
