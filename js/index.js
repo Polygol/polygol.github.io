@@ -2729,6 +2729,7 @@ async function firstSetup() {
     await selectLanguage(selectedLanguage);
 
     if (!hasVisitedBefore) {
+        document.body.classList.add('setup-active'); // Add class to hide UI
         isDuringFirstSetup = true; // Set flag to block initial loads
         
         // Set a purely temporary wallpaper for the setup screen
@@ -2957,7 +2958,7 @@ function createSetupScreen() {
         const nextButton = document.createElement('button');
         nextButton.className = 'setup-button primary';
 		nextButton.textContent = currentPage === setupPages.length - 1 ? currentLanguage.SETUP_GET_STARTED : currentLanguage.SETUP_CONTINUE;
-        nextButton.addEventListener('click', () => {
+		nextButton.addEventListener('click', () => {
             if (isTransitioning) return; // Prevent spam-clicking
             isTransitioning = true;
 
@@ -2967,18 +2968,21 @@ function createSetupScreen() {
                 setupContainer.style.opacity = '0';
                 setTimeout(() => {
                     setupContainer.remove();
+                    document.body.classList.remove('setup-active');
+                    document.body.classList.add('onboarding-active'); // Lock down UI for onboarding
                     isDuringFirstSetup = false;
 
                     // 1. Temporarily define Airy for createFullscreenEmbed
                     apps['Airy'] = { url: '/assets/gurapp/intl/airy/index.html', icon: '' };
 
-                    // 2. Open the Airy onboarding app and hide other elements
+                    // 2. Open the Airy onboarding app
                     createFullscreenEmbed('/assets/gurapp/intl/airy/index.html');
                     
                     // 3. Listen for completion message from Airy
                     const onOnboardingComplete = (event) => {
                         if (event.data.type === 'onboarding-complete') {
                             window.removeEventListener('message', onOnboardingComplete);
+                            document.body.classList.remove('onboarding-active');
                             allowPageLeave = true; // Bypass the preventLeaving prompt
                             window.location.reload();
                         }
