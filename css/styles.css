@@ -241,7 +241,7 @@ body.high-contrast *:not(#brightness-overlay):not(#temperature-overlay) {
 }
 
 body.glass-effects-disabled {
-    --edge-refraction-filter: blur(10px); /* Frosted glass appearance */
+    --edge-refraction-filter: blur(17.5px); /* Frosted glass appearance */
 }
 
 body.high-contrast .persistent-clock {
