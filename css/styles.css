@@ -2030,7 +2030,7 @@ input[type="checkbox"]:checked::before {
 		    max-height: 70vh;
 		    overflow: auto;
 		    background-color: var(--background-color-tr);
-		    border-radius: 35px;
+		    border-radius: 50px;
 		    corner-shape: superellipse(1.5);
 		    border: 1px solid var(--glass-border);
 		    box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
