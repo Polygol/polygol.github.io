@@ -2147,6 +2147,20 @@ input[type="checkbox"]:checked::before {
 			scale: 1.2;
         }
 
+		.setup-music-attribution {
+		    position: fixed;
+		    bottom: 20px;
+		    right: 20px;
+		    font-size: 8px;
+		    color: var(--text-color);
+			text-shadow: 0 0 4px var(--search-background);
+		    opacity: 0.7;
+		    z-index: 10000; /* Ensure it's on top of the setup screen */
+		    transition: opacity 0.5s ease;
+		    font-family: 'Inter', sans-serif;
+		    pointer-events: none;
+		}
+
         .setup-option.selected {
 		    border-color: var(--text-color);
 		    background-color: var(--secondary-text-color);
