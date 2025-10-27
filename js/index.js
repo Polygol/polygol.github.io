@@ -2976,6 +2976,26 @@ function createSetupScreen() {
             if (isTransitioning) return; // Prevent spam-clicking
             isTransitioning = true;
 
+            // --- START MUSIC ON FIRST INTERACTION ---
+            if (currentPage === 0) {
+                const setupMusic = document.getElementById('setup-music');
+                if (setupMusic && setupMusic.paused) {
+                    setupMusic.play().then(() => {
+                        // Fade in volume for a smooth start
+                        let volume = 0;
+                        const fadeInInterval = setInterval(() => {
+                            volume += 0.1;
+                            if (volume >= 1.0) {
+                                setupMusic.volume = 1.0;
+                                clearInterval(fadeInInterval);
+                            } else {
+                                setupMusic.volume = volume;
+                            }
+                        }, 50);
+                    }).catch(e => console.error("Could not play setup music after interaction:", e));
+                }
+            }
+
             if (currentPage === setupPages.length - 1) {
                 // --- ONBOARDING FLOW ---
                 localStorage.setItem('hasVisitedBefore', 'true');
