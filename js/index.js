@@ -414,6 +414,7 @@ let appLastOpened = {};
 let currentSunShadow = ''; // To store the calculated sun shadow string
 let currentSunShadowStrong = ''; // To store the intensified sun shadow string
 let isDuringFirstSetup = false; // Flag to prevent prompts during setup
+let allowPageLeave = false; // Global flag to bypass beforeunload prompt
 
 secondsSwitch.checked = showSeconds;
 
@@ -2729,6 +2730,11 @@ async function firstSetup() {
 
     if (!hasVisitedBefore) {
         isDuringFirstSetup = true; // Set flag to block initial loads
+        
+        // Set a purely temporary wallpaper for the setup screen
+        const randomPreset = WALLPAPER_PRESETS[Math.floor(Math.random() * WALLPAPER_PRESETS.length)];
+        document.body.style.setProperty('--bg-image', `url('${randomPreset.fullUrl}')`);
+        
         createSetupScreen(); // UI now uses the correct currentLanguage
     }
     // Note: 'hasVisitedBefore' is now set inside createSetupScreen upon completion
@@ -2817,7 +2823,8 @@ function createSetupScreen() {
         },
     ];
 
-    let currentPage = 0;
+	let currentPage = 0;
+    let isTransitioning = false; // Flag to prevent button spam
 
     function createPage(pageData) {
         const page = document.createElement('div');
@@ -2949,18 +2956,35 @@ function createSetupScreen() {
         
         const nextButton = document.createElement('button');
         nextButton.className = 'setup-button primary';
-        nextButton.textContent = currentPage === setupPages.length - 1 ? currentLanguage.SETUP_GET_STARTED : currentLanguage.SETUP_CONTINUE;
+		nextButton.textContent = currentPage === setupPages.length - 1 ? currentLanguage.SETUP_GET_STARTED : currentLanguage.SETUP_CONTINUE;
         nextButton.addEventListener('click', () => {
+            if (isTransitioning) return; // Prevent spam-clicking
+            isTransitioning = true;
+
             if (currentPage === setupPages.length - 1) {
-                // Complete setup
+                // --- ONBOARDING FLOW ---
                 localStorage.setItem('hasVisitedBefore', 'true');
                 setupContainer.style.opacity = '0';
                 setTimeout(() => {
                     setupContainer.remove();
-                    goFullscreen()
-                    // Now that setup is done, run the permission-requesting functions
                     isDuringFirstSetup = false;
-                    initializeGeolocationFeatures();
+
+                    // 1. Temporarily define Airy for createFullscreenEmbed
+                    apps['Airy'] = { url: '/assets/gurapp/intl/airy/index.html', icon: '' };
+
+                    // 2. Open the Airy onboarding app and hide other elements
+                    createFullscreenEmbed('/assets/gurapp/intl/airy/index.html');
+                    
+                    // 3. Listen for completion message from Airy
+                    const onOnboardingComplete = (event) => {
+                        if (event.data.type === 'onboarding-complete') {
+                            window.removeEventListener('message', onOnboardingComplete);
+                            allowPageLeave = true; // Bypass the preventLeaving prompt
+                            window.location.reload();
+                        }
+                    };
+                    window.addEventListener('message', onOnboardingComplete);
+
                 }, 500);
             } else {
                 currentPage++;
@@ -2973,7 +2997,7 @@ function createSetupScreen() {
         return page;
     }
 
-    function updateSetup() {
+	function updateSetup() {
         const currentPageElement = setupContainer.querySelector('.setup-page');
         if (currentPageElement) {
             currentPageElement.classList.remove('active');
@@ -2983,6 +3007,7 @@ function createSetupScreen() {
                 setupContainer.appendChild(newPage);
                 setTimeout(() => {
                     newPage.classList.add('active');
+                    isTransitioning = false; // Re-enable button after transition
                 }, 10);
             }, 300);
         } else {
@@ -2990,6 +3015,7 @@ function createSetupScreen() {
             setupContainer.appendChild(newPage);
             setTimeout(() => {
                 newPage.classList.add('active');
+                isTransitioning = false; // Re-enable button
             }, 10);
         }
 
@@ -8302,11 +8328,16 @@ function closeControls() {
 setInterval(ensureVideoLoaded, 1000);
 
 function preventLeaving() {
-  window.addEventListener('beforeunload', function (e) {
-    e.preventDefault();
-    e.returnValue = ''; // Standard for most browsers
-    return ''; // For some older browsers
-  });
+    window.addEventListener('beforeunload', function (e) {
+        if (window.allowPageLeave) { return; } // Bypass for controlled reloads
+
+        // Only prevent leaving if an app is actually open.
+        if (window.isAppOpen) {
+            e.preventDefault();
+            e.returnValue = ''; // Standard for most browsers
+            return ''; // For some older browsers
+        }
+    });
 }
 
 // --- Terminal Functions (Corrected Signatures) ---
@@ -8837,7 +8868,8 @@ const Gurasuraisu = {
 // --- NEW Permission Model ---
 // Maps trusted app IDs to their permission levels.
 const TRUSTED_APP_PERMISSIONS = {
-    'Settings': ['system-admin'], // Full access to everything
+    'Settings': ['system-admin'], // Full access to everything, needs permissions to change settings
+    'Airy': ['system-admin'], // Full access to everything, needs permissions for onboarding
     'Terminal': ['system-admin'], // Full access to everything
     'App Store': ['app-management']  // Can only manage apps
 };
