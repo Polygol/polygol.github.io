@@ -260,9 +260,6 @@
                 finishBtn.classList.toggle('hidden', !isLastPage);
             }
 
-            // Tell parent we are ready, so it sends the initial theme.
-            Gurasuraisu.postMessageToParent({ type: 'gurapp-ready' });
-
             nextBtn.addEventListener('click', () => {
                 if (currentPageIndex < pages.length - 1) {
                     currentPageIndex++;
@@ -278,8 +275,10 @@
             });
 
             finishBtn.addEventListener('click', () => {
-                // Use the API to tell the parent setup is complete
-                Gurasuraisu.postMessageToParent({ type: 'onboarding-complete' });
+                // Use the native postMessage to tell the parent setup is complete
+                if (window.self !== window.top) { // Check if inside an iframe
+                    window.parent.postMessage({ type: 'onboarding-complete' }, '*');
+                }
             });
             
             // Initial render
