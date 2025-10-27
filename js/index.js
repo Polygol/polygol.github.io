@@ -2756,7 +2756,7 @@ function createSetupScreen() {
     attribution.className = 'setup-music-attribution';
     attribution.innerHTML = 'Brittle Rille - Reunited • Kevin MacLeod (CC BY 4.0)';
     
-    setupContainer.appendChild(audio);
+    document.body.appendChild(audio); // Append to body to persist
     setupContainer.appendChild(attribution);
 
     const setupPages = [
@@ -2971,7 +2971,7 @@ function createSetupScreen() {
         
         const nextButton = document.createElement('button');
         nextButton.className = 'setup-button primary';
-		nextButton.textContent = currentPage === setupPages.length - 1 ? currentLanguage.SETUP_GET_STARTED : currentLanguage.SETUP_CONTINUE;
+		nextButton.textContent = currentPage === setupPages.length - 1 ? currentLanguage.SETUP_CONTINUE : currentLanguage.SETUP_CONTINUE;
 		nextButton.addEventListener('click', () => {
             if (isTransitioning) return; // Prevent spam-clicking
             isTransitioning = true;
@@ -3000,19 +3000,8 @@ function createSetupScreen() {
                 // --- ONBOARDING FLOW ---
                 localStorage.setItem('hasVisitedBefore', 'true');
 
-                // Fade out music with the screen
-                const setupMusic = document.getElementById('setup-music');
-                if (setupMusic) {
-                    const fadeOutInterval = setInterval(() => {
-                        if (setupMusic.volume > 0.1) {
-                            setupMusic.volume -= 0.1;
-                        } else {
-                            setupMusic.pause();
-                            clearInterval(fadeOutInterval);
-                        }
-                    }, 50);
-                }
-				
+                // Music continues playing until the final reload.
+
                 setupContainer.style.opacity = '0';
                 setTimeout(() => {
                     setupContainer.remove();
@@ -8383,8 +8372,9 @@ function preventLeaving() {
     window.addEventListener('beforeunload', function (e) {
         if (window.allowPageLeave) { return; } // Bypass for controlled reloads
 
-        // Only prevent leaving if an app is actually open.
-        if (window.isAppOpen) {
+		// Only prevent leaving if an app is open (foreground or minimized).
+        const hasOpenApps = window.isAppOpen || Object.keys(minimizedEmbeds).length > 0;
+        if (hasOpenApps) {
             e.preventDefault();
             e.returnValue = ''; // Standard for most browsers
             return ''; // For some older browsers
