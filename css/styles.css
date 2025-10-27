@@ -2081,7 +2081,6 @@ input[type="checkbox"]:checked::before {
 		    left: 50%;
 		    transform: translateX(-50%);
 		    bottom: 26px;
-		    margin: 2rem;
 		}
 
         .setup-button {
