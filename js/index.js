@@ -3021,7 +3021,7 @@ function createSetupScreen() {
                     isDuringFirstSetup = false;
 
                     // 1. Temporarily define Airy for createFullscreenEmbed
-                    apps['Airy'] = { url: '/assets/gurapp/intl/airy/index.html', icon: '' };
+                    apps['Airy'] = { url: '/assets/gurapp/intl/airy/index.html', icon: 'airy.png' };
 
                     // 2. Open the Airy onboarding app
                     createFullscreenEmbed('/assets/gurapp/intl/airy/index.html');
@@ -8921,7 +8921,6 @@ const Gurasuraisu = {
 // Maps trusted app IDs to their permission levels.
 const TRUSTED_APP_PERMISSIONS = {
     'Settings': ['system-admin'], // Full access to everything, needs permissions to change settings
-    'Airy': ['system-admin'], // Full access to everything, needs permissions for onboarding
     'Terminal': ['system-admin'], // Full access to everything
     'App Store': ['app-management']  // Can only manage apps
 };
