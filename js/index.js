@@ -2750,7 +2750,7 @@ function createSetupScreen() {
     audio.id = 'setup-music';
     audio.src = '/assets/sound/setup/swinging.mp3';
     audio.loop = true;
-    audio.play().catch(e => console.warn("Autoplay was prevented by the browser."));
+    audio.volume = 0; // Start silently for fade-in
 
     const attribution = document.createElement('div');
     attribution.className = 'setup-music-attribution';
