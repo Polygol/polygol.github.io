@@ -260,15 +260,8 @@
                 finishBtn.classList.toggle('hidden', !isLastPage);
             }
 
-            // --- Event Listeners & Initialization ---
-            Gurasuraisu.onReady(() => {
-                // Listen for theme changes from parent
-                Gurasuraisu.on('themeUpdate', (data) => {
-                    document.body.classList.toggle('light-theme', data.theme === 'light');
-                });
-                // Tell parent we are ready, so it sends the initial theme
-                Gurasuraisu.signalReady(); 
-            });
+            // Tell parent we are ready, so it sends the initial theme.
+            Gurasuraisu.signalReady(); 
 
             nextBtn.addEventListener('click', () => {
                 if (currentPageIndex < pages.length - 1) {
