@@ -2266,10 +2266,14 @@ function showPopup(message) {
     // Position the new popup
     popup.style.bottom = `calc(10vh + ${remainingPopups.length * 80}px)`;
     
-    document.body.appendChild(popup);
+	document.body.appendChild(popup);
+
+    // Set a longer timeout for the fullscreen prompt
+    const duration = message === currentLanguage.NOT_FULLSCREEN ? 30000 : 3000;
+
     setTimeout(() => {
         popup.style.opacity = '0';
-	popup.style.filter = 'blur(5px)';
+        popup.style.filter = 'blur(5px)';
         setTimeout(() => {
             if (document.body.contains(popup)) {
                 document.body.removeChild(popup);
@@ -2280,7 +2284,7 @@ function showPopup(message) {
                 });
             }
         }, 500);
-    }, 3000);
+    }, duration);
 }
 
 function showNotification(message, options = {}) {
