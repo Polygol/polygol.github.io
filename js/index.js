@@ -2985,8 +2985,8 @@ function createSetupScreen() {
                         let volume = 0;
                         const fadeInInterval = setInterval(() => {
                             volume += 0.1;
-                            if (volume >= 1.0) {
-                                setupMusic.volume = 1.0;
+                            if (volume >= 0.5) {
+                                setupMusic.volume = 0.5;
                                 clearInterval(fadeInInterval);
                             } else {
                                 setupMusic.volume = volume;
