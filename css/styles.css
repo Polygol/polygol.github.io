@@ -120,7 +120,7 @@
     padding: 8px 10px;
 	font-family: 'Inter', sans-serif;
     display: flex;
-	text-align: right;
+	text-align: left;
     align-items: center; /* Keeps the image and text aligned */
     gap: 8px; /* Adds spacing between image and text */
     cursor: pointer;
