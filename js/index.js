@@ -2270,7 +2270,7 @@ function showPopup(message) {
 	document.body.appendChild(popup);
 
     // Set a longer timeout for the fullscreen prompt
-    const duration = message === currentLanguage.NOT_FULLSCREEN ? 30000 : 3000;
+    const duration = message === currentLanguage.NOT_FULLSCREEN ? 10000 : 3000;
 
     setTimeout(() => {
         popup.style.opacity = '0';
