@@ -2754,7 +2754,7 @@ function createSetupScreen() {
 
     const attribution = document.createElement('div');
     attribution.className = 'setup-music-attribution';
-    attribution.innerHTML = 'Down With That • Twin Musicom (CC BY 4.0)';
+    attribution.innerHTML = 'Brittle Rille - Reunited • Kevin MacLeod (CC BY 4.0)';
     
     setupContainer.appendChild(audio);
     setupContainer.appendChild(attribution);
