@@ -10,8 +10,8 @@ You can access Polygol right now at https://polygol.github.io/
 Gurapp can extend your Polygol experience. The GitHub repository for each application are seperate from the `polygol.github.io` GitHub repository.
 
 # Running Locally
-Applications: You must download the Gurapps from each GitHub repository and place them in the root directory in order for Gurapps to work correctly with Polygol locally.
-Assets: You must edit the directory path in the code, since every path assumes that the asset is in root.
+* Applications: You must download the Gurapps from each GitHub repository and place them in the root directory in order for Gurapps to work correctly with Polygol locally.
+* Assets: You must edit the directory path in the code, since every path assumes that the asset is in root.
 
 # I HATE MISSING ASSETS
 If you see images of Fanny BFDI, the assets could not be found. If you are running locally, make sure you have followed the steps.
@@ -20,10 +20,10 @@ If you see images of Fanny BFDI, the assets could not be found. If you are runni
 https://kirbindustries.gitbook.io/polygol
 
 # Acknowledgements 
-Application Icons: kirbIndustries
-Timer Sound: Google
-Fallback Fanny: jacknjellify
-Setup Music: "Down With That" by Twin Musicom, used under CC BY 4.0
+* Application Icons: kirbIndustries
+* Timer Sound: Google
+* Fallback Fanny: jacknjellify
+* Setup Music: "Down With That" by Twin Musicom, used under CC BY 4.0
 (This is not the entire list. Check the repo for more information.)
 
 ---
