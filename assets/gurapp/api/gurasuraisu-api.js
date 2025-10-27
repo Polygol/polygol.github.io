@@ -236,7 +236,7 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
         }
 
         html.gurasuraisu-glass-disabled {
-            --edge-refraction-filter: saturate(0.5) blur(10px); /* Frosted glass appearance */
+            --edge-refraction-filter: blur(10px); /* Frosted glass appearance */
         }
 
         :root.standalone {
