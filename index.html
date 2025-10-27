@@ -53,10 +53,17 @@
         }, 5000); // 5 seconds
     
         // Catch crashes during load
+        window.polygolHasCrashed = false; // Global crash flag
         window.onerror = function(message, source, lineno, colno, error) {
             const loadingScreen = document.getElementById('loading-screen');
             if (loadingScreen) {
-                loadingScreen.innerHTML = ''; 
+                window.polygolHasCrashed = true; // Set flag to prevent onload from hiding this
+    
+                // Force the loading screen to be visible and stop animations
+                loadingScreen.classList.remove('hidden');
+                loadingScreen.style.opacity = '1';
+                loadingScreen.style.transition = 'none';
+                loadingScreen.innerHTML = '';
                 loadingScreen.style.gap = '20px';
     
                 const errorContainer = document.createElement('div');
