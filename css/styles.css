@@ -1992,7 +1992,7 @@ input[type="checkbox"]:checked::before {
             left: 0;
             width: 100%;
             height: 100%;
-            background: var(--background-color);
+            background: transparent;
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -2000,22 +2000,32 @@ input[type="checkbox"]:checked::before {
             justify-content: center;
             color: var(--text-color);
             transition: opacity 0.5s ease;
+			backdrop-filter: blur(10px);
         }
 
         .setup-page {
-            max-width: 600px;
-            padding: 2rem;
-            text-align: center;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-	    max-height: 100vh;
-	    overflow: auto;
+		    padding: 10vh 10vw 100px 10vw;
+		    text-align: center;
+		    opacity: 0;
+		    transform: translateY(20px);
+		    transition: opacity 0.3s ease, transform 0.3s ease;
+		    max-height: 70vh;
+		    overflow: auto;
+		    background-color: var(--background-color-tr);
+		    border-radius: 35px;
+		    corner-shape: superellipse(1.5);
+		    border: 1px solid var(--glass-border);
+		    box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
+		    max-width: 500px;
+		    width: 60vw;
+		    height: 50%;
+		    filter: blur(2.5px);
         }
 
         .setup-page.active {
             opacity: 1;
             transform: translateY(0);
+			filter: none;
         }
 
         .setup-title {
@@ -2048,34 +2058,41 @@ input[type="checkbox"]:checked::before {
         }
 
         .setup-option {
-            background: var(--search-background);
-            border: 2px solid transparent;
-            border-radius: 25px;
-            padding: 1rem;
-            margin: 1rem 0;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-			gap: 10px;
+			background: var(--search-background);
+		    padding: 14px 16px 14px 20px;
+		    margin: 14px 0;
+		    cursor: pointer;
+		    transition: transform 0.2s ease;
+		    display: flex;
+		    align-items: center;
+		    justify-content: space-between;
+		    gap: 20px;
+		    border-radius: 35px;
+		    border: 1px solid var(--glass-border);
+		    corner-shape: round;
         }
 
         .setup-buttons {
-		    margin: 2rem;
-		    display: flex;
+			display: flex;
 		    gap: 1rem;
 		    justify-content: center;
 		    font-family: 'Inter', sans-serif;
+		    position: absolute;
+		    left: 50%;
+		    transform: translateX(-50%);
+		    bottom: 26px;
+		    margin: 2rem;
 		}
 
         .setup-button {
-            padding: 0.8rem 2rem;
-            border-radius: 25px;
-            border: none;
+            padding: 16px 24px;
+            border-radius: 35px;
+            border: 1px solid var(--glass-border);
             font-size: 1rem;
             cursor: pointer;
             transition: opacity 0.2s ease;
+			font-family: 'Inter', sans-serif;
+			font-weight: 500;
         }
 
         .setup-button.primary {
@@ -2089,12 +2106,15 @@ input[type="checkbox"]:checked::before {
         }
 
         .setup-progress {
-            position: fixed;
-            bottom: 2rem;
-            display: flex;
-            gap: 0.5rem;
-			z-index: 1;
-        }
+		    position: fixed;
+		    bottom: 2rem;
+		    display: flex;
+		    gap: 0.5rem;
+		    z-index: 1;
+		    background: var(--search-background);
+		    padding: 5px 6px;
+		    border-radius: 18px;
+		}
 
         .progress-dot {
             width: 8px;
@@ -2107,11 +2127,15 @@ input[type="checkbox"]:checked::before {
 
         .progress-dot.active {
             opacity: 1;
+			scale: 1.2;
         }
 
         .setup-option.selected {
-            border-color: var(--text-color);
-        }
+		    border-color: var(--text-color);
+		    background-color: var(--secondary-text-color);
+		    color: var(--background-color);
+		    corner-shape: superellipse(1.5);
+		}
 
         .setup-option .material-symbols-rounded {
             opacity: 0;
