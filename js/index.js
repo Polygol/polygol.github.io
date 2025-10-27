@@ -8251,6 +8251,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 window.onload = function() {
+    if (window.polygolHasCrashed) { return; } // Abort if a crash was detected
+	
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) {
         // Forcefully wait 0.5 seconds before beginning fade out
