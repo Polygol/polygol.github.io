@@ -274,14 +274,14 @@
                 const isLastPage = index === pages.length - 1;
                 nextBtn.classList.toggle('hidden', isLastPage);
                 finishBtn.classList.toggle('hidden', !isLastPage);
-            }
-
-            if (finishBtn && !finishBtn.classList.contains('hidden')) {
-                dotsContainer.style.opacity = '0';
-                dotsContainer.style.pointerEvents = 'none';
-            } else {
-                dotsContainer.style.opacity = '1';
-                dotsContainer.style.pointerEvents = 'auto';
+    
+                if (finishBtn && !finishBtn.classList.contains('hidden')) {
+                    dotsContainer.style.opacity = '0';
+                    dotsContainer.style.pointerEvents = 'none';
+                } else {
+                    dotsContainer.style.opacity = '1';
+                    dotsContainer.style.pointerEvents = 'auto';
+                }
             }
 
             nextBtn.addEventListener('click', () => {
