@@ -1986,6 +1986,24 @@ input[type="checkbox"]:checked::before {
         backdrop-filter: brightness(0.8) contrast(2) saturate(2) grayscale(0.8);
     }
 
+	/* Hide all main UI elements during initial setup and post-setup onboarding */
+	body.setup-active .container,
+	body.setup-active .widget-grid,
+	body.setup-active .persistent-clock,
+	body.setup-active .drawer-handle,
+	body.setup-active #one-button-nav-handle,
+	body.setup-active #dock,
+	body.setup-active .page-indicator,
+	body.onboarding-active .container,
+	body.onboarding-active .widget-grid,
+	body.onboarding-active .persistent-clock,
+	body.onboarding-active .drawer-handle,
+	body.onboarding-active #one-button-nav-handle,
+	body.onboarding-active #dock,
+	body.onboarding-active .page-indicator {
+	    display: none !important;
+	}
+
         .setup-screen {
             position: fixed;
             top: 0;
