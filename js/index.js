@@ -7100,11 +7100,12 @@ function setupDrawerInteractions() {
         const deltaX = currentX - startX;
         const verticalDelta = startY - yPosition; // Use a different name to avoid conflict
 
-		const HORIZONTAL_SWIPE_DEADZONE = 40; // Pixels needed to trigger switcher
+		const HORIZONTAL_SWIPE_DEADZONE = 40; // Min horizontal movement to trigger switcher
+        const VERTICAL_SWIPE_LIMIT = 50;      // Max vertical movement for a horizontal gesture
 
-        // Determine if swipe is more horizontal than vertical
-        if (Math.abs(deltaX) > Math.abs(verticalDelta) + 20) { // Horizontal swipe
-            // Only open the switcher if the horizontal deadzone is passed
+        // Determine if swipe is horizontal (and not significantly vertical)
+        if (Math.abs(verticalDelta) < VERTICAL_SWIPE_LIMIT && Math.abs(deltaX) > Math.abs(verticalDelta) + 20) {
+            // Only open the switcher if the horizontal deadzone is also passed
             if (!appSwitcherVisible && Math.abs(deltaX) > HORIZONTAL_SWIPE_DEADZONE) {
                 openAppSwitcher();
             }
@@ -9710,7 +9711,15 @@ function openAppSwitcher() {
 
 function updateSwitcherSelection(index) {
     if (!appSwitcherVisible) return;
-    appSwitcherIndex = (index + appSwitcherApps.length) % appSwitcherApps.length; // Handle negative indices
+    
+    // Clamp the index to stay within the bounds of the app list
+    const clampedIndex = Math.max(0, Math.min(index, appSwitcherApps.length - 1));
+    
+    // Only update if the index has actually changed
+    if (clampedIndex === appSwitcherIndex) return;
+
+    appSwitcherIndex = clampedIndex;
+    
     document.querySelectorAll('.app-switcher-item').forEach((item, i) => {
         item.classList.toggle('selected', i === appSwitcherIndex);
     });
