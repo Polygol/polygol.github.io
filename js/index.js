@@ -7087,10 +7087,10 @@ function setupDrawerInteractions() {
 
         currentX = xPosition;
         const deltaX = currentX - startX;
-        const deltaY = startY - yPosition; // Inverted for upward swipe
+        const verticalDelta = startY - yPosition; // Use a different name to avoid conflict
 
         // Determine if swipe is more horizontal than vertical
-        if (Math.abs(deltaX) > Math.abs(deltaY) + 20) { // Horizontal swipe
+        if (Math.abs(deltaX) > Math.abs(verticalDelta) + 20) { // Horizontal swipe
             if (!appSwitcherVisible) {
                 openAppSwitcher();
             }
@@ -7112,6 +7112,7 @@ function setupDrawerInteractions() {
 	            velocities.shift();
 	        }
 	    }
+		
 	    lastY = yPosition;
 	    currentY = yPosition;
 	    const deltaY = startY - currentY; // Positive for upward swipe
