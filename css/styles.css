@@ -2324,7 +2324,7 @@ input[type="checkbox"]:checked::before {
 
 		.app-icon:active .app-icon-img {
 		    filter: brightness(1.5);
-		    transform: scale(1.05);
+		    transform: scale(1.04);
 		}
 
         .app-icon span {
