@@ -2250,20 +2250,29 @@ input[type="checkbox"]:checked::before {
             transform: translateX(-50%);
 		}
 
+		.drawer-search-btn {
+			background-color: var(--search-background);
+			border: 1px solid var(--glass-border);
+			box-shadow: var(--sun-shadow);
+			display: flex;
+			gap: 10px;
+			font-weight: 500;
+		}
+
         .app-drawer-content {
             display: flex;
             align-items: flex-start;
-            height: calc(100% - 42px);
+            height: calc(100% - (44px + 2vh));
             overflow-y: auto;
             user-select: none;
-            padding: 0 20px;
-            margin-top: 42px;
+            padding: 2vh 3vw 0 3vw;
+            margin-top: 44px;
         }
 
         .app-drawer-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 15px;
+            gap: 2vw;
             max-height: 90vh;
             width: 100%;
         }
@@ -2275,10 +2284,9 @@ input[type="checkbox"]:checked::before {
             align-items: center;
             cursor: pointer;
             transition: transform 0.2s;
-            padding: 2vw 15px;
-            border-radius: 25px;
-            border: 1px solid transparent;
+            padding-bottom: 2vw;
             user-select: none;
+			gap: 2vh;
         }
 
         .app-icon img {
@@ -2294,6 +2302,7 @@ input[type="checkbox"]:checked::before {
 
 		.app-icon .app-icon-img {
 			transform: scale(0.9);
+			width: 100%;
 		}
 
 		.app-icon:active .app-icon-img {
@@ -2303,7 +2312,6 @@ input[type="checkbox"]:checked::before {
 
         .app-icon span {
             text-align: center;
-			margin-top: 12px;
             color: var(--text-color);
 			font-weight: 500;
         }
@@ -2841,11 +2849,6 @@ input[type="checkbox"]:checked::before {
         @media (max-width: 970px) {
             .app-drawer-grid {
                 grid-template-columns: repeat(4, 1fr);
-            }
-
-            .app-icon img {
-                width: min(14vw, 175px);
-                height: min(14vw, 175px);
             }
         }
 
