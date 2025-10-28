@@ -7007,6 +7007,7 @@ function saveUsageData() {
 function setupDrawerInteractions() {
     let startY = 0, startX = 0;
     let currentY = 0, currentX = 0;
+    let dragStartIndex = -1; // NEW: Tracks the initial index for horizontal swipe
     let initialDrawerPosition = -100;
     let isDragging = false;
     let isDrawerInMotion = false;
@@ -7081,6 +7082,7 @@ function setupDrawerInteractions() {
         lastY = yPosition;
         currentX = xPosition;
         currentY = yPosition;
+        dragStartIndex = -1; // Reset on new drag
         isDragging = true;
         isDrawerInMotion = true;
         dragStartTime = Date.now();
@@ -7098,19 +7100,27 @@ function setupDrawerInteractions() {
         const deltaX = currentX - startX;
         const verticalDelta = startY - yPosition; // Use a different name to avoid conflict
 
-        // Determine if swipe is more horizontal than vertical
-        if (Math.abs(deltaX) > Math.abs(verticalDelta) + 20) { // Horizontal swipe
-            if (!appSwitcherVisible) {
-                openAppSwitcher();
-            }
-            if (appSwitcherVisible) {
-                // Scrub through apps based on swipe distance
-                const itemWidth = 80; // approx width of an item
-                const newIndex = Math.floor(Math.abs(deltaX) / itemWidth);
-                updateSwitcherSelection((appSwitcherIndex + (deltaX > 0 ? 1 : -1) * newIndex) % appSwitcherApps.length);
-            }
-            return; // Don't process vertical drawer movement
-        }
+		// Determine if swipe is more horizontal than vertical
+		if (Math.abs(deltaX) > Math.abs(verticalDelta) + 20) { // Horizontal swipe
+		    if (!appSwitcherVisible) {
+		        openAppSwitcher();
+		    }
+		    if (appSwitcherVisible) {
+		        if (dragStartIndex === -1) {
+		            dragStartIndex = appSwitcherIndex; // Set initial index on first horizontal move
+		        }
+		
+		        const itemWidth = 80; // approximate width + gap
+		        const slotsMoved = Math.round(deltaX / itemWidth);
+		        const newIndex = dragStartIndex + slotsMoved;
+		
+		        // Only update the UI if the calculated index has actually changed
+		        if (newIndex !== appSwitcherIndex) {
+		            updateSwitcherSelection(newIndex);
+		        }
+		    }
+		    return; // Don't process vertical drawer movement
+		}
 	
 	    const now = Date.now();
 	    const deltaTime = now - dragStartTime;
@@ -7515,10 +7525,12 @@ function setupDrawerInteractions() {
 
 	document.addEventListener('touchend', () => {
 		if (oneButtonNavEnabled) return;
-        if (appSwitcherVisible) {
-            selectAndCloseAppSwitcher();
-        } else {
-            endDrag();
+        if (isDragging) { // Only act if a drag was in progress
+            if (appSwitcherVisible) {
+                selectAndCloseAppSwitcher();
+            } else {
+                endDrag();
+            }
         }
     });
 
@@ -7541,12 +7553,14 @@ function setupDrawerInteractions() {
         }
     });
 
-    document.addEventListener('mouseup', () => {
+	document.addEventListener('mouseup', () => {
 		if (oneButtonNavEnabled) return;
-        if (appSwitcherVisible) {
-            selectAndCloseAppSwitcher();
-        } else {
-            endDrag();
+        if (isDragging) { // Only act if a drag was in progress
+            if (appSwitcherVisible) {
+                selectAndCloseAppSwitcher();
+            } else {
+                endDrag();
+            }
         }
     });
 
@@ -9701,6 +9715,7 @@ function selectAndCloseAppSwitcher() {
     if (!appSwitcherVisible) return;
     
     appSwitcherVisible = false; // Immediately disable further input.
+    isDragging = false; // Ensure dragging state is always reset.
 
     const selectedUrl = appSwitcherApps[appSwitcherIndex];
     createFullscreenEmbed(selectedUrl);
