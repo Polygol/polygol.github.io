@@ -2313,7 +2313,7 @@ input[type="checkbox"]:checked::before {
         .app-drawer-content {
             display: flex;
             align-items: flex-start;
-            height: calc(100% - (80px + 2vh));
+            height: calc(100% - 80px);
             overflow-y: auto;
             user-select: none;
             padding: 0 3vw 0 3vw;
