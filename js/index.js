@@ -7100,8 +7100,14 @@ function setupDrawerInteractions() {
         const deltaX = currentX - startX;
         const verticalDelta = startY - yPosition; // Use a different name to avoid conflict
 
-		const HORIZONTAL_SWIPE_DEADZONE = 40; // Min horizontal movement to trigger switcher
+        const HORIZONTAL_SWIPE_DEADZONE = 40; // Min horizontal movement to trigger switcher
         const VERTICAL_SWIPE_LIMIT = 50;      // Max vertical movement for a horizontal gesture
+
+        // If switcher is visible and user swipes up past the limit, discard it.
+        if (appSwitcherVisible && verticalDelta > VERTICAL_SWIPE_LIMIT) {
+            discardAndCloseAppSwitcher();
+            return; // Stop processing this gesture immediately.
+        }
 
         // Determine if swipe is horizontal (and not significantly vertical)
         if (Math.abs(verticalDelta) < VERTICAL_SWIPE_LIMIT && Math.abs(deltaX) > Math.abs(verticalDelta) + 20) {
@@ -9723,6 +9729,26 @@ function updateSwitcherSelection(index) {
     document.querySelectorAll('.app-switcher-item').forEach((item, i) => {
         item.classList.toggle('selected', i === appSwitcherIndex);
     });
+}
+
+function discardAndCloseAppSwitcher() {
+    if (!appSwitcherVisible) return;
+
+    appSwitcherVisible = false;
+    isDragging = false; // Stop the current drag operation completely
+
+    const overlay = document.getElementById('app-switcher-overlay');
+    overlay.style.opacity = '0';
+    overlay.style.transform = 'translateX(-50%) scale(0.95)';
+    setTimeout(() => {
+        overlay.style.display = 'none';
+    }, 200);
+
+    // Make the gesture overlay non-interactive since the action is cancelled
+    const swipeOverlay = document.getElementById('swipe-overlay');
+    if (swipeOverlay) {
+        swipeOverlay.style.pointerEvents = 'none';
+    }
 }
 
 function selectAndCloseAppSwitcher() {
