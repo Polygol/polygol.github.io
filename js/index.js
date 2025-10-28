@@ -6273,28 +6273,29 @@ async function deleteApp(appName) {
 let isAppOpen = false;
 
 async function createFullscreenEmbed(url) {
-    // BUGFIX: If an embed for this URL already exists anywhere in the DOM,
-    // prevent creating a duplicate. The rest of the function will handle switching to it.
-    const alreadyExists = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"]`);
-    if (alreadyExists && alreadyExists.style.display === 'block') {
-        return; // It's already the active app, do nothing.
+    // If the target app is already active on screen, do nothing.
+    const existingActive = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"][style*="display: block"]`);
+    if (existingActive) {
+        return;
     }
-let appSwitcherIndex = 0;
 
-    // PREVENT DUPLICATES & HANDLE SWITCHING
-    const currentlyOpenEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-    if (currentlyOpenEmbed) {
-        // If the app we want to open is already the one that's open, do nothing.
-        if (currentlyOpenEmbed.dataset.embedUrl === url) {
-            return; 
+    // --- Hard Reset: Forcefully hide and disable ALL other embeds ---
+    document.querySelectorAll('.fullscreen-embed').forEach(embed => {
+        if (embed.dataset.embedUrl !== url) {
+            // If this other embed has a URL, ensure it's in the minimized cache.
+            if (embed.dataset.embedUrl) {
+                minimizedEmbeds[embed.dataset.embedUrl] = embed;
+            }
+            // Immediately hide and disable it. No animations for this cleanup.
+            embed.style.display = 'none';
+            embed.style.pointerEvents = 'none';
+            embed.style.zIndex = '0';
         }
-        // Otherwise, an app is open and we want to switch, so minimize the current one.
-        minimizeFullscreenEmbed();
-    }
+    });
 
 	closeControls();
 	
-    // If we are restoring this app from a minimized state, we must cancel its cleanup timer.
+    // If we are about to restore this app, cancel any pending cleanup timer for it.
     if (minimizedEmbeds[url]) {
         clearTimeout(minimizeCleanupTimeout);
     }
@@ -6644,8 +6645,7 @@ function minimizeFullscreenEmbed(animate = true) {
 
     isAppOpen = false;
 	
-    // IMPORTANT FIX: Be more specific about which embed to minimize
-    // Only get embeds that are currently visible with display: block
+    // Find the single active embed to minimize. The new create logic prevents multiple.
     const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
     
     if (embedContainer) {
