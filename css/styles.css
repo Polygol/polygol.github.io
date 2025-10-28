@@ -2239,6 +2239,15 @@ input[type="checkbox"]:checked::before {
 		    transform: translateX(-50%);
         }
 
+		#app-drawer .app-drawer-handle {
+		    height: 80px;
+		    left: 50%;
+		    display: flex;
+		    align-items: center;
+		    gap: 16px;
+		    justify-content: center;
+		}
+
 		.drawer-handle-bar {
             width: 50px;
             height: 5px;
@@ -2250,23 +2259,31 @@ input[type="checkbox"]:checked::before {
             transform: translateX(-50%);
 		}
 
-		.drawer-search-btn {
-			background-color: var(--search-background);
-			border: 1px solid var(--glass-border);
-			box-shadow: var(--sun-shadow);
-			display: flex;
-			gap: 10px;
-			font-weight: 500;
+		.drawer-top-btn {
+		    background-color: var(--overlay-color);
+		    border: 1px solid var(--glass-border);
+		    box-shadow: var(--sun-shadow);
+		    display: flex;
+		    gap: 8px;
+		    padding: 10px 16px 10px 14px;
+		    position: relative;
+			font-size: 14px;
+			border-radius: 50px;
+		}
+
+		.drawer-top-btn .material-symbols-rounded {
+			font-size: 18px;
+			font-variation-settings: FILL '1', 'wght' 500;
 		}
 
         .app-drawer-content {
             display: flex;
             align-items: flex-start;
-            height: calc(100% - (44px + 2vh));
+            height: calc(100% - (80px + 2vh));
             overflow-y: auto;
             user-select: none;
-            padding: 2vh 3vw 0 3vw;
-            margin-top: 44px;
+            padding: 0 3vw 0 3vw;
+            margin-top: 80px;
         }
 
         .app-drawer-grid {
