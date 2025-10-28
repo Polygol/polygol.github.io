@@ -6764,14 +6764,136 @@ function populateDock() {
     const appDrawer = document.getElementById('app-drawer');
     const appGrid = document.getElementById('app-grid');
 
-// Function to create app icons
-function createAppIcons() {
-    appGrid.innerHTML = '';
+let appIconColors = JSON.parse(localStorage.getItem('appIconColors')) || {};
+const sortMethods = [
+    { id: 'alpha', icon: 'sort_by_alpha', label: 'Alphabetical' },
+    { id: 'last_used', icon: 'history', label: 'Last Used' },
+    { id: 'most_used', icon: 'trending_up', label: 'Most Used' },
+    { id: 'color', icon: 'palette', label: 'Color' }
+];
+let currentSortIndex = 0;
 
-    const appsArray = Object.entries(apps)
+function loadSortPreference() {
+    const savedSort = localStorage.getItem('appSortMethod') || 'alpha';
+    const savedIndex = sortMethods.findIndex(m => m.id === savedSort);
+    currentSortIndex = savedIndex !== -1 ? savedIndex : 0;
+}
+
+function updateSortButtonUI() {
+    const sortBtn = document.getElementById('sort-app-btn');
+    if (sortBtn) {
+        const currentMethod = sortMethods[currentSortIndex];
+        sortBtn.querySelector('.material-symbols-rounded').textContent = currentMethod.icon;
+        sortBtn.querySelector('span:last-child').textContent = currentMethod.label;
+    }
+}
+
+// --- Color Analysis Utilities ---
+function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) {
+        h = s = 0; // achromatic
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return [h, s, l];
+}
+
+function getDominantColor(imgSrc) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            try {
+                const data = ctx.getImageData(0, 0, img.width, img.height).data;
+                const colorCounts = {};
+                let maxCount = 0;
+                let dominantColor = {r: 255, g: 255, b: 255}; // Default white
+                for (let i = 0; i < data.length; i += 4) {
+                    // Skip transparent or near-white/black pixels to get actual color
+                    if (data[i+3] < 128 || (data[i] > 250 && data[i+1] > 250 && data[i+2] > 250) || (data[i] < 5 && data[i+1] < 5 && data[i+2] < 5)) continue;
+                    
+                    const rgb = `${data[i]},${data[i+1]},${data[i+2]}`;
+                    colorCounts[rgb] = (colorCounts[rgb] || 0) + 1;
+                    if (colorCounts[rgb] > maxCount) {
+                        maxCount = colorCounts[rgb];
+                        dominantColor = { r: data[i], g: data[i+1], b: data[i+2] };
+                    }
+                }
+                resolve(dominantColor);
+            } catch (e) {
+                reject(e); // Likely a CORS error
+            }
+        };
+        img.onerror = () => resolve({ r: 255, g: 255, b: 255 }); // Resolve with white on error
+        img.src = imgSrc;
+    });
+}
+
+async function cacheAppIconColors() {
+    let needsUpdate = false;
+    for (const appName in apps) {
+        if (!appIconColors[appName] && apps[appName].icon) {
+            try {
+                const iconSrc = apps[appName].icon.startsWith('/') ? window.location.origin + apps[appName].icon : apps[appName].icon;
+                const color = await getDominantColor(iconSrc);
+                const hsl = rgbToHsl(color.r, color.g, color.b);
+                appIconColors[appName] = hsl[0]; // Store hue
+                needsUpdate = true;
+            } catch (e) {
+                appIconColors[appName] = 0; // Default on error
+            }
+        }
+    }
+    if (needsUpdate) {
+        localStorage.setItem('appIconColors', JSON.stringify(appIconColors));
+    }
+}
+
+// Function to sort and render app icons
+function createAppIcons(filterQuery = '') {
+    appGrid.innerHTML = '';
+    
+    let appsArray = Object.entries(apps)
         .filter(([appName]) => appName !== "Apps")
-        .map(([appName, appDetails]) => ({ name: appName, details: appDetails }))
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .map(([appName, appDetails]) => ({ name: appName, details: appDetails }));
+
+    // Apply search filter if provided
+    if (filterQuery) {
+        appsArray = appsArray.filter(app => app.name.toLowerCase().includes(filterQuery.toLowerCase()));
+    }
+
+    // Apply sorting
+    const sortMethod = sortMethods[currentSortIndex].id;
+    switch (sortMethod) {
+        case 'last_used':
+            appsArray.sort((a, b) => (appLastOpened[b.name] || 0) - (appLastOpened[a.name] || 0));
+            break;
+        case 'most_used':
+            appsArray.sort((a, b) => (appUsage[b.name] || 0) - (appUsage[a.name] || 0));
+            break;
+        case 'color':
+            appsArray.sort((a, b) => (appIconColors[a.name] || 0) - (appIconColors[b.name] || 0));
+            break;
+        case 'alpha':
+        default:
+            appsArray.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+    }
 
     appsArray.forEach((app) => {
         const appIcon = document.createElement('div');
@@ -9387,6 +9509,41 @@ window.addEventListener('message', async (event) => { // Make listener async
 
     // Initialize app drawer
     function initAppDraw() {
-        createAppIcons();
+        const searchBtn = document.getElementById('search-app-btn');
+        const sortBtn = document.getElementById('sort-app-btn');
+        const searchContainer = document.querySelector('.app-search-container');
+        const searchInput = document.getElementById('app-search-input');
+        const closeSearchBtn = document.getElementById('close-search-btn');
+
+        searchBtn.addEventListener('click', () => {
+            appDrawer.classList.add('is-searching');
+            searchInput.focus();
+        });
+
+        closeSearchBtn.addEventListener('click', () => {
+            appDrawer.classList.remove('is-searching');
+            searchInput.value = '';
+            createAppIcons();
+        });
+
+        searchInput.addEventListener('input', () => {
+            createAppIcons(searchInput.value);
+        });
+
+        sortBtn.addEventListener('click', () => {
+            currentSortIndex = (currentSortIndex + 1) % sortMethods.length;
+            localStorage.setItem('appSortMethod', sortMethods[currentSortIndex].id);
+            updateSortButtonUI();
+            createAppIcons(searchInput.value); // Re-render with new sort
+        });
+
+        // Load preferences, cache colors, and then render the initial grid
+        loadSortPreference();
+        updateSortButtonUI();
+        cacheAppIconColors().then(() => {
+            createAppIcons();
+        });
+
+        // Setup the original drawer interactions
         setupDrawerInteractions();
     }
