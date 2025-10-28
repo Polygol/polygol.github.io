@@ -2306,14 +2306,6 @@ input[type="checkbox"]:checked::before {
             display: flex;
         }
 
-        .app-drawer.is-searching .drawer-top-btn {
-            display: none;
-        }
-
-        .app-drawer.is-searching .app-search-container {
-            display: flex;
-        }
-
         .app-drawer-content {
             display: flex;
             align-items: flex-start;
