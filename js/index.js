@@ -6936,17 +6936,8 @@ function createAppIcons(filterQuery = '') {
         const handleAppOpen = (e) => {
             e.preventDefault();
             e.stopPropagation();
-
-			// Hide the search bar upon launching an app
-            const searchContainer = document.querySelector('.app-search-container');
-            if (searchContainer.style.display === 'flex') {
-                const searchBtn = document.getElementById('search-app-btn');
-                const sortBtn = document.getElementById('sort-app-btn');
-                searchContainer.style.display = 'none';
-                searchBtn.style.display = 'flex';
-                sortBtn.style.display = 'flex';
-                document.getElementById('app-search-input').value = '';
-            }
+			
+            closeSearch(); // Clean up search UI
 			
             try {      
                 if (app.details.url.startsWith('#')) {
@@ -9518,82 +9509,91 @@ window.addEventListener('message', async (event) => { // Make listener async
     }
 });
 
-    // Initialize app drawer
-    function initAppDraw() {
-        const searchBtn = document.getElementById('search-app-btn');
-        const sortBtn = document.getElementById('sort-app-btn');
-        const searchContainer = document.querySelector('.app-search-container');
-        const searchInput = document.getElementById('app-search-input');
-        const closeSearchBtn = document.getElementById('close-search-btn');
+function openSearch() {
+    const searchContainer = document.querySelector('.app-search-container');
+    if (searchContainer.style.display === 'flex') return;
 
-        function openSearch() {
-            if (searchContainer.style.display === 'flex') return; // Already open
-            searchBtn.style.display = 'none';
-            sortBtn.style.display = 'none';
-            searchContainer.style.display = 'flex';
-            searchInput.focus();
+    const searchBtn = document.getElementById('search-app-btn');
+    const sortBtn = document.getElementById('sort-app-btn');
+    const searchInput = document.getElementById('app-search-input');
+
+    searchBtn.style.display = 'none';
+    sortBtn.style.display = 'none';
+    searchContainer.style.display = 'flex';
+    searchInput.focus();
+}
+
+function closeSearch() {
+    const searchContainer = document.querySelector('.app-search-container');
+    if (searchContainer.style.display === 'none') return;
+
+    const searchBtn = document.getElementById('search-app-btn');
+    const sortBtn = document.getElementById('sort-app-btn');
+    const searchInput = document.getElementById('app-search-input');
+
+    searchContainer.style.display = 'none';
+    searchBtn.style.display = 'flex';
+    sortBtn.style.display = 'flex';
+    searchInput.value = '';
+    createAppIcons(); // Reset to full, sorted list
+}
+
+// Initialize app drawer
+function initAppDraw() {
+    const searchBtn = document.getElementById('search-app-btn');
+    const sortBtn = document.getElementById('sort-app-btn');
+    const searchInput = document.getElementById('app-search-input');
+    const closeSearchBtn = document.getElementById('close-search-btn');
+
+    searchBtn.addEventListener('click', openSearch);
+    closeSearchBtn.addEventListener('click', closeSearch);
+
+    searchInput.addEventListener('blur', () => {
+        if (searchInput.value.trim() === '') {
+            setTimeout(closeSearch, 100);
         }
+    });
 
-        function closeSearch() {
-            if (searchContainer.style.display === 'none') return; // Already closed
-            searchContainer.style.display = 'none';
-            searchBtn.style.display = 'flex';
-            sortBtn.style.display = 'flex';
-            searchInput.value = '';
-            createAppIcons(); // Reset to full, sorted list
+    searchInput.addEventListener('input', () => {
+        createAppIcons(searchInput.value);
+    });
+    
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && searchInput.value.trim() !== '') {
+            const firstIcon = appGrid.querySelector('.app-icon');
+            if (firstIcon) {
+                firstIcon.click();
+            }
         }
+    });
 
-        searchBtn.addEventListener('click', openSearch);
-        closeSearchBtn.addEventListener('click', closeSearch);
-
-        // Hide search bar when it loses focus and is empty
-        searchInput.addEventListener('blur', () => {
-            if (searchInput.value.trim() === '') {
-                // Use a small timeout to prevent closing when the close button is clicked
-                setTimeout(() => closeSearch(), 100);
-            }
-        });
-
-        // Handle keyboard input in the app drawer
-        appDrawer.addEventListener('keydown', (e) => {
-            // Ignore if the search input is already focused or if it's a special key
-            if (document.activeElement === searchInput || e.key.length > 1) return;
-            
-            // Open search and append the typed key
-            openSearch();
-            searchInput.value += e.key;
-            createAppIcons(searchInput.value);
-        });
-
-        searchInput.addEventListener('input', () => {
-            createAppIcons(searchInput.value);
-        });
-        
-        // Handle "Enter" key to launch the best search result
-        searchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && searchInput.value.trim() !== '') {
-                const firstIcon = appGrid.querySelector('.app-icon');
-                if (firstIcon) {
-                    firstIcon.click(); // This will trigger the app launch
-                    closeSearch(); // Also close the search UI
-                }
-            }
-        });
-
-        sortBtn.addEventListener('click', () => {
-            currentSortIndex = (currentSortIndex + 1) % sortMethods.length;
-            localStorage.setItem('appSortMethod', sortMethods[currentSortIndex].id);
-            updateSortButtonUI();
-            createAppIcons(searchInput.value); // Re-render with new sort
-        });
-
-        // Load preferences, cache colors, and then render the initial grid
-        loadSortPreference();
+    sortBtn.addEventListener('click', () => {
+        currentSortIndex = (currentSortIndex + 1) % sortMethods.length;
+        localStorage.setItem('appSortMethod', sortMethods[currentSortIndex].id);
         updateSortButtonUI();
-        cacheAppIconColors().then(() => {
-            createAppIcons();
-        });
+        createAppIcons(searchInput.value);
+    });
 
-        // Setup the original drawer interactions
-        setupDrawerInteractions();
-    }
+    loadSortPreference();
+    updateSortButtonUI();
+    cacheAppIconColors().then(() => {
+        createAppIcons();
+    });
+
+    setupDrawerInteractions();
+}
+
+// Global listener for keyboard typing to open search
+document.addEventListener('keydown', (e) => {
+    const appDrawer = document.getElementById('app-drawer');
+    const searchInput = document.getElementById('app-search-input');
+
+    if (!appDrawer.classList.contains('open')) return;
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+    if (e.key.length > 1 || e.metaKey || e.ctrlKey || e.altKey) return;
+
+    e.preventDefault();
+    openSearch();
+    searchInput.value += e.key;
+    createAppIcons(searchInput.value);
+});
