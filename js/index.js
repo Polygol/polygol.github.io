@@ -3274,6 +3274,12 @@ let chatSession; // For conversational memory
 const AI_ICON_THINKING_SVG = `<svg width="24" height="24" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--text-color);"><style>.spinner_V8m1{transform-origin:center;animation:spinner_zKoa 2s linear infinite}.spinner_V8m1 circle{stroke-linecap:round;animation:spinner_YpZS 1.5s ease-in-out infinite}@keyframes spinner_zKoa{100%{transform:rotate(360deg)}}@keyframes spinner_YpZS{0%{stroke-dasharray:0 150;stroke-dashoffset:0}47.5%{stroke-dasharray:42 150;stroke-dashoffset:-16}95%,100%{stroke-dasharray:42 150;stroke-dashoffset:-59}}</style><g class="spinner_V8m1"><circle cx="12" cy="12" r="9.5" fill="none" stroke-width="3"></circle></g></svg>`;
 const AI_ICON_DEFAULT = 'auto_awesome';
 
+// --- App Switcher State ---
+let appSwitcherVisible = false;
+let appSwitcherApps = [];
+let appSwitcherIndex = 0;
+let isAltKeyDown = false;
+
 // Theme switching functionality
 function setupThemeSwitcher() {
     // Check and set initial theme
@@ -6990,8 +6996,8 @@ function saveUsageData() {
 }
 
 function setupDrawerInteractions() {
-    let startY = 0;
-    let currentY = 0;
+    let startY = 0, startX = 0;
+    let currentY = 0, currentX = 0;
     let initialDrawerPosition = -100;
     let isDragging = false;
     let isDrawerInMotion = false;
@@ -7060,9 +7066,11 @@ function setupDrawerInteractions() {
     swipeOverlay.style.pointerEvents = 'none'; // Start with no interaction
     document.body.appendChild(swipeOverlay);
 
-    function startDrag(yPosition) {
+	function startDrag(xPosition, yPosition) {
+        startX = xPosition;
         startY = yPosition;
         lastY = yPosition;
+        currentX = xPosition;
         currentY = yPosition;
         isDragging = true;
         isDrawerInMotion = true;
@@ -7074,8 +7082,26 @@ function setupDrawerInteractions() {
         });
     }
 
-	function moveDrawer(yPosition) {
+	function moveDrawer(xPosition, yPosition) {
 	    if (!isDragging) return;
+
+        currentX = xPosition;
+        const deltaX = currentX - startX;
+        const deltaY = startY - yPosition; // Inverted for upward swipe
+
+        // Determine if swipe is more horizontal than vertical
+        if (Math.abs(deltaX) > Math.abs(deltaY) + 20) { // Horizontal swipe
+            if (!appSwitcherVisible) {
+                openAppSwitcher();
+            }
+            if (appSwitcherVisible) {
+                // Scrub through apps based on swipe distance
+                const itemWidth = 80; // approx width of an item
+                const newIndex = Math.floor(Math.abs(deltaX) / itemWidth);
+                updateSwitcherSelection((appSwitcherIndex + (deltaX > 0 ? 1 : -1) * newIndex) % appSwitcherApps.length);
+            }
+            return; // Don't process vertical drawer movement
+        }
 	
 	    const now = Date.now();
 	    const deltaTime = now - dragStartTime;
@@ -7464,7 +7490,7 @@ function setupDrawerInteractions() {
         
         // Check if touch is on handle area
         if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
-            startDrag(touch.clientY);
+            startDrag(touch.clientX, touch.clientY);
             e.preventDefault();
         }
     }, { passive: false });
@@ -7473,13 +7499,17 @@ function setupDrawerInteractions() {
 		if (oneButtonNavEnabled) return;
         if (isDragging) {
             e.preventDefault();
-            moveDrawer(e.touches[0].clientY);
+            moveDrawer(e.touches[0].clientX, e.touches[0].clientY);
         }
     }, { passive: false });
 
-    document.addEventListener('touchend', () => {
+	document.addEventListener('touchend', () => {
 		if (oneButtonNavEnabled) return;
-        endDrag();
+        if (appSwitcherVisible) {
+            selectAndCloseAppSwitcher();
+        } else {
+            endDrag();
+        }
     });
 
     // Mouse Events for regular drawer interaction
@@ -7490,20 +7520,24 @@ function setupDrawerInteractions() {
         
         // Check if click is on handle area
         if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
-            startDrag(e.clientY);
+            startDrag(e.clientX, e.clientY);
         }
     });
 
     document.addEventListener('mousemove', (e) => {
 		if (oneButtonNavEnabled) return;
         if (isDragging) {
-            moveDrawer(e.clientY);
+            moveDrawer(e.clientX, e.clientY);
         }
     });
 
     document.addEventListener('mouseup', () => {
 		if (oneButtonNavEnabled) return;
-        endDrag();
+        if (appSwitcherVisible) {
+            selectAndCloseAppSwitcher();
+        } else {
+            endDrag();
+        }
     });
 
     document.addEventListener('click', (e) => {
@@ -9590,9 +9624,113 @@ function initAppDraw() {
     setupDrawerInteractions();
 }
 
-// Global listener for keyboard typing to open search
+// --- App Switcher Functions ---
+function openAppSwitcher() {
+    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+    const openUrl = openEmbed ? openEmbed.dataset.embedUrl : null;
+    const minimizedUrls = Object.keys(minimizedEmbeds);
+
+    const allOpenApps = [...new Set([openUrl, ...minimizedUrls].filter(Boolean))];
+
+    if (allOpenApps.length < 2) return; // No need to switch if < 2 apps are open
+
+    appSwitcherVisible = true;
+    appSwitcherApps = allOpenApps;
+
+    const switcherList = document.getElementById('app-switcher-list');
+    switcherList.innerHTML = '';
+
+    appSwitcherApps.forEach(url => {
+        const appName = Object.keys(apps).find(name => apps[name].url === url) || 'Unknown App';
+        const appDetails = apps[appName];
+        
+        const item = document.createElement('div');
+        item.className = 'app-switcher-item';
+        item.dataset.url = url;
+
+        let iconSrc = 'data:image/jpeg;base64,...'; // Fallback icon
+        if(appDetails && appDetails.icon) {
+            iconSrc = appDetails.icon.startsWith('/') ? appDetails.icon : `/assets/appicon/${appDetails.icon}`;
+        }
+
+        item.innerHTML = `
+            <div class="app-icon-img"><img src="${iconSrc}" alt="${appName}"></div>
+            <span>${appName}</span>
+        `;
+        switcherList.appendChild(item);
+    });
+
+    // Determine initial selection
+    const nextIndex = (allOpenApps.indexOf(openUrl) + 1) % allOpenApps.length;
+    updateSwitcherSelection(nextIndex);
+
+    const overlay = document.getElementById('app-switcher-overlay');
+    overlay.style.display = 'block';
+    setTimeout(() => {
+        overlay.style.opacity = '1';
+        overlay.style.transform = 'translateX(-50%) scale(1)';
+    }, 10);
+}
+
+function updateSwitcherSelection(index) {
+    if (!appSwitcherVisible) return;
+    appSwitcherIndex = (index + appSwitcherApps.length) % appSwitcherApps.length; // Handle negative indices
+    document.querySelectorAll('.app-switcher-item').forEach((item, i) => {
+        item.classList.toggle('selected', i === appSwitcherIndex);
+    });
+}
+
+function selectAndCloseAppSwitcher() {
+    if (!appSwitcherVisible) return;
+    
+    const selectedUrl = appSwitcherApps[appSwitcherIndex];
+    createFullscreenEmbed(selectedUrl);
+
+    const overlay = document.getElementById('app-switcher-overlay');
+    overlay.style.opacity = '0';
+    overlay.style.transform = 'translateX(-50%) scale(0.95)';
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        appSwitcherVisible = false;
+    }, 200);
+}
+
+// Global listener for keyboard shortcuts
 document.addEventListener('keydown', (e) => {
-    const appDrawer = document.getElementById('app-drawer');
+    // Universal Keyboard Shortcuts
+    if (e.code === 'Space') {
+        if (e.ctrlKey) {
+            e.preventDefault();
+            const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+            if (openEmbed) {
+                minimizeFullscreenEmbed();
+            } else {
+                // Toggle App Drawer
+                appDrawer.classList.toggle('open');
+                if(appDrawer.classList.contains('open')) {
+                    createAppIcons();
+                }
+            }
+        } else if (e.shiftKey) {
+            e.preventDefault();
+            const customizeModal = document.getElementById('customizeModal');
+            if (customizeModal.classList.contains('show')) {
+                closeControls();
+            } else {
+                document.getElementById('persistent-clock').click();
+            }
+        } else if (e.altKey) {
+            e.preventDefault();
+            isAltKeyDown = true;
+            if (!appSwitcherVisible) {
+                openAppSwitcher();
+            } else {
+                updateSwitcherSelection(appSwitcherIndex + 1);
+            }
+        }
+    }
+
+    // App Drawer Search
     const searchInput = document.getElementById('app-search-input');
 
     if (!appDrawer.classList.contains('open')) return;
@@ -9603,4 +9741,13 @@ document.addEventListener('keydown', (e) => {
     openSearch();
     searchInput.value += e.key;
     createAppIcons(searchInput.value);
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'Alt') {
+        if (appSwitcherVisible) {
+            selectAndCloseAppSwitcher();
+        }
+        isAltKeyDown = false;
+    }
 });
