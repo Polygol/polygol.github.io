@@ -6273,9 +6273,11 @@ async function deleteApp(appName) {
 let isAppOpen = false;
 
 async function createFullscreenEmbed(url) {
-    // If the target app is already active on screen, do nothing.
-    const existingActive = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"][style*="display: block"]`);
-    if (existingActive) {
+    // Check if we are switching from another app vs. opening from home.
+    const isSwitching = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+
+    // If the target app is already the active one, do nothing.
+    if (isSwitching && document.querySelector(`.fullscreen-embed[data-embed-url="${url}"][style*="display: block"]`)) {
         return;
     }
 
@@ -6397,12 +6399,6 @@ async function createFullscreenEmbed(url) {
 		embedContainer.style.border = '1px solid var(--glass-border)';
         embedContainer.style.overflow = 'clip';
         embedContainer.style.display = 'block';
-
-		const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
-	    const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
-	    const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
-	    document.body.style.setProperty('--wallpaper-filter', openFilter);
-	    document.body.style.setProperty('--bg-transform-scale', '1.25');
         
         // IMPORTANT FIX: Restore proper z-index and pointer events
         embedContainer.style.pointerEvents = 'auto';
@@ -6422,14 +6418,41 @@ async function createFullscreenEmbed(url) {
             bgVideo.pause();
         }
 		
-	    // Clear background blur and trigger the animation
-	    setTimeout(() => {
+		if (isSwitching) {
+	        // --- FAST SWITCH TRANSITION (Cross-fade) ---
+	        embedContainer.style.transition = 'opacity 0.2s ease-in-out'; // Only fade opacity
 	        embedContainer.style.transform = 'scale(1)';
-	        embedContainer.style.opacity = '1';
+	        embedContainer.style.opacity = '0';
 	        embedContainer.style.borderRadius = '0px';
-			embedContainer.style.cornerShape = 'square';
-			embedContainer.style.border = 'none';
-	    }, 10);
+	
+	        // Background effects are already active, so just fade in the new app.
+	        void embedContainer.offsetWidth; // Force reflow
+	        embedContainer.style.opacity = '1';
+	
+	    } else {
+	        // --- STANDARD OPENING ANIMATION ---
+	        const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
+	        const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
+	        const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+	        document.body.style.setProperty('--wallpaper-filter', openFilter);
+	        document.body.style.setProperty('--bg-transform-scale', '1.25');
+	
+	        // Pause background animations (Video and Animated Images)
+	        await pauseAnimatedBackground();
+	        const bgVideo = document.getElementById('background-video');
+	        if (bgVideo && !bgVideo.paused) {
+	            await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
+	            bgVideo.pause();
+	        }
+	
+	        setTimeout(() => {
+	            embedContainer.style.transform = 'scale(1)';
+	            embedContainer.style.opacity = '1';
+	            embedContainer.style.borderRadius = '0px';
+	            embedContainer.style.cornerShape = 'square';
+	            embedContainer.style.border = 'none';
+	        }, 10);
+	    }
         
         // Hide all main UI elements
         document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
@@ -6587,14 +6610,6 @@ async function createFullscreenEmbed(url) {
     
     // Now add the transition AFTER the element is in the DOM (removed filter)
     embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
-
-    // Pause background animations (Video and Animated Images)
-    await pauseAnimatedBackground();
-    const bgVideo = document.getElementById('background-video');
-    if (bgVideo && !bgVideo.paused) {
-        await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
-        bgVideo.pause();
-    }
     
     // Clear background blur and trigger the animation
     setTimeout(() => {
