@@ -9644,9 +9644,16 @@ function openAppSwitcher() {
 
     if (allOpenApps.length < 2) return; // No need to switch if < 2 apps are open
 
-    appSwitcherVisible = true;
-    appSwitcherApps = allOpenApps;
-
+	// Ensure the gesture overlay is active to capture swipes over the iframe.
+	const swipeOverlay = document.getElementById('swipe-overlay');
+	if (swipeOverlay) {
+	    swipeOverlay.style.display = 'block';
+	    swipeOverlay.style.pointerEvents = 'auto';
+	}
+	
+	appSwitcherVisible = true;
+	appSwitcherApps = allOpenApps;
+	
     const switcherList = document.getElementById('app-switcher-list');
     switcherList.innerHTML = '';
 
