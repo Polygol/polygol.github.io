@@ -2882,7 +2882,7 @@ input[type="checkbox"]:checked::before {
     left: 50%;
     transform: translateX(-50%);
     background-color: var(--search-background);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(10px);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
     border: 1px solid var(--glass-border);
 	corner-shape: superellipse(1.5);
     border-radius: 50px;
