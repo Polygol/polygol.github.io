@@ -2273,7 +2273,7 @@ input[type="checkbox"]:checked::before {
 
 		.drawer-top-btn .material-symbols-rounded {
 			font-size: 18px;
-			font-variation-settings: FILL '1', 'wght' 500;
+			font-variation-settings: 'FILL' 1, 'wght' 500;
 		}
 
         .app-drawer-content {
