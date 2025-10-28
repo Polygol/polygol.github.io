@@ -6877,6 +6877,7 @@ function setupDrawerInteractions() {
     const openThreshold = -50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
+	const appDrawerHandle = document.querySelector('.app-drawer-handle');
     const oneButtonNavHandle = document.getElementById('one-button-nav-handle');
 
     const startLongPress = (e) => {
@@ -7330,6 +7331,12 @@ function setupDrawerInteractions() {
 		if (oneButtonNavEnabled) return;
         const touch = e.touches[0];
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Check if touch is on handle area
+        if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
+            startDrag(touch.clientY);
+            e.preventDefault();
+        }
     }, { passive: false });
 
     document.addEventListener('touchmove', (e) => {
@@ -7350,6 +7357,11 @@ function setupDrawerInteractions() {
 		if (oneButtonNavEnabled) return;
         if (e.button !== 0) return;
         const element = document.elementFromPoint(e.clientX, e.clientY);
+        
+        // Check if click is on handle area
+        if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
+            startDrag(e.clientY);
+        }
     });
 
     document.addEventListener('mousemove', (e) => {
