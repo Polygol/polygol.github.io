@@ -2875,6 +2875,66 @@ input[type="checkbox"]:checked::before {
     color: var(--text-color);
 }
 
+/* --- App Switcher (Alt+Tab) Styles --- */
+#app-switcher-overlay {
+    position: fixed;
+    bottom: 120px; /* Position above the dock/handle area */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--search-background);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 12px;
+    box-shadow: var(--sun-shadow), 0 8px 30px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    opacity: 0;
+    transform: translateX(-50%) scale(0.95);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    max-width: 90vw;
+}
+
+#app-switcher-list {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.app-switcher-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 12px;
+    transition: background-color 0.2s;
+    width: 70px; /* Fixed width */
+}
+
+.app-switcher-item.selected {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+body.light-theme .app-switcher-item.selected {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.app-switcher-item .app-icon-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+}
+
+.app-switcher-item span {
+    font-size: 12px;
+    color: var(--secondary-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    text-align: center;
+}
+
 		@media (min-width: 1500px) {
 			.app-drawer-grid {
                 grid-template-columns: repeat(8, 1fr);
