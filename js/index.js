@@ -9693,6 +9693,8 @@ function updateSwitcherSelection(index) {
 function selectAndCloseAppSwitcher() {
     if (!appSwitcherVisible) return;
     
+    appSwitcherVisible = false; // Immediately disable further input.
+
     const selectedUrl = appSwitcherApps[appSwitcherIndex];
     createFullscreenEmbed(selectedUrl);
 
@@ -9701,7 +9703,6 @@ function selectAndCloseAppSwitcher() {
     overlay.style.transform = 'translateX(-50%) scale(0.95)';
     setTimeout(() => {
         overlay.style.display = 'none';
-        appSwitcherVisible = false;
     }, 200);
 }
 
