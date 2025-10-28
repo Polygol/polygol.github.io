@@ -6783,8 +6783,8 @@ function updateSortButtonUI() {
     const sortBtn = document.getElementById('sort-app-btn');
     if (sortBtn) {
         const currentMethod = sortMethods[currentSortIndex];
+        // Only update the icon, not the text label, to prevent UI shifting.
         sortBtn.querySelector('.material-symbols-rounded').textContent = currentMethod.icon;
-        sortBtn.querySelector('span:last-child').textContent = currentMethod.label;
     }
 }
 
@@ -9516,12 +9516,18 @@ window.addEventListener('message', async (event) => { // Make listener async
         const closeSearchBtn = document.getElementById('close-search-btn');
 
         searchBtn.addEventListener('click', () => {
-            appDrawer.classList.add('is-searching');
+            // JS-controlled UI state change
+            searchBtn.style.display = 'none';
+            sortBtn.style.display = 'none';
+            searchContainer.style.display = 'flex';
             searchInput.focus();
         });
 
         closeSearchBtn.addEventListener('click', () => {
-            appDrawer.classList.remove('is-searching');
+            // JS-controlled UI state change
+            searchContainer.style.display = 'none';
+            searchBtn.style.display = 'flex';
+            sortBtn.style.display = 'flex';
             searchInput.value = '';
             createAppIcons();
         });
