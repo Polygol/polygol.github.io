@@ -3278,7 +3278,8 @@ const AI_ICON_DEFAULT = 'auto_awesome';
 let appSwitcherVisible = false;
 let appSwitcherApps = [];
 let appSwitcherIndex = 0;
-let isAltKeyDown = false;
+let isTabKeyDown = false;
+let shiftSpaceSequenceTimer = null;
 
 // Theme switching functionality
 function setupThemeSwitcher() {
@@ -6272,6 +6273,14 @@ async function deleteApp(appName) {
 let isAppOpen = false;
 
 async function createFullscreenEmbed(url) {
+    // BUGFIX: If an embed for this URL already exists anywhere in the DOM,
+    // prevent creating a duplicate. The rest of the function will handle switching to it.
+    const alreadyExists = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"]`);
+    if (alreadyExists && alreadyExists.style.display === 'block') {
+        return; // It's already the active app, do nothing.
+    }
+let appSwitcherIndex = 0;
+
     // PREVENT DUPLICATES & HANDLE SWITCHING
     const currentlyOpenEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
     if (currentlyOpenEmbed) {
@@ -9698,36 +9707,52 @@ function selectAndCloseAppSwitcher() {
 
 // Global listener for keyboard shortcuts
 document.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+        isTabKeyDown = true;
+    }
+
     // Universal Keyboard Shortcuts
     if (e.code === 'Space') {
-        if (e.ctrlKey) {
+        // App Switcher: Tab + Space
+        if (isTabKeyDown) {
             e.preventDefault();
-            const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-            if (openEmbed) {
-                minimizeFullscreenEmbed();
-            } else {
-                // Toggle App Drawer
-                appDrawer.classList.toggle('open');
-                if(appDrawer.classList.contains('open')) {
-                    createAppIcons();
-                }
-            }
-        } else if (e.shiftKey) {
-            e.preventDefault();
-            const customizeModal = document.getElementById('customizeModal');
-            if (customizeModal.classList.contains('show')) {
-                closeControls();
-            } else {
-                document.getElementById('persistent-clock').click();
-            }
-        } else if (e.altKey) {
-            e.preventDefault();
-            isAltKeyDown = true;
             if (!appSwitcherVisible) {
                 openAppSwitcher();
             } else {
                 updateSwitcherSelection(appSwitcherIndex + 1);
             }
+        } 
+        // Home/Drawer & Controls Sequence: Shift + Space
+        else if (e.shiftKey) {
+            e.preventDefault();
+            if (shiftSpaceSequenceTimer) {
+                clearTimeout(shiftSpaceSequenceTimer);
+            }
+            // Set a timer to trigger Home/Drawer action if E is not pressed soon.
+            shiftSpaceSequenceTimer = setTimeout(() => {
+                const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+                if (openEmbed) {
+                    minimizeFullscreenEmbed();
+                } else {
+                    const isDrawerOpen = appDrawer.classList.toggle('open');
+                    if(isDrawerOpen) createAppIcons();
+                }
+                shiftSpaceSequenceTimer = null;
+            }, 250);
+        }
+    }
+
+    // Controls Sequence: E (after Shift+Space)
+    if (e.key.toLowerCase() === 'e' && shiftSpaceSequenceTimer) {
+        e.preventDefault();
+        clearTimeout(shiftSpaceSequenceTimer);
+        shiftSpaceSequenceTimer = null;
+
+        const customizeModal = document.getElementById('customizeModal');
+        if (customizeModal.classList.contains('show')) {
+            closeControls();
+        } else {
+            document.getElementById('persistent-clock').click();
         }
     }
 
@@ -9745,10 +9770,10 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('keyup', (e) => {
-    if (e.key === 'Alt') {
+    if (e.key === 'Tab') {
         if (appSwitcherVisible) {
             selectAndCloseAppSwitcher();
         }
-        isAltKeyDown = false;
+        isTabKeyDown = false;
     }
 });
