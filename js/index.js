@@ -6195,6 +6195,7 @@ async function installApp(appData) {
         showPopup(currentLanguage.GURAPP_OFFLINE_NOT_SUPPORTED);
     }
 
+	await cacheAppIconColors(); // Re-analyze icon colors
     createAppIcons();
     populateDock();
 }
@@ -6248,6 +6249,10 @@ async function deleteApp(appName) {
                 localStorage.setItem('userInstalledAppsInfo', JSON.stringify(userAppInfo));
              }
         }
+
+		// Remove the app's color from the cache
+        delete appIconColors[appName];
+        localStorage.setItem('appIconColors', JSON.stringify(appIconColors));
 
         // Refresh the app drawer and dock
         createAppIcons();
@@ -7312,7 +7317,8 @@ function setupDrawerInteractions() {
 	            dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
 	            appDrawer.style.bottom = '0%';
 	            appDrawer.style.opacity = '1';
-	            appDrawer.classList.add('open');
+				appDrawer.classList.add('open');
+	            createAppIcons(); // Re-sort and render apps
 	            initialDrawerPosition = 0;
 	            interactionBlocker.style.display = 'none';
                 // Revert background effects
@@ -7690,6 +7696,7 @@ function setupOneButtonNav() {
             appDrawer.style.opacity = '';
             
             appDrawer.classList.add('open'); // Now the CSS class will take effect
+			createAppIcons(); // Re-sort and render apps
             
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 if (!el.dataset.originalDisplay) {
