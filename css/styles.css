@@ -2276,6 +2276,44 @@ input[type="checkbox"]:checked::before {
 			font-variation-settings: 'FILL' 1, 'wght' 500;
 		}
 
+        .app-search-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            background-color: var(--overlay-color);
+            border: 1px solid var(--glass-border);
+		    box-shadow: var(--sun-shadow);
+            border-radius: 50px;
+            padding: 0 10px;
+        }
+
+        #app-search-input {
+            flex-grow: 1;
+            border: none;
+            background: none;
+            outline: none;
+            color: var(--text-color);
+            padding: 12px 10px;
+            font-size: 16px;
+        }
+
+        #close-search-btn {
+            background: none;
+            border: none;
+            color: var(--secondary-text-color);
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+        }
+
+        .app-drawer.is-searching .drawer-top-btn {
+            display: none;
+        }
+
+        .app-drawer.is-searching .app-search-container {
+            display: flex;
+        }
+
         .app-drawer-content {
             display: flex;
             align-items: flex-start;
