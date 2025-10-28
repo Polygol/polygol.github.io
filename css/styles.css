@@ -2875,6 +2875,12 @@ input[type="checkbox"]:checked::before {
     color: var(--text-color);
 }
 
+		@media (min-width: 1500px) {
+			.app-drawer-grid {
+                grid-template-columns: repeat(8, 1fr);
+            }
+        }
+
         @media (min-width: 800px) {
             .app-drawer {
                 left: 5vw;
