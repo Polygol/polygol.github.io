@@ -7100,12 +7100,15 @@ function setupDrawerInteractions() {
         const deltaX = currentX - startX;
         const verticalDelta = startY - yPosition; // Use a different name to avoid conflict
 
-		// Determine if swipe is more horizontal than vertical
-		if (Math.abs(deltaX) > Math.abs(verticalDelta) + 20) { // Horizontal swipe
-		    if (!appSwitcherVisible) {
-		        openAppSwitcher();
-		    }
-		    if (appSwitcherVisible) {
+		const HORIZONTAL_SWIPE_DEADZONE = 40; // Pixels needed to trigger switcher
+
+        // Determine if swipe is more horizontal than vertical
+        if (Math.abs(deltaX) > Math.abs(verticalDelta) + 20) { // Horizontal swipe
+            // Only open the switcher if the horizontal deadzone is passed
+            if (!appSwitcherVisible && Math.abs(deltaX) > HORIZONTAL_SWIPE_DEADZONE) {
+                openAppSwitcher();
+            }
+            if (appSwitcherVisible) {
 		        if (dragStartIndex === -1) {
 		            dragStartIndex = appSwitcherIndex; // Set initial index on first horizontal move
 		        }
@@ -7522,7 +7525,7 @@ function setupDrawerInteractions() {
             moveDrawer(e.touches[0].clientX, e.touches[0].clientY);
         }
     }, { passive: false });
-
+	
 	document.addEventListener('touchend', () => {
 		if (oneButtonNavEnabled) return;
         if (isDragging) { // Only act if a drag was in progress
@@ -7531,6 +7534,7 @@ function setupDrawerInteractions() {
             } else {
                 endDrag();
             }
+            isDragging = false; // Explicitly reset dragging state here.
         }
     });
 
@@ -7561,6 +7565,7 @@ function setupDrawerInteractions() {
             } else {
                 endDrag();
             }
+            isDragging = false; // Explicitly reset dragging state here.
         }
     });
 
