@@ -618,6 +618,15 @@ const Gurasuraisu = {
    */
   forceUpdate: function() {
     this._call('forceUpdatePolygol', []);
+  },
+
+  /**
+   * Asks the parent to trigger a file download.
+   * @param {string} filename - The desired name of the file.
+   * @param {string} dataUrl - The content of the file as a data URL.
+   */
+  downloadFile: function(filename, dataUrl) {
+    this._call('downloadFile', [filename, dataUrl]);
   }
 };
 
