@@ -8518,6 +8518,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     checkForAutomaticBackup();
 
     setupServiceWorkerUpdateListener(); 
+
+    // Request screen wake lock to prevent sleep
+    requestWakeLock();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 });
 
 window.onload = function() {
@@ -8579,6 +8583,33 @@ function preventLeaving() {
             return ''; // For some older browsers
         }
     });
+}
+
+// --- Screen Wake Lock ---
+let wakeLockSentinel = null;
+
+async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+        try {
+            wakeLockSentinel = await navigator.wakeLock.request('screen');
+            wakeLockSentinel.addEventListener('release', () => {
+                console.log('Screen Wake Lock was released');
+                wakeLockSentinel = null;
+            });
+            console.log('Screen Wake Lock is active.');
+        } catch (err) {
+            console.error(`Could not acquire screen wake lock: ${err.name}, ${err.message}`);
+        }
+    } else {
+        console.warn('Screen Wake Lock API not supported.');
+    }
+}
+
+async function handleVisibilityChange() {
+    if (wakeLockSentinel === null && document.visibilityState === 'visible') {
+        // If the lock was released when the tab was hidden, re-acquire it.
+        await requestWakeLock();
+    }
 }
 
 // --- Terminal Functions (Corrected Signatures) ---
