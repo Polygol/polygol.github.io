@@ -7374,7 +7374,6 @@ function setupDrawerInteractions() {
 	            appDrawer.style.bottom = '0%';
 	            appDrawer.style.opacity = '1';
 				appDrawer.classList.add('open');
-	            createAppIcons(); // Re-sort and render apps
 	            initialDrawerPosition = 0;
 	            interactionBlocker.style.display = 'none';
                 // Revert background effects
@@ -7766,7 +7765,6 @@ function setupOneButtonNav() {
             appDrawer.style.opacity = '';
             
             appDrawer.classList.add('open'); // Now the CSS class will take effect
-			createAppIcons(); // Re-sort and render apps
             
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 if (!el.dataset.originalDisplay) {
