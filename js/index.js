@@ -9695,20 +9695,40 @@ function openAppSwitcher() {
     const openUrl = openEmbed ? openEmbed.dataset.embedUrl : null;
     const minimizedUrls = Object.keys(minimizedEmbeds);
 
-    const allOpenApps = [...new Set([openUrl, ...minimizedUrls].filter(Boolean))];
+    let allOpenApps = [...new Set([openUrl, ...minimizedUrls].filter(Boolean))];
 
     if (allOpenApps.length < 2) return; // No need to switch if < 2 apps are open
 
-	// Ensure the gesture overlay is active to capture swipes over the iframe.
-	const swipeOverlay = document.getElementById('swipe-overlay');
-	if (swipeOverlay) {
-	    swipeOverlay.style.display = 'block';
-	    swipeOverlay.style.pointerEvents = 'auto';
-	}
-	
-	appSwitcherVisible = true;
-	appSwitcherApps = allOpenApps;
-	
+    // --- NEW: Responsive Sizing Logic ---
+    // 1. Sort all open apps by most recently used.
+    const findAppNameByUrl = (url) => Object.keys(apps).find(name => apps[name].url === url);
+    allOpenApps.sort((urlA, urlB) => {
+        const timeA = appLastOpened[findAppNameByUrl(urlA)] || 0;
+        const timeB = appLastOpened[findAppNameByUrl(urlB)] || 0;
+        return timeB - timeA;
+    });
+
+    // 2. Calculate how many items can fit based on viewport width.
+    const itemWidth = 80; // Approx. 70px width + 10px gap
+    const maxSwitcherWidth = window.innerWidth * 0.90; // Use up to 90% of the screen
+    const fittableItems = Math.floor(maxSwitcherWidth / itemWidth);
+    const numberOfItemsToShow = Math.min(12, Math.max(2, fittableItems));
+
+    // 3. Take only the most recent apps that will fit.
+    const appsToDisplay = allOpenApps.slice(0, numberOfItemsToShow);
+    // --- End of new logic ---
+
+
+    // Ensure the gesture overlay is active to capture swipes over the iframe.
+    const swipeOverlay = document.getElementById('swipe-overlay');
+    if (swipeOverlay) {
+        swipeOverlay.style.display = 'block';
+        swipeOverlay.style.pointerEvents = 'auto';
+    }
+
+    appSwitcherVisible = true;
+    appSwitcherApps = appsToDisplay; // Use the responsive list of apps
+
     const switcherList = document.getElementById('app-switcher-list');
     switcherList.innerHTML = '';
 
