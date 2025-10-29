@@ -6613,10 +6613,6 @@ async function createFullscreenEmbed(url) {
     }
 
     populateDock();
-
-	setTimeout(() => {
-        iframe.style.pointerEvents = 'auto';
-    }, 100);
 }
 
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
