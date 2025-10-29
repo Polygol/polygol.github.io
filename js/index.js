@@ -6286,12 +6286,17 @@ async function createFullscreenEmbed(url) {
             if (embed.dataset.embedUrl) {
                 minimizedEmbeds[embed.dataset.embedUrl] = embed;
             }
+			
             // Immediately hide and disable it. No animations for this cleanup.
-            embed.style.display = 'none';
-            embed.style.pointerEvents = 'none';
-            embed.style.zIndex = '0';
-        }
-    });
+	        embed.style.opacity = '0';
+	        embed.style.zIndex = '0';
+	
+	        // Wait for fade-out transition to finish before hiding it.
+	        setTimeout(() => {
+	            embed.style.display = 'none';
+	        }, 300);
+	    }
+	});
 
 	closeControls();
 	
@@ -6685,7 +6690,6 @@ function minimizeFullscreenEmbed(animate = true) {
     
     // Hide all fullscreen embeds that are not being displayed
     document.querySelectorAll('.fullscreen-embed:not([style*="display: block"])').forEach(embed => {
-        embed.style.pointerEvents = 'none';
         embed.style.zIndex = '0';
     });
     
