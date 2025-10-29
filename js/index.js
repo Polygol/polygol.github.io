@@ -6380,11 +6380,6 @@ async function createFullscreenEmbed(url) {
         delete minimizedEmbeds[url];
 		
 		const iframe = embedContainer.querySelector('iframe'); // Get the iframe
-
-		if (iframe) iframe.style.pointerEvents = 'none';
-        setTimeout(() => {
-            if (iframe) iframe.style.pointerEvents = 'auto';
-        }, 100);
         
         // First, remove any existing transitions
         embedContainer.style.transition = 'none';
@@ -6469,7 +6464,6 @@ async function createFullscreenEmbed(url) {
     // Create new embed if not already minimized
     const iframe = document.createElement('iframe');
     iframe.src = url;
-	iframe.style.pointerEvents = 'none';
     iframe.setAttribute('data-gurasuraisu-iframe', 'true');
     const appId = Object.keys(apps).find(k => apps[k].url === url);
     iframe.dataset.appId = appId;
