@@ -1509,13 +1509,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (canonicalAppName && apps[canonicalAppName]) {
                 const appToOpen = apps[canonicalAppName];
                 closeControls();
-                minimizeFullscreenEmbed();
                 createFullscreenEmbed(appToOpen.url);
             } else {
                 // 4. If no app is found, provide a sensible default action.
                 console.warn('[Media Widget] No active or cached app found. Falling back to default Music app.');
                 closeControls();
-                minimizeFullscreenEmbed();
                 createFullscreenEmbed('/music/index.html');
             }
         }
@@ -3655,7 +3653,6 @@ const availableFunctions = {
         return { status: "success", action: "change theme", value: themeName };
     },
     openApp: ({ appName }) => {
-        minimizeFullscreenEmbed();
         const appEntry = Object.entries(apps).find(
             ([name, details]) => name.toLowerCase() === appName.toLowerCase()
         );
@@ -6760,12 +6757,6 @@ function populateDock() {
         dockIcon.appendChild(imgContainer);
 		
 	dockIcon.addEventListener('click', async () => {
-	    // Minimize current fullscreen embed if one is open
-	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-	    if (openEmbed) {
-	        minimizeFullscreenEmbed();
-	    }
-	
 	    // Open the new app
 	    createFullscreenEmbed(details.url);
 	    populateDock(); // Refresh the dock
