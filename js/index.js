@@ -6382,6 +6382,7 @@ async function createFullscreenEmbed(url) {
         delete minimizedEmbeds[url];
 		
 		const iframe = embedContainer.querySelector('iframe'); // Get the iframe
+        iframe.style.pointerEvents = 'auto'; // FIX: Ensure iframe is interactive when restored
         
         // First, remove any existing transitions
         embedContainer.style.transition = 'none';
