@@ -235,7 +235,7 @@ async function forceUpdatePolygol() {
 }
 
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
-
+let lastWidgetTapTime = 0; // To debounce taps on widgets
 let availableWidgets; // Stores info about all possible widgets from apps
 let activeWidgets; // Stores the user's current layout
 const MARGIN = 20;
@@ -747,6 +747,12 @@ function renderWidgets() {
                 widgetToUpdate.y = instance.offsetTop;
                 saveWidgets();
             } else {
+                // FIX: Debounce tap events to prevent multiple instances from opening on touch devices.
+                if (Date.now() - lastWidgetTapTime < 300) {
+                    return;
+                }
+                lastWidgetTapTime = Date.now();
+
                 const widgetData = availableWidgets[activeWidgets[index].appName]?.find(w => w.widgetId === activeWidgets[index].widgetId);
                 if (!widgetData) return;
 
