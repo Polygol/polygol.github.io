@@ -655,8 +655,9 @@ body.one-button-nav-active .dock.show {
 
 .persistent-clock-actions {
     position: fixed;
-    top: 24px;
-    right: 24px;
+    top: 16px;
+    right: 16px;
+	padding: 8px;
     z-index: 9996;
     gap: 12px;
     transform-origin: top right;
