@@ -667,6 +667,16 @@ body.one-button-nav-active .dock.show {
     pointer-events: none;
 }
 
+#quick-action-minimize {
+    background-color: rgba(255, 193, 7, 0.75); /* Amber 75% */
+    color: #b26a00;
+}
+
+#quick-action-close {
+    background-color: rgba(244, 67, 54, 0.75); /* Red 75% */
+    color: #a91b0d;
+}
+
 .persistent-clock-actions.show {
     transform: scale(1);
     opacity: 1;
