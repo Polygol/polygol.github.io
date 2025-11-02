@@ -1529,50 +1529,80 @@ document.addEventListener('DOMContentLoaded', () => {
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
     const quickActions = document.getElementById('persistent-clock-quick-actions');
-    let quickActionsTimeout;
-
-    const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    let quickActionsTimeout, longPressTimeout;
+    let quickActionsVisibleByTouch = false;
 
     const showQuickActions = () => {
         const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (!isTouchDevice() && appIsOpen) {
+        if (appIsOpen) {
             clearTimeout(quickActionsTimeout);
-            persistentClock.style.opacity = '0'; // Hide the clock
+            persistentClock.style.opacity = '0';
             quickActions.style.display = 'flex';
             setTimeout(() => quickActions.classList.add('show'), 10);
         }
     };
 
-    const hideQuickActions = () => {
+    const hideQuickActions = (immediate = false) => {
         const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (!isTouchDevice()) {
-            quickActions.classList.remove('show');
-            quickActionsTimeout = setTimeout(() => {
-                if (!quickActions.matches(':hover')) {
-                    quickActions.style.display = 'none';
-                    if (appIsOpen) {
-                        persistentClock.style.opacity = '1'; // Show clock again
-                    }
+        quickActions.classList.remove('show');
+
+        const cleanup = () => {
+            if (!quickActions.matches(':hover')) {
+                quickActions.style.display = 'none';
+                if (appIsOpen) {
+                    persistentClock.style.opacity = '1';
                 }
-            }, 200); // Wait for transition
+            }
+        };
+
+        clearTimeout(quickActionsTimeout);
+        if (immediate) {
+            cleanup();
+        } else {
+            quickActionsTimeout = setTimeout(cleanup, 200);
         }
     };
 
+    // --- Mouse Hover Logic ---
     persistentClock.addEventListener('mouseenter', showQuickActions);
-    persistentClock.addEventListener('mouseleave', hideQuickActions);
-    quickActions.addEventListener('mouseleave', hideQuickActions);
+    persistentClock.addEventListener('mouseleave', () => hideQuickActions(false));
+    quickActions.addEventListener('mouseleave', () => hideQuickActions(false));
+    
+    // --- Touch Long-Press Logic ---
+    persistentClock.addEventListener('touchstart', (e) => {
+        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (!appIsOpen) return;
+        
+        e.preventDefault();
+        clearTimeout(longPressTimeout);
+        longPressTimeout = setTimeout(() => {
+            showQuickActions();
+            quickActionsVisibleByTouch = true;
+        }, 500);
+    }, { passive: false });
 
+    persistentClock.addEventListener('touchmove', () => clearTimeout(longPressTimeout));
+    persistentClock.addEventListener('touchend', () => clearTimeout(longPressTimeout));
+    
+    document.addEventListener('touchend', () => {
+        if (quickActionsVisibleByTouch) {
+            hideQuickActions(true);
+            quickActionsVisibleByTouch = false;
+        }
+    });
+
+    // --- Quick Action Button Listeners ---
     document.getElementById('quick-action-minimize').addEventListener('click', () => {
         minimizeFullscreenEmbed();
-        hideQuickActions();
+        hideQuickActions(true);
     });
     document.getElementById('quick-action-close').addEventListener('click', () => {
         closeFullscreenEmbed();
-        hideQuickActions();
+        hideQuickActions(true);
     });
     document.getElementById('quick-action-controls').addEventListener('click', () => {
         persistentClock.click();
-        hideQuickActions();
+        hideQuickActions(true);
     });
     
 	function updatePersistentClock() {
