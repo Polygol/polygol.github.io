@@ -1539,6 +1539,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(hideActionsTimeout);
             quickActions.style.display = 'flex';
             interactionBlocker.style.display = 'block';
+			interactionBlocker.style.pointerEvents = 'auto';
             interactionBlocker.style.zIndex = '9994'; // Below actions menu but above app
             setTimeout(() => {
                 quickActions.classList.add('show');
