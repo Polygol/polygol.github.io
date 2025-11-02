@@ -1533,13 +1533,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let hideActionsTimeout, longPressTimeout;
     let isLongPress = false;
 
-    const showQuickActions = () => {
+    const showQuickActions = (isTouch = false) => {
         const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
         if (appIsOpen) {
             clearTimeout(hideActionsTimeout);
             quickActions.style.display = 'flex';
             interactionBlocker.style.display = 'block';
             interactionBlocker.style.zIndex = '9994'; // Below actions menu but above app
+            persistentClock.style.opacity = '0';
+
+            document.getElementById('quick-action-controls').style.display = isTouch ? 'none' : 'flex';
+
             setTimeout(() => {
                 quickActions.classList.add('show');
             }, 10); // next frame
@@ -1547,22 +1551,24 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const hideQuickActions = () => {
+        const delay = isLongPress ? 0 : 100; // Immediate for touch, delayed for mouse
         clearTimeout(hideActionsTimeout);
         hideActionsTimeout = setTimeout(() => {
             quickActions.classList.remove('show');
             interactionBlocker.style.display = 'none';
             interactionBlocker.style.zIndex = '999';
+            persistentClock.style.opacity = '1';
             // Wait for transition to finish before setting display to none
             setTimeout(() => {
                 if (!quickActions.classList.contains('show')) {
                     quickActions.style.display = 'none';
                 }
             }, 200);
-        }, 100); // Small delay to allow moving mouse between elements
+        }, delay);
     };
 
     // --- Mouse Hover Logic ---
-    persistentClock.addEventListener('mouseenter', showQuickActions);
+    persistentClock.addEventListener('mouseenter', () => showQuickActions(false));
     quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
     persistentClock.addEventListener('mouseleave', hideQuickActions);
     quickActions.addEventListener('mouseleave', hideQuickActions);
@@ -1577,7 +1583,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(longPressTimeout);
         longPressTimeout = setTimeout(() => {
             isLongPress = true;
-            showQuickActions();
+            showQuickActions(true);
         }, 500);
     }, { passive: true });
 
