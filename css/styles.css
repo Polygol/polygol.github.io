@@ -653,6 +653,31 @@ body.one-button-nav-active .dock.show {
     visibility: visible;
 }
 
+.persistent-clock-actions {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9995;
+    gap: 8px;
+    background-color: var(--search-background);
+    padding: 8px;
+    border-radius: 50px;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    box-shadow: var(--sun-shadow);
+    transform-origin: top right;
+    transform: scale(0.9);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.persistent-clock-actions.show {
+    transform: scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .app-icon-img {
     border: 1px solid var(--glass-border);
     aspect-ratio: 1 / 1;
