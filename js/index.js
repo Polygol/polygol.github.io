@@ -1525,84 +1525,102 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 	
-    const appDrawer = document.getElementById('app-drawer');
+	const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
     const quickActions = document.getElementById('persistent-clock-quick-actions');
+    const interactionBlocker = document.getElementById('interaction-blocker');
     let quickActionsTimeout, longPressTimeout;
     let quickActionsVisibleByTouch = false;
+    let isLongPress = false;
+    let touchStartPos = { x: 0, y: 0 };
 
     const showQuickActions = () => {
         const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
         if (appIsOpen) {
             clearTimeout(quickActionsTimeout);
             persistentClock.style.opacity = '0';
+            persistentClock.style.pointerEvents = 'none';
+
+            interactionBlocker.style.zIndex = '9994';
+            interactionBlocker.style.display = 'block';
+
             quickActions.style.display = 'flex';
             setTimeout(() => quickActions.classList.add('show'), 10);
         }
     };
 
-    const hideQuickActions = (immediate = false) => {
+    const hideQuickActions = () => {
         const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
         quickActions.classList.remove('show');
 
         const cleanup = () => {
-            if (!quickActions.matches(':hover')) {
-                quickActions.style.display = 'none';
-                if (appIsOpen) {
-                    persistentClock.style.opacity = '1';
-                }
+            quickActions.style.display = 'none';
+            interactionBlocker.style.display = 'none';
+            interactionBlocker.style.zIndex = '999';
+            if (appIsOpen) {
+                persistentClock.style.opacity = '1';
+                persistentClock.style.pointerEvents = 'auto';
             }
         };
 
         clearTimeout(quickActionsTimeout);
-        if (immediate) {
-            cleanup();
-        } else {
-            quickActionsTimeout = setTimeout(cleanup, 200);
-        }
+        quickActionsTimeout = setTimeout(cleanup, 200);
     };
 
-    // --- Mouse Hover Logic ---
+    // --- Event Listeners ---
     persistentClock.addEventListener('mouseenter', showQuickActions);
-    persistentClock.addEventListener('mouseleave', () => hideQuickActions(false));
-    quickActions.addEventListener('mouseleave', () => hideQuickActions(false));
-    
-    // --- Touch Long-Press Logic ---
-    persistentClock.addEventListener('touchstart', (e) => {
-        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (!appIsOpen) return;
-        
-        e.preventDefault();
-        clearTimeout(longPressTimeout);
-        longPressTimeout = setTimeout(() => {
-            showQuickActions();
-            quickActionsVisibleByTouch = true;
-        }, 500);
-    }, { passive: false });
+    quickActions.addEventListener('mouseleave', hideQuickActions);
+    interactionBlocker.addEventListener('mouseenter', hideQuickActions);
 
-    persistentClock.addEventListener('touchmove', () => clearTimeout(longPressTimeout));
-    persistentClock.addEventListener('touchend', () => clearTimeout(longPressTimeout));
-    
+    persistentClock.addEventListener('touchstart', (e) => {
+        isLongPress = false;
+        quickActionsVisibleByTouch = false;
+        touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        
+        longPressTimeout = setTimeout(() => {
+            const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+            if(appIsOpen) {
+                isLongPress = true;
+                quickActionsVisibleByTouch = true;
+                showQuickActions();
+            }
+        }, 500);
+    }, { passive: true });
+
+    persistentClock.addEventListener('touchmove', (e) => {
+        const deltaX = Math.abs(e.touches[0].clientX - touchStartPos.x);
+        const deltaY = Math.abs(e.touches[0].clientY - touchStartPos.y);
+        if (deltaX > 10 || deltaY > 10) {
+            clearTimeout(longPressTimeout);
+        }
+    }, { passive: true });
+
+    persistentClock.addEventListener('touchend', (e) => {
+        clearTimeout(longPressTimeout);
+        if (!isLongPress) {
+            persistentClock.click();
+        }
+    });
+
     document.addEventListener('touchend', () => {
         if (quickActionsVisibleByTouch) {
-            hideQuickActions(true);
+            hideQuickActions();
             quickActionsVisibleByTouch = false;
         }
     });
 
-    // --- Quick Action Button Listeners ---
     document.getElementById('quick-action-minimize').addEventListener('click', () => {
         minimizeFullscreenEmbed();
-        hideQuickActions(true);
+        hideQuickActions();
     });
     document.getElementById('quick-action-close').addEventListener('click', () => {
         closeFullscreenEmbed();
-        hideQuickActions(true);
+        hideQuickActions();
     });
     document.getElementById('quick-action-controls').addEventListener('click', () => {
         persistentClock.click();
-        hideQuickActions(true);
+        hideQuickActions();
     });
     
 	function updatePersistentClock() {
