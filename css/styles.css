@@ -655,16 +655,10 @@ body.one-button-nav-active .dock.show {
 
 .persistent-clock-actions {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 24px;
+    right: 24px;
     z-index: 9996;
-    gap: 8px;
-    background-color: var(--search-background);
-    padding: 8px;
-    border-radius: 50px;
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
-    box-shadow: var(--sun-shadow);
+    gap: 12px;
     transform-origin: top right;
     transform: scale(0.9);
     opacity: 0;
@@ -1005,6 +999,17 @@ body.one-button-nav-active .dock.show {
         #blurOverlayControls {
             z-index: 9996;
         }
+
+		#interaction-blocker {
+		    position: fixed;
+		    top: 0;
+		    left: 0;
+		    width: 100%;
+		    height: 100%;
+		    z-index: 999;
+		    display: none;
+		    background: transparent;
+		}
 
         .cust-label {
             display: inline-flex;
