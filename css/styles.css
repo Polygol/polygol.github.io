@@ -657,7 +657,7 @@ body.one-button-nav-active .dock.show {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 9995;
+    z-index: 9996;
     gap: 8px;
     background-color: var(--search-background);
     padding: 8px;
