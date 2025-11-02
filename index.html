@@ -199,6 +199,12 @@
 
     <div id="persistent-clock" class="persistent-clock"></div>
 
+    <div id="persistent-clock-actions" style="display: none;">
+        <button id="qc-minimize-app" class="btn-qc"><span class="material-symbols-rounded" style="font-size: 18px;">hide</span></button>
+        <button id="qc-close-app" class="btn-qc"><span class="material-symbols-rounded" style="font-size: 18px;">close</span></button>
+        <button id="qc-open-controls" class="btn-qc"><span class="material-symbols-rounded" style="font-size: 18px;">page_info</span></button>
+    </div>
+    
     <div id="control-gesture-pane"></div>
 
     <div class="container">
@@ -505,6 +511,13 @@
                     <span style="margin-left: 4px;">Polygol 16</span>
                 </label>
                 <button id="versionButton">LANG_DETAIL_VERS</button>
+            </div>
+            <div id="app-management-controls" class="app-management-info" style="display: none;">
+                <label class="cust-label" data-lang-key="APP_CONTROLS">App Controls</label>
+                <div style="display: flex; gap: 10px;">
+                    <button id="minimize-app-btn" class="btn-qc" title="Minimize"><span class="material-symbols-rounded" style="font-size: 18px;">hide</span></button>
+                    <button id="close-app-btn" class="btn-qc" title="Close"><span class="material-symbols-rounded" style="font-size: 18px;">close</span></button>
+                </div>
             </div>
         </div>
     </div>
