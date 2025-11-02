@@ -1528,6 +1528,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
+    const quickActions = document.getElementById('persistent-clock-quick-actions');
+    let quickActionsTimeout;
+
+    const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    const showQuickActions = () => {
+        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (!isTouchDevice() && appIsOpen) {
+            clearTimeout(quickActionsTimeout);
+            persistentClock.style.opacity = '0'; // Hide the clock
+            quickActions.style.display = 'flex';
+            setTimeout(() => quickActions.classList.add('show'), 10);
+        }
+    };
+
+    const hideQuickActions = () => {
+        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (!isTouchDevice()) {
+            quickActions.classList.remove('show');
+            quickActionsTimeout = setTimeout(() => {
+                if (!quickActions.matches(':hover')) {
+                    quickActions.style.display = 'none';
+                    if (appIsOpen) {
+                        persistentClock.style.opacity = '1'; // Show clock again
+                    }
+                }
+            }, 200); // Wait for transition
+        }
+    };
+
+    persistentClock.addEventListener('mouseenter', showQuickActions);
+    persistentClock.addEventListener('mouseleave', hideQuickActions);
+    quickActions.addEventListener('mouseleave', hideQuickActions);
+
+    document.getElementById('quick-action-minimize').addEventListener('click', () => {
+        minimizeFullscreenEmbed();
+        hideQuickActions();
+    });
+    document.getElementById('quick-action-close').addEventListener('click', () => {
+        closeFullscreenEmbed();
+        hideQuickActions();
+    });
+    document.getElementById('quick-action-controls').addEventListener('click', () => {
+        persistentClock.click();
+        hideQuickActions();
+    });
     
 	function updatePersistentClock() {
 	  const isModalOpen = 
@@ -1555,9 +1601,36 @@ document.addEventListener('DOMContentLoaded', () => {
 	  }
 	}
     
-    // Make sure we re-attach the click event listener
+	// Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
 		syncUiStates();
+        const appManagementInfo = document.getElementById('app-management-info');
+        const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+
+        if (activeEmbed) {
+            const url = activeEmbed.dataset.embedUrl;
+            const appName = Object.keys(apps).find(name => apps[name].url === url);
+            const appDetails = appName ? apps[appName] : null;
+
+            if (appDetails) {
+                const label = document.getElementById('current-app-label');
+                const img = label.querySelector('img');
+                const span = label.querySelector('span');
+                let iconUrl = appDetails.icon;
+                if (iconUrl && !(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
+                    iconUrl = `/assets/appicon/${iconUrl}`;
+                }
+                img.src = iconUrl || '';
+                img.alt = appName;
+                span.textContent = appName;
+                appManagementInfo.style.display = 'flex';
+            } else {
+                appManagementInfo.style.display = 'none';
+            }
+        } else {
+            appManagementInfo.style.display = 'none';
+        }
+
 		persistentClock.style.opacity = '0';
 		customizeModal.style.display = 'block';
 		customizeModal.scrollTop = 0; // Scroll to top
@@ -1566,6 +1639,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		        customizeModal.classList.add('show');
 	            blurOverlayControls.classList.add('show');
 	        }, 10);
+    });
+
+    document.getElementById('app-minimize-btn').addEventListener('click', () => {
+        closeControls();
+        minimizeFullscreenEmbed();
+    });
+
+    document.getElementById('app-close-btn').addEventListener('click', () => {
+        closeControls();
+        closeFullscreenEmbed();
     });
     
     // Setup observer to watch for embed visibility changes to update clock immediately
@@ -6436,7 +6519,7 @@ async function createFullscreenEmbed(url) {
 	    }, 10);
         
         // Hide all main UI elements
-        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #app-management-info').forEach(el => {
             if (!el.dataset.originalDisplay) {
                 el.dataset.originalDisplay = window.getComputedStyle(el).display;
             }
@@ -6571,7 +6654,7 @@ async function createFullscreenEmbed(url) {
 	});
     
     // Hide all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #app-management-info').forEach(el => {
         if (!el.dataset.originalDisplay) {
             el.dataset.originalDisplay = window.getComputedStyle(el).display;
         }
@@ -6632,6 +6715,69 @@ createFullscreenEmbed = function(url) {
   }
   originalCreateFullscreenEmbed(url);
 };
+
+function closeFullscreenEmbed() {
+    // Restore the original favicon
+    if (originalFaviconUrl) {
+        updateFavicon(originalFaviconUrl, false);
+    }
+
+    isAppOpen = false;
+
+    const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
+    
+    if (embedContainer) {
+        const url = embedContainer.dataset.embedUrl;
+        
+        // Animate out
+        embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        embedContainer.style.transform = 'translateY(40px) scale(0.9)';
+        embedContainer.style.opacity = '0';
+        
+        // Remove from minimized cache
+        if (url && minimizedEmbeds[url]) {
+            delete minimizedEmbeds[url];
+        }
+
+        // After animation, remove the element entirely from the DOM
+        setTimeout(() => {
+            embedContainer.remove();
+        }, 300);
+    }
+    
+    // Restore all main UI elements
+    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #app-management-info').forEach(el => {
+	el.classList.remove('force-hide');
+        el.style.display = el.dataset.originalDisplay || ''; // Restore original display property
+        el.style.transition = 'opacity 0.3s ease';
+
+        requestAnimationFrame(() => {
+            el.style.opacity = '1';
+        });
+    });
+    
+    // Hide the swipe overlay
+    const swipeOverlay = document.getElementById('swipe-overlay');
+    if (swipeOverlay) {
+        swipeOverlay.style.display = 'none';
+        swipeOverlay.style.pointerEvents = 'none';
+    }
+
+    // Restore background effects
+    applyWallpaperEffects();
+    document.body.style.setProperty('--bg-transform-scale', '1.05');
+
+    // Resume background animations
+    resumeAnimatedBackground();
+    const bgVideo = document.getElementById('background-video');
+    if (bgVideo) {
+        bgVideo.play().then(() => {
+            animatePlaybackRate(bgVideo, bgVideo.playbackRate, 1.0, 300);
+        }).catch(e => console.error("Video play failed on resume:", e));
+    }
+
+    populateDock();
+}
 
 function minimizeFullscreenEmbed(animate = true) {
     // Clear any pending cleanup from a previous call
