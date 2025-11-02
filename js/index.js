@@ -1486,6 +1486,7 @@ document.addEventListener('DOMContentLoaded', () => {
         blurOverlayControls.addEventListener('click', () => {
             closeWidgetPicker();
             closeWallpaperPicker();
+            closeControls(); // This was missing
         });
     }
 
@@ -1656,7 +1657,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
     
 	// Make sure we re-attach the click event listener
-    persistentClock.addEventListener('click', () => {
+    persistentClock.addEventListener('click', (e) => { // Add event parameter 'e'
+        e.stopPropagation(); // Stop the event from bubbling up
 		syncUiStates();
         const appManagementInfo = document.getElementById('app-management-info');
         const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
