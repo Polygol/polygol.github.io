@@ -1525,7 +1525,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 	
-    const appDrawer = document.getElementById('app-drawer');
+	const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
     const quickActions = document.getElementById('persistent-clock-quick-actions');
@@ -1537,54 +1537,47 @@ document.addEventListener('DOMContentLoaded', () => {
         const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
         if (appIsOpen) {
             clearTimeout(hideActionsTimeout);
-            persistentClock.style.opacity = '0';
             quickActions.style.display = 'flex';
             interactionBlocker.style.display = 'block';
-            interactionBlocker.style.zIndex = '9994';
+            interactionBlocker.style.zIndex = '9994'; // Below actions menu but above app
             setTimeout(() => {
                 quickActions.classList.add('show');
-            }, 10);
+            }, 10); // next frame
         }
     };
 
     const hideQuickActions = () => {
         clearTimeout(hideActionsTimeout);
-        quickActions.classList.remove('show');
-        interactionBlocker.style.display = 'none';
-        interactionBlocker.style.zIndex = '999';
-
         hideActionsTimeout = setTimeout(() => {
-            const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-            if (!quickActions.classList.contains('show')) {
-                quickActions.style.display = 'none';
-            }
-            if (appIsOpen) {
-                persistentClock.style.opacity = '1';
-            }
-        }, 200);
+            quickActions.classList.remove('show');
+            interactionBlocker.style.display = 'none';
+            interactionBlocker.style.zIndex = '999';
+            // Wait for transition to finish before setting display to none
+            setTimeout(() => {
+                if (!quickActions.classList.contains('show')) {
+                    quickActions.style.display = 'none';
+                }
+            }, 200);
+        }, 100); // Small delay to allow moving mouse between elements
     };
 
     // --- Mouse Hover Logic ---
     persistentClock.addEventListener('mouseenter', showQuickActions);
     quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
-    document.body.addEventListener('mousemove', (e) => {
-        if (quickActions.style.display === 'flex' && 
-            !quickActions.contains(e.target) && 
-            !persistentClock.contains(e.target)) {
-            hideQuickActions();
-        }
-    });
+    persistentClock.addEventListener('mouseleave', hideQuickActions);
+    quickActions.addEventListener('mouseleave', hideQuickActions);
+    interactionBlocker.addEventListener('click', hideQuickActions); // Tap outside to close
 
-    // --- Touch Logic ---
+    // --- Touch Long-Press Logic ---
     persistentClock.addEventListener('touchstart', (e) => {
-        isLongPress = false;
+        isLongPress = false; // Reset on new touch
+        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (!appIsOpen) return;
+
         clearTimeout(longPressTimeout);
         longPressTimeout = setTimeout(() => {
-            const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-            if (appIsOpen) {
-                isLongPress = true;
-                showQuickActions();
-            }
+            isLongPress = true;
+            showQuickActions();
         }, 500);
     }, { passive: true });
 
@@ -1595,23 +1588,31 @@ document.addEventListener('DOMContentLoaded', () => {
     persistentClock.addEventListener('touchend', (e) => {
         clearTimeout(longPressTimeout);
         if (!isLongPress) {
+            // It was a regular tap, not a long press that was just initiated
             persistentClock.click();
         }
-        isLongPress = false; 
+        // If it was a long press, the menu is now open. The user will tap an action or outside.
+        isLongPress = false; // Reset for next interaction
     });
+    
+    interactionBlocker.addEventListener('touchend', hideQuickActions);
 
     // --- Quick Action Button Listeners ---
-    ['quick-action-minimize', 'quick-action-close', 'quick-action-controls'].forEach(id => {
-        document.getElementById(id).addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (id === 'quick-action-minimize') minimizeFullscreenEmbed();
-            if (id === 'quick-action-close') closeFullscreenEmbed();
-            if (id === 'quick-action-controls') persistentClock.click();
-            hideQuickActions();
-        });
+    document.getElementById('quick-action-minimize').addEventListener('click', (e) => {
+        e.stopPropagation();
+        minimizeFullscreenEmbed();
+        hideQuickActions();
     });
-
-    interactionBlocker.addEventListener('click', hideQuickActions);
+    document.getElementById('quick-action-close').addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeFullscreenEmbed();
+        hideQuickActions();
+    });
+    document.getElementById('quick-action-controls').addEventListener('click', (e) => {
+        e.stopPropagation();
+        persistentClock.click();
+        hideQuickActions();
+    });
     
 	function updatePersistentClock() {
 	  const isModalOpen = 
