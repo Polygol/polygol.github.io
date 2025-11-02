@@ -1539,26 +1539,24 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(hideActionsTimeout);
             quickActions.style.display = 'flex';
             interactionBlocker.style.display = 'block';
-            interactionBlocker.style.zIndex = '9994'; // Below actions menu but above app
+            interactionBlocker.style.zIndex = '9994'; // Below actions menu
             setTimeout(() => {
                 quickActions.classList.add('show');
-            }, 10); // next frame
+            }, 10);
         }
     };
 
     const hideQuickActions = () => {
+        quickActions.classList.remove('show');
         clearTimeout(hideActionsTimeout);
+        // Delay hiding to allow mouse to move between elements
         hideActionsTimeout = setTimeout(() => {
-            quickActions.classList.remove('show');
-            interactionBlocker.style.display = 'none';
-            interactionBlocker.style.zIndex = '999';
-            // Wait for transition to finish before setting display to none
-            setTimeout(() => {
-                if (!quickActions.classList.contains('show')) {
-                    quickActions.style.display = 'none';
-                }
-            }, 200);
-        }, 100); // Small delay to allow moving mouse between elements
+            if (!quickActions.matches(':hover') && !persistentClock.matches(':hover')) {
+                quickActions.style.display = 'none';
+                interactionBlocker.style.display = 'none';
+                interactionBlocker.style.zIndex = '999';
+            }
+        }, 300);
     };
 
     // --- Mouse Hover Logic ---
@@ -1566,14 +1564,13 @@ document.addEventListener('DOMContentLoaded', () => {
     quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
     persistentClock.addEventListener('mouseleave', hideQuickActions);
     quickActions.addEventListener('mouseleave', hideQuickActions);
-    interactionBlocker.addEventListener('click', hideQuickActions); // Tap outside to close
-
-    // --- Touch Long-Press Logic ---
+    
+    // --- Touch Logic ---
     persistentClock.addEventListener('touchstart', (e) => {
-        isLongPress = false; // Reset on new touch
         const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
         if (!appIsOpen) return;
-
+        
+        isLongPress = false;
         clearTimeout(longPressTimeout);
         longPressTimeout = setTimeout(() => {
             isLongPress = true;
@@ -1587,32 +1584,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     persistentClock.addEventListener('touchend', (e) => {
         clearTimeout(longPressTimeout);
-        if (!isLongPress) {
-            // It was a regular tap, not a long press that was just initiated
-            persistentClock.click();
+        if (isLongPress) {
+            e.preventDefault(); // Prevent click event after long press ends
         }
-        // If it was a long press, the menu is now open. The user will tap an action or outside.
-        isLongPress = false; // Reset for next interaction
     });
-    
-    interactionBlocker.addEventListener('touchend', hideQuickActions);
 
-    // --- Quick Action Button Listeners ---
-    document.getElementById('quick-action-minimize').addEventListener('click', (e) => {
-        e.stopPropagation();
-        minimizeFullscreenEmbed();
-        hideQuickActions();
-    });
-    document.getElementById('quick-action-close').addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeFullscreenEmbed();
-        hideQuickActions();
-    });
-    document.getElementById('quick-action-controls').addEventListener('click', (e) => {
-        e.stopPropagation();
-        persistentClock.click();
-        hideQuickActions();
-    });
+    // --- Button & Blocker Click/Tap Listeners ---
+    const setupQuickAction = (id, action) => {
+        const button = document.getElementById(id);
+        const handler = (e) => {
+            e.stopPropagation();
+            action();
+            hideQuickActions();
+        };
+        button.addEventListener('click', handler);
+        button.addEventListener('touchend', (e) => {
+            e.stopPropagation(); // Prevent document touchend from hiding menu
+            handler(e);
+        });
+    };
+
+    setupQuickAction('quick-action-minimize', minimizeFullscreenEmbed);
+    setupQuickAction('quick-action-close', closeFullscreenEmbed);
+    setupQuickAction('quick-action-controls', () => persistentClock.click());
+
+    // Tap outside (on blocker) to close
+    interactionBlocker.addEventListener('click', hideQuickActions);
+    interactionBlocker.addEventListener('touchend', hideQuickActions);
     
 	function updatePersistentClock() {
 	  const isModalOpen = 
