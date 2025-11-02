@@ -1486,7 +1486,6 @@ document.addEventListener('DOMContentLoaded', () => {
         blurOverlayControls.addEventListener('click', () => {
             closeWidgetPicker();
             closeWallpaperPicker();
-            closeControls(); // This was missing
         });
     }
 
@@ -1533,11 +1532,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const interactionBlocker = document.getElementById('interaction-blocker');
     let hideActionsTimeout, longPressTimeout;
     let isLongPress = false;
-	
+
     const showQuickActions = () => {
         const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
         if (appIsOpen) {
-            persistentClock.style.opacity = '0'; // Hide the clock
             clearTimeout(hideActionsTimeout);
             quickActions.style.display = 'flex';
             interactionBlocker.style.display = 'block';
@@ -1552,7 +1550,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(hideActionsTimeout);
         hideActionsTimeout = setTimeout(() => {
             quickActions.classList.remove('show');
-            persistentClock.style.opacity = '1'; // Show the clock again
             interactionBlocker.style.display = 'none';
             interactionBlocker.style.zIndex = '999';
             // Wait for transition to finish before setting display to none
@@ -1613,21 +1610,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('quick-action-controls').addEventListener('click', (e) => {
         e.stopPropagation();
-        // This is the desired action. The clock's own click handler will hide it
-        // and open the main controls modal correctly.
         persistentClock.click();
-        
-        // Manually hide the quick actions menu without the side effect of showing the clock.
-        // This resolves the race condition.
-        clearTimeout(hideActionsTimeout);
-        quickActions.classList.remove('show');
-        interactionBlocker.style.display = 'none';
-        interactionBlocker.style.zIndex = '999';
-        setTimeout(() => {
-            if (!quickActions.classList.contains('show')) {
-                quickActions.style.display = 'none';
-            }
-        }, 200);
+        hideQuickActions();
     });
     
 	function updatePersistentClock() {
@@ -1657,8 +1641,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
     
 	// Make sure we re-attach the click event listener
-    persistentClock.addEventListener('click', (e) => { // Add event parameter 'e'
-        e.stopPropagation(); // Stop the event from bubbling up
+    persistentClock.addEventListener('click', () => {
 		syncUiStates();
         const appManagementInfo = document.getElementById('app-management-info');
         const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
@@ -8743,13 +8726,6 @@ blurOverlayControls.addEventListener('click', () => {
 });
 
 function closeControls() {
-    // FIX: If the modal isn't fully "shown", do nothing.
-    // This prevents the race condition where this function is called immediately
-    // after the open logic has started but before the 'show' class is added.
-    if (!customizeModal.classList.contains('show')) {
-        return;
-    }
-	
 	persistentClock.style.opacity = '1';
     customizeModal.classList.remove('show'); // Start animation
     blurOverlayControls.classList.remove('show');
