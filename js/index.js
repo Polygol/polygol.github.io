@@ -7226,17 +7226,7 @@ function setupDrawerInteractions() {
     }
         
     // Create interaction blocker overlay
-    const interactionBlocker = document.createElement('div');
-    interactionBlocker.id = 'interaction-blocker';
-    interactionBlocker.style.position = 'fixed';
-    interactionBlocker.style.top = '0';
-    interactionBlocker.style.left = '0';
-    interactionBlocker.style.width = '100%';
-    interactionBlocker.style.height = '100%';
-    interactionBlocker.style.zIndex = '999'; // Below the drawer but above other content
-    interactionBlocker.style.display = 'none';
-    interactionBlocker.style.background = 'transparent';
-    document.body.appendChild(interactionBlocker);
+	const interactionBlocker = document.getElementById('interaction-blocker');
     
     populateDock();
     
