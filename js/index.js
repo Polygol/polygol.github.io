@@ -1532,10 +1532,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const interactionBlocker = document.getElementById('interaction-blocker');
     let hideActionsTimeout, longPressTimeout;
     let isLongPress = false;
-
+	
     const showQuickActions = () => {
         const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
         if (appIsOpen) {
+            persistentClock.style.opacity = '0'; // Hide the clock
             clearTimeout(hideActionsTimeout);
             quickActions.style.display = 'flex';
             interactionBlocker.style.display = 'block';
@@ -1550,6 +1551,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(hideActionsTimeout);
         hideActionsTimeout = setTimeout(() => {
             quickActions.classList.remove('show');
+            persistentClock.style.opacity = '1'; // Show the clock again
             interactionBlocker.style.display = 'none';
             interactionBlocker.style.zIndex = '999';
             // Wait for transition to finish before setting display to none
@@ -1610,8 +1612,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('quick-action-controls').addEventListener('click', (e) => {
         e.stopPropagation();
+        // This is the desired action. The clock's own click handler will hide it
+        // and open the main controls modal correctly.
         persistentClock.click();
-        hideQuickActions();
+        
+        // Manually hide the quick actions menu without the side effect of showing the clock.
+        // This resolves the race condition.
+        clearTimeout(hideActionsTimeout);
+        quickActions.classList.remove('show');
+        interactionBlocker.style.display = 'none';
+        interactionBlocker.style.zIndex = '999';
+        setTimeout(() => {
+            if (!quickActions.classList.contains('show')) {
+                quickActions.style.display = 'none';
+            }
+        }, 200);
     });
     
 	function updatePersistentClock() {
