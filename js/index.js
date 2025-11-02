@@ -1525,84 +1525,93 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 	
-    const appDrawer = document.getElementById('app-drawer');
+	const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
     const quickActions = document.getElementById('persistent-clock-quick-actions');
-    let quickActionsTimeout, longPressTimeout;
-    let quickActionsVisibleByTouch = false;
+    const interactionBlocker = document.getElementById('interaction-blocker');
+    let hideActionsTimeout, longPressTimeout;
+    let isLongPress = false;
 
     const showQuickActions = () => {
         const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
         if (appIsOpen) {
-            clearTimeout(quickActionsTimeout);
-            persistentClock.style.opacity = '0';
+            clearTimeout(hideActionsTimeout);
             quickActions.style.display = 'flex';
-            setTimeout(() => quickActions.classList.add('show'), 10);
+            interactionBlocker.style.display = 'block';
+            interactionBlocker.style.zIndex = '9994'; // Below actions menu but above app
+            setTimeout(() => {
+                quickActions.classList.add('show');
+            }, 10); // next frame
         }
     };
 
-    const hideQuickActions = (immediate = false) => {
-        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-        quickActions.classList.remove('show');
-
-        const cleanup = () => {
-            if (!quickActions.matches(':hover')) {
-                quickActions.style.display = 'none';
-                if (appIsOpen) {
-                    persistentClock.style.opacity = '1';
+    const hideQuickActions = () => {
+        clearTimeout(hideActionsTimeout);
+        hideActionsTimeout = setTimeout(() => {
+            quickActions.classList.remove('show');
+            interactionBlocker.style.display = 'none';
+            interactionBlocker.style.zIndex = '999';
+            // Wait for transition to finish before setting display to none
+            setTimeout(() => {
+                if (!quickActions.classList.contains('show')) {
+                    quickActions.style.display = 'none';
                 }
-            }
-        };
-
-        clearTimeout(quickActionsTimeout);
-        if (immediate) {
-            cleanup();
-        } else {
-            quickActionsTimeout = setTimeout(cleanup, 200);
-        }
+            }, 200);
+        }, 100); // Small delay to allow moving mouse between elements
     };
 
     // --- Mouse Hover Logic ---
     persistentClock.addEventListener('mouseenter', showQuickActions);
-    persistentClock.addEventListener('mouseleave', () => hideQuickActions(false));
-    quickActions.addEventListener('mouseleave', () => hideQuickActions(false));
-    
+    quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
+    persistentClock.addEventListener('mouseleave', hideQuickActions);
+    quickActions.addEventListener('mouseleave', hideQuickActions);
+    interactionBlocker.addEventListener('click', hideQuickActions); // Tap outside to close
+
     // --- Touch Long-Press Logic ---
     persistentClock.addEventListener('touchstart', (e) => {
+        isLongPress = false; // Reset on new touch
         const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
         if (!appIsOpen) return;
-        
-        e.preventDefault();
+
         clearTimeout(longPressTimeout);
         longPressTimeout = setTimeout(() => {
+            isLongPress = true;
             showQuickActions();
-            quickActionsVisibleByTouch = true;
         }, 500);
-    }, { passive: false });
+    }, { passive: true });
 
-    persistentClock.addEventListener('touchmove', () => clearTimeout(longPressTimeout));
-    persistentClock.addEventListener('touchend', () => clearTimeout(longPressTimeout));
-    
-    document.addEventListener('touchend', () => {
-        if (quickActionsVisibleByTouch) {
-            hideQuickActions(true);
-            quickActionsVisibleByTouch = false;
-        }
+    persistentClock.addEventListener('touchmove', () => {
+        clearTimeout(longPressTimeout);
     });
+
+    persistentClock.addEventListener('touchend', (e) => {
+        clearTimeout(longPressTimeout);
+        if (!isLongPress) {
+            // It was a regular tap, not a long press that was just initiated
+            persistentClock.click();
+        }
+        // If it was a long press, the menu is now open. The user will tap an action or outside.
+        isLongPress = false; // Reset for next interaction
+    });
+    
+    interactionBlocker.addEventListener('touchend', hideQuickActions);
 
     // --- Quick Action Button Listeners ---
-    document.getElementById('quick-action-minimize').addEventListener('click', () => {
+    document.getElementById('quick-action-minimize').addEventListener('click', (e) => {
+        e.stopPropagation();
         minimizeFullscreenEmbed();
-        hideQuickActions(true);
+        hideQuickActions();
     });
-    document.getElementById('quick-action-close').addEventListener('click', () => {
+    document.getElementById('quick-action-close').addEventListener('click', (e) => {
+        e.stopPropagation();
         closeFullscreenEmbed();
-        hideQuickActions(true);
+        hideQuickActions();
     });
-    document.getElementById('quick-action-controls').addEventListener('click', () => {
+    document.getElementById('quick-action-controls').addEventListener('click', (e) => {
+        e.stopPropagation();
         persistentClock.click();
-        hideQuickActions(true);
+        hideQuickActions();
     });
     
 	function updatePersistentClock() {
