@@ -648,6 +648,16 @@ body.one-button-nav-active .dock.show {
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
 
+#persistent-clock-actions {
+    position: fixed;
+    top: 20px;
+    right: 150px;
+    z-index: 9995;
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+
 .persistent-clock.show {
     opacity: 1;
     visibility: visible;
@@ -1661,7 +1671,7 @@ body.one-button-nav-active .dock.show {
             display: none;
         }
 
-.version-info, .campaign-info {
+.version-info, .campaign-info, .app-management-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
