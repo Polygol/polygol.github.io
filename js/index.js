@@ -8743,6 +8743,13 @@ blurOverlayControls.addEventListener('click', () => {
 });
 
 function closeControls() {
+    // FIX: If the modal isn't fully "shown", do nothing.
+    // This prevents the race condition where this function is called immediately
+    // after the open logic has started but before the 'show' class is added.
+    if (!customizeModal.classList.contains('show')) {
+        return;
+    }
+	
 	persistentClock.style.opacity = '1';
     customizeModal.classList.remove('show'); // Start animation
     blurOverlayControls.classList.remove('show');
