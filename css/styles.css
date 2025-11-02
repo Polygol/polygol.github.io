@@ -1686,7 +1686,7 @@ body.one-button-nav-active .dock.show {
             display: none;
         }
 
-.version-info, .campaign-info {
+.version-info, .campaign-info, #app-management-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
