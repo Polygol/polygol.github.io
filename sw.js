@@ -1,4 +1,4 @@
-const CACHE_NAME = 'polygol-cache-v4.3';
+const CACHE_NAME = 'polygol-cache-v4.4';
 
 const ASSETS_TO_CACHE = [
   '/assets/img/regular-expressive-onload.webp',
@@ -31,19 +31,20 @@ const ASSETS_TO_CACHE = [
   'https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Medium.woff2',
   'https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Semibold.woff2',
   'https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Bold.woff2',
+  '/assets/fonts/InterNumeric.ttf',
   'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js',
-  'https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap',
-  'https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&display=swap',
-  'https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap',
-  'https://fonts.googleapis.com/css2?family=Iansui&display=swap',
-  'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap',
-  'https://fonts.googleapis.com/css2?family=DotGothic16&display=swap',
-  'https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap',
-  'https://fonts.googleapis.com/css2?family=Rampart+One&display=swap',
-  'https://fonts.googleapis.com/css2?family=Doto:wght@400;700&display=swap',
-  'https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap',
   'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0',
-  'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0'
+  'https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap'
+  'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap',
+  'https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&display=swap',
+  'https://fonts.googleapis.com/css2?family=Domine:wght@400..700&display=swap',
+  'https://fonts.googleapis.com/css2?family=Climate+Crisis&display=swap',
+  'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap',
+  'https://fonts.googleapis.com/css2?family=DotGothic16&display=swap',  
+  'https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@100..800&display=swap',
+  'https://fonts.googleapis.com/css2?family=Jaro:opsz@6..72&display=swap',    
+  'https://fonts.googleapis.com/css2?family=Doto:wght@400;700&display=swap', 
+  'https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap'
 ];
 
 // INSTALL: Cache all assets. This now uses a single, simpler call.
