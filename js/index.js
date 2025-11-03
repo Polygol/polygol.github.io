@@ -1754,14 +1754,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const bodyObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === 'childList') {
+                let changed = false;
                 mutation.addedNodes.forEach(node => {
-                    if (node.nodeType === 1 && // Element node
-                        node.classList && 
+                    if (node.nodeType === 1 &&
+                        node.classList &&
                         node.classList.contains('fullscreen-embed')) {
                         embedObserver.observe(node, { attributes: true });
-                        updatePersistentClock();
+                        changed = true;
                     }
                 });
+                mutation.removedNodes.forEach(node => {
+                    if (node.nodeType === 1 &&
+                        node.classList &&
+                        node.classList.contains('fullscreen-embed')) {
+                        changed = true;
+                    }
+                });
+                if (changed) {
+                    updatePersistentClock();
+                }
             }
         });
     });
