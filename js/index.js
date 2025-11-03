@@ -6875,7 +6875,7 @@ function closeFullscreenEmbed() {
     });
 
     // Hide app management
-    document.querySelectorAll('.app-management-info').forEach(el => {
+    document.querySelectorAll('#app-management-info').forEach(el => {
         if (!el.dataset.originalDisplay) {
             el.dataset.originalDisplay = window.getComputedStyle(el).display;
         }
