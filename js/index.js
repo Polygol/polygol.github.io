@@ -6749,7 +6749,7 @@ async function createFullscreenEmbed(url) {
 	});
     
     // Hide all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #app-management-info').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
         if (!el.dataset.originalDisplay) {
             el.dataset.originalDisplay = window.getComputedStyle(el).display;
         }
@@ -6758,6 +6758,17 @@ async function createFullscreenEmbed(url) {
         setTimeout(() => {
             el.classList.add('force-hide');
         }, 300);
+    });
+
+    // Restore app management
+    document.querySelectorAll('#app-management-info').forEach(el => {
+	el.classList.remove('force-hide');
+        el.style.display = el.dataset.originalDisplay || ''; // Restore original display property
+        el.style.transition = 'opacity 0.3s ease';
+
+        requestAnimationFrame(() => {
+            el.style.opacity = '1';
+        });
     });
 	
     // Append the container to the DOM
@@ -6853,7 +6864,7 @@ function closeFullscreenEmbed() {
     }
     
     // Restore all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #app-management-info').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 	el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay || ''; // Restore original display property
         el.style.transition = 'opacity 0.3s ease';
@@ -6861,6 +6872,18 @@ function closeFullscreenEmbed() {
         requestAnimationFrame(() => {
             el.style.opacity = '1';
         });
+    });
+
+    // Hide app management
+    document.querySelectorAll('.app-management-info').forEach(el => {
+        if (!el.dataset.originalDisplay) {
+            el.dataset.originalDisplay = window.getComputedStyle(el).display;
+        }
+        el.style.transition = 'opacity 0.3s ease';
+        el.style.opacity = '0';
+        setTimeout(() => {
+            el.classList.add('force-hide');
+        }, 300);
     });
     
     // Hide the swipe overlay
