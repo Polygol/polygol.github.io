@@ -9512,8 +9512,8 @@ function setControlValueAndDispatch(key, value) {
  * @param {string} [options.height='120px'] - The height of the activity in the notification shade.
  */
 function startLiveActivity(appName, options) {
-    if (!options || !options.activityId || !options.url) {
-        console.error('[Live Activity] Start failed: activityId and url are required.');
+    if (!appName || !options || !options.activityId || !options.url) {
+        console.error('[Live Activity] Start failed: appName, activityId and url are required.');
         return;
     }
 
