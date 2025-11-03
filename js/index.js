@@ -1568,8 +1568,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Mouse Hover Logic ---
-    persistentClock.addEventListener('mouseenter', () => showQuickActions(false));
-    quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
+    persistentClock.addEventListener('mouseenter', () => {
+        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (appIsOpen) {
+            showQuickActions(false);
+        }
+    });
+	quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
     persistentClock.addEventListener('mouseleave', hideQuickActions);
     quickActions.addEventListener('mouseleave', hideQuickActions);
     interactionBlocker.addEventListener('click', hideQuickActions); // Tap outside to close
@@ -1648,6 +1653,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
 	// Make sure we re-attach the click event listener
     persistentClock.addEventListener('click', () => {
+        // Prevent re-opening if already visible/opening
+        if (customizeModal.style.display === 'block') return;
+
 		syncUiStates();
         const appManagementInfo = document.getElementById('app-management-info');
         const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
