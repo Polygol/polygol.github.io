@@ -105,28 +105,12 @@
     top: 20px;
     right: 20px;
     font-size: 8px;
-    color: var(--secondary-text-color-dark);
+    color: var(--secondary-text-color);
     background-color: transparent;
     padding: 8px 10px;
 	font-family: 'Inter', sans-serif;
     display: flex;
 	text-align: right;
-    align-items: center; /* Keeps the image and text aligned */
-    gap: 8px; /* Adds spacing between image and text */
-    cursor: pointer;
-}
-
-.boot-credits {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    font-size: 1.2rem;
-    color: var(--text-color-dark);
-    background-color: transparent;
-    padding: 8px 10px;
-	font-family: 'Inter', sans-serif;
-    display: flex;
-	text-align: left;
     align-items: center; /* Keeps the image and text aligned */
     gap: 8px; /* Adds spacing between image and text */
     cursor: pointer;
