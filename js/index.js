@@ -1568,15 +1568,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Mouse Hover Logic ---
-    persistentClock.addEventListener('mouseenter', () => {
-        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (appIsOpen) {
-            showQuickActions(false);
-        }
-    });
-	quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
-    persistentClock.addEventListener('mouseleave', hideQuickActions);
-    quickActions.addEventListener('mouseleave', hideQuickActions);
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    if (!isTouchDevice) {
+        persistentClock.addEventListener('mouseenter', () => {
+            const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+            if (appIsOpen) {
+                showQuickActions(false);
+            }
+        });
+        quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
+        persistentClock.addEventListener('mouseleave', hideQuickActions);
+        quickActions.addEventListener('mouseleave', hideQuickActions);
+    }
     interactionBlocker.addEventListener('click', hideQuickActions); // Tap outside to close
 
     // --- Touch Long-Press Logic ---
@@ -1655,6 +1658,8 @@ document.addEventListener('DOMContentLoaded', () => {
     persistentClock.addEventListener('click', () => {
         // Prevent re-opening if already visible/opening
         if (customizeModal.style.display === 'block') return;
+
+        clearTimeout(hideActionsTimeout); // Prevent quick actions from interfering
 
 		syncUiStates();
         const appManagementInfo = document.getElementById('app-management-info');
