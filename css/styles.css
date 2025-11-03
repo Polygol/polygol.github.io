@@ -660,8 +660,9 @@ body.one-button-nav-active .dock.show {
 	padding: 8px;
     z-index: 9996;
     gap: 12px;
-    transform-origin: top right;
+    transform-origin: right;
     transform: scale(0.9);
+	filter: blur(2.5px);
     opacity: 0;
     transition: transform 0.2s ease, opacity 0.2s ease;
     pointer-events: none;
@@ -679,6 +680,7 @@ body.one-button-nav-active .dock.show {
 
 .persistent-clock-actions.show {
     transform: scale(1);
+	filter: none;
     opacity: 1;
     pointer-events: auto;
 }
