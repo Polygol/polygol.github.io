@@ -88,7 +88,33 @@
                         Report this to our GitHub. <a href="https://github.com/Polygol/polygol.github.io/issues" style="color: #82b1ff;">https://github.com/Polygol/polygol.github.io/issues</a>
                     </p>
                 `;
+
+                // Create Continue Anyway button
+                const continueButton = document.createElement('button');
+                continueButton.textContent = 'Continue Anyway';
+                continueButton.style.marginTop = '20px';
+                continueButton.style.padding = '10px 20px';
+                continueButton.style.fontSize = '16px';
+                continueButton.style.backgroundColor = '#4CAF50';
+                continueButton.style.color = 'white';
+                continueButton.style.border = 'none';
+                continueButton.style.borderRadius = '50px';
+                continueButton.style.cursor = 'pointer';
+        
+                // Add click event to remove the loading screen
+                continueButton.addEventListener('click', () => {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.remove(); // Remove the loading screen from the DOM after fade-out
+                    }, 1000); // Match the fade-out time
+        
+                    // Optional: Handle any other recovery process if necessary
+                });
+        
+                // Append the error message and button to the loading screen
                 loadingScreen.appendChild(errorContainer);
+                loadingScreen.appendChild(continueButton);
+                
                 // Do not suppress default browser error handler
             }
         };
