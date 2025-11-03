@@ -1686,12 +1686,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		persistentClock.style.opacity = '0';
 		customizeModal.style.display = 'block';
+        customizeModal.style.pointerEvents = 'none'; // Prevent immediate close on touch
 		customizeModal.scrollTop = 0; // Scroll to top
 		blurOverlayControls.style.display = 'block';
-	        setTimeout(() => {
-		        customizeModal.classList.add('show');
-	            blurOverlayControls.classList.add('show');
-	        }, 10);
+        blurOverlayControls.style.pointerEvents = 'none'; // Prevent immediate close on touch
+
+        setTimeout(() => {
+            customizeModal.classList.add('show');
+            blurOverlayControls.classList.add('show');
+            // Re-enable pointer events after animation starts
+            setTimeout(() => {
+                customizeModal.style.pointerEvents = 'auto';
+                blurOverlayControls.style.pointerEvents = 'auto';
+            }, 150);
+        }, 10);
     });
 
     document.getElementById('app-minimize-btn').addEventListener('click', () => {
