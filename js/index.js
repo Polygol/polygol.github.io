@@ -1568,18 +1568,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Mouse Hover Logic ---
-    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    if (!isTouchDevice) {
-        persistentClock.addEventListener('mouseenter', () => {
-            const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-            if (appIsOpen) {
-                showQuickActions(false);
-            }
-        });
-        quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
-        persistentClock.addEventListener('mouseleave', hideQuickActions);
-        quickActions.addEventListener('mouseleave', hideQuickActions);
-    }
+    let lastTouchTime = 0;
+    document.addEventListener('touchstart', () => { lastTouchTime = Date.now(); }, true);
+
+    persistentClock.addEventListener('mouseenter', () => {
+        // Ignore hover if a touch event happened recently to prevent conflicts
+        if (Date.now() - lastTouchTime < 500) return;
+
+        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (appIsOpen) {
+            showQuickActions(false);
+        }
+    });
+    quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
+    persistentClock.addEventListener('mouseleave', hideQuickActions);
+    quickActions.addEventListener('mouseleave', hideQuickActions);
     interactionBlocker.addEventListener('click', hideQuickActions); // Tap outside to close
 
     // --- Touch Long-Press Logic ---
