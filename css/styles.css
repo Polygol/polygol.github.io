@@ -82,7 +82,7 @@
     align-items: center;
     gap: 10vh;
     opacity: 1;
-    transition: opacity 1s ease-out;
+    transition: opacity 1s ease-out, background-color 5s ease-out !IMPORTANT;
 }
 
 .loading-overlay.hidden {
