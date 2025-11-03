@@ -1539,6 +1539,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(hideActionsTimeout);
             quickActions.style.display = 'flex';
             interactionBlocker.style.display = 'block';
+            interactionBlocker.style.pointerEvents = 'auto';
             interactionBlocker.style.zIndex = '9994'; // Below actions menu but above app
             persistentClock.style.opacity = '0';
 
@@ -1584,6 +1585,7 @@ document.addEventListener('DOMContentLoaded', () => {
     persistentClock.addEventListener('mouseleave', hideQuickActions);
     quickActions.addEventListener('mouseleave', hideQuickActions);
     interactionBlocker.addEventListener('click', hideQuickActions); // Tap outside to close
+    persistentClock.addEventListener('contextmenu', e => e.preventDefault());
 
     // --- Touch Long-Press Logic ---
     persistentClock.addEventListener('touchstart', (e) => {
@@ -6797,6 +6799,18 @@ function closeFullscreenEmbed() {
     
     if (embedContainer) {
         const url = embedContainer.dataset.embedUrl;
+        const appName = Object.keys(apps).find(name => apps[name].url === url);
+
+        if (appName) {
+            // Clear media session for the closing app
+            clearMediaSession(appName);
+            // Stop all live activities started by this app
+            Object.keys(activeLiveActivities).forEach(activityId => {
+                if (activeLiveActivities[activityId].appName === appName) {
+                    stopLiveActivity(activityId);
+                }
+            });
+        }
         
         // Animate out
         embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -9479,7 +9493,7 @@ function setControlValueAndDispatch(key, value) {
  * @param {boolean} [options.homescreen=false] - If true, this activity can show a summary on the homescreen.
  * @param {string} [options.height='120px'] - The height of the activity in the notification shade.
  */
-function startLiveActivity(options) {
+function startLiveActivity(appName, options) {
     if (!options || !options.activityId || !options.url) {
         console.error('[Live Activity] Start failed: activityId and url are required.');
         return;
@@ -9497,6 +9511,7 @@ function startLiveActivity(options) {
     });
 
     activeLiveActivities[options.activityId] = {
+        appName: appName,
         options: options,
         notificationControl: notificationControl
     };
