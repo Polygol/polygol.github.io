@@ -1530,13 +1530,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const customizeModal = document.getElementById('customizeModal');
     const quickActions = document.getElementById('persistent-clock-quick-actions');
     const interactionBlocker = document.getElementById('interaction-blocker');
-    let hideActionsTimeout, longPressTimeout;
+    let hideActionsTimeout, longPressTimeout, quickActionsInactivityTimeout;
     let isLongPress = false;
 
     const showQuickActions = (isTouch = false) => {
         const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
         if (appIsOpen) {
             clearTimeout(hideActionsTimeout);
+            clearTimeout(quickActionsInactivityTimeout); // Clear previous inactivity timer
+
             quickActions.style.display = 'flex';
             interactionBlocker.style.display = 'block';
             interactionBlocker.style.pointerEvents = 'auto';
@@ -1548,10 +1550,15 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 quickActions.classList.add('show');
             }, 10); // next frame
+
+            if (isTouch) {
+                quickActionsInactivityTimeout = setTimeout(hideQuickActions, 5000);
+            }
         }
     };
 
     const hideQuickActions = () => {
+        clearTimeout(quickActionsInactivityTimeout); // Always clear the inactivity timer on close
         const delay = isLongPress ? 0 : 100; // Immediate for touch, delayed for mouse
         clearTimeout(hideActionsTimeout);
         hideActionsTimeout = setTimeout(() => {
