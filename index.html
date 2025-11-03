@@ -39,9 +39,9 @@
         // Show a message if loading is slow
         setTimeout(() => {
             const loadingScreen = document.getElementById('loading-screen');
-            const bootCredits = document.getElementById('boot-credits');
-            if (loadingScreen && bootCredits) { // Check if loading is still happening
-                bootCredits.innerHTML = `
+            const bootHelp = document.getElementById('boot-help');
+            if (loadingScreen && bootHelp) { // Check if loading is still happening
+                bootHelp.innerHTML = `
                     Polygol is loading. Do not close this tab.<br>
                     Polygolは読み込み中です。このタブを閉じないでください。<br>
                     Polygol wird geladen. Schließen Sie diesen Tab nicht.<br>
@@ -89,7 +89,7 @@
                     </p>
                 `;
                 loadingScreen.appendChild(errorContainer);
-                return true; // Suppress default browser error handler
+                // Do not suppress default browser error handler
             }
         };
     </script>
