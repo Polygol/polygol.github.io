@@ -6614,7 +6614,7 @@ async function createFullscreenEmbed(url) {
 	    }, 10);
         
         // Hide all main UI elements
-        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #app-management-info').forEach(el => {
+        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
             if (!el.dataset.originalDisplay) {
                 el.dataset.originalDisplay = window.getComputedStyle(el).display;
             }
@@ -6623,6 +6623,17 @@ async function createFullscreenEmbed(url) {
             setTimeout(() => {
                 el.classList.add('force-hide');
             }, 300);
+        });
+
+        // Restore app management
+        document.querySelectorAll('#app-management-info').forEach(el => {
+            el.classList.remove('force-hide');
+            el.style.display = el.dataset.originalDisplay || ''; // Restore original display property
+            el.style.transition = 'opacity 0.3s ease';
+
+            requestAnimationFrame(() => {
+                el.style.opacity = '1';
+            });
         });
 
         // Show the swipe overlay when restoring an app
