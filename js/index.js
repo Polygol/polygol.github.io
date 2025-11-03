@@ -1719,15 +1719,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 10);
     });
 
-    document.getElementById('app-minimize-btn').addEventListener('click', () => {
-        closeControls();
-        minimizeFullscreenEmbed();
-    });
+    const minimizeBtn = document.getElementById('app-minimize-btn');
+    if (minimizeBtn) {
+        minimizeBtn.addEventListener('click', () => {
+            closeControls();
+            minimizeFullscreenEmbed();
+        });
+    }
 
-    document.getElementById('app-close-btn').addEventListener('click', () => {
-        closeControls();
-        closeFullscreenEmbed();
-    });
+    const closeBtn = document.getElementById('app-close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            closeControls();
+            closeFullscreenEmbed();
+        });
+    }
     
     // Setup observer to watch for embed visibility changes to update clock immediately
     const embedObserver = new MutationObserver((mutations) => {
