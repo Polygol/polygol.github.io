@@ -421,7 +421,8 @@ const Gurasuraisu = {
       if (options && options.activityId) {
         _myActiveActivities.add(options.activityId); // Add to local tracker
       }
-      Gurasuraisu._call('startLiveActivity', [options]);
+      const appName = document.body.dataset.appName || 'UnknownApp';
+      Gurasuraisu._call('startLiveActivity', [appName, options]);
     },
 
     /**
