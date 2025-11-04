@@ -1384,14 +1384,14 @@ body.one-button-nav-active .dock.show {
     z-index: 1;
     box-sizing: border-box;
     position: absolute;
-    bottom: 68px;
+    bottom: 52px;
     pointer-events: none;
     justify-content: space-between;
-    width: 91.5%;
+    width: 90.5%;
 }
 
 .media-widget-time {
-    font-size: 12px;
+    font-size: 10px;
     font-variant-numeric: tabular-nums;
     color: var(--secondary-text-color);
     text-shadow: 0 0 4px var(--background-color);
@@ -1401,7 +1401,7 @@ body.one-button-nav-active .dock.show {
     height: 4px;
     border-radius: 6px;
     overflow: hidden;
-	margin: 0 50px 8px 50px;
+	margin: 0 6px 8px 6px;
     background-color: var(--overlay-color);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
 	box-shadow: var(--sun-shadow);
@@ -1420,7 +1420,7 @@ body.one-button-nav-active .dock.show {
     display: flex;
     gap: 55px;
     justify-content: flex-end;
-    margin: 8px auto 2px auto;
+    margin: 6px auto 4px auto;
     align-items: center;
 }
 
