@@ -1380,14 +1380,14 @@ body.one-button-nav-active .dock.show {
 .media-widget-progress-container {
     display: flex;
     align-items: center;
-    gap: 90px;
-    width: 100%;
-    padding: 0 6px;
+    padding: 0 8px;
     z-index: 1;
     box-sizing: border-box;
     position: absolute;
-    bottom: 34px;
-	pointer-events: none;
+    bottom: 68px;
+    pointer-events: none;
+    justify-content: space-between;
+    width: 91.5%;
 }
 
 .media-widget-time {
@@ -1398,13 +1398,10 @@ body.one-button-nav-active .dock.show {
 }
 
 #media-widget-progress-bar {
-    width: 87%;
     height: 4px;
     border-radius: 6px;
     overflow: hidden;
-    position: absolute;
-    bottom: 18px;
-    left: 6%;
+	margin: 0 50px 8px 50px;
     background-color: var(--search-background);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 	box-shadow: var(--sun-shadow);
@@ -1421,10 +1418,10 @@ body.one-button-nav-active .dock.show {
 
 .media-widget-controls {
     display: flex;
-    gap: 24px;
+    gap: 55px;
     justify-content: flex-end;
-    margin: 4px 4px 28px auto;
-	align-items: center;
+    margin: 6px auto 4px auto;
+    align-items: center;
 }
 
 .media-widget-controls button {
