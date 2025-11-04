@@ -1402,8 +1402,8 @@ body.one-button-nav-active .dock.show {
     border-radius: 6px;
     overflow: hidden;
 	margin: 0 50px 8px 50px;
-    background-color: var(--search-background);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    background-color: var(--overlay-color);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
 	box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
 }
@@ -1420,7 +1420,7 @@ body.one-button-nav-active .dock.show {
     display: flex;
     gap: 55px;
     justify-content: flex-end;
-    margin: 6px auto 4px auto;
+    margin: 8px auto 2px auto;
     align-items: center;
 }
 
@@ -1440,8 +1440,8 @@ body.one-button-nav-active .dock.show {
 }
 
 #media-widget-play-pause {
-    background: var(--search-background);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    background: var(--overlay-color);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
     box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
     width: 42px;
