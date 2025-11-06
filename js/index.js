@@ -2371,6 +2371,9 @@ function showPopup(message) {
     
     // Check if the message is about fullscreen and add a button if it is
     if (message === currentLanguage.NOT_FULLSCREEN) {
+        if (isFullScreen()) return; // Don't show the popup if already fullscreen
+        popup.id = 'fullscreen-prompt-popup'; // Assign an ID to find it later
+		
         // Clear existing text content since we only want to show the button
         while (popup.firstChild) {
             popup.removeChild(popup.firstChild);
@@ -2908,8 +2911,20 @@ function updateFullscreenButtonVisibility() {
 
 function checkFullscreen() {
   updateFullscreenButtonVisibility();
+
   if (!isFullScreen()) {
     showPopup(currentLanguage.NOT_FULLSCREEN);
+  }
+
+  const fsPopup = document.querySelector('#fullscreen-prompt-popup');
+  if (isFullScreen() && fsPopup) {
+    // If we have just entered fullscreen, hide any visible prompt.
+    fsPopup.style.opacity = '0';
+    setTimeout(() => {
+        if (fsPopup.parentNode) {
+            fsPopup.parentNode.removeChild(fsPopup);
+        }
+    }, 500);
   }
 }
 
