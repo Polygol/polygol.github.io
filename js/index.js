@@ -5910,14 +5910,7 @@ function setupFontSelection() {
                 const currentStyles = currentWallpaper.clockStyles || {};
                 const finalSettings = { ...currentStyles, ...settingsFromUI };
 
-                // Clear custom font if a standard one is chosen
-                if (settingsFromUI.font !== currentStyles.customFontName) {
-                    finalSettings.customFontName = null;
-                    finalSettings.customFontUrl = null;
-                }
-
                 currentWallpaper.clockStyles = finalSettings;
-                saveRecentWallpapers();
 				
 				// --- Handle saving theme-specific wallpaper effects ---
 	            if (!currentWallpaper.clockStyles.wallpaperEffects) {
@@ -5931,6 +5924,8 @@ function setupFontSelection() {
 	                brightness: brightnessSlider.value,
 	                contrast: contrastSlider.value
 	            };
+
+                saveRecentWallpapers();
 
                 // --- UPDATE IndexedDB record as well ---
                 if (currentWallpaper.id) { // Only for non-slideshow wallpapers
@@ -5982,16 +5977,32 @@ function setupFontSelection() {
     applyClockStyles();
     applyWallpaperEffects();
     applyAlignment(alignmentSelect.value);
+
+    // Special listener for the font dropdown to handle clearing custom fonts
+    fontSelect.addEventListener('change', async () => {
+        const currentWallpaper = recentWallpapers[currentWallpaperPosition];
+        if (currentWallpaper && currentWallpaper.clockStyles) {
+            currentWallpaper.clockStyles.customFontName = null;
+            currentWallpaper.clockStyles.customFontUrl = null;
+            applyCustomWallpaperStyles({}); // Clear the @font-face rule
+        }
+        applyClockStyles();
+        await saveCurrentWallpaperSettings();
+        syncUiStates();
+    });
     
     // --- 3. NOW, set up the event listeners for future user interactions ---
     const allControls = [
-        fontSelect, weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
+        weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
         blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
         shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch, roundnessSlider,
         sizeSlider, posXSlider, posYSlider, alignmentSelect, clockFormatInput, dateFormatInput
     ];
 
     allControls.forEach(control => {
+        // Use a Set to avoid duplicate event listeners for alignmentSelect
+        if(control.id === 'alignment-select' && control.dataset.listenerAttached) return;
+
         const eventType = (control.type === 'checkbox' || control.tagName === 'SELECT') ? 'change' : 'input';
         control.addEventListener(eventType, async () => {
             applyClockLayout();
@@ -6000,8 +6011,9 @@ function setupFontSelection() {
             await saveCurrentWallpaperSettings();
             syncUiStates();
         });
+        if(control.id === 'alignment-select') control.dataset.listenerAttached = 'true';
     });
-
+	
     // --- Special handler for Alignment Preset Dropdown ---
     alignmentSelect.addEventListener('change', async () => {
         applyClockLayout();
@@ -6101,11 +6113,12 @@ function applyClockStyles() {
 
     // --- Main Font and Roundness Logic ---
 
-    // 1. Prioritize custom font from Terminal
+    // 1. Prioritize custom font if it's set for the current wallpaper
     if (currentStyles.customFontName) {
-        clockFontFamily = `'${currentStyles.customFontName}', ${selectedFont}, Inter, sans-serif`;
+        clockFontFamily = `'${currentStyles.customFontName}', sans-serif`;
+        infoFontFamily = `'${currentStyles.customFontName}', sans-serif`;
     } 
-    // 2. Handle standard fonts from the dropdown
+    // 2. Handle standard fonts from the dropdown if no custom font is active
     else if (selectedFont === 'Inter') {
         roundnessAxis = 'RDNS'; // Inter family uses RDNS for roundness
         if (roundnessValue > 0) {
