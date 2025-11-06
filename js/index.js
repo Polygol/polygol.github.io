@@ -2400,7 +2400,7 @@ function showPopup(message) {
         // Create the icon element
         const icon = document.createElement('span');
         icon.className = 'material-symbols-rounded';
-        icon.textContent = 'fullscreen';
+        icon.textContent = 'expand_content';
         icon.style.fontFamily = 'Material Symbols Rounded';
         icon.style.fontSize = '20px';
         icon.style.lineHeight = '1'; // Helps with vertical alignment
