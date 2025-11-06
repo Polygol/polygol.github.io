@@ -2896,7 +2896,18 @@ function goFullscreen() {
     }
 }
 
+function updateFullscreenButtonVisibility() {
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const blackoutBtn = document.getElementById('blackout-btn');
+    if (fullscreenBtn && blackoutBtn) {
+        const isCurrentlyFullScreen = isFullScreen();
+        fullscreenBtn.style.display = isCurrentlyFullScreen ? 'none' : 'flex';
+        blackoutBtn.style.display = isCurrentlyFullScreen ? 'flex' : 'none';
+    }
+}
+
 function checkFullscreen() {
+  updateFullscreenButtonVisibility();
   if (!isFullScreen()) {
     showPopup(currentLanguage.NOT_FULLSCREEN);
   }
