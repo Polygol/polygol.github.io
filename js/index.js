@@ -5872,8 +5872,12 @@ function setupFontSelection() {
 	    const isLightMode = document.body.classList.contains('light-theme');
 	    const theme = isLightMode ? 'light' : 'dark';
 			
+		// Get the current wallpaper's styles to check for a custom font
+        const currentWallpaper = recentWallpapers.length > 0 ? recentWallpapers[currentWallpaperPosition] : null;
+        const currentStyles = (currentWallpaper && currentWallpaper.clockStyles) ? currentWallpaper.clockStyles : {};
+            
         const settingsFromUI = {
-            font: fontSelect.value,
+            font: currentStyles.customFontName || fontSelect.value, // Prioritize custom font
             weight: (parseInt(weightSlider.value, 10) * 10).toString(),
             color: colorPicker.value,
             colorEnabled: colorSwitch.checked,
@@ -5902,42 +5906,37 @@ function setupFontSelection() {
 	        broadcastSettingUpdate(key, value); // Broadcasts the update
 	    }
 
-        // If there's an active wallpaper, also save these settings specifically to it.
-        if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0) {
-            const currentWallpaper = recentWallpapers[currentWallpaperPosition];
-            if (currentWallpaper) {
-                 // Preserve any non-UI settings by merging
-                const currentStyles = currentWallpaper.clockStyles || {};
-                const finalSettings = { ...currentStyles, ...settingsFromUI };
+        if (currentWallpaper) {
+            // Merge the latest UI settings with the existing styles
+            const finalSettings = { ...currentStyles, ...settingsFromUI };
 
-                currentWallpaper.clockStyles = finalSettings;
+            currentWallpaper.clockStyles = finalSettings;
 				
-				// --- Handle saving theme-specific wallpaper effects ---
-	            if (!currentWallpaper.clockStyles.wallpaperEffects) {
-	                currentWallpaper.clockStyles.wallpaperEffects = { light: {}, dark: {} };
-	            }
-	            if (!currentWallpaper.clockStyles.wallpaperEffects[theme]) {
-	                currentWallpaper.clockStyles.wallpaperEffects[theme] = {};
-	            }
-	            currentWallpaper.clockStyles.wallpaperEffects[theme] = {
-	                blur: blurSlider.value,
-	                brightness: brightnessSlider.value,
-	                contrast: contrastSlider.value
-	            };
+            // --- Handle saving theme-specific wallpaper effects ---
+            if (!currentWallpaper.clockStyles.wallpaperEffects) {
+                currentWallpaper.clockStyles.wallpaperEffects = { light: {}, dark: {} };
+            }
+            if (!currentWallpaper.clockStyles.wallpaperEffects[theme]) {
+                currentWallpaper.clockStyles.wallpaperEffects[theme] = {};
+            }
+            currentWallpaper.clockStyles.wallpaperEffects[theme] = {
+                blur: blurSlider.value,
+                brightness: brightnessSlider.value,
+                contrast: contrastSlider.value
+            };
 
-                saveRecentWallpapers();
+            saveRecentWallpapers();
 
-                // --- UPDATE IndexedDB record as well ---
-                if (currentWallpaper.id) { // Only for non-slideshow wallpapers
-                    try {
-                        const wallpaperRecord = await getWallpaper(currentWallpaper.id);
-                        if (wallpaperRecord) {
-                            wallpaperRecord.clockStyles = finalSettings;
-                            await storeWallpaper(currentWallpaper.id, wallpaperRecord);
-                        }
-                    } catch (error) {
-                         console.error("Failed to save clock styles to IndexedDB:", error);
+            // --- UPDATE IndexedDB record as well ---
+            if (currentWallpaper.id) { // Only for non-slideshow wallpapers
+                try {
+                    const wallpaperRecord = await getWallpaper(currentWallpaper.id);
+                    if (wallpaperRecord) {
+                        wallpaperRecord.clockStyles = finalSettings;
+                        await storeWallpaper(currentWallpaper.id, wallpaperRecord);
                     }
+                } catch (error) {
+                    console.error("Failed to save clock styles to IndexedDB:", error);
                 }
             }
         }
@@ -6101,41 +6100,31 @@ function applyClockStyles() {
     // Use custom font if available, otherwise use font from dropdown
     const fontWeight = parseInt(weightSlider.value, 10) * 10;
     const roundnessValue = parseInt(roundnessSlider.value, 10);
-    const selectedFont = fontSelect.value;
+	const selectedFont = fontSelect.value;
+    const effectiveFont = currentStyles.customFontName || selectedFont;
     
-    let clockFontFamily = `'${selectedFont}', Inter, sans-serif`;
-    let infoFontFamily = `'${selectedFont}', Inter, sans-serif`; // Default for date
-    let roundnessAxis = 'ROND'; // Default to ROND for other fonts
+    let clockFontFamily = `'${effectiveFont}', sans-serif`;
+    let infoFontFamily = `'${effectiveFont}', sans-serif`;
+    let roundnessAxis = 'ROND';
 
     // Reset variation settings for all elements
     clockElement.style.fontVariationSettings = 'normal';
     infoElement.style.fontVariationSettings = 'normal';
-
-    // --- Main Font and Roundness Logic ---
-
-    // 1. Prioritize custom font if it's set for the current wallpaper
-    if (currentStyles.customFontName) {
-        clockFontFamily = `'${currentStyles.customFontName}', sans-serif`;
-        infoFontFamily = `'${currentStyles.customFontName}', sans-serif`;
-    } 
-    // 2. Handle standard fonts from the dropdown if no custom font is active
-    else if (selectedFont === 'Inter') {
-        roundnessAxis = 'RDNS'; // Inter family uses RDNS for roundness
-        if (roundnessValue > 0) {
-            clockFontFamily = "'Inter Numeric', sans-serif";
-            infoFontFamily = "'Open Runde', sans-serif"; // Special case: Use Open Runde for the date
-        } else {
-            clockFontFamily = "'Inter', sans-serif"; // No roundness, use standard Inter
-            infoFontFamily = "'Inter', sans-serif";
-        }
-    } 
-    // For any other font, clockFontFamily and infoFontFamily are already correctly set.
-    // roundnessAxis is already defaulted to 'ROND'.
+    
+    // --- Special Font Logic ---
+    // Only apply special logic if NOT using a custom font.
+    if (!currentStyles.customFontName && selectedFont === 'Inter' && roundnessValue > 0) {
+        roundnessAxis = 'RDNS';
+        clockFontFamily = "'Inter Numeric', sans-serif";
+        infoFontFamily = "'Open Runde', sans-serif";
+    }
 
     // --- Apply font variation settings if roundness is active ---
     if (roundnessValue > 0) {
         const roundValue = roundnessValue / 100;
+        // Apply to both clock and info, as some custom fonts might support it
         clockElement.style.fontVariationSettings = `'${roundnessAxis}' ${roundValue}`;
+        infoElement.style.fontVariationSettings = `'${roundnessAxis}' ${roundValue}`;
     }
 
     // --- Apply final styles to elements ---
