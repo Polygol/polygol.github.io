@@ -2507,6 +2507,11 @@ input[type="checkbox"]:checked::before {
             transition: transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease;
             filter: none;
         }
+		
+		.fullscreen-embed.legacy {
+		    height: calc(100% - 75px);
+		    margin-top: 50px;
+		}
         
         .fullscreen-embed iframe {
             width: 100%;
