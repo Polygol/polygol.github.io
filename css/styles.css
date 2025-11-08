@@ -2361,6 +2361,7 @@ input[type="checkbox"]:checked::before {
             gap: 2vw;
             max-height: 90vh;
             width: 100%;
+			padding: 10px 0;
         }
 
         .app-icon {
