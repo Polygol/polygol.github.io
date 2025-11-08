@@ -2532,7 +2532,7 @@ input[type="checkbox"]:checked::before {
 		    height: 75px;
 		    display: none; /* Hidden by default */
 		    align-items: center;
-		    gap: 24px;
+		    gap: 18px;
 		    z-index: 1;
 		    border-bottom: 1px solid var(--glass-border);
 		}
