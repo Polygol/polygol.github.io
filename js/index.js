@@ -6697,7 +6697,7 @@ async function createFullscreenEmbed(url) {
     iframe.setAttribute('allowfullscreen', '');
     
     const embedContainer = document.createElement('div');
-    embedContainer.className = 'fullscreen-embed legacy'; // Default to legacy mode
+    embedContainer.className = 'fullscreen-embed';
     
     // Set initial styles BEFORE adding to DOM (removed filter)
     embedContainer.style.transform = 'scale(0.8)'; 
@@ -6812,6 +6812,15 @@ async function createFullscreenEmbed(url) {
 	
     // Append the container to the DOM
     document.body.appendChild(embedContainer);
+
+    // Set a timeout to apply legacy mode if the app doesn't announce its API
+    setTimeout(() => {
+        // Check if the embed still exists and hasn't received an API handshake
+        if (document.body.contains(embedContainer) && !embedContainer.dataset.hasApi) {
+            console.log(`Gurapp at ${url} did not announce API. Applying legacy mode.`);
+            embedContainer.classList.add('legacy');
+        }
+    }, 500); // 500ms grace period
     
     // Force reflow to ensure the initial styles are applied
     void embedContainer.offsetWidth;
@@ -9718,21 +9727,24 @@ window.addEventListener('message', async (event) => { // Make listener async
     const data = event.data;
     const sourceWindow = event.source;
 
-    // Handle API presence handshake to remove legacy mode
-    if (data.type === 'gurasuraisu-api-present') {
-        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
-        for (const iframe of iframes) {
-            if (iframe.contentWindow === sourceWindow) {
-                const embedContainer = iframe.closest('.fullscreen-embed');
-                if (embedContainer) {
-                    embedContainer.classList.remove('legacy');
-                }
-                break;
-            }
-        }
-        return; // Handshake message handled
-    }
-
+	// Handle API presence handshake to prevent legacy mode
+	if (data.type === 'gurasuraisu-api-present') {
+	    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+	    for (const iframe of iframes) {
+	        if (iframe.contentWindow === sourceWindow) {
+	            const embedContainer = iframe.closest('.fullscreen-embed');
+	            if (embedContainer) {
+	                // Mark as having the API to prevent the legacy timeout from firing
+	                embedContainer.dataset.hasApi = 'true';
+	                // Also ensure legacy class is removed in case of a race condition
+	                embedContainer.classList.remove('legacy');
+	            }
+	            break;
+	        }
+	    }
+	    return; // Handshake message handled
+	}
+	
     if (data.action) {
         const funcToCall = allowedFunctions[data.action];
         if (typeof funcToCall === 'function') {
