@@ -6828,20 +6828,11 @@ async function createFullscreenEmbed(url) {
             const navControls = document.createElement('div');
             navControls.className = 'legacy-nav-controls';
 
-            const backBtn = document.createElement('button');
-            backBtn.className = 'btn-qc';
-            backBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size: 18px;">arrow_back</span>`;
-            backBtn.onclick = () => { if (iframe.contentWindow) iframe.contentWindow.history.back(); };
-
-            const forwardBtn = document.createElement('button');
-            forwardBtn.className = 'btn-qc';
-            forwardBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size: 18px;">arrow_forward</span>`;
-            forwardBtn.onclick = () => { if (iframe.contentWindow) iframe.contentWindow.history.forward(); };
-
             const refreshBtn = document.createElement('button');
             refreshBtn.className = 'btn-qc';
             refreshBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size: 18px;">refresh</span>`;
-            refreshBtn.onclick = () => { if (iframe.contentWindow) iframe.contentWindow.location.reload(); };
+            // This is the cross-origin safe way to reload an iframe.
+            refreshBtn.onclick = () => { iframe.src = iframe.src; };
 
             // Populate header info
             let iconUrl = appDetails.icon;
@@ -6853,11 +6844,9 @@ async function createFullscreenEmbed(url) {
 
             // Assemble the header
             legacyHeader.appendChild(appIconImg);
-            navControls.appendChild(backBtn);
-            navControls.appendChild(forwardBtn);
+            legacyHeader.appendChild(appNameSpan);
             navControls.appendChild(refreshBtn);
             legacyHeader.appendChild(navControls);
-            legacyHeader.appendChild(appNameSpan);
             
             // Add the header before the iframe
             embedContainer.insertBefore(legacyHeader, iframe);
