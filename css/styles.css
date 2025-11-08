@@ -2515,7 +2515,7 @@ input[type="checkbox"]:checked::before {
         }
 
 		.fullscreen-embed.legacy {
-			background-color: var(--background-color);
+			background-color: var(--background-color-tr);
 		}
 
 		.fullscreen-embed.legacy iframe {
