@@ -6843,9 +6843,9 @@ async function createFullscreenEmbed(url) {
             appNameSpan.textContent = appName;
 
             // Assemble the header
-            legacyHeader.appendChild(appIconImg);
             navControls.appendChild(refreshBtn);
             legacyHeader.appendChild(navControls);
+            legacyHeader.appendChild(appIconImg);
             legacyHeader.appendChild(appNameSpan);
             
             // Add the header before the iframe
