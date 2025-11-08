@@ -2555,6 +2555,8 @@ input[type="checkbox"]:checked::before {
 		.legacy-nav-controls {
 		    display: flex;
 		    gap: 8px;
+			border-right: 2px solid var(--background-color-tr-op);
+		    padding-right: 18px;
 		}
 
 		.legacy-nav-controls .btn-qc {
