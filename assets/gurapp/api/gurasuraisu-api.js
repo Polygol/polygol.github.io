@@ -736,8 +736,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('keydown', handleLocalActivity);
   }
 
-  // Tell the parent that this app is ready to receive settings
+  // Announce API presence to enable full-screen mode and readiness for settings.
   if (isInsideGurasuraisu) {
+    window.parent.postMessage({ type: 'gurasuraisu-api-present' }, '*');
     window.parent.postMessage({ type: 'gurapp-ready' }, '*');
   }
 });
