@@ -6697,7 +6697,7 @@ async function createFullscreenEmbed(url) {
     iframe.setAttribute('allowfullscreen', '');
     
     const embedContainer = document.createElement('div');
-    embedContainer.className = 'fullscreen-embed';
+    embedContainer.className = 'fullscreen-embed legacy'; // Default to legacy mode
     
     // Set initial styles BEFORE adding to DOM (removed filter)
     embedContainer.style.transform = 'scale(0.8)'; 
@@ -9717,6 +9717,21 @@ window.addEventListener('message', async (event) => { // Make listener async
 
     const data = event.data;
     const sourceWindow = event.source;
+
+    // Handle API presence handshake to remove legacy mode
+    if (data.type === 'gurasuraisu-api-present') {
+        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+        for (const iframe of iframes) {
+            if (iframe.contentWindow === sourceWindow) {
+                const embedContainer = iframe.closest('.fullscreen-embed');
+                if (embedContainer) {
+                    embedContainer.classList.remove('legacy');
+                }
+                break;
+            }
+        }
+        return; // Handshake message handled
+    }
 
     if (data.action) {
         const funcToCall = allowedFunctions[data.action];
