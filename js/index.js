@@ -6830,7 +6830,7 @@ async function createFullscreenEmbed(url) {
 
             const refreshBtn = document.createElement('button');
             refreshBtn.className = 'btn-qc';
-            refreshBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size: 18px;">refresh</span>`;
+            refreshBtn.innerHTML = `<span class="material-symbols-rounded">home</span>`;
             // This is the cross-origin safe way to reload an iframe.
             refreshBtn.onclick = () => { iframe.src = iframe.src; };
 
