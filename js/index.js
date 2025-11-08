@@ -6853,11 +6853,11 @@ async function createFullscreenEmbed(url) {
 
             // Assemble the header
             legacyHeader.appendChild(appIconImg);
-            legacyHeader.appendChild(appNameSpan);
             navControls.appendChild(backBtn);
             navControls.appendChild(forwardBtn);
             navControls.appendChild(refreshBtn);
             legacyHeader.appendChild(navControls);
+            legacyHeader.appendChild(appNameSpan);
             
             // Add the header before the iframe
             embedContainer.insertBefore(legacyHeader, iframe);
