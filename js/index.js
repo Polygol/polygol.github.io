@@ -6813,11 +6813,56 @@ async function createFullscreenEmbed(url) {
     // Append the container to the DOM
     document.body.appendChild(embedContainer);
 
-    // Set a timeout to apply legacy mode if the app doesn't announce its API
+	// Set a timeout to apply legacy mode if the app doesn't announce its API
     setTimeout(() => {
         // Check if the embed still exists and hasn't received an API handshake
         if (document.body.contains(embedContainer) && !embedContainer.dataset.hasApi) {
             console.log(`Gurapp at ${url} did not announce API. Applying legacy mode.`);
+            
+            // Create and prepend the legacy header
+            const legacyHeader = document.createElement('div');
+            legacyHeader.className = 'legacy-app-header';
+
+            const appIconImg = document.createElement('img');
+            const appNameSpan = document.createElement('span');
+            const navControls = document.createElement('div');
+            navControls.className = 'legacy-nav-controls';
+
+            const backBtn = document.createElement('button');
+            backBtn.className = 'btn-qc';
+            backBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size: 18px;">arrow_back</span>`;
+            backBtn.onclick = () => { if (iframe.contentWindow) iframe.contentWindow.history.back(); };
+
+            const forwardBtn = document.createElement('button');
+            forwardBtn.className = 'btn-qc';
+            forwardBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size: 18px;">arrow_forward</span>`;
+            forwardBtn.onclick = () => { if (iframe.contentWindow) iframe.contentWindow.history.forward(); };
+
+            const refreshBtn = document.createElement('button');
+            refreshBtn.className = 'btn-qc';
+            refreshBtn.innerHTML = `<span class="material-symbols-rounded" style="font-size: 18px;">refresh</span>`;
+            refreshBtn.onclick = () => { if (iframe.contentWindow) iframe.contentWindow.location.reload(); };
+
+            // Populate header info
+            let iconUrl = appDetails.icon;
+            if (iconUrl && !(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
+                iconUrl = `/assets/appicon/${iconUrl}`;
+            }
+            appIconImg.src = iconUrl || '';
+            appNameSpan.textContent = appName;
+
+            // Assemble the header
+            legacyHeader.appendChild(appIconImg);
+            legacyHeader.appendChild(appNameSpan);
+            navControls.appendChild(backBtn);
+            navControls.appendChild(forwardBtn);
+            navControls.appendChild(refreshBtn);
+            legacyHeader.appendChild(navControls);
+            
+            // Add the header before the iframe
+            embedContainer.insertBefore(legacyHeader, iframe);
+            
+            // Finally, apply the legacy class to make it all visible
             embedContainer.classList.add('legacy');
         }
     }, 500); // 500ms grace period
