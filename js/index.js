@@ -9530,7 +9530,8 @@ const controlIdMap = {
     'nightMode': 'night-mode-qc', // Using the container as the clickable element
     'minimalMode': 'minimal_mode_qc',
     'silentMode': 'silent_switch_qc',
-    'selectedLanguage': 'language-switcher'
+    'selectedLanguage': 'language-switcher',
+    'sleepModeStyle': 'sleepModeStyleSelect'
 };
 
 // --- NEW: Function to broadcast a setting update to the settings app ---
@@ -9550,7 +9551,14 @@ function broadcastSettingUpdate(key, value) {
 
 // --- NEW: Function to programmatically change a control's value and dispatch an event ---
 function setControlValueAndDispatch(key, value) {
-    const controlId = controlIdMap[key];
+    // Handle settings without a direct UI control in index.html
+    if (key === 'sleepModeStyle') {
+        localStorage.setItem(key, value);
+        broadcastSettingUpdate(key, value);
+        return; // Exit, as there's no UI element in the parent to update.
+    }
+	
+	const controlId = controlIdMap[key];
     if (!controlId) return;
 
     const control = document.getElementById(controlId);
