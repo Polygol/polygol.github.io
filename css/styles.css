@@ -2040,6 +2040,9 @@ input[type="checkbox"]:checked::before {
 	body.blackout-active #customizeModal.modal.show {
 	    display: none !important;
 	}
+	body.blackout-active {
+	    background-color: #000 !important;
+	}
 
 	/* Style 1: Dim Wallpaper, Show Content */
 	body.blackout-active.blackout-style-dim-show::before,
