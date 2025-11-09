@@ -4871,11 +4871,10 @@ function resetAutoSleepTimer() {
         return;
     }
 
-    const isEnabled = localStorage.getItem('autoSleepEnabled') === 'true';
     const duration = parseInt(localStorage.getItem('autoSleepDuration') || '0', 10);
     const scope = localStorage.getItem('autoSleepScope') || 'home';
 
-    if (!isEnabled || duration === 0) return;
+    if (duration === 0) return; // If set to "Never", do nothing.
 
     const isAppOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
     const isDrawerOpen = appDrawer.classList.contains('open');
@@ -9593,7 +9592,6 @@ const controlIdMap = {
     'sleepModeStyle': 'sleepModeStyleSelect',
     'slideshowInterval': 'slideshowInterval',
     'hideClockIndicator': 'hideClockIndicator',
-    'autoSleepEnabled': 'autoSleepEnabled',
     'autoSleepDuration': 'autoSleepDuration',
     'autoSleepScope': 'autoSleepScope'
 };
