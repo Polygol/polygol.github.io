@@ -2043,7 +2043,7 @@ input[type="checkbox"]:checked::before {
 
 	body.blackout-active::before,
 	body.blackout-active #background-video {
-		filter: saturate(2);
+		filter: var(--wallpaper-filter) saturate(2);
 	    opacity: 0.5;
 	}
 
