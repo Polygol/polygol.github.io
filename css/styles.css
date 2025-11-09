@@ -2047,7 +2047,7 @@ input[type="checkbox"]:checked::before {
 
 	body.blackout-active::before,
 	body.blackout-active #background-video {
-		opacity: 0.2;
+		opacity: 0.25;
 	}
 
 	/* Hide all main UI elements during initial setup and post-setup onboarding */
