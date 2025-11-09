@@ -2965,8 +2965,15 @@ function blackoutScreen() {
     `;
     document.body.appendChild(blockingOverlay);
     
-    // Add a one-time listener to exit blackout mode
-    blockingOverlay.addEventListener('click', exitBlackoutMode, { once: true });
+    // After 200ms, enable interaction to prevent immediate dismissal on touch devices
+    setTimeout(() => {
+        const blocker = document.getElementById('blackout-event-overlay');
+        if (blocker) {
+            blocker.style.pointerEvents = 'all';
+            blocker.addEventListener('click', exitBlackoutMode, { once: true });
+            blocker.addEventListener('touchstart', exitBlackoutMode, { once: true });
+        }
+    }, 200);
 }
 
 function goFullscreen() {
