@@ -2031,6 +2031,16 @@ input[type="checkbox"]:checked::before {
 		corner-shape: square;
 	}
 
+	/* Hide UI during blackout mode */
+	body.blackout-active .persistent-clock,
+	body.blackout-active .drawer-handle,
+	body.blackout-active #one-button-nav-handle,
+	body.blackout-active #dock,
+	body.blackout-active .page-indicator,
+	body.blackout-active #customizeModal.modal.show {
+	    display: none !important;
+	}
+
 	/* Hide all main UI elements during initial setup and post-setup onboarding */
 	body.setup-active .container,
 	body.setup-active .widget-grid,
