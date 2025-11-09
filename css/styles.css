@@ -2041,13 +2041,10 @@ input[type="checkbox"]:checked::before {
 	    display: none !important;
 	}
 
-	body.blackout-active {
-		background-color: #000 !important;
-	}
-
 	body.blackout-active::before,
 	body.blackout-active #background-video {
-		opacity: 0.25;
+		filter: saturate(2);
+	    opacity: 0.5;
 	}
 
 	/* Hide all main UI elements during initial setup and post-setup onboarding */
