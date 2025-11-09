@@ -4028,7 +4028,7 @@ async function handleAiQuery() {
              response = finalResult.response;
         }
 
-	responseArea.innerHTML = response.text();
+		responseArea.textContent = response.text();
         responseArea.style.opacity = '1';
         responseArea.style.transform = 'translateY(0)';
 
