@@ -2031,7 +2031,7 @@ input[type="checkbox"]:checked::before {
 		corner-shape: square;
 	}
 
-	/* Hide UI during blackout mode */
+	/* Common styles for ALL blackout modes */
 	body.blackout-active .persistent-clock,
 	body.blackout-active .drawer-handle,
 	body.blackout-active #one-button-nav-handle,
@@ -2041,10 +2041,42 @@ input[type="checkbox"]:checked::before {
 	    display: none !important;
 	}
 
-	body.blackout-active::before,
-	body.blackout-active #background-video {
-		filter: var(--wallpaper-filter) saturate(2);
-	    opacity: 0.5;
+	/* Style 1: Dim Wallpaper, Show Content */
+	body.blackout-active.blackout-style-dim-show::before,
+	body.blackout-active.blackout-style-dim-show #background-video {
+	    opacity: 0.3 !important;
+	    filter: var(--wallpaper-filter) saturate(2) !important;
+	}
+
+	/* Style 2: Dim Wallpaper, Hide Content */
+	body.blackout-active.blackout-style-dim-hide .container,
+	body.blackout-active.blackout-style-dim-hide .widget-grid {
+	    display: none !important;
+	}
+	body.blackout-active.blackout-style-dim-hide::before,
+	body.blackout-active.blackout-style-dim-hide #background-video {
+	    opacity: 0.3 !important;
+	    filter: var(--wallpaper-filter) saturate(2) !important;
+	}
+
+	/* Style 3: Hide Wallpaper, Show Content */
+	body.blackout-active.blackout-style-hide-show {
+	    background-color: #000 !important;
+	}
+	body.blackout-active.blackout-style-hide-show::before,
+	body.blackout-active.blackout-style-hide-show #background-video {
+	    display: none !important;
+	}
+
+	/* Style 4: Turn Off Screen */
+	body.blackout-active.blackout-style-off {
+	    background-color: #000 !important;
+	}
+	body.blackout-active.blackout-style-off::before,
+	body.blackout-active.blackout-style-off #background-video,
+	body.blackout-active.blackout-style-off .container,
+	body.blackout-active.blackout-style-off .widget-grid {
+	    display: none !important;
 	}
 
 	/* Hide all main UI elements during initial setup and post-setup onboarding */
