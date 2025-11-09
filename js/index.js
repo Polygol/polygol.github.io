@@ -1547,7 +1547,7 @@ document.addEventListener('DOMContentLoaded', () => {
             interactionBlocker.style.display = 'block';
             interactionBlocker.style.pointerEvents = 'auto';
             interactionBlocker.style.zIndex = '9994'; // Below actions menu but above app
-            persistentClock.style.opacity = '0';
+            persistentClock.style.opacity = '0 !important';
 
             document.getElementById('quick-action-controls').style.display = isTouch ? 'none' : 'flex';
 
@@ -1690,7 +1690,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	  } else {
         const hideIndicator = localStorage.getItem('hideClockIndicator') === 'true';
         if (hideIndicator) {
-            persistentClock.style.opacity = '0';
+            persistentClock.style.opacity = '0 !important';
         } else {
             persistentClock.innerHTML = '<span class="material-symbols-rounded">keyboard_arrow_down</span>';
             persistentClock.style.opacity = '1';
