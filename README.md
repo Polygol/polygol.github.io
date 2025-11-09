@@ -23,7 +23,7 @@ https://kirbindustries.gitbook.io/polygol
 * Application Icons: kirbIndustries
 * Timer Sound: Google
 * Fallback Fanny: jacknjellify
-* Setup Music: "Down With That" by Twin Musicom, used under CC BY 4.0
+* Setup Music: Brittle Rille - Reunited by Kevin MacLeod (CC BY 4.0)
 
 (This is not the entire list. Check the repo for more information.)
 
