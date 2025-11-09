@@ -1990,10 +1990,6 @@ input[type="checkbox"]:checked::before {
 	    backdrop-filter: blur(10px);
 	}
     
-    body.minimal-active .clock {
-    	font-size: clamp(6rem, 20vw, 20rem) !important;
-    }
-    
     body.minimal-active .drawer-handle,
 	body.minimal-active .one-button-nav-handle {
         opacity: 0;
