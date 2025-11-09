@@ -2538,23 +2538,6 @@ input[type="checkbox"]:checked::before {
 			max-width: calc(100vw - 140px);
 		    overflow: hidden;
 		}
-
-		@media (max-width: 400px) {
-			.legacy-nav-controls {
-				border-right: none;
-				padding-right: 0;
-			}
-			
-			.legacy-app-header span {
-			    font-weight: 500;
-			    color: var(--text-color);
-				display: none;
-			}
-
-			.legacy-app-header span.material-symbols-rounded {
-				display: block;
-			}
-		}
 		
 		.fullscreen-embed.legacy .legacy-app-header {
 		    display: flex; /* Shown only on legacy embeds */
@@ -3090,6 +3073,23 @@ body.light-theme .app-switcher-item.selected {
                 grid-template-columns: repeat(3, 1fr);
             }
         }
+
+		@media (max-width: 500px) {
+			.legacy-nav-controls {
+				border-right: none;
+				padding-right: 0;
+			}
+			
+			.legacy-app-header span {
+			    font-weight: 500;
+			    color: var(--text-color);
+				display: none;
+			}
+
+			.legacy-app-header span.material-symbols-rounded {
+				display: block;
+			}
+		}
 
         @media (max-width: 400px) {
             .app-drawer-grid {
