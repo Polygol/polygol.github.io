@@ -2911,7 +2911,6 @@ function isFullScreen() {
 
 function exitBlackoutMode() {
     // Restore previous settings
-    setControlValueAndDispatch('nightMode', previousBlackoutSettings.nightMode || 'false');
     setControlValueAndDispatch('highContrast', previousBlackoutSettings.highContrast || 'false');
     setControlValueAndDispatch('animationsEnabled', previousBlackoutSettings.animationsEnabled || 'true');
 
@@ -2932,7 +2931,6 @@ function blackoutScreen() {
 
     // Store previous settings
     previousBlackoutSettings = {
-        nightMode: localStorage.getItem('nightMode') || 'false',
         highContrast: localStorage.getItem('highContrast') || 'false',
         animationsEnabled: localStorage.getItem('animationsEnabled') || 'true'
     };
@@ -2949,7 +2947,6 @@ function blackoutScreen() {
     });
 
     // Apply power saving settings
-    setControlValueAndDispatch('nightMode', 'true');
     setControlValueAndDispatch('highContrast', 'true');
     setControlValueAndDispatch('animationsEnabled', 'false');
 
