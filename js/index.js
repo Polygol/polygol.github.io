@@ -2914,15 +2914,15 @@ function exitBlackoutMode() {
     setControlValueAndDispatch('highContrast', previousBlackoutSettings.highContrast || 'false');
     setControlValueAndDispatch('animationsEnabled', previousBlackoutSettings.animationsEnabled || 'true');
 
-    document.body.classList.remove('blackout-active');
+    document.body.classList.remove('blackout-active', 'blackout-style-dim-show', 'blackout-style-dim-hide', 'blackout-style-hide-show', 'blackout-style-off');
 
     const blocker = document.getElementById('blackout-event-overlay');
     if (blocker) {
         blocker.style.backgroundColor = 'transparent';
-        blocker.style.pointerEvents = 'none'; // Disable further interaction immediately
+        blocker.style.pointerEvents = 'none';
         setTimeout(() => {
             blocker.remove();
-        }, 200); // Debounce period
+        }, 200);
     }
 }
 
@@ -2950,7 +2950,8 @@ function blackoutScreen() {
     setControlValueAndDispatch('highContrast', 'true');
     setControlValueAndDispatch('animationsEnabled', 'false');
 
-    document.body.classList.add('blackout-active');
+    const sleepStyle = localStorage.getItem('sleepModeStyle') || 'dim-show';
+    document.body.classList.add('blackout-active', `blackout-style-${sleepStyle}`);
 
     // Create a new full-screen overlay to capture all events
     const blockingOverlay = document.createElement('div');
