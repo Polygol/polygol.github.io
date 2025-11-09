@@ -4881,9 +4881,14 @@ function resetAutoSleepTimer() {
     const isDrawerOpen = appDrawer.classList.contains('open');
 
     let shouldBeActive = false;
-    if (scope === 'home' && !isAppOpen && !isDrawerOpen) {
-        shouldBeActive = true;
-    } else if (scope === 'home-drawer' && !isAppOpen) {
+    if (scope === 'home') {
+        // Only active on the home screen
+        if (!isAppOpen && !isDrawerOpen) {
+            shouldBeActive = true;
+        }
+    } else if (scope === 'home-apps') {
+        // Always active, regardless of home screen, app, or drawer state.
+        // The legacy app check at the top of the function is the only exclusion.
         shouldBeActive = true;
     }
 
