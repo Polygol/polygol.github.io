@@ -415,6 +415,8 @@ let currentSunShadow = ''; // To store the calculated sun shadow string
 let currentSunShadowStrong = ''; // To store the intensified sun shadow string
 let isDuringFirstSetup = false; // Flag to prevent prompts during setup
 let allowPageLeave = false; // Global flag to bypass beforeunload prompt
+let blackoutHoldTimer = null;
+let previousBlackoutSettings = {};
 
 secondsSwitch.checked = showSeconds;
 
@@ -1639,6 +1641,23 @@ document.addEventListener('DOMContentLoaded', () => {
         persistentClock.click();
         hideQuickActions();
     });
+
+    const blackoutBtn = document.getElementById('blackout-btn');
+    const startBlackoutHold = () => {
+        cancelBlackoutHold(); // Clear any existing timer
+        blackoutHoldTimer = setTimeout(() => {
+            blackoutScreen();
+            blackoutHoldTimer = null;
+        }, 500);
+    };
+    const cancelBlackoutHold = () => {
+        clearTimeout(blackoutHoldTimer);
+    };
+    blackoutBtn.addEventListener('mousedown', startBlackoutHold);
+    blackoutBtn.addEventListener('touchstart', startBlackoutHold, { passive: true });
+    blackoutBtn.addEventListener('mouseup', cancelBlackoutHold);
+    blackoutBtn.addEventListener('mouseleave', cancelBlackoutHold);
+    blackoutBtn.addEventListener('touchend', cancelBlackoutHold);
     
 	function updatePersistentClock() {
 	  const isModalOpen = 
@@ -2884,6 +2903,66 @@ function isFullScreen() {
     document.mozFullScreenElement ||
     document.msFullscreenElement
   );
+}
+
+function exitBlackoutMode() {
+    // Restore previous settings
+    setControlValueAndDispatch('nightMode', previousBlackoutSettings.nightMode || 'false');
+    setControlValueAndDispatch('highContrast', previousBlackoutSettings.highContrast || 'false');
+    setControlValueAndDispatch('animationsEnabled', previousBlackoutSettings.animationsEnabled || 'true');
+
+    document.body.classList.remove('blackout-active');
+
+    const blocker = document.getElementById('blackout-event-overlay');
+    if (blocker) {
+        blocker.style.backgroundColor = 'transparent';
+        blocker.style.pointerEvents = 'none'; // Disable further interaction immediately
+        setTimeout(() => {
+            blocker.remove();
+        }, 200); // Debounce period
+    }
+}
+
+function blackoutScreen() {
+    closeControls();
+
+    // Store previous settings
+    previousBlackoutSettings = {
+        nightMode: localStorage.getItem('nightMode') || 'false',
+        highContrast: localStorage.getItem('highContrast') || 'false',
+        animationsEnabled: localStorage.getItem('animationsEnabled') || 'true'
+    };
+
+    // Close all apps, but minimize the one playing media
+    document.querySelectorAll('.fullscreen-embed[style*="display: block"]').forEach(embed => {
+        const url = embed.dataset.embedUrl;
+        const appName = Object.keys(apps).find(name => apps[name].url === url);
+        if (appName === activeMediaSessionApp) {
+            minimizeFullscreenEmbed();
+        } else {
+            closeFullscreenEmbed();
+        }
+    });
+
+    // Apply power saving settings
+    setControlValueAndDispatch('nightMode', 'true');
+    setControlValueAndDispatch('highContrast', 'true');
+    setControlValueAndDispatch('animationsEnabled', 'false');
+
+    document.body.classList.add('blackout-active');
+
+    // Create a new full-screen overlay to capture all events
+    const blockingOverlay = document.createElement('div');
+    blockingOverlay.id = 'blackout-event-overlay';
+    blockingOverlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        z-index: 999999999999999; cursor: pointer; pointer-events: all;
+        background-color: transparent; transition: background-color 0.2s;
+    `;
+    document.body.appendChild(blockingOverlay);
+    
+    // Add a one-time listener to exit blackout mode
+    blockingOverlay.addEventListener('click', exitBlackoutMode, { once: true });
 }
 
 function goFullscreen() {
@@ -8138,100 +8217,6 @@ function setupOneButtonNav() {
 
     navButton.addEventListener('mouseleave', () => clearTimeout(longPressTimeout));
     navButton.addEventListener('touchmove', () => clearTimeout(longPressTimeout));
-}
-
-function blackoutScreen() {
-  // Get the brightness overlay element
-  const brightnessOverlay = document.getElementById('brightness-overlay');
-  
-  // Store the current brightness value
-  const currentBrightness = localStorage.getItem('page_brightness') || '100';
-  
-  // Save the current brightness value for later restoration
-  localStorage.setItem('previous_brightness', currentBrightness);
-  
-  // Set brightness to 0 (completely dark)
-  brightnessOverlay.style.backgroundColor = 'rgba(0, 0, 0, 1)';
-  
-  // Create a new full-screen overlay to capture all events
-  const blockingOverlay = document.createElement('div');
-  blockingOverlay.id = 'blackout-event-overlay';
-  blockingOverlay.style.position = 'fixed';
-  blockingOverlay.style.top = '0';
-  blockingOverlay.style.left = '0';
-  blockingOverlay.style.width = '100%';
-  blockingOverlay.style.height = '100%';
-  blockingOverlay.style.zIndex = '999999999999999'; // Highest z-index to block everything
-  blockingOverlay.style.cursor = 'pointer';
-  blockingOverlay.style.pointerEvents = 'all';
-  blockingOverlay.style.backgroundColor = 'black'; // Ensure it's completely black
-  
-  // Add it to the document
-  document.body.appendChild(blockingOverlay);
-
-  closeControls();
-  minimizeFullscreenEmbed();
-
-  // Wait for the animation to finish before hiding elements and pausing media
-  setTimeout(() => {
-      // Pause all videos, embeds, and animations
-      document.querySelectorAll('video, iframe, canvas, [data-animation]').forEach(el => {
-          if (el.tagName === 'VIDEO') {
-              if (!el.paused) {
-                  el.pause();
-                  el.dataset.wasPlaying = 'true';
-              }
-          } else if (el.tagName === 'IFRAME') {
-              try {
-                  el.dataset.wasActive = 'true';
-                  el.style.pointerEvents = 'none';
-              } catch (e) {
-                  console.error('Failed to pause embed:', e);
-              }
-          } else if (el.style.animationPlayState) {
-              el.dataset.animationState = el.style.animationPlayState;
-              el.style.animationPlayState = 'paused';
-          }
-      });
-  }, 300);
-  
-  // Stop animations and reduce energy consumption
-  document.body.classList.add('power-save-mode');
-  
-  // Function to handle the event and cleanup
-  function restoreScreenAndMinimize() {
-    // Restore previous brightness
-    const previousBrightness = localStorage.getItem('previous_brightness') || '100';
-    brightnessOverlay.style.backgroundColor = `rgba(0, 0, 0, ${(100-previousBrightness)/100})`;
-    
-    // Remove power save mode
-    document.body.classList.remove('power-save-mode');
-    
-    // Resume videos, embeds, and animations
-    document.querySelectorAll('video, iframe, canvas, [data-animation]').forEach(el => {
-      if (el.tagName === 'VIDEO' && el.dataset.wasPlaying === 'true') {
-        el.play();
-        delete el.dataset.wasPlaying;
-      } else if (el.tagName === 'IFRAME' && el.dataset.wasActive === 'true') {
-        try {
-          el.style.pointerEvents = 'auto';
-          delete el.dataset.wasActive;
-        } catch (e) {
-          console.error('Failed to resume embed:', e);
-        }
-      } else if (el.dataset.animationState) {
-        el.style.animationPlayState = el.dataset.animationState;
-        delete el.dataset.animationState;
-      }
-    });
-        
-    // Remove the blocking overlay
-    document.body.removeChild(blockingOverlay);
-  }
-  
-  // Add event listeners only to the blocking overlay
-  blockingOverlay.addEventListener('click', restoreScreenAndMinimize);
-  blockingOverlay.addEventListener('touchstart', restoreScreenAndMinimize);
 }
 
 secondsSwitch.addEventListener('change', function() {
