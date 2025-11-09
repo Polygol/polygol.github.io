@@ -2984,11 +2984,11 @@ function goFullscreen() {
 
 function updateFullscreenButtonVisibility() {
     const fullscreenBtn = document.getElementById('fullscreen-btn');
-    const blackoutBtn = document.getElementById('blackout-btn');
-    if (fullscreenBtn && blackoutBtn) {
+    const settingsBtn = document.getElementById('settings-app-btn');
+    if (fullscreenBtn && settingsBtn) {
         const isCurrentlyFullScreen = isFullScreen();
         fullscreenBtn.style.display = isCurrentlyFullScreen ? 'none' : 'flex';
-        blackoutBtn.style.display = isCurrentlyFullScreen ? 'flex' : 'none';
+        settingsBtn.style.display = isCurrentlyFullScreen ? 'flex' : 'none';
     }
 }
 
