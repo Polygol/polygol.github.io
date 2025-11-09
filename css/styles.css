@@ -2411,7 +2411,7 @@ input[type="checkbox"]:checked::before {
             text-align: center;
             color: var(--text-color);
 			font-weight: 500;
-			text-shadow: 0 0 20px var(--background-color-tr-op);
+			text-shadow: 0 0 20px var(--background-color-tr);
         }
 
         .popup {
