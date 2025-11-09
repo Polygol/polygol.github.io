@@ -2041,6 +2041,15 @@ input[type="checkbox"]:checked::before {
 	    display: none !important;
 	}
 
+	body.blackout-active {
+		background-color: #000 !important;
+	}
+
+	body.blackout-active::before,
+	body.blackout-active #background-video {
+		display: none !important;
+	}
+
 	/* Hide all main UI elements during initial setup and post-setup onboarding */
 	body.setup-active .container,
 	body.setup-active .widget-grid,
