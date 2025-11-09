@@ -304,6 +304,12 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
           border: 1px solid var(--glass-border);
           border-radius: 999px;
         }
+
+        select option {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.2s, transform 0.1s;
+        }
     `;
     
     // Conditionally add Gurasuraisu-specific styles.
