@@ -2935,15 +2935,34 @@ function blackoutScreen() {
         animationsEnabled: localStorage.getItem('animationsEnabled') || 'true'
     };
 
-    // Close all apps, but minimize the one playing media
-    document.querySelectorAll('.fullscreen-embed[style*="display: block"]').forEach(embed => {
-        const url = embed.dataset.embedUrl;
-        const appName = Object.keys(apps).find(name => apps[name].url === url);
-        if (appName === activeMediaSessionApp) {
-            minimizeFullscreenEmbed();
+    // 1. Handle the currently active app
+    const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+    if (activeEmbed) {
+        const activeUrl = activeEmbed.dataset.embedUrl;
+        const activeAppName = Object.keys(apps).find(name => apps[name].url === activeUrl);
+        if (activeAppName === activeMediaSessionApp) {
+            minimizeFullscreenEmbed(); // Minimize active media app
         } else {
-            closeFullscreenEmbed();
+            closeFullscreenEmbed(); // Close active non-media app
         }
+    }
+
+    // 2. Clean up all other minimized apps that are not the active media app
+    const urlsToRemove = [];
+    for (const url in minimizedEmbeds) {
+        const appName = Object.keys(apps).find(name => apps[name].url === url);
+        // Add to removal list if it's NOT the media app
+        if (appName !== activeMediaSessionApp) {
+            urlsToRemove.push(url);
+        }
+    }
+
+    urlsToRemove.forEach(url => {
+        const embedContainer = minimizedEmbeds[url];
+        if (embedContainer) {
+            embedContainer.remove(); // Remove from DOM
+        }
+        delete minimizedEmbeds[url]; // Remove from cache
     });
 
     // Apply power saving settings
