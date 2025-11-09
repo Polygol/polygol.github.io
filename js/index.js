@@ -388,6 +388,7 @@ function hideCursor() {
  */
 function showCursorAndResetTimer() {
     clearTimeout(cursorIdleTimeout); // Clear any existing timer
+    resetAutoSleepTimer(); // Also reset the auto-sleep timer on any activity
 
     // If the cursor was hidden, make it visible again
     if (document.body.classList.contains('cursor-hidden')) {
@@ -417,6 +418,7 @@ let isDuringFirstSetup = false; // Flag to prevent prompts during setup
 let allowPageLeave = false; // Global flag to bypass beforeunload prompt
 let blackoutHoldTimer = null;
 let previousBlackoutSettings = {};
+let autoSleepTimer = null;
 
 secondsSwitch.checked = showSeconds;
 
@@ -1684,8 +1686,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	    }
 	    
 	    persistentClock.innerHTML = `<span class="persistent-clock-digit">${displayHours}</span><span class="persistent-colon">:</span><span class="persistent-clock-digit">${minutes}</span>`;
+        persistentClock.style.display = 'flex';
 	  } else {
-	    persistentClock.innerHTML = '<span class="material-symbols-rounded">keyboard_arrow_down</span>';
+        const hideIndicator = localStorage.getItem('hideClockIndicator') === 'true';
+        if (hideIndicator) {
+            persistentClock.style.display = 'none';
+        } else {
+            persistentClock.innerHTML = '<span class="material-symbols-rounded">keyboard_arrow_down</span>';
+            persistentClock.style.display = 'flex';
+        }
 	  }
 	}
     
@@ -3570,7 +3579,6 @@ const customizeModal = document.getElementById('customizeModal');
 const themeSwitch = document.getElementById('theme-switch');
 const wallpaperInput = document.getElementById('wallpaperInput');
 const uploadButton = document.getElementById('uploadButton');
-const SLIDESHOW_INTERVAL = 600000; // 10 minutes in milliseconds
 const gurappsSwitch = document.getElementById("gurapps-switch");
 const contrastSwitch = document.getElementById('contrast-switch');
 const animationSwitch = document.getElementById('animation-switch');
@@ -4669,6 +4677,7 @@ async function saveWallpaper(file, customStyles = null) {
 
 async function applyWallpaper() {
     applyCustomWallpaperStyles(); 
+    resetAutoSleepTimer(); // Changing wallpaper is user activity
 
     // Clean up any previously stored animated GIF URL to prevent memory leaks
     if (document.body.dataset.animatedGifUrl) {
@@ -4754,8 +4763,9 @@ async function applyWallpaper() {
         }
         
         clearInterval(slideshowInterval);
+        const intervalDuration = parseInt(localStorage.getItem('slideshowInterval') || '600000', 10);
         await displaySlideshow();
-        slideshowInterval = setInterval(displaySlideshow, SLIDESHOW_INTERVAL);
+        slideshowInterval = setInterval(displaySlideshow, intervalDuration);
     } else {
         // Apply single wallpaper from recent wallpapers
         if (recentWallpapers.length > 0 && currentWallpaperPosition < recentWallpapers.length) {
@@ -4850,6 +4860,30 @@ const observer = new MutationObserver((mutations) => {
 });
 
 observer.observe(document.body, { childList: true });
+
+function resetAutoSleepTimer() {
+    clearTimeout(autoSleepTimer);
+
+    const isEnabled = localStorage.getItem('autoSleepEnabled') === 'true';
+    const duration = parseInt(localStorage.getItem('autoSleepDuration') || '0', 10);
+    const scope = localStorage.getItem('autoSleepScope') || 'home';
+
+    if (!isEnabled || duration === 0) return;
+
+    const isAppOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+    const isDrawerOpen = appDrawer.classList.contains('open');
+
+    let shouldBeActive = false;
+    if (scope === 'home' && !isAppOpen && !isDrawerOpen) {
+        shouldBeActive = true;
+    } else if (scope === 'home-drawer' && !isAppOpen) {
+        shouldBeActive = true;
+    }
+
+    if (shouldBeActive) {
+        autoSleepTimer = setTimeout(blackoutScreen, duration);
+    }
+}
 
 // --- Dynamic Style Manager ---
 function applyCustomWallpaperStyles(styles = {}) {
@@ -5577,13 +5611,9 @@ async function jumpToWallpaper(index) {
     
     if (wallpaper.isSlideshow) {
         isSlideshow = true;
-        let slideshowData = JSON.parse(localStorage.getItem("wallpapers"));
-        if (slideshowData && slideshowData.length > 0) {
-            localStorage.setItem("wallpapers", JSON.stringify(slideshowData));
-            currentWallpaperIndex = 0;
-            applyWallpaper();
-            showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
-        }
+        // The applyWallpaper function itself will handle starting the interval
+        applyWallpaper();
+        showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
     } else {
         isSlideshow = false;
         localStorage.removeItem("wallpapers");
@@ -6699,6 +6729,8 @@ async function createFullscreenEmbed(url) {
 	    document.body.style.setProperty('--wallpaper-filter', openFilter);
 	    document.body.style.setProperty('--bg-transform-scale', '1.25');
         
+        clearTimeout(autoSleepTimer); // Stop auto-sleep when an app is opened
+
         // IMPORTANT FIX: Restore proper z-index and pointer events
         embedContainer.style.pointerEvents = 'auto';
         embedContainer.style.zIndex = '1001';
@@ -7065,7 +7097,7 @@ function closeFullscreenEmbed() {
     // Restore background effects
     applyWallpaperEffects();
     document.body.style.setProperty('--bg-transform-scale', '1.05');
-
+	
     // Resume background animations
     resumeAnimatedBackground();
     const bgVideo = document.getElementById('background-video');
@@ -7076,6 +7108,7 @@ function closeFullscreenEmbed() {
     }
 
     populateDock();
+    resetAutoSleepTimer(); // Reset timer when returning to home screen
 }
 
 function minimizeFullscreenEmbed(animate = true) {
@@ -9550,7 +9583,12 @@ const controlIdMap = {
     'minimalMode': 'minimal_mode_qc',
     'silentMode': 'silent_switch_qc',
     'selectedLanguage': 'language-switcher',
-    'sleepModeStyle': 'sleepModeStyleSelect'
+    'sleepModeStyle': 'sleepModeStyleSelect',
+    'slideshowInterval': 'slideshowInterval',
+    'hideClockIndicator': 'hideClockIndicator',
+    'autoSleepEnabled': 'autoSleepEnabled',
+    'autoSleepDuration': 'autoSleepDuration',
+    'autoSleepScope': 'autoSleepScope'
 };
 
 // --- NEW: Function to broadcast a setting update to the settings app ---
@@ -9571,10 +9609,24 @@ function broadcastSettingUpdate(key, value) {
 // --- NEW: Function to programmatically change a control's value and dispatch an event ---
 function setControlValueAndDispatch(key, value) {
     // Handle settings without a direct UI control in index.html
-    if (key === 'sleepModeStyle') {
+    const settingsWithoutDirectControl = [
+        'sleepModeStyle', 'slideshowInterval', 'hideClockIndicator',
+        'autoSleepEnabled', 'autoSleepDuration', 'autoSleepScope'
+    ];
+    if (settingsWithoutDirectControl.includes(key)) {
         localStorage.setItem(key, value);
         broadcastSettingUpdate(key, value);
-        return; // Exit, as there's no UI element in the parent to update.
+        
+        if (key === 'slideshowInterval') {
+            applyWallpaper(); // This will restart the interval with the new duration
+        }
+        if (key.startsWith('autoSleep')) {
+            resetAutoSleepTimer();
+        }
+        if (key === 'hideClockIndicator') {
+            updatePersistentClock();
+        }
+        return;
     }
 	
 	const controlId = controlIdMap[key];
