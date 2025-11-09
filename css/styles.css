@@ -1937,7 +1937,7 @@ input[type="checkbox"]:checked::before {
       transition: all 0.5s;
       opacity: 1;
       background-color: var(--search-background);
-      backdrop-filter: var(--edge-refraction-filter) blur(2.5px);
+      backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 	  box-shadow: var(--sun-shadow);
       padding: 7px 8px;
       border: 1px solid var(--glass-border);
