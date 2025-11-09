@@ -9860,7 +9860,21 @@ window.addEventListener('message', async (event) => { // Make listener async
         // --- REVISED Security Check ---
         const requiredPermission = FUNCTION_PERMISSIONS[funcName];
 
-        if (requiredPermission) {
+		if (requiredPermission) {
+            // CRITICAL: Verify the origin of the message for sensitive commands
+            const trustedOrigins = [
+                window.location.origin,
+                'https://polygol.github.io'
+                // Add other trusted origins if necessary
+            ];
+            if (!trustedOrigins.includes(event.origin)) {
+                console.error(`[Polygol Security] Discarded sensitive command '${funcName}' from untrusted origin: ${event.origin}`);
+                if(sourceWindow) {
+                    sourceWindow.postMessage({ type: 'parentActionError', message: `Access Denied: Untrusted origin.` }, event.origin);
+                }
+                return; // Stop processing immediately.
+            }
+
             let sourceAppId = null;
             const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
             for (const iframe of iframes) {
