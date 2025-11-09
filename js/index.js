@@ -1651,7 +1651,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
     };
     const cancelBlackoutHold = () => {
+        if (blackoutHoldTimer) { // If the timer is still active, it was a short tap
+            showPopup("Tap and hold to enter sleep mode");
+        }
         clearTimeout(blackoutHoldTimer);
+        blackoutHoldTimer = null; // Ensure it's nullified
     };
     blackoutBtn.addEventListener('mousedown', startBlackoutHold);
     blackoutBtn.addEventListener('touchstart', startBlackoutHold, { passive: true });
