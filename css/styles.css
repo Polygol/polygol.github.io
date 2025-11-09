@@ -2005,12 +2005,12 @@ input[type="checkbox"]:checked::before {
 		font-weight: 500;
 	}
 
-	body-minimal-active .persistent-clock .persistent-clock-digit,
-	body-minimal-active .persistent-clock .persistent-colon {
-		-webkit-mask-image: none;
-        mask-image: none;
-        mask-composite: source-in;
-        backdrop-filter: none;
+	body-minimal-active .persistent-clock-digit,
+	body-minimal-active .persistent-colon {
+		-webkit-mask-image: none !important;
+        mask-image: none !important;
+        mask-composite: source-in !important;
+        backdrop-filter: none !important;
 	}
 
     body.minimal-active .app-drawer, body.minimal-active .dock {
