@@ -2045,18 +2045,16 @@ input[type="checkbox"]:checked::before {
 	body.blackout-active.blackout-style-dim-show::before,
 	body.blackout-active.blackout-style-dim-show #background-video {
 	    opacity: 0.3 !important;
-	    filter: var(--wallpaper-filter) saturate(2) !important;
 	}
 
-	/* Style 2: Dim Wallpaper, Hide Content */
+	/* Style 2: Show Wallpaper, Hide Content */
 	body.blackout-active.blackout-style-dim-hide .container,
 	body.blackout-active.blackout-style-dim-hide .widget-grid {
 	    display: none !important;
 	}
 	body.blackout-active.blackout-style-dim-hide::before,
 	body.blackout-active.blackout-style-dim-hide #background-video {
-	    opacity: 0.3 !important;
-	    filter: var(--wallpaper-filter) saturate(2) !important;
+	    opacity: 1 !important;
 	}
 
 	/* Style 3: Hide Wallpaper, Show Content */
