@@ -1690,10 +1690,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	  } else {
         const hideIndicator = localStorage.getItem('hideClockIndicator') === 'true';
         if (hideIndicator) {
-            persistentClock.style.display = 'none';
+            persistentClock.style.opacity = '0';
         } else {
             persistentClock.innerHTML = '<span class="material-symbols-rounded">keyboard_arrow_down</span>';
-            persistentClock.style.display = 'flex';
+            persistentClock.style.opacity = '1';
         }
 	  }
 	}
