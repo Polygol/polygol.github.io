@@ -2522,8 +2522,8 @@ input[type="checkbox"]:checked::before {
 		.fullscreen-embed.legacy iframe {
 		    border-radius: 15px;
 		    corner-shape: superellipse(1.5);
-		    height: calc(100% - 100px);
-		    margin-top: 75px;
+		    height: calc(100% - 105px);
+		    margin-top: 80px;
 		}
 
 		.legacy-app-header {
