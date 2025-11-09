@@ -1662,7 +1662,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	    
 	    persistentClock.innerHTML = `<span class="persistent-clock-digit">${displayHours}</span><span class="persistent-colon">:</span><span class="persistent-clock-digit">${minutes}</span>`;
 	  } else {
-	    persistentClock.innerHTML = '<span class="material-symbols-rounded">page_info</span>';
+	    persistentClock.innerHTML = '<span class="material-symbols-rounded">keyboard_arrow_down</span>';
 	  }
 	}
     
@@ -4118,32 +4118,10 @@ function applyAlignment(alignment) {
 }
 
 function updateMinimalMode() {
-    const elementsToHide = [
-        document.getElementById('weather'),
-        document.querySelector('.info'),
-        document.querySelector('.clockwidgets')
-    ];
-    
     if (minimalMode) {
-        // Hide elements
-        elementsToHide.forEach(el => {
-            if (el) el.style.display = 'none';
-        });
         // Add minimal-active class to body for potential CSS styling
         document.body.classList.add('minimal-active');
     } else {
-        // Show elements
-        if (document.getElementById('weather')) {
-            document.getElementById('weather').style.display = 
-                localStorage.getItem('showWeather') !== 'false' ? 'block' : 'none';
-        }
-            
-        if (document.querySelector('.info'))
-            document.querySelector('.info').style.display = '';
-            
-        if (document.querySelector('.clockwidgets'))
-            document.querySelector('.clockwidgets').style.display = '';
-        
         // Remove minimal-active class
         document.body.classList.remove('minimal-active');
     }
