@@ -13,7 +13,7 @@ function initializeSettingsApp() {
         'page-clock': 'Clock',
         'page-wallpaper': 'Wallpaper',
         'page-system': 'System',
-        'page-data': 'Data & Recovery',
+        'page-data': 'Your Account',
         'page-general': 'General',
         'page-about': 'About'
     };
