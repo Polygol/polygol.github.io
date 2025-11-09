@@ -4864,6 +4864,13 @@ observer.observe(document.body, { childList: true });
 function resetAutoSleepTimer() {
     clearTimeout(autoSleepTimer);
 
+    // Don't start the sleep timer if a legacy app is active,
+    // as we can't detect user activity within it.
+    const isLegacyAppOpen = !!document.querySelector('.fullscreen-embed.legacy[style*="display: block"]');
+    if (isLegacyAppOpen) {
+        return;
+    }
+
     const isEnabled = localStorage.getItem('autoSleepEnabled') === 'true';
     const duration = parseInt(localStorage.getItem('autoSleepDuration') || '0', 10);
     const scope = localStorage.getItem('autoSleepScope') || 'home';
