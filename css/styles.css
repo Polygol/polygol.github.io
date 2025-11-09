@@ -1988,7 +1988,6 @@ input[type="checkbox"]:checked::before {
 
     body.minimal-active .blur-overlay {
 	    backdrop-filter: blur(10px);
-	    filter: grayscale(0.5);
 	}
     
     body.minimal-active .clock {
@@ -2015,10 +2014,6 @@ input[type="checkbox"]:checked::before {
     body.minimal-active .app-drawer, body.minimal-active .dock {
 		mix-blend-mode: luminosity;
 		filter: grayscale(0.5);
-	}
-
-	body.minimal-active .widget-instance iframe {
-		filter: grayscale(1);
 	}
 
 	body.minimal-active .fullscreen-embed iframe {
