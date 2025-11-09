@@ -1690,7 +1690,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	  } else {
         const hideIndicator = localStorage.getItem('hideClockIndicator') === 'true';
         if (hideIndicator) {
-            persistentClock.innerHTML = '<span class="material-symbols-rounded"></span>';
+            persistentClock.innerHTML = '<span class="material-symbols-rounded"><br></span>';
             persistentClock.style.opacity = '0';
         } else {
             persistentClock.innerHTML = '<span class="material-symbols-rounded">keyboard_arrow_down</span>';
