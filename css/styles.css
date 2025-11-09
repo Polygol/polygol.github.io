@@ -2001,8 +2001,7 @@ input[type="checkbox"]:checked::before {
     }
 
     body.minimal-active .persistent-clock {
-		color: var(--background-color-tr-op);
-		font-weight: 500;
+		opacity: 0 !important;
 	}
 
 	body-minimal-active .persistent-clock-digit,
