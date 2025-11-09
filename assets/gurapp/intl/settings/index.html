@@ -150,18 +150,6 @@
                                data-key="nightMode">
                     </div>
                 </div>   
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Sleep Mode</span>
-                        <span class="setting-description">Choose what displays when you enter sleep mode</span>
-                    </div>
-                    <select class="styled-select" data-key="sleepModeStyle">
-                        <option value="dim-show">Show all</option>
-                        <option value="dim-hide">Wallpaper only</option>
-                        <option value="hide-show">Content only</option>
-                        <option value="off">Turn off screen</option>
-                    </select>
-                </div>
             </div>
             <div class="setting-section">
                 <h2 class="section-title">Appearance</h2>
@@ -226,6 +214,13 @@
                     </div>
                     <input type="checkbox" class="toggle-switch" 
                            data-key="showWeather">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Hide Home Screen Clock Indicator</span>
+                        <span class="setting-description">Hides the arrow icon on the persistent clock</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="hideClockIndicator">
                 </div>
             </div>
         </div>
@@ -362,6 +357,18 @@
                     <input type="range" min="50" max="150" class="styled-slider" 
                            data-key="wallpaperContrast">
                 </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Slideshow Duration</span>
+                    </div>
+                    <select class="styled-select" data-key="slideshowInterval">
+                        <option value="60000">1 Minute</option>
+                        <option value="300000">5 Minutes</option>
+                        <option value="600000">10 Minutes</option>
+                        <option value="1800000">30 Minutes</option>
+                        <option value="3600000">1 Hour</option>
+                    </select>
+                </div>
             </div>
         </div>
         <!-- System Page -->
@@ -397,6 +404,47 @@
                         <input type="checkbox" class="toggle-switch" 
                                data-key="oneButtonNavEnabled">
                     </div>
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Sleep</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Sleep Mode</span>
+                        <span class="setting-description">Choose what displays when you enter sleep mode</span>
+                    </div>
+                    <select class="styled-select" data-key="sleepModeStyle">
+                        <option value="dim-show">Show all</option>
+                        <option value="dim-hide">Wallpaper only</option>
+                        <option value="hide-show">Content only</option>
+                        <option value="off">Turn off screen</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Automatic Sleep</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="autoSleepEnabled">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Sleep After</span>
+                    </div>
+                    <select class="styled-select" data-key="autoSleepDuration">
+                        <option value="60000">1 Minute</option>
+                        <option value="300000">5 Minutes</option>
+                        <option value="900000">15 Minutes</option>
+                        <option value="0">Never</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Apply On</span>
+                    </div>
+                    <select class="styled-select" data-key="autoSleepScope">
+                        <option value="home">Home Screen Only</option>
+                        <option value="home-drawer">Home Screen & Apps</option>
+                    </select>
                 </div>
             </div>
         </div>
