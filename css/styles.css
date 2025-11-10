@@ -1451,7 +1451,7 @@ body.one-button-nav-active .dock.show {
     corner-shape: superellipse(1.5);
     color: var(--text-color);
     position: fixed;
-    right: 20px;
+    right: 22px;
     top: 62px;
 }
 
