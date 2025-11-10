@@ -1301,7 +1301,7 @@ body.one-button-nav-active .dock.show {
 	box-shadow: var(--sun-shadow);
     overflow: hidden;
     transition: all 0.3s ease;
-	height: 175px;
+	height: 149px;
 }
 
 .media-widget[style*="display: none"] {
@@ -1312,17 +1312,17 @@ body.one-button-nav-active .dock.show {
 }
 
 .media-widget .app-icon-img {
-    position: absolute;
+	position: absolute;
     top: 18px;
     left: 20px;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 35%;
-	corner-shape: superellipse(1.25);
     z-index: 2;
     mix-blend-mode: luminosity;
     pointer-events: none;
-	box-shadow: none;
+    box-shadow: none;
+    corner-shape: superellipse(1.25);
 }
 
 #media-widget-art {
@@ -1352,7 +1352,7 @@ body.one-button-nav-active .dock.show {
     display: flex;
     gap: 6px;
     flex-direction: column;
-    margin: 52px 8px 8px 2px;
+    margin: 50px 60px 8px 2px;
     z-index: 1;
     pointer-events: none;
     text-shadow: 0 0 4px var(--background-color);
@@ -1380,14 +1380,15 @@ body.one-button-nav-active .dock.show {
 .media-widget-progress-container {
     display: flex;
     align-items: center;
-    padding: 0 8px;
+    padding: 0 68px;
     z-index: 1;
     box-sizing: border-box;
-    position: absolute;
-    bottom: 52px;
+    position: fixed;
+    bottom: 8px;
     pointer-events: none;
     justify-content: space-between;
-    width: 90.5%;
+    width: 100%;
+    left: 0;
 }
 
 .media-widget-time {
@@ -1398,14 +1399,15 @@ body.one-button-nav-active .dock.show {
 }
 
 #media-widget-progress-bar {
-    height: 4px;
+    height: 6px;
     border-radius: 6px;
     overflow: hidden;
-	margin: 0 6px 8px 6px;
+    margin: 0;
     background-color: var(--overlay-color);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
-	box-shadow: var(--sun-shadow);
+    box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
+    flex-grow: 1;
 }
 
 #media-widget-progress {
@@ -1418,10 +1420,9 @@ body.one-button-nav-active .dock.show {
 
 .media-widget-controls {
     display: flex;
-    gap: 55px;
-    justify-content: flex-end;
-    margin: 6px auto 4px auto;
+    gap: 14px;
     align-items: center;
+	justify-content: space-between;
 }
 
 .media-widget-controls button {
@@ -1447,7 +1448,11 @@ body.one-button-nav-active .dock.show {
     width: 42px;
     height: 42px;
     border-radius: 25px;
-	corner-shape: superellipse(1.5);
+    corner-shape: superellipse(1.5);
+    color: var(--text-color);
+    position: fixed;
+    right: 20px;
+    top: 58px;
 }
 
 /* Smart Home Controls Styles */
