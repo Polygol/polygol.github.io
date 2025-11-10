@@ -1470,7 +1470,6 @@ body.one-button-nav-active .dock.show {
     position: relative;
     min-height: 32px;
     height: 32px;
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 	box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
 }
