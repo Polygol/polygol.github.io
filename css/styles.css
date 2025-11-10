@@ -908,24 +908,25 @@ body.one-button-nav-active .dock.show {
             top: 0px;
             right: 0px;
             margin: min(5vw, 25px);
-            padding: 0;
             box-sizing: border-box;
             overflow: auto;
             display: block;
             left: auto;
             bottom: auto;
             transform-origin: top right;
-            transform: translateX(0) scale(0.9) scaleY(0.9);
+            transform: translateX(0) scale(0.9) scaleY(0.8);
             opacity: 0;
             filter: blur(5px);
-            width: clamp(280px, 90%, 375px);
+            width: clamp(280px, 90%, 420px);
             z-index: 9999 !important;
-            background-color: rgba(0, 0, 0, 0);
-            box-shadow: none;
-            border: none;
-            border-radius: 10px;
-            backdrop-filter: none;
-	    	scrollbar-width: none;
+            border-radius: 35px;
+		    background: var(--search-background);
+		    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(5px);
+		    box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
+		    border: 1px solid var(--glass-border);
+		    padding: 14px 16px 18px 16px;
+		    corner-shape: superellipse(1.5);
+			scrollbar-width: none;
         }
 
 		#customizeModal.modal::-webkit-scrollbar {
@@ -1108,7 +1109,6 @@ body.one-button-nav-active .dock.show {
     padding-left: 10px;
     border: 1px solid var(--glass-border);
     background: var(--search-background);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 	box-shadow: var(--sun-shadow);
     border-radius: 20px;
     transition: background-color 0.2s, transform 0.1s;
@@ -1176,7 +1176,7 @@ body.one-button-nav-active .dock.show {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
     gap: 10px;
-    border-bottom: 2px solid var(--search-background);
+    border-bottom: 2px solid var(--transparent-color);
     border-radius: 0 !important;
     padding-bottom: 10px;
 }
@@ -1184,7 +1184,7 @@ body.one-button-nav-active .dock.show {
 .settings-grid.system-settings {
 	display: none;
     border-bottom: none;
-    border-top: 2px solid var(--search-background);
+    border-top: 2px solid var(--transparent-color);
     padding: 10px 0 0;
 }
 
@@ -1195,7 +1195,7 @@ body.one-button-nav-active .dock.show {
 	padding: 0;
 	backdrop-filter: none;
 	background-color: transparent;
-    border-top: 2px solid var(--search-background);
+    border-top: 2px solid var(--transparent-color);
 	border-bottom: none;
     box-shadow: none;
     padding-top: 10px;
@@ -1259,7 +1259,6 @@ body.one-button-nav-active .dock.show {
     position: relative;
     min-height: 32px;
     height: 32px;
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
     box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
 	width: -webkit-fill-available;
@@ -1298,7 +1297,6 @@ body.one-button-nav-active .dock.show {
     border-radius: 35px;
 	corner-shape: superellipse(1.5);
     border: 1px solid var(--glass-border);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 	box-shadow: var(--sun-shadow);
     overflow: hidden;
     transition: all 0.3s ease;
@@ -1704,7 +1702,7 @@ body.one-button-nav-active .dock.show {
     padding: 15px 0px 15px 4px;
     transition: background-color 0.2s, transform 0.1s;
     height: 32px;
-    border-top: 2px solid var(--search-background);
+    border-top: 2px solid var(--transparent-color);
 }
 
 input[type="checkbox"] {
@@ -1756,7 +1754,6 @@ input[type="checkbox"]:checked::before {
     transition: background-color 0.2s, transform 0.1s;
     border: 1px solid var(--glass-border);
 	box-shadow: var(--sun-shadow);
-	backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 	font-weight: 500;
 }
 
@@ -1908,6 +1905,7 @@ input[type="checkbox"]:checked::before {
     align-items: center;
     gap: 15px;
     justify-content: space-between;
+	margin-left: 6px;
 }
 
 .btn-qc {
@@ -1924,6 +1922,11 @@ input[type="checkbox"]:checked::before {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.controls-container .btn-qc {
+    backdrop-filter: none;
+    background-color: var(--search-background);
 }
 
     .page-indicator {
