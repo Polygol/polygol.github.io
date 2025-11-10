@@ -2699,7 +2699,6 @@ function addToNotificationShade(message, options = {}) {
     const notification = document.createElement('div');
     notification.className = 'shade-notification';
     notification.style.backgroundColor = 'var(--search-background)';
-    notification.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(2.5px)';
     notification.style.boxShadow = 'var(--sun-shadow)';
     notification.style.color = 'var(--text-color)';
     notification.style.padding = '18px';
