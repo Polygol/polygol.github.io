@@ -1352,7 +1352,7 @@ body.one-button-nav-active .dock.show {
     display: flex;
     gap: 6px;
     flex-direction: column;
-    margin: 50px 60px 8px 2px;
+    margin: 55px 60px 8px 2px;
     z-index: 1;
     pointer-events: none;
     text-shadow: 0 0 4px var(--background-color);
@@ -1452,7 +1452,7 @@ body.one-button-nav-active .dock.show {
     color: var(--text-color);
     position: fixed;
     right: 22px;
-    top: 62px;
+    top: 67px;
 }
 
 /* Smart Home Controls Styles */
