@@ -1452,7 +1452,7 @@ body.one-button-nav-active .dock.show {
     color: var(--text-color);
     position: fixed;
     right: 22px;
-    top: 67px;
+    top: 65px;
 }
 
 /* Smart Home Controls Styles */
