@@ -1007,6 +1007,7 @@ body.one-button-nav-active .dock.show {
 
         #blurOverlayControls {
             z-index: 9996;
+			backdrop-filter: none;
         }
 
 		#interaction-blocker {
@@ -1989,8 +1990,8 @@ input[type="checkbox"]:checked::before {
       filter: blur(5px);
     }
 
-    body.minimal-active .blur-overlay {
-	    backdrop-filter: blur(10px);
+    body.minimal-active #blurOverlayControls {
+	    backdrop-filter: blur(10px) !important;
 	}
     
     body.minimal-active .drawer-handle,
