@@ -422,23 +422,6 @@ let autoSleepTimer = null;
 
 secondsSwitch.checked = showSeconds;
 
-async function launchBackgroundServices() {
-    const backgroundServices = ['Chronos', 'Fantaskical'];
-
-    for (const appName of backgroundServices) {
-        if (apps[appName]) {
-            console.log(`${appName} is installed. Launching as a background service.`);
-            const appUrl = apps[appName].url;
-            const isRunning = document.querySelector(`.fullscreen-embed[data-embed-url="${appUrl}"]`);
-
-            if (!isRunning) {
-                await createFullscreenEmbed(appUrl);
-                minimizeFullscreenEmbed(false);
-            }
-        }
-    }
-}
-
 function saveAvailableWidgets() {
     localStorage.setItem('availableWidgets', JSON.stringify(availableWidgets));
 }
@@ -2966,21 +2949,19 @@ function blackoutScreen() {
     if (activeEmbed) {
         const activeUrl = activeEmbed.dataset.embedUrl;
         const activeAppName = Object.keys(apps).find(name => apps[name].url === activeUrl);
-        const isPersistentService = ['Chronos', 'Fantaskical'].includes(activeAppName);
-
-        if (activeAppName === activeMediaSessionApp || isPersistentService) {
-            minimizeFullscreenEmbed(); // Minimize media app or persistent services
+        if (activeAppName === activeMediaSessionApp) {
+            minimizeFullscreenEmbed(); // Minimize active media app
         } else {
-            closeFullscreenEmbed(); // Close other active apps
+            closeFullscreenEmbed(); // Close active non-media app
         }
     }
 
-    // 2. Clean up all other minimized apps that are not media or persistent services
+    // 2. Clean up all other minimized apps that are not the active media app
     const urlsToRemove = [];
     for (const url in minimizedEmbeds) {
         const appName = Object.keys(apps).find(name => apps[name].url === url);
-        const isPersistentService = ['Chronos', 'Fantaskical'].includes(appName);
-        if (appName !== activeMediaSessionApp && !isPersistentService) {
+        // Add to removal list if it's NOT the media app
+        if (appName !== activeMediaSessionApp) {
             urlsToRemove.push(url);
         }
     }
@@ -7054,25 +7035,14 @@ createFullscreenEmbed = function(url) {
 };
 
 function closeFullscreenEmbed() {
-    const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
-    
-    if (embedContainer) {
-        const url = embedContainer.dataset.embedUrl;
-        const appName = Object.keys(apps).find(name => apps[name].url === url);
-
-        // Intercept close command for background services and minimize instead
-        if (appName === 'Chronos' || appName === 'Fantaskical') {
-            minimizeFullscreenEmbed();
-            return;
-        }
-    }
-    
     // Restore the original favicon
     if (originalFaviconUrl) {
         updateFavicon(originalFaviconUrl, false);
     }
 
     isAppOpen = false;
+
+    const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
     
     if (embedContainer) {
         const url = embedContainer.dataset.embedUrl;
@@ -8925,8 +8895,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     checkForAutomaticBackup();
 
     setupServiceWorkerUpdateListener(); 
-    
-    launchBackgroundServices();
 
     // Request screen wake lock to prevent sleep
     requestWakeLock();
