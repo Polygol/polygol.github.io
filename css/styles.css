@@ -1301,7 +1301,7 @@ body.one-button-nav-active .dock.show {
 	box-shadow: var(--sun-shadow);
     overflow: hidden;
     transition: all 0.3s ease;
-	height: 134px;
+	height: 175px;
 }
 
 .media-widget[style*="display: none"] {
@@ -1314,10 +1314,11 @@ body.one-button-nav-active .dock.show {
 .media-widget .app-icon-img {
     position: absolute;
     top: 18px;
-    right: 18px;
+    left: 20px;
     width: 32px;
     height: 32px;
-    border-radius: 14px;
+    border-radius: 35%;
+	corner-shape: superellipse(1.25);
     z-index: 2;
     mix-blend-mode: luminosity;
     pointer-events: none;
@@ -1351,7 +1352,7 @@ body.one-button-nav-active .dock.show {
     display: flex;
     gap: 6px;
     flex-direction: column;
-    margin: 8px 40px 8px 4px;
+    margin: 52px 8px 8px 2px;
     z-index: 1;
     pointer-events: none;
     text-shadow: 0 0 4px var(--background-color);
