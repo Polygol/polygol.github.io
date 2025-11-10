@@ -919,12 +919,12 @@ body.one-button-nav-active .dock.show {
             filter: blur(5px);
             width: clamp(280px, 90%, 420px);
             z-index: 9999 !important;
-            border-radius: 35px;
+            border-radius: 50px;
 		    background: var(--search-background);
 		    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(5px);
 		    box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
 		    border: 1px solid var(--glass-border);
-		    padding: 14px 16px 18px 16px;
+		    padding: 18px 20px 22px 20px;
 		    corner-shape: superellipse(1.5);
 			scrollbar-width: none;
         }
