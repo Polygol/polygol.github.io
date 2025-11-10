@@ -7073,8 +7073,6 @@ function closeFullscreenEmbed() {
     }
 
     isAppOpen = false;
-
-    const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
     
     if (embedContainer) {
         const url = embedContainer.dataset.embedUrl;
