@@ -638,7 +638,7 @@ function addWidget(widgetData) {
     saveWidgets();
 }
 
-function removeWidget(index) {
+async function removeWidget(index) {
     if (await showCustomConfirm('Remove this widget?')) {
         activeWidgets.splice(index, 1);
         renderWidgets();
