@@ -240,6 +240,9 @@ let availableWidgets; // Stores info about all possible widgets from apps
 let activeWidgets; // Stores the user's current layout
 const MARGIN = 20;
 
+// --- Dialog Management ---
+let activeDialog = null; // For handling promise resolution for local dialogs
+
 let originalFaviconUrl = '';
 
 const initialFaviconLink = document.querySelector("link[rel='icon']") || document.querySelector("link[rel='shortcut icon']");
@@ -479,6 +482,89 @@ function adjustWidgetsForViewportResize() {
     }
 }
 
+// Dialog Management
+function showDialog(options) {
+    const dialog = document.getElementById('dialogModal');
+    const title = document.getElementById('dialogTitle');
+    const message = document.getElementById('dialogMessage');
+    const promptContainer = document.getElementById('dialogPromptContainer');
+    const input = document.getElementById('dialogInput');
+    const buttons = document.getElementById('dialogButtons');
+    const blurOverlay = document.getElementById('blurOverlayControls');
+
+    title.textContent = options.title || '';
+    message.textContent = options.message || '';
+    buttons.innerHTML = '';
+    promptContainer.style.display = 'none';
+
+    const closeDialog = (value) => {
+        // Send response back to iframe if it was an external request
+        if (options.source && options.requestId) {
+            options.source.postMessage({
+                type: 'dialog-response',
+                requestId: options.requestId,
+                value: value
+            }, options.origin);
+        }
+        // Resolve the promise for internal calls
+        if (activeDialog && activeDialog.resolve) {
+            activeDialog.resolve(value);
+            activeDialog = null;
+        }
+        
+        // Hide dialog UI
+        dialog.classList.remove('show');
+        blurOverlay.classList.remove('show');
+        setTimeout(() => {
+            dialog.style.display = 'none';
+            if (!document.querySelector('.modal.show')) {
+                blurOverlay.style.display = 'none';
+            }
+        }, 300);
+    };
+
+    if (options.type === 'prompt') {
+        promptContainer.style.display = 'block';
+        input.value = options.defaultValue || '';
+        setTimeout(() => input.focus(), 100);
+    }
+
+    if (options.type === 'confirm' || options.type === 'prompt') {
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = currentLanguage.CANCEL || 'Cancel';
+        cancelBtn.className = 'button-dialog';
+        cancelBtn.onclick = () => closeDialog(options.type === 'prompt' ? null : false);
+        buttons.appendChild(cancelBtn);
+    }
+
+    const okBtn = document.createElement('button');
+    okBtn.textContent = 'OK';
+    okBtn.className = 'button-dialog primary';
+    okBtn.onclick = () => closeDialog(options.type === 'prompt' ? input.value : true);
+    buttons.appendChild(okBtn);
+
+    blurOverlay.style.display = 'block';
+    dialog.style.display = 'block';
+    setTimeout(() => {
+        blurOverlay.classList.add('show');
+        dialog.classList.add('show');
+    }, 10);
+}
+
+function showCustomConfirm(message, title = 'Confirm') {
+    return new Promise(resolve => {
+        activeDialog = { resolve };
+        showDialog({ type: 'confirm', message, title });
+    });
+}
+
+function showCustomPrompt(message, title = 'Prompt', defaultValue = '') {
+    return new Promise(resolve => {
+        activeDialog = { resolve };
+        showDialog({ type: 'prompt', message, title, defaultValue });
+    });
+}
+
 function handleViewportResize() {
     adjustWidgetsForViewportResize(); // First, fix the data
     renderWidgets();                  // Then, re-render with the corrected data
@@ -553,7 +639,7 @@ function addWidget(widgetData) {
 }
 
 function removeWidget(index) {
-    if (confirm('Remove this widget?')) {
+    if (await showCustomConfirm('Remove this widget?')) {
         activeWidgets.splice(index, 1);
         renderWidgets();
         saveWidgets();
@@ -3787,7 +3873,7 @@ async function initializeAiAssistant() {
     if (!isAiAssistantEnabled) return;
 
     if (!geminiApiKey) {
-        geminiApiKey = prompt(currentLanguage.AI_API_KEY_PROMPT || "Please enter your Google AI API Key:");
+        geminiApiKey = await showCustomPrompt(currentLanguage.AI_API_KEY_PROMPT || "Please enter your Google AI API Key", "API Key");
         if (geminiApiKey) {
             localStorage.setItem('geminiApiKey', geminiApiKey);
         } else {
@@ -6556,7 +6642,7 @@ async function deleteApp(appName) {
     }
 
     // Confirmation dialog
-    if (!confirm(currentLanguage.GURAPP_DELETE_ASK.replace('{appName}', appName))) {
+    if (!(await showCustomConfirm(currentLanguage.GURAPP_DELETE_ASK.replace('{appName}', appName), 'Delete App'))) {
         return;
     }
 
@@ -9019,8 +9105,8 @@ function listLocalStorageKeys() {
     return keys;
 }
 
-function clearLocalStorage() {
-    if (confirm(currentLanguage.RESET_CONFIRM)) {
+async function clearLocalStorage() {
+    if (await showCustomConfirm(currentLanguage.RESET_CONFIRM, 'Reset Polygol')) {
         localStorage.clear();
         setTimeout(() => window.location.reload(), 100); // Give time for message to send
         return 'All Polygol localStorage data cleared. Reloading...';
@@ -9221,7 +9307,8 @@ async function removeIDBRecord(dbName, storeName, key) {
 }
 
 async function clearIDBStore(dbName, storeName) {
-    if (!confirm(`Are you sure you want to clear ALL data from the '${storeName}' store in the '${dbName}' database? This cannot be undone.`)) {
+    const confirmed = await showCustomConfirm(`Are you sure you want to clear ALL data from the '${storeName}' store in the '${dbName}' database? This cannot be undone.`, 'Clear Store');
+    if (!confirmed) {
         return 'Operation cancelled.';
     }
     const db = await openIDB(dbName);
@@ -9238,8 +9325,8 @@ async function clearIDBStore(dbName, storeName) {
 
 
 // Global functions exposed for the Terminal (or other Gurapps if needed)
-function rebootGurasuraisu() { // Removed sourceWindow
-    if (confirm(currentLanguage.REBOOT_CONFIRM)) {
+async function rebootGurasuraisu() { // Removed sourceWindow
+    if (await showCustomConfirm(currentLanguage.REBOOT_CONFIRM, 'Reboot')) {
         setTimeout(() => window.location.reload(), 100);
         return 'Rebooting Polygol...';
     } else {
@@ -10004,6 +10091,17 @@ window.addEventListener('message', async (event) => { // Make listener async
                     'getIDBRecord': 'idbRecordValue',
                     'requestInstalledApps': 'installed-apps-list' // Added here
                 };
+
+	            // Handle dialogs specifically as they have a complex payload
+	            if (funcName === 'showDialog') {
+	                const dialogOptions = args[0] || {};
+	                dialogOptions.source = sourceWindow; // Track who to reply to
+	                dialogOptions.origin = event.origin;
+	                showDialog(dialogOptions);
+	                // Dialogs are async, no immediate result to return. The response is handled in showDialog.
+	                return;
+	            }
+				
                 if (funcName.startsWith('get') || funcName.startsWith('list') || funcName.startsWith('request')) {
                     messageType = typeMap[funcName] || 'commandOutput';
                 }
