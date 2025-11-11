@@ -491,7 +491,7 @@ function _displayDialog(options) {
     const promptContainer = document.getElementById('dialogPromptContainer');
     const input = document.getElementById('dialogInput');
     const buttons = document.getElementById('dialogButtons');
-    const blurOverlay = document.getElementById('blurOverlayControls');
+    const blurOverlay = document.getElementById('blurOverlay');
 
     title.textContent = options.title || '';
     message.textContent = options.message || ''; // Using textContent for security
@@ -530,7 +530,7 @@ function closeDialog(value) {
     if (!activeDialog) return;
 
     const dialog = document.getElementById('dialogModal');
-    const blurOverlay = document.getElementById('blurOverlayControls');
+    const blurOverlay = document.getElementById('blurOverlay');
 
     // Respond to iframe or resolve local promise
     if (activeDialog.source && activeDialog.requestId) {
@@ -992,8 +992,7 @@ function openWidgetPicker() {
     const drawer = document.getElementById('widget-picker-drawer');
     const content = drawer.querySelector('.widget-drawer-content');
     const grid = document.getElementById('widget-picker-grid');
-    const blurOverlay = document.getElementById('blurOverlayControls');
-    if (!drawer || !grid || !blurOverlay || !content) return;
+    if (!drawer || !grid || !content) return;
     
     content.scrollTop = 0; // Scroll to top
     grid.innerHTML = ''; // Clear old items
@@ -1049,23 +1048,14 @@ function openWidgetPicker() {
         }
     }
     
-    blurOverlay.style.display = 'block';
     drawer.classList.add('open');
-    setTimeout(() => {
-        blurOverlay.classList.add('show');
-    }, 10);
 }
 
 function closeWidgetPicker() {
     const drawer = document.getElementById('widget-picker-drawer');
-    const blurOverlay = document.getElementById('blurOverlayControls');
-    if (!drawer || !blurOverlay) return;
+    if (!drawer) return;
 
     drawer.classList.remove('open');
-    blurOverlay.classList.remove('show');
-    setTimeout(() => {
-        blurOverlay.style.display = 'none';
-    }, 300);
 }
 
 async function applyPresetWallpaper(preset) {
@@ -1092,8 +1082,7 @@ function openWallpaperPicker() {
     const drawer = document.getElementById('wallpaper-picker-drawer');
     const content = drawer.querySelector('.widget-drawer-content');
     const grid = document.getElementById('wallpaper-picker-grid');
-    const blurOverlay = document.getElementById('blurOverlayControls');
-    if (!drawer || !grid || !blurOverlay || !content) return;
+    if (!drawer || !grid || !content) return;
 
     closeControls();
     content.scrollTop = 0; // Scroll to top
@@ -1156,23 +1145,14 @@ function openWallpaperPicker() {
         grid.appendChild(item);
     });
 
-    blurOverlay.style.display = 'block';
     drawer.classList.add('open');
-    setTimeout(() => {
-        blurOverlay.classList.add('show');
-    }, 10);
 }
 
 function closeWallpaperPicker() {
     const drawer = document.getElementById('wallpaper-picker-drawer');
-    const blurOverlay = document.getElementById('blurOverlayControls');
-    if (!drawer || !blurOverlay) return;
+    if (!drawer) return;
 
     drawer.classList.remove('open');
-    blurOverlay.classList.remove('show');
-    setTimeout(() => {
-        blurOverlay.style.display = 'none';
-    }, 300);
 }
 
 function registerWidget(widgetData) {
@@ -1567,7 +1547,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 	// --- Add event listeners to close drawers ---
-    const blurOverlayControls = document.getElementById('blurOverlayControls');
+    const blurOverlay = document.getElementById('blurOverlay');
 
     const widgetDrawer = document.getElementById('widget-picker-drawer');
     if (widgetDrawer) {
@@ -1590,8 +1570,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Generic overlay click to close any active modal/drawer
-    if (blurOverlayControls) {
-        blurOverlayControls.addEventListener('click', () => {
+    if (blurOverlay) {
+        blurOverlay.addEventListener('click', () => {
             // Priority 1: Close active dialog.
             if (activeDialog) {
                 let cancelValue = true; // Default for alerts
