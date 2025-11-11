@@ -926,9 +926,10 @@ body.one-button-nav-active .dock.show {
 		    border-radius: 25px;
 		    corner-shape: superellipse(1.5);
 		    border: 1px solid var(--glass-border);
-		    background-color: var(--overlay-color);
+		    background-color: var(--search-background);
 		    color: var(--text-color);
 		    box-shadow: var(--sun-shadow);
+			font-family: 'Inter', 'sans-serif';
 		    font-size: 1rem;
 		    outline: none;
 		    width: 100%;
