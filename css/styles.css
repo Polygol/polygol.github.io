@@ -887,7 +887,8 @@ body.one-button-nav-active .dock.show {
             z-index: 200;
             left: 50%;
             transform: translate(-50%) scale(0.9);
-		    width: 90%;
+		    width: max-content;
+			min-width: 250px;
 		    max-width: 500px;
             max-height: 90vh;
             background-color: var(--search-background);
@@ -1050,7 +1051,6 @@ body.one-button-nav-active .dock.show {
             left: 0;
             right: 0;
             bottom: 0;
-            backdrop-filter: blur(1px);
             z-index: 100;
             opacity: 0;
             transition: all 0.3s ease;
