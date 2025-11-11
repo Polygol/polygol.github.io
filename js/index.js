@@ -493,8 +493,14 @@ function _displayDialog(options) {
     const buttons = document.getElementById('dialogButtons');
     const blurOverlay = document.getElementById('blurOverlay');
 
-    title.textContent = options.title || '';
-    message.textContent = options.message || ''; // Using textContent for security
+    if (options.type === 'confirm') {
+        // For confirms, use the message as the title and leave the message body empty.
+        title.textContent = options.message || '';
+        message.textContent = '';
+    } else {
+        title.textContent = options.title || '';
+        message.textContent = options.message || ''; // Using textContent for security
+    }
     buttons.innerHTML = '';
     promptContainer.style.display = 'none';
 
