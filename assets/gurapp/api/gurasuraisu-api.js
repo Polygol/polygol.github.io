@@ -1,4 +1,6 @@
 /**
+ * !! DOCUMENTATION: https://kirbindustries.gitbook.io/polygol/developers/developer-materials/gurapp-api !!
+ *
  * Gurasuraisu API for Gurapps
  * This helper script allows an iframe (Gurapp) to safely communicate
  * with the parent Gurasuraisu (Polygol) window and use its core functions.
