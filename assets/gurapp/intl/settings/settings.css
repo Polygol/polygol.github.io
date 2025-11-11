@@ -440,7 +440,7 @@ input.form-input {
     border: none;
     backdrop-filter: none;
     box-shadow: none;
-    padding: 12px 6px;
+    padding: 12px 0;
 }
 .color-picker {
     -webkit-appearance: none;
