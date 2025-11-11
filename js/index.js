@@ -490,7 +490,7 @@ function showDialog(options) {
     const promptContainer = document.getElementById('dialogPromptContainer');
     const input = document.getElementById('dialogInput');
     const buttons = document.getElementById('dialogButtons');
-    const blurOverlay = document.getElementById('blurOverlayControls');
+    const blurOverlay = document.getElementById('blurOverlay');
 
     title.textContent = options.title || '';
     message.textContent = options.message || '';
