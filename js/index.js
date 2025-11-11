@@ -5397,7 +5397,7 @@ function resetIndicatorTimeout() {
 }
 
 // Handle triple tap on dots to remove wallpaper
-function handleDotTap(e, index) {
+async function handleDotTap(e, index) {
   e.stopPropagation();
   
   const now = Date.now();
