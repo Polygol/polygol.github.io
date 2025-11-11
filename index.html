@@ -652,6 +652,19 @@
 
     <div id="interaction-blocker"></div>
 
+    <div id="dialogModal" class="modal" style="display: none; z-index: 999999;">
+        <div class="modal-content">
+            <h2 id="dialogTitle"></h2>
+            <p id="dialogMessage" style="margin-bottom: 20px;"></p>
+            <div id="dialogPromptContainer" class="form-group" style="display: none;">
+                <input type="text" id="dialogInput" class="form-input">
+            </div>
+            <div id="dialogButtons" class="form-row" style="justify-content: flex-end; margin-top: 20px;">
+                <!-- Buttons will be injected here -->
+            </div>
+        </div>
+    </div>
+
     <script src="js/index.js"></script>
 </body>
 </html>
