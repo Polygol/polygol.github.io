@@ -6653,7 +6653,7 @@ async function installApp(appData) {
                 action: 'cache-app',
                 files: appData.filesToCache
             });
-            const message = isUpdate ? `'${appData.name}' updated` : currentLanguage.GURAPP_INSTALLING.replace('{appName}', appData.name);
+            const message = isUpdate ? `${appData.name} updated` : currentLanguage.GURAPP_INSTALLING.replace('{appName}', appData.name);
             showPopup(message);
         } catch (error) {
             console.error('Service Worker not ready:', error);
