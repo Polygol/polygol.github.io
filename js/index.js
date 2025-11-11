@@ -2918,6 +2918,11 @@ function isFullScreen() {
   );
 }
 
+function doesAppHaveActiveLiveActivity(appName) {
+    if (!appName) return false;
+    return Object.values(activeLiveActivities).some(activity => activity.appName === appName);
+}
+
 function exitBlackoutMode() {
     // Restore previous settings
     setControlValueAndDispatch('highContrast', previousBlackoutSettings.highContrast || 'false');
@@ -2949,19 +2954,19 @@ function blackoutScreen() {
     if (activeEmbed) {
         const activeUrl = activeEmbed.dataset.embedUrl;
         const activeAppName = Object.keys(apps).find(name => apps[name].url === activeUrl);
-        if (activeAppName === activeMediaSessionApp || hasActiveLiveActivity(activeAppName)) {
-            minimizeFullscreenEmbed();
+        if (activeAppName === activeMediaSessionApp || doesAppHaveActiveLiveActivity(activeAppName)) {
+            minimizeFullscreenEmbed(); // Minimize if it has media or a live activity
         } else {
-            closeFullscreenEmbed();
+            closeFullscreenEmbed(); // Close active non-essential app
         }
     }
 
-    // 2. Clean up all other minimized apps that are not providing essential background services
+    // 2. Clean up all other minimized apps that are not essential
     const urlsToRemove = [];
     for (const url in minimizedEmbeds) {
         const appName = Object.keys(apps).find(name => apps[name].url === url);
         // Add to removal list if it's NOT the media app AND does NOT have a live activity
-        if (appName !== activeMediaSessionApp && !hasActiveLiveActivity(appName)) {
+        if (appName !== activeMediaSessionApp && !doesAppHaveActiveLiveActivity(appName)) {
             urlsToRemove.push(url);
         }
     }
@@ -9685,11 +9690,6 @@ function setControlValueAndDispatch(key, value) {
  * @param {boolean} [options.homescreen=false] - If true, this activity can show a summary on the homescreen.
  * @param {string} [options.height='120px'] - The height of the activity in the notification shade.
  */
-function hasActiveLiveActivity(appName) {
-    if (!appName) return false;
-    return Object.values(activeLiveActivities).some(activity => activity.appName === appName);
-}
-
 function startLiveActivity(appName, options) {
     if (!appName || !options || !options.activityId || !options.url) {
         console.error('[Live Activity] Start failed: appName, activityId and url are required.');
