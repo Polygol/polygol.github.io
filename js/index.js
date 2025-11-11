@@ -5407,11 +5407,13 @@ function handleDotTap(e, index) {
     if (now - lastTapTime < 500) { // 500ms between taps
       tapCount++;
       
-      // If triple tap detected
-      if (tapCount === 3) {
-        removeWallpaper(index);
-        tapCount = 0;
-      }
+		// If triple tap detected
+		if (tapCount === 3) {
+			if (await showCustomConfirm(currentLanguage.WALLPAPER_REMOVE_CONFIRM || 'Are you sure you want to delete this wallpaper?', 'Delete Wallpaper')) {
+				await removeWallpaper(index);
+			}
+			tapCount = 0;
+		}
     } else {
       // Too slow, reset counter
       tapCount = 1;
