@@ -241,7 +241,8 @@ let activeWidgets; // Stores the user's current layout
 const MARGIN = 20;
 
 // --- Dialog Management ---
-let activeDialog = null; // For handling promise resolution for local dialogs
+let activeDialog = null; // Tracks the currently displayed dialog
+let dialogQueue = [];    // Queue for pending dialog requests
 
 let originalFaviconUrl = '';
 
@@ -483,45 +484,19 @@ function adjustWidgetsForViewportResize() {
 }
 
 // Dialog Management
-function showDialog(options) {
+function _displayDialog(options) {
     const dialog = document.getElementById('dialogModal');
     const title = document.getElementById('dialogTitle');
     const message = document.getElementById('dialogMessage');
     const promptContainer = document.getElementById('dialogPromptContainer');
     const input = document.getElementById('dialogInput');
     const buttons = document.getElementById('dialogButtons');
-    const blurOverlay = document.getElementById('blurOverlay');
+    const blurOverlay = document.getElementById('blurOverlayControls');
 
     title.textContent = options.title || '';
-    message.textContent = options.message || '';
+    message.textContent = options.message || ''; // Using textContent for security
     buttons.innerHTML = '';
     promptContainer.style.display = 'none';
-
-    const closeDialog = (value) => {
-        // Send response back to iframe if it was an external request
-        if (options.source && options.requestId) {
-            options.source.postMessage({
-                type: 'dialog-response',
-                requestId: options.requestId,
-                value: value
-            }, options.origin);
-        }
-        // Resolve the promise for internal calls
-        if (activeDialog && activeDialog.resolve) {
-            activeDialog.resolve(value);
-            activeDialog = null;
-        }
-        
-        // Hide dialog UI
-        dialog.classList.remove('show');
-        blurOverlay.classList.remove('show');
-        setTimeout(() => {
-            dialog.style.display = 'none';
-            if (!document.querySelector('.modal.show')) {
-                blurOverlay.style.display = 'none';
-            }
-        }, 300);
-    };
 
     if (options.type === 'prompt') {
         promptContainer.style.display = 'block';
@@ -538,7 +513,7 @@ function showDialog(options) {
     }
 
     const okBtn = document.createElement('button');
-    okBtn.textContent = 'OK';
+    okBtn.textContent = currentLanguage.OK || 'OK';
     okBtn.className = 'button-dialog primary';
     okBtn.onclick = () => closeDialog(options.type === 'prompt' ? input.value : true);
     buttons.appendChild(okBtn);
@@ -551,17 +526,60 @@ function showDialog(options) {
     }, 10);
 }
 
+function closeDialog(value) {
+    if (!activeDialog) return;
+
+    const dialog = document.getElementById('dialogModal');
+    const blurOverlay = document.getElementById('blurOverlayControls');
+
+    // Respond to iframe or resolve local promise
+    if (activeDialog.source && activeDialog.requestId) {
+        activeDialog.source.postMessage({
+            type: 'dialog-response',
+            requestId: activeDialog.requestId,
+            value: value
+        }, activeDialog.origin);
+    } else if (activeDialog.resolve) {
+        activeDialog.resolve(value);
+    }
+    
+    // Hide UI
+    dialog.classList.remove('show');
+    blurOverlay.classList.remove('show');
+    setTimeout(() => {
+        dialog.style.display = 'none';
+        const isAnyModalOpen = document.querySelector('.modal.show, .widget-drawer.open');
+        if (!isAnyModalOpen) {
+            blurOverlay.style.display = 'none';
+        }
+    }, 300);
+
+    activeDialog = null;
+    processDialogQueue(); // Process the next item in the queue
+}
+
+function processDialogQueue() {
+    if (activeDialog || dialogQueue.length === 0) {
+        return;
+    }
+    activeDialog = dialogQueue.shift();
+    _displayDialog(activeDialog);
+}
+
+function showDialog(options) {
+    dialogQueue.push(options);
+    processDialogQueue();
+}
+
 function showCustomConfirm(message, title = 'Confirm') {
     return new Promise(resolve => {
-        activeDialog = { resolve };
-        showDialog({ type: 'confirm', message, title });
+        showDialog({ type: 'confirm', message, title, resolve });
     });
 }
 
 function showCustomPrompt(message, title = 'Prompt', defaultValue = '') {
     return new Promise(resolve => {
-        activeDialog = { resolve };
-        showDialog({ type: 'prompt', message, title, defaultValue });
+        showDialog({ type: 'prompt', message, title, defaultValue, resolve });
     });
 }
 
@@ -1571,11 +1589,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Generic overlay click to close any/all open drawers
+    // Generic overlay click to close any active modal/drawer
     if (blurOverlayControls) {
         blurOverlayControls.addEventListener('click', () => {
-            closeWidgetPicker();
-            closeWallpaperPicker();
+            // Priority 1: Close active dialog.
+            if (activeDialog) {
+                let cancelValue = true; // Default for alerts
+                if (activeDialog.type === 'confirm') cancelValue = false;
+                if (activeDialog.type === 'prompt') cancelValue = null;
+                closeDialog(cancelValue); // Close any type of dialog
+                return; 
+            }
+
+            // Priority 2: Close open drawers.
+            if (document.querySelector('.widget-drawer.open')) {
+                closeWidgetPicker();
+                closeWallpaperPicker();
+                return;
+            }
+
+            // Priority 3: Close the main controls panel.
+            if (document.getElementById('customizeModal').classList.contains('show')) {
+                closeControls();
+            }
         });
     }
 
@@ -10031,6 +10067,16 @@ window.addEventListener('message', async (event) => { // Make listener async
     if (data && data.action === 'callGurasuraisuFunc' && data.functionName) {
         const funcName = data.functionName;
         const args = Array.isArray(data.args) ? data.args : [];
+		
+        // Handle dialogs specifically as they have a complex payload
+        if (funcName === 'showDialog') {
+            const dialogOptions = args[0] || {};
+            dialogOptions.source = sourceWindow; // Track who to reply to
+            dialogOptions.origin = event.origin;
+            showDialog(dialogOptions);
+            // Dialogs are async, no immediate result to return. The response is handled in showDialog.
+            return;
+        }
 
         // --- REVISED Security Check ---
         const requiredPermission = FUNCTION_PERMISSIONS[funcName];
@@ -10092,16 +10138,6 @@ window.addEventListener('message', async (event) => { // Make listener async
                     'requestInstalledApps': 'installed-apps-list' // Added here
                 };
 
-	            // Handle dialogs specifically as they have a complex payload
-	            if (funcName === 'showDialog') {
-	                const dialogOptions = args[0] || {};
-	                dialogOptions.source = sourceWindow; // Track who to reply to
-	                dialogOptions.origin = event.origin;
-	                showDialog(dialogOptions);
-	                // Dialogs are async, no immediate result to return. The response is handled in showDialog.
-	                return;
-	            }
-				
                 if (funcName.startsWith('get') || funcName.startsWith('list') || funcName.startsWith('request')) {
                     messageType = typeMap[funcName] || 'commandOutput';
                 }
