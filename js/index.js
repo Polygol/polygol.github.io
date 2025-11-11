@@ -1074,11 +1074,11 @@ function closeWidgetPicker() {
 
 async function applyPresetWallpaper(preset) {
     closeWallpaperPicker();
-    showPopup(currentLanguage.APPLYING_WALLPAPER || 'Applying new wallpaper...');
+    showPopup(currentLanguage.APPLYING_WALLPAPER || 'Applying new wallpaper');
 
     try {
         const response = await fetch(preset.fullUrl);
-        if (!response.ok) throw new Error('Failed to fetch wallpaper image.');
+        if (!response.ok) throw new Error('Failed to fetch wallpaper image');
 
         const blob = await response.blob();
         const filename = preset.fullUrl.split('/').pop();
@@ -1088,7 +1088,7 @@ async function applyPresetWallpaper(preset) {
 
     } catch (error) {
         console.error('Failed to apply preset wallpaper:', error);
-        showPopup(currentLanguage.WALLPAPER_APPLY_FAIL || 'Failed to apply wallpaper.');
+        showPopup(currentLanguage.WALLPAPER_APPLY_FAIL || 'Failed to apply wallpaper');
     }
 }
 
@@ -5415,7 +5415,7 @@ async function handleDotTap(e, index) {
       
 		// If triple tap detected
 		if (tapCount === 3) {
-			if (await showCustomConfirm(currentLanguage.WALLPAPER_REMOVE_CONFIRM || 'Are you sure you want to delete this wallpaper?', 'Delete Wallpaper')) {
+			if (await showCustomConfirm(currentLanguage.WALLPAPER_REMOVE_CONFIRM || 'Delete this wallpaper?')) {
 				await removeWallpaper(index);
 			}
 			tapCount = 0;
@@ -6653,7 +6653,7 @@ async function installApp(appData) {
                 action: 'cache-app',
                 files: appData.filesToCache
             });
-            const message = isUpdate ? `App '${appData.name}' updated successfully!` : currentLanguage.GURAPP_INSTALLING.replace('{appName}', appData.name);
+            const message = isUpdate ? `'${appData.name}' updated` : currentLanguage.GURAPP_INSTALLING.replace('{appName}', appData.name);
             showPopup(message);
         } catch (error) {
             console.error('Service Worker not ready:', error);
@@ -6677,7 +6677,7 @@ async function deleteApp(appName) {
     }
 
     // Confirmation dialog
-    if (!(await showCustomConfirm(currentLanguage.GURAPP_DELETE_ASK.replace('{appName}', appName), 'Delete App'))) {
+    if (!(await showCustomConfirm(currentLanguage.GURAPP_DELETE_ASK.replace('{appName}', appName)))) {
         return;
     }
 
@@ -9141,7 +9141,7 @@ function listLocalStorageKeys() {
 }
 
 async function clearLocalStorage() {
-    if (await showCustomConfirm(currentLanguage.RESET_CONFIRM, 'Reset Polygol')) {
+    if (await showCustomConfirm(currentLanguage.RESET_CONFIRM)) {
         localStorage.clear();
         setTimeout(() => window.location.reload(), 100); // Give time for message to send
         return 'All Polygol localStorage data cleared. Reloading...';
@@ -9342,7 +9342,7 @@ async function removeIDBRecord(dbName, storeName, key) {
 }
 
 async function clearIDBStore(dbName, storeName) {
-    const confirmed = await showCustomConfirm(`Are you sure you want to clear ALL data from the '${storeName}' store in the '${dbName}' database? This cannot be undone.`, 'Clear Store');
+    const confirmed = await showCustomConfirm(`Are you sure you want to clear ALL data from the '${storeName}' store in the '${dbName}' database? This cannot be undone.`);
     if (!confirmed) {
         return 'Operation cancelled.';
     }
@@ -9361,7 +9361,7 @@ async function clearIDBStore(dbName, storeName) {
 
 // Global functions exposed for the Terminal (or other Gurapps if needed)
 async function rebootGurasuraisu() { // Removed sourceWindow
-    if (await showCustomConfirm(currentLanguage.REBOOT_CONFIRM, 'Reboot')) {
+    if (await showCustomConfirm(currentLanguage.REBOOT_CONFIRM)) {
         setTimeout(() => window.location.reload(), 100);
         return 'Rebooting Polygol...';
     } else {
