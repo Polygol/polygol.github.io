@@ -708,7 +708,7 @@ function renderWidgets() {
         const index = parseInt(indexKey);
         const overlay = instance.querySelector('.widget-instance-overlay');
         
-        let isDragging = false, longPressTimer;
+        let isDragging = false, longPressTimer, longPressFired = false;
         let initialMouseX, initialMouseY, initialWidgetX, initialWidgetY;
         const snapLineV = document.getElementById('snap-line-v');
         const snapLineH = document.getElementById('snap-line-h');
@@ -718,12 +718,14 @@ function renderWidgets() {
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
             isDragging = false;
+            longPressFired = false; // Reset the flag
             initialMouseX = clientX;
             initialMouseY = clientY;
             initialWidgetX = instance.offsetLeft;
             initialWidgetY = instance.offsetTop;
 
             longPressTimer = setTimeout(() => {
+                longPressFired = true;
                 removeWidget(index);
             }, 500);
 
@@ -846,6 +848,12 @@ function renderWidgets() {
             document.removeEventListener('touchend', onDragEnd);
             snapLineV.style.display = 'none';
             snapLineH.style.display = 'none';
+
+            // FIX: If a long press was handled, just reset state and exit.
+            if (longPressFired) {
+                isDragging = false;
+                return;
+            }
 
             if (isDragging) {
                 instance.classList.remove('is-dragging');
@@ -3043,6 +3051,9 @@ function exitBlackoutMode() {
 }
 
 function blackoutScreen() {
+    // FIX: Don't re-apply if already in blackout mode
+    if (document.body.classList.contains('blackout-active')) return;
+
     closeControls();
 
     // Store previous settings
