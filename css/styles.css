@@ -903,6 +903,48 @@ body.one-button-nav-active .dock.show {
             pointer-events: none;
         }
 
+		/* --- Form & Dialog Styles --- */
+		.form-group {
+		    display: flex;
+		    flex-direction: column;
+		    gap: 8px;
+		}
+		
+		.form-input {
+		    padding: 12px 16px;
+		    border-radius: 25px;
+		    corner-shape: superellipse(1.5);
+		    border: 1px solid var(--glass-border);
+		    background-color: var(--overlay-color);
+		    color: var(--text-color);
+		    box-shadow: var(--sun-shadow);
+		    font-size: 1rem;
+		    outline: none;
+		    width: 100%;
+		    box-sizing: border-box;
+		}
+		
+		.form-row {
+		    display: flex;
+		    gap: 10px;
+		}
+		
+		.button-dialog {
+		    background-color: var(--transparent-color);
+		    color: var(--text-color);
+		    border: 1px solid var(--glass-border);
+		    border-radius: 25px;
+		    padding: 10px 20px;
+		    cursor: pointer;
+		    font-weight: 500;
+		    box-shadow: var(--sun-shadow);
+		}
+		
+		.button-dialog.primary {
+		    background-color: var(--text-color);
+		    color: var(--background-color);
+		}
+
         #customizeModal.modal {
             position: fixed;
             top: 0px;
