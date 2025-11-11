@@ -7,6 +7,8 @@
 const isInsideGurasuraisu = window.self !== window.top;
 let _mediaControlActions = {};
 let _actionRequestHandlers = {};
+const _dialogCallbacks = {}; // For handling dialog responses
+let _dialogRequestId = 0;   // For tracking dialog requests
 const _myActiveActivities = new Set(); // NEW: Tracks this app's active activities
 
 // Gurasuraisu Font and Cursor Injection
@@ -364,6 +366,12 @@ const _fallbacks = {
             setTimeout(() => toast.remove(), 500);
         }, 3000);
     },
+    showConfirm: function(message) {
+        return window.confirm(message);
+    },
+    showPrompt: function(message, defaultValue) {
+        return window.prompt(message, defaultValue);
+    },
     // For functions that have no standalone equivalent, we can just log a warning.
     default: function(functionName) {
         console.warn(`Gurasuraisu API: '${functionName}' is only available inside the Polygol environment.`);
@@ -634,6 +642,32 @@ const Gurasuraisu = {
    */
   downloadFile: function(filename, dataUrl) {
     this._call('downloadFile', [filename, dataUrl]);
+  },
+
+  showAlert: function(message, title = 'Alert') {
+      this._call('showDialog', [{ type: 'alert', message, title }]);
+  },
+
+  showConfirm: function(message, title = 'Confirm') {
+      return new Promise((resolve) => {
+          if (!isInsideGurasuraisu) {
+              return resolve(window.confirm(message));
+          }
+          const requestId = `confirm_${++_dialogRequestId}`;
+          _dialogCallbacks[requestId] = resolve;
+          this._call('showDialog', [{ type: 'confirm', message, title, requestId }]);
+      });
+  },
+
+  showPrompt: function(message, title = 'Prompt', defaultValue = '') {
+      return new Promise((resolve) => {
+          if (!isInsideGurasuraisu) {
+              return resolve(window.prompt(message, defaultValue));
+          }
+          const requestId = `prompt_${++_dialogRequestId}`;
+          _dialogCallbacks[requestId] = resolve;
+          this._call('showDialog', [{ type: 'prompt', message, title, defaultValue, requestId }]);
+      });
   }
 };
 
@@ -670,8 +704,14 @@ window.addEventListener('message', async (event) => {
       case 'glassEffectsUpdate':
         document.documentElement.classList.toggle('gurasuraisu-glass-disabled', !data.enabled);
         break;
-          
-      // --- NEW: Handles screenshot requests from the parent ---
+      case 'dialog-response':
+        if (data.requestId && _dialogCallbacks[data.requestId]) {
+            _dialogCallbacks[data.requestId](data.value);
+            delete _dialogCallbacks[data.requestId];
+        }
+        break;
+            
+      // --- Handles screenshot requests from the parent ---
       case 'request-screenshot':
         try {
             // Check if html2canvas is loaded in the Gurapp's window
