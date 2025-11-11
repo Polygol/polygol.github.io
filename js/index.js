@@ -509,20 +509,34 @@ function _displayDialog(options) {
         input.value = options.defaultValue || '';
         setTimeout(() => input.focus(), 100);
     }
+	
+    if (options.type === 'confirm') {
+        const noBtn = document.createElement('button');
+        noBtn.textContent = currentLanguage.NO || 'No';
+        noBtn.className = 'button-dialog';
+        noBtn.onclick = () => closeDialog(false);
+        buttons.appendChild(noBtn);
 
-    if (options.type === 'confirm' || options.type === 'prompt') {
-        const cancelBtn = document.createElement('button');
-        cancelBtn.textContent = currentLanguage.CANCEL || 'Cancel';
-        cancelBtn.className = 'button-dialog';
-        cancelBtn.onclick = () => closeDialog(options.type === 'prompt' ? null : false);
-        buttons.appendChild(cancelBtn);
+        const yesBtn = document.createElement('button');
+        yesBtn.textContent = currentLanguage.YES || 'Yes';
+        yesBtn.className = 'button-dialog primary';
+        yesBtn.onclick = () => closeDialog(true);
+        buttons.appendChild(yesBtn);
+    } else { // For 'alert' and 'prompt'
+        if (options.type === 'prompt') {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = currentLanguage.CANCEL || 'Cancel';
+            cancelBtn.className = 'button-dialog';
+            cancelBtn.onclick = () => closeDialog(null);
+            buttons.appendChild(cancelBtn);
+        }
+
+        const okBtn = document.createElement('button');
+        okBtn.textContent = currentLanguage.OK || 'OK';
+        okBtn.className = 'button-dialog primary';
+        okBtn.onclick = () => closeDialog(options.type === 'prompt' ? input.value : true);
+        buttons.appendChild(okBtn);
     }
-
-    const okBtn = document.createElement('button');
-    okBtn.textContent = currentLanguage.OK || 'OK';
-    okBtn.className = 'button-dialog primary';
-    okBtn.onclick = () => closeDialog(options.type === 'prompt' ? input.value : true);
-    buttons.appendChild(okBtn);
 
     blurOverlay.style.display = 'block';
     dialog.style.display = 'block';
