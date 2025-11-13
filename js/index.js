@@ -157,8 +157,9 @@ function setupServiceWorkerUpdateListener() {
                             // Check if there's a controller. If not, this is the first SW install.
                             if (navigator.serviceWorker.controller) {
                                 // A new SW is waiting. Show the notification.
-                                showNotification('A new version of Polygol is available.', {
-                                    buttonText: 'Update & Reload',
+                                showNotification('A system update of Polygol is available', {
+									icon: 'update',
+                                    buttonText: 'Restart and update',
                                     buttonAction: () => {
                                         newWorker.postMessage({ action: 'skipWaiting' });
                                     }
@@ -184,14 +185,14 @@ function setupServiceWorkerUpdateListener() {
 
 async function forceUpdatePolygol() {
     if (!('serviceWorker' in navigator)) {
-        showNotification('Service Worker not supported.', { icon: 'error' });
+        showNotification('Service Worker not supported', { icon: 'error' });
         return 'Update check failed: Service Worker not supported.';
     }
 
     try {
         const registration = await navigator.serviceWorker.getRegistration();
         if (!registration) {
-            showNotification('No active Service Worker found.', { icon: 'error' });
+            showNotification('No active Service Worker found', { icon: 'error' });
             return 'Update check failed: No registration found.';
         }
 
@@ -229,7 +230,7 @@ async function forceUpdatePolygol() {
 
     } catch (error) {
         console.error('[SW] Force update failed:', error);
-        showNotification('Update check failed. See console for details.', { icon: 'error' });
+        showNotification('Checking updates failed. Try again later', { icon: 'error' });
         return 'Update check failed.';
     }
 }
@@ -3654,7 +3655,8 @@ async function createAutomaticBackup() {
         // 4. Update timestamp and notify user
         localStorage.setItem('lastBackupTimestamp', Date.now().toString());
         
-        showNotification(currentLanguage.BACKUP_READY || 'Your weekly backup is ready.', {
+        showNotification(currentLanguage.BACKUP_READY || 'Weekly backup is ready', {
+			icon: 'backup',
             buttonText: currentLanguage.BACKUP_DOWNLOAD || "Download",
             buttonAction: () => {
                 downloadBackupFile(backupBlob, fileName);
@@ -3663,7 +3665,7 @@ async function createAutomaticBackup() {
 
     } catch (error) {
         console.error('Automatic backup failed:', error);
-        showNotification(currentLanguage.BACKUP_FAILED || 'Automatic backup failed.', { icon: 'error' });
+        showNotification(currentLanguage.BACKUP_FAILED || 'Automatic backup failed', { icon: 'error' });
     }
 }
 
