@@ -2673,7 +2673,7 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(5px)';
     popup.style.boxShadow = 'var(--sun-shadow), 0 0 10px rgba(0, 0, 0, 0.2)';
     popup.style.color = 'var(--text-color)';
-    popup.style.padding = '16px';
+    popup.style.padding = '16px 16px 16px 20px';
     popup.style.borderRadius = '35px';
 	popup.style.cornerShape = 'superellipse(1.5)';
     popup.style.zIndex = '9999996';
@@ -2712,11 +2712,18 @@ function createOnScreenPopup(message, options = {}) {
     // Add icon
     const icon = document.createElement('span');
     icon.className = 'material-symbols-rounded';
+	icon.style.background = "var(--secondary-text-color)";
+	icon.style.padding = "8px";
+	icon.style.fontSize = "20px";
+	icon.style.borderRadius = "35%";
+	icon.style.color = "var(--background-color)";
+	icon.style.cornerShape = "superellipse(1.25)";
     icon.textContent = iconType;
     popup.appendChild(icon);
     
     // Add message text
     const messageText = document.createElement('div');
+	messageText.style.width = '-webkit-fill-available';
     messageText.textContent = message;
     popup.appendChild(messageText);
     
@@ -2724,14 +2731,15 @@ function createOnScreenPopup(message, options = {}) {
     if (options.buttonText) {
         const actionButton = document.createElement('button');
         actionButton.textContent = options.buttonText;
-        actionButton.style.marginLeft = '10px';
-        actionButton.style.padding = '8px 16px';
-        actionButton.style.borderRadius = '18px';
+        actionButton.style.padding = '10px 18px';
+        actionButton.style.borderRadius = '20px';
         actionButton.style.border = '1px solid var(--glass-border)';
 	    actionButton.style.boxShadow = 'var(--sun-shadow)';
         actionButton.style.backgroundColor = 'var(--text-color)';
         actionButton.style.color = 'var(--background-color)';
         actionButton.style.cursor = 'pointer';
+		actionButton.style.fontFamily = '"Inter", sans-serif';
+		actionButton.style.fontWeight = '500';
         
         // Handle local action or Gurapp-specific action
         if (options.buttonAction && typeof options.buttonAction === 'function') {
@@ -2841,7 +2849,7 @@ function addToNotificationShade(message, options = {}) {
     notification.style.display = 'flex';
     notification.style.flexDirection = 'column';
     notification.style.justifyContent = 'flex-start';
-    notification.style.gap = '10px';
+    notification.style.gap = '16px';
     notification.style.border = '1px solid var(--glass-border)';
     notification.style.pointerEvents = 'auto';
 
@@ -2878,7 +2886,7 @@ function addToNotificationShade(message, options = {}) {
 	    const contentContainer = document.createElement('div');
 	    contentContainer.style.display = 'flex';
 	    contentContainer.style.alignItems = 'center';
-	    contentContainer.style.gap = '10px';
+	    contentContainer.style.gap = '16px';
 	    contentContainer.style.width = '100%';
 	    
 	    let iconType = 'notifications';
@@ -2894,7 +2902,12 @@ function addToNotificationShade(message, options = {}) {
 	    const icon = document.createElement('span');
 	    icon.className = 'material-symbols-rounded';
 	    icon.textContent = iconTypeForShade;
-	    icon.style.fontSize = '24px';
+		icon.style.background = "var(--secondary-text-color)";
+		icon.style.padding = "8px";
+		icon.style.fontSize = "20px";
+		icon.style.borderRadius = "35%";
+		icon.style.color = "var(--background-color)";
+		icon.style.cornerShape = "superellipse(1.25)";
 	    contentContainer.appendChild(icon);
 	    
 	    // Create message text
