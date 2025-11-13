@@ -7711,7 +7711,7 @@ function setupDrawerInteractions() {
         const deltaX = currentX - startX;
         const verticalDelta = startY - yPosition; // Use a different name to avoid conflict
 
-        const HORIZONTAL_SWIPE_DEADZONE = 40; // Min horizontal movement to trigger switcher
+        const HORIZONTAL_SWIPE_DEADZONE = 20; // Min horizontal movement to trigger switcher
         const VERTICAL_SWIPE_LIMIT = 50;      // Max vertical movement for a horizontal gesture
 
         // If switcher is visible and user swipes up past the limit, discard it.
@@ -7766,7 +7766,7 @@ function setupDrawerInteractions() {
 	        openEmbed.style.transition = 'none !important'; // No transitions during drag for instant response
 	
 	        // Start effect after a small deadzone
-	        if (deltaY > 10) {
+	        if (deltaY > 50) {
 		    cancelLongPress();
 		    persistentClock.style.opacity = '0';
 			
