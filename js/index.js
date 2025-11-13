@@ -2560,7 +2560,8 @@ function showPopup(message) {
         fullscreenBtn.style.alignItems = 'center'; // This ensures vertical centering
         fullscreenBtn.style.justifyContent = 'center';
         fullscreenBtn.style.gap = '5px'; // Gap between text and icon
-        fullscreenBtn.style.fontFamily = 'Inter, sans-serif';
+        fullscreenBtn.style.fontFamily = '"Inter", sans-serif';
+		fullscreenBtn.style.fontWeight = '500';
         fullscreenBtn.style.height = '36px'; // Setting a fixed height helps with centering
         
         // Create the icon element
@@ -2948,7 +2949,8 @@ function addToNotificationShade(message, options = {}) {
 	        actionButton.style.backgroundColor = 'var(--text-color)';
 	        actionButton.style.color = 'var(--background-color)';
 	        actionButton.style.cursor = 'pointer';
-	        actionButton.style.fontFamily = 'Inter, sans-serif';
+	        actionButton.style.fontFamily = '"Inter", sans-serif';
+			actionButton.style.fontWeight = '500';
 	        actionButton.style.fontSize = '14px';
 	        actionButton.style.transition = 'background-color 0.2s';
 	        
