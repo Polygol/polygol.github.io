@@ -538,11 +538,16 @@ function _displayDialog(options) {
         buttons.appendChild(okBtn);
     }
 
+	blurOverlay.style.pointerEvents = 'none'; // Temporarily disable clicks
     blurOverlay.style.display = 'block';
     dialog.style.display = 'block';
     setTimeout(() => {
         blurOverlay.classList.add('show');
         dialog.classList.add('show');
+		// Re-enable clicks after the animation starts
+        setTimeout(() => {
+            blurOverlay.style.pointerEvents = 'auto';
+        }, 150);
     }, 10);
 }
 
