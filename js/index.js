@@ -2953,6 +2953,7 @@ function addToNotificationShade(message, options = {}) {
 			actionButton.style.fontWeight = '500';
 	        actionButton.style.fontSize = '14px';
 	        actionButton.style.transition = 'background-color 0.2s';
+			actionButton.style.boxShadow = 'var(--sun-shadow)';
 	        
 	        // Handle local action or Gurapp-specific action
 	        if (options.buttonAction && typeof options.buttonAction === 'function') { // For parent-local actions
