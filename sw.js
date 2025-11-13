@@ -1,4 +1,4 @@
-const CACHE_NAME = 'polygol-cache-v4.62';
+const CACHE_NAME = 'polygol-cache-v4.63';
 
 const ASSETS_TO_CACHE = [
   '/assets/img/regular-expressive-onload.webp',
