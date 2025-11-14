@@ -1,3 +1,7 @@
+// https://github.com/Polygol/polygol.github.io
+// Polygol
+// index.js
+
 // DB Schemas for backup functionality
 const DB_SCHEMAS = {
     'WallpaperDB': { version: 1, stores: ['wallpapers'] },
@@ -613,8 +617,6 @@ function handleViewportResize() {
     adjustWidgetsForViewportResize(); // First, fix the data
     renderWidgets();                  // Then, re-render with the corrected data
 }
-
-// index(13).js
 
 function saveWidgets() {
     // This function now saves the current widget layout.
@@ -6125,8 +6127,6 @@ function applyWallpaperEffects() {
     const filterString = `blur(${effects.blur}px) brightness(${effects.brightness}%) contrast(${effects.contrast}%)`;
     document.body.style.setProperty('--wallpaper-filter', filterString);
 }
-
-// index(13).js
 
 function setupFontSelection() {
     const clockElement = document.getElementById('clock');
