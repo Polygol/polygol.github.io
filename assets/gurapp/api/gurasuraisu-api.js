@@ -11,7 +11,7 @@ let _mediaControlActions = {};
 let _actionRequestHandlers = {};
 const _dialogCallbacks = {}; // For handling dialog responses
 let _dialogRequestId = 0;   // For tracking dialog requests
-const _myActiveActivities = new Set(); // NEW: Tracks this app's active activities
+const _myActiveActivities = new Set(); // Tracks this app's active activities
 
 // Gurasuraisu Font and Cursor Injection
 // This block runs as soon as the script is loaded by the Gurapp.
@@ -373,6 +373,55 @@ const _myActiveActivities = new Set(); // NEW: Tracks this app's active activiti
 
     style.textContent = css;
     document.head.appendChild(style);
+
+    // Inject SVG Filter for glass effects, overriding if one already exists
+    document.addEventListener('DOMContentLoaded', () => {
+        const existingFilterSvg = document.querySelector('svg > filter#edge-refraction-only');
+        if (existingFilterSvg) {
+            const parentSvg = existingFilterSvg.closest('svg');
+            if (parentSvg) parentSvg.remove();
+        }
+
+        const svgFilterHtml = `
+            <svg style="display: none">
+                <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
+                    <!-- Part 1: Generate the edge turbulence pattern -->
+                    <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="turbulence"></feTurbulence>
+                    <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"></feMorphology>
+                    <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"></feComposite>
+                    <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"></feComposite>
+            
+                    <!-- Part 2: Create the two displacement passes -->
+                    <feDisplacementMap in="SourceGraphic" in2="edge_turbulence" scale="15" xChannelSelector="R" yChannelSelector="G" result="disp_positive"></feDisplacementMap>
+                    <feDisplacementMap in="SourceGraphic" in2="edge_turbulence" scale="-15" xChannelSelector="R" yChannelSelector="G" result="disp_negative"></feDisplacementMap>
+            
+                    <!-- Part 3: Create masks to isolate the correct halves of each pass -->
+                    <!-- Mask for the Top-Left Half -->
+                    <feFlood flood-color="white" width="50%" height="50%" x="0" y="0" result="topLeftRect"></feFlood>
+                    <!-- Mask for the Bottom-Right Half -->
+                    <feFlood flood-color="white" width="50%" height="50%" x="50%" y="50%" result="bottomRightRect"></feFlood>
+            
+                    <!-- Part 4: Apply the masks -->
+                    <!-- Isolate the correctly refracted top-left from the positive pass -->
+                    <feComposite in="disp_positive" in2="topLeftRect" operator="in" result="topLeft_part"></feComposite>
+                    <!-- Isolate the correctly refracted bottom-right from the negative pass -->
+                    <feComposite in="disp_negative" in2="bottomRightRect" operator="in" result="bottomRight_part"></feComposite>
+            
+                    <!-- 
+                       Part 5: Merge the perfectly isolated parts.
+                       Because there is no overlap, 'lighten' works perfectly, but you could also use feMerge.
+                    -->
+                    <feBlend in="topLeft_part" in2="bottomRight_part" mode="lighten" result="blended_image"></feBlend>
+                    
+                    <!-- Part 6: Adjust final opacity -->
+                    <feComponentTransfer in="blended_image">
+                        <feFuncA type="linear" slope="0.9"></feFuncA>
+                    </feComponentTransfer>
+                </filter>
+            </svg>
+        `;
+        document.body.insertAdjacentHTML('afterbegin', svgFilterHtml);
+    });
 })();
 
 // Native JS solutions for when the app is running outside of Polygol
