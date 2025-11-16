@@ -384,7 +384,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
 
         const svgFilterHtml = `
             <svg style="display: none">
-                <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
+                <filter id="edge-refraction-only" color-interpolation-filters="sRGB">
                     <!-- Part 1: Generate the edge turbulence pattern -->
                     <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="turbulence"></feTurbulence>
                     <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"></feMorphology>
