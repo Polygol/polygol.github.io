@@ -2108,7 +2108,10 @@ input[type="checkbox"]:checked::before {
 	    display: none !important;
 	}
 	body.blackout-active {
-	    background-color: #000 !important;
+	    background-color: #000 !important; /* Pure black for dark mode */
+	}
+	body.blackout-active.light-theme {
+	    background-color: #fff !important; /* Pure white for light mode */
 	}
 
 	/* Style 1: Dim Wallpaper, Show Content */
