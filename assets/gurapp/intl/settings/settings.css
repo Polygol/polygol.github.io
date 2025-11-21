@@ -279,44 +279,7 @@
 }
 
 .toggle-switch {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 50px;
-    height: 30px;
     background-color: var(--transparent-color);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--sun-shadow);
-    border-radius: 15px;
-    position: relative;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.toggle-switch::before {
-    content: '';
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    background-color: var(--secondary-text-color);
-    box-shadow: var(--sun-shadow);
-    outline: 1px solid var(--glass-border);
-    border-radius: 50%;
-    top: 5px;
-    left: 6px;
-    transition: all 0.3s cubic-bezier(.3,1.2,.64,1);
-}
-
-.toggle-switch:checked {
-    background-color: var(--secondary-text-color);
-}
-
-.toggle-switch:checked::before {
-    background-color: var(--background-color);
-    transform: translateX(20px);
-    width: 22px;
-    height: 22px;
-    top: 3px;
-    left: 2px;
 }
 
 /* --- Styles for Sliders, Selects, and Modals --- */
