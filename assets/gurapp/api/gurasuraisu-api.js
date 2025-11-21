@@ -189,6 +189,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --modal-transparent: var(--modal-transparent-dark);
             --search-background: var(--search-background-dark);
             --overlay-color: var(--dark-overlay);
+            --overlay-color-op: var(--light-overlay);
             --transparent-color: var(--dark-transparent);
             --glass-border: var(--glass-border-dark);
         }
@@ -204,8 +205,10 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --search-background: var(--search-background-light);
             --search-background-op: var(--search-background-dark);
             --overlay-color: var(--light-overlay);
+            --overlay-color-op: var(--dark-overlay);
             --transparent-color: var(--light-transparent);
             --glass-border: var(--glass-border-light);
+        	--polygol-cursor-visible: var(--polygol-cursor-light);
         }
         
         /* For dark theme (default) with high contrast */
@@ -217,6 +220,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --modal-transparent: var(--modal-transparent-dark-highcontrast);
             --search-background: var(--search-background-dark-highcontrast);
             --overlay-color: var(--dark-overlay-highcontrast);
+            --overlay-color-op: var(--light-overlay-highcontrast);
             --transparent-color: var(--dark-transparent-highcontrast);
             --glass-border: var(--secondary-text-color-dark-highcontrast);
         }
@@ -230,6 +234,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --modal-transparent: var(--modal-transparent-light-highcontrast);
             --search-background: var(--search-background-light-highcontrast);
             --overlay-color: var(--light-overlay-highcontrast);
+            --overlay-color-op: var(--dark-overlay-highcontrast);
             --transparent-color: var(--light-transparent-highcontrast);
             --glass-border: var(--secondary-text-color-light-highcontrast);
         }
