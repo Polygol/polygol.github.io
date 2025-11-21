@@ -1237,127 +1237,143 @@ function lerpColor(color1, color2, factor) {
 
 /**
  * Calculates a box-shadow string based on the sun's position and sets it as a CSS variable.
+ * Uses timezone data to estimate sun position instead of geolocation.
  */
 function updateSunEffect() {
-    // Check if geolocation is available to get coordinates for SunCalc
-    if (!navigator.geolocation) {
-        console.warn("Sun effect disabled: Geolocation not available.");
-        return;
+    const now = new Date();
+    
+    // Estimate Longitude from Timezone Offset (15 degrees per hour)
+    // getTimezoneOffset returns positive minutes for zones behind UTC (West)
+    // Longitude is negative for West, so we multiply by -15/60 (-0.25)
+    const longitude = (now.getTimezoneOffset() / 60) * -15;
+
+    // Estimate Latitude from Timezone Region
+    let latitude = 40; // Default to mid-northern latitudes (e.g., US/Europe)
+    try {
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (timeZone) {
+            if (timeZone.startsWith('Australia')) latitude = -25;
+            else if (timeZone.startsWith('Africa')) latitude = 0;
+            else if (timeZone.startsWith('Asia')) latitude = 35;
+            else if (timeZone.startsWith('Europe')) latitude = 50;
+            else if (timeZone.startsWith('America')) {
+                latitude = 40;
+                // Basic check for major South American zones to flip latitude
+                if (timeZone.includes('Sao_Paulo') || timeZone.includes('Argentina') || timeZone.includes('Santiago') || timeZone.includes('Lima')) {
+                    latitude = -20;
+                }
+            }
+            else if (timeZone.startsWith('Pacific')) latitude = 0;
+            else if (timeZone.startsWith('Atlantic')) latitude = 30;
+            else if (timeZone.startsWith('Indian')) latitude = -10;
+            else if (timeZone.startsWith('Antarctica')) latitude = -75;
+        }
+    } catch (e) {
+        console.warn("Could not determine approximate latitude from timezone, using default.");
     }
 
-    navigator.geolocation.getCurrentPosition(position => {
-        const { latitude, longitude } = position.coords;
-        const now = new Date();
-        const sunPosition = SunCalc.getPosition(now, latitude, longitude);
+    const sunPosition = SunCalc.getPosition(now, latitude, longitude);
 
-        // Check for current theme to adjust intensity
-        const isLightMode = document.body.classList.contains('light-theme');
+    // Check for current theme to adjust intensity
+    const isLightMode = document.body.classList.contains('light-theme');
 
-        // Define constants for the sharp highlight effect with much more saturated colors
-        const SUNRISE_COLOR = [255, 170, 90];     // Highly saturated orange
-        const MIDDAY_COLOR = [255, 255, 255];     // Pure white
-        const MOONLIGHT_COLOR = [160, 195, 255];  // Highly saturated blue
-        const SHADOW_DISTANCE = 1.0;             // A tight, 1px distance for the highlight
-        const BLUR_RADIUS = 1.0;                 // A minimal blur to anti-alias the 1px line
-        const SPREAD_RADIUS = 0.0;               // No spread, for a crisp line
-        const STRONG_BLUR_RADIUS = 4.0;          // Increased blur for a bigger glow
-        const STRONG_SPREAD_RADIUS = 1.0;        // Increased spread for thickness
-        const MAX_SUN_ALPHA = isLightMode ? 0.95 : 0.7;   // Drastically increased opacity
-        const MAX_MOON_ALPHA = isLightMode ? 0.75 : 0.5;  // Drastically increased moonlight opacity
+	// Define constants for the sharp highlight effect with much more saturated colors
+	const SUNRISE_COLOR = [255, 170, 90];     // Highly saturated orange
+	const MIDDAY_COLOR = [255, 255, 255];     // Pure white
+	const MOONLIGHT_COLOR = [160, 195, 255];  // Highly saturated blue
+	const SHADOW_DISTANCE = 1.0;             // A tight, 1px distance for the highlight
+	const BLUR_RADIUS = 1.0;                 // A minimal blur to anti-alias the 1px line
+	const SPREAD_RADIUS = 0.0;               // No spread, for a crisp line
+	const STRONG_BLUR_RADIUS = 4.0;          // Increased blur for a bigger glow
+	const STRONG_SPREAD_RADIUS = 1.0;        // Increased spread for thickness
+	const MAX_SUN_ALPHA = isLightMode ? 0.95 : 0.7;   // Drastically increased opacity
+	const MAX_MOON_ALPHA = isLightMode ? 0.75 : 0.5;  // Drastically increased moonlight opacity
 
-        if (sunPosition.altitude > 0) {
-            // --- SUNLIGHT LOGIC ---
-            const altitudeFactor = Math.sin(sunPosition.altitude); 
-            const finalAlpha = MAX_SUN_ALPHA * Math.max(0.5, altitudeFactor); 
-            const finalColor = lerpColor(SUNRISE_COLOR, MIDDAY_COLOR, altitudeFactor);
-            const [r, g, b] = finalColor;
+	if (sunPosition.altitude > 0) {
+		// --- SUNLIGHT LOGIC ---
+		const altitudeFactor = Math.sin(sunPosition.altitude); 
+		const finalAlpha = MAX_SUN_ALPHA * Math.max(0.5, altitudeFactor); 
+		const finalColor = lerpColor(SUNRISE_COLOR, MIDDAY_COLOR, altitudeFactor);
+		const [r, g, b] = finalColor;
 
-            const offsetX = Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
-            const offsetY = Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
+		const offsetX = Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
+		const offsetY = Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
 
-            // A: Regular Shadow
-            // 1. Primary soft glow from the light source
-            const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
-            // 2. Sharp specular highlight on the edge facing the light
-            const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
-            // Reflected rim on opposite side
-            const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
-            // 3. "Caustic Glow" on the opposite edge to simulate thickness and internal reflection
-            const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.25 : 0.05})`;
+		// A: Regular Shadow
+		// 1. Primary soft glow from the light source
+		const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
+		// 2. Sharp specular highlight on the edge facing the light
+		const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
+		// Reflected rim on opposite side
+		const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
+		// 3. "Caustic Glow" on the opposite edge to simulate thickness and internal reflection
+		const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.25 : 0.05})`;
 
-            currentSunShadow = `${causticGlow}, ${specularHighlight}, ${reflectedSpecular}, ${softGlow}`;
+		currentSunShadow = `${causticGlow}, ${specularHighlight}, ${reflectedSpecular}, ${softGlow}`;
+		
+		// B: Strong Shadow (Same geometry, higher opacity)
+		const strongSoftGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${(Math.min(1, finalAlpha * 1.5)).toFixed(2)})`;
+		const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.95 : 0.7})`;
+		const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.95 : 0.7})`;
+		const strongCaustic = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.4 : 0.15})`;
+		
+		currentSunShadowStrong = `${strongCaustic}, ${strongSpecular}, ${strongReflectedSpecular}, ${strongSoftGlow}`;
+
+	} else {
+		// --- NIGHT LOGIC (MOONLIGHT OR STARLIGHT) ---
+		const moonPosition = SunCalc.getMoonPosition(now, latitude, longitude);
+
+		// Default to starlight
+		const STARLIGHT_COLOR = [200, 210, 230];
+		const STARLIGHT_ALPHA = isLightMode ? 0.20 : 0.15;
+		const [r_star, g_star, b_star] = STARLIGHT_COLOR;
+
+		// A: Regular Starlight
+		const starlightGlow = `inset 0px 1px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
+		const starlightSpecular = `inset 0px 1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.3 : 0.15})`;
+		const starlightReflected = `inset 0px -1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.3 : 0.15})`;
+		const starlightCaustic = `inset 0px -1px 4px 0px rgba(${r_star}, ${g_star}, ${b_star}, ${isLightMode ? 0.15 : 0.05})`;
+		currentSunShadow = `${starlightCaustic}, ${starlightSpecular}, ${starlightReflected}, ${starlightGlow}`;
+
+		// B: Strong Starlight (Same geometry, higher opacity)
+		const strongStarlightGlow = `inset 0px 1px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${(STARLIGHT_ALPHA * 1.5).toFixed(2)})`;
+		const strongStarlightSpecular = `inset 0px 1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.6 : 0.3})`;
+		const strongStarlightReflected = `inset 0px -1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.6 : 0.3})`;
+		const strongStarlightCaustic = `inset 0px -1px 4px 0px rgba(${r_star}, ${g_star}, ${b_star}, ${isLightMode ? 0.3 : 0.1})`;
+		currentSunShadowStrong = `${strongStarlightCaustic}, ${strongStarlightSpecular}, ${strongStarlightReflected}, ${strongStarlightGlow}`;
+		
+		// If the moon is up, override starlight with brighter, directional moonlight.
+		if (moonPosition.altitude > 0) {
+			const moonIllumination = SunCalc.getMoonIllumination(now);
+			const moonAltitudeFactor = Math.sin(moonPosition.altitude);
+			const finalAlpha = MAX_MOON_ALPHA * moonAltitudeFactor * moonIllumination.fraction;
+			const [r, g, b] = MOONLIGHT_COLOR;
+
+			const offsetX = Math.sin(moonPosition.azimuth) * SHADOW_DISTANCE;
+			const offsetY = Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
 			
-            // B: Strong Shadow (Same geometry, higher opacity)
-            const strongSoftGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${(Math.min(1, finalAlpha * 1.5)).toFixed(2)})`;
-            const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.95 : 0.7})`;
-            const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.95 : 0.7})`;
-            const strongCaustic = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.4 : 0.15})`;
-            
-            currentSunShadowStrong = `${strongCaustic}, ${strongSpecular}, ${strongReflectedSpecular}, ${strongSoftGlow}`;
+			const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
+			const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.4 : 0.2})`;
+			const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.4 : 0.2})`;
+			const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.2 : 0.1})`;
 
-        } else {
-            // --- NIGHT LOGIC (MOONLIGHT OR STARLIGHT) ---
-            const moonPosition = SunCalc.getMoonPosition(now, latitude, longitude);
+			// A: Regular Moonlight
+			currentSunShadow = `${causticGlow}, ${specularHighlight}, ${reflectedSpecular}, ${softGlow}`;
 
-            // Default to starlight
-            const STARLIGHT_COLOR = [200, 210, 230];
-            const STARLIGHT_ALPHA = isLightMode ? 0.20 : 0.15;
-            const [r_star, g_star, b_star] = STARLIGHT_COLOR;
-
-			// A: Regular Starlight
-            const starlightGlow = `inset 0px 1px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
-            const starlightSpecular = `inset 0px 1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.3 : 0.15})`;
-            const starlightReflected = `inset 0px -1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.3 : 0.15})`;
-            const starlightCaustic = `inset 0px -1px 4px 0px rgba(${r_star}, ${g_star}, ${b_star}, ${isLightMode ? 0.15 : 0.05})`;
-            currentSunShadow = `${starlightCaustic}, ${starlightSpecular}, ${starlightReflected}, ${starlightGlow}`;
-
-		    // B: Strong Starlight (Same geometry, higher opacity)
-            const strongStarlightGlow = `inset 0px 1px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${(STARLIGHT_ALPHA * 1.5).toFixed(2)})`;
-            const strongStarlightSpecular = `inset 0px 1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.6 : 0.3})`;
-            const strongStarlightReflected = `inset 0px -1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.6 : 0.3})`;
-            const strongStarlightCaustic = `inset 0px -1px 4px 0px rgba(${r_star}, ${g_star}, ${b_star}, ${isLightMode ? 0.3 : 0.1})`;
-            currentSunShadowStrong = `${strongStarlightCaustic}, ${strongStarlightSpecular}, ${strongStarlightReflected}, ${strongStarlightGlow}`;
-            
-            // If the moon is up, override starlight with brighter, directional moonlight.
-            if (moonPosition.altitude > 0) {
-                const moonIllumination = SunCalc.getMoonIllumination(now);
-                const moonAltitudeFactor = Math.sin(moonPosition.altitude);
-                const finalAlpha = MAX_MOON_ALPHA * moonAltitudeFactor * moonIllumination.fraction;
-                const [r, g, b] = MOONLIGHT_COLOR;
-
-                const offsetX = Math.sin(moonPosition.azimuth) * SHADOW_DISTANCE;
-                const offsetY = Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
-                
-                const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
-                const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.4 : 0.2})`;
-                const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.4 : 0.2})`;
-                const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.2 : 0.1})`;
-
-				// A: Regular Moonlight
-                currentSunShadow = `${causticGlow}, ${specularHighlight}, ${reflectedSpecular}, ${softGlow}`;
-
-			    // B: Strong Moonlight (Same geometry, higher opacity)
-                const strongSoftGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${(Math.min(1, finalAlpha * 1.5)).toFixed(2)})`;
-                const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
-                const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
-                const strongCaustic = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.4 : 0.2})`;
-                                
-				currentSunShadowStrong = `${strongCaustic}, ${strongSpecular}, ${strongReflectedSpecular}, ${strongSoftGlow}`;
-            }
-        }
-        
-        // Apply to the main page by setting the CSS variables and broadcast to iframes
-        document.body.style.setProperty('--sun-shadow', currentSunShadow);
-        document.body.style.setProperty('--sun-shadow-strong', currentSunShadowStrong);
-        broadcastSunUpdate();
-
-    }, error => {
-        console.warn("Sun effect disabled: Could not get location.", error);
-        // Ensure the variables are cleared if location fails
-        document.body.style.setProperty('--sun-shadow', '0 0 0 0 transparent');
-        document.body.style.setProperty('--sun-shadow-strong', '0 0 0 0 transparent');
-        broadcastSunUpdate();
-    });
+			// B: Strong Moonlight (Same geometry, higher opacity)
+			const strongSoftGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${(Math.min(1, finalAlpha * 1.5)).toFixed(2)})`;
+			const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
+			const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
+			const strongCaustic = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.4 : 0.2})`;
+							
+			currentSunShadowStrong = `${strongCaustic}, ${strongSpecular}, ${strongReflectedSpecular}, ${strongSoftGlow}`;
+		}
+	}
+	
+	// Apply to the main page by setting the CSS variables and broadcast to iframes
+	document.body.style.setProperty('--sun-shadow', currentSunShadow);
+	document.body.style.setProperty('--sun-shadow-strong', currentSunShadowStrong);
+	broadcastSunUpdate();
 }
 
 /**
