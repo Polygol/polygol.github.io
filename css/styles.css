@@ -1791,11 +1791,12 @@ input[type="checkbox"]::before {
     background-color: var(--secondary-text-color);
     border-radius: 50%;
     top: 50%;
-    left: 6px;
+    left: 7.5px;
     transform: translateY(-50%);
     border: 1px solid var(--glass-border);
     box-sizing: border-box;
     box-shadow: var(--sun-shadow);
+	transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1);
 }
 
 input[type="checkbox"]:checked {
