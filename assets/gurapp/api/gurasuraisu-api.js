@@ -333,6 +333,50 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
           border-radius: 999px;
         }
 
+        input[type="checkbox"] {
+            appearance: none;
+            width: 56px;
+            height: 32px;
+            background-color: var(--search-background);
+            border-radius: 16px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            box-shadow: var(--sun-shadow);
+        }
+        
+        input[type="checkbox"]::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background-color: var(--secondary-text-color);
+            border-radius: 50%;
+            top: 50%;
+            left: 6px;
+            transform: translateY(-50%);
+            border: 1px solid var(--glass-border);
+            box-sizing: border-box;
+            box-shadow: var(--sun-shadow);
+        
+        
+        input[type="checkbox"]:checked {
+            background-color: var(--secondary-text-color);
+        }
+        
+        input[type="checkbox"]:checked::before {
+            background-color: var(--modal-background);
+            transform: translateY(-50%);
+            width: 46px;
+            height: 40px;
+            top: 50%;
+            left: 13px;
+            backdrop-filter: saturate(2) blur(1px);
+            border-radius: 36px;
+        }
+
         select option {
             background-color: var(--background-color);
             color: var(--text-color);
