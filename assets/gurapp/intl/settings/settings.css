@@ -279,7 +279,11 @@
 }
 
 .toggle-switch {
-    background-color: var(--transparent-color);
+    background-color: var(--transparent-color) !important;
+}
+
+.toggle-switch:checked {
+    background-color: var(--secondary-text-color);
 }
 
 /* --- Styles for Sliders, Selects, and Modals --- */
