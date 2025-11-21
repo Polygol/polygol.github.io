@@ -374,7 +374,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             height: 40px;
             top: 50%;
             left: 14px;
-            backdrop-filter: saturate(2) blur(1px);
+            backdrop-filter: saturate(2) blur(2.5px);
             border-radius: 36px;
         }
 
