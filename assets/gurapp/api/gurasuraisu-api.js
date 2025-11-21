@@ -188,6 +188,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --modal-background: var(--modal-background-dark);
             --modal-transparent: var(--modal-transparent-dark);
             --search-background: var(--search-background-dark);
+            --search-background-op: var(--search-background-light);
             --overlay-color: var(--dark-overlay);
             --overlay-color-op: var(--light-overlay);
             --transparent-color: var(--dark-transparent);
@@ -219,6 +220,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --modal-background: var(--modal-background-dark-highcontrast);
             --modal-transparent: var(--modal-transparent-dark-highcontrast);
             --search-background: var(--search-background-dark-highcontrast);
+            --search-background-op: var(--search-background-light-highcontrast);
             --overlay-color: var(--dark-overlay-highcontrast);
             --overlay-color-op: var(--light-overlay-highcontrast);
             --transparent-color: var(--dark-transparent-highcontrast);
@@ -233,6 +235,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --modal-background: var(--modal-background-light-highcontrast);
             --modal-transparent: var(--modal-transparent-light-highcontrast);
             --search-background: var(--search-background-light-highcontrast);
+            --search-background-op: var(--search-background-dark-highcontrast);
             --overlay-color: var(--light-overlay-highcontrast);
             --overlay-color-op: var(--dark-overlay-highcontrast);
             --transparent-color: var(--light-transparent-highcontrast);
