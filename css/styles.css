@@ -1771,15 +1771,16 @@ body.one-button-nav-active .dock.show {
 
 input[type="checkbox"] {
     appearance: none;
-    width: 50px;
+    width: 56px;
     height: 32px;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--search-background);
     border-radius: 16px;
     position: relative;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1);
     border: 1px solid var(--glass-border);
     cursor: pointer;
+    box-shadow: var(--sun-shadow);
 }
 
 input[type="checkbox"]::before {
@@ -1792,8 +1793,9 @@ input[type="checkbox"]::before {
     top: 50%;
     left: 6px;
     transform: translateY(-50%);
-    transition: transform 0.3s, background-color 0.3s, width 0.3s, height 0.3s, left 0.3s, right 0.3s;
     border: 1px solid var(--glass-border);
+    box-sizing: border-box;
+    box-shadow: var(--sun-shadow);
 }
 
 input[type="checkbox"]:checked {
@@ -1801,11 +1803,14 @@ input[type="checkbox"]:checked {
 }
 
 input[type="checkbox"]:checked::before {
-    width: 22px;
-    height: 22px;
-    background-color: var(--background-color);
-    left: 21px;
+    background-color: var(--modal-background);
     transform: translateY(-50%);
+    width: 46px;
+    height: 40px;
+    top: 50%;
+    left: 13px;
+    backdrop-filter: saturate(2) blur(1px);
+    border-radius: 36px;
 }
 
 #uploadButton, #versionButton, #resetButton {
