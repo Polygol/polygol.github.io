@@ -278,7 +278,7 @@
     font-weight: 500;
 }
 
-.toggle-switch {
+.toggle-switch:not(:checked) {
     background-color: var(--transparent-color) !important;
 }
 
