@@ -1810,7 +1810,7 @@ input[type="checkbox"]:checked::before {
     height: 40px;
     top: 50%;
     left: 14px;
-    backdrop-filter: saturate(2) blur(1px);
+    backdrop-filter: saturate(2) blur(2.5px);
     border-radius: 36px;
 }
 
