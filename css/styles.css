@@ -184,7 +184,7 @@
     --modal-transparent: var(--modal-transparent-dark);
     --search-background: var(--search-background-dark);
     --overlay-color: var(--dark-overlay);
-    --overlay-color-tr: var(--light-overlay);
+    --overlay-color-op: var(--light-overlay);
     --transparent-color: var(--dark-transparent);
     --glass-border: var(--glass-border-dark);
 }
