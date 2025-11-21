@@ -1280,16 +1280,19 @@ function updateSunEffect() {
             const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
             // 2. Sharp specular highlight on the edge facing the light
             const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px 0px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
+            // Reflected rim on opposite side
+            const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px 0px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
             // 3. "Caustic Glow" on the opposite edge to simulate thickness and internal reflection
             const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.25 : 0.05})`;
 
-            currentSunShadow = `${causticGlow}, ${specularHighlight}, ${softGlow}`;
+            currentSunShadow = `${causticGlow}, ${specularHighlight}, ${reflectedSpecular}, ${softGlow}`;
 
             // B: Strong Shadow
             const strongSoftGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${STRONG_BLUR_RADIUS}px ${STRONG_SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
             const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 2px 1px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
+            const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 2px 1px rgba(255, 255, 255, ${isLightMode ? 0.7 : 0.4})`;
             const strongCaustic = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 8px 1px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.25 : 0.05})`;
-            currentSunShadowStrong = `${strongCaustic}, ${strongSpecular}, ${strongSoftGlow}`;
+            currentSunShadowStrong = `${strongCaustic}, ${strongSpecular}, ${strongReflectedSpecular}, ${strongSoftGlow}`;
 
         } else {
             // --- NIGHT LOGIC (MOONLIGHT OR STARLIGHT) ---
@@ -1303,14 +1306,16 @@ function updateSunEffect() {
 			// A: Regular Starlight
             const starlightGlow = `inset 0px 1px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
             const starlightSpecular = `inset 0px 1px 1px 0px rgba(255, 255, 255, ${isLightMode ? 0.3 : 0.15})`;
+            const starlightReflected = `inset 0px -1px 1px 0px rgba(255, 255, 255, ${isLightMode ? 0.3 : 0.15})`;
             const starlightCaustic = `inset 0px -1px 4px 0px rgba(${r_star}, ${g_star}, ${b_star}, ${isLightMode ? 0.15 : 0.05})`;
-            currentSunShadow = `${starlightCaustic}, ${starlightSpecular}, ${starlightGlow}`;
+            currentSunShadow = `${starlightCaustic}, ${starlightSpecular}, ${starlightReflected}, ${starlightGlow}`;
 
 		    // B: Strong Starlight
             const strongStarlightGlow = `inset 0px 1px ${STRONG_BLUR_RADIUS}px ${STRONG_SPREAD_RADIUS}px rgba(${r_star}, ${g_star}, ${b_star}, ${STARLIGHT_ALPHA.toFixed(2)})`;
             const strongStarlightSpecular = `inset 0px 1px 2px 1px rgba(255, 255, 255, ${isLightMode ? 0.3 : 0.15})`;
+            const strongStarlightReflected = `inset 0px -1px 2px 1px rgba(255, 255, 255, ${isLightMode ? 0.3 : 0.15})`;
             const strongStarlightCaustic = `inset 0px -1px 6px 1px rgba(${r_star}, ${g_star}, ${b_star}, ${isLightMode ? 0.15 : 0.05})`;
-            currentSunShadowStrong = `${strongStarlightCaustic}, ${strongStarlightSpecular}, ${strongStarlightGlow}`;
+            currentSunShadowStrong = `${strongStarlightCaustic}, ${strongStarlightSpecular}, ${strongStarlightReflected}, ${strongStarlightGlow}`;
             
             // If the moon is up, override starlight with brighter, directional moonlight.
             if (moonPosition.altitude > 0) {
@@ -1324,17 +1329,19 @@ function updateSunEffect() {
                 
                 const softGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${BLUR_RADIUS}px ${SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
                 const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px 0px rgba(255, 255, 255, ${isLightMode ? 0.4 : 0.2})`;
+                const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px 0px rgba(255, 255, 255, ${isLightMode ? 0.4 : 0.2})`;
                 const causticGlow = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 6px 0px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.2 : 0.1})`;
 
 				// A: Regular Moonlight
-                currentSunShadow = `${causticGlow}, ${specularHighlight}, ${softGlow}`;
+                currentSunShadow = `${causticGlow}, ${specularHighlight}, ${reflectedSpecular}, ${softGlow}`;
 
 			    // B: Strong Moonlight
                 const strongSoftGlow = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px ${STRONG_BLUR_RADIUS}px ${STRONG_SPREAD_RADIUS}px rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(2)})`;
                 const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 2px 1px rgba(255, 255, 255, ${isLightMode ? 0.4 : 0.2})`;
+                const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 2px 1px rgba(255, 255, 255, ${isLightMode ? 0.4 : 0.2})`;
                 const strongCaustic = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 8px 1px rgba(${r}, ${g}, ${b}, ${isLightMode ? 0.2 : 0.1})`;
                 
-				currentSunShadowStrong = `${strongCaustic}, ${strongSpecular}, ${strongSoftGlow}`;
+				currentSunShadowStrong = `${strongCaustic}, ${strongSpecular}, ${strongReflectedSpecular}, ${strongSoftGlow}`;
             }
         }
         
