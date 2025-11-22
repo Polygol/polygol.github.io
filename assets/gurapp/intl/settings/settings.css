@@ -423,12 +423,12 @@ input.form-input {
 
 /* Storage Visualizer */
 .storage-visualizer-container {
-    padding: 20px;
+    padding: 16px 20px;
     background-color: var(--search-background);
     border: 1px solid var(--glass-border);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
     box-shadow: var(--sun-shadow);
-    border-radius: 25px;
+    border-radius: 35px;
     corner-shape: superellipse(1.5);
 }
 
