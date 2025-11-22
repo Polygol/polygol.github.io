@@ -5,6 +5,7 @@ function initializeSettingsApp() {
     const pageTitle = document.querySelector('.page-title');
     const backBtn = document.querySelector('.back-btn');
     const tabButtons = document.querySelectorAll('.tab-btn');
+    let editMode = 'idb'; // 'idb' or 'ls'
 
     const pageTitles = {
         'main-settings': 'Settings',
@@ -19,7 +20,9 @@ function initializeSettingsApp() {
         'page-storage': 'Storage',
         'page-db-details': 'Database',
         'page-store-viewer': 'Store Data',
-        'page-record-editor': 'Edit Record'
+        'page-record-editor': 'Edit Record',
+        'page-localstorage': 'Local Storage',
+        'page-cache': 'Cache Storage',
     };
 
     function navigateTo(pageId) {
@@ -146,14 +149,42 @@ function initializeSettingsApp() {
         }, '*');
     }
 
-    function openRecordEditor(key, value) {
+    function refreshLocalStorage() {
+        window.parent.postMessage({ 
+            action: 'callGurasuraisuFunc', 
+            functionName: 'getLocalStorageAll', 
+            args: [] 
+        }, '*');
+    }
+
+    function refreshCacheStorage() {
+        window.parent.postMessage({ 
+            action: 'callGurasuraisuFunc', 
+            functionName: 'listCaches', 
+            args: [] 
+        }, '*');
+    }
+    
+    function openRecordEditor(key, value, mode = 'idb') {
+        editMode = mode; // Set current mode
         currentRecordKey = key;
         document.getElementById('record-key-display').value = key;
         
-        // Pretty print JSON
         let stringValue = '';
         try {
-            stringValue = JSON.stringify(value, null, 2);
+            // If it's an object (IDB), stringify. If it's a string (LS), keep it.
+            // LS values are always strings, but might be JSON strings.
+            if (typeof value === 'object') {
+                stringValue = JSON.stringify(value, null, 2);
+            } else {
+                // Try to prettify if it looks like JSON
+                try {
+                    const parsed = JSON.parse(value);
+                    stringValue = JSON.stringify(parsed, null, 2);
+                } catch {
+                    stringValue = value;
+                }
+            }
         } catch (e) {
             stringValue = String(value);
         }
@@ -225,6 +256,25 @@ function initializeSettingsApp() {
         if(storageBtn) {
             storageBtn.addEventListener('click', refreshStoragePage);
         }
+
+        document.getElementById('btn-open-ls').onclick = () => {
+            navigateTo('page-localstorage');
+            refreshLocalStorage();
+        };
+        
+        document.getElementById('btn-open-cache').onclick = () => {
+            navigateTo('page-cache');
+            refreshCacheStorage();
+        };
+        
+        document.getElementById('btn-clear-ls').onclick = () => {
+             window.parent.postMessage({ 
+                action: 'callGurasuraisuFunc', 
+                functionName: 'clearLocalStorage', 
+                args: [] 
+            }, '*');
+            // Parent reloads on clear, so no need to refresh UI manually
+        };
         
         // DB Actions
         document.getElementById('btn-delete-current-db').onclick = () => {
@@ -247,26 +297,52 @@ function initializeSettingsApp() {
 
         // Record Editor Actions
         document.getElementById('btn-delete-record').onclick = () => {
-            // NOTE: This requires the store to use out-of-line keys matching currentRecordKey
-            // If keyPath is used, we pass the whole object, but the API expects a key.
-            // This is a "best effort" implementation based on the existing simple API.
-            window.parent.postMessage({ 
-                action: 'callGurasuraisuFunc', 
-                functionName: 'removeIDBRecord', 
-                args: [currentDbName, currentStoreName, currentRecordKey] 
-            }, '*');
+            if (editMode === 'idb') {
+                window.parent.postMessage({ 
+                    action: 'callGurasuraisuFunc', 
+                    functionName: 'removeIDBRecord', 
+                    args: [currentDbName, currentStoreName, currentRecordKey] 
+                }, '*');
+            } else {
+                 window.parent.postMessage({ 
+                    action: 'callGurasuraisuFunc', 
+                    functionName: 'removeLocalStorageItem', 
+                    args: [currentRecordKey] 
+                }, '*');
+            }
             navigateBack();
+            setTimeout(() => {
+                if (editMode === 'ls') refreshLocalStorage();
+                else refreshStoreRecords();
+            }, 100);
         };
-
+        
         document.getElementById('btn-save-record').onclick = () => {
-            const jsonStr = document.getElementById('record-value-editor').value;
-            // Note: setIDBRecord expects (db, store, key, jsonString)
-            window.parent.postMessage({ 
-                action: 'callGurasuraisuFunc', 
-                functionName: 'setIDBRecord', 
-                args: [currentDbName, currentStoreName, currentRecordKey, jsonStr] 
-            }, '*');
-             navigateBack();
+            const val = document.getElementById('record-value-editor').value;
+            
+            if (editMode === 'idb') {
+                // Existing IDB logic
+                window.parent.postMessage({ 
+                    action: 'callGurasuraisuFunc', 
+                    functionName: 'setIDBRecord', 
+                    args: [currentDbName, currentStoreName, currentRecordKey, val] 
+                }, '*');
+            } else {
+                // LocalStorage logic
+                // Note: setLocalStorageItem expects (key, value)
+                window.parent.postMessage({ 
+                    action: 'callGurasuraisuFunc', 
+                    functionName: 'setLocalStorageItem', 
+                    args: [currentRecordKey, val] 
+                }, '*');
+            }
+            navigateBack();
+            
+            // Trigger refresh based on mode
+            setTimeout(() => {
+                if (editMode === 'ls') refreshLocalStorage();
+                else refreshStoreRecords();
+            }, 100);
         };
         
         document.querySelectorAll('[data-modal]').forEach(btn => {
@@ -287,6 +363,75 @@ function initializeSettingsApp() {
         const { type, key, value } = data;
         if ((type === 'localStorageItemValue' || type === 'settingUpdate') && key) {
             updateControl(key, value);
+        }
+
+        if (data.type === 'localStorageAllValues') {
+            const container = document.getElementById('ls-list-container');
+            container.innerHTML = '';
+            const items = data.value; // Array of {key, value}
+            
+            if (items && items.length > 0) {
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'setting-item record-item';
+                    let preview = String(item.value);
+                    if (preview.length > 100) preview = preview.substring(0, 100) + '...';
+                    
+                    div.innerHTML = `
+                        <div class="record-key">${item.key}</div>
+                        <div class="record-preview">${preview}</div>
+                    `;
+                    // Open editor in 'ls' mode
+                    div.onclick = () => openRecordEditor(item.key, item.value, 'ls');
+                    container.appendChild(div);
+                });
+            } else {
+                container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--secondary-text-color)">Storage is empty.</div>';
+            }
+        }
+
+        // Handle Cache List
+        if (data.type === 'cachesList') {
+            const container = document.getElementById('cache-list-container');
+            container.innerHTML = '';
+            const caches = data.value; // Array of strings
+            
+            if (caches && caches.length > 0) {
+                caches.forEach(name => {
+                    const div = document.createElement('div');
+                    div.className = 'setting-item nav-item';
+                    div.innerHTML = `
+                        <div class="setting-info">
+                            <span class="material-symbols-rounded">folder_zip</span>
+                            <span class="setting-label">${name}</span>
+                        </div>
+                        <button class="action-btn" style="background-color: #ff5252; color: white; border: none; padding: 4px 12px;">Delete</button>
+                    `;
+                    
+                    // Delete button handler
+                    const delBtn = div.querySelector('button');
+                    delBtn.onclick = (e) => {
+                        e.stopPropagation();
+                         window.parent.postMessage({ 
+                            action: 'callGurasuraisuFunc', 
+                            functionName: 'deleteCache', 
+                            args: [name] 
+                        }, '*');
+                        // Refresh happens via parentActionSuccess, but we can force it too
+                        setTimeout(refreshCacheStorage, 200);
+                    };
+                    
+                    container.appendChild(div);
+                });
+            } else {
+                container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--secondary-text-color)">No caches found.</div>';
+            }
+        }
+        
+        // Refresh cache page if action success
+        if ((data.type === 'parentActionSuccess' || data.type === 'parentActionInfo') && 
+            document.getElementById('page-cache').classList.contains('active')) {
+             refreshCacheStorage();
         }
 
         // New IDB Handlers
