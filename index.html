@@ -263,6 +263,14 @@
             <div class="controls-container">
                 <h2 style="margin: 0; text-shadow: 0 0 2px var(--search-background);">LANG_CONTROLS</h2>
                 <div style="display: flex; gap: 12px;">
+                    <!-- Network Status Indicator -->
+                    <div id="network-status-indicator" class="status-qc">
+                        <span class="material-symbols-rounded" style="font-size: 18px;">signal_cellular_null</span>
+                    </div>
+                    <!-- Battery Status Indicator -->
+                    <div id="battery-status-indicator" class="status-qc" style="cursor: default; pointer-events: none; display: none; align-items: center; justify-content: center;">
+                        <span class="material-symbols-rounded" style="font-size: 18px;">battery_unknown</span>
+                    </div>
                     <button id="settings-app-btn" class="btn-qc" onclick="createFullscreenEmbed('/assets/gurapp/intl/settings/index.html')" style="display: none;">
                         <span class="material-symbols-rounded" style="font-size: 18px;">settings</span>
                     </button>
@@ -272,10 +280,6 @@
                     <button id="blackout-btn" class="btn-qc">
                         <span class="material-symbols-rounded" style="font-size: 18px;">power_settings_new</span>
                     </button>
-                   <!-- Network Status Indicator -->
-                    <div id="network-status-indicator" class="status-qc">
-                        <span class="material-symbols-rounded" style="font-size: 18px;">signal_cellular_null</span>
-                    </div>
                 </div>
             </div>
             <div class="qc-sliders">
