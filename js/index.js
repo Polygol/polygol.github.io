@@ -8529,6 +8529,7 @@ function setupOneButtonNav() {
                 el.style.transition = 'opacity 0.3s ease';
                 requestAnimationFrame(() => { el.style.opacity = '1'; });
             });
+			resetIndicatorTimeout();
         } else {
             // Toggle Dock on Home Screen
             if (dock.classList.contains('show')) {
@@ -8557,6 +8558,7 @@ function setupOneButtonNav() {
                 el.classList.remove('force-hide');
                 el.style.opacity = '1';
             });
+			resetIndicatorTimeout();
         } else {
             // Open App Drawer
             if (dock.classList.contains('show')) {
@@ -8577,6 +8579,7 @@ function setupOneButtonNav() {
                 el.style.opacity = '0';
                 setTimeout(() => { el.classList.add('force-hide'); }, 300);
             });
+			resetIndicatorTimeout();
         }
     };
 
