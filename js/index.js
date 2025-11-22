@@ -7350,6 +7350,7 @@ async function createFullscreenEmbed(url) {
 
     populateDock();
     resetIndicatorTimeout();
+	updateDockVisibility();
 }
 
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
@@ -7448,6 +7449,7 @@ function closeFullscreenEmbed() {
     populateDock();
     resetAutoSleepTimer(); // Reset timer when returning to home screen
     resetIndicatorTimeout();
+	updateDockVisibility();
 }
 
 function minimizeFullscreenEmbed(animate = true) {
@@ -7496,6 +7498,7 @@ function minimizeFullscreenEmbed(animate = true) {
                 embedContainer.style.zIndex = '0';
 
 				resetIndicatorTimeout();
+				updateDockVisibility();
             }, cleanupDelay);
         }
     }
@@ -8177,6 +8180,7 @@ function setupDrawerInteractions() {
 				appDrawer.classList.add('open');
 	            initialDrawerPosition = 0;
 	            interactionBlocker.style.display = 'none';
+				updateDockVisibility();
                 // Revert background effects
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
@@ -8201,6 +8205,7 @@ function setupDrawerInteractions() {
 	            appDrawer.classList.remove('open');
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
+				updateDockVisibility();
                 // Revert background effects
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
@@ -8408,8 +8413,9 @@ function setupDrawerInteractions() {
         }
 
         // Hide the bottom dock if it's visible and the click was outside of it
-        if (dock.classList.contains('show') && !dock.contains(e.target) && !oneButtonNavHandle.contains(e.target)) {
-            dock.classList.remove('show');
+		const isPinned = localStorage.getItem('dockPinned') === 'true';
+        if (!isPinned && dock.classList.contains('show') && !dock.contains(e.target) && !oneButtonNavHandle.contains(e.target)) {
+			dock.classList.remove('show');
             dock.style.boxShadow = 'none';
             drawerPill.style.opacity = '1';
             
@@ -8703,6 +8709,18 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Apply immediately on load
         resetIndicatorTimeout();
     }
+
+    const dockPinnedSwitch = document.getElementById('dock-pinned-switch');
+    if (dockPinnedSwitch) {
+        dockPinnedSwitch.checked = localStorage.getItem('dockPinned') === 'true';
+        dockPinnedSwitch.addEventListener('change', function() {
+            localStorage.setItem('dockPinned', this.checked);
+            updateDockVisibility(); // Apply immediately
+        });
+    }
+    
+    // Initial check
+    updateDockVisibility();
 
 	const glassEffectsSwitch = document.getElementById('glass-effects-switch');
 	if (glassEffectsSwitch) {
@@ -9876,6 +9894,39 @@ function animatePlaybackRate(video, startRate, endRate, duration) {
     });
 }
 
+function updateDockVisibility() {
+    const dock = document.getElementById('dock');
+    const drawerPill = document.querySelector('.drawer-pill');
+    if (!dock) return;
+
+    const isPinned = localStorage.getItem('dockPinned') === 'true';
+    const isAppOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+    const isDrawerOpen = document.getElementById('app-drawer')?.classList.contains('open');
+
+    // If Pinned AND on Home Screen (No app, no drawer)
+    if (isPinned && !isAppOpen && !isDrawerOpen) {
+        dock.style.display = 'flex';
+        // Use a slight delay to allow display:flex to apply before adding class for transition
+        requestAnimationFrame(() => {
+            dock.classList.add('show');
+            dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
+        });
+        if (drawerPill) drawerPill.style.opacity = '0';
+    } 
+    // If Not Pinned, OR App Open, OR Drawer Open -> Revert to default behavior (Hidden/Auto)
+    else if (!isPinned && !dock.classList.contains('interacting')) {
+        // Only hide if we aren't actively interacting (hovering/touching)
+        dock.classList.remove('show');
+        if (drawerPill) drawerPill.style.opacity = '1';
+        // Allow CSS transition to finish before hiding
+        setTimeout(() => {
+            if (!dock.classList.contains('show')) {
+                dock.style.display = 'none';
+            }
+        }, 300);
+    }
+}
+
 const Gurasuraisu = {
     // This is the inverse of the API in the child. It allows the parent to call a function *in* a child app.
     callApp: (appName, action) => {
@@ -9976,7 +10027,8 @@ const controlIdMap = {
     'hideClockIndicator': 'hideClockIndicator',
     'autoSleepDuration': 'autoSleepDuration',
     'autoSleepScope': 'autoSleepScope',
-    'persistentPageIndicator': 'persistent-indicator-switch'
+    'persistentPageIndicator': 'persistent-indicator-switch',
+    'dockPinned': 'dock-pinned-switch'
 };
 
 // --- NEW: Function to broadcast a setting update to the settings app ---
