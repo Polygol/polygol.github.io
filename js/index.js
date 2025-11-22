@@ -9456,11 +9456,40 @@ async function getIDBRecord(dbName, storeName, key) {
     const db = await openIDB(dbName);
     const transaction = db.transaction(storeName, 'readonly');
     const store = transaction.objectStore(storeName);
-    const request = key ? store.get(key) : store.getAll();
 
     return new Promise((resolve, reject) => {
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(new Error(`Could not get from '${storeName}': ${request.error}`));
+        // If a specific key is requested
+        if (key !== null && key !== undefined) {
+            const request = store.get(key);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(new Error(`Could not get from '${storeName}': ${request.error}`));
+        } else {
+            // If listing all, we MUST fetch keys and values separately to reconstruct the pairs
+            // because store.getAll() does not return keys for out-of-line stores.
+            const keysReq = store.getAllKeys();
+            const valuesReq = store.getAll();
+            
+            let keys = null;
+            let values = null;
+            
+            keysReq.onsuccess = () => {
+                keys = keysReq.result;
+                if (values) finish();
+            };
+            
+            valuesReq.onsuccess = () => {
+                values = valuesReq.result;
+                if (keys) finish();
+            };
+            
+            function finish() {
+                // Combine into objects
+                const result = values.map((val, i) => ({ key: keys[i], value: val }));
+                resolve(result);
+            }
+            
+            keysReq.onerror = valuesReq.onerror = () => reject(new Error(`Failed to list records from '${storeName}'`));
+        }
         transaction.oncomplete = () => db.close();
     });
 }
