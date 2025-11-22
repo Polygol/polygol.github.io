@@ -2006,6 +2006,12 @@ input[type="checkbox"]:checked::before {
     background-color: var(--search-background);
 }
 
+.status-qc {
+    display: flex;
+    align-items: center;
+    padding: 0 6px 0 0;
+}
+
     .page-indicator {
       position: fixed;
       bottom: 30px;
