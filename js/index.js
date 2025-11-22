@@ -9878,8 +9878,8 @@ const FUNCTION_PERMISSIONS = {
 	'deleteIDBDatabase': 'system-admin',
 	'getLocalStorageAll': 'system-admin',
     'listCaches': 'system-admin',
-	'deleteCache': 'system-admin'
-    'forceUpdatePolygol': 'system-admin',
+	'deleteCache': 'system-admin',
+    'forceUpdatePolygol': 'system-admin'
 };
 
 // --- NEW: Map for remote control from the settings app ---
