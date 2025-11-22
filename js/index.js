@@ -10369,7 +10369,7 @@ window.addEventListener('message', async (event) => { // Make listener async
 	            } else if (funcName === 'listIDBStores') {
 	                response.stores = result;
 	            } else if (funcName === 'getIDBRecord') {
-	                response.data = result;
+	                response.value = result;
 				} else {
                      response.message = result;
                 }
