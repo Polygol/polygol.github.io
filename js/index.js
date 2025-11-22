@@ -1863,8 +1863,56 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// Initial check
+	// --- Battery Status Logic ---
+	function initBattery() {
+		if ('getBattery' in navigator) {
+			navigator.getBattery().then(battery => {
+				const batContainer = document.getElementById('battery-status-indicator');
+				const batIcon = batContainer.querySelector('span');
+				
+				// Only show the indicator if API is supported and active
+				batContainer.style.display = 'flex';
+
+				function updateBatteryUI() {
+					const level = battery.level * 100;
+					const isCharging = battery.charging;
+
+					// Reset colors
+					batIcon.style.color = 'var(--text-color)';
+
+					if (isCharging) {
+						batIcon.textContent = 'battery_charging_full';
+					} else {
+						if (level <= 15) {
+							batIcon.textContent = 'battery_1_bar';
+							// Make it red for low battery
+							batIcon.style.color = '#ff5252'; 
+						} else if (level <= 30) {
+							batIcon.textContent = 'battery_2_bar';
+						} else if (level <= 50) {
+							batIcon.textContent = 'battery_3_bar';
+						} else if (level <= 65) {
+							batIcon.textContent = 'battery_4_bar';
+						} else if (level <= 85) {
+							batIcon.textContent = 'battery_5_bar';
+						} else if (level <= 99) {
+							batIcon.textContent = 'battery_6_bar';
+						} else {
+							batIcon.textContent = 'battery_full';
+						}
+					}
+				}
+
+				updateBatteryUI();
+				battery.addEventListener('chargingchange', updateBatteryUI);
+				battery.addEventListener('levelchange', updateBatteryUI);
+			});
+		}
+	}
+
+	// Initial calls
 	updateNetworkInfo();
+    initBattery();
 
 	// Listen for changes
 	const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
