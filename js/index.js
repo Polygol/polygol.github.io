@@ -264,7 +264,7 @@ let currentLanguage = LANG_EN; // Default to English
 
 function applyLanguage(language) {
     console.log('Applying language:', language);
-    document.querySelector('.modal-content h2').innerText = language.CONTROLS;
+    document.querySelector('.modal-content h3').innerText = language.CONTROLS;
     document.querySelector('#silent_switch_qc .qc-label').innerText = language.SILENT;
     document.querySelector('#temp_control_qc .qc-label').innerText = language.TONE;
     document.querySelector('#minimal_mode_qc .qc-label').innerText = language.MINIMAL;
@@ -2356,7 +2356,7 @@ function setupWeatherToggle() {
 function updateClockAndDate() {
     let clockElement = document.getElementById('clock');
     let dateElement = document.getElementById('date');
-    let modalTitle = document.querySelector('#customizeModal h2');
+    let modalTitle = document.querySelector('#customizeModal h3');
     if (!clockElement || !dateElement) return;
 
     const fontSelect = document.getElementById('font-select');
