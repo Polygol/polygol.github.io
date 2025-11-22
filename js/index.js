@@ -10397,11 +10397,13 @@ window.addEventListener('message', async (event) => { // Make listener async
 	                response.databases = result;
 	            } else if (funcName === 'listIDBStores') {
 	                response.stores = result;
-	            } else if (funcName === 'getIDBRecord') {
-	                response.value = result;
+				} else if (funcName === 'getIDBRecord' || funcName === 'getLocalStorageAll' || funcName === 'listCaches') {
+				    // Ensure these data-heavy responses use the 'value' property
+				    // so settings.js knows where to look.
+				    response.value = result;
 				} else {
-                     response.message = result;
-                }
+				    response.message = result;
+				}
                 
                 sourceWindow.postMessage(response, event.origin);
 
