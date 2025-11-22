@@ -2023,7 +2023,7 @@ input[type="checkbox"]:checked::before {
         pointer-events: auto; /* Ensure clickable */
 		filter: none;
         padding: 10px 12px; /* Larger hit area */
-		gap: 12px;
+		gap: 14px;
 		background-color: transparent;
 		backdrop-filter: none;
 		border: none;
