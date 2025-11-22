@@ -5565,16 +5565,26 @@ function resetIndicatorTimeout() {
   // Clear any existing timeout
   clearTimeout(pageIndicatorTimeout);
   
-  // Only set a new timeout if we're not actively dragging
+  // Only proceed if not dragging
   if (!isDragging) {
     const pageIndicator = document.getElementById('page-indicator');
     if (pageIndicator) {
+      const isPersistent = localStorage.getItem('persistentPageIndicator') === 'true';
+      
+      if (isPersistent) {
+          // Persistent Mode: Remove fade-out, add persistent class, skip timeout
+          pageIndicator.classList.remove('fade-out');
+          pageIndicator.classList.add('persistent-mode');
+          return; 
+      }
+
+      // Normal Mode: Remove persistent class, ensure visible, then set timeout
+      pageIndicator.classList.remove('persistent-mode');
       pageIndicator.classList.remove('fade-out');
       
       pageIndicatorTimeout = setTimeout(() => {
         if (pageIndicator) {
           pageIndicator.classList.add('fade-out');
-          // We don't remove the element completely anymore, just hide it with CSS
         }
       }, INDICATOR_TIMEOUT);
     }
@@ -8655,6 +8665,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     setupOneButtonNav();
 
+    const persistentIndicatorSwitch = document.getElementById('persistent-indicator-switch');
+    if (persistentIndicatorSwitch) {
+        // Load initial state
+        persistentIndicatorSwitch.checked = localStorage.getItem('persistentPageIndicator') === 'true';
+        
+        // Add listener
+        persistentIndicatorSwitch.addEventListener('change', function() {
+            localStorage.setItem('persistentPageIndicator', this.checked);
+            // Broadcast to settings if needed, though direct interaction handles local
+            resetIndicatorTimeout(); // Apply visual changes immediately
+        });
+        
+        // Apply immediately on load
+        resetIndicatorTimeout();
+    }
+
 	const glassEffectsSwitch = document.getElementById('glass-effects-switch');
 	if (glassEffectsSwitch) {
 	    glassEffectsSwitch.checked = glassEffectsEnabled;
@@ -9926,7 +9952,8 @@ const controlIdMap = {
     'slideshowInterval': 'slideshowInterval',
     'hideClockIndicator': 'hideClockIndicator',
     'autoSleepDuration': 'autoSleepDuration',
-    'autoSleepScope': 'autoSleepScope'
+    'autoSleepScope': 'autoSleepScope',
+    'persistentPageIndicator': 'persistent-indicator-switch'
 };
 
 // --- NEW: Function to broadcast a setting update to the settings app ---
