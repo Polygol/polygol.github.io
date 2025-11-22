@@ -283,7 +283,8 @@ function initializeSettingsApp() {
     // --- Real-time Syncing ---
     window.addEventListener('message', (event) => {
         if (event.origin !== window.location.origin) return;
-        const { type, key, value } = event.data;
+        const data = event.data; 
+        const { type, key, value } = data;
         if ((type === 'localStorageItemValue' || type === 'settingUpdate') && key) {
             updateControl(key, value);
         }
