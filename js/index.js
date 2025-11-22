@@ -1839,7 +1839,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (!connection) {
-			netIcon.textContent = 'wifi'; // Fallback
+			netIcon.textContent = 'network_wifi'; // Fallback
 			return;
 		}
 
@@ -1849,7 +1849,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		let iconBase = 'signal_cellular_'; // Default to cellular bars
 
 		if (type === 'wifi' || type === 'wimax') {
-			iconBase = 'signal_wifi_'; // Use wifi arcs
+			iconBase = 'network_wifi_'; // Use wifi arcs
 		} else if (type === 'ethernet') {
 			netIcon.textContent = 'settings_ethernet';
 			return;
