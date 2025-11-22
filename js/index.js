@@ -9846,7 +9846,8 @@ const FUNCTION_PERMISSIONS = {
     'setIDBRecord': 'system-admin',
     'removeIDBRecord': 'system-admin',
     'clearIDBStore': 'system-admin',
-    'forceUpdatePolygol': 'system-admin'
+    'forceUpdatePolygol': 'system-admin',
+	'deleteIDBDatabase'
 };
 
 // --- NEW: Map for remote control from the settings app ---
@@ -10112,6 +10113,18 @@ window.addEventListener('message', async (event) => { // Make listener async
 		setSettingValue: (key, value) => {
             setControlValueAndDispatch(key, value);
             return `Setting '${key}' remotely updated.`;
+        },
+        deleteIDBDatabase: async (dbName) => {
+            if (await showCustomConfirm(`Are you sure you want to delete the entire database "${dbName}"? This is irreversible.`)) {
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.deleteDatabase(dbName);
+                    req.onsuccess = () => resolve(`Database '${dbName}' deleted.`);
+                    req.onerror = () => reject(`Failed to delete '${dbName}'.`);
+                    req.onblocked = () => reject(`Deletion blocked: Database '${dbName}' is currently open in another tab/app.`);
+                });
+            } else {
+                return "Operation cancelled.";
+            }
         },
 		forceUpdatePolygol
     };
