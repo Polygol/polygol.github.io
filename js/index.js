@@ -7588,7 +7588,7 @@ function populateDock() {
 	dockIcon.addEventListener('click', async () => {
         const dock = document.getElementById('dock');
         if (dock) dock.classList.remove('show');
-		
+		drawerPill.style.opacity = '1'
 	    // Open the new app
 	    createFullscreenEmbed(details.url);
 	    populateDock(); // Refresh the dock
@@ -7779,6 +7779,7 @@ function createAppIcons(filterQuery = '') {
 			// Force hide dock immediately
             const dock = document.getElementById('dock');
             if (dock) dock.classList.remove('show');
+			drawerPill.style.opacity = '1'
 			
             try {      
                 if (app.details.url.startsWith('#')) {
