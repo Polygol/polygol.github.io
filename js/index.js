@@ -9847,7 +9847,7 @@ const FUNCTION_PERMISSIONS = {
     'removeIDBRecord': 'system-admin',
     'clearIDBStore': 'system-admin',
     'forceUpdatePolygol': 'system-admin',
-	'deleteIDBDatabase'
+	'deleteIDBDatabase': 'system-admin'
 };
 
 // --- NEW: Map for remote control from the settings app ---
