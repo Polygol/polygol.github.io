@@ -9897,33 +9897,49 @@ function animatePlaybackRate(video, startRate, endRate, duration) {
 function updateDockVisibility() {
     const dock = document.getElementById('dock');
     const drawerPill = document.querySelector('.drawer-pill');
+    const pageIndicator = document.getElementById('page-indicator'); // Get the indicator
+    
     if (!dock) return;
 
     const isPinned = localStorage.getItem('dockPinned') === 'true';
+    // Check for any visible fullscreen embed
     const isAppOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
     const isDrawerOpen = document.getElementById('app-drawer')?.classList.contains('open');
 
-    // If Pinned AND on Home Screen (No app, no drawer)
+    // 1. Pinned Mode on Home Screen (No App, No Drawer)
     if (isPinned && !isAppOpen && !isDrawerOpen) {
+        // Show Dock
         dock.style.display = 'flex';
-        // Use a slight delay to allow display:flex to apply before adding class for transition
         requestAnimationFrame(() => {
             dock.classList.add('show');
             dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
         });
         if (drawerPill) drawerPill.style.opacity = '0';
+
+        // Move Page Indicator UP to avoid overlap
+        if (pageIndicator) {
+            pageIndicator.classList.add('shifted-up');
+        }
     } 
-    // If Not Pinned, OR App Open, OR Drawer Open -> Revert to default behavior (Hidden/Auto)
-    else if (!isPinned && !dock.classList.contains('interacting')) {
-        // Only hide if we aren't actively interacting (hovering/touching)
-        dock.classList.remove('show');
-        if (drawerPill) drawerPill.style.opacity = '1';
-        // Allow CSS transition to finish before hiding
-        setTimeout(() => {
-            if (!dock.classList.contains('show')) {
-                dock.style.display = 'none';
-            }
-        }, 300);
+    // 2. Default/Hidden Mode (Not Pinned OR App/Drawer is Open)
+    else {
+        // Hide Dock (unless interacting manually)
+        if (!dock.classList.contains('interacting')) {
+            dock.classList.remove('show');
+            if (drawerPill) drawerPill.style.opacity = '1';
+            
+            setTimeout(() => {
+                // Only set display none if it hasn't been shown again in the meantime
+                if (!dock.classList.contains('show')) {
+                    dock.style.display = 'none';
+                }
+            }, 300);
+        }
+
+        // Move Page Indicator DOWN (Default position)
+        if (pageIndicator) {
+            pageIndicator.classList.remove('shifted-up');
+        }
     }
 }
 
