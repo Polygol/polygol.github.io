@@ -8218,6 +8218,8 @@ function setupDrawerInteractions() {
 	        
 	        swipeOverlay.style.display = 'none';
 	        swipeOverlay.style.pointerEvents = 'none';
+
+			resetIndicatorTimeout();
 	    }
 	
 	    isDragging = false;
@@ -8402,6 +8404,7 @@ function setupDrawerInteractions() {
 		            el.style.opacity = '1';
 		        });
 		    });
+			resetIndicatorTimeout();
         }
 
         // Hide the bottom dock if it's visible and the click was outside of it
