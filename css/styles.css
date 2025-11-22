@@ -2018,6 +2018,32 @@ input[type="checkbox"]:checked::before {
       filter: none;
     }
 
+    .page-indicator.persistent-mode {
+        opacity: 1 !important;
+        pointer-events: auto; /* Ensure clickable */
+		filter: none;
+        padding: 10px 12px; /* Larger hit area */
+		gap: 12px;
+		background-color: transparent;
+		backdrop-filter: none;
+		border: none;
+		box-shadow: none;
+		bottom: 25px;
+    }
+    
+    .page-indicator.persistent-mode .indicator-dot {
+		width: 12px;
+		height: 12px;
+		background-color: transparent;
+		backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
+		opacity: 0.25;
+	}
+
+    .page-indicator.persistent-mode .indicator-dot.active {
+	    background-color: transparent;
+	    opacity: 1;
+	}
+
     .page-indicator.empty {
       padding: 9px 16px;
     }
