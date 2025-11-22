@@ -583,6 +583,7 @@ body.one-button-nav-active .dock.show {
 	font-family: 'Inter Numeric', 'Inter';
     font-variant-numeric: tabular-nums;
 	font-variation-settings: "RDNS" 1;
+	letter-spacing: -0.5px;
     display: flex;
     align-items: center; /* Keeps the image and text aligned */
     gap: 0;
