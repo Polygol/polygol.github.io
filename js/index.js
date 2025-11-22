@@ -9897,46 +9897,53 @@ function animatePlaybackRate(video, startRate, endRate, duration) {
 function updateDockVisibility() {
     const dock = document.getElementById('dock');
     const drawerPill = document.querySelector('.drawer-pill');
-    const pageIndicator = document.getElementById('page-indicator'); // Get the indicator
+    const pageIndicator = document.getElementById('page-indicator');
     
     if (!dock) return;
 
     const isPinned = localStorage.getItem('dockPinned') === 'true';
-    // Check for any visible fullscreen embed
+    
+    // Robust check for any open app (foreground)
     const isAppOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+    
+    // Check if drawer is open
     const isDrawerOpen = document.getElementById('app-drawer')?.classList.contains('open');
 
-    // 1. Pinned Mode on Home Screen (No App, No Drawer)
+    // LOGIC: Show Dock ONLY if Pinned AND on Home Screen (No App, No Drawer)
     if (isPinned && !isAppOpen && !isDrawerOpen) {
         // Show Dock
         dock.style.display = 'flex';
+        
+        // Add class after display set to allow transition
         requestAnimationFrame(() => {
             dock.classList.add('show');
             dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
         });
+        
         if (drawerPill) drawerPill.style.opacity = '0';
 
-        // Move Page Indicator UP to avoid overlap
+        // Move Page Indicator UP
         if (pageIndicator) {
             pageIndicator.classList.add('shifted-up');
         }
     } 
-    // 2. Default/Hidden Mode (Not Pinned OR App/Drawer is Open)
+    // ELSE: Hide Dock (Default behavior, or if App/Drawer is open)
     else {
-        // Hide Dock (unless interacting manually)
+        // Only hide if we aren't actively interacting with it (optional safety check)
         if (!dock.classList.contains('interacting')) {
             dock.classList.remove('show');
-            if (drawerPill) drawerPill.style.opacity = '1';
+            
+            if (drawerPill && !isPinned) drawerPill.style.opacity = '1';
             
             setTimeout(() => {
-                // Only set display none if it hasn't been shown again in the meantime
+                // Check again before setting display:none to prevent flickering if state changed fast
                 if (!dock.classList.contains('show')) {
                     dock.style.display = 'none';
                 }
             }, 300);
         }
 
-        // Move Page Indicator DOWN (Default position)
+        // Move Page Indicator DOWN
         if (pageIndicator) {
             pageIndicator.classList.remove('shifted-up');
         }
