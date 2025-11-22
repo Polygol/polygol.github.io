@@ -1982,7 +1982,7 @@ input[type="checkbox"]:checked::before {
     align-items: center;
     gap: 15px;
     justify-content: space-between;
-	margin-left: 6px;
+	margin-left: 10px;
 }
 
 .btn-qc {
@@ -2009,7 +2009,6 @@ input[type="checkbox"]:checked::before {
 .status-qc {
     display: flex;
     align-items: center;
-    padding: 0 6px 0 0;
 }
 
     .page-indicator {
