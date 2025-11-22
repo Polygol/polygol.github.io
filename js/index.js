@@ -9875,8 +9875,11 @@ const FUNCTION_PERMISSIONS = {
     'setIDBRecord': 'system-admin',
     'removeIDBRecord': 'system-admin',
     'clearIDBStore': 'system-admin',
+	'deleteIDBDatabase': 'system-admin',
+	'getLocalStorageAll': 'system-admin',
+    'listCaches': 'system-admin',
+	'deleteCache': 'system-admin'
     'forceUpdatePolygol': 'system-admin',
-	'deleteIDBDatabase': 'system-admin'
 };
 
 // --- NEW: Map for remote control from the settings app ---
@@ -10155,6 +10158,30 @@ window.addEventListener('message', async (event) => { // Make listener async
                 return "Operation cancelled.";
             }
         },
+		// Get all LS data for the manager list
+        getLocalStorageAll: () => {
+            const items = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                items.push({ key, value: localStorage.getItem(key) });
+            }
+            return items;
+        },
+        // Cache Storage API
+        listCaches: async () => {
+            if ('caches' in window) {
+                return await caches.keys();
+            }
+            return [];
+        },
+        deleteCache: async (cacheName) => {
+            if ('caches' in window) {
+                if (await showCustomConfirm(`Delete cache "${cacheName}"? This may affect app performance.`)) {
+                    return await caches.delete(cacheName);
+                }
+            }
+            return false;
+        },
 		forceUpdatePolygol
     };
 
@@ -10344,7 +10371,9 @@ window.addEventListener('message', async (event) => { // Make listener async
                     'listIDBDatabases': 'idbDatabasesList',
                     'listIDBStores': 'idbStoresList',
                     'getIDBRecord': 'idbRecordValue',
-                    'requestInstalledApps': 'installed-apps-list' // Added here
+                    'requestInstalledApps': 'installed-apps-list',
+					'getLocalStorageAll': 'localStorageAllValues',
+                    'listCaches': 'cachesList'
                 };
 
                 if (funcName.startsWith('get') || funcName.startsWith('list') || funcName.startsWith('request')) {
