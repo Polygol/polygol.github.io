@@ -1843,35 +1843,50 @@ document.addEventListener('DOMContentLoaded', () => {
 			return;
 		}
 
-		// Determine icon set based on connection method (type)
-		// 'type' is experimental but useful for distinguishing Wifi vs Cellular
 		const type = connection.type; 
-		let iconBase = 'signal_cellular_'; // Default to cellular bars
 
-		if (type === 'wifi' || type === 'wimax') {
-			iconBase = 'network_wifi_'; // Use wifi arcs
-		} else if (type === 'ethernet') {
+		if (type === 'ethernet') {
 			netIcon.textContent = 'settings_ethernet';
 			return;
 		}
 
-		// Map effectiveType (speed) to bars
-		// 4g = 4 bars, 3g = 3 bars, 2g = 2 bars, slow-2g = 1 bar
-		switch (connection.effectiveType) {
-			case '4g':
-				netIcon.textContent = iconBase + '4_bar';
-				break;
-			case '3g':
-				netIcon.textContent = iconBase + '3_bar';
-				break;
-			case '2g':
-				netIcon.textContent = iconBase + '2_bar';
-				break;
-			case 'slow-2g':
-				netIcon.textContent = iconBase + '1_bar'; // Note: signal_wifi_1_bar exists
-				break;
-			default:
-				netIcon.textContent = iconBase + 'null';
+		if (type === 'wifi' || type === 'wimax') {
+			// WiFi specific mappings
+			switch (connection.effectiveType) {
+				case '4g':
+					netIcon.textContent = 'network_wifi'; // Full signal (4)
+					break;
+				case '3g':
+					netIcon.textContent = 'network_wifi_3_bar';
+					break;
+				case '2g':
+					netIcon.textContent = 'network_wifi_2_bar';
+					break;
+				case 'slow-2g':
+					netIcon.textContent = 'network_wifi_1_bar';
+					break;
+				default:
+					netIcon.textContent = 'signal_wifi_0_bar';
+			}
+		} else {
+			// Cellular mappings (default)
+			let iconBase = 'signal_cellular_';
+			switch (connection.effectiveType) {
+				case '4g':
+					netIcon.textContent = iconBase + '4_bar';
+					break;
+				case '3g':
+					netIcon.textContent = iconBase + '3_bar';
+					break;
+				case '2g':
+					netIcon.textContent = iconBase + '2_bar';
+					break;
+				case 'slow-2g':
+					netIcon.textContent = iconBase + '1_bar';
+					break;
+				default:
+					netIcon.textContent = iconBase + 'null';
+			}
 		}
 	}
 
