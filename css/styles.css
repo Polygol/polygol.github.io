@@ -2044,6 +2044,10 @@ input[type="checkbox"]:checked::before {
 	    opacity: 1;
 	}
 
+    .page-indicator.shifted-up {
+		bottom: 110px !important;
+	}
+
     .page-indicator.empty {
       padding: 9px 16px;
     }
