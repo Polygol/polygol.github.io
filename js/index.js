@@ -1893,24 +1893,24 @@ document.addEventListener('DOMContentLoaded', () => {
 					batIcon.style.color = 'var(--text-color)';
 
 					if (isCharging) {
-						batIcon.textContent = 'battery_charging_full';
+						batIcon.textContent = 'battery_android_bolt';
 					} else {
 						if (level <= 15) {
-							batIcon.textContent = 'battery_1_bar';
+							batIcon.textContent = 'battery_android_1';
 							// Make it red for low battery
 							batIcon.style.color = '#ff5252'; 
 						} else if (level <= 30) {
-							batIcon.textContent = 'battery_2_bar';
+							batIcon.textContent = 'battery_android_2';
 						} else if (level <= 50) {
-							batIcon.textContent = 'battery_3_bar';
+							batIcon.textContent = 'battery_android_3';
 						} else if (level <= 65) {
-							batIcon.textContent = 'battery_4_bar';
+							batIcon.textContent = 'battery_android_4';
 						} else if (level <= 85) {
-							batIcon.textContent = 'battery_5_bar';
+							batIcon.textContent = 'battery_android_5';
 						} else if (level <= 99) {
-							batIcon.textContent = 'battery_6_bar';
+							batIcon.textContent = 'battery_android_6';
 						} else {
-							batIcon.textContent = 'battery_full';
+							batIcon.textContent = 'battery_android_0';
 						}
 					}
 				}
