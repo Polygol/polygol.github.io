@@ -541,14 +541,67 @@
                         <div class="storage-bar-fill" id="storage-bar-fill" style="width: 0%"></div>
                     </div>
                     <p class="setting-description" style="margin-top: 10px;">
-                        This usage includes wallpapers, cached apps, and system data.
+                        Includes wallpapers, cached apps, and system data.
                     </p>
                 </div>
             </div>
         
-            <h2 class="section-title">Databases</h2>
+            <h2 class="section-title">Data Sources</h2>
+            <div class="setting-section">
+                <div class="setting-item nav-item" id="btn-open-ls">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">description</span>
+                        <span class="setting-label">Local Storage</span>
+                        <span class="setting-description">System settings & app states</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" id="btn-open-cache">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">cached</span>
+                        <span class="setting-label">Cache Storage</span>
+                        <span class="setting-description">Offline app files</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
+        
+            <h2 class="section-title">Databases (IndexedDB)</h2>
             <div class="setting-section" id="database-list-container">
                 <!-- DB List items will be injected here -->
+            </div>
+        </div>
+
+        <!-- LocalStorage Viewer -->
+        <div class="page" id="page-localstorage">
+            <div class="setting-section">
+                 <div class="setting-item" style="background: var(--transparent-color); border: none; box-shadow: none;">
+                    <div class="setting-info">
+                        <span class="setting-label">Local Storage</span>
+                        <span class="setting-description">Key-Value Pairs</span>
+                    </div>
+                     <button class="action-btn" id="btn-clear-ls" style="background-color: #ff5252; color: white; border: none;">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+            <div class="setting-section" id="ls-list-container">
+                <!-- LS Items injected here -->
+            </div>
+        </div>
+        
+        <!-- Cache Viewer -->
+        <div class="page" id="page-cache">
+            <div class="setting-section">
+                 <div class="setting-item" style="background: var(--transparent-color); border: none; box-shadow: none;">
+                    <div class="setting-info">
+                        <span class="setting-label">Cache Storage</span>
+                        <span class="setting-description">Service Worker Caches</span>
+                    </div>
+                </div>
+            </div>
+            <div class="setting-section" id="cache-list-container">
+                <!-- Cache Items injected here -->
             </div>
         </div>
         
