@@ -1826,6 +1826,62 @@ document.addEventListener('DOMContentLoaded', () => {
     blackoutBtn.addEventListener('mouseup', cancelBlackoutHold);
     blackoutBtn.addEventListener('mouseleave', cancelBlackoutHold);
     blackoutBtn.addEventListener('touchend', cancelBlackoutHold);
+
+	const netIcon = document.querySelector('#network-status-indicator span');
+	
+	function updateNetworkInfo() {
+		// Check if API is supported
+		const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+		
+		if (!navigator.onLine) {
+			netIcon.textContent = 'signal_cellular_off';
+			return;
+		}
+
+		if (!connection) {
+			// Fallback if API not supported but online
+			netIcon.textContent = 'wifi'; 
+			return;
+		}
+
+		// Map effectiveType to Material Symbols
+		switch (connection.effectiveType) {
+			case '4g':
+				netIcon.textContent = 'signal_cellular_4_bar';
+				break;
+			case '3g':
+				netIcon.textContent = 'signal_cellular_3_bar';
+				break;
+			case '2g':
+				netIcon.textContent = 'signal_cellular_2_bar';
+				break;
+			case 'slow-2g':
+				netIcon.textContent = 'signal_cellular_1_bar';
+				break;
+			default:
+				netIcon.textContent = 'signal_cellular_null';
+		}
+	}
+
+	// Initial check
+	updateNetworkInfo();
+
+	// Listen for changes
+	const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+	if (connection) {
+		connection.addEventListener('change', updateNetworkInfo);
+	}
+	
+	window.addEventListener('online', () => {
+	    showPopup(currentLanguage.ONLINE);
+		updateNetworkInfo();
+	    updateSmallWeather(); // Refresh weather data
+	});
+	
+	window.addEventListener('offline', () => {
+	    showPopup(currentLanguage.OFFLINE);
+		updateNetworkInfo();
+	});
     
 	function updatePersistentClock() {
 	  const isModalOpen = 
@@ -8502,15 +8558,6 @@ document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
 		closeControls();
     }
-});
-
-window.addEventListener('online', () => {
-    showPopup(currentLanguage.ONLINE);
-    updateSmallWeather(); // Refresh weather data
-});
-
-window.addEventListener('offline', () => {
-    showPopup(currentLanguage.OFFLINE);
 });
 
 // Call applyWallpaper on page load
