@@ -1834,32 +1834,44 @@ document.addEventListener('DOMContentLoaded', () => {
 		const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
 		
 		if (!navigator.onLine) {
-			netIcon.textContent = 'signal_cellular_off';
+			netIcon.textContent = 'signal_disconnected';
 			return;
 		}
 
 		if (!connection) {
-			// Fallback if API not supported but online
-			netIcon.textContent = 'wifi'; 
+			netIcon.textContent = 'wifi'; // Fallback
 			return;
 		}
 
-		// Map effectiveType to Material Symbols
+		// Determine icon set based on connection method (type)
+		// 'type' is experimental but useful for distinguishing Wifi vs Cellular
+		const type = connection.type; 
+		let iconBase = 'signal_cellular_'; // Default to cellular bars
+
+		if (type === 'wifi' || type === 'wimax') {
+			iconBase = 'signal_wifi_'; // Use wifi arcs
+		} else if (type === 'ethernet') {
+			netIcon.textContent = 'settings_ethernet';
+			return;
+		}
+
+		// Map effectiveType (speed) to bars
+		// 4g = 4 bars, 3g = 3 bars, 2g = 2 bars, slow-2g = 1 bar
 		switch (connection.effectiveType) {
 			case '4g':
-				netIcon.textContent = 'signal_cellular_4_bar';
+				netIcon.textContent = iconBase + '4_bar';
 				break;
 			case '3g':
-				netIcon.textContent = 'signal_cellular_3_bar';
+				netIcon.textContent = iconBase + '3_bar';
 				break;
 			case '2g':
-				netIcon.textContent = 'signal_cellular_2_bar';
+				netIcon.textContent = iconBase + '2_bar';
 				break;
 			case 'slow-2g':
-				netIcon.textContent = 'signal_cellular_1_bar';
+				netIcon.textContent = iconBase + '1_bar'; // Note: signal_wifi_1_bar exists
 				break;
 			default:
-				netIcon.textContent = 'signal_cellular_null';
+				netIcon.textContent = iconBase + 'null';
 		}
 	}
 
