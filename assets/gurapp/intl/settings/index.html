@@ -372,6 +372,14 @@
         <!-- System Page -->
         <div class="page" id="page-system">
             <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-storage">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">storage</span>
+                        <span class="setting-label">Storage Manager</span>
+                        <span class="setting-description">Manage quota and databases</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
                 <h2 class="section-title">Functionality</h2>
                  <div class="setting-item" id="setting-gurappsEnabled">
                     <div class="setting-info">
@@ -520,6 +528,87 @@
                             Open
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+        <!-- Storage Overview Page -->
+        <div class="page" id="page-storage">
+            <div class="setting-section">
+                <div class="storage-visualizer-container">
+                    <div class="storage-labels">
+                        <span id="storage-used-label">Calculating...</span>
+                        <span id="storage-total-label"></span>
+                    </div>
+                    <div class="storage-bar-bg">
+                        <div class="storage-bar-fill" id="storage-bar-fill" style="width: 0%"></div>
+                    </div>
+                    <p class="setting-description" style="margin-top: 10px;">
+                        This usage includes wallpapers, cached apps, and system data.
+                    </p>
+                </div>
+            </div>
+        
+            <h2 class="section-title">Databases</h2>
+            <div class="setting-section" id="database-list-container">
+                <!-- DB List items will be injected here -->
+            </div>
+        </div>
+        
+        <!-- Database Details Page (Listing Object Stores) -->
+        <div class="page" id="page-db-details">
+            <div class="setting-section">
+                <div class="setting-item" style="background: var(--transparent-color); border: none; box-shadow: none;">
+                    <div class="setting-info">
+                        <span class="setting-label" id="current-db-name-label">DB Name</span>
+                        <span class="setting-description">Select a Store to view or edit data</span>
+                    </div>
+                    <button class="action-btn" id="btn-delete-current-db" style="background-color: #ff5252; color: white; border: none;">
+                        Delete DB
+                    </button>
+                </div>
+            </div>
+            <h2 class="section-title">Object Stores</h2>
+            <div class="setting-section" id="store-list-container">
+                <!-- Object Stores will be injected here -->
+            </div>
+        </div>
+        
+        <!-- Store Viewer Page (Listing Records) -->
+        <div class="page" id="page-store-viewer">
+            <div class="setting-section">
+                 <div class="setting-item" style="background: var(--transparent-color); border: none; box-shadow: none;">
+                    <div class="setting-info">
+                        <span class="setting-label" id="current-store-name-label">Store Name</span>
+                        <span class="setting-description">Raw Data View</span>
+                    </div>
+                     <button class="action-btn" id="btn-clear-current-store">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+            <div class="setting-section" id="record-list-container">
+                <!-- Records will be injected here -->
+            </div>
+        </div>
+        
+        <!-- Record Editor Page -->
+        <div class="page" id="page-record-editor">
+            <div class="setting-section">
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <label class="setting-label">Key</label>
+                    <input type="text" id="record-key-display" class="form-input" style="width: 100%; cursor: default;" readonly>
+                </div>
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px; height: auto;">
+                    <label class="setting-label">Value (JSON)</label>
+                    <textarea id="record-value-editor" class="form-input" style="width: 100%; height: 300px; font-family: monospace; font-size: 12px; line-height: 1.4; resize: none;"></textarea>
+                </div>
+                <div class="setting-item" style="background: transparent; border: none; box-shadow: none; justify-content: flex-end; gap: 10px;">
+                     <button class="action-btn" id="btn-delete-record" style="background-color: #ff5252; color: white; border: none;">
+                        Delete
+                    </button>
+                    <button class="action-btn" id="btn-save-record">
+                        Save Changes
+                    </button>
                 </div>
             </div>
         </div>
