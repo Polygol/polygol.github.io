@@ -5565,20 +5565,34 @@ function resetIndicatorTimeout() {
   // Clear any existing timeout
   clearTimeout(pageIndicatorTimeout);
   
-  // Only proceed if not dragging
+  const pageIndicator = document.getElementById('page-indicator');
+  if (!pageIndicator) return;
+
+  // 1. Check if an app is open (foreground)
+  const isAppOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+  
+  // 2. Check if the app drawer is open
+  const isDrawerOpen = document.getElementById('app-drawer')?.classList.contains('open');
+
+  // 3. If either is true, force hide the indicator immediately
+  if (isAppOpen || isDrawerOpen) {
+      pageIndicator.classList.remove('persistent-mode');
+      pageIndicator.classList.add('fade-out');
+      return;
+  }
+
+  // Only proceed with standard logic if not dragging dots
   if (!isDragging) {
-    const pageIndicator = document.getElementById('page-indicator');
-    if (pageIndicator) {
       const isPersistent = localStorage.getItem('persistentPageIndicator') === 'true';
       
       if (isPersistent) {
-          // Persistent Mode: Remove fade-out, add persistent class, skip timeout
+          // Persistent Mode: Show and scale up
           pageIndicator.classList.remove('fade-out');
           pageIndicator.classList.add('persistent-mode');
           return; 
       }
 
-      // Normal Mode: Remove persistent class, ensure visible, then set timeout
+      // Normal Mode: Ensure standard size, show, then schedule fade out
       pageIndicator.classList.remove('persistent-mode');
       pageIndicator.classList.remove('fade-out');
       
@@ -5587,7 +5601,6 @@ function resetIndicatorTimeout() {
           pageIndicator.classList.add('fade-out');
         }
       }, INDICATOR_TIMEOUT);
-    }
   }
 }
 
@@ -7336,6 +7349,7 @@ async function createFullscreenEmbed(url) {
     }
 
     populateDock();
+    resetIndicatorTimeout();
 }
 
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
@@ -7433,6 +7447,7 @@ function closeFullscreenEmbed() {
 
     populateDock();
     resetAutoSleepTimer(); // Reset timer when returning to home screen
+    resetIndicatorTimeout();
 }
 
 function minimizeFullscreenEmbed(animate = true) {
@@ -7479,6 +7494,8 @@ function minimizeFullscreenEmbed(animate = true) {
 
 				embedContainer.style.transform = 'scale(0.8)';
                 embedContainer.style.zIndex = '0';
+
+				resetIndicatorTimeout();
             }, cleanupDelay);
         }
     }
