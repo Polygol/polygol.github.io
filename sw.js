@@ -26,6 +26,8 @@ const ASSETS_TO_CACHE = [
   '/assets/appicon/settings.png',
   'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
   'https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js',
+  'https://cdn.jsdelivr.net/npm/trystero@0.15.1/dist/trystero-torrent.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap',
   'https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Regular.woff2',
   'https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Medium.woff2',
