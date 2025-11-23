@@ -23,7 +23,7 @@ function initializeSettingsApp() {
         'page-record-editor': 'Edit Record',
         'page-localstorage': 'Local Storage',
         'page-cache': 'Cache Storage',
-        'page-connect': 'Connect'
+        'page-connect': 'Connections'
     };
 
     function navigateTo(pageId) {
