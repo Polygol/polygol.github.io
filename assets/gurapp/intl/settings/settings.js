@@ -346,21 +346,13 @@ function initializeSettingsApp() {
             }, 100);
         };
 
-        document.getElementById('btn-show-qr').onclick = () => {
-            const pairingString = window.parent.WavesHost.getPairingData();
-            const container = document.getElementById('waves-host-qr');
-            container.innerHTML = ''; // Clear previous
-            
-            // QRCodeJS is loaded in index.html
-            new QRCode(container, {
-                text: pairingString,
-                width: 180,
-                height: 180
-            });
+        document.getElementById('btn-refresh-waves').onclick = () => {
+            const code = window.parent.WavesHost.getPairingCode();
+            document.getElementById('waves-code-display').innerText = code;
         };
     
         document.getElementById('btn-reset-waves').onclick = () => {
-            if(confirm("This will disconnect all current remotes. Continue?")) {
+            if(confirm("This will disconnect all existing remotes. Are you sure?")) {
                 window.parent.WavesHost.resetPairingData();
             }
         };
@@ -383,6 +375,20 @@ function initializeSettingsApp() {
         const { type, key, value } = data;
         if ((type === 'localStorageItemValue' || type === 'settingUpdate') && key) {
             updateControl(key, value);
+        }
+
+        if (key === 'waves_auth_challenge') {
+            const modal = document.getElementById('waves-auth-modal');
+            const emojiDisplay = document.getElementById('waves-auth-emoji');
+            
+            if (value) {
+                // Show Modal
+                emojiDisplay.innerText = value;
+                modal.classList.add('show');
+            } else {
+                // Hide Modal
+                modal.classList.remove('show');
+            }
         }
 
         if (data.type === 'localStorageAllValues') {
