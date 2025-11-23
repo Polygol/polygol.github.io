@@ -706,16 +706,19 @@
         <div class="page" id="page-connect">
             <div class="setting-section">
                 <h2 class="section-title">Waves (Beta)</h2>
-                <div class="setting-item" style="flex-direction: column; align-items: center; text-align: center; padding: 20px;">
+                <div class="setting-item" style="flex-direction: column; align-items: center; text-align: center; padding: 30px;">
                     <p class="setting-description" style="margin-bottom: 15px;">
-                        Scan this QR code with the Waves app on your phone to control this display.
+                        Enter this code on your phone to connect securely.
                     </p>
-                    <!-- Container for QR Code -->
-                    <div id="waves-host-qr" style="background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px;"></div>
+                    
+                    <!-- Manual Code Display -->
+                    <div id="waves-code-display" style="font-family: 'Roboto Mono', monospace; font-size: 36px; font-weight: 700; letter-spacing: 4px; color: var(--text-color); margin: 20px 0; user-select: text;">
+                        ...
+                    </div>
                     
                     <div style="display: flex; gap: 10px; width: 100%;">
-                        <button class="action-btn" id="btn-show-qr" style="flex:1;">Show Code</button>
-                        <button class="action-btn" id="btn-reset-waves" style="flex:1; background-color: var(--terminal-error-color); color: white; border: none;">Reset Keys</button>
+                         <button class="action-btn" id="btn-refresh-waves">Reveal Code</button>
+                         <button class="action-btn" id="btn-reset-waves" style="background-color: #ff5252; color: white; border: none;">Regenerate</button>
                     </div>
                     
                     <p class="setting-description" style="margin-bottom: 15px;">
@@ -812,6 +815,17 @@
                 <input type="text" class="form-input" data-key="clockFormat" 
                        placeholder="e.g., HH:mm:ss">
             </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="waves-auth-modal" style="background: rgba(0,0,0,0.8);">
+        <div class="modal-container" style="text-align: center;">
+            <h3>Verify Connection</h3>
+            <p style="margin: 10px 0 20px; opacity: 0.8;">Tap this emoji on your phone</p>
+            <div id="waves-auth-emoji" style="font-size: 80px; margin: 20px 0;">
+                ❓
+            </div>
+            <p style="font-size: 12px; opacity: 0.5;">This ensures you are looking at this screen.</p>
         </div>
     </div>
         
