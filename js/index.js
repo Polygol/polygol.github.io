@@ -9824,11 +9824,6 @@ function _updateActiveMediaSession() {
     showMediaWidget(metadata);
     updateMediaWidgetState('paused'); // Default to paused on change.
 
-    // Sync with Waves Remote
-    if (window.WavesHost) {
-        window.WavesHost.pushMediaUpdate(metadata, appName);
-    }
-
     const appIconEl = document.getElementById('media-widget-app-icon');
     if (appIconEl && apps[appName] && apps[appName].icon) {
         let iconUrl = apps[appName].icon;
@@ -9861,7 +9856,8 @@ function _updateActiveMediaSession() {
 	
     // Sync with Waves Remote
     if (window.WavesHost) {
-        window.WavesHost.pushMediaUpdate(metadata, appName);
+        // When a session first loads/activates, we assume 'paused' until the app tells us otherwise
+        window.WavesHost.pushMediaUpdate(metadata, appName, 'paused');
     }
 }
 
@@ -9931,6 +9927,14 @@ function updateMediaPlaybackState(appName, state) {
         // We could also update metadata here if it changes (e.g., new song)
         if (state.metadata) {
             showMediaWidget(state.metadata);
+        }
+
+		if (window.WavesHost) {
+            window.WavesHost.pushMediaUpdate(
+                state.metadata || JSON.parse(localStorage.getItem('lastMediaMetadata')), 
+                appName, 
+                state.playbackState
+            );
         }
     }
 }
