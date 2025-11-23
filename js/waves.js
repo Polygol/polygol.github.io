@@ -90,17 +90,16 @@ async function handleRemoteCommand(payload, localPsk, peerId) {
                 window.minimizeFullscreenEmbed();
             }
             break;
-
+            
         case 'media':
-            // FIX: Use window.activeMediaSessionApp to identify target
-            // and window.Gurasuraisu.callApp to dispatch (System API)
-            const targetApp = window.activeMediaSessionApp;
-            const action = data.action; // prev, next, playPause
+            // FIX: Check window global first, then localStorage fallback
+            const targetApp = window.activeMediaSessionApp || localStorage.getItem('lastMediaSessionApp');
+            const action = data.action; 
 
-            if (targetApp && window.Gurasuraisu && typeof window.Gurasuraisu.callApp === 'function') {
+            if (targetApp && window.Gurasuraisu) {
                 window.Gurasuraisu.callApp(targetApp, action);
             } else {
-                console.warn("[Waves] Media action failed: No active session or System API missing");
+                console.warn("[Waves] Media action failed: Target app unknown or System API missing");
             }
             break;
             
