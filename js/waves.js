@@ -1,5 +1,14 @@
 // js/waves.js - Host Side (Polygol System)
 
+// The CDN script exposes joinRoom directly on window, not under Trystero.
+if (typeof Trystero === 'undefined') {
+    window.Trystero = {
+        joinRoom: window.joinRoom || ((...args) => console.error("Trystero joinRoom not found. Library not loaded?")),
+        selfId: window.selfId,
+        getPeers: window.getPeers
+    };
+}
+
 const WAVES_CONFIG = { appId: 'polygol-connect-v1' };
 let wavesRoom = null;
 let wavesOnData = null;
