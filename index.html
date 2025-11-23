@@ -19,8 +19,8 @@
     <script src="js/lang.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script type="module">
-        import { joinRoom, selfId, getPeers } from 'https://esm.sh/trystero@0.15.1/torrent';
-        window.Trystero = { joinRoom, selfId, getPeers };
+        import { joinRoom, selfId } from 'https://esm.sh/trystero@0.15.1/torrent';
+        window.Trystero = { joinRoom, selfId };
         window.dispatchEvent(new Event('trystero-ready'));
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
