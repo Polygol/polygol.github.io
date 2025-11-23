@@ -1,18 +1,14 @@
-// Waves
+// js/waves.js - Host Side (Polygol System)
 
 const WAVES_CONFIG = { appId: 'polygol-connect-v1' };
 let wavesRoom = null;
-let wavesSendAction = null;
 let wavesOnData = null;
+let wavesSend = null; // To send screenshots back
 
-// --- 1. Persistence & State ---
-function getWavesState() {
-    const stored = localStorage.getItem('waves_connection');
+// 1. State Management
+function getWavesHostState() {
+    const stored = localStorage.getItem('waves_host_config');
     return stored ? JSON.parse(stored) : null;
-}
-
-function saveWavesState(roomId, psk, role) {
-    localStorage.setItem('waves_connection', JSON.stringify({ roomId, psk, role }));
 }
 
 function generateUUID() {
@@ -22,161 +18,114 @@ function generateUUID() {
     });
 }
 
-// --- 2. Connection Logic ---
-
-function initWaves() {
-    const state = getWavesState();
-    if (state) {
-        console.log(`[Waves] Initializing P2P in ${state.role} mode...`);
-        connectToRoom(state.roomId, state.psk);
-    }
-}
-
-function connectToRoom(roomId, psk) {
-    // Join the Trystero room
-    wavesRoom = Trystero.joinRoom(WAVES_CONFIG, roomId);
+// 2. Connection Logic
+function initWavesHost() {
+    let state = getWavesHostState();
     
-    // Create data channels
+    // auto-generate credentials on first run so it's always ready
+    if (!state) {
+        state = { roomId: generateUUID(), psk: generateUUID() };
+        localStorage.setItem('waves_host_config', JSON.stringify(state));
+    }
+
+    console.log(`[Waves Host] Listening on Room: ${state.roomId}`);
+    
+    wavesRoom = Trystero.joinRoom(WAVES_CONFIG, state.roomId);
     const [send, get] = wavesRoom.makeAction('waves-cmd');
-    wavesSendAction = send;
+    wavesSend = send;
     wavesOnData = get;
 
-    // Handle incoming data
     wavesOnData((payload, peerId) => {
-        handleIncomingPayload(payload, psk);
+        handleRemoteCommand(payload, state.psk, peerId);
     });
 
     wavesRoom.onPeerJoin(peerId => {
-        console.log(`[Waves] Peer joined: ${peerId}`);
-        showNotification('New device connected via Waves', { icon: 'cast_connected' });
+        showNotification('Waves Remote Connected', { icon: 'phonelink_ring' });
     });
-
-    // If we are the Host, update our status so settings UI knows
-    document.body.dataset.wavesConnected = "true";
 }
 
-// --- 3. Security & Commands ---
-
-function sendCommand(type, data) {
-    const state = getWavesState();
-    if (!state) return;
-
-    const payload = {
-        auth: state.psk, // Send Pre-Shared Key for verification
-        type: type,
-        data: data,
-        timestamp: Date.now()
-    };
-    
-    if (wavesSendAction) {
-        wavesSendAction(payload);
-    }
-}
-
-async function handleIncomingPayload(payload, localPsk) {
-    // 1. Security Check: Does the payload contain the correct Pre-Shared Key?
+// 3. Command Handler
+async function handleRemoteCommand(payload, localPsk, peerId) {
+    // Security Check
     if (payload.auth !== localPsk) {
-        console.warn("[Waves] Unauthorized command received. Dropping.");
+        console.warn("[Waves Host] Unauthorized command attempt.");
         return;
     }
 
     const { type, data } = payload;
-    console.log(`[Waves] Executing: ${type}`, data);
 
-    // 2. Command Routing
     switch (type) {
         case 'setBrightness':
+            // Call the internal helper found in index.js
             setControlValueAndDispatch('page_brightness', data);
             break;
         
-        case 'setTheme':
-            setControlValueAndDispatch('theme', data); // 'light' or 'dark'
-            break;
-
         case 'blackout':
             blackoutScreen();
             break;
         
         case 'wake':
-            // Simulate user activity to wake screen
+            // Simulate activity
             showCursorAndResetTimer();
-            // If blackout is active, remove it (requires custom logic if blackout removes listeners)
-            document.body.classList.remove('blackout-active'); 
+            // Remove blackout classes
+            document.body.classList.remove('blackout-active', 'blackout-style-dim-show', 'blackout-style-dim-hide', 'blackout-style-hide-show', 'blackout-style-off');
+            const overlay = document.getElementById('blackout-event-overlay');
+            if(overlay) overlay.remove();
             break;
 
-        case 'mediaControl':
-             // data = { appName: 'Music', action: 'playPause' }
-             if(window.Gurasuraisu) Gurasuraisu.callApp(data.appName, data.action);
-             break;
+        case 'media':
+            // data: { app: 'Music', action: 'next' }
+            // If 'app' is null, use the active global variable
+            const targetApp = data.app || window.activeMediaSessionApp;
+            if(targetApp) {
+                // Use the Gurasuraisu helper to talk to the iframe
+                const iframe = document.querySelector(`iframe[data-app-id="${targetApp}"]`);
+                if (iframe) {
+                    const targetOrigin = new URL(iframe.src).origin;
+                    iframe.contentWindow.postMessage({ type: 'media-control', action: data.action }, targetOrigin);
+                }
+            }
+            break;
 
         case 'requestScreenshot':
-            // Capture screen and send back
-            const canvas = await html2canvas(document.body, { 
-                useCORS: true, 
-                logging: false,
-                ignoreElements: (el) => el.id === 'ai-assistant-overlay' 
-            });
-            const imgData = canvas.toDataURL('image/jpeg', 0.4); // Low quality for speed
-            sendCommand('screenshotResponse', imgData);
+            try {
+                // Capture body, ignoring the AI overlay
+                const canvas = await html2canvas(document.body, { 
+                    useCORS: true, 
+                    logging: false,
+                    ignoreElements: (el) => el.id === 'ai-assistant-overlay' || el.tagName === 'VIDEO' // Videos often crash canvas
+                });
+                const imgData = canvas.toDataURL('image/jpeg', 0.3); // Low quality for speed
+                
+                // Send back to the specific peer
+                wavesSend({ type: 'screenshot', data: imgData }, peerId);
+            } catch (e) {
+                console.error("Screenshot failed", e);
+            }
             break;
-
-        case 'screenshotResponse':
-            // We are the Phone, receiving the Display's screen
-            const remoteView = document.getElementById('waves-remote-view');
-            if(remoteView) remoteView.src = data;
-            break;
-        
-        case 'setWallpaper':
-            // Jump to specific index
-            jumpToWallpaper(parseInt(data));
+            
+        case 'reload':
+            window.location.reload();
             break;
     }
 }
 
-// --- 4. Pairing Logic ---
-
-// Call this to become a Host (Display)
-function startHostSession() {
-    const roomId = generateUUID(); // Unique secure room
-    const psk = generateUUID();    // Pre-Shared Key (Password)
-    
-    saveWavesState(roomId, psk, 'host');
-    connectToRoom(roomId, psk);
-    
-    // Return data for QR Code
-    return JSON.stringify({ r: roomId, k: psk });
+// 4. Pairing Helper (Called by Settings App)
+function getPairingData() {
+    return JSON.stringify(getWavesHostState());
 }
 
-// Call this to become a Client (Phone)
-function joinClientSession(qrDataString) {
-    try {
-        const data = JSON.parse(qrDataString);
-        if(data.r && data.k) {
-            saveWavesState(data.r, data.k, 'client');
-            connectToRoom(data.r, data.k);
-            return true;
-        }
-    } catch(e) {
-        console.error("Invalid Pairing Code");
-        return false;
-    }
+function resetPairingData() {
+    localStorage.removeItem('waves_host_config');
+    // Reload to bind new room
+    window.location.reload();
 }
 
-function disconnectWaves() {
-    localStorage.removeItem('waves_connection');
-    if(wavesRoom) {
-        // Trystero doesn't have a clean 'disconnect' method in doc, reload is safest
-        window.location.reload();
-    }
-}
+// Init
+document.addEventListener('DOMContentLoaded', initWavesHost);
 
-// Initialize on load
-document.addEventListener('DOMContentLoaded', initWaves);
-
-// Expose for UI
-window.Waves = {
-    startHost: startHostSession,
-    joinClient: joinClientSession,
-    disconnect: disconnectWaves,
-    send: sendCommand
+// Expose to Settings App
+window.WavesHost = {
+    getPairingData,
+    resetPairingData
 };
