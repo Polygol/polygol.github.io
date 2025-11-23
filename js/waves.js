@@ -1,10 +1,12 @@
 // js/waves.js - Host Side (Polygol System)
 
 const WAVES_CONFIG = { appId: 'polygol-connect-v1' };
+const EMOJIS = ['🍕', '🚀', '🦄', '🎈', '🌵', '🎸', '🍦', '💎', '🔥', '🌈', '📷', '🔔'];
 let wavesRoom = null;
 let wavesOnData = null;
 let wavesSend = null; // Response channel
 let wavesBroadcast = null; // State update channel
+let pendingAuth = {}; // Stores peerId -> { correctEmoji: '🍕', timestamp: 123 }
 
 // 1. State Management
 function getWavesHostState() {
@@ -12,16 +14,22 @@ function getWavesHostState() {
     return stored ? JSON.parse(stored) : null;
 }
 
-function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
+function generatePairingCode() {
+    // Generates format like: A7X-92M
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+        if(i===3) result += '-';
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
 }
 
-// 2. Connection Logic
+function generatePSK() {
+    return 'psk_' + Math.random().toString(36).substr(2) + Date.now().toString(36);
+}
+
 function initWavesHost() {
-    // Wait for Trystero to load
     if (!window.Trystero) {
         window.addEventListener('trystero-ready', initWavesHost, { once: true });
         return;
@@ -29,41 +37,92 @@ function initWavesHost() {
 
     let state = getWavesHostState();
     
+    // Generate persistent credentials if missing
     if (!state) {
-        state = { roomId: generateUUID(), psk: generateUUID() };
+        state = { 
+            roomId: generatePairingCode(), // Short code for discovery
+            psk: generatePSK()             // Long secret for authorization
+        };
         localStorage.setItem('waves_host_config', JSON.stringify(state));
     }
 
-    console.log(`[Waves Host] Listening on Room: ${state.roomId}`);
+    console.log(`[Waves] Room: ${state.roomId}`);
     
     wavesRoom = window.Trystero.joinRoom(WAVES_CONFIG, state.roomId);
     
     if(wavesRoom.makeAction) {
-        // Channel for Commands (Incoming)
         const [sendCmd, getCmd] = wavesRoom.makeAction('waves-cmd');
         wavesSend = sendCmd;
         wavesOnData = getCmd;
 
-        // Channel for State Updates (Outgoing)
         const [sendUpdate, getUpdate] = wavesRoom.makeAction('waves-update');
         wavesBroadcast = sendUpdate;
 
         wavesOnData((payload, peerId) => {
-            handleRemoteCommand(payload, state.psk, peerId);
+            // If valid PSK, execute command
+            if (payload.auth === state.psk) {
+                handleRemoteCommand(payload, peerId);
+            } 
+            // If auth handshake
+            else if (payload.type === 'hello') {
+                startEmojiAuth(peerId);
+            }
+            else if (payload.type === 'verify') {
+                finalizeEmojiAuth(peerId, payload.answer, state.psk);
+            }
         });
 
         wavesRoom.onPeerJoin(peerId => {
-            showNotification('Waves Remote Connected', { icon: 'phonelink_ring' });
-            // Send initial state snapshot
-            pushFullState();
+            // Do nothing until they say hello. 
+            // This prevents spamming anyone who accidentally joins the room.
         });
     }
 }
 
-// 3. Command Handler
-async function handleRemoteCommand(payload, localPsk, peerId) {
-    if (payload.auth !== localPsk) return;
+// 3. Authentication Logic (2FA)
+function startEmojiAuth(peerId) {
+    // Pick 1 correct emoji and 3 distractors
+    const shuffled = [...EMOJIS].sort(() => 0.5 - Math.random());
+    const options = shuffled.slice(0, 4);
+    const correct = options[Math.floor(Math.random() * 4)];
 
+    // Store pending state
+    pendingAuth[peerId] = {
+        correctEmoji: correct,
+        timestamp: Date.now()
+    };
+
+    // Show the correct emoji on the Host screen (Settings App)
+    // We use the broadcast channel to tell the settings iframe to show it
+    broadcastSettingUpdate('waves_auth_challenge', correct);
+    
+    // Send options to the phone
+    wavesSend({ type: 'challenge', options: options }, peerId);
+}
+
+function finalizeEmojiAuth(peerId, answer, psk) {
+    const session = pendingAuth[peerId];
+    if (!session) return;
+
+    if (answer === session.correctEmoji) {
+        // Success! Send the keys to the castle
+        wavesSend({ type: 'authorized', psk: psk }, peerId);
+        showNotification('New device authorized', { icon: 'verified_user' });
+        // Send initial state
+        setTimeout(pushFullState, 500);
+    } else {
+        // Fail
+        wavesSend({ type: 'auth_failed' }, peerId);
+        showNotification('Auth failed: Wrong emoji', { icon: 'gpp_bad' });
+    }
+    
+    // Cleanup
+    delete pendingAuth[peerId];
+    broadcastSettingUpdate('waves_auth_challenge', null); // Hide popup
+}
+
+// 3. Command Handler
+async function handleRemoteCommand(payload, peerId) {
     const { type, data } = payload;
 
     switch (type) {
@@ -194,8 +253,9 @@ function pushMediaUpdate(metadata, appName, playbackState = 'paused') {
     });
 }
 
-function getPairingData() {
-    return JSON.stringify(getWavesHostState());
+function getPairingCode() {
+    const state = getWavesHostState();
+    return state ? state.roomId : "ERROR";
 }
 
 function resetPairingData() {
@@ -207,7 +267,7 @@ document.addEventListener('DOMContentLoaded', initWavesHost);
 
 // Expose Public API
 window.WavesHost = {
-    getPairingData,
+    getPairingCode,
     resetPairingData,
     pushMediaUpdate,
     pushFullState
