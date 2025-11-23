@@ -1,7 +1,13 @@
 // js/waves.js - Host Side (Polygol System)
 
 const WAVES_CONFIG = { appId: 'polygol-connect-v1' };
-const EMOJIS = ['🍕', '🚀', '🦄', '🎈', '🌵', '🎸', '🍦', '💎', '🔥', '🌈', '📷', '🔔'];
+const EMOJIS = [
+    '🍕', '🚀', '🦄', '🎈', '🌵', '🎸', '🍦', '💎', '🔥', '🌈', '📷', '🔔',
+    '🐶', '🐱', '🦊', '🐼', '🐸', '🐵', '🐔', '🐧', '🦈', '🦋', '🐞', '🐝',
+    '🍎', '🍌', '🍉', '🍇', '🍓', '🍒', '🍍', '🥥', '🥑', '🍆', '🥕', '🌽',
+    '⚽', '🏀', '🏈', '🎾', '🎱', '🎳', '⛳', '🛹', '🚗', '✈️', '⚓', '🚲',
+    '⌚', '💡', '📚', '✏️', '🔑', '🎁', '🏆', '👑', '🕶️', '🎩', '☂️', '🎵'
+];
 let wavesRoom = null;
 let wavesOnData = null;
 let wavesSend = null; // Response channel
@@ -15,11 +21,10 @@ function getWavesHostState() {
 }
 
 function generatePairingCode() {
-    // Generates format like: A7X-92M
+    // Generates 8-character alphanumeric code (No hyphens)
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let result = '';
-    for (let i = 0; i < 6; i++) {
-        if(i===3) result += '-';
+    for (let i = 0; i < 8; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
