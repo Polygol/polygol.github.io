@@ -23,6 +23,7 @@ function initializeSettingsApp() {
         'page-record-editor': 'Edit Record',
         'page-localstorage': 'Local Storage',
         'page-cache': 'Cache Storage',
+        'page-connect': 'Connect'
     };
 
     function navigateTo(pageId) {
@@ -344,7 +345,26 @@ function initializeSettingsApp() {
                 else refreshStoreRecords();
             }, 100);
         };
-        
+
+        document.getElementById('btn-show-qr').onclick = () => {
+            const pairingString = window.parent.WavesHost.getPairingData();
+            const container = document.getElementById('waves-host-qr');
+            container.innerHTML = ''; // Clear previous
+            
+            // QRCodeJS is loaded in index.html
+            new QRCode(container, {
+                text: pairingString,
+                width: 180,
+                height: 180
+            });
+        };
+    
+        document.getElementById('btn-reset-waves').onclick = () => {
+            if(confirm("This will disconnect all current remotes. Continue?")) {
+                window.parent.WavesHost.resetPairingData();
+            }
+        };
+
         document.querySelectorAll('[data-modal]').forEach(btn => {
             btn.addEventListener('click', () => document.getElementById(btn.dataset.modal)?.classList.add('show'));
         });
