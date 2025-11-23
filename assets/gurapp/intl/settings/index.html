@@ -701,6 +701,24 @@
                 </div>
             </div>
         </div>
+
+        <div class="page" id="page-connect">
+            <div class="setting-section">
+                <h2 class="section-title">Waves Remote</h2>
+                <div class="setting-item" style="flex-direction: column; align-items: center; text-align: center; padding: 20px;">
+                    <p class="setting-description" style="margin-bottom: 15px;">
+                        Scan this QR code with the Waves app on your phone to control this display.
+                    </p>
+                    <!-- Container for QR Code -->
+                    <div id="waves-host-qr" style="background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px;"></div>
+                    
+                    <div style="display: flex; gap: 10px; width: 100%;">
+                        <button class="action-btn" id="btn-show-qr" style="flex:1;">Show Code</button>
+                        <button class="action-btn" id="btn-reset-waves" style="flex:1; background-color: var(--terminal-error-color); color: white; border: none;">Reset Keys</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modals for Complex Settings -->
