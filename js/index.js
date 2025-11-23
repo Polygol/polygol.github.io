@@ -9820,6 +9820,11 @@ function _updateActiveMediaSession() {
     showMediaWidget(metadata);
     updateMediaWidgetState('paused'); // Default to paused on change.
 
+    // Sync with Waves Remote
+    if (window.WavesHost) {
+        window.WavesHost.pushMediaUpdate(metadata, appName);
+    }
+
     const appIconEl = document.getElementById('media-widget-app-icon');
     if (appIconEl && apps[appName] && apps[appName].icon) {
         let iconUrl = apps[appName].icon;
