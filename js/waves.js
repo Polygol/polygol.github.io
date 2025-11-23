@@ -71,62 +71,66 @@ async function handleRemoteCommand(payload, localPsk, peerId) {
             setControlValueAndDispatch('page_brightness', data);
             break;
         
-        case 'blackout':
-            blackoutScreen();
+        case 'toggleSleep':
+            if (document.body.classList.contains('blackout-active')) {
+                // Wake
+                showCursorAndResetTimer();
+                document.body.classList.remove('blackout-active', 'blackout-style-dim-show', 'blackout-style-dim-hide', 'blackout-style-hide-show', 'blackout-style-off');
+                const overlay = document.getElementById('blackout-event-overlay');
+                if(overlay) overlay.remove();
+            } else {
+                // Sleep
+                blackoutScreen();
+            }
             break;
-        
-        case 'wake':
-            showCursorAndResetTimer();
-            document.body.classList.remove('blackout-active', 'blackout-style-dim-show', 'blackout-style-dim-hide', 'blackout-style-hide-show', 'blackout-style-off');
-            const overlay = document.getElementById('blackout-event-overlay');
-            if(overlay) overlay.remove();
+
+        case 'home':
+            minimizeFullscreenEmbed();
             break;
 
         case 'media':
-            // Robust media handling
+            // Use system API instead of direct iframe access
             const targetApp = data.app || window.activeMediaSessionApp;
-            const action = data.action; // prev, next, playPause
-
-            if(targetApp) {
-                // 1. Try finding the iframe
-                const iframe = document.querySelector(`iframe[data-app-id="${targetApp}"]`);
-                if (iframe) {
-                    const targetOrigin = getOriginFromUrl(iframe.src);
-                    iframe.contentWindow.postMessage({ type: 'media-control', action: action }, targetOrigin);
-                }
-                // 2. Fallback: Check if we can trigger via main window helpers
-                // (This part is redundant if the iframe method works, but good for safety)
+            if(targetApp && window.Gurasuraisu) {
+                window.Gurasuraisu.callApp(targetApp, data.action);
             }
             break;
             
         case 'launchApp':
-            // data = { url: '/path/to/app' }
             if(data.url) {
                 createFullscreenEmbed(data.url);
             }
             break;
             
         case 'getApps':
-            // Send list of installed apps
-            const appList = Object.entries(window.apps || {}).map(([name, details]) => ({
-                name: name,
-                icon: details.icon,
-                url: details.url
-            }));
+            const appList = Object.entries(window.apps || {}).map(([name, details]) => {
+                // Construct absolute URL for icons so they load on the client
+                let iconUrl = details.icon;
+                if (iconUrl && !iconUrl.startsWith('http') && !iconUrl.startsWith('data:')) {
+                    iconUrl = new URL(`/assets/appicon/${iconUrl}`, window.location.href).href;
+                }
+                return {
+                    name: name,
+                    icon: iconUrl,
+                    url: details.url
+                };
+            });
             wavesSend({ type: 'appList', data: appList }, peerId);
             break;
 
         case 'requestScreenshot':
-            try {
-                const canvas = await html2canvas(document.body, { 
-                    useCORS: true, 
-                    logging: false,
-                    ignoreElements: (el) => el.id === 'ai-assistant-overlay' || el.id === 'camera-preview'
-                });
-                const imgData = canvas.toDataURL('image/jpeg', 0.4);
-                wavesSend({ type: 'screenshot', data: imgData }, peerId);
-            } catch (e) {
-                console.error("Screenshot failed", e);
+            if (window.html2canvas) {
+                try {
+                    const canvas = await html2canvas(document.body, { 
+                        useCORS: true, 
+                        logging: false,
+                        ignoreElements: (el) => el.id === 'ai-assistant-overlay' || el.id === 'camera-preview'
+                    });
+                    const imgData = canvas.toDataURL('image/jpeg', 0.3);
+                    wavesSend({ type: 'screenshot', data: imgData }, peerId);
+                } catch (e) {
+                    console.error("Screenshot failed", e);
+                }
             }
             break;
     }
