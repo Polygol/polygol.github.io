@@ -9803,7 +9803,8 @@ function hideMediaWidget() {
 function _updateActiveMediaSession() {
     if (mediaSessionStack.length === 0) {
         // If stack is empty, hide the widget and clear all state.
-        activeMediaSessionApp = null;
+		activeMediaSessionApp = null;
+        window.activeMediaSessionApp = null;
         hideMediaWidget();
         // localStorage.removeItem('lastMediaMetadata');
         // localStorage.removeItem('lastMediaSessionApp');
@@ -9816,6 +9817,7 @@ function _updateActiveMediaSession() {
     
     // Update global state and localStorage.
     activeMediaSessionApp = appName;
+ 	window.activeMediaSessionApp = appName;
     localStorage.setItem('lastMediaSessionApp', appName);
 
     // Update the widget's UI with the new session's data.
@@ -9855,6 +9857,11 @@ function _updateActiveMediaSession() {
     if (nextBtn) {
         nextBtn.disabled = !supportedActions.includes('next');
         nextBtn.style.display = nextBtn.disabled ? 'none' : 'block';
+    }
+	
+    // Sync with Waves Remote
+    if (window.WavesHost) {
+        window.WavesHost.pushMediaUpdate(metadata, appName);
     }
 }
 
@@ -10058,15 +10065,19 @@ function updateDockVisibility() {
 }
 
 const Gurasuraisu = {
-    // This is the inverse of the API in the child. It allows the parent to call a function *in* a child app.
     callApp: (appName, action) => {
-        const iframe = document.querySelector(`iframe[data-app-id="${appName}"]`);
+        if (!appName) return;
+        // Use 'i' flag for case-insensitive matching to be robust
+        const iframe = document.querySelector(`iframe[data-app-id="${appName}" i]`);
         if (iframe) {
             const targetOrigin = getOriginFromUrl(iframe.src);
             iframe.contentWindow.postMessage({ type: 'media-control', action: action }, targetOrigin);
+        } else {
+             console.warn(`[System] Could not find running app '${appName}' to send media command.`);
         }
     }
 };
+window.Gurasuraisu = Gurasuraisu; // FIX: Explicitly expose to window
 
 // --- NEW Permission Model ---
 // Maps trusted app IDs to their permission levels.
