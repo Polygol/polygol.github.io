@@ -9174,6 +9174,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         updateBrightness(e.target.value);
         localStorage.setItem('page_brightness', e.target.value);
         broadcastSettingUpdate('page_brightness', e.target.value);
+
+		if (window.WavesHost) window.WavesHost.pushFullState();
     });
     
     // Add CSS for the overlays
