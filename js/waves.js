@@ -110,29 +110,32 @@ async function handleRemoteCommand(payload, localPsk, peerId) {
             break;
             
         case 'getApps':
-            // FIX: Ensure we are reading the global apps object correctly and filtering
-            const sysApps = window.apps || {};
-            const appList = Object.entries(sysApps)
-                .filter(([name]) => name !== "Apps") // Filter out the 'Apps' folder definition if present
-                .map(([name, details]) => {
-                    // FIX: Convert relative icon paths to absolute for the remote device
-                    let iconUrl = details.icon;
-                    if (iconUrl && !iconUrl.startsWith('http') && !iconUrl.startsWith('data:')) {
-                        // Handle both /assets and plain filenames
-                        if (!iconUrl.startsWith('/')) {
-                            iconUrl = `/assets/appicon/${iconUrl}`;
+            try {
+                const sysApps = window.apps || {};
+                const appList = Object.entries(sysApps)
+                    .filter(([name]) => name !== "Apps") 
+                    .map(([name, details]) => {
+                        // Ensure we have a valid icon URL
+                        let iconUrl = details.icon || 'system.png'; 
+                        if (!iconUrl.startsWith('http') && !iconUrl.startsWith('data:')) {
+                            if (!iconUrl.startsWith('/')) {
+                                iconUrl = `/assets/appicon/${iconUrl}`;
+                            }
+                            // Convert to absolute URL
+                            iconUrl = new URL(iconUrl, window.location.origin).href;
                         }
-                        iconUrl = new URL(iconUrl, window.location.href).href;
-                    }
-                    return {
-                        name: name,
-                        icon: iconUrl,
-                        url: details.url
-                    };
-                });
-            wavesSend({ type: 'appList', data: appList }, peerId);
+                        return {
+                            name: name,
+                            icon: iconUrl,
+                            url: details.url
+                        };
+                    });
+                wavesSend({ type: 'appList', data: appList }, peerId);
+            } catch (e) {
+                console.error("[Waves] getApps error:", e);
+            }
             break;
-
+            
         case 'requestScreenshot':
             // FIX: Use createCompositeScreenshot from index.js to handle iframes correctly
             if (typeof window.createCompositeScreenshot === 'function') {
@@ -164,27 +167,30 @@ async function handleRemoteCommand(payload, localPsk, peerId) {
 function pushFullState() {
     if(!wavesBroadcast) return;
     
-    // Gather state
     const state = {
         brightness: localStorage.getItem('page_brightness') || 100,
-        media: null
+        media: null,
+        mediaState: 'paused' // Default
     };
 
-    // Get Media State from DOM/LocalStorage
     const lastMediaMeta = localStorage.getItem('lastMediaMetadata');
     if (lastMediaMeta) {
         state.media = JSON.parse(lastMediaMeta);
-        state.mediaApp = localStorage.getItem('lastMediaSessionApp');
+        // Check if the play button in DOM currently shows 'pause' icon (meaning it's playing)
+        const playBtn = document.querySelector('#media-widget-play-pause span');
+        if (playBtn && playBtn.textContent === 'pause') {
+            state.mediaState = 'playing';
+        }
     }
     
     wavesBroadcast({ type: 'state', data: state });
 }
 
-function pushMediaUpdate(metadata, appName) {
+function pushMediaUpdate(metadata, appName, playbackState = 'paused') {
     if(!wavesBroadcast) return;
     wavesBroadcast({ 
         type: 'mediaUpdate', 
-        data: { metadata, appName } 
+        data: { metadata, appName, playbackState } 
     });
 }
 
