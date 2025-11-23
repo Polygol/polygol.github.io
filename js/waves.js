@@ -1,14 +1,5 @@
 // js/waves.js - Host Side (Polygol System)
 
-// The CDN script exposes joinRoom directly on window, not under Trystero.
-if (typeof Trystero === 'undefined') {
-    window.Trystero = {
-        joinRoom: window.joinRoom || ((...args) => console.error("Trystero joinRoom not found. Library not loaded?")),
-        selfId: window.selfId,
-        getPeers: window.getPeers
-    };
-}
-
 const WAVES_CONFIG = { appId: 'polygol-connect-v1' };
 let wavesRoom = null;
 let wavesOnData = null;
@@ -29,9 +20,15 @@ function generateUUID() {
 
 // 2. Connection Logic
 function initWavesHost() {
+    // Wait for the ES Module to load and attach to window
+    if (!window.Trystero) {
+        window.addEventListener('trystero-ready', initWavesHost, { once: true });
+        return;
+    }
+
     let state = getWavesHostState();
     
-    // auto-generate credentials on first run so it's always ready
+    // auto-generate credentials on first run
     if (!state) {
         state = { roomId: generateUUID(), psk: generateUUID() };
         localStorage.setItem('waves_host_config', JSON.stringify(state));
@@ -39,18 +36,25 @@ function initWavesHost() {
 
     console.log(`[Waves Host] Listening on Room: ${state.roomId}`);
     
-    wavesRoom = Trystero.joinRoom(WAVES_CONFIG, state.roomId);
-    const [send, get] = wavesRoom.makeAction('waves-cmd');
-    wavesSend = send;
-    wavesOnData = get;
+    // Trystero is now guaranteed to exist
+    wavesRoom = window.Trystero.joinRoom(WAVES_CONFIG, state.roomId);
+    
+    // Check if makeAction exists (it should on a valid room instance)
+    if(wavesRoom.makeAction) {
+        const [send, get] = wavesRoom.makeAction('waves-cmd');
+        wavesSend = send;
+        wavesOnData = get;
 
-    wavesOnData((payload, peerId) => {
-        handleRemoteCommand(payload, state.psk, peerId);
-    });
+        wavesOnData((payload, peerId) => {
+            handleRemoteCommand(payload, state.psk, peerId);
+        });
 
-    wavesRoom.onPeerJoin(peerId => {
-        showNotification('Waves Remote Connected', { icon: 'phonelink_ring' });
-    });
+        wavesRoom.onPeerJoin(peerId => {
+            showNotification('Waves Remote Connected', { icon: 'phonelink_ring' });
+        });
+    } else {
+        console.error("[Waves] Failed to initialize room actions. Trystero version mismatch?");
+    }
 }
 
 // 3. Command Handler
