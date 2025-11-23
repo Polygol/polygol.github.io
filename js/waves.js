@@ -3,7 +3,8 @@
 const WAVES_CONFIG = { appId: 'polygol-connect-v1' };
 let wavesRoom = null;
 let wavesOnData = null;
-let wavesSend = null; // To send screenshots back
+let wavesSend = null; // Response channel
+let wavesBroadcast = null; // State update channel
 
 // 1. State Management
 function getWavesHostState() {
@@ -20,7 +21,7 @@ function generateUUID() {
 
 // 2. Connection Logic
 function initWavesHost() {
-    // Wait for the ES Module to load and attach to window
+    // Wait for Trystero to load
     if (!window.Trystero) {
         window.addEventListener('trystero-ready', initWavesHost, { once: true });
         return;
@@ -28,7 +29,6 @@ function initWavesHost() {
 
     let state = getWavesHostState();
     
-    // auto-generate credentials on first run
     if (!state) {
         state = { roomId: generateUUID(), psk: generateUUID() };
         localStorage.setItem('waves_host_config', JSON.stringify(state));
@@ -36,14 +36,17 @@ function initWavesHost() {
 
     console.log(`[Waves Host] Listening on Room: ${state.roomId}`);
     
-    // Trystero is now guaranteed to exist
     wavesRoom = window.Trystero.joinRoom(WAVES_CONFIG, state.roomId);
     
-    // Check if makeAction exists (it should on a valid room instance)
     if(wavesRoom.makeAction) {
-        const [send, get] = wavesRoom.makeAction('waves-cmd');
-        wavesSend = send;
-        wavesOnData = get;
+        // Channel for Commands (Incoming)
+        const [sendCmd, getCmd] = wavesRoom.makeAction('waves-cmd');
+        wavesSend = sendCmd;
+        wavesOnData = getCmd;
+
+        // Channel for State Updates (Outgoing)
+        const [sendUpdate, getUpdate] = wavesRoom.makeAction('waves-update');
+        wavesBroadcast = sendUpdate;
 
         wavesOnData((payload, peerId) => {
             handleRemoteCommand(payload, state.psk, peerId);
@@ -51,25 +54,20 @@ function initWavesHost() {
 
         wavesRoom.onPeerJoin(peerId => {
             showNotification('Waves Remote Connected', { icon: 'phonelink_ring' });
+            // Send initial state snapshot
+            pushFullState();
         });
-    } else {
-        console.error("[Waves] Failed to initialize room actions. Trystero version mismatch?");
     }
 }
 
 // 3. Command Handler
 async function handleRemoteCommand(payload, localPsk, peerId) {
-    // Security Check
-    if (payload.auth !== localPsk) {
-        console.warn("[Waves Host] Unauthorized command attempt.");
-        return;
-    }
+    if (payload.auth !== localPsk) return;
 
     const { type, data } = payload;
 
     switch (type) {
         case 'setBrightness':
-            // Call the internal helper found in index.js
             setControlValueAndDispatch('page_brightness', data);
             break;
         
@@ -78,67 +76,110 @@ async function handleRemoteCommand(payload, localPsk, peerId) {
             break;
         
         case 'wake':
-            // Simulate activity
             showCursorAndResetTimer();
-            // Remove blackout classes
             document.body.classList.remove('blackout-active', 'blackout-style-dim-show', 'blackout-style-dim-hide', 'blackout-style-hide-show', 'blackout-style-off');
             const overlay = document.getElementById('blackout-event-overlay');
             if(overlay) overlay.remove();
             break;
 
         case 'media':
-            // data: { app: 'Music', action: 'next' }
-            // If 'app' is null, use the active global variable
+            // Robust media handling
             const targetApp = data.app || window.activeMediaSessionApp;
+            const action = data.action; // prev, next, playPause
+
             if(targetApp) {
-                // Use the Gurasuraisu helper to talk to the iframe
+                // 1. Try finding the iframe
                 const iframe = document.querySelector(`iframe[data-app-id="${targetApp}"]`);
                 if (iframe) {
-                    const targetOrigin = new URL(iframe.src).origin;
-                    iframe.contentWindow.postMessage({ type: 'media-control', action: data.action }, targetOrigin);
+                    const targetOrigin = getOriginFromUrl(iframe.src);
+                    iframe.contentWindow.postMessage({ type: 'media-control', action: action }, targetOrigin);
                 }
+                // 2. Fallback: Check if we can trigger via main window helpers
+                // (This part is redundant if the iframe method works, but good for safety)
             }
+            break;
+            
+        case 'launchApp':
+            // data = { url: '/path/to/app' }
+            if(data.url) {
+                createFullscreenEmbed(data.url);
+            }
+            break;
+            
+        case 'getApps':
+            // Send list of installed apps
+            const appList = Object.entries(window.apps || {}).map(([name, details]) => ({
+                name: name,
+                icon: details.icon,
+                url: details.url
+            }));
+            wavesSend({ type: 'appList', data: appList }, peerId);
             break;
 
         case 'requestScreenshot':
             try {
-                // Capture body, ignoring the AI overlay
                 const canvas = await html2canvas(document.body, { 
                     useCORS: true, 
                     logging: false,
-                    ignoreElements: (el) => el.id === 'ai-assistant-overlay' || el.tagName === 'VIDEO' // Videos often crash canvas
+                    ignoreElements: (el) => el.id === 'ai-assistant-overlay' || el.id === 'camera-preview'
                 });
-                const imgData = canvas.toDataURL('image/jpeg', 0.3); // Low quality for speed
-                
-                // Send back to the specific peer
+                const imgData = canvas.toDataURL('image/jpeg', 0.4);
                 wavesSend({ type: 'screenshot', data: imgData }, peerId);
             } catch (e) {
                 console.error("Screenshot failed", e);
             }
             break;
-            
-        case 'reload':
-            window.location.reload();
-            break;
     }
 }
 
-// 4. Pairing Helper (Called by Settings App)
+// 4. Broadcasting State (To Client)
+function pushFullState() {
+    if(!wavesBroadcast) return;
+    
+    // Gather state
+    const state = {
+        brightness: localStorage.getItem('page_brightness') || 100,
+        media: null
+    };
+
+    // Get Media State from DOM/LocalStorage
+    const lastMediaMeta = localStorage.getItem('lastMediaMetadata');
+    if (lastMediaMeta) {
+        state.media = JSON.parse(lastMediaMeta);
+        state.mediaApp = localStorage.getItem('lastMediaSessionApp');
+    }
+    
+    wavesBroadcast({ type: 'state', data: state });
+}
+
+function pushMediaUpdate(metadata, appName) {
+    if(!wavesBroadcast) return;
+    wavesBroadcast({ 
+        type: 'mediaUpdate', 
+        data: { metadata, appName } 
+    });
+}
+
 function getPairingData() {
     return JSON.stringify(getWavesHostState());
 }
 
 function resetPairingData() {
     localStorage.removeItem('waves_host_config');
-    // Reload to bind new room
     window.location.reload();
 }
 
-// Init
 document.addEventListener('DOMContentLoaded', initWavesHost);
 
-// Expose to Settings App
+// Expose Public API
 window.WavesHost = {
     getPairingData,
-    resetPairingData
+    resetPairingData,
+    pushMediaUpdate,
+    pushFullState
 };
+
+// Helper for URL origin
+function getOriginFromUrl(url) {
+    try { return new URL(url).origin; } catch (e) { return window.location.origin; }
+}
