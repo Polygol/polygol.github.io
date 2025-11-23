@@ -68,68 +68,93 @@ async function handleRemoteCommand(payload, localPsk, peerId) {
 
     switch (type) {
         case 'setBrightness':
-            setControlValueAndDispatch('page_brightness', data);
+            if (typeof setControlValueAndDispatch === 'function') {
+                setControlValueAndDispatch('page_brightness', data);
+            }
             break;
         
         case 'toggleSleep':
             if (document.body.classList.contains('blackout-active')) {
-                // Wake
-                showCursorAndResetTimer();
-                document.body.classList.remove('blackout-active', 'blackout-style-dim-show', 'blackout-style-dim-hide', 'blackout-style-hide-show', 'blackout-style-off');
-                const overlay = document.getElementById('blackout-event-overlay');
-                if(overlay) overlay.remove();
+                if (typeof window.exitBlackoutMode === 'function') {
+                    window.exitBlackoutMode();
+                }
             } else {
-                // Sleep
-                blackoutScreen();
+                if (typeof window.blackoutScreen === 'function') {
+                    window.blackoutScreen();
+                }
             }
             break;
 
         case 'home':
-            minimizeFullscreenEmbed();
+            if (typeof window.minimizeFullscreenEmbed === 'function') {
+                window.minimizeFullscreenEmbed();
+            }
             break;
 
         case 'media':
-            // Use system API instead of direct iframe access
-            const targetApp = data.app || window.activeMediaSessionApp;
-            if(targetApp && window.Gurasuraisu) {
-                window.Gurasuraisu.callApp(targetApp, data.action);
+            // FIX: Use window.activeMediaSessionApp to identify target
+            // and window.Gurasuraisu.callApp to dispatch (System API)
+            const targetApp = window.activeMediaSessionApp;
+            const action = data.action; // prev, next, playPause
+
+            if (targetApp && window.Gurasuraisu && typeof window.Gurasuraisu.callApp === 'function') {
+                window.Gurasuraisu.callApp(targetApp, action);
+            } else {
+                console.warn("[Waves] Media action failed: No active session or System API missing");
             }
             break;
             
         case 'launchApp':
-            if(data.url) {
-                createFullscreenEmbed(data.url);
+            if (data.url && typeof window.createFullscreenEmbed === 'function') {
+                window.createFullscreenEmbed(data.url);
             }
             break;
             
         case 'getApps':
-            const appList = Object.entries(window.apps || {}).map(([name, details]) => {
-                // Construct absolute URL for icons so they load on the client
-                let iconUrl = details.icon;
-                if (iconUrl && !iconUrl.startsWith('http') && !iconUrl.startsWith('data:')) {
-                    iconUrl = new URL(`/assets/appicon/${iconUrl}`, window.location.href).href;
-                }
-                return {
-                    name: name,
-                    icon: iconUrl,
-                    url: details.url
-                };
-            });
+            // FIX: Ensure we are reading the global apps object correctly and filtering
+            const sysApps = window.apps || {};
+            const appList = Object.entries(sysApps)
+                .filter(([name]) => name !== "Apps") // Filter out the 'Apps' folder definition if present
+                .map(([name, details]) => {
+                    // FIX: Convert relative icon paths to absolute for the remote device
+                    let iconUrl = details.icon;
+                    if (iconUrl && !iconUrl.startsWith('http') && !iconUrl.startsWith('data:')) {
+                        // Handle both /assets and plain filenames
+                        if (!iconUrl.startsWith('/')) {
+                            iconUrl = `/assets/appicon/${iconUrl}`;
+                        }
+                        iconUrl = new URL(iconUrl, window.location.href).href;
+                    }
+                    return {
+                        name: name,
+                        icon: iconUrl,
+                        url: details.url
+                    };
+                });
             wavesSend({ type: 'appList', data: appList }, peerId);
             break;
 
         case 'requestScreenshot':
-            if (window.html2canvas) {
+            // FIX: Use createCompositeScreenshot from index.js to handle iframes correctly
+            if (typeof window.createCompositeScreenshot === 'function') {
+                try {
+                    const imgData = await window.createCompositeScreenshot();
+                    wavesSend({ type: 'screenshot', data: imgData }, peerId);
+                } catch (e) {
+                    console.error("[Waves] System screenshot failed:", e);
+                }
+            } else if (window.html2canvas) {
+                // Fallback
                 try {
                     const canvas = await html2canvas(document.body, { 
                         useCORS: true, 
                         logging: false,
-                        ignoreElements: (el) => el.id === 'ai-assistant-overlay' || el.id === 'camera-preview'
+                        ignoreElements: (el) => el.id === 'ai-assistant-overlay'
                     });
-                    const imgData = canvas.toDataURL('image/jpeg', 0.3);
+                    const imgData = canvas.toDataURL('image/jpeg', 0.4);
                     wavesSend({ type: 'screenshot', data: imgData }, peerId);
                 } catch (e) {
-                    console.error("Screenshot failed", e);
+                    console.error("[Waves] Fallback screenshot failed:", e);
                 }
             }
             break;
