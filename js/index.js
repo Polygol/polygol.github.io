@@ -5329,22 +5329,9 @@ async function processCurrentWallpaperDepth() {
         // Load the library dynamically via script tag to avoid ESM bundle size limits and CORS issues
         if (!window.imglyRemoveBackground) {
             showNotification('Downloading AI models', { icon: 'auto_awesome' });
-            await new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                // Use UMD build
-                script.src = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.3.0/dist/imgly-background-removal.min.js';
-                script.crossOrigin = "anonymous"; // Important for CORS
-                script.onload = () => {
-                    // The UMD build exposes 'imglyRemoveBackground' directly on window
-                    if (typeof window.imglyRemoveBackground === 'function') {
-                         resolve(); 
-                    } else {
-                         reject(new Error("Library loaded but function not found"));
-                    }
-                };
-                script.onerror = () => reject(new Error("Failed to load background removal library"));
-                document.head.appendChild(script);
-            });
+            // Use version 1.7.0 ESM from jsDelivr as verified
+            const module = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
+            window.imglyRemoveBackground = module.default;
         }
 
         // 4. Process
@@ -5356,6 +5343,14 @@ async function processCurrentWallpaperDepth() {
         } else {
             throw new Error("No image source found");
         }
+
+        // Important: Set publicPath to the dist folder of the same version
+        const blob = await window.imglyRemoveBackground(imageSource, {
+            publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/',
+            progress: (key, current, total) => {
+                // Optional: console.log(`Processing: ${key} ${current}/${total}`);
+            }
+        });
 
         // We MUST set publicPath to the CDN so it fetches models from there, not locally
         const blob = await window.imglyRemoveBackground(imageSource, {
