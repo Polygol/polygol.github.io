@@ -351,7 +351,7 @@ function initializeSettingsApp() {
             document.getElementById('waves-code-display').innerText = code;
         };
     
-        document.getElementById('btn-reset-waves').onclick = () => {
+        document.getElementById('btn-reset-waves').onclick = async () => {
             if (await Gurasuraisu.showConfirm("This will disconnect all existing remotes. Are you sure?")) {
                 window.parent.WavesHost.resetPairingData();
             }
