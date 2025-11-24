@@ -211,7 +211,7 @@ async function forceUpdatePolygol() {
                         // The existing 'onupdatefound' listener in setupServiceWorkerUpdateListener
                         // will now correctly detect this new worker and show the "Update & Reload" prompt.
                         // We just give the user initial feedback.
-                        showPopup('Update found! The system will prompt you to reload shortly.');
+                        showPopup('A system update will install soon');
                     }
                 });
             }
@@ -225,7 +225,11 @@ async function forceUpdatePolygol() {
         setTimeout(() => {
             // If there's still no new worker installing, it means no update was found.
             if (!registration.installing) {
-                showPopup('Polygol is up to date.');
+                showDialog({ 
+				    type: 'alert', 
+				    title: 'Polygol is up to date', 
+				    message: 'No updates found were.' 
+				});
             }
         }, 2000); // 2-second timeout to wait for the update check to complete.
 
@@ -1110,7 +1114,10 @@ async function applyPresetWallpaper(preset) {
 
     } catch (error) {
         console.error('Failed to apply preset wallpaper:', error);
-        showPopup(currentLanguage.WALLPAPER_APPLY_FAIL || 'Failed to apply wallpaper');
+		showDialog({ 
+		    type: 'alert', 
+		    title: currentLanguage.WALLPAPER_APPLY_FAIL || 'Failed to apply wallpaper'
+		});
     }
 }
 
@@ -1426,7 +1433,10 @@ function checkIfPWA() {
 
 function promptToInstallPWA() {
     if (!localStorage.getItem('pwaPromptShown') && !checkIfPWA()) {
-        showPopup(currentLanguage.INSTALL_PROMPT);
+		showDialog({ 
+		    type: 'alert', 
+		    title: currentLanguage.INSTALL_PROMPT
+		});
         localStorage.setItem('pwaPromptShown', 'true');
     }
 }
@@ -2628,7 +2638,10 @@ async function updateSmallWeather() {
     } catch (error) {
         console.error('Error updating small weather widget:', error);
         document.getElementById('weather').style.display = 'none';
-        showPopup(currentLanguage.FAIL_WEATHER);
+		showDialog({ 
+		    type: 'alert', 
+		    title: currentLanguage.FAIL_WEATHER 
+		});
     }
     updateTitle();
 }
@@ -2937,7 +2950,11 @@ function createOnScreenPopup(message, options = {}) {
                     console.log(`[Polygol] Sent action '${functionName}' to Gurapp '${appName}'.`);
                 } else {
                     console.warn(`[Polygol] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
-                    showPopup(`Error: Could not perform action for ${appName}.`);
+					showDialog({ 
+					    type: 'alert', 
+					    title: 'Notification Action Error', 
+					    message: `Could not perform action for ${appName}.`
+					});
                 }
                 closeMe(); // FIX: Call the local close function
             });
@@ -3150,8 +3167,12 @@ function addToNotificationShade(message, options = {}) {
 	                    console.log(`[Polygol] Sent action '${functionName}' to Gurapp '${appName}'.`);
 	                } else {
 	                    console.warn(`[Polygol] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
-	                    showPopup(`Error: Could not perform action for ${appName}.`);
-	                }
+						showDialog({ 
+						    type: 'alert', 
+						    title: 'Notification Action Error', 
+						    message: `Could not perform action for ${appName}.`
+						});
+					}
 	                closeNotification(notification); // Close the notification after click
 	            });
 	        }
@@ -3741,7 +3762,7 @@ function checkForAutomaticBackup() {
 
 // Function to create the backup file and notify the user
 async function createAutomaticBackup() {
-    showPopup(currentLanguage.BACKUP_STARTED || 'Starting automatic backup...');
+    showPopup(currentLanguage.BACKUP_STARTED || 'Starting automatic backup');
     try {
         // 1. Gather localStorage
         const localStorageData = {};
@@ -4376,7 +4397,7 @@ const availableFunctions = {
 
 function showAiAssistant() {
     if (!isAiAssistantEnabled || !genAI) {
-        if (isAiAssistantEnabled) showPopup(currentLanguage.AI_NOT_READY || "AI is not ready.");
+        if (isAiAssistantEnabled) showPopup(currentLanguage.AI_NOT_READY || "AI is not ready");
         return;
     };
 	
@@ -4680,7 +4701,10 @@ wallpaperInput.addEventListener("change", async event => {
             if (["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "video/mp4"].includes(file.type)) {
                 saveWallpaper(file);
             } else {
-                showPopup(currentLanguage.WALLPAPER_UPDATE_FAIL);
+				showDialog({ 
+				    type: 'alert', 
+				    title: currentLanguage.WALLPAPER_UPDATE_FAIL 
+				});
             }
         } else {
             let processedWallpapers = [];
@@ -4735,12 +4759,18 @@ wallpaperInput.addEventListener("change", async event => {
                 applyWallpaper();
                 showPopup(currentLanguage.MULTIPLE_WALLPAPERS_UPDATED);
             } else {
-                showPopup(currentLanguage.NO_VALID_WALLPAPERS);
+				showDialog({ 
+				    type: 'alert', 
+				    title: currentLanguage.NO_VALID_WALLPAPERS
+				});
             }
         }
     } catch (error) {
         console.error("Error handling wallpapers:", error);
-        showPopup(currentLanguage.WALLPAPER_SAVE_FAIL);
+		showDialog({ 
+		    type: 'alert', 
+		    title: currentLanguage.WALLPAPER_SAVE_FAIL
+		});
     }
 });
 
@@ -4989,7 +5019,10 @@ async function saveWallpaper(file, customStyles = null) {
 	syncUiStates();
     } catch (error) {
         console.error("Error saving wallpaper:", error);
-        showPopup(currentLanguage.WALLPAPER_SAVE_FAIL);
+		showDialog({ 
+		    type: 'alert', 
+		    title: currentLanguage.WALLPAPER_SAVE_FAIL
+		});
     }
 }
 
@@ -5409,7 +5442,10 @@ function saveRecentWallpapers() {
     localStorage.setItem('recentWallpapers', JSON.stringify(recentWallpapers));
   } catch (error) {
     console.error('Error saving recent wallpapers:', error);
-    showPopup(currentLanguage.WALLPAPER_HISTORY_FAIL);
+	showDialog({ 
+		type: 'alert', 
+		title: currentLanguage.WALLPAPER_HISTORY_FAIL
+	});
   }
 }
 
@@ -6872,7 +6908,10 @@ async function installApp(appData) {
             showPopup(message);
         } catch (error) {
             console.error('Service Worker not ready:', error);
-            showPopup(currentLanguage.GURAPP_INSTALL_FAILED.replace('{appName}', appData.name));
+			showDialog({ 
+			    type: 'alert', 
+			    title: currentLanguage.GURAPP_INSTALL_FAILED.replace('{appName}', appData.name)
+			});
         }
     } else {
         showPopup(currentLanguage.GURAPP_OFFLINE_NOT_SUPPORTED);
@@ -6886,8 +6925,15 @@ async function installApp(appData) {
 async function deleteApp(appName) {
     // --- Protection Clause ---
     const appToDelete = apps[appName];
-    if (appToDelete && appToDelete.url.includes('/appstore/index.html')) {
-        showPopup(currentLanguage.GURAPP_DELETE_STORE_DENIED);
+	if (
+		appToDelete && 
+		(appToDelete.url.includes('/appstore/index.html') ||
+		appToDelete.url.includes('/assets/gurapp/intl/settings/'))
+	) {
+	showDialog({ 
+		    type: 'alert', 
+		    title: currentLanguage.GURAPP_DELETE_STORE_DENIED
+		});
         return; // Stop the function immediately
     }
 
@@ -6942,7 +6988,10 @@ async function deleteApp(appName) {
         populateDock();
         showPopup(currentLanguage.GURAPP_DELETED.replace('{appName}', appName));
     } else {
-        showPopup(currentLanguage.GURAPP_DELETE_FAILED.replace('{appName}', appName));
+		showDialog({ 
+		    type: 'alert', 
+		    title: currentLanguage.GURAPP_DELETE_FAILED.replace('{appName}', appName)
+		});
     }
 }
 
@@ -7011,7 +7060,10 @@ async function createFullscreenEmbed(url) {
 	// If the URL is not for an installed app, an internal tool, or a Google Form, block it.
 	if (!appName && !isInternalTool && !isGoogleForm) {
 	    console.warn(`Attempted to open an unknown app or non-allowlisted URL: ${url}`);
-	    showPopup(currentLanguage.GURAPP_NOT_INSTALLED);
+		showDialog({ 
+		    type: 'alert', 
+		    title: currentLanguage.GURAPP_NOT_INSTALLED
+		});
 	    return;
 	}
 	
@@ -7799,26 +7851,16 @@ function createAppIcons(filterQuery = '') {
 			drawerPill.style.opacity = '1'
 			
             try {      
-                if (app.details.url.startsWith('#')) {
-                    switch (app.details.url) {
-                        case '#settings':
-                            showPopup(currentLanguage.OPEN_SETTINGS);
-                            break;
-                        case '#tasks':
-                            showMinimizedEmbeds(); // Add this case to call your new function
-                            break;
-                        default:
-                            showPopup(currentLanguage.APP_OPENED.replace("{app}", app));
-                    }
-                } else {
-                    createFullscreenEmbed(app.details.url);
-                }
+                createFullscreenEmbed(app.details.url);
                 
                 appDrawer.classList.remove('open');
                 appDrawer.style.bottom = '-100%';
                 initialDrawerPosition = -100;
             } catch (error) {
-                showPopup(currentLanguage.APP_OPEN_FAIL.replace("{app}", app));
+				showDialog({ 
+				    type: 'alert', 
+				    title: currentLanguage.APP_OPEN_FAIL.replace("{app}", app)
+				});
                 console.error(`App open error: ${error}`);
             }
         };
@@ -9099,19 +9141,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Update icon
         updateSilentModeIcon(isSilentMode);
         
-        // Only override showPopup based on silent mode state
-        if (isSilentMode) { // Silent mode is being turned ON
-            if (!window.originalShowPopup) {
-                window.originalShowPopup = window.showPopup;
-            }
-            window.showPopup = function(message) {
-                console.log('Silent ON; suppressing popup:', message);
-            };
-        } else { // Silent mode is being turned OFF
-            if (window.originalShowPopup) {
-                window.showPopup = window.originalShowPopup;
-            }
-        }
+        // Do NOT override showPopup based on silent mode state
         // showNotification is handled by its own internal logic, no override needed here.
     });
     
@@ -9119,14 +9149,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     (function initSilentMode() {
         isSilentMode = localStorage.getItem('silentMode') === 'true'; // Initialize global flag
         
-        if (isSilentMode) { // Silent mode is ON on page load
-            if (!window.originalShowPopup) {
-                window.originalShowPopup = window.showPopup;
-            }
-            window.showPopup = function(message) {
-                console.log('Silent ON; suppressing popup:', message);
-            };
-        }
         // showNotification is handled by its own internal logic, no override needed here.
     })();
     
