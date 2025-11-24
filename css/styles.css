@@ -361,6 +361,24 @@ body:not(.reduce-animations)::before,
     object-fit: cover;
 }
 
+#depth-layer {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none; /* Let clicks pass through to widgets */
+	z-index: 5; /* Above Clock/Widgets, below Apps/Modals */
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	opacity: 0;
+	transition: opacity 0.5s ease, transform 0.5s ease;
+	/* Match the main background transform for animations */
+	transform: scale(var(--bg-transform-scale, 1.05));
+	filter: var(--wallpaper-filter); /* Match wallpaper filters */
+}
+
 .force-hide {
     display: none !important;
 }
@@ -719,6 +737,7 @@ body.one-button-nav-active .dock.show {
     flex-direction: column;
     align-items: center;
     width: max-content;
+	z-index: 1;
 }
 
 .container.align-left {
@@ -2828,7 +2847,7 @@ input[type="checkbox"]:checked::before {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 5; /* Below the main UI but above the background */
+    z-index: 1;
     pointer-events: none; /* The grid itself is not interactive */
 }
 
