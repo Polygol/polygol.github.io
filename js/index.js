@@ -5336,26 +5336,38 @@ function applyCustomWallpaperStyles(styles = {}) {
 // Depth Effect
 async function processCurrentWallpaperDepth() {
     const currentWallpaper = recentWallpapers[currentWallpaperPosition];
-    if (!currentWallpaper || currentWallpaper.isVideo || currentWallpaper.isSlideshow) return;
+    
+    // Basic validation
+    if (!currentWallpaper || currentWallpaper.isVideo || currentWallpaper.isSlideshow) {
+        const depthLayer = document.getElementById('depth-layer');
+        if(depthLayer) depthLayer.style.opacity = '0';
+        return;
+    }
 
-    // FIX: Check wallpaper-specific setting, NOT global
+    // Check if user enabled it
     if (!currentWallpaper.depthEnabled) {
          const depthLayer = document.getElementById('depth-layer');
          if(depthLayer) depthLayer.style.opacity = '0';
          return;
     }
 
-    showPopup("Analyzing wallpaper depth...");
-
     try {
-        // 2. Check if we already have a cached depth map in IDB
+        // 1. Fetch the full record from IndexedDB
         const dbRecord = await getWallpaper(currentWallpaper.id);
+        if (!dbRecord) return;
         
-        if (dbRecord && dbRecord.depthBlob) {
-            // Cache hit! Apply it.
+        // 2. CRITICAL: Check if depth data already exists
+        if (dbRecord.depthBlob) {
+            console.log("[Depth] Loaded from cache.");
             applyDepthLayer(dbRecord.depthBlob);
-            return;
+            return; // STOP HERE - Do not re-analyze
         }
+		
+		showDialog({ 
+		    type: 'alert', 
+		    title: 'Analyzing wallpaper depth', 
+		    message: 'This might take a few minutes. During analysis, Polygol will be unresponsive.' 
+		});
 
         // 3. No cache, we need to generate it.
         // Load the library dynamically via script tag to avoid ESM bundle size limits and CORS issues
@@ -5387,22 +5399,27 @@ async function processCurrentWallpaperDepth() {
             }
         });
 
-        // Save to IDB
+        // 4. Save generated blob to IndexedDB immediately
         dbRecord.depthBlob = blob;
         await storeWallpaper(currentWallpaper.id, dbRecord);
+        console.log("[Depth] Generated and saved to IDB.");
 
+        // 5. Apply
         applyDepthLayer(blob);
         showPopup("Depth effect generated");
 
     } catch (error) {
         console.error("Depth effect failed:", error);
-        // Reset switch if failed
+        showPopup("Failed to generate depth effect");
+        
+        // Auto-disable to prevent loop on broken images
         currentWallpaper.depthEnabled = false;
         saveRecentWallpapers();
         const sw = document.getElementById('depth-effect-switch');
         if(sw) sw.checked = false;
         
-        showPopup("Failed to generate depth effect");
+        const depthLayer = document.getElementById('depth-layer');
+        if(depthLayer) depthLayer.style.opacity = '0';
     }
 }
 
