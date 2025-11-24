@@ -5328,8 +5328,8 @@ async function processCurrentWallpaperDepth() {
         // 3. No cache, we need to generate it.
         // Load the library dynamically (lazy load)
         if (!window.imglyRemoveBackground) {
-            showPopup("Downloading AI models... (This happens once)");
-            const module = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.3.0/+esm');
+			showNotification('Downloading AI models', { icon: 'auto_awesome' });
+            const module = await import('https://esm.sh/@imgly/background-removal@1.3.0');
             window.imglyRemoveBackground = module.removeBackground;
         }
 
