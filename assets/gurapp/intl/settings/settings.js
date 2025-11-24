@@ -352,10 +352,8 @@ function initializeSettingsApp() {
         };
     
         document.getElementById('btn-reset-waves').onclick = () => {
-            if (await showCustomConfirm("This will disconnect all existing remotes. Are you sure?")) {
+            if (await Gurasuraisu.showConfirm("This will disconnect all existing remotes. Are you sure?")) {
                 window.parent.WavesHost.resetPairingData();
-            } else {
-                console.log("Cancelled");
             }
         };
 
