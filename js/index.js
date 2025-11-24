@@ -5104,6 +5104,18 @@ async function applyWallpaper() {
                                 document.body.dataset.wallpaperType = imageData.type.split('/')[1]; // Sets 'gif' or 'webp'
                                 document.body.dataset.wallpaperId = wallpaper.id;
                             }
+							
+							const depthLayer = document.getElementById('depth-layer');
+					        if (depthLayer) {
+					            // Hide old layer immediately while loading/checking new one
+					            depthLayer.style.opacity = '0'; 
+					            
+					            // Check if feature is enabled
+					            if (localStorage.getItem('depthEffectEnabled') === 'true') {
+					                // Small delay to let main wallpaper render first
+					                setTimeout(processCurrentWallpaperDepth, 100);
+					            }
+					        }
                         }
                     }
                 }
@@ -5177,6 +5189,18 @@ async function applyWallpaper() {
                                 document.body.dataset.wallpaperType = imageData.type.split('/')[1]; // Sets 'gif' or 'webp'
                                 document.body.dataset.wallpaperId = currentWallpaper.id;
                             }
+
+							const depthLayer = document.getElementById('depth-layer');
+					        if (depthLayer) {
+					            // Hide old layer immediately while loading/checking new one
+					            depthLayer.style.opacity = '0'; 
+					            
+					            // Check if feature is enabled
+					            if (localStorage.getItem('depthEffectEnabled') === 'true') {
+					                // Small delay to let main wallpaper render first
+					                setTimeout(processCurrentWallpaperDepth, 100);
+					            }
+					        }
                         }
                     }
                 }
@@ -5273,6 +5297,89 @@ function applyCustomWallpaperStyles(styles = {}) {
     }
 
     styleTag.textContent = css;
+}
+
+// Depth Effect
+async function processCurrentWallpaperDepth() {
+    // 1. Check if enabled and valid
+    if (localStorage.getItem('depthEffectEnabled') !== 'true') return;
+    
+    const currentWallpaper = recentWallpapers[currentWallpaperPosition];
+    if (!currentWallpaper || currentWallpaper.isVideo || currentWallpaper.isSlideshow) {
+        // Depth effect not supported for videos/slideshows yet
+        const depthLayer = document.getElementById('depth-layer');
+        if(depthLayer) depthLayer.style.opacity = '0';
+        return;
+    }
+
+    showPopup("Analyzing wallpaper depth...");
+
+    try {
+        // 2. Check if we already have a cached depth map in IDB
+        const dbRecord = await getWallpaper(currentWallpaper.id);
+        
+        if (dbRecord && dbRecord.depthBlob) {
+            // Cache hit! Apply it.
+            applyDepthLayer(dbRecord.depthBlob);
+            showPopup("Depth effect applied.");
+            return;
+        }
+
+        // 3. No cache, we need to generate it.
+        // Load the library dynamically (lazy load)
+        if (!window.imglyRemoveBackground) {
+            showPopup("Downloading AI models... (This happens once)");
+            const module = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.3.0/+esm');
+            window.imglyRemoveBackground = module.removeBackground;
+        }
+
+        // 4. Process
+        let imageSource;
+        if (dbRecord.blob) {
+            imageSource = dbRecord.blob;
+        } else if (dbRecord.dataUrl) {
+            imageSource = dbRecord.dataUrl;
+        } else {
+            throw new Error("No image source found");
+        }
+
+        const blob = await window.imglyRemoveBackground(imageSource, {
+            progress: (key, current, total) => {
+                // Optional: console.log(`Processing: ${key} ${current}/${total}`);
+            }
+        });
+
+        // 5. Save to IDB
+        dbRecord.depthBlob = blob;
+        await storeWallpaper(currentWallpaper.id, dbRecord);
+
+        // 6. Apply
+        applyDepthLayer(blob);
+        showPopup("Depth effect generated.");
+
+    } catch (error) {
+        console.error("Depth effect failed:", error);
+        showPopup("Failed to generate depth effect.");
+        // Disable to prevent loops
+        localStorage.setItem('depthEffectEnabled', 'false');
+        setControlValueAndDispatch('depthEffectEnabled', 'false');
+    }
+}
+
+function applyDepthLayer(imageBlob) {
+    const depthLayer = document.getElementById('depth-layer');
+    if (!depthLayer) return;
+
+    const url = URL.createObjectURL(imageBlob);
+    
+    // Clean up old URL
+    if (depthLayer.dataset.url) {
+        URL.revokeObjectURL(depthLayer.dataset.url);
+    }
+
+    depthLayer.style.backgroundImage = `url('${url}')`;
+    depthLayer.dataset.url = url;
+    depthLayer.style.opacity = '1';
 }
 
 // Load recent wallpapers from localStorage on startup
@@ -9236,6 +9343,24 @@ document.addEventListener('DOMContentLoaded', async function() {
 		    broadcastSettingUpdate('selectedLanguage', this.value);
         });
     }
+	
+    const depthEffectSwitch = document.getElementById('depth-effect-switch');
+    if (depthEffectSwitch) {
+        depthEffectSwitch.checked = localStorage.getItem('depthEffectEnabled') === 'true';
+        depthEffectSwitch.addEventListener('change', function() {
+            const isEnabled = this.checked;
+            localStorage.setItem('depthEffectEnabled', isEnabled);
+            
+            if (isEnabled) {
+                // Trigger processing for current wallpaper
+                processCurrentWallpaperDepth();
+            } else {
+                // Hide immediately
+                const depthLayer = document.getElementById('depth-layer');
+                if(depthLayer) depthLayer.style.opacity = '0';
+            }
+        });
+    }
 
     const aiSwitch = document.getElementById('ai-switch');
     aiSwitch.checked = isAiAssistantEnabled;
@@ -10196,7 +10321,8 @@ const controlIdMap = {
     'autoSleepScope': 'autoSleepScope',
     'persistentPageIndicator': 'persistent-indicator-switch',
     'dockPinned': 'dock-pinned-switch',
-    'wakeLockMode': 'wake-lock-mode-select'
+    'wakeLockMode': 'wake-lock-mode-select',
+	'depthEffectEnabled': 'depth-effect-switch'
 };
 
 // --- NEW: Function to broadcast a setting update to the settings app ---
