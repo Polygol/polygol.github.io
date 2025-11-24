@@ -524,7 +524,7 @@ function _displayDialog(options) {
 
         const yesBtn = document.createElement('button');
         yesBtn.textContent = currentLanguage.YES || 'Yes';
-        yesBtn.className = 'button-dialog primary';
+        yesBtn.className = 'button-dialog';
         yesBtn.onclick = () => closeDialog(true);
         buttons.appendChild(yesBtn);
     } else { // For 'alert' and 'prompt'
