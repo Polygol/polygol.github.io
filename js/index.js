@@ -6210,6 +6210,8 @@ async function jumpToWallpaper(index) {
         applyWallpaperEffects();
         applyAlignment(wallpaper.clockStyles.alignment || 'center');
         updateClockAndDate();
+
+		broadcastAllWallpaperSettings(wallpaper);
     }
         
     clearInterval(slideshowInterval);
@@ -6368,6 +6370,8 @@ function switchWallpaper(direction) {
 
         // Update clock and weather display
         updateClockAndDate();
+
+		broadcastAllWallpaperSettings(wallpaper);
     }
     
     // Save the position for persistence
@@ -10963,6 +10967,56 @@ window.addEventListener('message', async (event) => { // Make listener async
         return; // Message handled
     }
 });
+
+function broadcastAllWallpaperSettings(wallpaper) {
+    if (!wallpaper) return;
+    const styles = wallpaper.clockStyles || {};
+    const val = (v, def) => (v !== undefined ? v : def).toString();
+
+    // Prepare all settings to sync
+    const settings = {
+        'font': val(styles.font, 'Inter'),
+        // Convert weight 700 -> 70 for the slider/settings UI
+        'weight': (parseInt(styles.weight || '700', 10) / 10).toString(),
+        'color': val(styles.color, '#ffffff'),
+        'colorEnabled': val(styles.colorEnabled, 'false'),
+        'stackEnabled': val(styles.stackEnabled, 'false'),
+        'showSeconds': val(styles.showSeconds, 'true'),
+        'showWeather': val(styles.showWeather, 'true'),
+        'clockSize': val(styles.clockSize, '0'),
+        'clockPosX': val(styles.clockPosX, '50'),
+        'clockPosY': val(styles.clockPosY, '50'),
+        'alignment': val(styles.alignment, 'center'),
+        'shadowEnabled': val(styles.shadowEnabled, 'false'),
+        'shadowBlur': val(styles.shadowBlur, '10'),
+        'shadowColor': val(styles.shadowColor, '#000000'),
+        'gradientEnabled': val(styles.gradientEnabled, 'false'),
+        'gradientColor': val(styles.gradientColor, '#ffffff'),
+        'glassEnabled': val(styles.glassEnabled, 'false'),
+        'roundness': val(styles.roundness, '0'),
+        'dateFormat': val(styles.dateFormat, 'dddd, MMMM D'),
+        'depthEffectEnabled': val(wallpaper.depthEnabled, 'false')
+    };
+    
+    // Clock format might default based on 12hr setting
+    const defaultClockFormat = document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss';
+    settings['clockFormat'] = val(styles.clockFormat, defaultClockFormat);
+
+    // Theme-dependent effects
+    const isLightMode = document.body.classList.contains('light-theme');
+    const theme = isLightMode ? 'light' : 'dark';
+    const effects = styles.wallpaperEffects?.[theme] || { blur: '0', brightness: '100', contrast: '100' };
+
+    settings['wallpaperBlur'] = effects.blur;
+    settings['wallpaperBrightness'] = effects.brightness;
+    settings['wallpaperContrast'] = effects.contrast;
+
+    // Update LocalStorage and Broadcast
+    for (const [key, value] of Object.entries(settings)) {
+        localStorage.setItem(key, value);
+        broadcastSettingUpdate(key, value);
+    }
+}
 
 function openSearch() {
     const searchContainer = document.querySelector('.app-search-container');
