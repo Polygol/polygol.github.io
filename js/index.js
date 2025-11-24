@@ -516,17 +516,17 @@ function _displayDialog(options) {
     }
 	
     if (options.type === 'confirm') {
-        const noBtn = document.createElement('button');
-        noBtn.textContent = currentLanguage.NO || 'No';
-        noBtn.className = 'button-dialog';
-        noBtn.onclick = () => closeDialog(false);
-        buttons.appendChild(noBtn);
-
         const yesBtn = document.createElement('button');
         yesBtn.textContent = currentLanguage.YES || 'Yes';
         yesBtn.className = 'button-dialog';
         yesBtn.onclick = () => closeDialog(true);
         buttons.appendChild(yesBtn);
+		
+        const noBtn = document.createElement('button');
+        noBtn.textContent = currentLanguage.NO || 'No';
+        noBtn.className = 'button-dialog';
+        noBtn.onclick = () => closeDialog(false);
+        buttons.appendChild(noBtn);
     } else { // For 'alert' and 'prompt'
         if (options.type === 'prompt') {
             const cancelBtn = document.createElement('button');
@@ -3812,17 +3812,17 @@ async function createAutomaticBackup() {
         // 4. Update timestamp and notify user
         localStorage.setItem('lastBackupTimestamp', Date.now().toString());
         
-        showNotification(currentLanguage.BACKUP_READY || 'Weekly backup is ready', {
-			icon: 'backup',
-            buttonText: currentLanguage.BACKUP_DOWNLOAD || "Download",
-            buttonAction: () => {
-                downloadBackupFile(backupBlob, fileName);
-            }
-        });
+		if (await showCustomConfirm(currentLanguage.BACKUP_READY || 'Weekly backup is ready. Download now?')) {
+			downloadBackupFile(backupBlob, fileName);
+        }
 
     } catch (error) {
         console.error('Automatic backup failed:', error);
-        showNotification(currentLanguage.BACKUP_FAILED || 'Automatic backup failed', { icon: 'error' });
+		showDialog({ 
+		    type: 'alert', 
+		    title: 'Automatic backup failed', 
+		    message: 'Please manually download your data using the System Transfer tool.' 
+		});
     }
 }
 
