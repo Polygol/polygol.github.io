@@ -4625,7 +4625,9 @@ async function storeWallpaper(key, data) {
             version: "1.0",
             timestamp: Date.now(),
             clockStyles: data.clockStyles || {},
-            widgetLayout: data.widgetLayout || [] // Ensure widget layout is saved
+            widgetLayout: data.widgetLayout || [], // Ensure widget layout is saved
+			depthDataUrl: data.depthDataUrl || null, // Save the generated image
+            depthEnabled: data.depthEnabled || false // Save the toggle state
         };
         let request = store.put(wallpaperData, key);
         request.onerror = () => reject(request.error);
@@ -4916,6 +4918,32 @@ async function compressMedia(file) {
     });
 }
 
+// Helper to convert the AI output blob to a compressed WebP string
+function blobToCompressedWebP(blob) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(blob);
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            
+            // Compress to WebP with 0.85 quality (same as wallpapers)
+            const dataUrl = canvas.toDataURL("image/webp", 0.85);
+            
+            URL.revokeObjectURL(url);
+            resolve(dataUrl);
+        };
+        img.onerror = (e) => {
+            URL.revokeObjectURL(url);
+            reject(e);
+        };
+        img.src = url;
+    });
+}
+
 async function saveWallpaper(file, customStyles = null) {
     try {
         const wallpaperId = `wallpaper_${Date.now()}`;
@@ -5109,25 +5137,17 @@ async function applyWallpaper() {
                             const depthLayer = document.getElementById('depth-layer');
                             if (depthLayer) {
                                 if (currentWallpaper.depthEnabled) {
-                                    // Check if the IDB record we just fetched (imageData) has the blob
-                                    if (imageData.depthBlob) {
-                                        // Instant apply from cache
-                                        const depthUrl = URL.createObjectURL(imageData.depthBlob);
-                                        // Clean old
-                                        if (depthLayer.dataset.url) URL.revokeObjectURL(depthLayer.dataset.url);
-                                        
-                                        depthLayer.style.backgroundImage = `url('${depthUrl}')`;
-                                        depthLayer.dataset.url = depthUrl;
-                                        depthLayer.style.opacity = '1';
+                                    // Check for depthDataUrl (Base64/WebP)
+                                    if (imageData && imageData.depthDataUrl) {
+                                        // FAST PATH: Apply string directly
+                                        applyDepthLayer(imageData.depthDataUrl);
                                     } else {
-                                        // Enabled but not cached yet, generate it
+                                        // SLOW PATH: Generate
                                         depthLayer.style.opacity = '0';
                                         setTimeout(processCurrentWallpaperDepth, 100);
                                     }
                                 } else {
-                                    // Disabled for this wallpaper
                                     depthLayer.style.opacity = '0';
-                                    // Clear image after fade to save memory
                                     setTimeout(() => {
                                          if(depthLayer.style.opacity === '0') depthLayer.style.backgroundImage = '';
                                     }, 500);
@@ -5211,25 +5231,17 @@ async function applyWallpaper() {
                             const depthLayer = document.getElementById('depth-layer');
                             if (depthLayer) {
                                 if (currentWallpaper.depthEnabled) {
-                                    // Check if the IDB record we just fetched (imageData) has the blob
-                                    if (imageData.depthBlob) {
-                                        // Instant apply from cache
-                                        const depthUrl = URL.createObjectURL(imageData.depthBlob);
-                                        // Clean old
-                                        if (depthLayer.dataset.url) URL.revokeObjectURL(depthLayer.dataset.url);
-                                        
-                                        depthLayer.style.backgroundImage = `url('${depthUrl}')`;
-                                        depthLayer.dataset.url = depthUrl;
-                                        depthLayer.style.opacity = '1';
+                                    // Check for depthDataUrl (Base64/WebP)
+                                    if (imageData && imageData.depthDataUrl) {
+                                        // FAST PATH: Apply string directly
+                                        applyDepthLayer(imageData.depthDataUrl);
                                     } else {
-                                        // Enabled but not cached yet, generate it
+                                        // SLOW PATH: Generate
                                         depthLayer.style.opacity = '0';
                                         setTimeout(processCurrentWallpaperDepth, 100);
                                     }
                                 } else {
-                                    // Disabled for this wallpaper
                                     depthLayer.style.opacity = '0';
-                                    // Clear image after fade to save memory
                                     setTimeout(() => {
                                          if(depthLayer.style.opacity === '0') depthLayer.style.backgroundImage = '';
                                     }, 500);
@@ -5352,24 +5364,23 @@ async function processCurrentWallpaperDepth() {
     }
 
     try {
-        // 1. Fetch the full record from IndexedDB
         const dbRecord = await getWallpaper(currentWallpaper.id);
         if (!dbRecord) return;
         
-        // 2. CRITICAL: Check if depth data already exists
-        if (dbRecord.depthBlob) {
-            console.log("[Depth] Loaded from cache.");
-            applyDepthLayer(dbRecord.depthBlob);
-            return; // STOP HERE - Do not re-analyze
+        // 1. Check for cached Data URL (Fast Path)
+        if (dbRecord.depthDataUrl) {
+            console.log("[Depth] Loaded from IDB cache.");
+            applyDepthLayer(dbRecord.depthDataUrl); // Pass string directly
+            return;
         }
 		
-		showDialog({ 
+		await showDialog({ 
 		    type: 'alert', 
 		    title: 'Analyzing wallpaper depth', 
 		    message: 'This might take a few minutes. During analysis, Polygol will be unresponsive.' 
 		});
 
-        // 3. No cache, we need to generate it.
+		// 3. No cache, we need to generate it.
         // Load the library dynamically via script tag to avoid ESM bundle size limits and CORS issues
         if (!window.imglyRemoveBackground) {
             showNotification('Downloading AI models', { icon: 'auto_awesome' });
@@ -5381,7 +5392,7 @@ async function processCurrentWallpaperDepth() {
                 throw new Error("Failed to load background removal function from module.");
             }
         }
-		
+
         // 4. Process
         let imageSource;
         if (dbRecord.blob) {
@@ -5399,20 +5410,25 @@ async function processCurrentWallpaperDepth() {
             }
         });
 
-        // 4. Save generated blob to IndexedDB immediately
-        dbRecord.depthBlob = blob;
+        // 3. Compress and Save
+        console.log("[Depth] Compressing result...");
+        const compressedDataUrl = await blobToCompressedWebP(blob);
+        
+        dbRecord.depthDataUrl = compressedDataUrl;
+        // Also ensure we save the enabled state
+        dbRecord.depthEnabled = true; 
+        
         await storeWallpaper(currentWallpaper.id, dbRecord);
-        console.log("[Depth] Generated and saved to IDB.");
+        console.log("[Depth] Saved to IDB.");
 
-        // 5. Apply
-        applyDepthLayer(blob);
-        showPopup("Depth effect generated");
+        // 4. Apply
+        applyDepthLayer(compressedDataUrl);
+        showPopup("Depth effect generated.");
 
     } catch (error) {
         console.error("Depth effect failed:", error);
         showPopup("Failed to generate depth effect");
         
-        // Auto-disable to prevent loop on broken images
         currentWallpaper.depthEnabled = false;
         saveRecentWallpapers();
         const sw = document.getElementById('depth-effect-switch');
@@ -5423,19 +5439,24 @@ async function processCurrentWallpaperDepth() {
     }
 }
 
-function applyDepthLayer(imageBlob) {
+function applyDepthLayer(source) {
     const depthLayer = document.getElementById('depth-layer');
     if (!depthLayer) return;
 
-    const url = URL.createObjectURL(imageBlob);
+    let url = source;
     
-    // Clean up old URL
-    if (depthLayer.dataset.url) {
+    // If it's a Blob (legacy check), create URL. If string (DataURL), use as is.
+    if (source instanceof Blob) {
+        url = URL.createObjectURL(source);
+    }
+    
+    // Clean up previous blob URL if it exists
+    if (depthLayer.dataset.url && depthLayer.dataset.url.startsWith('blob:')) {
         URL.revokeObjectURL(depthLayer.dataset.url);
     }
 
     depthLayer.style.backgroundImage = `url('${url}')`;
-    depthLayer.dataset.url = url;
+    depthLayer.dataset.url = url; // Store for reference/cleanup
     depthLayer.style.opacity = '1';
 }
 
