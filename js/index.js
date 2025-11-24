@@ -5331,9 +5331,13 @@ async function processCurrentWallpaperDepth() {
             showNotification('Downloading AI models', { icon: 'auto_awesome' });
             // Use version 1.7.0 ESM from jsDelivr as verified
             const module = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
-            window.imglyRemoveBackground = module.default;
+            window.imglyRemoveBackground = module.removeBackground || module.default;
+			
+            if (typeof window.imglyRemoveBackground !== 'function') {
+                throw new Error("Failed to load background removal function from module.");
+            }
         }
-
+		
         // 4. Process
         let imageSource;
         if (dbRecord.blob) {
