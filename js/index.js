@@ -5105,17 +5105,34 @@ async function applyWallpaper() {
                                 document.body.dataset.wallpaperId = wallpaper.id;
                             }
 							
-							const depthLayer = document.getElementById('depth-layer');
-					        if (depthLayer) {
-					            // Hide old layer immediately while loading/checking new one
-					            depthLayer.style.opacity = '0'; 
-					            
-					            // Check if feature is enabled
-					            if (localStorage.getItem('depthEffectEnabled') === 'true') {
-					                // Small delay to let main wallpaper render first
-					                setTimeout(processCurrentWallpaperDepth, 100);
-					            }
-					        }
+                            // --- NEW DEPTH LOGIC ---
+                            const depthLayer = document.getElementById('depth-layer');
+                            if (depthLayer) {
+                                if (currentWallpaper.depthEnabled) {
+                                    // Check if the IDB record we just fetched (imageData) has the blob
+                                    if (imageData.depthBlob) {
+                                        // Instant apply from cache
+                                        const depthUrl = URL.createObjectURL(imageData.depthBlob);
+                                        // Clean old
+                                        if (depthLayer.dataset.url) URL.revokeObjectURL(depthLayer.dataset.url);
+                                        
+                                        depthLayer.style.backgroundImage = `url('${depthUrl}')`;
+                                        depthLayer.dataset.url = depthUrl;
+                                        depthLayer.style.opacity = '1';
+                                    } else {
+                                        // Enabled but not cached yet, generate it
+                                        depthLayer.style.opacity = '0';
+                                        setTimeout(processCurrentWallpaperDepth, 100);
+                                    }
+                                } else {
+                                    // Disabled for this wallpaper
+                                    depthLayer.style.opacity = '0';
+                                    // Clear image after fade to save memory
+                                    setTimeout(() => {
+                                         if(depthLayer.style.opacity === '0') depthLayer.style.backgroundImage = '';
+                                    }, 500);
+                                }
+                            }
                         }
                     }
                 }
@@ -5190,17 +5207,34 @@ async function applyWallpaper() {
                                 document.body.dataset.wallpaperId = currentWallpaper.id;
                             }
 
-							const depthLayer = document.getElementById('depth-layer');
-					        if (depthLayer) {
-					            // Hide old layer immediately while loading/checking new one
-					            depthLayer.style.opacity = '0'; 
-					            
-					            // Check if feature is enabled
-					            if (localStorage.getItem('depthEffectEnabled') === 'true') {
-					                // Small delay to let main wallpaper render first
-					                setTimeout(processCurrentWallpaperDepth, 100);
-					            }
-					        }
+                            // --- NEW DEPTH LOGIC ---
+                            const depthLayer = document.getElementById('depth-layer');
+                            if (depthLayer) {
+                                if (currentWallpaper.depthEnabled) {
+                                    // Check if the IDB record we just fetched (imageData) has the blob
+                                    if (imageData.depthBlob) {
+                                        // Instant apply from cache
+                                        const depthUrl = URL.createObjectURL(imageData.depthBlob);
+                                        // Clean old
+                                        if (depthLayer.dataset.url) URL.revokeObjectURL(depthLayer.dataset.url);
+                                        
+                                        depthLayer.style.backgroundImage = `url('${depthUrl}')`;
+                                        depthLayer.dataset.url = depthUrl;
+                                        depthLayer.style.opacity = '1';
+                                    } else {
+                                        // Enabled but not cached yet, generate it
+                                        depthLayer.style.opacity = '0';
+                                        setTimeout(processCurrentWallpaperDepth, 100);
+                                    }
+                                } else {
+                                    // Disabled for this wallpaper
+                                    depthLayer.style.opacity = '0';
+                                    // Clear image after fade to save memory
+                                    setTimeout(() => {
+                                         if(depthLayer.style.opacity === '0') depthLayer.style.backgroundImage = '';
+                                    }, 500);
+                                }
+                            }
                         }
                     }
                 }
@@ -5301,15 +5335,14 @@ function applyCustomWallpaperStyles(styles = {}) {
 
 // Depth Effect
 async function processCurrentWallpaperDepth() {
-    // 1. Check if enabled and valid
-    if (localStorage.getItem('depthEffectEnabled') !== 'true') return;
-    
     const currentWallpaper = recentWallpapers[currentWallpaperPosition];
-    if (!currentWallpaper || currentWallpaper.isVideo || currentWallpaper.isSlideshow) {
-        // Depth effect not supported for videos/slideshows yet
-        const depthLayer = document.getElementById('depth-layer');
-        if(depthLayer) depthLayer.style.opacity = '0';
-        return;
+    if (!currentWallpaper || currentWallpaper.isVideo || currentWallpaper.isSlideshow) return;
+
+    // FIX: Check wallpaper-specific setting, NOT global
+    if (!currentWallpaper.depthEnabled) {
+         const depthLayer = document.getElementById('depth-layer');
+         if(depthLayer) depthLayer.style.opacity = '0';
+         return;
     }
 
     showPopup("Analyzing wallpaper depth...");
@@ -5321,7 +5354,6 @@ async function processCurrentWallpaperDepth() {
         if (dbRecord && dbRecord.depthBlob) {
             // Cache hit! Apply it.
             applyDepthLayer(dbRecord.depthBlob);
-            showPopup("Depth effect applied.");
             return;
         }
 
@@ -5355,20 +5387,22 @@ async function processCurrentWallpaperDepth() {
             }
         });
 
-        // 5. Save to IDB
+        // Save to IDB
         dbRecord.depthBlob = blob;
         await storeWallpaper(currentWallpaper.id, dbRecord);
 
-        // 6. Apply
         applyDepthLayer(blob);
-        showPopup("Depth effect generated.");
+        showPopup("Depth effect generated");
 
     } catch (error) {
         console.error("Depth effect failed:", error);
-        showPopup("Failed to generate depth effect.");
-        // Disable to prevent loops
-        localStorage.setItem('depthEffectEnabled', 'false');
-        setControlValueAndDispatch('depthEffectEnabled', 'false');
+        // Reset switch if failed
+        currentWallpaper.depthEnabled = false;
+        saveRecentWallpapers();
+        const sw = document.getElementById('depth-effect-switch');
+        if(sw) sw.checked = false;
+        
+        showPopup("Failed to generate depth effect");
     }
 }
 
@@ -6069,7 +6103,11 @@ async function jumpToWallpaper(index) {
 	    if (alignmentSelect) alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
         if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'dddd, MMMM D';
         if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
-        
+
+		if (document.getElementById('depth-effect-switch')) {
+            document.getElementById('depth-effect-switch').checked = wallpaper.depthEnabled || false;
+        }
+		
         if (secondsSwitch) {
             secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
             showSeconds = secondsSwitch.checked;
@@ -6220,7 +6258,11 @@ function switchWallpaper(direction) {
         if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
         if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'dddd, MMMM D';
         if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
-        
+
+        if (document.getElementById('depth-effect-switch')) {
+            document.getElementById('depth-effect-switch').checked = wallpaper.depthEnabled || false;
+        }
+		
         if (secondsSwitch) {
             secondsSwitch.checked = wallpaper.clockStyles.showSeconds !== false;
             showSeconds = secondsSwitch.checked; // Update the global variable
@@ -9352,18 +9394,43 @@ document.addEventListener('DOMContentLoaded', async function() {
 	
     const depthEffectSwitch = document.getElementById('depth-effect-switch');
     if (depthEffectSwitch) {
-        depthEffectSwitch.checked = localStorage.getItem('depthEffectEnabled') === 'true';
-        depthEffectSwitch.addEventListener('change', function() {
+        // Listener for wallpaper-specific toggling
+        depthEffectSwitch.addEventListener('change', async function() {
             const isEnabled = this.checked;
-            localStorage.setItem('depthEffectEnabled', isEnabled);
             
-            if (isEnabled) {
-                // Trigger processing for current wallpaper
-                processCurrentWallpaperDepth();
-            } else {
-                // Hide immediately
-                const depthLayer = document.getElementById('depth-layer');
-                if(depthLayer) depthLayer.style.opacity = '0';
+            if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0) {
+                const wp = recentWallpapers[currentWallpaperPosition];
+                
+                // 1. Update Memory
+                wp.depthEnabled = isEnabled;
+                
+                // 2. Update LocalStorage (Persistence)
+                saveRecentWallpapers();
+                
+                // 3. Update IDB (Deep Persistence)
+                if (wp.id) {
+                    try {
+                        const record = await getWallpaper(wp.id);
+                        if (record) {
+                            record.depthEnabled = isEnabled;
+                            await storeWallpaper(wp.id, record);
+                        }
+                    } catch(e) { console.error(e); }
+                }
+
+                // 4. Trigger Action
+                if (isEnabled) {
+                    processCurrentWallpaperDepth();
+                } else {
+                    const depthLayer = document.getElementById('depth-layer');
+                    if(depthLayer) {
+                        depthLayer.style.opacity = '0';
+                        // Delayed clear to allow fade out
+                        setTimeout(() => {
+                             if(depthLayer.style.opacity === '0') depthLayer.style.backgroundImage = '';
+                        }, 500);
+                    }
+                }
             }
         });
     }
