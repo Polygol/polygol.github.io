@@ -5345,6 +5345,8 @@ function applyCustomWallpaperStyles(styles = {}) {
     styleTag.textContent = css;
 }
 
+let skippedDepthWallpapers = new Set(); // Tracks wallpapers user declined to process
+
 // Depth Effect
 async function processCurrentWallpaperDepth() {
     const currentWallpaper = recentWallpapers[currentWallpaperPosition];
@@ -5373,13 +5375,38 @@ async function processCurrentWallpaperDepth() {
             applyDepthLayer(dbRecord.depthDataUrl); // Pass string directly
             return;
         }
-		
-		await showDialog({ 
-		    type: 'alert', 
-		    title: 'Analyzing wallpaper depth', 
-		    message: 'This might take a few minutes. During analysis, Polygol will be unresponsive.' 
-		});
 
+		// --- NEW: Session Skip Check ---
+        if (skippedDepthWallpapers.has(currentWallpaper.id)) {
+            console.log("[Depth] Skipped by user for this session.");
+            // Visually uncheck to reflect status
+            const sw = document.getElementById('depth-effect-switch');
+            if(sw) sw.checked = false;
+            return;
+        }
+		
+        // --- NEW: Confirmation Dialog ---
+        // We use showCustomConfirm because it returns a Promise<boolean>
+        const confirmed = await showCustomConfirm(
+            'This might take a few minutes. During analysis, Polygol will be unresponsive.',
+            'Analyze wallpaper depth?'
+        );
+
+		if (!confirmed) {
+            // User clicked No: Add to skip list
+            skippedDepthWallpapers.add(currentWallpaper.id);
+            
+            // Turn off the switch visually
+            const sw = document.getElementById('depth-effect-switch');
+            if(sw) sw.checked = false;
+            
+            // Update memory object so it doesn't try again immediately on resize/reload
+            currentWallpaper.depthEnabled = false;
+            return;
+        }
+
+		// Continue (Only runs if confirmed)
+		
 		// 3. No cache, we need to generate it.
         // Load the library dynamically via script tag to avoid ESM bundle size limits and CORS issues
         if (!window.imglyRemoveBackground) {
