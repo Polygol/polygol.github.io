@@ -5350,9 +5350,8 @@ async function processCurrentWallpaperDepth() {
 
         // Important: Set publicPath to the dist folder of the same version
         const blob = await window.imglyRemoveBackground(imageSource, {
-            publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/',
             progress: (key, current, total) => {
-                // Optional: console.log(`Processing: ${key} ${current}/${total}`);
+            console.log(`Processing: ${key} ${current}/${total}`);
             }
         });
 
