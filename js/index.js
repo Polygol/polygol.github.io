@@ -228,7 +228,7 @@ async function forceUpdatePolygol() {
                 showDialog({ 
 				    type: 'alert', 
 				    title: 'Polygol is up to date', 
-				    message: 'No updates found were.' 
+				    message: 'No updates found were found.' 
 				});
             }
         }, 2000); // 2-second timeout to wait for the update check to complete.
