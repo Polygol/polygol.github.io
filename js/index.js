@@ -5326,11 +5326,25 @@ async function processCurrentWallpaperDepth() {
         }
 
         // 3. No cache, we need to generate it.
-        // Load the library dynamically (lazy load)
+        // Load the library dynamically via script tag to avoid ESM bundle size limits and CORS issues
         if (!window.imglyRemoveBackground) {
-			showNotification('Downloading AI models', { icon: 'auto_awesome' });
-            const module = await import('https://esm.sh/@imgly/background-removal@1.3.0');
-            window.imglyRemoveBackground = module.removeBackground;
+            showNotification('Downloading AI models', { icon: 'auto_awesome' });
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                // Use UMD build
+                script.src = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.3.0/dist/imgly-background-removal.min.js';
+                script.crossOrigin = "anonymous"; // Important for CORS
+                script.onload = () => {
+                    // The UMD build exposes 'imglyRemoveBackground' directly on window
+                    if (typeof window.imglyRemoveBackground === 'function') {
+                         resolve(); 
+                    } else {
+                         reject(new Error("Library loaded but function not found"));
+                    }
+                };
+                script.onerror = () => reject(new Error("Failed to load background removal library"));
+                document.head.appendChild(script);
+            });
         }
 
         // 4. Process
@@ -5343,7 +5357,9 @@ async function processCurrentWallpaperDepth() {
             throw new Error("No image source found");
         }
 
+        // We MUST set publicPath to the CDN so it fetches models from there, not locally
         const blob = await window.imglyRemoveBackground(imageSource, {
+            publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.3.0/dist/',
             progress: (key, current, total) => {
                 // Optional: console.log(`Processing: ${key} ${current}/${total}`);
             }
