@@ -5352,14 +5352,6 @@ async function processCurrentWallpaperDepth() {
             }
         });
 
-        // We MUST set publicPath to the CDN so it fetches models from there, not locally
-        const blob = await window.imglyRemoveBackground(imageSource, {
-            publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.3.0/dist/',
-            progress: (key, current, total) => {
-                // Optional: console.log(`Processing: ${key} ${current}/${total}`);
-            }
-        });
-
         // 5. Save to IDB
         dbRecord.depthBlob = blob;
         await storeWallpaper(currentWallpaper.id, dbRecord);
