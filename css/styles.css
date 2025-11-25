@@ -2135,7 +2135,7 @@ input[type="checkbox"]:checked::before {
 	}
 
 	body.minimal-active .fullscreen-embed iframe {
-		background-color: var(--search-background);
+		background-color: var(--background-color);
 	}
 
     body.night-mode-active #temperature-overlay {
