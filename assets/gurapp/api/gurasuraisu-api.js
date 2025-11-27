@@ -482,11 +482,18 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             .tab-btn {
                 font-size: 0;
                 gap: 0 !important;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
             }
         
             .tab-btn.active {
-                font-size: 0;
-                padding: 14px 24px;
+                font-size: 12px;
+                padding: 5px 14px;
+            }
+
+            .toolbar .tab-btn.active .material-symbols-rounded {
+                font-size: 18px !important;
             }
         }
     `;
