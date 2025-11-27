@@ -2140,7 +2140,24 @@ document.addEventListener('DOMContentLoaded', () => {
 	
 	// Start the synchronized interval
 	synchronizePersistentClock();
-}); 
+	
+    // --- NEW: Autorun Script ---
+    const startupScript = localStorage.getItem('customStartupScript');
+    if (startupScript) {
+        console.log("[System] Running startup script...");
+        setTimeout(() => {
+            try {
+                // Wrap in async IIFE to allow await in the script
+                (async () => {
+                    eval(startupScript);
+                })();
+            } catch (e) {
+                console.error("[System] Startup Script Error:", e);
+                showNotification("Startup script failed", { icon: 'terminal' });
+            }
+        }, 1000); // 1s delay to ensure DOM is fully settled
+    }
+});
 
 // Function to update the document title
 function updateTitle() {
