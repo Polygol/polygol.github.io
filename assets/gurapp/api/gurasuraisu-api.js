@@ -391,6 +391,104 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             color: var(--text-color);
             transition: background-color 0.2s, transform 0.1s;
         }
+
+
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+            gap: 14px;
+            padding: 15px 20px;
+            background-color: transparent;
+            border: none;
+            position: fixed;
+            top: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            transition: top 0.3s ease;
+            width: 100%;
+            flex-wrap: wrap;
+            height: 80px;
+        }
+
+        .toolbar.hidden {
+            display: none;
+        }
+
+        .toolbar::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+        }
+
+        .toolbar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            backdrop-filter: blur(2.5px);
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0) 100%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        .tab-btn {
+            background-color: var(--search-background);
+            color: transparent;
+            border-radius: 50%;
+            padding: 14px 14px;
+            font-size: 0;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1) ! IMPORTANT;
+            display: flex;
+            align-items: center;
+            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+            box-shadow: var(--sun-shadow);
+            border: 1px solid var(--glass-border);
+        }
+
+        .tab-btn.active {
+            background-color: var(--secondary-text-color);
+            color: var(--background-color);
+            border-radius: 35px;
+            corner-shape: superellipse(1.5);
+            font-family: 'Open Runde';
+            font-weight: 500;
+            padding: 14px 22px 14px 18px;
+            font-size: revert;
+            gap: 12px;
+        }
+
+        .toolbar .tab-btn .material-symbols-rounded {
+            transition: color 0.3s;
+            color: var(--text-color);
+            font-size: 20px;
+        }
+
+        .toolbar .tab-btn.active .material-symbols-rounded {
+            color: var(--background-color) !important;
+        }
+
+        @media (max-width: 800px) {
+            .toolbar {
+                justify-content: flex-start;
+            }
+
+            .tab-btn {
+                font-size: 0;
+                gap: 0 !important;
+            }
+        
+            .tab-btn.active {
+                font-size: 0;
+                padding: 14px 24px;
+            }
+        }
     `;
     
     // Conditionally add Gurasuraisu-specific styles.
