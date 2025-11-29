@@ -10,15 +10,18 @@ const DB_SCHEMAS = {
 
 const SoundManager = {
     sounds: {
-        'click': new Audio('/assets/sound/ui/select.mp3'),
-        'toggle': new Audio('/assets/sound/ui/seltoggle.mp3'),
-        'check': new Audio('/assets/sound/ui/check.mp3'),
-        'open': new Audio('/assets/sound/ui/in.mp3'),
-        'close': new Audio('/assets/sound/ui/out.mp3'),
-        'popup': new Audio('/assets/sound/ui/popup.mp3'),
-        'error': new Audio('/assets/sound/ui/tone1.mp3'),
-        'success': new Audio('/assets/sound/ui/tone2.mp3'),
-        'type': new Audio('/assets/sound/ui/mecha.mp3')
+        'select': new Audio('/assets/sound/ui/select.mp3'),    // Standard Button
+        'toggle': new Audio('/assets/sound/ui/seltoggle.mp3'), // Switches
+        'check': new Audio('/assets/sound/ui/check.mp3'),      // Checkboxes
+        'open': new Audio('/assets/sound/ui/in.mp3'),          // Drawer/App Open
+        'close': new Audio('/assets/sound/ui/out.mp3'),        // Drawer/App Close
+        'popup': new Audio('/assets/sound/ui/popup.mp3'),      // Alerts/Modals
+        'error': new Audio('/assets/sound/ui/tone1.mp3'),      // Errors
+        'success': new Audio('/assets/sound/ui/tone2.mp3'),    // Success
+        'type': new Audio('/assets/sound/ui/mecha.mp3'),       // Input focus/typing
+        'expand': new Audio('/assets/sound/ui/tridown.mp3'),   // Dropdowns open
+        'collapse': new Audio('/assets/sound/ui/tripuck.mp3'), // Dropdowns close
+        'delay': new Audio('/assets/sound/ui/seldelay.mp3')
     },
 
     play: function(type) {
@@ -39,6 +42,43 @@ const SoundManager = {
         }
     }
 };
+
+// "Smart" Context Detector
+function determineSoundContext(element) {
+    if (!element) return null;
+
+    const tag = element.tagName;
+    const type = element.getAttribute('type');
+    const role = element.getAttribute('role');
+
+    // 1. Forms (Inputs)
+    if (tag === 'INPUT') {
+        if (type === 'checkbox' || type === 'radio') {
+            // Distinguish Switch vs Checkbox via Role if available
+            return (role === 'switch') ? 'toggle' : 'check';
+        }
+        if (type === 'range') return null; // Sliders are handled via input event usually, or ignored to prevent spam
+        if (['text', 'password', 'email', 'number', 'search'].includes(type)) return 'type';
+        return 'select';
+    }
+    
+    if (tag === 'TEXTAREA') return 'type';
+    if (tag === 'SELECT') return 'expand';
+
+    // 2. Buttons & Links
+    if (tag === 'BUTTON' || tag === 'A' || role === 'button') {
+        return 'select';
+    }
+
+    // 3. "Interactive Divs" (Heuristic: Computed Pointer Cursor)
+    // This catches any div/span that looks clickable without hardcoding classes
+    const style = window.getComputedStyle(element);
+    if (style.cursor === 'pointer') {
+        return 'select';
+    }
+
+    return null; // Not interactive
+}
 
 const WALLPAPER_SUBMISSION_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeSYSJalaX0HCZe0helcK5NCuc0U47tQc6KaO1OAsBs5HxK1A/viewform?embedded=true';
 
@@ -8531,7 +8571,7 @@ function setupDrawerInteractions() {
                 // Revert background effects
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
-				SoundManager.play('open');
+				SoundManager.play('delay');
 				// Hide UI elements
 				document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 			        if (!el.dataset.originalDisplay) {
@@ -8557,7 +8597,6 @@ function setupDrawerInteractions() {
                 // Revert background effects
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
-				SoundManager.play('close');
 				// Restore all main UI elements
 			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 				el.classList.remove('force-hide');
@@ -8777,20 +8816,35 @@ function setupDrawerInteractions() {
                 }
             }, 300); // Match CSS transition duration
         }
-
-       // Check if we clicked a button or input in the main DOM
-        const target = e.target.closest('button, input, .clickable, .app-icon, .setting-item');
-        
-        if (target) {
-            if (target.tagName === 'INPUT' && target.type === 'checkbox') {
-                SoundManager.play(target.checked ? 'check' : 'toggle');
-            } else if (target.classList.contains('app-icon')) {
-                // Handled by app launch event, but good for feedback
-            } else {
-                SoundManager.play('click');
-            }
-		}
     });
+
+	document.addEventListener('click', (e) => {
+	    // Traverse up from target to find the interactive element
+	    // We check 5 levels up to catch clicks inside complex buttons
+	    let target = e.target;
+	    let context = null;
+	
+	    for (let i = 0; i < 5; i++) {
+	        if (!target || target === document.body) break;
+	        
+	        context = determineSoundContext(target);
+	        if (context) break;
+	        
+	        target = target.parentElement;
+	    }
+	
+	    if (context) {
+	        SoundManager.play(context);
+	    }
+	}, { capture: true }); // Use capture to ensure we hear it even if propagation stops
+	
+	// Focus sound for text inputs
+	document.addEventListener('focus', (e) => {
+	    const context = determineSoundContext(e.target);
+	    if (context === 'type') {
+	        SoundManager.play('type');
+	    }
+	}, { capture: true });
 
 	document.addEventListener('click', (e) => {
 	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
