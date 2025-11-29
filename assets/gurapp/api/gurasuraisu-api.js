@@ -1042,36 +1042,57 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('click', handleLocalActivity);
     window.addEventListener('keydown', handleLocalActivity);
 
+    function getLocalSoundContext(element) {
+        if (!element) return null;
+        const tag = element.tagName;
+        const type = element.getAttribute('type');
+        const role = element.getAttribute('role');
+
+        if (tag === 'INPUT') {
+            if (type === 'checkbox' || type === 'radio') return (role === 'switch') ? 'toggle' : 'check';
+            if (type === 'range') return null;
+            if (['text', 'password', 'email', 'number', 'search'].includes(type)) return 'type';
+            return 'select';
+        }
+        if (tag === 'TEXTAREA') return 'type';
+        if (tag === 'SELECT') return 'expand';
+        if (tag === 'BUTTON' || tag === 'A' || role === 'button') return 'select';
+
+        // Heuristic: Computed Pointer Cursor for generic divs
+        const style = window.getComputedStyle(element);
+        if (style.cursor === 'pointer') return 'select';
+
+        return null;
+    }
+
     document.body.addEventListener('click', (e) => {
+        // Check app-level override and system master switch
         if (!_autoSoundEnabled || !_systemSoundEnabled()) return;
 
-        // Find the clickable element
-        const target = e.target.closest('button, input, a, [role="button"], .clickable');
-        if (!target) return;
+        let target = e.target;
+        let soundType = null;
 
-        // Determine Sound Context
-        let soundType = 'click'; // Default
-
-        if (target.tagName === 'INPUT') {
-            if (target.type === 'checkbox' || target.type === 'radio') {
-                soundType = target.checked ? 'check' : 'toggle';
-            } else if (target.type === 'range') {
-                return; // Sliders are too noisy
-            }
+        // Traverse up to find interactive parent
+        for (let i = 0; i < 5; i++) {
+            if (!target || target === document.body) break;
+            soundType = getLocalSoundContext(target);
+            if (soundType) break;
+            target = target.parentElement;
         }
-        
-        // Send request to parent
-        Gurasuraisu.playSound(soundType);
-    });
 
-    // Input focus sounds
-    document.body.addEventListener('focusin', (e) => {
+        if (soundType) {
+            Gurasuraisu.playSound(soundType);
+        }
+    }, { capture: true });
+
+    // Focus events for inputs
+    document.body.addEventListener('focus', (e) => {
          if (!_autoSoundEnabled || !_systemSoundEnabled()) return;
-         if (e.target.tagName === 'INPUT' && (e.target.type === 'text' || e.target.type === 'password')) {
-             // Subtle click for focus
-             // Gurasuraisu.playSound('type'); 
+         const type = getLocalSoundContext(e.target);
+         if (type === 'type') {
+             Gurasuraisu.playSound('type');
          }
-    });
+    }, { capture: true });
   }
 
   // Announce API presence to enable full-screen mode and readiness for settings.
