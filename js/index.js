@@ -9925,7 +9925,13 @@ function getEffectiveSettingValue(key) {
     const rawValue = localStorage.getItem(key);
     // Handle toggles that default to 'true' if they are null/undefined
     const defaultsTrue = [
-        'gurappsEnabled', 'animationsEnabled', 'showSeconds', 'showWeather', 'aiAssistantEnabled'
+        'gurappsEnabled', 
+        'animationsEnabled', 
+        'showSeconds', 
+        'showWeather', 
+        'aiAssistantEnabled',
+        'gurappSoundsEnabled',
+        'glassEffectsEnabled'
     ];
     if (defaultsTrue.includes(key)) {
         return (rawValue !== 'false').toString();
