@@ -10,6 +10,7 @@ function initializeSettingsApp() {
     const pageTitles = {
         'main-settings': 'Settings',
         'page-display': 'Display',
+        'page-sound': 'Sound & Haptics',
         'page-homescreen': 'Home Screen',
         'page-clock': 'Clock',
         'page-wallpaper': 'Wallpaper',
