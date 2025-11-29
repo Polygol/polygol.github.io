@@ -10748,6 +10748,11 @@ window.addEventListener('message', async (event) => { // Make listener async
 	    startLiveActivity,
 	    updateLiveActivity, // Forward updates
         stopLiveActivity,
+		playUiSound: (type) => {
+            if (window.SoundManager) {
+                window.SoundManager.play(type);
+            }
+        },
 
 		// Privileged Functions (already checked above)
 		installApp, 
