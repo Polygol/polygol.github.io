@@ -610,6 +610,13 @@ const _fallbacks = {
         console.warn(`Gurasuraisu API: '${functionName}' is only available inside the Polygol environment.`);
     }
 };
+
+// Internal State for Sound
+let _autoSoundEnabled = true; // Default to true for the app logic
+const _systemSoundEnabled = () => {
+    // Check system setting passed down or default to true
+    return localStorage.getItem('gurappSoundsEnabled') !== 'false';
+};
  
 const Gurasuraisu = {
   /**
@@ -651,6 +658,27 @@ const Gurasuraisu = {
     // The parent window handles all actions.
     this._call('showNotification', [message, options]);
   },
+
+    /**
+     * Plays a system UI sound.
+     * @param {string} type - 'click', 'toggle', 'check', 'error', 'success', 'open', 'close'
+     */
+    playSound: function(type) {
+        if (_systemSoundEnabled()) {
+            this._call('playUiSound', [type]);
+        }
+    },
+
+    /**
+     * Configures the automatic UI sound detection for this Gurapp.
+     * @param {object} config
+     * @param {boolean} config.auto - Set to false to disable auto-click detection.
+     */
+    configureSounds: function(config) {
+        if (typeof config.auto === 'boolean') {
+            _autoSoundEnabled = config.auto;
+        }
+    },
 
   /**
    * Namespace for Live Activity functions.
@@ -1013,6 +1041,37 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('mousemove', handleLocalActivity);
     window.addEventListener('click', handleLocalActivity);
     window.addEventListener('keydown', handleLocalActivity);
+
+    document.body.addEventListener('click', (e) => {
+        if (!_autoSoundEnabled || !_systemSoundEnabled()) return;
+
+        // Find the clickable element
+        const target = e.target.closest('button, input, a, [role="button"], .clickable');
+        if (!target) return;
+
+        // Determine Sound Context
+        let soundType = 'click'; // Default
+
+        if (target.tagName === 'INPUT') {
+            if (target.type === 'checkbox' || target.type === 'radio') {
+                soundType = target.checked ? 'check' : 'toggle';
+            } else if (target.type === 'range') {
+                return; // Sliders are too noisy
+            }
+        }
+        
+        // Send request to parent
+        Gurasuraisu.playSound(soundType);
+    });
+
+    // Input focus sounds
+    document.body.addEventListener('focusin', (e) => {
+         if (!_autoSoundEnabled || !_systemSoundEnabled()) return;
+         if (e.target.tagName === 'INPUT' && (e.target.type === 'text' || e.target.type === 'password')) {
+             // Subtle click for focus
+             // Gurasuraisu.playSound('type'); 
+         }
+    });
   }
 
   // Announce API presence to enable full-screen mode and readiness for settings.
