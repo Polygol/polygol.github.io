@@ -8,6 +8,38 @@ const DB_SCHEMAS = {
     'GuraAIDB': { version: 1, stores: [{ name: 'ChatHistory', options: { keyPath: 'id', autoIncrement: true } }] }
 };
 
+const SoundManager = {
+    sounds: {
+        'click': new Audio('/assets/sound/ui/select.mp3'),
+        'toggle': new Audio('/assets/sound/ui/seltoggle.mp3'),
+        'check': new Audio('/assets/sound/ui/check.mp3'),
+        'open': new Audio('/assets/sound/ui/in.mp3'),
+        'close': new Audio('/assets/sound/ui/out.mp3'),
+        'popup': new Audio('/assets/sound/ui/popup.mp3'),
+        'error': new Audio('/assets/sound/ui/tone1.mp3'),
+        'success': new Audio('/assets/sound/ui/tone2.mp3'),
+        'type': new Audio('/assets/sound/ui/mecha.mp3')
+    },
+
+    play: function(type) {
+        // 1. Check Global Settings
+        const mode = localStorage.getItem('uiSoundMode') || 'silent_off';
+        const isSilent = localStorage.getItem('silentMode') === 'true';
+
+        if (mode === 'always_off') return;
+        if (mode === 'silent_off' && isSilent) return;
+
+        // 2. Play Sound
+        const audio = this.sounds[type];
+        if (audio) {
+            // Clone to allow rapid-fire playback (overlapping sounds)
+            const clone = audio.cloneNode();
+            clone.volume = 0.4; // Subtle volume
+            clone.play().catch(e => { /* Ignore autoplay blocks */ });
+        }
+    }
+};
+
 const WALLPAPER_SUBMISSION_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeSYSJalaX0HCZe0helcK5NCuc0U47tQc6KaO1OAsBs5HxK1A/viewform?embedded=true';
 
 // Wallpaper presets with associated clock styles
@@ -2998,6 +3030,7 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.top = `${20 + (remainingPopups.length * 70)}px`;
     
     document.body.appendChild(popup);
+	SoundManager.play('popup');
     
     // Auto-dismiss on-screen popup
     const timeoutId = setTimeout(closeMe, 10000);
@@ -7344,6 +7377,8 @@ async function createFullscreenEmbed(url) {
     persistentClock.style.opacity = '1';
 
     isAppOpen = true;
+
+	SoundManager.play('open');
 	
     // Check if we have this URL minimized already
     if (minimizedEmbeds[url]) {
@@ -7678,6 +7713,8 @@ function closeFullscreenEmbed() {
 
     isAppOpen = false;
 
+	SoundManager.play('close'); 
+
     const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
     
     if (embedContainer) {
@@ -7770,6 +7807,8 @@ function minimizeFullscreenEmbed(animate = true) {
     }
 
     isAppOpen = false;
+
+	SoundManager.play('close'); 
 	
     // Find the single active embed to minimize. The new create logic prevents multiple.
     const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
@@ -8492,6 +8531,7 @@ function setupDrawerInteractions() {
                 // Revert background effects
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
+				SoundManager.play('open');
 				// Hide UI elements
 				document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 			        if (!el.dataset.originalDisplay) {
@@ -8517,6 +8557,7 @@ function setupDrawerInteractions() {
                 // Revert background effects
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
+				SoundManager.play('close');
 				// Restore all main UI elements
 			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 				el.classList.remove('force-hide');
@@ -8736,6 +8777,19 @@ function setupDrawerInteractions() {
                 }
             }, 300); // Match CSS transition duration
         }
+
+       // Check if we clicked a button or input in the main DOM
+        const target = e.target.closest('button, input, .clickable, .app-icon, .setting-item');
+        
+        if (target) {
+            if (target.tagName === 'INPUT' && target.type === 'checkbox') {
+                SoundManager.play(target.checked ? 'check' : 'toggle');
+            } else if (target.classList.contains('app-icon')) {
+                // Handled by app launch event, but good for feedback
+            } else {
+                SoundManager.play('click');
+            }
+		}
     });
 
 	document.addEventListener('click', (e) => {
@@ -9001,6 +9055,26 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
     setupOneButtonNav();
+
+    // Sound Settings
+    const soundModeSelect = document.getElementById('ui-sound-mode');
+    if (soundModeSelect) {
+        soundModeSelect.value = localStorage.getItem('uiSoundMode') || 'silent_off';
+        soundModeSelect.addEventListener('change', function() {
+            localStorage.setItem('uiSoundMode', this.value);
+            broadcastSettingUpdate('uiSoundMode', this.value);
+        });
+    }
+
+    const gurappSoundSwitch = document.getElementById('gurapp-sounds-switch');
+    if (gurappSoundSwitch) {
+        const val = localStorage.getItem('gurappSoundsEnabled');
+        gurappSoundSwitch.checked = val === null ? true : val === 'true'; // Default true
+        gurappSoundSwitch.addEventListener('change', function() {
+            localStorage.setItem('gurappSoundsEnabled', this.checked);
+            broadcastSettingUpdate('gurappSoundsEnabled', this.checked.toString());
+        });
+    }
 
     const persistentIndicatorSwitch = document.getElementById('persistent-indicator-switch');
     if (persistentIndicatorSwitch) {
@@ -10481,7 +10555,9 @@ const controlIdMap = {
     'persistentPageIndicator': 'persistent-indicator-switch',
     'dockPinned': 'dock-pinned-switch',
     'wakeLockMode': 'wake-lock-mode-select',
-	'depthEffectEnabled': 'depth-effect-switch'
+	'depthEffectEnabled': 'depth-effect-switch',
+    'uiSoundMode': 'ui-sound-mode',
+    'gurappSoundsEnabled': 'gurapp-sounds-switch'
 };
 
 // --- NEW: Function to broadcast a setting update to the settings app ---
