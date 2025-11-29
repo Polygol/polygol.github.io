@@ -85,21 +85,11 @@
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
-                <div class="setting-item nav-item" data-page="page-homescreen">
+                <div class="setting-item nav-item" data-page="page-sound">
                     <div class="setting-info">
-                        <span class="material-symbols-rounded">home</span>
-                        <span class="setting-label">Home Screen</span>
-                        <span class="setting-description">Customize your Home Screen</span>
-                    </div>
-                    <span class="material-symbols-rounded">arrow_forward_ios</span>
-                </div>
-            </div>
-            <div class="setting-section">
-                <div class="setting-item nav-item" data-page="page-general">
-                    <div class="setting-info">
-                        <span class="material-symbols-rounded">page_info</span>
-                        <span class="setting-label">General</span>
-                        <span class="setting-description">Manage your overall setup and perferences</span>
+                        <span class="material-symbols-rounded">volume_up</span>
+                        <span class="setting-label">Sound & Haptics</span>
+                        <span class="setting-description">Control how Polygol uses your sound devices</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -108,6 +98,24 @@
                          <span class="material-symbols-rounded">manufacturing</span>
                         <span class="setting-label">System</span>
                         <span class="setting-description">Adjust system settings</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
+            <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-homescreen">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">home</span>
+                        <span class="setting-label">Home Screen</span>
+                        <span class="setting-description">Customize your Home Screen</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-general">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">page_info</span>
+                        <span class="setting-label">General</span>
+                        <span class="setting-description">Manage your overall setup and perferences</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -197,6 +205,32 @@
                     <div class="setting-control">
                         <input type="checkbox" class="toggle-switch" data-key="glassEffectsEnabled" checked>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sound & Haptics Page -->
+        <div class="page" id="page-display">
+            <div class="setting-section">
+                <h2 class="section-title">Sound Feedback</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Sound Feedback</span>
+                        <span class="setting-description">Play sounds when interacting</span>
+                    </div>
+                    <select class="styled-select" data-key="uiSoundMode">
+                        <option value="silent_off">Off in Silent Mode</option>
+                        <option value="always_on">Always On</option>
+                        <option value="always_off">Always Off</option>
+                    </select>
+                </div>
+            
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Gurapp Sounds</span>
+                        <span class="setting-description">Allow apps to play system UI sounds</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="gurappSoundsEnabled">
                 </div>
             </div>
         </div>
