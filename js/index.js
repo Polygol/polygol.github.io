@@ -10128,7 +10128,7 @@ function _updateActiveMediaSession() {
 
     // Update the widget's UI with the new session's data.
     showMediaWidget(metadata);
-    updateMediaWidgetState('paused'); // Default to paused on change.
+    updateMediaWidgetState();
 
     const appIconEl = document.getElementById('media-widget-app-icon');
     if (appIconEl && apps[appName] && apps[appName].icon) {
