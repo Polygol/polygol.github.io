@@ -284,6 +284,14 @@ function pushAppUI(appName, components) {
     });
 }
 
+function pushAppUIUpdate(appName, updates) {
+    if(!wavesBroadcast) return;
+    wavesBroadcast({ 
+        type: 'appUIUpdate', 
+        data: { appName, updates } 
+    });
+}
+
 function clearAppUI() {
     if(!wavesBroadcast) return;
     wavesBroadcast({ type: 'appUI', data: null }); // Null tells remote to show default
