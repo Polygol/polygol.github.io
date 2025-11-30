@@ -5495,8 +5495,7 @@ async function processCurrentWallpaperDepth() {
         // --- NEW: Confirmation Dialog ---
         // We use showCustomConfirm because it returns a Promise<boolean>
         const confirmed = await showCustomConfirm(
-            'This process runs in the background but may slow down your device for a moment.',
-            'Analyze wallpaper depth?'
+            'Analyzing wallpaper may slow down your device for a moment. Continue anyway?',
         );
 		
 		if (!confirmed) {
@@ -5528,7 +5527,7 @@ async function processCurrentWallpaperDepth() {
         // 3. Create Inline Web Worker
         // This code string runs in a separate thread, impossible to freeze UI
         const workerCode = `
-            importScripts('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/imgly-background-removal.min.js');
+            importScripts('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
             
             self.onmessage = async function(e) {
                 try {
