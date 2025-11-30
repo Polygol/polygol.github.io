@@ -168,8 +168,14 @@ async function handleRemoteCommand(payload, peerId) {
             break;
             
         case 'launchApp':
-            if (data.url && typeof window.createFullscreenEmbed === 'function') {
-                window.createFullscreenEmbed(data.url);
+            let urlToLaunch = data.url;
+            // Allow launching by Name if URL is missing
+            if (!urlToLaunch && data.appName && window.apps && window.apps[data.appName]) {
+                urlToLaunch = window.apps[data.appName].url;
+            }
+
+            if (urlToLaunch && typeof window.createFullscreenEmbed === 'function') {
+                window.createFullscreenEmbed(urlToLaunch);
             }
             break;
             
@@ -270,9 +276,23 @@ function pushFullState() {
 
 function pushMediaUpdate(metadata, appName, playbackState = 'paused') {
     if(!wavesBroadcast) return;
+
+    // Resolve Icon for Remote
+    let appIcon = null;
+    if (window.apps && window.apps[appName]) {
+        let iconUrl = window.apps[appName].icon;
+        if (iconUrl && !iconUrl.startsWith('http') && !iconUrl.startsWith('data:') && !iconUrl.startsWith('/')) {
+            iconUrl = `/assets/appicon/${iconUrl}`;
+        }
+        if (iconUrl && !iconUrl.startsWith('data:')) {
+             try { iconUrl = new URL(iconUrl, window.location.origin).href; } catch(e){}
+        }
+        appIcon = iconUrl;
+    }
+
     wavesBroadcast({ 
         type: 'mediaUpdate', 
-        data: { metadata, appName, playbackState } 
+        data: { metadata, appName, playbackState, appIcon } 
     });
 }
 
