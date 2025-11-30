@@ -48,16 +48,19 @@ function determineSoundContext(element) {
     if (!element) return null;
 
     const tag = element.tagName;
+    
+    // FIX: Ignore LABELS to prevent double-audio (Label click -> Input click)
+    if (tag === 'LABEL') return null;
+
     const type = element.getAttribute('type');
     const role = element.getAttribute('role');
 
     // 1. Forms (Inputs)
     if (tag === 'INPUT') {
         if (type === 'checkbox' || type === 'radio') {
-            // Distinguish Switch vs Checkbox via Role if available
             return (role === 'switch') ? 'toggle' : 'check';
         }
-        if (type === 'range') return null; // Sliders are handled via input event usually, or ignored to prevent spam
+        if (type === 'range') return null;
         if (['text', 'password', 'email', 'number', 'search'].includes(type)) return 'type';
         return 'select';
     }
@@ -71,13 +74,15 @@ function determineSoundContext(element) {
     }
 
     // 3. "Interactive Divs" (Heuristic: Computed Pointer Cursor)
-    // This catches any div/span that looks clickable without hardcoding classes
-    const style = window.getComputedStyle(element);
-    if (style.cursor === 'pointer') {
-        return 'select';
-    }
+    // Only check this if we haven't found a specific tag yet
+    try {
+        const style = window.getComputedStyle(element);
+        if (style.cursor === 'pointer') {
+            return 'select';
+        }
+    } catch(e) {}
 
-    return null; // Not interactive
+    return null; 
 }
 
 const WALLPAPER_SUBMISSION_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeSYSJalaX0HCZe0helcK5NCuc0U47tQc6KaO1OAsBs5HxK1A/viewform?embedded=true';
@@ -10967,6 +10972,13 @@ window.addEventListener('message', async (event) => { // Make listener async
 		sourceWindow.postMessage({ type: 'glassEffectsUpdate', enabled: glassEffectsEnabled }, targetOrigin);
 
         sourceWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow, shadowStrong: currentSunShadowStrong }, targetOrigin);
+
+		const gurappSounds = localStorage.getItem('gurappSoundsEnabled') !== 'false';
+	    sourceWindow.postMessage({ 
+	        type: 'settingUpdate', 
+	        key: 'gurappSoundsEnabled', 
+	        value: gurappSounds.toString() 
+	    }, targetOrigin);
 
         return; // Message handled
     }
