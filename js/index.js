@@ -342,6 +342,7 @@ if (initialFaviconLink) {
 let activeMediaSessionApp = null; // To track which app controls the media widget
 let mediaSessionStack = []; // A stack to manage multiple media sessions
 let activeLiveActivities = {}; // Stores info about active activities by ID
+let widgetSnapshotInterval = null; // Timer for widget updates
 
 let currentLanguage = LANG_EN; // Default to English
 
@@ -813,6 +814,11 @@ function renderWidgets() {
         gridContainer.appendChild(instance);
         widgetElements.set(index.toString(), instance);
     });
+
+    // Trigger snapshot update for remote
+    if (window.WavesHost) {
+    	setTimeout(broadcastWidgetSnapshots, 1000);
+    }
 
     // 2. Add interaction listeners to all newly created widgets
     widgetElements.forEach((instance, indexKey) => {
@@ -3352,6 +3358,17 @@ function addToNotificationShade(message, options = {}) {
     };
 }
 
+function clearAllNotifications() {
+    const shade = document.querySelector('.notification-shade');
+    // Remove all notification elements except live activities
+    if (shade) {
+        const notifs = shade.querySelectorAll('.shade-notification:not(.live-activity-notification)');
+        notifs.forEach(n => n.remove());
+    }
+    window.activeNotificationsList = [];
+    updateRemoteNotifications();
+}
+
 function isFullScreen() {
   return (
     document.fullscreenElement ||
@@ -4330,18 +4347,60 @@ async function initializeAiAssistant() {
 // Global state for Waves Remote
 window.activeNotificationsList = []; 
 window.activeLiveActivityData = null; // { icon, text }
+window.activeRemoteLiveActivity = null; // { url, height, id }
 
 // Function to update remote state
 function updateRemoteNotifications() {
     if (window.WavesHost) {
         // Combine standard notifications and live activity
         const list = [...window.activeNotificationsList];
+        // If we have a full iframe live activity, prioritize sending that config
+        if (window.activeRemoteLiveActivity) {
+            window.WavesHost.pushLiveActivityStart(window.activeRemoteLiveActivity);
+        }
         if (window.activeLiveActivityData) {
-            list.unshift(window.activeLiveActivityData); // Put live activity on top
+            list.unshift(window.activeLiveActivityData); // Put live activity summary on top
         }
         window.WavesHost.pushNotificationUpdate(list);
     }
 }
+
+async function broadcastWidgetSnapshots() {
+    if (!window.WavesHost || document.hidden) return;
+    
+    const widgets = document.querySelectorAll('.widget-instance');
+    if (widgets.length === 0) {
+        window.WavesHost.pushWidgetUpdate([]);
+        return;
+    }
+
+    const snapshots = [];
+    // Use a lower scale for performance
+    const options = { logging: false, useCORS: true, scale: 0.5, allowTaint: true };
+    
+    for (const widget of widgets) {
+        try {
+            // Capture the iframe content is tricky due to CORS. 
+            // We capture the container. If iframe allows it, it works. 
+            // Otherwise we might just get the container frame.
+            const canvas = await html2canvas(widget, options);
+            snapshots.push({
+                id: widget.dataset.widgetIndex,
+                img: canvas.toDataURL('image/jpeg', 0.5)
+            });
+        } catch (e) { 
+            // Silent fail
+        }
+    }
+    
+    if (snapshots.length > 0) {
+        window.WavesHost.pushWidgetUpdate(snapshots);
+    }
+}
+
+// Start snapshot timer
+if (widgetSnapshotInterval) clearInterval(widgetSnapshotInterval);
+widgetSnapshotInterval = setInterval(broadcastWidgetSnapshots, 600000); // Update every 10s
 
 // Function to dynamically load the html2canvas script
 async function loadHtml2canvasScript() {
@@ -10902,7 +10961,8 @@ window.addEventListener('message', async (event) => { // Make listener async
 		updateMediaProgress,
 	    startLiveActivity,
 	    updateLiveActivity, // Forward updates
-        stopLiveActivity,
+	    stopLiveActivity,
+	    clearAllNotifications,
 		playUiSound: (type) => {
             if (window.SoundManager) {
                 window.SoundManager.play(type);
