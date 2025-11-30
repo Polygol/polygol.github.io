@@ -7131,7 +7131,7 @@ function initializeCustomization() {
 }
 
 // App definitions
-let apps = {
+var apps = {
     "App Store": {
         url: "/appstore/index.html",
         icon: "appstore.png"
