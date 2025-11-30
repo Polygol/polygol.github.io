@@ -7815,7 +7815,11 @@ function closeFullscreenEmbed() {
                 }
             });
         }
-        
+		
+	    if (window.WavesHost) {
+	        window.WavesHost.clearAppUI(); // Switch back to default media/brightness view
+	    }
+		
         // Animate out
         embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
         embedContainer.style.transform = 'translateY(40px) scale(0.9)';
@@ -7908,6 +7912,11 @@ function minimizeFullscreenEmbed(animate = true) {
 	            embedContainer.style.transform = 'translateY(40px)';
 	            embedContainer.style.opacity = '0';
 	        }
+
+			if (window.WavesHost) {
+			    window.WavesHost.clearAppUI(); // Switch back to default media/brightness view
+			}
+			
 	        // If animate is false (from a gesture), the animation is already handled by endDrag.
             
             // Cleanup delay is 300ms if we animated, 0ms otherwise.
@@ -10866,6 +10875,16 @@ window.addEventListener('message', async (event) => { // Make listener async
 		playUiSound: (type) => {
             if (window.SoundManager) {
                 window.SoundManager.play(type);
+            }
+        },
+		setRemoteUI: (components) => {
+            // Only allow the currently active app to take over the remote
+            // We infer the active app by looking for the fullscreen embed
+            const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+            
+            if (window.WavesHost && activeEmbed) {
+                const appName = activeEmbed.querySelector('iframe').dataset.appId;
+                window.WavesHost.pushAppUI(appName, components);
             }
         },
 
