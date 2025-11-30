@@ -663,6 +663,14 @@ const Gurasuraisu = {
     },
 
     /**
+     * Sends a partial update for specific components on the remote UI.
+     * @param {object} updates - Key-value pairs where Key is the component ID and Value is the new value.
+     */
+    sendRemoteUpdate: function(updates) {
+        this._call('sendRemoteUpdate', [updates]);
+    },
+
+    /**
      * Listen for actions triggered from the Waves remote.
      * @param {function} callback - Function to handle the event (id, value).
      */
