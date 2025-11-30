@@ -172,6 +172,10 @@ async function handleRemoteCommand(payload, peerId) {
                 window.createFullscreenEmbed(data.url);
             }
             break;
+
+        case 'getState':
+            pushFullState();
+            break;
             
         case 'getApps':
             try {
@@ -253,8 +257,17 @@ function pushFullState() {
         brightness: localStorage.getItem('page_brightness') || 100,
         media: null,
         mediaState: 'paused', // Default
-        appUI: window.activeAppUI || null // NEW: Include active app UI in full state
+        appUI: window.activeAppUI || null, // NEW: Include active app UI in full state
+        notifications: [] // NEW: Include notifications
     };
+
+    // Gather notifications from System
+    if (window.activeNotificationsList) {
+        state.notifications = [...window.activeNotificationsList];
+    }
+    if (window.activeLiveActivityData) {
+        state.notifications.unshift(window.activeLiveActivityData);
+    }
 
     const lastMediaMeta = localStorage.getItem('lastMediaMetadata');
     if (lastMediaMeta) {
@@ -288,11 +301,11 @@ function pushAppUI(appName, components) {
     });
 }
 
-function pushAppUIUpdate(appName, updates) {
+function pushNotificationUpdate(notifications) {
     if(!wavesBroadcast) return;
     wavesBroadcast({ 
-        type: 'appUIUpdate', 
-        data: { appName, updates } 
+        type: 'notificationUpdate', 
+        data: notifications 
     });
 }
 
@@ -321,6 +334,8 @@ window.WavesHost = {
     pushMediaUpdate,
     pushFullState,
     pushAppUI,
+    pushAppUIUpdate,
+    pushNotificationUpdate,
     clearAppUI
 };
 
