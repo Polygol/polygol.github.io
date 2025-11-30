@@ -392,7 +392,6 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             transition: background-color 0.2s, transform 0.1s;
         }
 
-
         .toolbar {
             display: flex;
             justify-content: center;
@@ -501,31 +500,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
     // Conditionally add Gurasuraisu-specific styles.
     if (isInsideGurasuraisu) {
         css += `
-            :root {
-                /* Define the two cursor styles as variables */
-                --gurasu-cursor-dark: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(255,255,255,0.7);stroke:rgba(0,0,0,0.5);stroke-width:1"/></svg>') 10 10, auto;
-                --gurasu-cursor-light: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto;
-                --gurasu-cursor-hidden: none;
-                
-                /* Set the default active cursor (for dark theme) */
-                --gurasu-cursor-visible: var(--gurasu-cursor-dark);
-                --gurasu-active-cursor: var(--gurasu-cursor-visible);
-            }
-
-            /* Switch cursor for light theme */
-            body.light-theme {
-                --gurasu-cursor-visible: var(--gurasu-cursor-light);
-            }
-        
-            /* Apply the correct visible cursor to all elements by default */
-            * {
-                cursor: var(--gurasu-cursor-visible) !important;
-            }
-    
-            /* When the parent signals inactivity, override all elements to have the hidden cursor */
-            html.gurasuraisu-cursor-hidden * {
-                cursor: var(--gurasu-cursor-hidden) !important;
-            }
+            /* Add CSS later */
         `;
     }
 
@@ -959,9 +934,6 @@ window.addEventListener('message', async (event) => {
         document.documentElement.style.setProperty('--sun-shadow', data.shadow);
         document.documentElement.style.setProperty('--sun-shadow-strong', data.shadowStrong);
         break;
-      case 'cursorStateUpdate':
-        document.documentElement.classList.toggle('gurasuraisu-cursor-hidden', !data.visible);
-        break;
       case 'glassEffectsUpdate':
         document.documentElement.classList.toggle('gurasuraisu-glass-disabled', !data.enabled);
         break;
@@ -1026,9 +998,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const throttleInterval = 500; // Throttle messages to the parent
 
     const handleLocalActivity = () => {
-        // Step 1: Show this iframe's cursor immediately.
-        document.documentElement.classList.remove('gurasuraisu-cursor-hidden');
-
         // Step 2: Notify the parent to reset the global hide timer (throttled).
         const now = Date.now();
         if (now - lastActivitySignal > throttleInterval) {
