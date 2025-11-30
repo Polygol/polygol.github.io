@@ -11058,10 +11058,18 @@ window.addEventListener('message', async (event) => { // Make listener async
                 }
             }
         },
-		sendRemoteUpdate: (updates) => {
-            const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-            if (window.WavesHost && activeEmbed) {
-                const appName = activeEmbed.querySelector('iframe').dataset.appId;
+        sendRemoteUpdate: (updates) => {
+            // Allow background apps to send updates
+            let appName = null;
+            const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+            for (const iframe of iframes) {
+                if (iframe.contentWindow === event.source) {
+                    appName = iframe.dataset.appId;
+                    break;
+                }
+            }
+
+            if (window.WavesHost && appName) {
                 window.WavesHost.pushAppUIUpdate(appName, updates);
             }
         },
