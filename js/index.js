@@ -3137,6 +3137,10 @@ function addToNotificationShade(message, options = {}) {
 	    notification.style.opacity = '0';
 	    notification.style.transform = 'translateX(50px)';
 	    notification.style.height = '0px';
+        
+        // Remove from global list
+        window.activeNotificationsList = window.activeNotificationsList.filter(n => n.id !== notif.dataset.notifId);
+        updateRemoteNotifications();
 	        
 	    // Remove after animation completes
 	    setTimeout(() => {
@@ -3161,7 +3165,18 @@ function addToNotificationShade(message, options = {}) {
         notification.style.padding = '0'; // Remove padding for iframe to fit
         notification.appendChild(iframe);
     } else {
-	    // Content container
+        // Add ID for tracking
+        notification.dataset.notifId = Date.now() + Math.random();
+        
+        // Add to global list for remote
+        window.activeNotificationsList.push({
+            id: notification.dataset.notifId,
+            message: message,
+            icon: options.icon || 'notifications'
+        });
+        updateRemoteNotifications();
+		
+		// Content container
 	    const contentContainer = document.createElement('div');
 	    contentContainer.style.display = 'flex';
 	    contentContainer.style.alignItems = 'center';
@@ -4309,6 +4324,22 @@ async function initializeAiAssistant() {
         const aiSwitch = document.getElementById('ai-switch');
         if (aiSwitch) aiSwitch.checked = false;
         syncUiStates();
+    }
+}
+
+// Global state for Waves Remote
+window.activeNotificationsList = []; 
+window.activeLiveActivityData = null; // { icon, text }
+
+// Function to update remote state
+function updateRemoteNotifications() {
+    if (window.WavesHost) {
+        // Combine standard notifications and live activity
+        const list = [...window.activeNotificationsList];
+        if (window.activeLiveActivityData) {
+            list.unshift(window.activeLiveActivityData); // Put live activity on top
+        }
+        window.WavesHost.pushNotificationUpdate(list);
     }
 }
 
@@ -11080,6 +11111,14 @@ window.addEventListener('message', async (event) => { // Make listener async
             if (iconEl) iconEl.textContent = data.icon || '';
             if (textEl) textEl.textContent = data.text || '';
         }
+        
+        // Update Remote
+        window.activeLiveActivityData = { 
+            icon: data.icon || 'smart_toy', 
+            text: data.text || 'Live Activity' 
+        };
+        updateRemoteNotifications();
+        
         return;
     }
 
