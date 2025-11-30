@@ -297,8 +297,6 @@ input[type="submit"]:active,
 }
 
         body {
-			--polygol-cursor-hidden: none;
-			
             font-family: 'Inter', sans-serif;
             background-color: var(--background-color);
             background-image: none !important;
@@ -315,16 +313,6 @@ input[type="submit"]:active,
             touch-action: manipulation;
             /* Set the default value on the body element */
             --bg-transform-scale: 1.05; 
-        }
-
-        /* When the body is inactive, change the active cursor variable */
-        body.cursor-hidden {
-            --polygol-active-cursor: var(--polygol-cursor-hidden);
-        }
-
-        /* Apply the active cursor to all elements */
-        body, body * {
-            cursor: var(--polygol-active-cursor);
         }
 
 body::before, #background-video {
