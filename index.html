@@ -209,7 +209,7 @@
                Part 5: Merge the perfectly isolated parts.
                Because there is no overlap, 'lighten' works perfectly, but you could also use feMerge.
             -->
-            <feBlend in="topLeft_part" in2="bottomRight_part" mode="lighten" result="blended_image"></feBlend>
+            <feBlend in="topLeft_part" in2="bottomRight_part" mode="darken" result="blended_image"></feBlend>
             
             <!-- Part 6: Adjust final opacity -->
             <feComponentTransfer in="blended_image">
