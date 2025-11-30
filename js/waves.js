@@ -224,18 +224,16 @@ async function handleRemoteCommand(payload, peerId) {
         case 'appAction':
             // Route custom event back to the app
             // data: { appName: 'Slides', id: 'nextBtn', value: null }
-            const activeApp = document.querySelector('.fullscreen-embed[style*="display: block"]');
-            if (activeApp) {
-                const iframe = activeApp.querySelector('iframe');
-                // Security: Ensure the remote is talking to the app that is actually open
-                if (iframe && iframe.dataset.appId === data.appName) {
-                    const targetOrigin = getOriginFromUrl(iframe.src);
-                    iframe.contentWindow.postMessage({ 
-                        type: 'remote-action', 
-                        id: data.id, 
-                        value: data.value 
-                    }, targetOrigin);
-                }
+            // Support background apps by looking up iframe by ID
+            const targetIframe = document.querySelector(`iframe[data-app-id="${data.appName}"]`);
+            
+            if (targetIframe) {
+                const targetOrigin = getOriginFromUrl(targetIframe.src);
+                targetIframe.contentWindow.postMessage({ 
+                    type: 'remote-action', 
+                    id: data.id, 
+                    value: data.value 
+                }, targetOrigin);
             }
             break;
             
