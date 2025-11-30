@@ -159,6 +159,10 @@
             opacity: 0.5;
         }
 
+        .setting-item.nav-item {
+            cursor: pointer;
+        }
+
         body::-webkit-scrollbar { width: 8px; }
         body::-webkit-scrollbar-track { background: transparent; }
         body::-webkit-scrollbar-thumb {
