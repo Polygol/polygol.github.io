@@ -5518,24 +5518,21 @@ async function processCurrentWallpaperDepth() {
         if (dbRecord.blob) {
             imageBlob = dbRecord.blob;
         } else if (dbRecord.dataUrl) {
-            // Convert Base64 to Blob to transfer to worker efficiently
             imageBlob = dataURLtoBlob(dbRecord.dataUrl);
         } else {
             throw new Error("No image source");
         }
 
-        // 3. Create Inline Web Worker
-        // This code string runs in a separate thread, impossible to freeze UI
+        // 3. Create Inline Module Worker
+        // We use type="module" to support 'import'
         const workerCode = `
-            importScripts('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.0.1/dist/browser.min.js');
+            import { removeBackground } from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm';
             
             self.onmessage = async function(e) {
                 try {
-                    // The library is exposed as self.imglyRemoveBackground in the worker scope
-                    const blob = await self.imglyRemoveBackground(e.data, {
-                        // No publicPath needed, defaults to CDN which works best
+                    const blob = await removeBackground(e.data, {
                         progress: (key, current, total) => {
-                            // Optional: could post progress back
+                            // Optional progress tracking
                         }
                     });
                     self.postMessage({ type: 'success', blob: blob });
@@ -5547,10 +5544,11 @@ async function processCurrentWallpaperDepth() {
 
         const workerBlob = new Blob([workerCode], { type: "application/javascript" });
         const workerUrl = URL.createObjectURL(workerBlob);
-        const worker = new Worker(workerUrl);
+        
+        // IMPORTANT: { type: "module" } enables imports in the worker
+        const worker = new Worker(workerUrl, { type: "module" });
 
         // 4. Handle Worker Communication
-        // Wrap in Promise to await result
         const resultBlob = await new Promise((resolve, reject) => {
             worker.onmessage = function(e) {
                 if (e.data.type === 'success') {
@@ -5558,7 +5556,7 @@ async function processCurrentWallpaperDepth() {
                 } else {
                     reject(new Error(e.data.message));
                 }
-                worker.terminate(); // Kill worker to free RAM
+                worker.terminate();
                 URL.revokeObjectURL(workerUrl);
             };
             
