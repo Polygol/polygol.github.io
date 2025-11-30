@@ -252,7 +252,8 @@ function pushFullState() {
     const state = {
         brightness: localStorage.getItem('page_brightness') || 100,
         media: null,
-        mediaState: 'paused' // Default
+        mediaState: 'paused', // Default
+        appUI: window.activeAppUI || null // NEW: Include active app UI in full state
     };
 
     const lastMediaMeta = localStorage.getItem('lastMediaMetadata');
@@ -277,10 +278,13 @@ function pushMediaUpdate(metadata, appName, playbackState = 'paused') {
 }
 
 function pushAppUI(appName, components) {
+    // Store in global window scope so it persists for new connections
+    window.activeAppUI = { appName, components };
+    
     if(!wavesBroadcast) return;
     wavesBroadcast({ 
         type: 'appUI', 
-        data: { appName, components } 
+        data: window.activeAppUI 
     });
 }
 
@@ -293,6 +297,7 @@ function pushAppUIUpdate(appName, updates) {
 }
 
 function clearAppUI() {
+    window.activeAppUI = null; // Clear stored state
     if(!wavesBroadcast) return;
     wavesBroadcast({ type: 'appUI', data: null }); // Null tells remote to show default
 }
