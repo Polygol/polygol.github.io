@@ -301,6 +301,14 @@ function pushAppUI(appName, components) {
     });
 }
 
+function pushAppUIUpdate(appName, updates) {
+    if(!wavesBroadcast) return;
+    wavesBroadcast({ 
+        type: 'appUIUpdate', 
+        data: { appName, updates }
+    });
+}
+
 function pushNotificationUpdate(notifications) {
     if(!wavesBroadcast) return;
     wavesBroadcast({ 
