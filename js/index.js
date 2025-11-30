@@ -7883,6 +7883,13 @@ async function createBackgroundEmbed(url) {
     // 1. Check if running (Active or Minimized)
     const existingActive = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"]`);
     if (existingActive || minimizedEmbeds[url]) {
+        // NEW: Force refresh UI if already running so remote picks it up immediately
+        const targetContainer = existingActive || minimizedEmbeds[url];
+        const targetFrame = targetContainer.querySelector('iframe');
+        if (targetFrame && targetFrame.contentWindow) {
+            const targetOrigin = getOriginFromUrl(url);
+            targetFrame.contentWindow.postMessage({ type: 'requestRemoteUI' }, targetOrigin);
+        }
         return; // Already running
     }
 
@@ -11016,12 +11023,18 @@ window.addEventListener('message', async (event) => { // Make listener async
             }
         },
 		setRemoteUI: (components) => {
-            // Only allow the currently active app to take over the remote
-            // We infer the active app by looking for the fullscreen embed
-            const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-            
-            if (window.WavesHost && activeEmbed) {
-                const appName = activeEmbed.querySelector('iframe').dataset.appId;
+            // NEW: Allow ANY running app (even background) to set remote UI if they are the sender.
+            // We identify the app by matching the event source window to our iframes.
+            let appName = null;
+            const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+            for (const iframe of iframes) {
+                if (iframe.contentWindow === event.source) {
+                    appName = iframe.dataset.appId;
+                    break;
+                }
+            }
+
+            if (window.WavesHost && appName) {
                 window.WavesHost.pushAppUI(appName, components);
                 
                 // Auto-register as Mini App capable
