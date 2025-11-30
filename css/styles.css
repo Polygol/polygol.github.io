@@ -2856,7 +2856,10 @@ input[type="checkbox"]:checked::before {
 
 .widget-instance.is-dragging {
     z-index: 1000;
-    cursor: grabbing;
+}
+
+.widget-instance.is-dragging .widget-instance-overlay {
+    cursor: grabbing !important;
 }
 
 .widget-instance iframe {
@@ -2881,9 +2884,9 @@ input[type="checkbox"]:checked::before {
     corner-shape: superellipse(1.5);
 }
 
-.widget-instance-overlay:active .widget-instance, .widget-instance.is-dragging .widget-instance {
+.widget-instance-overlay:active .widget-instance, .widget-instance.is-dragging {
 	transform: scale(1.04) !important;
-    cursor: grabbing;
+    cursor: pointer;
 	filter: brightness(1.5) !important;
 }
 
