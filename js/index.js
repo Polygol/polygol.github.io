@@ -5527,7 +5527,7 @@ async function processCurrentWallpaperDepth() {
         // 3. Create Inline Web Worker
         // This code string runs in a separate thread, impossible to freeze UI
         const workerCode = `
-            importScripts('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
+            importScripts('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.0.1/dist/browser.min.js');
             
             self.onmessage = async function(e) {
                 try {
