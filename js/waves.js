@@ -149,6 +149,12 @@ async function handleRemoteCommand(payload, peerId) {
             }
             break;
 
+        case 'clearNotifications':
+            if (typeof window.clearAllNotifications === 'function') {
+                window.clearAllNotifications();
+            }
+            break;
+
         case 'home':
             if (typeof window.minimizeFullscreenEmbed === 'function') {
                 window.minimizeFullscreenEmbed();
@@ -175,6 +181,10 @@ async function handleRemoteCommand(payload, peerId) {
 
         case 'getState':
             pushFullState();
+            // Force a widget update
+            if (typeof window.broadcastWidgetSnapshots === 'function') {
+                window.broadcastWidgetSnapshots();
+            }
             break;
             
         case 'getApps':
@@ -317,6 +327,22 @@ function pushNotificationUpdate(notifications) {
     });
 }
 
+function pushLiveActivityStart(activityConfig) {
+    if(!wavesBroadcast) return;
+    wavesBroadcast({ 
+        type: 'liveActivityStart', 
+        data: activityConfig 
+    });
+}
+
+function pushWidgetUpdate(widgets) {
+    if(!wavesBroadcast) return;
+    wavesBroadcast({ 
+        type: 'widgetUpdate', 
+        data: widgets 
+    });
+}
+
 function clearAppUI() {
     window.activeAppUI = null; // Clear stored state
     if(!wavesBroadcast) return;
@@ -344,6 +370,8 @@ window.WavesHost = {
     pushAppUI,
     pushAppUIUpdate,
     pushNotificationUpdate,
+    pushLiveActivityStart,
+    pushWidgetUpdate,
     clearAppUI
 };
 
