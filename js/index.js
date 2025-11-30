@@ -7932,6 +7932,8 @@ async function createBackgroundEmbed(url) {
     console.log(`[System] Launched ${appName} in background.`);
 }
 
+window.launchAppSilently = createBackgroundEmbed;
+
 function closeFullscreenEmbed() {
     // Restore the original favicon
     if (originalFaviconUrl) {
@@ -7960,7 +7962,10 @@ function closeFullscreenEmbed() {
         }
 		
 	    if (window.WavesHost) {
-	        window.WavesHost.clearAppUI(); // Switch back to default media/brightness view
+            // Only clear if the closing app owns the current UI
+            if (window.activeAppUI && window.activeAppUI.appName === appName) {
+	            window.WavesHost.clearAppUI(); 
+            }
 	    }
 		
         // Animate out
@@ -8055,9 +8060,13 @@ function minimizeFullscreenEmbed(animate = true) {
 	            embedContainer.style.transform = 'translateY(40px)';
 	            embedContainer.style.opacity = '0';
 	        }
-
+			
 			if (window.WavesHost) {
-			    window.WavesHost.clearAppUI(); // Switch back to default media/brightness view
+                const appName = embedContainer.querySelector('iframe')?.dataset.appId;
+                // Only clear if the minimizing app owns the current UI
+                if (appName && window.activeAppUI && window.activeAppUI.appName === appName) {
+    			    window.WavesHost.clearAppUI(); 
+                }
 			}
 			
 	        // If animate is false (from a gesture), the animation is already handled by endDrag.
