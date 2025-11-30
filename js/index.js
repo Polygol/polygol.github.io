@@ -2915,6 +2915,7 @@ function showNotification(message, options = {}) {
     // Only create on-screen popup if silent mode is NOT active
     if (!isSilentMode) {
         popupNotification = createOnScreenPopup(message, options);
+		window.SoundManager.play('error');
     }
     
     // Always create persistent notification in the shade
