@@ -10976,6 +10976,17 @@ window.addEventListener('message', async (event) => { // Make listener async
             if (window.WavesHost && activeEmbed) {
                 const appName = activeEmbed.querySelector('iframe').dataset.appId;
                 window.WavesHost.pushAppUI(appName, components);
+                
+                // Auto-register as Mini App capable
+                if (apps[appName] && !apps[appName].hasMiniApp) {
+                    apps[appName].hasMiniApp = true;
+                    // Persist change
+                    const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
+                    if (userApps[appName]) {
+                        userApps[appName].hasMiniApp = true;
+                        localStorage.setItem('userInstalledApps', JSON.stringify(userApps));
+                    }
+                }
             }
         },
 		sendRemoteUpdate: (updates) => {
