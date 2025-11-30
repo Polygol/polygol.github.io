@@ -544,7 +544,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
                        Part 5: Merge the perfectly isolated parts.
                        Because there is no overlap, 'lighten' works perfectly, but you could also use feMerge.
                     -->
-                    <feBlend in="topLeft_part" in2="bottomRight_part" mode="lighten" result="blended_image"></feBlend>
+                    <feBlend in="topLeft_part" in2="bottomRight_part" mode="darken" result="blended_image"></feBlend>
                     
                     <!-- Part 6: Adjust final opacity -->
                     <feComponentTransfer in="blended_image">
@@ -921,6 +921,11 @@ window.addEventListener('message', async (event) => {
     switch (data.type) {
       case 'themeUpdate':
         document.body.classList.toggle('light-theme', data.theme === 'light');
+        // Update Filter
+        const feBlend = document.querySelector('#edge-refraction-only feBlend');
+        if (feBlend) {
+            feBlend.setAttribute('mode', data.theme === 'light' ? 'lighten' : 'darken');
+        }
         break;
       case 'animationsUpdate':
         document.body.classList.toggle('reduce-animations', !data.enabled);
@@ -992,6 +997,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // FIX: Target the <html> element for the initial high contrast check
     const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
     document.documentElement.classList.toggle('gurasuraisu-high-contrast', highContrastEnabled);
+      
+    // We use setTimeout to ensure the SVG injection (which happens in another listener) has completed
+    setTimeout(() => {
+        const feBlend = document.querySelector('#edge-refraction-only feBlend');
+        if (feBlend) {
+            const isLight = document.body.classList.contains('light-theme');
+            feBlend.setAttribute('mode', isLight ? 'lighten' : 'darken');
+        }
+    }, 0);
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
