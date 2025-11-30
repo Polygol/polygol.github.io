@@ -43,6 +43,8 @@ const SoundManager = {
     }
 };
 
+window.SoundManager = SoundManager; // Expose to global scope for API access
+
 // "Smart" Context Detector
 function determineSoundContext(element) {
     if (!element) return null;
