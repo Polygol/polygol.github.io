@@ -653,6 +653,28 @@ const Gurasuraisu = {
         }
     },
 
+    /**
+     * Sets the UI on the connected Waves remote (Second Screen).
+     * @param {Array} components - Array of widget definitions.
+     * Example: [{ type: 'button', id: 'btn1', label: 'Next Slide', icon: 'skip_next' }]
+     */
+    setRemoteUI: function(components) {
+        this._call('setRemoteUI', [components]);
+    },
+
+    /**
+     * Listen for actions triggered from the Waves remote.
+     * @param {function} callback - Function to handle the event (id, value).
+     */
+    onRemoteAction: function(callback) {
+        window.addEventListener('message', (event) => {
+            if (event.source !== window.parent) return;
+            if (event.data.type === 'remote-action') {
+                callback(event.data.id, event.data.value);
+            }
+        });
+    },
+
   /**
    * Namespace for Live Activity functions.
    */
