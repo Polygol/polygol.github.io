@@ -179,6 +179,12 @@ async function handleRemoteCommand(payload, peerId) {
             }
             break;
 
+        case 'launchAppSilently':
+            if (data.url && typeof window.launchAppSilently === 'function') {
+                window.launchAppSilently(data.url);
+            }
+            break;
+
         case 'getState':
             pushFullState();
             // Force a widget update
