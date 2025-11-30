@@ -500,6 +500,10 @@ input[type="color"]::-moz-color-swatch {
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
 
+.drawer-handle:active {
+	cursor: grabbing;
+}
+
 .drawer-pill {
     padding: 11.5px;
     display: flex;
@@ -2470,6 +2474,7 @@ input[type="checkbox"]:checked::before {
 		    position: relative;
 			font-size: 14px;
 			border-radius: 50px;
+			cursor: pointer;
 		}
 
 		.drawer-top-btn .material-symbols-rounded {
