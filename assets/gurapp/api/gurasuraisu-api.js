@@ -683,6 +683,20 @@ const Gurasuraisu = {
         });
     },
 
+    /**
+     * Listen for a request to refresh/send the remote UI.
+     * Triggered when the app is launched via Mini Apps but is already running.
+     * @param {function} callback - Function to execute (usually calling setRemoteUI).
+     */
+    onRequestRemoteUI: function(callback) {
+        window.addEventListener('message', (event) => {
+            if (event.source !== window.parent) return;
+            if (event.data.type === 'requestRemoteUI') {
+                callback();
+            }
+        });
+    },
+
   /**
    * Namespace for Live Activity functions.
    */
