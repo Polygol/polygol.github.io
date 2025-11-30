@@ -633,7 +633,7 @@ const Gurasuraisu = {
 
     /**
      * Plays a system UI sound.
-     * @param {string} type - 'click', 'toggle', 'check', 'error', 'success', 'open', 'close'
+     * @param {string} type - 'select', 'toggle', 'check', 'error', 'success', 'open', 'close', 'type'
      */
     playSound: function(type) {
         if (_systemSoundsAllowed) {
@@ -643,11 +643,12 @@ const Gurasuraisu = {
 
     /**
      * Configures the automatic UI sound detection for this Gurapp.
+     * Use this to disable automatic click sounds if you want to handle them manually.
      * @param {object} config
      * @param {boolean} config.auto - Set to false to disable auto-click detection.
      */
     configureSounds: function(config) {
-        if (typeof config.auto === 'boolean') {
+        if (config && typeof config.auto === 'boolean') {
             _autoSoundEnabled = config.auto;
         }
     },
