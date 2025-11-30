@@ -199,6 +199,24 @@ async function handleRemoteCommand(payload, peerId) {
                 console.error("[Waves] getApps error:", e);
             }
             break;
+
+        case 'appAction':
+            // Route custom event back to the app
+            // data: { appName: 'Slides', id: 'nextBtn', value: null }
+            const activeApp = document.querySelector('.fullscreen-embed[style*="display: block"]');
+            if (activeApp) {
+                const iframe = activeApp.querySelector('iframe');
+                // Security: Ensure the remote is talking to the app that is actually open
+                if (iframe && iframe.dataset.appId === data.appName) {
+                    const targetOrigin = getOriginFromUrl(iframe.src);
+                    iframe.contentWindow.postMessage({ 
+                        type: 'remote-action', 
+                        id: data.id, 
+                        value: data.value 
+                    }, targetOrigin);
+                }
+            }
+            break;
             
         case 'requestScreenshot':
             // FIX: Use createCompositeScreenshot from index.js to handle iframes correctly
@@ -258,6 +276,19 @@ function pushMediaUpdate(metadata, appName, playbackState = 'paused') {
     });
 }
 
+function pushAppUI(appName, components) {
+    if(!wavesBroadcast) return;
+    wavesBroadcast({ 
+        type: 'appUI', 
+        data: { appName, components } 
+    });
+}
+
+function clearAppUI() {
+    if(!wavesBroadcast) return;
+    wavesBroadcast({ type: 'appUI', data: null }); // Null tells remote to show default
+}
+
 function getPairingCode() {
     const state = getWavesHostState();
     return state ? state.roomId : "ERROR";
@@ -275,7 +306,9 @@ window.WavesHost = {
     getPairingCode,
     resetPairingData,
     pushMediaUpdate,
-    pushFullState
+    pushFullState,
+    pushAppUI,
+    clearAppUI
 };
 
 // Helper for URL origin
