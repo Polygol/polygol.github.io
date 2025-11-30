@@ -5042,6 +5042,15 @@ function blobToCompressedWebP(blob) {
     });
 }
 
+function dataURLtoBlob(dataurl) {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], {type:mime});
+}
+
 async function saveWallpaper(file, customStyles = null) {
     try {
         const wallpaperId = `wallpaper_${Date.now()}`;
@@ -5486,10 +5495,10 @@ async function processCurrentWallpaperDepth() {
         // --- NEW: Confirmation Dialog ---
         // We use showCustomConfirm because it returns a Promise<boolean>
         const confirmed = await showCustomConfirm(
-            'This might take a few minutes. During analysis, Polygol will be unresponsive.',
+            'This process runs in the background but may slow down your device for a moment.',
             'Analyze wallpaper depth?'
         );
-
+		
 		if (!confirmed) {
             // User clicked No: Add to skip list
             skippedDepthWallpapers.add(currentWallpaper.id);
@@ -5505,54 +5514,84 @@ async function processCurrentWallpaperDepth() {
 
 		// Continue (Only runs if confirmed)
 		
-		// 3. No cache, we need to generate it.
-        // Load the library dynamically via script tag to avoid ESM bundle size limits and CORS issues
-        if (!window.imglyRemoveBackground) {
-            showNotification('Downloading AI models', { icon: 'auto_awesome' });
-            // Use version 1.7.0 ESM from jsDelivr as verified
-            const module = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
-            window.imglyRemoveBackground = module.removeBackground || module.default;
-			
-            if (typeof window.imglyRemoveBackground !== 'function') {
-                throw new Error("Failed to load background removal function from module.");
-            }
-        }
-
-        // 4. Process
-        let imageSource;
+        // 2. Prepare Image Source as Blob
+        let imageBlob;
         if (dbRecord.blob) {
-            imageSource = dbRecord.blob;
+            imageBlob = dbRecord.blob;
         } else if (dbRecord.dataUrl) {
-            imageSource = dbRecord.dataUrl;
+            // Convert Base64 to Blob to transfer to worker efficiently
+            imageBlob = dataURLtoBlob(dbRecord.dataUrl);
         } else {
-            throw new Error("No image source found");
+            throw new Error("No image source");
         }
 
-        // Important: Set publicPath to the dist folder of the same version
-        const blob = await window.imglyRemoveBackground(imageSource, {
-            progress: (key, current, total) => {
-            console.log(`Processing: ${key} ${current}/${total}`);
-            }
+        // 3. Create Inline Web Worker
+        // This code string runs in a separate thread, impossible to freeze UI
+        const workerCode = `
+            importScripts('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/imgly-background-removal.min.js');
+            
+            self.onmessage = async function(e) {
+                try {
+                    // The library is exposed as self.imglyRemoveBackground in the worker scope
+                    const blob = await self.imglyRemoveBackground(e.data, {
+                        // No publicPath needed, defaults to CDN which works best
+                        progress: (key, current, total) => {
+                            // Optional: could post progress back
+                        }
+                    });
+                    self.postMessage({ type: 'success', blob: blob });
+                } catch (error) {
+                    self.postMessage({ type: 'error', message: error.toString() });
+                }
+            };
+        `;
+
+        const workerBlob = new Blob([workerCode], { type: "application/javascript" });
+        const workerUrl = URL.createObjectURL(workerBlob);
+        const worker = new Worker(workerUrl);
+
+        // 4. Handle Worker Communication
+        // Wrap in Promise to await result
+        const resultBlob = await new Promise((resolve, reject) => {
+            worker.onmessage = function(e) {
+                if (e.data.type === 'success') {
+                    resolve(e.data.blob);
+                } else {
+                    reject(new Error(e.data.message));
+                }
+                worker.terminate(); // Kill worker to free RAM
+                URL.revokeObjectURL(workerUrl);
+            };
+            
+            worker.onerror = function(e) {
+                reject(new Error("Worker Error: " + e.message));
+                worker.terminate();
+                URL.revokeObjectURL(workerUrl);
+            };
+
+            showNotification('Generating depth', { icon: 'auto_awesome' });
+            
+            // Send data to worker
+            worker.postMessage(imageBlob);
         });
 
-        // 3. Compress and Save
+        // 5. Compress and Save (Back on Main Thread)
         console.log("[Depth] Compressing result...");
-        const compressedDataUrl = await blobToCompressedWebP(blob);
+        const compressedDataUrl = await blobToCompressedWebP(resultBlob);
         
         dbRecord.depthDataUrl = compressedDataUrl;
-        // Also ensure we save the enabled state
         dbRecord.depthEnabled = true; 
         
         await storeWallpaper(currentWallpaper.id, dbRecord);
         console.log("[Depth] Saved to IDB.");
 
-        // 4. Apply
+        // 6. Apply
         applyDepthLayer(compressedDataUrl);
-        showPopup("Depth effect generated.");
+        showNotification('Task completed', { icon: 'auto_awesome' });
 
     } catch (error) {
         console.error("Depth effect failed:", error);
-        showPopup("Failed to generate depth effect");
+        showNotification('Failed to complete', { icon: 'auto_awesome' });
         
         currentWallpaper.depthEnabled = false;
         saveRecentWallpapers();
