@@ -10887,6 +10887,13 @@ window.addEventListener('message', async (event) => { // Make listener async
                 window.WavesHost.pushAppUI(appName, components);
             }
         },
+		sendRemoteUpdate: (updates) => {
+            const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+            if (window.WavesHost && activeEmbed) {
+                const appName = activeEmbed.querySelector('iframe').dataset.appId;
+                window.WavesHost.pushAppUIUpdate(appName, updates);
+            }
+        },
 
 		// Privileged Functions (already checked above)
 		installApp, 
