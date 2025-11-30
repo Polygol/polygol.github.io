@@ -16,8 +16,8 @@ const SoundManager = {
         'open': new Audio('/assets/sound/ui/in.mp3'),          // Drawer/App Open
         'close': new Audio('/assets/sound/ui/out.mp3'),        // Drawer/App Close
         'popup': new Audio('/assets/sound/ui/popup.mp3'),      // Alerts/Modals
-        'error': new Audio('/assets/sound/ui/tone1.mp3'),      // Errors
-        'success': new Audio('/assets/sound/ui/tone2.mp3'),    // Success
+        'error': new Audio('/assets/sound/ui/tone2.mp3'),      // Errors
+        'success': new Audio('/assets/sound/ui/tone1.mp3'),    // Success
         'type': new Audio('/assets/sound/ui/mecha.mp3'),       // Input focus/typing
         'expand': new Audio('/assets/sound/ui/tridown.mp3'),   // Dropdowns open
         'collapse': new Audio('/assets/sound/ui/tripuck.mp3'), // Dropdowns close
@@ -9287,6 +9287,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Set initial states from localStorage or defaults
     lightModeSwitch.checked = storedLightMode === 'light';
     if (lightModeSwitch.checked) lightModeControl.classList.add('active');
+	
+	const feBlend = document.querySelector('#edge-refraction-only feBlend');
+    if (feBlend) {
+        feBlend.setAttribute('mode', lightModeSwitch.checked ? 'lighten' : 'darken');
+    }
     
     minimalModeSwitch.checked = storedMinimalMode;
     if (minimalModeSwitch.checked) minimalModeControl.classList.add('active');
@@ -9444,6 +9449,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         broadcastSettingUpdate('theme', newTheme);
         document.body.classList.toggle('light-theme', isLight);
         updateLightModeIcon(isLight);
+
+		// Update SVG Filter Mode
+		const feBlend = document.querySelector('#edge-refraction-only feBlend');
+        if (feBlend) {
+            feBlend.setAttribute('mode', isLight ? 'lighten' : 'darken');
+        }
 
         // Inform all iframes of the specific theme update
         const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
