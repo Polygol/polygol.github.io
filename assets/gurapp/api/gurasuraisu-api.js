@@ -587,11 +587,8 @@ const _fallbacks = {
 };
 
 // Internal State for Sound
-let _autoSoundEnabled = true; // Default to true for the app logic
-const _systemSoundEnabled = () => {
-    // Check system setting passed down or default to true
-    return localStorage.getItem('gurappSoundsEnabled') !== 'false';
-};
+let _autoSoundEnabled = true; // App dev override
+let _systemSoundsAllowed = true; // User preference from System
  
 const Gurasuraisu = {
   /**
@@ -639,7 +636,7 @@ const Gurasuraisu = {
      * @param {string} type - 'click', 'toggle', 'check', 'error', 'success', 'open', 'close'
      */
     playSound: function(type) {
-        if (_systemSoundEnabled()) {
+        if (_systemSoundsAllowed) {
             this._call('playUiSound', [type]);
         }
     },
@@ -937,6 +934,11 @@ window.addEventListener('message', async (event) => {
       case 'glassEffectsUpdate':
         document.documentElement.classList.toggle('gurasuraisu-glass-disabled', !data.enabled);
         break;
+      case 'settingUpdate':
+        if (data.key === 'gurappSoundsEnabled') {
+          _systemSoundsAllowed = (data.value === 'true');
+        }
+        break;
       case 'dialog-response':
         if (data.requestId && _dialogCallbacks[data.requestId]) {
             _dialogCallbacks[data.requestId](data.value);
@@ -1014,6 +1016,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function getLocalSoundContext(element) {
         if (!element) return null;
         const tag = element.tagName;
+        
+        // Ignore Labels to prevent double sounds
+        if (tag === 'LABEL') return null;
+
         const type = element.getAttribute('type');
         const role = element.getAttribute('role');
 
@@ -1027,25 +1033,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tag === 'SELECT') return 'expand';
         if (tag === 'BUTTON' || tag === 'A' || role === 'button') return 'select';
 
-        // Heuristic: Computed Pointer Cursor for generic divs
+        // Heuristic: Computed Pointer Cursor
         const style = window.getComputedStyle(element);
         if (style.cursor === 'pointer') return 'select';
 
         return null;
     }
-
-    document.body.addEventListener('click', (e) => {
-        // Check app-level override and system master switch
-        if (!_autoSoundEnabled || !_systemSoundEnabled()) return;
+      
+    document.addEventListener('click', (e) => {
+        if (!_autoSoundEnabled || !_systemSoundsAllowed) return;
 
         let target = e.target;
         let soundType = null;
 
-        // Traverse up to find interactive parent
+        // Traverse up 5 levels to find interactive parent (e.g. span inside button)
         for (let i = 0; i < 5; i++) {
-            if (!target || target === document.body) break;
+            if (!target || target === document) break;
+            
             soundType = getLocalSoundContext(target);
             if (soundType) break;
+            
             target = target.parentElement;
         }
 
@@ -1054,9 +1061,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, { capture: true });
 
-    // Focus events for inputs
-    document.body.addEventListener('focus', (e) => {
-         if (!_autoSoundEnabled || !_systemSoundEnabled()) return;
+    // Input Focus Sounds
+    document.addEventListener('focus', (e) => {
+         if (!_autoSoundEnabled || !_systemSoundsAllowed) return;
          const type = getLocalSoundContext(e.target);
          if (type === 'type') {
              Gurasuraisu.playSound('type');
