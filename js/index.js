@@ -7879,6 +7879,52 @@ createFullscreenEmbed = function(url) {
   originalCreateFullscreenEmbed(url);
 };
 
+async function createBackgroundEmbed(url) {
+    // 1. Check if running (Active or Minimized)
+    const existingActive = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"]`);
+    if (existingActive || minimizedEmbeds[url]) {
+        return; // Already running
+    }
+
+    // 2. Find App Info
+    let appName = Object.keys(apps).find(name => apps[name].url === url);
+    let appDetails = appName ? apps[appName] : null;
+
+    // 3. Create Container (Hidden)
+    const embedContainer = document.createElement('div');
+    embedContainer.className = 'fullscreen-embed';
+    embedContainer.style.display = 'none'; 
+    embedContainer.style.zIndex = '0';
+    embedContainer.dataset.embedUrl = url;
+
+    // 4. Create Iframe
+    const iframe = document.createElement('iframe');
+    iframe.src = url;
+    iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+    if (appName) iframe.dataset.appId = appName;
+    iframe.setAttribute('frameborder', '0');
+    iframe.setAttribute('allowfullscreen', '');
+    
+    embedContainer.appendChild(iframe);
+
+    // 5. Listeners
+    iframe.addEventListener('load', () => {
+        const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
+        if (iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+                type: 'languageUpdate',
+                languageCode: currentLang
+            }, '*');
+        }
+    });
+
+    // 6. Add to DOM and Minimized Cache
+    document.body.appendChild(embedContainer);
+    minimizedEmbeds[url] = embedContainer;
+    
+    console.log(`[System] Launched ${appName} in background.`);
+}
+
 function closeFullscreenEmbed() {
     // Restore the original favicon
     if (originalFaviconUrl) {
@@ -10952,6 +10998,7 @@ window.addEventListener('message', async (event) => { // Make listener async
 		showNotification, 
 		minimizeFullscreenEmbed, 
 		createFullscreenEmbed, 
+        launchAppSilently: createBackgroundEmbed, // Expose silent launch
 		blackoutScreen,
 		registerWidget, 
 		triggerWallpaperUpload: () => document.getElementById('wallpaperInput').click(),
