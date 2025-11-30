@@ -205,7 +205,8 @@ async function handleRemoteCommand(payload, peerId) {
                         return {
                             name: name,
                             icon: iconUrl,
-                            url: details.url
+                            url: details.url,
+                            hasMiniApp: !!details.hasMiniApp
                         };
                     });
                 wavesSend({ type: 'appList', data: appList }, peerId);
