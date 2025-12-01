@@ -568,7 +568,7 @@ body.one-button-nav-active #one-button-nav-handle {
 }
 
 body.one-button-nav-active .dock.show {
-    bottom: 28px;
+    bottom: 16px;
 }
 
 .persistent-clock {
@@ -2050,7 +2050,7 @@ input[type="checkbox"]:checked::before {
 	}
 
     .page-indicator.shifted-up {
-		bottom: 110px !important;
+		bottom: 120px !important;
 	}
 
     .page-indicator.empty {
