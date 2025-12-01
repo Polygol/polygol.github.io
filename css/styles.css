@@ -2604,7 +2604,7 @@ input[type="checkbox"]:checked::before {
 		    gap: 0;
 		    left: 50%;
 		    transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1);
-		    z-index: 9994;
+		    z-index: 9996;
 		    box-shadow: var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1);
 		    transform-origin: bottom;
 		    will-change: transform, opacity;
