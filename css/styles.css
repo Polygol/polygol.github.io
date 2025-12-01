@@ -2559,13 +2559,12 @@ input[type="checkbox"]:checked::before {
         }
 
 		.app-icon .app-icon-img {
-			transform: scale(0.9);
-			width: 100%;
+			width: 90%;
 		}
 
 		.app-icon:active .app-icon-img {
 		    filter: brightness(1.5);
-		    transform: scale(1.04);
+		    transform: scale(1.2);
 		}
 
         .app-icon span {
@@ -2591,27 +2590,28 @@ input[type="checkbox"]:checked::before {
         }
 
         .dock {
-            display: none;
-            position: fixed;
-            bottom: -55px;
-            transform: translateX(-50%) scale(0.6);
-            background: var(--search-background);
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
-			box-shadow: var(--sun-shadow);
-            border: 1px solid var(--glass-border);
-		    border-radius: 45px;
+		    display: none;
+		    position: fixed;
+		    bottom: 3px;
+		    transform: translateX(-50%) scale(0.2);
+		    background: var(--search-background);
+		    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+		    box-shadow: var(--sun-shadow);
+		    border: 1px solid var(--glass-border);
+		    border-radius: 256px;
 		    corner-shape: superellipse(1.5);
-			padding: 8px 10px;
-            gap: 6px;
-            left: 50%;
-            transition: all 0.3s cubic-bezier(.3,1.2,.64,1);
-            z-index: 9998;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            transform-origin: bottom;
-            will-change: transform, opacity;
-            filter: blur(5px);
-            opacity: 0;
-            max-width: 90vw;
+		    padding: 12px 14px;
+		    gap: 12px;
+		    left: 50%;
+		    transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1);
+		    z-index: 9998;
+		    box-shadow: var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1);
+		    transform-origin: bottom;
+		    will-change: transform, opacity;
+		    filter: blur(5px);
+		    opacity: 0;
+		    max-width: 90vw;
+			pointer-events: none;
         }
 
         .dock.show {
@@ -2624,31 +2624,20 @@ input[type="checkbox"]:checked::before {
         }
         
         .dock-icon {
-            width: clamp(48px, 74px, 74px);
+            width: clamp(48px, 64px, 128px);
             height: auto;
             aspect-ratio: 1/1;
             transform: scale(1);
-            transition: filter 0.2s transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9) !important;
+            transition: filter 0.2s, transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
             cursor: pointer;
-            border-radius: 28px;
         }
 
         .dock-icon:active {
             transform: scale(1.2);
             filter: brightness(1.5);
-            transition: filter 0.2s transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9) !important;
+            transition: filter 0.2s transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
             cursor: pointer;
         }
-        
-        .dock-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-		.dock-icon .app-icon-img {
-			transform: scale(0.9);
-		}
 
         .dock-icon.drawer-opener::after {
             content: '';
