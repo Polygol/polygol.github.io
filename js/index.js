@@ -7789,8 +7789,6 @@ async function createFullscreenEmbed(url) {
         // Check if the embed still exists and hasn't received an API handshake
         if (document.body.contains(embedContainer) && !embedContainer.dataset.hasApi) {
             console.log(`Gurapp at ${url} did not announce API. Applying legacy mode.`);
-
-			iframe.sandbox = 'allow-scripts allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox';
             
             // Create and prepend the legacy header
             const legacyHeader = document.createElement('div');
