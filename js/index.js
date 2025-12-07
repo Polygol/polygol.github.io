@@ -2145,7 +2145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  
                  const img = document.createElement('img');
                  let iconUrl = apps[appName]?.icon;
-                 if (iconUrl && !iconUrl.startsWith('http') && !iconUrl.startsWith('/')) {
+                 if (iconUrl && !iconUrl.startsWith('http') && !iconUrl.startsWith('/') && !iconUrl.startsWith('data:')) {
                      iconUrl = `/assets/appicon/${iconUrl}`;
                  }
                  img.src = iconUrl || '';
@@ -11133,7 +11133,7 @@ function _updateActiveMediaSession() {
     const appIconEl = document.getElementById('media-widget-app-icon');
     if (appIconEl && apps[appName] && apps[appName].icon) {
         let iconUrl = apps[appName].icon;
-        if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/'))) {
+        if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
             iconUrl = `/assets/appicon/${iconUrl}`;
         }
         appIconEl.src = iconUrl;
@@ -12238,7 +12238,17 @@ function openAppSwitcher() {
             const iconSrc = apps[appName]?.icon;
             const imgContainer = document.createElement('div');
             imgContainer.className = 'app-icon-img';
-            imgContainer.innerHTML = `<img src="${iconSrc ? (iconSrc.startsWith('/') ? iconSrc : `/assets/appicon/${iconSrc}`) : ''}" alt="${appName}">`;
+            
+            let finalSrc = '';
+            if (iconSrc) {
+                if (iconSrc.startsWith('http') || iconSrc.startsWith('/') || iconSrc.startsWith('data:')) {
+                    finalSrc = iconSrc;
+                } else {
+                    finalSrc = `/assets/appicon/${iconSrc}`;
+                }
+            }
+            
+            imgContainer.innerHTML = `<img src="${finalSrc}" alt="${appName}">`;
             return imgContainer;
         };
         
