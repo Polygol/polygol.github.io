@@ -3271,10 +3271,12 @@ body.light-theme .app-switcher-item.selected {
     margin-top: 4px;
 }
 
-/* During split selection mode, dim the active app */
+/* Visual state when picking the second app */
 .fullscreen-embed.split-selecting {
-    filter: brightness(0.6) blur(2px);
+    transform: scale(0.95);
+    filter: brightness(0.5) blur(5px);
     pointer-events: none;
+    transition: transform 0.3s ease, filter 0.3s ease;
 }
 
 /* --- Split Screen Styles --- */
@@ -3306,20 +3308,32 @@ body.light-theme .app-switcher-item.selected {
     border-radius: 0;
 }
 
+.fullscreen-embed.is-resizing {
+    pointer-events: none !important; /* Prevent iframe interaction during resize */
+}
+
+.fullscreen-embed.is-resizing iframe {
+    pointer-events: none !important;
+}
+
 /* The draggable divider */
 #split-divider {
     position: fixed;
     top: 0;
     left: 50%; /* Default center */
-    width: 14px; /* Touch target size */
+    width: 24px; /* Touch target size */
     height: 100%;
     transform: translateX(-50%);
     cursor: col-resize;
     z-index: 1005; /* Above apps */
-    display: flex;
+    display: 99999;
     justify-content: center;
     align-items: center;
     touch-action: none;
+}
+
+#split-divider.is-resizing {
+    transition: none !important; /* Follow finger instantly */
 }
 
 .split-handle-bar {
