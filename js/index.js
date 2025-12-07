@@ -814,6 +814,7 @@ function renderWidgets() {
         instance.style.left = `${widget.x}px`;
         instance.style.top = `${widget.y}px`;
 
+		embedContainer = document.createElement('div');
         const iframe = document.createElement('iframe');
         iframe.src = widgetDef.url;
 		iframe.setAttribute('data-gurasuraisu-iframe', 'true');
