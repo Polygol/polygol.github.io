@@ -7552,6 +7552,11 @@ function initiateSplitScreen(sideForNewApp) {
     
     // Open App Drawer to pick the second app
     const appDrawer = document.getElementById('app-drawer');
+
+    // Clear inline styles that might block the class-based opening
+    appDrawer.style.bottom = '';
+    appDrawer.style.opacity = '';
+
     appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
     appDrawer.classList.add('open');
     appDrawer.style.zIndex = '1005'; // FIX: Ensure drawer is on top of the splitting app
