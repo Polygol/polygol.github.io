@@ -7731,7 +7731,7 @@ function updateSplitLayout(percentage) {
 
 let isAppOpen = false;
 
-async function _internal_createFullscreenEmbed((url, options = {}) { // Renamed to _internal_
+async function _internal_createFullscreenEmbed(url, options = {}) { // Renamed to _internal_
     const { isSplitActivation = false, splitSide = null } = options;
 	
     // 1. If currently selecting a split partner
