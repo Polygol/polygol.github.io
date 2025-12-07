@@ -7731,7 +7731,7 @@ function updateSplitLayout(percentage) {
 
 let isAppOpen = false;
 
-async function createFullscreenEmbed(url, options = {}) {
+async function _internal_createFullscreenEmbed((url, options = {}) { // Renamed to _internal_
     const { isSplitActivation = false, splitSide = null } = options;
 	
     // 1. If currently selecting a split partner
@@ -8219,71 +8219,49 @@ async function createFullscreenEmbed(url, options = {}) {
 	updateDockVisibility();
 }
 
-// Wrapper to intercept app open calls
-const originalCreateFullscreenEmbed = createFullscreenEmbed;
-createFullscreenEmbed = async function(url, options = {}) {
-    const { isSplitActivation = false, splitSide = null } = options;
+async function createFullscreenEmbed(url, options = {}) {
+    const { isSplitActivation = false } = options;
 
-    // 1. Intercept selection
     if (splitScreenState.isSelecting) {
         finalizeSplitScreen(url);
         return;
     }
-    
-    // 2. Normal Open (Not part of internal split restoration)
+
     if (!isSplitActivation) {
-        // If split is active, kill split and open this app fullscreen
         if (splitScreenState.active) {
-            exitSplitScreen(null); // Minimize both
+            exitSplitScreen(null);
         }
-        
-        // Restore pair logic (User clicks on one of the recent pair apps in home/dock)
+
         if (splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
             const { left, right } = splitScreenState.lastSplitPair;
             
-            // Check if both still exist/valid
-            const leftEl = getEmbedContainer(left) || true; // loose check 
-            const rightEl = getEmbedContainer(right) || true;
+            splitScreenState.active = true;
+            splitScreenState.leftAppUrl = left;
+            splitScreenState.rightAppUrl = right;
 
-            if (leftEl && rightEl) {
-                // Restore the whole view
-                splitScreenState.active = true;
-                splitScreenState.leftAppUrl = left;
-                splitScreenState.rightAppUrl = right;
-                
-                // Recursively call with options to skip this check
-                await createFullscreenEmbed(left, { isSplitActivation: true });
-                await createFullscreenEmbed(right, { isSplitActivation: true });
-                
-                // Show divider
-                document.getElementById('split-divider').style.display = 'flex';
-                updateSplitLayout(splitScreenState.splitPercentage || 50);
-                
-                // Hide Home UI
-                document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-                    el.classList.add('force-hide');
-                });
-                return;
-            }
+            await createFullscreenEmbed(left, { isSplitActivation: true });
+            await createFullscreenEmbed(right, { isSplitActivation: true });
+
+            document.getElementById('split-divider').style.display = 'flex';
+            updateSplitLayout(splitScreenState.splitPercentage || 50);
+
+            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => el.classList.add('force-hide'));
+            return;
         }
     }
 
-    // 3. Internal Restoration Logic (When called by finalize or restore pair)
     if (isSplitActivation) {
         let embed = getEmbedContainer(url);
-        if (!embed) {
-            // If doesn't exist, use original creator
-            await originalCreateFullscreenEmbed(url);
-            embed = getEmbedContainer(url);
-        } else {
-            // Restore from minimized
+        if (embed) {
             delete minimizedEmbeds[url];
             embed.style.display = 'block';
-            document.body.appendChild(embed); // Ensure z-order
+            document.body.appendChild(embed);
+        } else {
+            await _internal_createFullscreenEmbed(url); // Calls the REAL function
+            embed = getEmbedContainer(url);
         }
-        
-        // Apply split classes based on current state
-        embed.className = 'fullscreen-embed'; // Reset
+
+        embed.className = 'fullscreen-embed';
         if (url === splitScreenState.leftAppUrl) embed.classList.add('split-left');
         if (url === splitScreenState.rightAppUrl) embed.classList.add('split-right');
         
@@ -8291,9 +8269,8 @@ createFullscreenEmbed = async function(url, options = {}) {
         return;
     }
 
-    // Default Fallback
-    originalCreateFullscreenEmbed(url);
-};
+    _internal_createFullscreenEmbed(url); // The default action is to call the REAL function
+}
 
 async function createBackgroundEmbed(url) {
     // 1. Check if running (Active or Minimized)
