@@ -7550,11 +7550,16 @@ function cancelSplitSelection() {
     appDrawer.style.opacity = '0';
 }
 
-function exitSplitScreen(survivingUrl = null) {
+function exitSplitScreen(survivingUrl) { 
+    // Note: removed default '= null' to detect undefined vs null
+
     if (!splitScreenState.active && !splitScreenState.isSelecting) return;
 
-    // If no survivor specified, default to the Primary app (the one active before split)
-    if (!survivingUrl) {
+    // Logic: 
+    // If survivingUrl is PASSED (URL string), keep that one open.
+    // If survivingUrl is NULL (explicit), close both (e.g. going Home or opening App C).
+    // If survivingUrl is UNDEFINED (called without args), default to Primary.
+    if (survivingUrl === undefined) {
         survivingUrl = splitScreenState.primaryAppUrl;
     }
 
@@ -7581,12 +7586,17 @@ function exitSplitScreen(survivingUrl = null) {
         embed.style.width = ''; 
         
         if (url === survivingUrl) {
-            // Restore Survivor
+            // Restore Survivor to Fullscreen
             embed.style.display = 'block';
             embed.style.opacity = '1';
             embed.style.transform = 'none';
             embed.style.zIndex = '1001';
-            // Re-trigger standard open to ensure it sets global state (isAppOpen, etc)
+            
+            // Critical: Reset pointer events in case they were disabled by the divider
+            const iframe = embed.querySelector('iframe');
+            if(iframe) iframe.style.pointerEvents = 'auto';
+
+            // Re-trigger standard open to ensure it sets global state
             originalCreateFullscreenEmbed(url);
         } else {
             // Minimize Loser
@@ -7896,9 +7906,9 @@ async function createFullscreenEmbed(url, options = {}) {
     
     const embedContainer = document.createElement('div');
     embedContainer.className = 'fullscreen-embed';
-    if (window._pendingSplitSide) {
-        embedContainer.classList.add(window._pendingSplitSide === 'left' ? 'split-left' : 'split-right');
-    }
+	if (window._pendingSplitSide) {
+	    embedContainer.classList.add(window._pendingSplitSide === 'left' ? 'split-left' : 'split-right');
+	}
     
     // Check for pending split class
     if (window.pendingSplitClass) {
@@ -8106,7 +8116,7 @@ async function createFullscreenEmbed(url, options = {}) {
 // Wrapper to intercept app open calls
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
 createFullscreenEmbed = async function(url, options = {}) {
-    const { isSplitActivation, splitSide } = options;
+    const { isSplitActivation = false, splitSide = null } = options;
 
     // 1. Handle Selection Finalization (User clicked app in drawer during split select)
     if (splitScreenState.isSelecting && !isSplitActivation) {
@@ -8114,40 +8124,49 @@ createFullscreenEmbed = async function(url, options = {}) {
         return;
     }
 
-    // 2. Handle Split Restoration (User clicked a split pair in App Switcher)
-    if (!splitScreenState.active && splitScreenState.lastSplitPair && 
-       (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
+    // 2. Handle Split Restoration (User clicked a split pair in App Switcher or single app history)
+    // CRITICAL: We MUST check !isSplitActivation to prevent infinite recursion
+    if (!isSplitActivation && 
+        !splitScreenState.active && 
+        splitScreenState.lastSplitPair && 
+        (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
         
-        // Prevent recursion: if called recursively, skip this block
-        if (!isSplitActivation) {
-            const { left, right } = splitScreenState.lastSplitPair;
-            splitScreenState.active = true;
-            
-            // Re-open both with special flags
-            await createFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
-            await createFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
-            
-            document.getElementById('split-divider').style.display = 'flex';
-            updateSplitLayout(50);
-            return;
+        const { left, right } = splitScreenState.lastSplitPair;
+        
+        // 1. Set flag immediately to prevent other logic from interfering
+        splitScreenState.active = true;
+        splitScreenState.leftAppUrl = left;
+        splitScreenState.rightAppUrl = right;
+        
+        // 2. Restore UI elements
+        const divider = document.getElementById('split-divider');
+        if (divider) divider.style.display = 'flex';
+        
+        // 3. Open both apps with the special flag
+        // We do this sequentially to ensure DOM order stability
+        await createFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
+        await createFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
+        
+        // 4. Finalize Layout
+        updateSplitLayout(50);
+        closeControls();
+        const appDrawer = document.getElementById('app-drawer');
+        if (appDrawer) {
+            appDrawer.classList.remove('open');
+            appDrawer.style.bottom = '-100%';
+            appDrawer.style.opacity = '0';
         }
+        return; // Stop here, do not run standard open logic
     }
 
-    // 3. Normal Open Logic (Exit split if active and opening a completely new app)
+    // 3. Normal Open Logic 
+    // If we are NOT activating a split, but split is active, we must exit split mode.
     if (splitScreenState.active && !isSplitActivation) {
-        exitSplitScreen(null); // Full exit, minimize split apps
+        exitSplitScreen(null); // This minimizes existing split apps and resets active=false
     }
 
-    // 4. Call Original Implementation
-    // We need to inject the split class immediately after creation.
-    // Since original function creates DOM, we can try to find it immediately or modify original.
-    // However, a cleaner way for 'isSplitActivation' is to handle the DOM setup manually here
-    // IF it's a restore, otherwise let original handle it.
-    
-    // Actually, simply calling original is fine, BUT we need to apply the split classes
-    // immediately after to ensure no flash of fullscreen content.
-    
-    // Set a global flag that the original function can check (least intrusive modification)
+    // 4. Pass through to Original Implementation
+    // Set global flag for the original function to apply class during creation
     if (isSplitActivation) {
         window._pendingSplitSide = splitSide;
     }
@@ -8155,16 +8174,25 @@ createFullscreenEmbed = async function(url, options = {}) {
     await originalCreateFullscreenEmbed(url);
     window._pendingSplitSide = null;
     
-    // Force update the element just in case
-    const container = getEmbedContainer(url);
-    if (container && isSplitActivation) {
-        container.classList.add(splitSide === 'left' ? 'split-left' : 'split-right');
-        container.classList.remove('split-selecting');
-        container.style.width = '50%'; // Initial width
-        // Ensure visibility properties are set correctly for split
-        container.style.display = 'block';
-        container.style.opacity = '1';
-        container.style.zIndex = '1001';
+    // 5. Post-Creation Fixes (Crucial for split view)
+    if (isSplitActivation) {
+        const container = getEmbedContainer(url);
+        if (container) {
+            // Force classes
+            container.classList.remove('split-left', 'split-right', 'split-selecting');
+            container.classList.add(splitSide === 'left' ? 'split-left' : 'split-right');
+            
+            // Force Styles (Override generic minimization styles)
+            container.style.display = 'block';
+            container.style.opacity = '1';
+            container.style.zIndex = '1001';
+            container.style.transform = 'none';
+            container.style.width = '50%'; // Visual reset
+            
+            // Ensure input works
+            const iframe = container.querySelector('iframe');
+            if (iframe) iframe.style.pointerEvents = 'auto';
+        }
     }
 };
 
