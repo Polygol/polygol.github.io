@@ -603,6 +603,7 @@ body.one-button-nav-active .dock.show {
     mask-composite: source-in;
     backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
     transform: rotate(180deg);
+	font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 200, 'opsz' 20;
 }
 
 .persistent-clock {
