@@ -7688,6 +7688,29 @@ async function createFullscreenEmbed(url, options = {}) {
             isSplitActivation = true;
             splitSide = 'right';
         }
+
+        // If we enforced split mode, ensure the UI reflects it (divider + neighbor)
+        if (isSplitActivation) {
+            closeControls();
+            const drawer = document.getElementById('app-drawer');
+            if(drawer) drawer.classList.remove('open');
+
+            const divider = document.getElementById('split-divider');
+            if (divider) {
+                divider.style.display = 'flex';
+                updateSplitLayout(splitScreenState.splitPercentage || 50);
+            }
+            
+            // Restore neighbor
+            const neighborUrl = (splitSide === 'left') ? splitScreenState.rightAppUrl : splitScreenState.leftAppUrl;
+            if (neighborUrl && neighborUrl !== url) {
+                 // Invoke with isSplitActivation: true to bypass wrapper logic and prevent recursion loops
+                 createFullscreenEmbed(neighborUrl, { 
+                     isSplitActivation: true, 
+                     splitSide: (splitSide === 'left' ? 'right' : 'left') 
+                 });
+            }
+        }
     }
 	
     // 1. If currently selecting a split partner
