@@ -8422,25 +8422,71 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
     // Clear any pending cleanup
     clearTimeout(minimizeCleanupTimeout);
 	
-    // --- Split Screen Support: Add active split to list ---
+    // --- Split Screen Support: Handle split screen minimization ---
     if (splitScreenState.active) {
-        const leftUrl = splitScreenState.leftAppUrl;
-        const rightUrl = splitScreenState.rightAppUrl;
-        
-        // Use the most recent timestamp of the pair
-        const appNameL = Object.keys(apps).find(n => apps[n].url === leftUrl);
-        const appNameR = Object.keys(apps).find(n => apps[n].url === rightUrl);
-        const ts = Math.max(appLastOpened[appNameL] || 0, appLastOpened[appNameR] || 0);
+        // Scenario A: Swipe up on ONE side (Close one, keep other)
+        if (urlToMinimize) {
+            const survivor = (urlToMinimize === splitScreenState.leftAppUrl) 
+                ? splitScreenState.rightAppUrl 
+                : splitScreenState.leftAppUrl;
+            
+            // This destroys the split state and maximizes the survivor
+            exitSplitScreen(survivor);
+            return;
+        }
 
-        displayItems.push({
-            type: 'split',
-            leftUrl: leftUrl,
-            rightUrl: rightUrl,
-            timestamp: ts
+        // Scenario B: Home Button / Minimize All (Keep split active in background)
+        // 1. Hide Divider
+        const divider = document.getElementById('split-divider');
+        if (divider) divider.style.display = 'none';
+
+        // 2. Minimize Both Apps manually
+        [splitScreenState.leftAppUrl, splitScreenState.rightAppUrl].forEach(url => {
+            if(!url) return;
+            const embed = getEmbedContainer(url);
+            if (embed) {
+                minimizedEmbeds[url] = embed; 
+                
+                // Visual Minimize Animation
+                if (animate) {
+                    embed.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                    embed.style.transform = 'translateY(40px) scale(0.8)';
+                    embed.style.opacity = '0';
+                }
+                
+                // Do NOT remove split classes yet, so they restore in position
+                
+                setTimeout(() => {
+                    if (minimizedEmbeds[url] === embed) {
+                        embed.style.display = 'none';
+                        embed.style.pointerEvents = 'none';
+                        embed.style.zIndex = '0';
+                    }
+                }, animate ? 300 : 0);
+            }
+        });
+
+        // 3. RESTORE HOME UI
+        persistentClock.style.opacity = '1';
+        updateDockVisibility();
+        applyWallpaperEffects();
+        document.body.style.setProperty('--bg-transform-scale', '1.05');
+        resetIndicatorTimeout();
+        
+        // Restore interaction blocker
+        const interactionBlocker = document.getElementById('interaction-blocker');
+        if (interactionBlocker) interactionBlocker.style.pointerEvents = 'auto';
+
+        // Unhide all main UI elements
+        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+            el.classList.remove('force-hide');
+            el.style.display = el.dataset.originalDisplay || '';
+            el.style.transition = 'opacity 0.3s ease';
+            requestAnimationFrame(() => { el.style.opacity = '1'; });
         });
         
-        handledUrls.add(leftUrl);
-        handledUrls.add(rightUrl);
+        // NOTE: We leave splitScreenState.active = true so we can restore the pair later
+        return; 
     }
 	
     // --- Standard Single App Minimize Logic ---
@@ -12117,61 +12163,24 @@ function openAppSwitcher() {
     const openAndMinimizedUrls = [...new Set([openUrl, ...minimizedUrls].filter(Boolean))];
     const handledUrls = new Set();
 
-	// --- Split Screen Support: Handle split screen minimization ---
     if (splitScreenState.active) {
-        // Scenario A: Swipe up on ONE side (Close one, keep other)
-        if (urlToMinimize) {
-            const survivor = (urlToMinimize === splitScreenState.leftAppUrl) 
-                ? splitScreenState.rightAppUrl 
-                : splitScreenState.leftAppUrl;
-            
-            // This destroys the split state and maximizes the survivor
-            exitSplitScreen(survivor);
-            return;
-        }
-
-        // Scenario B: Home Button / Minimize All
-        // We DO NOT call exitSplitScreen here, because we want to preserve the pair.
+        const leftUrl = splitScreenState.leftAppUrl;
+        const rightUrl = splitScreenState.rightAppUrl;
         
-        // 1. Hide Divider
-        const divider = document.getElementById('split-divider');
-        if (divider) divider.style.display = 'none';
+        // Use the most recent timestamp of the pair
+        const appNameL = Object.keys(apps).find(n => apps[n].url === leftUrl);
+        const appNameR = Object.keys(apps).find(n => apps[n].url === rightUrl);
+        const ts = Math.max(appLastOpened[appNameL] || 0, appLastOpened[appNameR] || 0);
 
-        // 2. Minimize Both Apps manually
-        const urlsToHide = [splitScreenState.leftAppUrl, splitScreenState.rightAppUrl];
-        
-        urlsToHide.forEach(url => {
-            const embed = getEmbedContainer(url);
-            if (embed) {
-                minimizedEmbeds[url] = embed; // Ensure valid cache
-                
-                // Visual Minimize Animation
-                embed.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                embed.style.transform = 'translateY(40px) scale(0.8)';
-                embed.style.opacity = '0';
-                
-                // Don't strip split classes yet, so they restore faster
-                
-                setTimeout(() => {
-                    // Only hide if still minimized
-                    if (minimizedEmbeds[url] === embed) {
-                        embed.style.display = 'none';
-                        embed.style.pointerEvents = 'none';
-                        embed.style.zIndex = '0';
-                    }
-                }, 300);
-            }
+        displayItems.push({
+            type: 'split',
+            leftUrl: leftUrl,
+            rightUrl: rightUrl,
+            timestamp: ts
         });
-
-        // 3. Reset UI to Home State
-        persistentClock.style.opacity = '1';
-        updateDockVisibility();
-        applyWallpaperEffects();
-        document.body.style.setProperty('--bg-transform-scale', '1.05');
-        resetIndicatorTimeout();
         
-        // NOTE: We leave splitScreenState.active = true
-        return; 
+        handledUrls.add(leftUrl);
+        handledUrls.add(rightUrl);
     }
 	
     // Then, add any remaining single apps
