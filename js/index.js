@@ -2104,7 +2104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
     
 	// Make sure we re-attach the click event listener
-persistentClock.addEventListener('click', () => {
+	persistentClock.addEventListener('click', () => {
         // Prevent re-opening if already visible/opening
         if (customizeModal.style.display === 'block') return;
 
@@ -2119,17 +2119,17 @@ persistentClock.addEventListener('click', () => {
         const existingSplit = document.getElementById('split-management-container');
         if(existingSplit) existingSplit.remove();
         
-        // Default state: Show standard label
-        currentAppLabel.style.display = '';
-        appControls.style.display = '';
+        // Default state: Show standard label (with safety checks)
+        if (currentAppLabel) currentAppLabel.style.display = '';
+        if (appControls) appControls.style.display = '';
 
         // CHECK: Are we in a Split Screen state?
         const isSplitVisible = splitScreenState.active && document.querySelector('.fullscreen-embed[style*="display: block"]');
         
-        if (isSplitVisible) {
+        if (isSplitVisible && appManagementInfo) {
              // --- SPLIT MODE UI ---
-             currentAppLabel.style.display = 'none';
-             appControls.style.display = 'none';
+             if (currentAppLabel) currentAppLabel.style.display = 'none';
+             if (appControls) appControls.style.display = 'none';
              
              const splitContainer = document.createElement('div');
              splitContainer.id = 'split-management-container';
@@ -2178,7 +2178,7 @@ persistentClock.addEventListener('click', () => {
              appManagementInfo.appendChild(splitContainer);
              appManagementInfo.style.display = 'flex';
 
-        } else {
+        } else if (appManagementInfo) {
             // --- STANDARD SINGLE APP UI ---
             const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
             if (activeEmbed) {
@@ -2186,17 +2186,18 @@ persistentClock.addEventListener('click', () => {
                 const appName = Object.keys(apps).find(name => apps[name].url === url);
                 const appDetails = appName ? apps[appName] : null;
     
-                if (appDetails) {
-                    const label = document.getElementById('current-app-label');
-                    const img = label.querySelector('img');
-                    const span = label.querySelector('span');
+                if (appDetails && currentAppLabel) {
+                    const img = currentAppLabel.querySelector('img');
+                    const span = currentAppLabel.querySelector('span');
                     let iconUrl = appDetails.icon;
                     if (iconUrl && !(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
                         iconUrl = `/assets/appicon/${iconUrl}`;
                     }
-                    img.src = iconUrl || '';
-                    img.alt = appName;
-                    span.textContent = appName;
+                    if (img) {
+                        img.src = iconUrl || '';
+                        img.alt = appName;
+                    }
+                    if (span) span.textContent = appName;
                     appManagementInfo.style.display = 'flex';
                 } else {
                     appManagementInfo.style.display = 'none';
