@@ -8102,15 +8102,19 @@ async function createFullscreenEmbed(url, options = {}) {
 
 // Wrapper to intercept app open calls
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
-createFullscreenEmbed = async function(url) {
+createFullscreenEmbed = async function(url, options = {}) {
+    const { isSplitActivation = false } = options;
+
     // Case 1: Intercept click to finalize a split
-    if (splitScreenState.isSelecting) {
+    // Only intercept if we aren't programmatically activating the split
+    if (splitScreenState.isSelecting && !isSplitActivation) {
         finalizeSplitScreen(url);
         return;
     }
 
     // Case 2: Restore a previous split session
-    if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
+    // Only restore if this isn't a specific activation command
+    if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right) && !isSplitActivation) {
         const { left, right } = splitScreenState.lastSplitPair;
         
         splitScreenState.active = true;
@@ -8148,11 +8152,12 @@ createFullscreenEmbed = async function(url) {
     }
 
     // Case 3: Normal fullscreen open, must exit any active split view
-    if (splitScreenState.active) {
+    // Only exit split if we are opening a purely new app, not activating a split side
+    if (splitScreenState.active && !isSplitActivation) {
         exitSplitScreen(null); // This will minimize both split apps
     }
     
-    originalCreateFullscreenEmbed(url);
+    originalCreateFullscreenEmbed(url, options);
 };
 
 async function createBackgroundEmbed(url) {
