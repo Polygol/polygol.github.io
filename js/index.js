@@ -7519,57 +7519,27 @@ function finalizeSplitScreen(secondAppUrl) {
     splitAssociations[firstAppUrl] = secondAppUrl;
     splitAssociations[secondAppUrl] = firstAppUrl;
 
-    // 1. Get the first app element and undim it, ensure it has correct class
+    // Launch/Restore second app
+    // We utilize createFullscreenEmbed but need to intercept it visually
+    // The CSS classes will handle the positioning if we apply them immediately
+    
+    // 1. Get the first app element and undim it
     const firstEmbed = document.querySelector(`.fullscreen-embed[data-embed-url="${firstAppUrl}"]`);
-    if(firstEmbed) {
-        firstEmbed.classList.remove('split-selecting');
-        // Ensure first app has correct split class
-        if (splitScreenState.selectingSide === 'right') {
-            firstEmbed.classList.add('split-left');
-            firstEmbed.classList.remove('split-right');
-        } else {
-            firstEmbed.classList.add('split-right');
-            firstEmbed.classList.remove('split-left');
-        }
-        // Ensure it's visible and properly styled
-        firstEmbed.style.display = 'block';
-        firstEmbed.style.opacity = '1';
-        firstEmbed.style.pointerEvents = 'auto';
-        firstEmbed.style.zIndex = '1001';
-    }
+    if(firstEmbed) firstEmbed.classList.remove('split-selecting');
 
     // 2. Setup the second app's embed container
+    // Check if already exists (minimized) or create new
+    // We use createFullscreenEmbed logic logic but manually add class before display
     const existingEmbed = document.querySelector(`.fullscreen-embed[data-embed-url="${secondAppUrl}"]`) || minimizedEmbeds[secondAppUrl];
-    const secondSide = splitScreenState.selectingSide === 'right' ? 'split-right' : 'split-left';
     
     if (existingEmbed) {
-        // Remove from minimized cache if it was there
-        if (minimizedEmbeds[secondAppUrl]) {
-            delete minimizedEmbeds[secondAppUrl];
-        }
-        
         // Prepare it before showing
-        existingEmbed.classList.remove('split-left', 'split-right', 'split-selecting');
-        existingEmbed.classList.add(secondSide);
-        
-        // Ensure proper display
-        existingEmbed.style.display = 'block';
-        existingEmbed.style.opacity = '1';
-        existingEmbed.style.pointerEvents = 'auto';
-        existingEmbed.style.zIndex = '1001';
-        existingEmbed.style.transform = 'none';
-        existingEmbed.style.width = '';
-        existingEmbed.style.left = '';
-        existingEmbed.style.right = '';
-        
-        // Ensure iframe is interactive
-        const iframe = existingEmbed.querySelector('iframe');
-        if (iframe) {
-            iframe.style.pointerEvents = 'auto';
-        }
+        existingEmbed.classList.add(splitScreenState.selectingSide === 'right' ? 'split-right' : 'split-left');
+        restoreSplitApp(secondAppUrl);
     } else {
-        // It's a new open - set flag so createFullscreenEmbed applies split class
-        window.pendingSplitClass = secondSide;
+        // It's a new open.
+        // We set a global flag so createFullscreenEmbed knows to apply split class
+        window.pendingSplitClass = splitScreenState.selectingSide === 'right' ? 'split-right' : 'split-left';
         createFullscreenEmbed(secondAppUrl);
         window.pendingSplitClass = null; // Reset
     }
@@ -7581,15 +7551,12 @@ function finalizeSplitScreen(secondAppUrl) {
         appDrawer.style.opacity = '0';
     }
 
-    // Show Divider and update layout
+    // Show Divider
     const divider = document.getElementById('split-divider');
     if (divider) {
         divider.style.display = 'flex';
         divider.style.left = '50%';
     }
-    
-    // Update layout to ensure both apps are properly sized
-    updateSplitLayout(50);
 }
 
 // Special restore function for split screen to bypass standard animations that might conflict
@@ -7603,17 +7570,6 @@ function restoreSplitApp(url) {
         embed.style.zIndex = '1001';
         embed.style.transform = 'none';
         embed.style.pointerEvents = 'auto';
-        
-        // Ensure iframe is interactive
-        const iframe = embed.querySelector('iframe');
-        if (iframe) {
-            iframe.style.pointerEvents = 'auto';
-        }
-        
-        // Remove any conflicting styles that might hide it
-        embed.style.width = '';
-        embed.style.left = '';
-        embed.style.right = '';
     }
 }
 
@@ -7665,22 +7621,11 @@ function updateSplitLayout(percentage) {
     const leftApp = document.querySelector(`.fullscreen-embed[data-embed-url="${splitScreenState.leftAppUrl}"]`);
     const rightApp = document.querySelector(`.fullscreen-embed[data-embed-url="${splitScreenState.rightAppUrl}"]`);
     
-    if (leftApp) {
-        leftApp.style.width = `${percentage}%`;
-        leftApp.style.left = '0';
-        leftApp.style.right = 'auto';
-    }
-    
-    if (rightApp) {
-        rightApp.style.width = `${100 - percentage}%`;
-        rightApp.style.left = 'auto';
-        rightApp.style.right = '0';
-    }
+    if (leftApp) leftApp.style.width = `${percentage}%`;
+    if (rightApp) rightApp.style.width = `${100 - percentage}%`;
     
     const divider = document.getElementById('split-divider');
-    if (divider) {
-        divider.style.left = `${percentage}%`;
-    }
+    if (divider) divider.style.left = `${percentage}%`;
 }
 
 let isAppOpen = false;
@@ -7762,28 +7707,23 @@ async function createFullscreenEmbed(url) {
     }
 
     // --- Hard Reset: Forcefully hide and disable ALL other embeds ---
-    // BUT: Skip this if we're in split screen mode and this is the second app
-    const isSplitSecondApp = window.pendingSplitClass && splitScreenState.active;
-    
-    if (!isSplitSecondApp) {
-        document.querySelectorAll('.fullscreen-embed').forEach(embed => {
-            if (embed.dataset.embedUrl !== url) {
-                // If this other embed has a URL, ensure it's in the minimized cache.
-                if (embed.dataset.embedUrl) {
-                    minimizedEmbeds[embed.dataset.embedUrl] = embed;
-                }
-                
-                // Immediately hide and disable it. No animations for this cleanup.
-                embed.style.opacity = '0';
-                embed.style.zIndex = '0';
-        
-                // Wait for fade-out transition to finish before hiding it.
-                setTimeout(() => {
-                    embed.style.display = 'none';
-                }, 300);
+    document.querySelectorAll('.fullscreen-embed').forEach(embed => {
+        if (embed.dataset.embedUrl !== url) {
+            // If this other embed has a URL, ensure it's in the minimized cache.
+            if (embed.dataset.embedUrl) {
+                minimizedEmbeds[embed.dataset.embedUrl] = embed;
             }
-        });
-    }
+			
+            // Immediately hide and disable it. No animations for this cleanup.
+	        embed.style.opacity = '0';
+	        embed.style.zIndex = '0';
+	
+	        // Wait for fade-out transition to finish before hiding it.
+	        setTimeout(() => {
+	            embed.style.display = 'none';
+	        }, 300);
+	    }
+	});
 
 	closeControls();
 	
@@ -7985,31 +7925,18 @@ async function createFullscreenEmbed(url) {
     embedContainer.className = 'fullscreen-embed';
     
     // Check for pending split class
-    const isSplitApp = window.pendingSplitClass !== null;
     if (window.pendingSplitClass) {
         embedContainer.classList.add(window.pendingSplitClass);
     }
     
-    // Set initial styles BEFORE adding to DOM
-    // For split screen apps, skip the animation and show immediately
-    if (isSplitApp) {
-        // Split screen: show immediately without animation
-        embedContainer.style.transform = 'none';
-        embedContainer.style.opacity = '1';
-        embedContainer.style.borderRadius = '0px';
-        embedContainer.style.cornerShape = 'square';
-        embedContainer.style.border = 'none';
-    } else {
-        // Normal app: use animation
-        embedContainer.style.transform = 'scale(0.8)'; 
-        embedContainer.style.opacity = '0';
-        embedContainer.style.borderRadius = '35px';
-        embedContainer.style.cornerShape = 'superellipse(1.5)';
-        embedContainer.style.border = '1px solid var(--glass-border)';
-    }
-    
+    // Set initial styles BEFORE adding to DOM (removed filter)
+    embedContainer.style.transform = 'scale(0.8)'; 
+    embedContainer.style.opacity = '0';
+    embedContainer.style.borderRadius = '35px';
+	embedContainer.style.cornerShape = 'superellipse(1.5)';
+	embedContainer.style.border = '1px solid var(--glass-border)';
     embedContainer.style.overflow = 'clip';
-    embedContainer.style.display = 'block';
+	embedContainer.style.display = 'block';
         
     // IMPORTANT FIX: Set proper z-index and pointer events
     embedContainer.style.pointerEvents = 'auto';
@@ -8162,31 +8089,25 @@ async function createFullscreenEmbed(url) {
     // Force reflow to ensure the initial styles are applied
     void embedContainer.offsetWidth;
     
-    // For split screen apps, skip animations
-    if (!isSplitApp) {
-        // Now add the transition AFTER the element is in the DOM (removed filter)
-        embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+    // Now add the transition AFTER the element is in the DOM (removed filter)
+    embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
 
-        // Pause background animations (Video and Animated Images)
-        await pauseAnimatedBackground();
-        const bgVideo = document.getElementById('background-video');
-        if (bgVideo && !bgVideo.paused) {
-            await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
-            bgVideo.pause();
-        }
-        
-        // Clear background blur and trigger the animation
-        setTimeout(() => {
-            embedContainer.style.transform = 'scale(1)';
-            embedContainer.style.opacity = '1';
-            embedContainer.style.borderRadius = '0px';
-            embedContainer.style.cornerShape = 'square';
-            embedContainer.style.border = 'none';
-        }, 10);
-    } else {
-        // For split screen, ensure layout is updated immediately
-        updateSplitLayout(splitScreenState.splitPercentage || 50);
+    // Pause background animations (Video and Animated Images)
+    await pauseAnimatedBackground();
+    const bgVideo = document.getElementById('background-video');
+    if (bgVideo && !bgVideo.paused) {
+        await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
+        bgVideo.pause();
     }
+    
+    // Clear background blur and trigger the animation
+    setTimeout(() => {
+        embedContainer.style.transform = 'scale(1)';
+        embedContainer.style.opacity = '1';
+        embedContainer.style.borderRadius = '0px';
+		embedContainer.style.cornerShape = 'square';
+		embedContainer.style.border = 'none';
+    }, 10);
     
     // Show the swipe overlay when opening an app
     if (swipeOverlay) {
@@ -9386,16 +9307,8 @@ function setupDrawerInteractions() {
             if (isDividerDragging) handleDividerMove(e.clientX);
         });
 
-        window.addEventListener('touchend', () => { 
-            isDividerDragging = false;
-            window.splitGestureActive = false;
-            window.potentialSplitSide = null;
-        });
-        window.addEventListener('mouseup', () => { 
-            isDividerDragging = false;
-            window.splitGestureActive = false;
-            window.potentialSplitSide = null;
-        });
+        window.addEventListener('touchend', () => { isDividerDragging = false; });
+        window.addEventListener('mouseup', () => { isDividerDragging = false; });
     }
 
     // Touch Events for regular drawer interaction
@@ -9408,32 +9321,26 @@ function setupDrawerInteractions() {
         const width = window.innerWidth;
         const height = window.innerHeight;
         
-        // Bottom 10% of screen - only check if not on drawer handle
-        const isOnHandle = drawerHandle.contains(element) || appDrawerHandle.contains(element);
-        
-        if (!isOnHandle && touch.clientY > height * 0.9) {
+        // Bottom 10% of screen
+        if (touch.clientY > height * 0.9) {
             // Left Corner (0-15%)
             if (touch.clientX < width * 0.15) {
                 // Potential Split Gesture Left
                 window.potentialSplitSide = 'left';
                 window.splitGestureStart = { x: touch.clientX, y: touch.clientY };
-                window.splitGestureActive = false;
             } 
             // Right Corner (85-100%)
             else if (touch.clientX > width * 0.85) {
                 // Potential Split Gesture Right
                 window.potentialSplitSide = 'right';
                 window.splitGestureStart = { x: touch.clientX, y: touch.clientY };
-                window.splitGestureActive = false;
             } else {
                 window.potentialSplitSide = null;
             }
-        } else {
-            window.potentialSplitSide = null;
         }
         
         // Check if touch is on handle area
-        if (isOnHandle) {
+        if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
             startDrag(touch.clientX, touch.clientY);
             e.preventDefault();
         }
@@ -9443,36 +9350,26 @@ function setupDrawerInteractions() {
 		if (oneButtonNavEnabled) return;
         
         // --- Split Screen Gesture Handling ---
-        if (window.potentialSplitSide && !isDragging && !window.splitGestureActive) {
+        if (window.potentialSplitSide && !isDragging) { // isDragging comes from drawer logic
             const touch = e.touches[0];
             const start = window.splitGestureStart;
             const deltaX = touch.clientX - start.x;
             const deltaY = touch.clientY - start.y;
             
-            // Calculate movement distance
-            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            // Calculate angle (Diagonal check)
+            // We want significant movement inwards and upwards
+            const isDiagonal = Math.abs(deltaY) > 20 && Math.abs(deltaX) > 20;
             
-            // Require minimum movement to avoid accidental triggers
-            if (distance > 30) {
-                // Calculate angle (Diagonal check)
-                // We want significant movement inwards and upwards
-                const isDiagonal = Math.abs(deltaY) > 15 && Math.abs(deltaX) > 15;
-                
-                if (isDiagonal) {
-                    // Check direction based on side
-                    // Left corner: move right (deltaX > 0) and up (deltaY < 0)
-                    // Right corner: move left (deltaX < 0) and up (deltaY < 0)
-                    if ((window.potentialSplitSide === 'left' && deltaX > 15 && deltaY < -15) || 
-                        (window.potentialSplitSide === 'right' && deltaX < -15 && deltaY < -15)) {
-                        
-                        // Trigger Split
-                        window.splitGestureActive = true;
-                        initiateSplitScreen(window.potentialSplitSide === 'left' ? 'left' : 'right');
-                        window.potentialSplitSide = null; // Clear to prevent re-trigger
-                        e.preventDefault();
-                        e.stopPropagation();
-                        return;
-                    }
+            if (isDiagonal) {
+                // Check direction based on side
+                if ((window.potentialSplitSide === 'left' && deltaX > 0 && deltaY < 0) || 
+                    (window.potentialSplitSide === 'right' && deltaX < 0 && deltaY < 0)) {
+                    
+                    // Trigger Split
+                    initiateSplitScreen(window.potentialSplitSide === 'left' ? 'left' : 'right');
+                    window.potentialSplitSide = null; // Reset
+                    e.preventDefault();
+                    return;
                 }
             }
         }
@@ -12191,45 +12088,12 @@ function openAppSwitcher() {
 	                splitScreenState.leftAppUrl = item.left;
 	                splitScreenState.rightAppUrl = item.right;
 	                splitScreenState.active = true;
-	                
-	                // Restore both apps
-	                const leftEmbed = document.querySelector(`.fullscreen-embed[data-embed-url="${item.left}"]`) || minimizedEmbeds[item.left];
-	                const rightEmbed = document.querySelector(`.fullscreen-embed[data-embed-url="${item.right}"]`) || minimizedEmbeds[item.right];
-	                
-	                if (leftEmbed) {
-	                    if (minimizedEmbeds[item.left]) delete minimizedEmbeds[item.left];
-	                    leftEmbed.classList.remove('split-right', 'split-selecting');
-	                    leftEmbed.classList.add('split-left');
-	                    leftEmbed.style.display = 'block';
-	                    leftEmbed.style.opacity = '1';
-	                    leftEmbed.style.zIndex = '1001';
-	                    leftEmbed.style.pointerEvents = 'auto';
-	                    leftEmbed.style.transform = 'none';
-	                    leftEmbed.style.width = '';
-	                    leftEmbed.style.left = '';
-	                    leftEmbed.style.right = '';
-	                }
-	                
-	                if (rightEmbed) {
-	                    if (minimizedEmbeds[item.right]) delete minimizedEmbeds[item.right];
-	                    rightEmbed.classList.remove('split-left', 'split-selecting');
-	                    rightEmbed.classList.add('split-right');
-	                    rightEmbed.style.display = 'block';
-	                    rightEmbed.style.opacity = '1';
-	                    rightEmbed.style.zIndex = '1001';
-	                    rightEmbed.style.pointerEvents = 'auto';
-	                    rightEmbed.style.transform = 'none';
-	                    rightEmbed.style.width = '';
-	                    rightEmbed.style.left = '';
-	                    rightEmbed.style.right = '';
-	                }
-	                
-	                // Show divider and update layout
-	                const divider = document.getElementById('split-divider');
-	                if (divider) {
-	                    divider.style.display = 'flex';
-	                    divider.style.left = '50%';
-	                }
+	                restoreSplitApp(item.left);
+	                restoreSplitApp(item.right);
+	                document.getElementById('split-divider').style.display = 'flex';
+	                // Add split classes
+	                document.querySelector(`.fullscreen-embed[data-embed-url="${item.left}"]`)?.classList.add('split-left');
+	                document.querySelector(`.fullscreen-embed[data-embed-url="${item.right}"]`)?.classList.add('split-right');
 	                updateSplitLayout(50);
 	            }
 	            selectAndCloseAppSwitcher();
