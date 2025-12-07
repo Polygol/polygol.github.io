@@ -8312,6 +8312,16 @@ function closeFullscreenEmbed() {
     
     if (embedContainer) {
         const url = embedContainer.dataset.embedUrl;
+
+        // If part of a split, clear the split state from memory so the remaining app becomes standalone
+        if (splitScreenState.active && (url === splitScreenState.leftAppUrl || url === splitScreenState.rightAppUrl)) {
+            splitScreenState.active = false;
+            splitScreenState.leftAppUrl = null;
+            splitScreenState.rightAppUrl = null;
+            const divider = document.getElementById('split-divider');
+            if (divider) divider.style.display = 'none';
+        }
+
         const appName = Object.keys(apps).find(name => apps[name].url === url);
 
         if (appName) {
