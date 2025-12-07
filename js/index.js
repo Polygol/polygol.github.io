@@ -2134,14 +2134,14 @@ document.addEventListener('DOMContentLoaded', () => {
              
              const splitContainer = document.createElement('div');
              splitContainer.id = 'split-management-container';
-             splitContainer.style.cssText = 'display: flex; gap: 10px; width: 100%; justify-content: space-between; margin-bottom: 10px;';
+             splitContainer.style.cssText = 'display: flex; gap: 18px; width: 100%; justify-content: space-between;';
              
              // Helper to build a mini-card for each app
              const createSplitCard = (url, side) => {
                  const appName = Object.keys(apps).find(k => apps[k].url === url) || 'Unknown';
                  const card = document.createElement('div');
                  card.className = 'setting-item'; // Reuse existing style class for look
-                 card.style.cssText = 'flex: 1; display: flex; align-items: center; gap: 10px; padding: 10px; cursor: default;';
+                 card.style.cssText = 'flex: 1; display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 10px; cursor: default;';
                  
                  const img = document.createElement('img');
                  let iconUrl = apps[appName]?.icon;
@@ -2149,11 +2149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                      iconUrl = `/assets/appicon/${iconUrl}`;
                  }
                  img.src = iconUrl || '';
-                 img.style.cssText = 'width: 24px; height: 24px; border-radius: 6px;';
-                 
-                 const text = document.createElement('span');
-                 text.textContent = appName;
-                 text.style.cssText = 'font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;';
+                 img.style.cssText = 'width: 32px; height: 32px; border-radius: 35%; corner-shape: superellipse(1.25);';
                  
                  const closeBtn = document.createElement('button');
                  closeBtn.className = 'btn-qc';
@@ -2168,7 +2164,6 @@ document.addEventListener('DOMContentLoaded', () => {
                  };
                  
                  card.appendChild(img);
-                 card.appendChild(text);
                  card.appendChild(closeBtn);
                  return card;
              };
