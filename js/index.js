@@ -7727,6 +7727,23 @@ async function createFullscreenEmbed(url, options = {}) {
     }
 
 	closeControls();
+
+    // --- DUPLICATE PREVENTION FIX ---
+    // Check cache first, then fall back to checking DOM for any existing container
+    let embedContainer = minimizedEmbeds[url];
+    if (!embedContainer) {
+        const inDom = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"]`);
+        if (inDom) {
+            // Found in DOM but not in cache
+            if (inDom.style.display === 'none') {
+                minimizedEmbeds[url] = inDom; // Re-link cache
+                embedContainer = inDom;
+            } else if (!isSplitActivation) {
+                // App is already active/visible. Just return (focus).
+                return; 
+            }
+        }
+    }
 	
     // If we are about to restore this app, cancel any pending cleanup timer for it.
     if (minimizedEmbeds[url]) {
@@ -7809,7 +7826,7 @@ async function createFullscreenEmbed(url, options = {}) {
 
 	SoundManager.play('open');
 	
-    if (minimizedEmbeds[url]) {
+    if (embedContainer) {
         // Restore the minimized embed
         const embedContainer = minimizedEmbeds[url];
 
