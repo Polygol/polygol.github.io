@@ -3303,8 +3303,8 @@ body.light-theme .app-switcher-item.selected {
 /* Ensure inner iframes respect the split size */
 .fullscreen-embed.split-left iframe,
 .fullscreen-embed.split-right iframe {
-    width: 100%;
-    border-radius: 0;
+	width: calc(100% - 20px);
+    padding: 0 10px;
 }
 
 .fullscreen-embed.is-resizing {
