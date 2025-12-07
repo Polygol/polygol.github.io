@@ -7777,27 +7777,10 @@ async function _internal_createFullscreenEmbed(url, options = {}) { // Renamed t
         return;
     }
     
-    // If opening a new fullscreen app, exit any active split screen
+    // If opening a new fullscreen app, exit any active split screen.
+    // This is now only called for non-split activations, so it's safe.
     if (splitScreenState.active && !isSplitActivation) {
-        exitSplitScreen(null);
-    }
-    
-    // Restore split view if opening one of the pair
-    if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
-        const { left, right } = splitScreenState.lastSplitPair;
-        
-        // Restore state
-        splitScreenState.active = true;
-        splitScreenState.leftAppUrl = left;
-        splitScreenState.rightAppUrl = right;
-
-        // Open/Restore both apps
-        await createFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
-        await createFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
-
-        updateSplitLayout(50);
-        document.getElementById('split-divider').style.display = 'flex';
-        return;
+        exitSplitScreen(null); // This will correctly minimize both split apps
     }
 
     if (!isSplitActivation) {
@@ -8012,10 +7995,10 @@ async function _internal_createFullscreenEmbed(url, options = {}) { // Renamed t
     
     const embedContainer = document.createElement('div');
     embedContainer.className = 'fullscreen-embed';
-    if (isSplitActivation && splitSide) {
-        embedContainer.classList.add(splitSide === 'left' ? 'split-left' : 'split-right');
-    }
-    
+	if (isSplitActivation) {
+	    embedContainer.classList.add(url === splitScreenState.leftAppUrl ? 'split-left' : 'split-right');
+	}
+	    
     // Check for pending split class
     if (window.pendingSplitClass) {
         embedContainer.classList.add(window.pendingSplitClass);
@@ -8222,54 +8205,39 @@ async function _internal_createFullscreenEmbed(url, options = {}) { // Renamed t
 async function createFullscreenEmbed(url, options = {}) {
     const { isSplitActivation = false } = options;
 
-    if (splitScreenState.isSelecting) {
+    // Case 1: Intercept click to finalize a split selection
+    if (splitScreenState.isSelecting && !isSplitActivation) {
         finalizeSplitScreen(url);
         return;
     }
 
-    if (!isSplitActivation) {
-        if (splitScreenState.active) {
-            exitSplitScreen(null);
-        }
-
-        if (splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
-            const { left, right } = splitScreenState.lastSplitPair;
-            
-            splitScreenState.active = true;
-            splitScreenState.leftAppUrl = left;
-            splitScreenState.rightAppUrl = right;
-
-            await createFullscreenEmbed(left, { isSplitActivation: true });
-            await createFullscreenEmbed(right, { isSplitActivation: true });
-
-            document.getElementById('split-divider').style.display = 'flex';
-            updateSplitLayout(splitScreenState.splitPercentage || 50);
-
-            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => el.classList.add('force-hide'));
-            return;
-        }
-    }
-
-    if (isSplitActivation) {
-        let embed = getEmbedContainer(url);
-        if (embed) {
-            delete minimizedEmbeds[url];
-            embed.style.display = 'block';
-            document.body.appendChild(embed);
-        } else {
-            await _internal_createFullscreenEmbed(url); // Calls the REAL function
-            embed = getEmbedContainer(url);
-        }
-
-        embed.className = 'fullscreen-embed';
-        if (url === splitScreenState.leftAppUrl) embed.classList.add('split-left');
-        if (url === splitScreenState.rightAppUrl) embed.classList.add('split-right');
+    // Case 2: Restore a previous split session when user opens one of the pair from home/dock
+    if (!isSplitActivation && !splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
+        const { left, right } = splitScreenState.lastSplitPair;
         
-        embed.style.cssText = 'display: block !important; opacity: 1 !important; z-index: 1001 !important; transform: none !important;';
-        return;
+        // --- DIRECT RESTORATION LOGIC (NO RECURSION) ---
+        splitScreenState.active = true;
+        splitScreenState.leftAppUrl = left;
+        splitScreenState.rightAppUrl = right;
+        
+        // Hide home UI before showing apps
+        closeControls();
+        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+            el.classList.add('force-hide'); el.style.opacity = '0';
+        });
+
+        // Call the original worker function for each app in the pair
+        await _createFullscreenEmbed_original(left, { isSplitActivation: true });
+        await _createFullscreenEmbed_original(right, { isSplitActivation: true });
+        
+        document.getElementById('split-divider').style.display = 'flex';
+        updateSplitLayout(splitScreenState.splitPercentage || 50);
+        return; // End execution for this path
     }
 
-    _internal_createFullscreenEmbed(url); // The default action is to call the REAL function
+    // Default Fallback: This is a normal fullscreen app open.
+    // Call the original worker function. It will handle closing other apps.
+    await _createFullscreenEmbed_original(url, options);
 }
 
 async function createBackgroundEmbed(url) {
