@@ -7609,6 +7609,9 @@ function exitSplitScreen(survivingUrl = null) {
     splitScreenState.active = false;
     splitScreenState.isSelecting = false;
     
+    // Clear history so it doesn't auto-restore later
+    splitScreenState.lastSplitPair = null;
+    
     const { leftAppUrl, rightAppUrl } = splitScreenState;
     
     // Clear state refs
