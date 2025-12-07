@@ -7949,7 +7949,6 @@ async function createFullscreenEmbed(url, options = {}) {
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allowfullscreen', '');
     
-    const embedContainer = document.createElement('div');
     embedContainer.className = 'fullscreen-embed';
     if (isSplitActivation && splitSide) {
         embedContainer.classList.add(splitSide === 'left' ? 'split-left' : 'split-right');
