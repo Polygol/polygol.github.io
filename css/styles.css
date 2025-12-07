@@ -2479,6 +2479,7 @@ input[type="checkbox"]:checked::before {
 
         .app-drawer.open {
             bottom: 0;
+		    opacity: 1;
 		    transform: none;
 		    filter: none;
         }
