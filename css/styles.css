@@ -3324,8 +3324,8 @@ body.light-theme .app-switcher-item.selected {
     height: 100%;
     transform: translateX(-50%);
     cursor: col-resize;
-    z-index: 1005; /* Above apps */
-    display: 99999;
+    z-index: 99999; /* Above apps */
+    display: none;
     justify-content: center;
     align-items: center;
     touch-action: none;
@@ -3333,23 +3333,23 @@ body.light-theme .app-switcher-item.selected {
 
 #split-divider.is-resizing {
     transition: none !important; /* Follow finger instantly */
+	background-color: var(--background-color);
 }
 
 .split-handle-bar {
     width: 4px;
     height: 40px;
-    background-color: var(--text-color);
-    border-radius: 2px;
-    opacity: 0.5;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    background-color: var(--search-background-op);
+    border-radius: 8px;
     transition: height 0.2s, opacity 0.2s;
 }
 
 #split-divider:active .split-handle-bar,
 #split-divider:hover .split-handle-bar {
+	width: 8px;
     height: 60px;
-    opacity: 1;
-    background-color: var(--accent-color, var(--text-color));
+    background-color: var(--text-color);
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 		@media (min-width: 1500px) {
