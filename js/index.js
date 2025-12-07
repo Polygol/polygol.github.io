@@ -12108,9 +12108,9 @@ function openAppSwitcher() {
 	    const appName = Object.keys(apps).find(name => apps[name].url === url) || 'Unknown App';
 	    const appDetails = apps[appName];
 	    
-	    const item = document.createElement('div');
-	    item.className = 'app-switcher-item';
-	    item.dataset.url = url;
+	    const itemDiv = document.createElement('div');
+	    itemDiv.className = 'app-switcher-item';
+	    itemDiv.dataset.url = url;
 	
 	    const img = document.createElement('img');
 	    let iconSrc = 'data:image/jpeg;base64,...'; // Fallback icon
@@ -12133,11 +12133,11 @@ function openAppSwitcher() {
 	        };
 	    }
 	
-	    item.innerHTML = `
+	    itemDiv.innerHTML = `
 	        <div class="app-icon-img">${img.outerHTML}</div>
 	        <span>${appName}</span>
 	    `;
-	    switcherList.appendChild(item);
+	    switcherList.appendChild(itemDiv);
 	});
 
     // Determine initial selection
