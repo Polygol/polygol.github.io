@@ -7616,7 +7616,8 @@ async function createFullscreenEmbed(url, options = {}) {
     const { isSplitActivation = false, splitSide = null } = options;
 	
     // 1. If currently selecting a split partner
-    if (splitScreenState.isSelecting) {
+    // FIX: Do not finalize if we are actively creating the split views
+    if (splitScreenState.isSelecting && !isSplitActivation) {
         finalizeSplitScreen(url);
         return;
     }
@@ -8106,14 +8107,12 @@ createFullscreenEmbed = async function(url, options = {}) {
     const { isSplitActivation = false } = options;
 
     // Case 1: Intercept click to finalize a split
-    // Only intercept if we aren't programmatically activating the split
     if (splitScreenState.isSelecting && !isSplitActivation) {
         finalizeSplitScreen(url);
         return;
     }
 
     // Case 2: Restore a previous split session
-    // Only restore if this isn't a specific activation command
     if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right) && !isSplitActivation) {
         const { left, right } = splitScreenState.lastSplitPair;
         
@@ -8121,28 +8120,9 @@ createFullscreenEmbed = async function(url, options = {}) {
         splitScreenState.leftAppUrl = left;
         splitScreenState.rightAppUrl = right;
         
-        // This is a special multi-app open, so we handle it manually.
-        for (const side of ['left', 'right']) {
-            const appUrl = side === 'left' ? left : right;
-            let embed = getEmbedContainer(appUrl);
-            if (embed) { delete minimizedEmbeds[appUrl]; } 
-            else { /* Create embed from scratch */ 
-                embed = document.createElement('div');
-                embed.className = 'fullscreen-embed';
-                embed.dataset.embedUrl = appUrl;
-                const iframe = document.createElement('iframe');
-                iframe.src = appUrl;
-                iframe.setAttribute('data-gurasuraisu-iframe', 'true');
-                const appId = Object.keys(apps).find(k => apps[k].url === appUrl);
-                iframe.dataset.appId = appId;
-                embed.appendChild(iframe);
-                document.body.appendChild(embed);
-            }
-            embed.className = 'fullscreen-embed'; // reset
-            embed.classList.add(side === 'left' ? 'split-left' : 'split-right');
-            embed.style.cssText = 'display: block; opacity: 1; transform: none; z-index: 1001; pointer-events: auto;';
-            embed.querySelector('iframe').style.pointerEvents = 'auto';
-        }
+        // Use await to ensure DOM is ready
+        await createFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
+        await createFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
         
         document.getElementById('split-divider').style.display = 'flex';
         updateSplitLayout(50);
@@ -8152,11 +8132,11 @@ createFullscreenEmbed = async function(url, options = {}) {
     }
 
     // Case 3: Normal fullscreen open, must exit any active split view
-    // Only exit split if we are opening a purely new app, not activating a split side
     if (splitScreenState.active && !isSplitActivation) {
         exitSplitScreen(null); // This will minimize both split apps
     }
     
+    // Pass options to original to preserve splitSide flags
     originalCreateFullscreenEmbed(url, options);
 };
 
