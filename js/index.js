@@ -7589,53 +7589,22 @@ async function createFullscreenEmbed(url, options = {}) {
         return;
     }
 
-    // 2. If opening an app that is associated with a split pair
-    if (!splitScreenState.active && splitAssociations[url]) {
-        const partnerUrl = splitAssociations[url];
-        // Check if partner is valid (e.g. running/minimized)
-        const partnerEmbed = document.querySelector(`.fullscreen-embed[data-embed-url="${partnerUrl}"]`) || minimizedEmbeds[partnerUrl];
+    if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
+        const { left, right } = splitScreenState.lastSplitPair;
         
-        if (partnerEmbed) {
-            // Restore Split View
-            splitScreenState.active = true;
-            // Determine side based on previously saved state isn't explicitly tracked, 
-            // so we default requested URL to Left, Partner to Right for consistency, or check previous classes
-            
-            // Simple logic: URL is Left, Partner is Right
-            splitScreenState.leftAppUrl = url;
-            splitScreenState.rightAppUrl = partnerUrl;
-            
-            window.pendingSplitClass = 'split-left';
-            // Recursively call this function to load URL (but it will skip the split checks on second call)
-            const tempIsSelecting = splitScreenState.isSelecting;
-            splitScreenState.isSelecting = false; // Temporarily disable to allow normal flow
-            await createFullscreenEmbed(url);
-            splitScreenState.isSelecting = tempIsSelecting;
-            window.pendingSplitClass = null;
+        // Restore state
+        splitScreenState.active = true;
+        splitScreenState.leftAppUrl = left;
+        splitScreenState.rightAppUrl = right;
 
-            // Load Partner
-            const pEmbed = minimizedEmbeds[partnerUrl] || document.querySelector(`.fullscreen-embed[data-embed-url="${partnerUrl}"]`);
-            if (pEmbed) {
-                if (minimizedEmbeds[partnerUrl]) delete minimizedEmbeds[partnerUrl];
-                pEmbed.classList.remove('split-left'); 
-                pEmbed.classList.add('split-right');
-                pEmbed.style.display = 'block';
-                pEmbed.style.opacity = '1';
-                pEmbed.style.zIndex = '1001';
-            }
-            
-            // Show divider
-            const divider = document.getElementById('split-divider');
-            if (divider) {
-                divider.style.display = 'flex';
-                divider.style.left = '50%';
-            }
-            updateSplitLayout(50);
-            return;
-        } else {
-            // Partner gone, remove association
-            delete splitAssociations[url];
-        }
+        // Open/Restore both apps
+        // Use await to ensure they are processed sequentially to avoid race conditions
+        await createFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
+        await createFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
+
+        updateSplitLayout(50);
+        document.getElementById('split-divider').style.display = 'flex';
+        return;
     }
 
     // 3. Normal Open - If split is active, this new app REPLACES the split view (standard mobile OS behavior)
