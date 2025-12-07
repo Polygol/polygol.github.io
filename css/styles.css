@@ -594,7 +594,7 @@ body.one-button-nav-active .dock.show {
     transform: scale(0.9);
 }
 
-.nav-btn-small .material-symbols-round {
+.nav-btn-small .material-symbols-rounded {
 	font-size: 22px;
     -webkit-mask-image: linear-gradient(black, black);
     -webkit-mask-clip: text;
