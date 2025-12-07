@@ -7612,70 +7612,37 @@ async function createFullscreenEmbed(url, options = {}) {
     const { isSplitActivation = false, splitSide = null } = options;
 	
     // 1. If currently selecting a split partner
-    // FIX: Do not finalize if we are actively creating the split views
+    // FIX: Only finalize if this is a USER interaction, not a system activation
     if (splitScreenState.isSelecting && !isSplitActivation) {
         finalizeSplitScreen(url);
         return;
     }
 
-    if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
+    // 2. Restore a previous split session
+    // FIX: Only restore if this is a USER interaction, not a system activation
+    if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right) && !isSplitActivation) {
         const { left, right } = splitScreenState.lastSplitPair;
         
-        // Restore state
         splitScreenState.active = true;
         splitScreenState.leftAppUrl = left;
         splitScreenState.rightAppUrl = right;
 
         // Open/Restore both apps
-        // Use await to ensure they are processed sequentially to avoid race conditions
         await createFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
         await createFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
 
         updateSplitLayout(50);
         document.getElementById('split-divider').style.display = 'flex';
+        // Close drawer if open
+        const drawer = document.getElementById('app-drawer');
+        if(drawer) drawer.classList.remove('open');
+        closeControls();
         return;
     }
 
-    // 3. Normal Open - If split is active, this new app REPLACES the split view (standard mobile OS behavior)
-    // Or, simpler: Exit split mode, open new app fullscreen.
-    if (splitScreenState.active) {
-        // Minimize both current split apps
-        const left = document.querySelector(`.fullscreen-embed[data-embed-url="${splitScreenState.leftAppUrl}"]`);
-        const right = document.querySelector(`.fullscreen-embed[data-embed-url="${splitScreenState.rightAppUrl}"]`);
-        if(left) { minimizedEmbeds[splitScreenState.leftAppUrl] = left; left.style.display='none'; }
-        if(right) { minimizedEmbeds[splitScreenState.rightAppUrl] = right; right.style.display='none'; }
-        
-        splitScreenState.active = false;
-        const divider = document.getElementById('split-divider');
-        if (divider) divider.style.display = 'none';
-    }
-
-    const existingActive = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"][style*="display: block"]`);
-    if (existingActive && !isSplitActivation) { // Don't exit early if activating a split
-        return;
-    }
-    
-    // If opening a new fullscreen app, exit any active split screen
+    // 3. Normal Open
     if (splitScreenState.active && !isSplitActivation) {
         exitSplitScreen(null);
-    }
-    
-    // Restore split view if opening one of the pair
-    if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
-        const { left, right } = splitScreenState.lastSplitPair;
-        
-        // Restore state
-        splitScreenState.active = true;
-        splitScreenState.leftAppUrl = left;
-        splitScreenState.rightAppUrl = right;
-
-        // Open/Restore both apps
-        await createFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
-        await createFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
-
-        updateSplitLayout(50);
-        document.getElementById('split-divider').style.display = 'flex';
-        return;
     }
 
     if (!isSplitActivation) {
@@ -8110,72 +8077,52 @@ async function createFullscreenEmbed(url, options = {}) {
 // Wrapper to intercept app open calls
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
 createFullscreenEmbed = async function(url, options = {}) {
-    // Default options to empty object if undefined
-    const { isSplitActivation = false } = options || {};
+    // CRITICAL FIX: If this is an internal system activation (e.g. creating a split view),
+    // pass it through to the original function immediately. Do not process logic.
+    if (options && options.isSplitActivation) {
+        return originalCreateFullscreenEmbed(url, options);
+    }
 
-    // Case 1: Intercept click to finalize a split selection
-    if (splitScreenState.isSelecting && !isSplitActivation) {
+    // Case 1: Intercept click to finalize a split
+    if (splitScreenState.isSelecting) {
         finalizeSplitScreen(url);
         return;
     }
 
-    // Case 2: Handling Active Splits (Visible or Minimized)
-    if (splitScreenState.active && !isSplitActivation) {
-        // Sub-case: The requested URL is part of the active split pair
-        if (url === splitScreenState.leftAppUrl || url === splitScreenState.rightAppUrl) {
-            
-            // We are restoring a minimized split. We must restore the OTHER side too.
-            const otherUrl = (url === splitScreenState.leftAppUrl) 
-                ? splitScreenState.rightAppUrl 
-                : splitScreenState.leftAppUrl;
-
-            // 1. Restore the other side first (silently)
-            // We pass isSplitActivation: true to prevent recursion
-            await originalCreateFullscreenEmbed(otherUrl, { 
-                isSplitActivation: true, 
-                splitSide: (otherUrl === splitScreenState.leftAppUrl ? 'left' : 'right') 
-            });
-
-            // 2. Ensure Divider is visible and correct
-            const divider = document.getElementById('split-divider');
-            if (divider) {
-                divider.style.display = 'flex';
-                // Restore previous position or default to 50
-                updateSplitLayout(splitScreenState.splitPercentage || 50);
-            }
-
-            // 3. Update options for the requested URL to ensure it renders as a split
-            options.isSplitActivation = true;
-            options.splitSide = (url === splitScreenState.leftAppUrl ? 'left' : 'right');
-            
-            // Fall through to call original for the requested URL...
-        } else {
-            // Sub-case: Opening a 3rd app (Not part of split)
-            // This exits the split session and minimizes the pair
-            exitSplitScreen(null); 
-        }
-    }
-    
-    // Case 3: Restore a previous split session from history (if getting completely fresh)
-    if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right) && !isSplitActivation) {
+    // Case 2: Restore a previous split session (Wrapper Logic)
+    // This logic mirrors the main function but catches calls made from outside (e.g. Dock/Icons)
+    if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
         const { left, right } = splitScreenState.lastSplitPair;
         
         splitScreenState.active = true;
         splitScreenState.leftAppUrl = left;
         splitScreenState.rightAppUrl = right;
         
-        await createFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
-        await createFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
+        // Pass options to prevent recursion
+        await originalCreateFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
+        await originalCreateFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
         
         document.getElementById('split-divider').style.display = 'flex';
         updateSplitLayout(50);
+        
         closeControls();
         const drawer = document.getElementById('app-drawer');
         if(drawer) drawer.classList.remove('open');
         return;
     }
 
-    // Call original function
+    // Case 3: Restore a minimized active split (User clicks one of the pair in dock)
+    if (splitScreenState.active && (url === splitScreenState.leftAppUrl || url === splitScreenState.rightAppUrl)) {
+        // Just focus/restore the specific one requested, ensuring split classes applied
+        const side = (url === splitScreenState.leftAppUrl) ? 'left' : 'right';
+        return originalCreateFullscreenEmbed(url, { isSplitActivation: true, splitSide: side });
+    }
+
+    // Case 4: Opening a 3rd app (Exit Split)
+    if (splitScreenState.active) {
+        exitSplitScreen(null); 
+    }
+    
     return originalCreateFullscreenEmbed(url, options);
 };
 
@@ -8333,11 +8280,12 @@ function closeFullscreenEmbed() {
 	updateDockVisibility();
 }
 
+// Ensure the function accepts the second argument
 function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
     // Clear any pending cleanup from a previous call
     clearTimeout(minimizeCleanupTimeout);
 	
-	// --- Split Screen Support: Handle split screen minimization ---
+    // --- Split Screen Support: Handle split screen minimization ---
     if (splitScreenState.active) {
         // Scenario A: Swipe up on ONE side (Close one, keep other)
         if (urlToMinimize) {
@@ -8345,38 +8293,35 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
                 ? splitScreenState.rightAppUrl 
                 : splitScreenState.leftAppUrl;
             
-            // This function handles the logic of keeping 'survivor' open
+            // This destroys the split state and maximizes the survivor
             exitSplitScreen(survivor);
             return;
         }
 
         // Scenario B: Home Button / Minimize All (Keep apps alive in background)
-        // 1. Capture URLs before resetting state
-        const leftUrl = splitScreenState.leftAppUrl;
-        const rightUrl = splitScreenState.rightAppUrl;
+        // 1. Hide Divider
+        const divider = document.getElementById('split-divider');
+        if (divider) divider.style.display = 'none';
 
-        // 2. Hide Divider
-        document.getElementById('split-divider').style.display = 'none';
-
-        // 3. Reset State
+        // 2. Reset State but keep active=true implicitly for restoration, 
+        // OR reset active=false to treat them as independent apps in background.
+        // For standard OS behavior, we treat them as independent once minimized to home.
         splitScreenState.active = false;
         splitScreenState.isSelecting = false;
         persistentClock.style.opacity = '1';
 
-        // 4. Manually Minimize Both Apps (Preserve them in minimizedEmbeds)
-        [leftUrl, rightUrl].forEach(url => {
+        // 3. Manually Minimize Both Apps
+        [splitScreenState.leftAppUrl, splitScreenState.rightAppUrl].forEach(url => {
+            if(!url) return;
             const embed = getEmbedContainer(url);
             if (embed) {
-                // Add to minimized cache
-                minimizedEmbeds[url] = embed;
+                minimizedEmbeds[url] = embed; 
                 
-                // Reset styles
-                embed.classList.remove('split-left', 'split-right', 'split-selecting');
-                embed.style.width = '';
-                embed.style.left = '';
+                // Visual Minimize Animation
                 embed.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
                 embed.style.transform = 'translateY(40px) scale(0.8)';
                 embed.style.opacity = '0';
+                embed.classList.remove('split-left', 'split-right'); // Clean classes
                 
                 setTimeout(() => {
                     if (minimizedEmbeds[url] === embed) {
@@ -8388,13 +8333,13 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
             }
         });
 
-        // 5. Clean up UI
+        // 4. Clean up UI
         updateDockVisibility();
         applyWallpaperEffects();
         document.body.style.setProperty('--bg-transform-scale', '1.05');
         resetIndicatorTimeout();
         
-        return; // Done
+        return; 
     }
 	
     // Restore the original favicon when minimizing an app
