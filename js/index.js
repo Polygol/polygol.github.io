@@ -7943,6 +7943,7 @@ async function createFullscreenEmbed(url, options = {}) {
     }
     
     // Create new embed if not already minimized
+	embedContainer = document.createElement('div');
     const iframe = document.createElement('iframe');
     iframe.src = url;
     iframe.setAttribute('data-gurasuraisu-iframe', 'true');
