@@ -3304,7 +3304,6 @@ body.light-theme .app-switcher-item.selected {
 .fullscreen-embed.split-left iframe,
 .fullscreen-embed.split-right iframe {
     width: 100%;
-    height: 100%;
     border-radius: 0;
 }
 
