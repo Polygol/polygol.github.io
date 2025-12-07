@@ -2154,7 +2154,6 @@ document.addEventListener('DOMContentLoaded', () => {
                  const closeBtn = document.createElement('button');
                  closeBtn.className = 'btn-qc';
                  closeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
-                 closeBtn.style.marginLeft = 'auto';
                  closeBtn.onclick = (e) => {
                      e.stopPropagation();
                      closeControls();
