@@ -2104,51 +2104,118 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
     
 	// Make sure we re-attach the click event listener
-    persistentClock.addEventListener('click', () => {
+persistentClock.addEventListener('click', () => {
         // Prevent re-opening if already visible/opening
         if (customizeModal.style.display === 'block') return;
 
-        clearTimeout(hideActionsTimeout); // Prevent quick actions from interfering
+        clearTimeout(hideActionsTimeout); 
+        syncUiStates();
 
-		syncUiStates();
         const appManagementInfo = document.getElementById('app-management-info');
-        const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+        const currentAppLabel = document.getElementById('current-app-label');
+        const appControls = document.getElementById('app-controls');
+        
+        // Clean up any previously injected split container
+        const existingSplit = document.getElementById('split-management-container');
+        if(existingSplit) existingSplit.remove();
+        
+        // Default state: Show standard label
+        currentAppLabel.style.display = '';
+        appControls.style.display = '';
 
-        if (activeEmbed) {
-            const url = activeEmbed.dataset.embedUrl;
-            const appName = Object.keys(apps).find(name => apps[name].url === url);
-            const appDetails = appName ? apps[appName] : null;
+        // CHECK: Are we in a Split Screen state?
+        const isSplitVisible = splitScreenState.active && document.querySelector('.fullscreen-embed[style*="display: block"]');
+        
+        if (isSplitVisible) {
+             // --- SPLIT MODE UI ---
+             currentAppLabel.style.display = 'none';
+             appControls.style.display = 'none';
+             
+             const splitContainer = document.createElement('div');
+             splitContainer.id = 'split-management-container';
+             splitContainer.style.cssText = 'display: flex; gap: 10px; width: 100%; justify-content: space-between; margin-bottom: 10px;';
+             
+             // Helper to build a mini-card for each app
+             const createSplitCard = (url, side) => {
+                 const appName = Object.keys(apps).find(k => apps[k].url === url) || 'Unknown';
+                 const card = document.createElement('div');
+                 card.className = 'setting-item'; // Reuse existing style class for look
+                 card.style.cssText = 'flex: 1; display: flex; align-items: center; gap: 10px; padding: 10px; cursor: default;';
+                 
+                 const img = document.createElement('img');
+                 let iconUrl = apps[appName]?.icon;
+                 if (iconUrl && !iconUrl.startsWith('http') && !iconUrl.startsWith('/')) {
+                     iconUrl = `/assets/appicon/${iconUrl}`;
+                 }
+                 img.src = iconUrl || '';
+                 img.style.cssText = 'width: 24px; height: 24px; border-radius: 6px;';
+                 
+                 const text = document.createElement('span');
+                 text.textContent = appName;
+                 text.style.cssText = 'font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;';
+                 
+                 const closeBtn = document.createElement('button');
+                 closeBtn.className = 'btn-qc';
+                 closeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
+                 closeBtn.style.marginLeft = 'auto';
+                 closeBtn.onclick = (e) => {
+                     e.stopPropagation();
+                     closeControls();
+                     // Close THIS side, expand the OTHER side
+                     const survivor = (side === 'left') ? splitScreenState.rightAppUrl : splitScreenState.leftAppUrl;
+                     exitSplitScreen(survivor);
+                 };
+                 
+                 card.appendChild(img);
+                 card.appendChild(text);
+                 card.appendChild(closeBtn);
+                 return card;
+             };
 
-            if (appDetails) {
-                const label = document.getElementById('current-app-label');
-                const img = label.querySelector('img');
-                const span = label.querySelector('span');
-                let iconUrl = appDetails.icon;
-                if (iconUrl && !(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
-                    iconUrl = `/assets/appicon/${iconUrl}`;
+             if (splitScreenState.leftAppUrl) splitContainer.appendChild(createSplitCard(splitScreenState.leftAppUrl, 'left'));
+             if (splitScreenState.rightAppUrl) splitContainer.appendChild(createSplitCard(splitScreenState.rightAppUrl, 'right'));
+             
+             appManagementInfo.appendChild(splitContainer);
+             appManagementInfo.style.display = 'flex';
+
+        } else {
+            // --- STANDARD SINGLE APP UI ---
+            const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+            if (activeEmbed) {
+                const url = activeEmbed.dataset.embedUrl;
+                const appName = Object.keys(apps).find(name => apps[name].url === url);
+                const appDetails = appName ? apps[appName] : null;
+    
+                if (appDetails) {
+                    const label = document.getElementById('current-app-label');
+                    const img = label.querySelector('img');
+                    const span = label.querySelector('span');
+                    let iconUrl = appDetails.icon;
+                    if (iconUrl && !(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
+                        iconUrl = `/assets/appicon/${iconUrl}`;
+                    }
+                    img.src = iconUrl || '';
+                    img.alt = appName;
+                    span.textContent = appName;
+                    appManagementInfo.style.display = 'flex';
+                } else {
+                    appManagementInfo.style.display = 'none';
                 }
-                img.src = iconUrl || '';
-                img.alt = appName;
-                span.textContent = appName;
-                appManagementInfo.style.display = 'flex';
             } else {
                 appManagementInfo.style.display = 'none';
             }
-        } else {
-            appManagementInfo.style.display = 'none';
         }
 
 		persistentClock.style.opacity = '0';
 		customizeModal.style.display = 'block';
-        customizeModal.style.pointerEvents = 'none'; // Prevent immediate close on touch
-		customizeModal.scrollTop = 0; // Scroll to top
+        customizeModal.style.pointerEvents = 'none'; 
+		customizeModal.scrollTop = 0; 
 		blurOverlayControls.style.display = 'block';
-        blurOverlayControls.style.pointerEvents = 'none'; // Prevent immediate close on touch
+        blurOverlayControls.style.pointerEvents = 'none'; 
 
         setTimeout(() => {
             customizeModal.classList.add('show');
             blurOverlayControls.classList.add('show');
-            // Re-enable pointer events after animation starts
             setTimeout(() => {
                 customizeModal.style.pointerEvents = 'auto';
                 blurOverlayControls.style.pointerEvents = 'auto';
@@ -8077,20 +8144,64 @@ async function createFullscreenEmbed(url, options = {}) {
 // Wrapper to intercept app open calls
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
 createFullscreenEmbed = async function(url, options = {}) {
-    // CRITICAL FIX: If this is an internal system activation (e.g. creating a split view),
-    // pass it through to the original function immediately. Do not process logic.
-    if (options && options.isSplitActivation) {
+    // Default options to empty object if undefined
+    const { isSplitActivation = false } = options || {};
+
+    // Bypass for internal calls
+    if (isSplitActivation) {
         return originalCreateFullscreenEmbed(url, options);
     }
 
-    // Case 1: Intercept click to finalize a split
+    // Case 1: Intercept click to finalize a split selection
     if (splitScreenState.isSelecting) {
         finalizeSplitScreen(url);
         return;
     }
 
-    // Case 2: Restore a previous split session (Wrapper Logic)
-    // This logic mirrors the main function but catches calls made from outside (e.g. Dock/Icons)
+    // Case 2: Handling Active Splits (Visible or Minimized)
+    if (splitScreenState.active) {
+        // Sub-case: The requested URL is part of the active split pair
+        if (url === splitScreenState.leftAppUrl || url === splitScreenState.rightAppUrl) {
+            
+            // We are restoring a minimized split. We must restore the OTHER side too.
+            const otherUrl = (url === splitScreenState.leftAppUrl) 
+                ? splitScreenState.rightAppUrl 
+                : splitScreenState.leftAppUrl;
+
+            // 1. Restore the other side first (silently)
+            // We pass isSplitActivation: true to prevent recursion
+            await originalCreateFullscreenEmbed(otherUrl, { 
+                isSplitActivation: true, 
+                splitSide: (otherUrl === splitScreenState.leftAppUrl ? 'left' : 'right') 
+            });
+
+            // 2. Ensure Divider is visible and correct
+            const divider = document.getElementById('split-divider');
+            if (divider) {
+                divider.style.display = 'flex';
+                // Restore previous position or default to 50
+                updateSplitLayout(splitScreenState.splitPercentage || 50);
+            }
+            
+            // 3. Close Home UI Elements
+            closeControls();
+            const drawer = document.getElementById('app-drawer');
+            if(drawer) drawer.classList.remove('open');
+
+            // 4. Call original for the requested URL (this brings it to front/focus)
+            return originalCreateFullscreenEmbed(url, { 
+                isSplitActivation: true, 
+                splitSide: (url === splitScreenState.leftAppUrl ? 'left' : 'right') 
+            });
+
+        } else {
+            // Sub-case: Opening a 3rd app (Not part of split)
+            // This exits the split session and minimizes the pair
+            exitSplitScreen(null); 
+        }
+    }
+    
+    // Case 3: Restore a previous split session from history (if getting completely fresh)
     if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
         const { left, right } = splitScreenState.lastSplitPair;
         
@@ -8098,31 +8209,18 @@ createFullscreenEmbed = async function(url, options = {}) {
         splitScreenState.leftAppUrl = left;
         splitScreenState.rightAppUrl = right;
         
-        // Pass options to prevent recursion
-        await originalCreateFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
-        await originalCreateFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
+        await createFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
+        await createFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
         
         document.getElementById('split-divider').style.display = 'flex';
         updateSplitLayout(50);
-        
         closeControls();
         const drawer = document.getElementById('app-drawer');
         if(drawer) drawer.classList.remove('open');
         return;
     }
 
-    // Case 3: Restore a minimized active split (User clicks one of the pair in dock)
-    if (splitScreenState.active && (url === splitScreenState.leftAppUrl || url === splitScreenState.rightAppUrl)) {
-        // Just focus/restore the specific one requested, ensuring split classes applied
-        const side = (url === splitScreenState.leftAppUrl) ? 'left' : 'right';
-        return originalCreateFullscreenEmbed(url, { isSplitActivation: true, splitSide: side });
-    }
-
-    // Case 4: Opening a 3rd app (Exit Split)
-    if (splitScreenState.active) {
-        exitSplitScreen(null); 
-    }
-    
+    // Call original function
     return originalCreateFullscreenEmbed(url, options);
 };
 
@@ -8282,7 +8380,7 @@ function closeFullscreenEmbed() {
 
 // Ensure the function accepts the second argument
 function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
-    // Clear any pending cleanup from a previous call
+    // Clear any pending cleanup
     clearTimeout(minimizeCleanupTimeout);
 	
     // --- Split Screen Support: Handle split screen minimization ---
@@ -8298,19 +8396,12 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
             return;
         }
 
-        // Scenario B: Home Button / Minimize All (Keep apps alive in background)
+        // Scenario B: Home Button / Minimize All (Keep split active in background)
         // 1. Hide Divider
         const divider = document.getElementById('split-divider');
         if (divider) divider.style.display = 'none';
 
-        // 2. Reset State but keep active=true implicitly for restoration, 
-        // OR reset active=false to treat them as independent apps in background.
-        // For standard OS behavior, we treat them as independent once minimized to home.
-        splitScreenState.active = false;
-        splitScreenState.isSelecting = false;
-        persistentClock.style.opacity = '1';
-
-        // 3. Manually Minimize Both Apps
+        // 2. Minimize Both Apps manually
         [splitScreenState.leftAppUrl, splitScreenState.rightAppUrl].forEach(url => {
             if(!url) return;
             const embed = getEmbedContainer(url);
@@ -8318,10 +8409,13 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
                 minimizedEmbeds[url] = embed; 
                 
                 // Visual Minimize Animation
-                embed.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                embed.style.transform = 'translateY(40px) scale(0.8)';
-                embed.style.opacity = '0';
-                embed.classList.remove('split-left', 'split-right'); // Clean classes
+                if (animate) {
+                    embed.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                    embed.style.transform = 'translateY(40px) scale(0.8)';
+                    embed.style.opacity = '0';
+                }
+                
+                // Do NOT remove split classes yet, so they restore in position
                 
                 setTimeout(() => {
                     if (minimizedEmbeds[url] === embed) {
@@ -8329,29 +8423,42 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
                         embed.style.pointerEvents = 'none';
                         embed.style.zIndex = '0';
                     }
-                }, 300);
+                }, animate ? 300 : 0);
             }
         });
 
-        // 4. Clean up UI
+        // 3. RESTORE HOME UI (Fixing the bug)
+        persistentClock.style.opacity = '1';
         updateDockVisibility();
         applyWallpaperEffects();
         document.body.style.setProperty('--bg-transform-scale', '1.05');
         resetIndicatorTimeout();
         
+        // Restore interaction blocker
+        const interactionBlocker = document.getElementById('interaction-blocker');
+        if (interactionBlocker) interactionBlocker.style.pointerEvents = 'auto';
+
+        // Unhide all main UI elements
+        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+            el.classList.remove('force-hide');
+            el.style.display = el.dataset.originalDisplay || '';
+            el.style.transition = 'opacity 0.3s ease';
+            requestAnimationFrame(() => { el.style.opacity = '1'; });
+        });
+        
+        // NOTE: We leave splitScreenState.active = true so we can restore the pair later
         return; 
     }
 	
+    // --- Standard Single App Minimize Logic ---
     // Restore the original favicon when minimizing an app
     if (originalFaviconUrl) {
         updateFavicon(originalFaviconUrl, false);
     }
 
     isAppOpen = false;
-
 	SoundManager.play('close'); 
 	
-    // Find the single active embed to minimize. The new create logic prevents multiple.
 	const embedContainer = urlToMinimize 
 	    ? getEmbedContainer(urlToMinimize)
 	    : document.querySelector('.fullscreen-embed[style*="display: block"]');
@@ -8361,7 +8468,6 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         if (url) {
             minimizedEmbeds[url] = embedContainer;
 
-	        // If called from a non-gesture context, apply the simple slide-down animation.
 	        if (animate) {
 	            embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 	            embedContainer.style.transform = 'translateY(40px)';
@@ -8370,29 +8476,23 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 			
 			if (window.WavesHost) {
                 const appName = embedContainer.querySelector('iframe')?.dataset.appId;
-                // Only clear if the minimizing app owns the current UI
                 if (appName && window.activeAppUI && window.activeAppUI.appName === appName) {
     			    window.WavesHost.clearAppUI(); 
                 }
 			}
 			
-	        // If animate is false (from a gesture), the animation is already handled by endDrag.
-            
-            // Cleanup delay is 300ms if we animated, 0ms otherwise.
             const cleanupDelay = animate ? 300 : 0;
 
 			minimizeCleanupTimeout = setTimeout(() => {
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
                 
-                // Only hide if it's still in the minimized cache (i.e., not being re-opened)
                 if (minimizedEmbeds[url] === embedContainer) {
                     embedContainer.style.display = 'none';
 				    embedContainer.style.pointerEvents = 'none';
                 }
 
 				persistentClock.style.opacity = '1';
-
 				embedContainer.style.transform = 'scale(0.8)';
                 embedContainer.style.zIndex = '0';
 
@@ -8402,41 +8502,32 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         }
     }
     
-    // Restore all main UI elements
     document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-	el.classList.remove('force-hide');
+	    el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay;
         el.style.transition = 'opacity 0.3s ease';
-
-        requestAnimationFrame(() => {
-            el.style.opacity = '1';
-        });
+        requestAnimationFrame(() => { el.style.opacity = '1'; });
     });
     
-    // Hide all fullscreen embeds that are not being displayed
     document.querySelectorAll('.fullscreen-embed:not([style*="display: block"])').forEach(embed => {
         embed.style.zIndex = '0';
     });
     
-    // Hide the swipe overlay when minimizing
 	const swipeOverlay = document.getElementById('swipe-overlay');
     if (swipeOverlay) {
         swipeOverlay.style.display = 'none';
         swipeOverlay.style.pointerEvents = 'none';
     }
     
-    // Reset interaction blocker to default state
     const interactionBlocker = document.getElementById('interaction-blocker');
     if (interactionBlocker) {
         interactionBlocker.style.pointerEvents = 'auto';
     }
 
-    // Resume background animations (Video and Animated Images)
     resumeAnimatedBackground();
     const bgVideo = document.getElementById('background-video');
     if (bgVideo) {
         bgVideo.play().then(() => {
-            // Animate from the slow speed back to normal
             animatePlaybackRate(bgVideo, bgVideo.playbackRate, 1.0, 300);
         }).catch(e => console.error("Video play failed on resume:", e));
     }
