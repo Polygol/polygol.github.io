@@ -8124,8 +8124,8 @@ createFullscreenEmbed = async function(url, options = {}) {
         return;
     }
 
-    // 2. Handle Split Restoration (User clicked a split pair in App Switcher or single app history)
-    // CRITICAL: We MUST check !isSplitActivation to prevent infinite recursion
+    // 2. Handle Split Restoration (User clicked a split pair in App Switcher)
+    // FIX: Added !isSplitActivation check here to prevent infinite recursion
     if (!isSplitActivation && 
         !splitScreenState.active && 
         splitScreenState.lastSplitPair && 
@@ -8133,40 +8133,33 @@ createFullscreenEmbed = async function(url, options = {}) {
         
         const { left, right } = splitScreenState.lastSplitPair;
         
-        // 1. Set flag immediately to prevent other logic from interfering
+        // Restore state
         splitScreenState.active = true;
         splitScreenState.leftAppUrl = left;
         splitScreenState.rightAppUrl = right;
         
-        // 2. Restore UI elements
-        const divider = document.getElementById('split-divider');
-        if (divider) divider.style.display = 'flex';
-        
-        // 3. Open both apps with the special flag
-        // We do this sequentially to ensure DOM order stability
+        // Show divider immediately
+        document.getElementById('split-divider').style.display = 'flex';
+
+        // Open/Restore both apps
+        // Note: isSplitActivation: true prevents re-entering this block
         await createFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
         await createFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
-        
-        // 4. Finalize Layout
+
         updateSplitLayout(50);
         closeControls();
-        const appDrawer = document.getElementById('app-drawer');
-        if (appDrawer) {
-            appDrawer.classList.remove('open');
-            appDrawer.style.bottom = '-100%';
-            appDrawer.style.opacity = '0';
-        }
-        return; // Stop here, do not run standard open logic
+        document.getElementById('app-drawer').classList.remove('open');
+        return;
     }
 
     // 3. Normal Open Logic 
     // If we are NOT activating a split, but split is active, we must exit split mode.
+    // FIX: Added !isSplitActivation check here too, so we don't close the split while building it
     if (splitScreenState.active && !isSplitActivation) {
-        exitSplitScreen(null); // This minimizes existing split apps and resets active=false
+        exitSplitScreen(null); 
     }
 
     // 4. Pass through to Original Implementation
-    // Set global flag for the original function to apply class during creation
     if (isSplitActivation) {
         window._pendingSplitSide = splitSide;
     }
@@ -8174,24 +8167,15 @@ createFullscreenEmbed = async function(url, options = {}) {
     await originalCreateFullscreenEmbed(url);
     window._pendingSplitSide = null;
     
-    // 5. Post-Creation Fixes (Crucial for split view)
+    // 5. Post-Creation Fixes
     if (isSplitActivation) {
         const container = getEmbedContainer(url);
         if (container) {
-            // Force classes
             container.classList.remove('split-left', 'split-right', 'split-selecting');
             container.classList.add(splitSide === 'left' ? 'split-left' : 'split-right');
-            
-            // Force Styles (Override generic minimization styles)
-            container.style.display = 'block';
-            container.style.opacity = '1';
-            container.style.zIndex = '1001';
-            container.style.transform = 'none';
-            container.style.width = '50%'; // Visual reset
-            
-            // Ensure input works
+            container.style.cssText = 'display: block !important; opacity: 1 !important; z-index: 1001 !important; transform: none !important; pointer-events: auto !important;';
             const iframe = container.querySelector('iframe');
-            if (iframe) iframe.style.pointerEvents = 'auto';
+            if(iframe) iframe.style.pointerEvents = 'auto';
         }
     }
 };
