@@ -7677,7 +7677,18 @@ function updateSplitLayout(percentage) {
 let isAppOpen = false;
 
 async function createFullscreenEmbed(url, options = {}) {
-    const { isSplitActivation = false, splitSide = null } = options;
+    let { isSplitActivation = false, splitSide = null } = options;
+
+    // Safeguard: If active split exists and URL matches, enforce split mode
+    if (splitScreenState.active && !isSplitActivation) {
+        if (url === splitScreenState.leftAppUrl) {
+            isSplitActivation = true;
+            splitSide = 'left';
+        } else if (url === splitScreenState.rightAppUrl) {
+            isSplitActivation = true;
+            splitSide = 'right';
+        }
+    }
 	
     // 1. If currently selecting a split partner
     // FIX: Only finalize if this is a USER interaction, not a system activation
@@ -12332,6 +12343,7 @@ function selectAndCloseAppSwitcher() {
 	        splitScreenState.active = true;
 	        splitScreenState.leftAppUrl = selectedItem.leftUrl;
 	        splitScreenState.rightAppUrl = selectedItem.rightUrl;
+            splitScreenState.lastSplitPair = { left: selectedItem.leftUrl, right: selectedItem.rightUrl };
 	
 	        createFullscreenEmbed(selectedItem.leftUrl, { isSplitActivation: true, splitSide: 'left' });
 	        createFullscreenEmbed(selectedItem.rightUrl, { isSplitActivation: true, splitSide: 'right' });
