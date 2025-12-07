@@ -3273,9 +3273,11 @@ body.light-theme .app-switcher-item.selected {
 
 /* Visual state when picking the second app */
 .fullscreen-embed.split-selecting {
-    transform: scale(0.95);
-    filter: brightness(0.5) blur(5px);
-    pointer-events: none;
+    transform: scale(0.95) !important;
+    filter: opacity(0.6) blur(2.5px);
+	border-radius: 35px !important;
+    corner-shape: superellipse(1.5) !important;
+    pointer-events: none !important;
     transition: transform 0.3s ease, filter 0.3s ease;
 }
 
@@ -3286,7 +3288,6 @@ body.light-theme .app-switcher-item.selected {
     width: 50% !important;
     left: 0 !important;
     right: auto !important;
-    border-radius: 0 0 0 0 !important; /* Flush edges */
     border-right: 1px solid var(--glass-border);
     transition: width 0.1s linear, transform 0.3s ease, opacity 0.3s ease !important;
 }
@@ -3295,7 +3296,6 @@ body.light-theme .app-switcher-item.selected {
     width: 50% !important;
     left: auto !important;
     right: 0 !important;
-    border-radius: 0 0 0 0 !important; /* Flush edges */
     border-left: 1px solid var(--glass-border);
     transition: width 0.1s linear, transform 0.3s ease, opacity 0.3s ease !important;
 }
@@ -3303,6 +3303,12 @@ body.light-theme .app-switcher-item.selected {
 /* Ensure inner iframes respect the split size */
 .fullscreen-embed.split-left iframe,
 .fullscreen-embed.split-right iframe {
+	width: 100%;
+    padding: 0;
+}
+
+.fullscreen-embed.split-left.legacy iframe,
+.fullscreen-embed.split-right.legacy iframe {
 	width: calc(100% - 20px);
     padding: 0 10px;
 }
