@@ -254,6 +254,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         :root.standalone {
             --background-color-dark-tr: var(--background-color-dark);
             --background-color-light-tr: var(--background-color-light);
+            --edge-refraction-filter: blur(17.5px); /* Frosted glass appearance */
         }
 
         /* When animations are disabled */
@@ -1032,14 +1033,38 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   try {
-    const storedTheme = localStorage.getItem('theme') || 'dark';
-    document.body.classList.toggle('light-theme', storedTheme === 'light');
+    // --- Theme Logic ---
+    let theme = localStorage.getItem('theme');
+    if (!isInsideGurasuraisu && theme === null) {
+        // Standalone Default: System Preference
+        theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    } else if (theme === null) {
+        theme = 'dark'; // Polygol Default
+    }
+    document.body.classList.toggle('light-theme', theme === 'light');
 
-    const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
+    // --- Animation Logic ---
+    let animValue = localStorage.getItem('animationsEnabled');
+    let animationsEnabled = true;
+    if (!isInsideGurasuraisu && animValue === null) {
+        // Standalone Default: System Preference (prefers-reduced-motion)
+        animationsEnabled = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } else {
+        animationsEnabled = animValue !== 'false'; // Default true if null in Polygol
+    }
     document.body.classList.toggle('reduce-animations', !animationsEnabled);
 
+    // --- High Contrast Logic ---
+    let contrastValue = localStorage.getItem('highContrast');
+    let highContrastEnabled = false;
+    if (!isInsideGurasuraisu && contrastValue === null) {
+        // Standalone Default: System Preference
+        highContrastEnabled = window.matchMedia('(prefers-contrast: more)').matches;
+    } else {
+        highContrastEnabled = contrastValue === 'true';
+    }
+
     // FIX: Target the <html> element for the initial high contrast check
-    const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
     document.documentElement.classList.toggle('gurasuraisu-high-contrast', highContrastEnabled);
       
     // We use setTimeout to ensure the SVG injection (which happens in another listener) has completed
