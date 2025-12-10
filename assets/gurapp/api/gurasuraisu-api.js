@@ -1030,6 +1030,42 @@ document.addEventListener('DOMContentLoaded', () => {
   // FIX: Apply the 'standalone' class to the <html> element if not in Gurasuraisu
   if (!isInsideGurasuraisu) {
       document.documentElement.classList.add('standalone');
+
+      // --- Standalone: Polygol Promo Modal ---
+      try {
+          const hidePromo = localStorage.getItem('polygol_hide_promo') === 'true';
+          if (!hidePromo) {
+              const promoHtml = `
+                  <div id="polygol-promo-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2147483647; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); font-family: 'Inter', sans-serif;">
+                      <div style="background: var(--modal-background); border: 1px solid var(--glass-border); padding: 30px; border-radius: 50px; corner-shape: superellipse(1.5); max-width: 380px; width: 90%; text-align: center; box-shadow: var(--sun-shadow), 0 20px 50px rgba(0,0,0,0.3); backdrop-filter: var(--edge-refraction-only) saturate(2) blur(5px);">
+                          <img src="https://polygol.github.io/assets/img/regular-expressive-onload.png" style="width: 72px; height: 72px; border-radius: 18px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); corner-shape: superellipse(1.5);">
+                          <h2 style="margin: 0 0 10px 0; font-size: 1.6rem; color: var(--text-color); font-family: 'Open Runde', sans-serif; font-weight: 600;">Polygol</h2>
+                          <p style="margin: 0 0 25px 0; color: var(--secondary-text-color); font-size: 0.95rem; line-height: 1.5;">
+                              This app is part of the Polygol ecosystem. Experience the full environment.
+                          </p>
+                          <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 25px;">
+                              <button id="polygol-promo-close" class="clickable" style="background: transparent; border: 1px solid var(--glass-border); padding: 12px 24px; border-radius: 50px; color: var(--text-color); cursor: pointer; font-size: 14px; font-weight: 500;">Close</button>
+                              <a href="https://polygol.github.io" target="_blank" class="clickable" style="display: inline-block; background: var(--text-color); color: var(--background-color); border: none; padding: 12px 24px; border-radius: 50px; text-decoration: none; font-weight: 600; cursor: pointer; font-size: 14px;">Open Polygol</a>
+                          </div>
+                          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; color: var(--secondary-text-color);">
+                              <input type="checkbox" id="polygol-promo-dontshow" style="width: 20px; height: 20px; border-radius: 6px; margin: 0; appearance: auto; background: transparent; box-shadow: none;">
+                              <label for="polygol-promo-dontshow" style="cursor: pointer;">Don't show again</label>
+                          </div>
+                      </div>
+                  </div>
+              `;
+              document.body.insertAdjacentHTML('beforeend', promoHtml);
+
+              document.getElementById('polygol-promo-close').addEventListener('click', () => {
+                  if (document.getElementById('polygol-promo-dontshow').checked) {
+                      localStorage.setItem('polygol_hide_promo', 'true');
+                  }
+                  document.getElementById('polygol-promo-overlay').remove();
+              });
+          }
+      } catch (e) {
+          console.error("Failed to show Polygol promo:", e);
+      }
   }
 
   try {
