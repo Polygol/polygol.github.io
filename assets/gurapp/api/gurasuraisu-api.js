@@ -496,6 +496,31 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
                 font-size: 18px !important;
             }
         }
+
+        @media (max-width: 400px) {
+            .toolbar {
+                justify-content: flex-start;
+                gap: 10px;
+            }
+
+            .tab-btn {
+                font-size: 0;
+                gap: 0 !important;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                padding: 10px;
+            }
+        
+            .tab-btn.active {
+                font-size: 0;
+                padding: 10px;
+            }
+
+            .toolbar .tab-btn.active .material-symbols-rounded {
+                font-size: 20px !important;
+            }
+        }
     `;
     
     // Conditionally add Gurasuraisu-specific styles.
