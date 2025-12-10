@@ -1027,13 +1027,14 @@ window.addEventListener('message', async (event) => {
  * in localStorage for a seamless appearance.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  // FIX: Apply the 'standalone' class to the <html> element if not in Gurasuraisu
+  // Apply the 'standalone' class to the <html> element if not in Gurasuraisu
   if (!isInsideGurasuraisu) {
       document.documentElement.classList.add('standalone');
 
-      // --- Standalone: Polygol Promo Modal ---
+      // Standalone: Polygol Advertisement/Promotional Modal
+      // Developers, please do not try to bypass this!
       try {
-          const hidePromo = localStorage.getItem('polygol_hide_promo') === 'true';
+          const hidePromo = localStorage.getItem('gurappapi_polygol_ad_openenviroment_hide_user') === 'true';
           if (!hidePromo) {
               const promoHtml = `
                   <div id="polygol-promo-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2147483647; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); font-family: 'Inter', sans-serif;">
@@ -1041,7 +1042,7 @@ document.addEventListener('DOMContentLoaded', () => {
                           <img src="https://polygol.github.io/assets/img/regular-expressive-onload.webp" style="width: 72px; height: 72px; margin-bottom: 20px;">
                           <h2 style="margin: 0 0 10px 0; font-size: 1.6rem; color: var(--text-color); font-family: 'Open Runde', sans-serif; font-weight: 600;">Polygol</h2>
                           <p style="margin: 0 0 25px 0; color: var(--secondary-text-color); font-size: 0.95rem; line-height: 1.5;">
-                              This app is part of the Polygol ecosystem. Experience the full environment.
+                              This app is part of the Polygol ecosystem. Experience the full environment, with smart AI across your apps, multitasking tools and extensive customization options."
                           </p>
                           <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 25px;">
                               <button id="polygol-promo-close" class="clickable" style="background: transparent; border: 1px solid var(--glass-border); padding: 12px 24px; border-radius: 50px; color: var(--text-color); cursor: pointer; font-size: 14px; font-weight: 500;">Close</button>
@@ -1058,13 +1059,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
               document.getElementById('polygol-promo-close').addEventListener('click', () => {
                   if (document.getElementById('polygol-promo-dontshow').checked) {
-                      localStorage.setItem('polygol_hide_promo', 'true');
+                      localStorage.setItem('gurappapi_polygol_ad_openenviroment_hide_user', 'true');
                   }
                   document.getElementById('polygol-promo-overlay').remove();
               });
           }
       } catch (e) {
-          console.error("Failed to show Polygol promo:", e);
+          console.error("Please do not block Gurasuraisu API promotions! Failed to show Polygol promo:", e);
       }
   }
 
