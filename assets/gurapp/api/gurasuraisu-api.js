@@ -1071,14 +1071,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   try {
     // --- Theme Logic ---
-    let theme = localStorage.getItem('theme');
-    if (!isInsideGurasuraisu && theme === null) {
-        // Standalone Default: System Preference
-        theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-    } else if (theme === null) {
-        theme = 'dark'; // Polygol Default
+    if (!isInsideGurasuraisu) {
+        // Standalone: Priority System Preference with Live Switching
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+        const updateTheme = (e) => {
+            const isLight = e.matches;
+            document.body.classList.toggle('light-theme', isLight);
+        };
+        
+        // Apply immediately and listen for changes
+        updateTheme(mediaQuery);
+        mediaQuery.addEventListener('change', updateTheme);
+    } else {
+        // Polygol: Use LocalStorage or Default
+        let theme = localStorage.getItem('theme');
+        if (theme === null) theme = 'dark';
+        document.body.classList.toggle('light-theme', theme === 'light');
     }
-    document.body.classList.toggle('light-theme', theme === 'light');
 
     // --- Animation Logic ---
     let animValue = localStorage.getItem('animationsEnabled');
