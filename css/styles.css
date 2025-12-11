@@ -2514,7 +2514,7 @@ input[type="checkbox"]:checked::before {
 		.drawer-top-btn {
 		    background-color: var(--search-background);
 		    border: 1px solid var(--glass-border);
-		    box-shadow: var(--sun-shadow);
+		    box-shadow: var(--sun-shadow), 0 0 15px rgba(0, 0, 0, 0.05);
 		    display: flex;
 		    gap: 8px;
 			height: 46px;
@@ -2537,7 +2537,7 @@ input[type="checkbox"]:checked::before {
             align-items: center;
             background-color: var(--search-background);
             border: 1px solid var(--glass-border);
-		    box-shadow: var(--sun-shadow);
+		    box-shadow: var(--sun-shadow), 0 0 15px rgba(0, 0, 0, 0.05);
             border-radius: 50px;
             padding: 0 8px 0 16px;
 			backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
