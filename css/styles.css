@@ -2517,7 +2517,6 @@ input[type="checkbox"]:checked::before {
 		    box-shadow: var(--sun-shadow);
 		    display: flex;
 		    gap: 8px;
-		    padding: 0 18px 0 16px;
 			height: 46px;
 			width: 46px;
 		    justify-content: center;
@@ -2530,8 +2529,7 @@ input[type="checkbox"]:checked::before {
 		}
 
 		.drawer-top-btn .material-symbols-rounded {
-			font-size: 18px;
-			font-variation-settings: 'FILL' 1, 'wght' 500;
+			font-size: 20px;
 		}
 
         .app-search-container {
@@ -2559,18 +2557,27 @@ input[type="checkbox"]:checked::before {
             padding: 12px 14px;
             font-size: 16px;
 			font-family: 'Inter', 'sans-serif';
+			width: 54px;
         }
 
 		#app-search-input::placeholder {
-			font-family: 'Inter', 'sans-serif';
+			color: var(--text-color);
 			font-weight: 500;
 		}
 
-		.app-drawer-handle:has(#app-search-input:focus) {
+		#app-search-input:not(:focus) {
+		    text-align: center;
+		}
+
+		#app-search-input:not(:placeholder-shown) {
+			width: 200px;
+		}
+
+		.app-drawer-handle:has(#app-search-input:not(:placeholder-shown)) {
 			gap: 0;
 		}
 
-		.app-drawer-handle:has(#app-search-input:focus) #sort-app-btn {
+		.app-drawer-handle:has(#app-search-input:not(:placeholder-shown)) #sort-app-btn {
 		    scale: 0;
 		    width: 0;
 		    opacity: 0;
