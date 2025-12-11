@@ -423,13 +423,29 @@
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">measuring_tape</span></div>
                         <span class="setting-label">Size</span>
                     </div>
-                    <div class="setting-item" id="setting-seconds">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">timer_10_select</span></div>
-                        <span class="setting-label" data-lang-key="SECONDS"></span>
+                    <div class="setting-item" id="setting-clock-spacing">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">space_bar</span></div>
+                        <span class="setting-label">Spacing</span>
+                    </div>
+                    <div class="setting-item" id="setting-text-case">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">text_fields</span></div>
+                        <span class="setting-label">Case</span>
+                    </div>
+                    <div class="setting-item" id="setting-date-size">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">calendar_view_day</span></div>
+                        <span class="setting-label">Date Size</span>
+                    </div>
+                    <div class="setting-item" id="setting-date-offset">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">vertical_align_center</span></div>
+                        <span class="setting-label">Date Offset</span>
                     </div>
                     <div class="setting-item" id="setting-format">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">edit_calendar</span></div>
                         <span class="setting-label" data-lang-key="FORMAT">Format</span>
+                    </div>
+                    <div class="setting-item" id="setting-seconds">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">timer_10_select</span></div>
+                        <span class="setting-label" data-lang-key="SECONDS"></span>
                     </div>
                     <div class="setting-item" id="setting-gurapps">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">grid_view</span></div>
@@ -474,6 +490,15 @@
                 <input type="range" min="20" max="100" value="100" class="weight-slider" id="weight-slider">
                 <input type="range" min="0" max="100" value="0" class="roundness-slider" id="roundness-slider">
                 <input type="range" min="-50" max="50" value="0" id="clock-size-slider">
+                <input type="range" min="-5" max="20" value="0" id="clock-spacing-slider">
+                <select id="text-case-select">
+                    <option value="none">Normal</option>
+                    <option value="uppercase">UPPERCASE</option>
+                    <option value="lowercase">lowercase</option>
+                    <option value="capitalize">Capitalize</option>
+                </select>
+                <input type="range" min="50" max="200" value="100" id="date-size-slider">
+                <input type="range" min="-50" max="50" value="0" id="date-offset-slider">
                 <div id="position-controls-popup" class="control-popup-content">
                     <div class="popup-control-row">
                         <label for="clock-pos-x-slider">X</label>
