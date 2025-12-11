@@ -7412,12 +7412,13 @@ function setupCollapsibleSettings() {
         icon.className = 'material-symbols-rounded';
         icon.textContent = 'expand_more';
         icon.style.transition = 'transform 0.3s ease';
-        // Default state is expanded (pointing up)
-        icon.style.transform = 'rotate(180deg)';
+        // Default state is collapsed (pointing down)
+        icon.style.transform = 'rotate(0deg)';
         
         heading.appendChild(icon);
 
         const content = heading.nextElementSibling;
+        content.style.display = 'none'; // Collapse by default
         
         heading.addEventListener('click', () => {
             if (content.style.display === 'none') {
@@ -10792,6 +10793,18 @@ function closeControls() {
 	persistentClock.style.opacity = '1';
     customizeModal.classList.remove('show'); // Start animation
     blurOverlayControls.classList.remove('show');
+
+    // Collapse all settings sections when closing
+    const homeSettings = document.querySelector('.settings-grid.home-settings');
+    if (homeSettings) {
+        homeSettings.querySelectorAll('h4').forEach(heading => {
+            const icon = heading.querySelector('.material-symbols-rounded');
+            const content = heading.nextElementSibling;
+            
+            if (content) content.style.display = 'none';
+            if (icon) icon.style.transform = 'rotate(0deg)';
+        });
+    }
 
     setTimeout(() => {
         customizeModal.style.display = 'none'; // Hide after animation
