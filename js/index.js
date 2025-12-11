@@ -1704,6 +1704,10 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-weight', 'weight-slider');
     connectGridItem('setting-roundness', 'roundness-slider');
     connectGridItem('setting-size', 'clock-size-slider');
+    connectGridItem('setting-clock-spacing', 'clock-spacing-slider');
+    connectGridItem('setting-text-case', 'text-case-select');
+    connectGridItem('setting-date-size', 'date-size-slider');
+    connectGridItem('setting-date-offset', 'date-offset-slider');
     connectGridItem('setting-alignment', 'alignment-select');
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
@@ -5855,7 +5859,11 @@ function loadRecentWallpapers() {
         gradientColor: '#ffffff',
         glassEnabled: false,
         roundness: '0',
-        customFontName: null,
+        letterSpacing: '0',
+        textCase: 'none',
+        dateSize: '100',
+        dateOffset: '0',
+		customFontName: null,
         customFontUrl: null,
         customLineHeight: null,
         customCSS: null
@@ -6488,6 +6496,10 @@ async function jumpToWallpaper(index) {
         if (colorSwitch) colorSwitch.checked = wallpaper.clockStyles.colorEnabled || false;
         if (stackSwitch) stackSwitch.checked = wallpaper.clockStyles.stackEnabled || false;
 	    if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
+        if (document.getElementById('clock-spacing-slider')) document.getElementById('clock-spacing-slider').value = wallpaper.clockStyles.letterSpacing || '0';
+        if (document.getElementById('text-case-select')) document.getElementById('text-case-select').value = wallpaper.clockStyles.textCase || 'none';
+        if (document.getElementById('date-size-slider')) document.getElementById('date-size-slider').value = wallpaper.clockStyles.dateSize || '100';
+        if (document.getElementById('date-offset-slider')) document.getElementById('date-offset-slider').value = wallpaper.clockStyles.dateOffset || '0';
 	    if (sizeSlider) sizeSlider.value = wallpaper.clockStyles.clockSize || '0';
 	    if (posXSlider) posXSlider.value = wallpaper.clockStyles.clockPosX || '50';
 	    if (posYSlider) posYSlider.value = wallpaper.clockStyles.clockPosY || '50';
@@ -6919,6 +6931,10 @@ function setupFontSelection() {
     const positionPopup = document.getElementById('position-controls-popup');
     const clockFormatInput = document.getElementById('clock-format-input');
     const dateFormatInput = document.getElementById('date-format-input');
+	const spacingSlider = document.getElementById('clock-spacing-slider');
+    const textCaseSelect = document.getElementById('text-case-select');
+    const dateSizeSlider = document.getElementById('date-size-slider');
+    const dateOffsetSlider = document.getElementById('date-offset-slider');
 
     // --- Function to save all settings (triggered by user interaction) ---
     async function saveCurrentWallpaperSettings() {
@@ -6948,6 +6964,10 @@ function setupFontSelection() {
             gradientColor: gradientColorPicker.value,
             glassEnabled: glassSwitch.checked,
             roundness: roundnessSlider.value,
+            letterSpacing: spacingSlider ? spacingSlider.value : '0',
+            textCase: textCaseSelect ? textCaseSelect.value : 'none',
+            dateSize: dateSizeSlider ? dateSizeSlider.value : '100',
+            dateOffset: dateOffsetSlider ? dateOffsetSlider.value : '0',
 			dateFormat: document.getElementById('date-format-input').value,
             clockFormat: document.getElementById('clock-format-input').value
         };
@@ -7013,6 +7033,10 @@ function setupFontSelection() {
     gradientColorPicker.value = localStorage.getItem('gradientColor') || '#ffffff';
     glassSwitch.checked = localStorage.getItem('glassEnabled') === 'true';
     roundnessSlider.value = localStorage.getItem('roundness') || '0';
+	spacingSlider.value = localStorage.getItem('letterSpacing') || '0';
+	textCaseSelect.value = localStorage.getItem('textCase') || 'none';
+	dateSizeSlider.value = localStorage.getItem('dateSize') || '100';
+	dateOffsetSlider.value = localStorage.getItem('dateOffset') || '0';
     // Note: Blur, brightness, and contrast sliders are handled by their own setup logic, but it's safe to include here too.
     const isLightModeOnLoad = document.body.classList.contains('light-theme');
     const initialTheme = isLightModeOnLoad ? 'light' : 'dark';
@@ -7048,7 +7072,8 @@ function setupFontSelection() {
         weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
         blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
         shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch, roundnessSlider,
-        sizeSlider, posXSlider, posYSlider, alignmentSelect, clockFormatInput, dateFormatInput
+        sizeSlider, posXSlider, posYSlider, alignmentSelect, clockFormatInput, dateFormatInput,
+        spacingSlider, textCaseSelect, dateSizeSlider, dateOffsetSlider
     ];
 
     allControls.forEach(control => {
@@ -7144,11 +7169,34 @@ function applyClockStyles() {
     const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
     const glassSwitch = document.getElementById('clock-glass-switch');
     const roundnessSlider = document.getElementById('roundness-slider');
+    const spacingSlider = document.getElementById('clock-spacing-slider');
+    const textCaseSelect = document.getElementById('text-case-select');
+    const dateSizeSlider = document.getElementById('date-size-slider');
+    const dateOffsetSlider = document.getElementById('date-offset-slider');
     
     if (!clockElement || !infoElement) return;
     
     const currentStyles = (recentWallpapers.length > 0 && recentWallpapers[currentWallpaperPosition] && recentWallpapers[currentWallpaperPosition].clockStyles) ?
                            recentWallpapers[currentWallpaperPosition].clockStyles : {};
+    
+    // --- Apply New Typography Settings ---
+    if (spacingSlider) {
+        const spacing = `${spacingSlider.value}px`;
+        clockElement.style.letterSpacing = spacing;
+        infoElement.style.letterSpacing = spacing;
+    }
+    if (textCaseSelect) {
+        const transform = textCaseSelect.value;
+        clockElement.style.textTransform = transform;
+        infoElement.style.textTransform = transform;
+    }
+    if (dateSizeSlider) {
+        // Scale date relative to its default size (100%)
+        infoElement.style.fontSize = `${dateSizeSlider.value}%`;
+    }
+    if (dateOffsetSlider) {
+        infoElement.style.marginTop = `${dateOffsetSlider.value}px`;
+    }
     
     // Use custom font if available, otherwise use font from dropdown
     const fontWeight = parseInt(weightSlider.value, 10) * 10;
@@ -7261,6 +7309,10 @@ function resetAndApplyDefaultClockStyles() {
         gradientColor: '#ffffff',
         glassEnabled: false,
         roundness: '0',
+        letterSpacing: '0',
+        textCase: 'none',
+        dateSize: '100',
+        dateOffset: '0',
 		customFontName: null,
         customFontUrl: null,
         customLineHeight: null,
@@ -7290,6 +7342,10 @@ function resetAndApplyDefaultClockStyles() {
     document.getElementById('clock-gradient-color-picker').value = defaultStyles.gradientColor;
     document.getElementById('clock-glass-switch').checked = defaultStyles.glassEnabled;
     document.getElementById('roundness-slider').value = defaultStyles.roundness;
+	document.getElementById('clock-spacing-slider').value = defaultStyles.letterSpacing;
+	document.getElementById('text-case-select').value = defaultStyles.textCase;
+	document.getElementById('date-size-slider').value = defaultStyles.dateSize;
+	document.getElementById('date-offset-slider').value = defaultStyles.dateOffset;
 	document.getElementById('clock-size-slider').value = defaultStyles.clockSize;
 	document.getElementById('clock-pos-x-slider').value = defaultStyles.clockPosX;
 	document.getElementById('clock-pos-y-slider').value = defaultStyles.clockPosY;
@@ -11509,7 +11565,11 @@ const controlIdMap = {
     'wakeLockMode': 'wake-lock-mode-select',
 	'depthEffectEnabled': 'depth-effect-switch',
     'uiSoundMode': 'ui-sound-mode',
-    'gurappSoundsEnabled': 'gurapp-sounds-switch'
+    'gurappSoundsEnabled': 'gurapp-sounds-switch',
+    'letterSpacing': 'clock-spacing-slider',
+    'textCase': 'text-case-select',
+    'dateSize': 'date-size-slider',
+    'dateOffset': 'date-offset-slider'
 };
 
 // --- NEW: Function to broadcast a setting update to the settings app ---
@@ -11583,6 +11643,7 @@ function setControlValueAndDispatch(key, value) {
         if (control.value !== value) {
             control.value = value;
         } else { return; }
+        eventType = 'change'; // Ensure select triggers change, not input
     }
 
     control.dispatchEvent(new Event(eventType, { bubbles: true }));
@@ -12104,7 +12165,11 @@ function broadcastAllWallpaperSettings(wallpaper) {
         'glassEnabled': val(styles.glassEnabled, 'false'),
         'roundness': val(styles.roundness, '0'),
         'dateFormat': val(styles.dateFormat, 'dddd, MMMM D'),
-        'depthEffectEnabled': val(wallpaper.depthEnabled, 'false')
+        'depthEffectEnabled': val(wallpaper.depthEnabled, 'false'),
+        'letterSpacing': val(styles.letterSpacing, '0'),
+        'textCase': val(styles.textCase, 'none'),
+        'dateSize': val(styles.dateSize, '100'),
+        'dateOffset': val(styles.dateOffset, '0')
     };
     
     // Clock format might default based on 12hr setting
