@@ -5,8 +5,7 @@
     <meta name="viewport" 
           content="width=device-width, initial-scale=1.0, 
                    maximum-scale=1.0, user-scalable=no" />
-    <title>Settings</title>
-    <link rel="icon" href="/assets/appicon/settings.png" type="image/png">
+    <title>Settings only works with Polygol.</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" 
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
@@ -321,6 +320,26 @@
                     <input type="range" min="0" max="100" class="styled-slider" 
                            data-key="roundness">
                 </div>
+                <div class="setting-item slider-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Spacing</span>
+                        <span class="setting-description">Adjust letter spacing</span>
+                    </div>
+                    <input type="range" min="-5" max="20" class="styled-slider" 
+                           data-key="letterSpacing">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Text Case</span>
+                        <span class="setting-description">Change capitalization</span>
+                    </div>
+                    <select class="styled-select" data-key="textCase">
+                        <option value="none">Normal</option>
+                        <option value="uppercase">Uppercase</option>
+                        <option value="lowercase">Lowercase</option>
+                        <option value="capitalize">Capitalize</option>
+                    </select>
+                </div>
             </div>
             <div class="setting-section">
                 <h2 class="section-title">Format & Layout</h2>
@@ -378,6 +397,16 @@
                     <span class="setting-label">Size</span>
                     <input type="range" min="-50" max="50" class="styled-slider" 
                            data-key="clockSize">
+                </div>
+                <div class="setting-item slider-item">
+                    <span class="setting-label">Date Size</span>
+                    <input type="range" min="50" max="200" class="styled-slider" 
+                           data-key="dateSize">
+                </div>
+                <div class="setting-item slider-item">
+                    <span class="setting-label">Date Offset</span>
+                    <input type="range" min="-50" max="50" class="styled-slider" 
+                           data-key="dateOffset">
                 </div>
             </div>
         </div>
