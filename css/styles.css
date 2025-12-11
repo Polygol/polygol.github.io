@@ -2569,7 +2569,8 @@ input[type="checkbox"]:checked::before {
 		    text-align: center;
 		}
 
-		#app-search-input:not(:placeholder-shown) {
+		#app-search-input:not(:placeholder-shown),
+		#app-search-input:focus {
 			width: 200px;
 		}
 
