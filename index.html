@@ -380,7 +380,7 @@
                 </div>
             </div>
             <div class="settings-grid home-settings">
-                <div class="settings-grid general-home-settings" style="border-radius: 28px 28px 10px 10px; display: none;">
+                <div class="settings-grid general-home-settings" style="border-radius: 10px; display: none;">
                     <div class="setting-item" id="setting-ai">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">auto_awesome</span></div>
                         <span class="setting-label">GuraAI</span>
@@ -390,77 +390,105 @@
                         <span class="setting-label" data-lang-key="ONE_BUTTON_NAV">Buttons</span>
                     </div>
                 </div>
-                <div class="settings-grid clock-settings" style="border-radius: 10px;">
+                <!-- Appearance -->
+                <h4 style="margin: 10px;">Appearance</h4>
+                <div class="settings-grid appearance-settings">
                     <div class="setting-item" id="setting-style">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">match_case</span></div>
-                        <span class="setting-label" data-lang-key="STYLE"></span>
+                        <span class="setting-label" data-lang-key="STYLE">Style</span>
                     </div>
-                    <div class="setting-item" id="setting-clock-color">
+            
+                    <div class="setting-item active" id="setting-clock-color">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">colorize</span></div>
-                        <span class="setting-label" data-lang-key="CLOCK_COLOR"></span>
+                        <span class="setting-label" data-lang-key="CLOCK_COLOR">Clock Color</span>
                     </div>
+            
                     <div class="setting-item" id="setting-clock-shadow">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">text_select_move_down</span></div>
                         <span class="setting-label" data-lang-key="SHADOW">Shadow</span>
                     </div>
-                    <div class="setting-item" id="setting-clock-stack">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">farsight_digital</span></div>
-                        <span class="setting-label" data-lang-key="CLOCK_STACK"></span>
-                    </div>
+            
                     <div class="setting-item" id="setting-weight">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">line_weight</span></div>
-                        <span class="setting-label" data-lang-key="WEIGHT"></span>
+                        <span class="setting-label" data-lang-key="WEIGHT">Weight</span>
                     </div>
-                    <div class="setting-item" id="setting-roundness">
+            
+                    <div class="setting-item active" id="setting-roundness">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">line_curve</span></div>
                         <span class="setting-label">Roundness</span>
                     </div>
-                    <div class="setting-item" id="setting-position">
+                </div>
+                <!-- Layout -->
+                <h4 style="margin: 10px;">Layout</h4>
+                <div class="settings-grid layout-settings">
+                    <div class="setting-item active" id="setting-position">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">open_with</span></div>
-                        <span class="setting-label" data-lang-key="ALIGNMENT"></span>
+                        <span class="setting-label" data-lang-key="ALIGNMENT">Alignment</span>
                     </div>
-                    <div class="setting-item" id="setting-size">
+            
+                    <div class="setting-item active" id="setting-size">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">measuring_tape</span></div>
                         <span class="setting-label">Size</span>
                     </div>
-                    <div class="setting-item" id="setting-clock-spacing">
+            
+                    <div class="setting-item active" id="setting-clock-spacing">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">space_bar</span></div>
                         <span class="setting-label">Spacing</span>
                     </div>
+            
                     <div class="setting-item" id="setting-text-case">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">text_fields</span></div>
                         <span class="setting-label">Case</span>
                     </div>
-                    <div class="setting-item" id="setting-date-size">
+                </div>
+                <!-- Time & Date -->
+                <h4 style="margin: 10px;">Time & Date</h4>
+                <div class="settings-grid time-date-settings">
+                    <div class="setting-item active" id="setting-clock-stack">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">farsight_digital</span></div>
+                        <span class="setting-label" data-lang-key="CLOCK_STACK">Clock Stack</span>
+                    </div>
+            
+                    <div class="setting-item active" id="setting-date-size">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">calendar_view_day</span></div>
                         <span class="setting-label">Date Size</span>
                     </div>
+            
                     <div class="setting-item" id="setting-date-offset">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">vertical_align_center</span></div>
                         <span class="setting-label">Date Offset</span>
                     </div>
+            
                     <div class="setting-item" id="setting-format">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">edit_calendar</span></div>
                         <span class="setting-label" data-lang-key="FORMAT">Format</span>
                     </div>
+            
                     <div class="setting-item" id="setting-seconds">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">timer_10_select</span></div>
-                        <span class="setting-label" data-lang-key="SECONDS"></span>
+                        <span class="setting-label" data-lang-key="SECONDS">Seconds</span>
                     </div>
-                    <div class="setting-item" id="setting-gurapps">
+                </div>
+                <!-- Other -->
+                <h4 style="margin: 10px;">Other</h4>
+                <div class="settings-grid other-settings">
+                    <div class="setting-item active" id="setting-gurapps">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">grid_view</span></div>
-                        <span class="setting-label" data-lang-key="GURAPPS"></span>
+                        <span class="setting-label" data-lang-key="GURAPPS">Gurapps</span>
                     </div>
+            
                     <div class="setting-item" id="setting-weather">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">partly_cloudy_day</span></div>
-                        <span class="setting-label" data-lang-key="WEATHER"></span>
+                        <span class="setting-label" data-lang-key="WEATHER">Weather</span>
                     </div>
+            
                     <div class="setting-item" id="setting-widgets">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">widget_menu</span></div>
                         <span class="setting-label" data-lang-key="WIDGETS">Widgets</span>
                     </div>
                 </div>
-                <div class="settings-grid wallpaper-settings" style="border-radius: 10px 10px 28px 28px;">
+                <div class="settings-grid wallpaper-settings" style="border-radius: 10px">
+                    <h4 style="margin: 10px;">Wallpaper</h4>
                     <div class="setting-item" id="setting-wallpaper">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">filter_vintage</span></div>
                         <span class="setting-label" data-lang-key="WALLPAPER"></span>
