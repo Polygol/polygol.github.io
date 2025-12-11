@@ -12269,28 +12269,14 @@ function broadcastAllWallpaperSettings(wallpaper) {
 function openSearch() {
     const searchContainer = document.querySelector('.app-search-container');
     if (searchContainer.style.display === 'flex') return;
-
-    const searchBtn = document.getElementById('search-app-btn');
-    const sortBtn = document.getElementById('sort-app-btn');
     const searchInput = document.getElementById('app-search-input');
-
-    searchBtn.style.display = 'none';
-    sortBtn.style.display = 'none';
-    searchContainer.style.display = 'flex';
     searchInput.focus();
 }
 
 function closeSearch() {
     const searchContainer = document.querySelector('.app-search-container');
     if (searchContainer.style.display === 'none') return;
-
-    const searchBtn = document.getElementById('search-app-btn');
-    const sortBtn = document.getElementById('sort-app-btn');
     const searchInput = document.getElementById('app-search-input');
-
-    searchContainer.style.display = 'none';
-    searchBtn.style.display = 'flex';
-    sortBtn.style.display = 'flex';
     searchInput.value = '';
     createAppIcons(); // Reset to full, sorted list
 }
@@ -12301,9 +12287,6 @@ function initAppDraw() {
     const sortBtn = document.getElementById('sort-app-btn');
     const searchInput = document.getElementById('app-search-input');
     const closeSearchBtn = document.getElementById('close-search-btn');
-
-    searchBtn.addEventListener('click', openSearch);
-    closeSearchBtn.addEventListener('click', closeSearch);
 
     searchInput.addEventListener('blur', () => {
         if (searchInput.value.trim() === '') {
