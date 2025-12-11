@@ -2574,13 +2574,11 @@ input[type="checkbox"]:checked::before {
 			width: 200px;
 		}
 
-		.app-drawer-handle:has(#app-search-input:not(:placeholder-shown)),
-		.app-drawer-handle:has(#app-search-input:focus) {
+		.app-drawer-handle:has(#app-search-input:not(:placeholder-shown)) {
 			gap: 0;
 		}
 
-		.app-drawer-handle:has(#app-search-input:not(:placeholder-shown)) #sort-app-btn,
-		.app-drawer-handle:has(#app-search-input:focus) {
+		.app-drawer-handle:has(#app-search-input:not(:placeholder-shown)) #sort-app-btn {
 		    scale: 0;
 		    width: 0;
 		    opacity: 0;
