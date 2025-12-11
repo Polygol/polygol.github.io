@@ -763,7 +763,7 @@ function loadWidgets() {
     renderWidgets();
 }
 
-function addWidget(widgetData) {
+function addWidget(widgetData, isTransparent = false) {
     const baseUnit = 200; // The size of a 1x1 widget block
     const gridW = widgetData.defaultSize ? widgetData.defaultSize[0] : 1;
     const gridH = widgetData.defaultSize ? widgetData.defaultSize[1] : 1;
@@ -776,9 +776,9 @@ function addWidget(widgetData) {
         appName: widgetData.appName,
         w: defaultWidth,
         h: defaultHeight,
-        // Place new widgets in the top-left, avoiding the clock area
         x: 10,
-        y: 80, 
+        y: 80,
+        transparent: isTransparent // Save transparency state
     });
     renderWidgets();
     saveWidgets();
@@ -814,12 +814,25 @@ function renderWidgets() {
         instance.style.left = `${widget.x}px`;
         instance.style.top = `${widget.y}px`;
 
+		// Apply transparency styles if flag is set
+        if (widget.transparent) {
+            instance.style.background = 'transparent';
+            instance.style.border = 'none';
+            instance.style.backdropFilter = 'none';
+            instance.style.boxShadow = 'none';
+        }
+
 		embedContainer = document.createElement('div');
         const iframe = document.createElement('iframe');
         iframe.src = widgetDef.url;
 		iframe.setAttribute('data-gurasuraisu-iframe', 'true');
         const overlay = document.createElement('div');
         overlay.className = 'widget-instance-overlay';
+
+		// Remove overlay shadow if transparent
+        if (widget.transparent) {
+            overlay.style.boxShadow = 'none';
+        }
 
         // --- Create the invisible resize handle ---
         const resizeHandle = document.createElement('div');
@@ -1139,6 +1152,10 @@ function openWidgetPicker() {
     content.scrollTop = 0; // Scroll to top
     grid.innerHTML = ''; // Clear old items
 
+	// Reset transparency toggle
+    const transparentSwitch = document.getElementById('widget-transparent-switch');
+    if (transparentSwitch) transparentSwitch.checked = false;
+
     // Check if there are any available widgets
     if (Object.keys(availableWidgets).length === 0) {
         grid.innerHTML = `<p style="text-align: center; opacity: 0.7;">No widgets available. Install apps that provide widgets.</p>`;
@@ -1182,7 +1199,8 @@ function openWidgetPicker() {
                 item.appendChild(title);
 
                 item.addEventListener('click', () => {
-                    addWidget(widgetData);
+                    const isTransparent = document.getElementById('widget-transparent-switch')?.checked || false;
+                    addWidget(widgetData, isTransparent);
                     closeWidgetPicker();
                 });
                 grid.appendChild(item);
