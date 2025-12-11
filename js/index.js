@@ -7195,7 +7195,7 @@ function applyClockStyles() {
         infoElement.style.fontSize = `${dateSizeSlider.value}%`;
     }
     if (dateOffsetSlider) {
-        infoElement.style.marginTop = `${dateOffsetSlider.value}px`;
+        infoElement.style.marginBottom = `${dateOffsetSlider.value}px`;
     }
     
     // Use custom font if available, otherwise use font from dropdown
