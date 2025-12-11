@@ -2585,8 +2585,12 @@ function updateClockAndDate() {
 	const now = moment();
 
     // Get formats directly from the input fields, which hold the wallpaper-specific settings.
-    const clockFormat = document.getElementById('clock-format-input').value;
-    const dateFormat = document.getElementById('date-format-input').value;
+    let clockFormat = document.getElementById('clock-format-input').value;
+    let dateFormat = document.getElementById('date-format-input').value;
+
+    // Handle literal text escaping (convert ```text``` to [text] for moment.js)
+    if (clockFormat) clockFormat = clockFormat.replace(/```(.*?)```/g, '[$1]');
+    if (dateFormat) dateFormat = dateFormat.replace(/```(.*?)```/g, '[$1]');
 
     const timeString = now.format(clockFormat);
     const formattedDate = now.format(dateFormat);
