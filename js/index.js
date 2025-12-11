@@ -1190,7 +1190,10 @@ function openWidgetPicker() {
         }
     }
     
-    drawer.classList.add('open');
+    drawer.style.display = 'flex';
+    setTimeout(() => {
+        drawer.classList.add('open');
+    }, 10);
 }
 
 function closeWidgetPicker() {
@@ -1198,6 +1201,11 @@ function closeWidgetPicker() {
     if (!drawer) return;
 
     drawer.classList.remove('open');
+    setTimeout(() => {
+        if (!drawer.classList.contains('open')) {
+            drawer.style.display = 'none';
+        }
+    }, 300);
 }
 
 async function applyPresetWallpaper(preset) {
@@ -1290,7 +1298,10 @@ function openWallpaperPicker() {
         grid.appendChild(item);
     });
 
-    drawer.classList.add('open');
+    drawer.style.display = 'flex';
+    setTimeout(() => {
+        drawer.classList.add('open');
+    }, 10);
 }
 
 function closeWallpaperPicker() {
@@ -1298,6 +1309,11 @@ function closeWallpaperPicker() {
     if (!drawer) return;
 
     drawer.classList.remove('open');
+    setTimeout(() => {
+        if (!drawer.classList.contains('open')) {
+            drawer.style.display = 'none';
+        }
+    }, 300);
 }
 
 function registerWidget(widgetData) {
