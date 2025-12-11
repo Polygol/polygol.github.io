@@ -2519,6 +2519,8 @@ input[type="checkbox"]:checked::before {
 		    gap: 8px;
 		    padding: 0 18px 0 16px;
 			height: 46px;
+			width: 46px;
+		    justify-content: center;
 		    align-items: center;
 		    position: relative;
 			font-size: 14px;
@@ -2558,6 +2560,22 @@ input[type="checkbox"]:checked::before {
             font-size: 16px;
 			font-family: 'Inter', 'sans-serif';
         }
+
+		#app-search-input::placeholder {
+			font-family: 'Inter', 'sans-serif';
+			font-weight: 500;
+		}
+
+		.app-drawer-handle:has(#app-search-input:focus) {
+			gap: 0;
+		}
+
+		.app-drawer-handle:has(#app-search-input:focus) #sort-app-btn {
+		    scale: 0;
+		    width: 0;
+		    opacity: 0;
+		    border: none;
+		}
 
         #close-search-btn {
             background: none;
