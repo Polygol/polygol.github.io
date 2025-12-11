@@ -7393,6 +7393,44 @@ function resetAndApplyDefaultClockStyles() {
     return defaultStyles;
 }
 
+function setupCollapsibleSettings() {
+    const homeSettings = document.querySelector('.settings-grid.home-settings');
+    if (!homeSettings) return;
+
+    const headings = homeSettings.querySelectorAll('h4');
+    headings.forEach(heading => {
+        heading.style.cursor = 'pointer';
+        heading.style.userSelect = 'none';
+        heading.style.display = 'flex';
+        heading.style.alignItems = 'center';
+        heading.style.justifyContent = 'space-between';
+        
+        // Prevent duplicate icons if run multiple times
+        if (heading.querySelector('.material-symbols-rounded')) return;
+
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-rounded';
+        icon.textContent = 'expand_more';
+        icon.style.transition = 'transform 0.3s ease';
+        // Default state is expanded (pointing up)
+        icon.style.transform = 'rotate(180deg)';
+        
+        heading.appendChild(icon);
+
+        const content = heading.nextElementSibling;
+        
+        heading.addEventListener('click', () => {
+            if (content.style.display === 'none') {
+                content.style.display = ''; // Restore grid layout
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.style.display = 'none';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        });
+    });
+}
+
 // Initialize theme and wallpaper on load
 function initializeCustomization() {
     setupThemeSwitcher();
@@ -10156,6 +10194,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     initAppDraw(); // Now this will use the fully populated 'apps' object
     initializeCustomization(); // Now reads correct styles and applies them to DOM
+	setupCollapsibleSettings();
     setupWeatherToggle();
     initializePageIndicator();
 	loadWidgets(); // Now renders into a correctly styled layout
