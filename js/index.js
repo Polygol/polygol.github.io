@@ -1204,6 +1204,9 @@ function closeWidgetPicker() {
     setTimeout(() => {
         if (!drawer.classList.contains('open')) {
             drawer.style.display = 'none';
+            // Clear content to free up resources (iframe processes)
+            const grid = document.getElementById('widget-picker-grid');
+            if (grid) grid.innerHTML = ''; 
         }
     }, 300);
 }
