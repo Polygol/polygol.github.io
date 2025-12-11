@@ -873,13 +873,13 @@ body.one-button-nav-active .dock.show {
             margin-bottom: 10px;
             user-select: none;
             gap: clamp(0.5rem, 2vw, 1rem);
+			font-size: clamp(1.5rem, 3vw, 2rem);
+			font-weight: 500;
+		    font-variant-numeric: tabular-nums;
 			z-index: 1;
         }
 
 .date {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
     cursor: pointer;
     user-select: none;
     transform: scale(1);
