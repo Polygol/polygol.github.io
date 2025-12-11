@@ -2497,6 +2497,7 @@ input[type="checkbox"]:checked::before {
 		    align-items: center;
 		    gap: 16px;
 		    justify-content: center;
+			z-index: 2;
 		}
 
 		.drawer-handle-bar {
@@ -2516,11 +2517,14 @@ input[type="checkbox"]:checked::before {
 		    box-shadow: var(--sun-shadow);
 		    display: flex;
 		    gap: 8px;
-		    padding: 10px 16px 10px 14px;
+		    padding: 0 18px 0 16px;
+			height: 46px;
+		    align-items: center;
 		    position: relative;
 			font-size: 14px;
 			border-radius: 50px;
 			cursor: pointer;
+			backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 		}
 
 		.drawer-top-btn .material-symbols-rounded {
@@ -2536,6 +2540,8 @@ input[type="checkbox"]:checked::before {
 		    box-shadow: var(--sun-shadow);
             border-radius: 50px;
             padding: 0 8px 0 16px;
+			backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+			height: 46px;
         }
 
 		.app-search-container .material-symbols-rounded {
@@ -2568,8 +2574,7 @@ input[type="checkbox"]:checked::before {
             height: calc(100% - 80px);
             overflow-y: auto;
             user-select: none;
-            padding: 0 3vw 0 3vw;
-            margin-top: 80px;
+            padding: 80px 3vw 0 3vw;
         }
 
         .app-drawer-grid {
