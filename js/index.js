@@ -6873,10 +6873,10 @@ function syncUiStates() {
     document.getElementById('setting-weight').classList.toggle('active', document.getElementById('weight-slider').value !== '70');
     document.getElementById('setting-style').classList.toggle('active', document.getElementById('font-select').value !== 'Inter');
     document.getElementById('setting-wallpaper').classList.toggle('active', recentWallpapers.length > 0);
-	document.getElementById('setting-clock-spacing').classList.toggle('active', document.getElementById('clock-spacing-slider').value !== '0');
-	document.getElementById('setting-text-case').classList.toggle('active', document.getElementById('text-case-select').value !== 'none');
-	document.getElementById('setting-date-size').classList.toggle('active', document.getElementById('date-size-slider').value !== '100');
-	document.getElementById('setting-date-offset').classList.toggle('active', document.getElementById('date-offset-slider').value !== '0');
+    document.getElementById('setting-clock-spacing').classList.toggle('active', spacingSlider.value !== '0');
+    document.getElementById('setting-text-case').classList.toggle('active', textCaseSelect.value !== 'none');
+    document.getElementById('setting-date-size').classList.toggle('active', dateSizeSlider.value !== '100');
+    document.getElementById('setting-date-offset').classList.toggle('active', dateOffsetSlider.value !== '0');
     
     // Update to use the new 'setting-position' ID and check all relevant sliders
     const posX = document.getElementById('clock-pos-x-slider').value;
