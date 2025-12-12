@@ -3018,10 +3018,10 @@ input[type="checkbox"]:checked::before {
         drop-shadow(0 calc(var(--border-width) * -1) 0 var(--border-color))
 }
 
-.widget-instance.sticker-widget.is-dragging,
-.widget-instance.sticker:hover,
-.widget-resize-handle:hover .widget-instance.sticker-widget,
-.widget-resize-handle:active .widget-instance.sticker-widget {
+.widget-instance.is-dragging,
+.widget-instance:hover,
+.widget-resize-handle:hover .widget-instance,
+.widget-resize-handle:active .widget-instance {
 	background: var(--search-background);
     border: 1px solid var(--glass-border);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
