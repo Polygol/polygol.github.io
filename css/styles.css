@@ -3131,6 +3131,14 @@ input[type="checkbox"]:checked::before {
     z-index: 2; /* Must be above the iframe but below the drag overlay */
 }
 
+.widget-resize-handle:hover,
+.widget-resize-handle:active {
+	background: var(--search-background);
+    box-shadow: var(--sun-shadow);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    border: 1px solid var(--glass-border);
+}
+
 .wallpaper-drawer-handle {
     width: 100%;
     padding: 15px 0;
