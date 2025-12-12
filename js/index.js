@@ -1146,12 +1146,12 @@ function renderWidgets() {
 				// Final clamp to ensure the widget never leaves the viewport
 	            finalX = Math.max(MARGIN, Math.min(finalX, window.innerWidth - snappedWidth - MARGIN));
 	            finalY = Math.max(MARGIN, Math.min(finalY, window.innerHeight - snappedHeight - MARGIN));
+				
+	            instance.style.width = `${snappedWidth}px`;
+	            instance.style.height = `${snappedHeight}px`;
+	            instance.style.left = `${finalX}px`;
+	            instance.style.top = `${finalY}px`;
 			};
-
-            instance.style.width = `${snappedWidth}px`;
-            instance.style.height = `${snappedHeight}px`;
-            instance.style.left = `${finalX}px`;
-            instance.style.top = `${finalY}px`;
         };
 
         const onResizeEnd = () => {
