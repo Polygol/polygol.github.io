@@ -3008,7 +3008,6 @@ input[type="checkbox"]:checked::before {
         drop-shadow(calc(var(--border-width) * -1) 0 0 var(--border-color))
         drop-shadow(0 var(--border-width) 0 var(--border-color))
         drop-shadow(0 calc(var(--border-width) * -1) 0 var(--border-color))
-        drop-shadow(var(--sun-shadow)); /* Keep the sun shadow effect */
 }
 
 /* --- Widget Picker Drawer Styles --- */
