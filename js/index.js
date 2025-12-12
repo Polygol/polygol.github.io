@@ -1062,7 +1062,6 @@ function renderWidgets() {
         let initialResizeMouseX, initialResizeMouseY, initialWidgetW, initialWidgetH;
 		let initialResizeWidgetX, initialResizeWidgetY; 
         let isAnchoredRight, isAnchoredBottom; // Flags to track edge snapping
-        const resizeHandle = instance.querySelector('.widget-resize-handle');
 
         const onResizeStart = (e) => {
             e.stopPropagation(); 
