@@ -2987,11 +2987,6 @@ input[type="checkbox"]:checked::before {
 }
 
 .widget-instance.sticker-widget {
-    background: transparent; /* Stickers default to transparent usually */
-    border: none;
-    box-shadow: none;
-    backdrop-filter: none;
-    border-radius: 0;
     overflow: visible; /* Allow drop-shadows to bleed slightly if needed */
 }
 
@@ -3001,7 +2996,6 @@ input[type="checkbox"]:checked::before {
     object-fit: contain; /* Keep aspect ratio */
     pointer-events: none;
     display: block;
-    /* Transition for smooth border updates if we add live editing later */
     transition: filter 0.2s ease; 
 }
 
@@ -3015,13 +3009,6 @@ input[type="checkbox"]:checked::before {
         drop-shadow(0 var(--border-width) 0 var(--border-color))
         drop-shadow(0 calc(var(--border-width) * -1) 0 var(--border-color))
         drop-shadow(var(--sun-shadow)); /* Keep the sun shadow effect */
-}
-
-/* Ensure resize handle is visible on stickers */
-.widget-instance.sticker-widget .widget-resize-handle {
-    background: rgba(255, 255, 255, 0.2); /* Slight hint where the handle is */
-    border-radius: 50%;
-    backdrop-filter: blur(2px);
 }
 
 /* --- Widget Picker Drawer Styles --- */
