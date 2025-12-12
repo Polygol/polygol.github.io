@@ -3041,12 +3041,8 @@ input[type="checkbox"]:checked::before {
 
 .widget-rotate-handle:hover,
 .widget-rotate-handle:active {
-	opacity: 1;
-}
-
-.widget-rotate-handle:active {
     cursor: grabbing;
-    background: var(--text-color);
+	opacity: 1;
 }
 
 /* Add a visual connector line between handle and widget */
