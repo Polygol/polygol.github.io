@@ -1424,12 +1424,9 @@ function setupStickerControls() {
     addBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         
-        // Use the existing logic to show popup (borrowed from existing codebase)
-        // We create a temporary container context similar to how other popups work
         const controlPopup = document.querySelector('.control-popup');
         const hiddenContainer = document.getElementById('hidden-controls-container');
         
-        // Reset popup fields
         fileInput.value = '';
         fileBtn.textContent = 'Select Image';
         borderSwitch.checked = false;
@@ -1439,23 +1436,19 @@ function setupStickerControls() {
             controlPopup.style.display = 'none';
             hiddenContainer.appendChild(popup);
         } else {
-            // Move any existing content back
             if (controlPopup.firstElementChild) {
                 hiddenContainer.appendChild(controlPopup.firstElementChild);
             }
             controlPopup.appendChild(popup);
             
-            // Position near the button
             const rect = addBtn.getBoundingClientRect();
             controlPopup.style.display = 'block';
             controlPopup.style.top = `${rect.bottom + 10}px`;
-            // Center horizontally relative to button, clamp to screen
-            let left = rect.left + (rect.width / 2) - 100; // Approx half popup width
+            let left = rect.left + (rect.width / 2) - 100;
             controlPopup.style.left = `${Math.max(10, Math.min(window.innerWidth - 220, left))}px`;
         }
     });
 
-    // File Selection
     fileBtn.addEventListener('click', () => fileInput.click());
     
     fileInput.addEventListener('change', () => {
@@ -1464,7 +1457,6 @@ function setupStickerControls() {
         }
     });
 
-    // Create Action
     createBtn.addEventListener('click', async () => {
         if (!fileInput.files || !fileInput.files[0]) {
             showPopup('Please select an image');
@@ -1472,42 +1464,43 @@ function setupStickerControls() {
         }
 
         const file = fileInput.files[0];
-        const reader = new FileReader();
+        
+        // Show loading indication if needed, or just await
+        // Use existing compressMedia utility to convert to WebP
+        let compressedSrc;
+        try {
+            compressedSrc = await compressMedia(file);
+        } catch (e) {
+            console.error("Sticker compression failed", e);
+            showPopup("Failed to process image");
+            return;
+        }
 
-        reader.onload = (e) => {
-            const result = e.target.result; // Base64 string
-            
-            const isTransparent = document.getElementById('widget-transparent-switch').checked;
-            
-            const stickerData = {
-                type: 'sticker', // Distinct type
-                src: result,
-                border: borderSwitch.checked,
-                borderColor: document.getElementById('sticker-border-color').value,
-                borderWidth: document.getElementById('sticker-border-width').value,
-                transparent: isTransparent,
-                // Initial Size (will be refined by image aspect ratio in rendering if needed)
-                w: 150, 
-                h: 150,
-                x: 50,
-                y: 50
-            };
-
-            // Add to active widgets
-            activeWidgets.push(stickerData);
-            
-            // Hide popup
-            const controlPopup = document.querySelector('.control-popup');
-            const hiddenContainer = document.getElementById('hidden-controls-container');
-            controlPopup.style.display = 'none';
-            hiddenContainer.appendChild(popup);
-            
-            renderWidgets();
-            saveWidgets();
-            closeWidgetPicker();
+        const isTransparent = document.getElementById('widget-transparent-switch').checked;
+        
+        const stickerData = {
+            type: 'sticker',
+            src: compressedSrc, // Now a WebP Data URL
+            border: borderSwitch.checked,
+            borderColor: document.getElementById('sticker-border-color').value,
+            borderWidth: document.getElementById('sticker-border-width').value,
+            transparent: isTransparent, // This controls the background
+            w: 150, 
+            h: 150,
+            x: 50,
+            y: 50
         };
 
-        reader.readAsDataURL(file);
+        activeWidgets.push(stickerData);
+        
+        const controlPopup = document.querySelector('.control-popup');
+        const hiddenContainer = document.getElementById('hidden-controls-container');
+        controlPopup.style.display = 'none';
+        hiddenContainer.appendChild(popup);
+        
+        renderWidgets();
+        saveWidgets();
+        closeWidgetPicker();
     });
 }
 
