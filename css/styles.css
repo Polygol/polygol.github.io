@@ -3022,12 +3022,13 @@ input[type="checkbox"]:checked::before {
 /* Rotation Handle for Stickers */
 .widget-rotate-handle {
     position: absolute;
-    top: -30px; /* Position above the widget */
+	opacity: 0;
+    top: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 24px;
     height: 24px;
-    background: var(--search-background);
+    background: var(--background-color);
     border: 1px solid var(--glass-border);
     border-radius: 50%;
     cursor: grab;
@@ -3036,7 +3037,11 @@ input[type="checkbox"]:checked::before {
     align-items: center;
     justify-content: center;
     box-shadow: var(--sun-shadow);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+}
+
+.widget-rotate-handle:hover,
+.widget-rotate-handle:active {
+	opacity: 1;
 }
 
 .widget-rotate-handle:active {
