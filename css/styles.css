@@ -2988,6 +2988,7 @@ input[type="checkbox"]:checked::before {
 
 .widget-instance.sticker-widget {
     z-index: 20; 
+    transform-origin: center center;
 }
 
 .widget-instance.sticker-widget.is-dragging {
@@ -3018,12 +3019,49 @@ input[type="checkbox"]:checked::before {
         drop-shadow(0 calc(var(--border-width) * -1) 0 var(--border-color))
 }
 
+/* Rotation Handle for Stickers */
+.widget-rotate-handle {
+    position: absolute;
+    top: -30px; /* Position above the widget */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 24px;
+    background: var(--search-background);
+    border: 1px solid var(--glass-border);
+    border-radius: 50%;
+    cursor: grab;
+    z-index: 1002; /* Above everything */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--sun-shadow);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+}
+
+.widget-rotate-handle:active {
+    cursor: grabbing;
+    background: var(--text-color);
+}
+
+/* Add a visual connector line between handle and widget */
+.widget-rotate-handle::after {
+    content: '';
+    position: absolute;
+    top: 22px; /* Connect to top of handle */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 10px; /* Reach down to the widget */
+    background: var(--glass-border);
+    z-index: -1;
+}
+
 .widget-instance.is-dragging,
 .widget-instance:hover,
 .widget-instance:has(.widget-resize-handle:hover), /* Parent contains hovered child */
 .widget-instance:has(.widget-resize-handle:active) /* Parent contains active child */ {
 	background: var(--search-background) !important;
-    border: 1px solid var(--glass-border) !important;
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px) !important;
 }
 
