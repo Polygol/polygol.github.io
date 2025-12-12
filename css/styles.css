@@ -2986,6 +2986,44 @@ input[type="checkbox"]:checked::before {
     z-index: 2; /* Sits on top of the iframe */
 }
 
+.widget-instance.sticker-widget {
+    background: transparent; /* Stickers default to transparent usually */
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    border-radius: 0;
+    overflow: visible; /* Allow drop-shadows to bleed slightly if needed */
+}
+
+.sticker-content {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Keep aspect ratio */
+    pointer-events: none;
+    display: block;
+    /* Transition for smooth border updates if we add live editing later */
+    transition: filter 0.2s ease; 
+}
+
+/* Border Logic using Drop Shadow for Alpha transparency support */
+.sticker-content.has-border {
+    --border-color: #fff;
+    --border-width: 2px;
+    filter: 
+        drop-shadow(var(--border-width) 0 0 var(--border-color)) 
+        drop-shadow(calc(var(--border-width) * -1) 0 0 var(--border-color))
+        drop-shadow(0 var(--border-width) 0 var(--border-color))
+        drop-shadow(0 calc(var(--border-width) * -1) 0 var(--border-color))
+        drop-shadow(var(--sun-shadow)); /* Keep the sun shadow effect */
+}
+
+/* Ensure resize handle is visible on stickers */
+.widget-instance.sticker-widget .widget-resize-handle {
+    background: rgba(255, 255, 255, 0.2); /* Slight hint where the handle is */
+    border-radius: 50%;
+    backdrop-filter: blur(2px);
+}
+
 /* --- Widget Picker Drawer Styles --- */
 .widget-drawer {
     position: fixed;
