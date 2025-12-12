@@ -822,25 +822,41 @@ function renderWidgets() {
             instance.style.boxShadow = 'none';
         }
 
-		embedContainer = document.createElement('div');
-        const iframe = document.createElement('iframe');
-        iframe.src = widgetDef.url;
-		iframe.setAttribute('data-gurasuraisu-iframe', 'true');
-        const overlay = document.createElement('div');
-        overlay.className = 'widget-instance-overlay';
+        if (widget.type === 'sticker') {
+            instance.classList.add('sticker-widget');
+            
+            const img = document.createElement('img');
+            img.src = widget.src;
+            img.className = 'sticker-content';
+            
+            if (widget.border) {
+                img.classList.add('has-border');
+                // Apply custom properties for the filter
+                img.style.setProperty('--border-color', widget.borderColor);
+                img.style.setProperty('--border-width', `${widget.borderWidth}px`);
+            }
+            
+            instance.appendChild(img);
+        } else {
+            // STANDARD APP WIDGET LOGIC
+            const widgetDef = availableWidgets[widget.appName]?.find(w => w.widgetId === widget.widgetId);
+            if (!widgetDef) return; 
 
-		// Remove overlay shadow if transparent
-        if (widget.transparent) {
-            overlay.style.boxShadow = 'none';
+            const iframe = document.createElement('iframe');
+            iframe.src = widgetDef.url;
+            iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+            instance.appendChild(iframe);
         }
 
-        // --- Create the invisible resize handle ---
+        const overlay = document.createElement('div');
+        overlay.className = 'widget-instance-overlay';
+        if (widget.transparent) overlay.style.boxShadow = 'none';
+
         const resizeHandle = document.createElement('div');
         resizeHandle.className = 'widget-resize-handle';
         
-        instance.appendChild(iframe);
         instance.appendChild(overlay);
-        instance.appendChild(resizeHandle); // Add handle to the widget
+        instance.appendChild(resizeHandle);
         gridContainer.appendChild(instance);
         widgetElements.set(index.toString(), instance);
     });
@@ -853,7 +869,9 @@ function renderWidgets() {
     // 2. Add interaction listeners to all newly created widgets
     widgetElements.forEach((instance, indexKey) => {
         const index = parseInt(indexKey);
+		const widgetData = activeWidgets[index]; // Get data to check type
         const overlay = instance.querySelector('.widget-instance-overlay');
+        const resizeHandle = instance.querySelector('.widget-resize-handle');
         
         let isDragging = false, longPressTimer, longPressFired = false;
         let initialMouseX, initialMouseY, initialWidgetX, initialWidgetY;
@@ -1078,37 +1096,53 @@ function renderWidgets() {
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-            // --- Grid Snapping for Size ---
-            const baseUnit = 200;
-            const maxUnits = 4;
-            let newWidth = initialWidgetW + (clientX - initialResizeMouseX);
-            let newHeight = initialWidgetH + (clientY - initialResizeMouseY);
-            
-            let gridW = Math.round((newWidth + MARGIN) / (baseUnit + MARGIN));
-            let gridH = Math.round((newHeight + MARGIN) / (baseUnit + MARGIN));
-            gridW = Math.max(1, Math.min(maxUnits, gridW));
-            gridH = Math.max(1, Math.min(maxUnits, gridH));
+			if (widgetData.type === 'sticker') {
+                // --- FREE RESIZING FOR STICKERS ---
+                
+                // 1. Maintain aspect ratio? (Optional, but usually expected for stickers)
+                // For "freely", we assume no aspect lock unless Shift is held, 
+                // but for simple UX, let's just let it stretch.
+                
+                // 2. Constraints (15px min, Viewport max)
+                newWidth = Math.max(15, Math.min(window.innerWidth - initialResizeWidgetX, newWidth));
+                newHeight = Math.max(15, Math.min(window.innerHeight - initialResizeWidgetY, newHeight));
 
-            const snappedWidth = (gridW * baseUnit) + ((gridW - 1) * MARGIN);
-            const snappedHeight = (gridH * baseUnit) + ((gridH - 1) * MARGIN);
-            
-            // --- Positional Adjustment and Boundary Enforcement ---
-            let finalX = initialResizeWidgetX;
-            let finalY = initialResizeWidgetY;
-
-            // If anchored right, adjust the 'left' position to grow inwards
-            if (isAnchoredRight) {
-                finalX = window.innerWidth - snappedWidth - MARGIN;
-            }
-            
-            // If anchored bottom, adjust the 'top' position to grow inwards
-            if (isAnchoredBottom) {
-                finalY = window.innerHeight - snappedHeight - MARGIN;
-            }
-
-            // Final clamp to ensure the widget never leaves the viewport
-            finalX = Math.max(MARGIN, Math.min(finalX, window.innerWidth - snappedWidth - MARGIN));
-            finalY = Math.max(MARGIN, Math.min(finalY, window.innerHeight - snappedHeight - MARGIN));
+                // 3. No Grid Calculation
+                instance.style.width = `${newWidth}px`;
+                instance.style.height = `${newHeight}px`;
+            } else {
+	            // --- Grid Snapping for Size ---
+	            const baseUnit = 200;
+	            const maxUnits = 4;
+	            let newWidth = initialWidgetW + (clientX - initialResizeMouseX);
+	            let newHeight = initialWidgetH + (clientY - initialResizeMouseY);
+	            
+	            let gridW = Math.round((newWidth + MARGIN) / (baseUnit + MARGIN));
+	            let gridH = Math.round((newHeight + MARGIN) / (baseUnit + MARGIN));
+	            gridW = Math.max(1, Math.min(maxUnits, gridW));
+	            gridH = Math.max(1, Math.min(maxUnits, gridH));
+	
+	            const snappedWidth = (gridW * baseUnit) + ((gridW - 1) * MARGIN);
+	            const snappedHeight = (gridH * baseUnit) + ((gridH - 1) * MARGIN);
+	            
+	            // --- Positional Adjustment and Boundary Enforcement ---
+	            let finalX = initialResizeWidgetX;
+	            let finalY = initialResizeWidgetY;
+	
+	            // If anchored right, adjust the 'left' position to grow inwards
+	            if (isAnchoredRight) {
+	                finalX = window.innerWidth - snappedWidth - MARGIN;
+	            }
+	            
+	            // If anchored bottom, adjust the 'top' position to grow inwards
+	            if (isAnchoredBottom) {
+	                finalY = window.innerHeight - snappedHeight - MARGIN;
+	            }
+				
+				// Final clamp to ensure the widget never leaves the viewport
+	            finalX = Math.max(MARGIN, Math.min(finalX, window.innerWidth - snappedWidth - MARGIN));
+	            finalY = Math.max(MARGIN, Math.min(finalY, window.innerHeight - snappedHeight - MARGIN));
+			};
 
             instance.style.width = `${snappedWidth}px`;
             instance.style.height = `${snappedHeight}px`;
@@ -1364,6 +1398,113 @@ function loadSavedData() {
 
 function saveLastOpenedData() {
     localStorage.setItem('appLastOpened', JSON.stringify(appLastOpened));
+}
+
+function setupStickerControls() {
+    const addBtn = document.getElementById('add-sticker-btn');
+    const popup = document.getElementById('sticker-settings-popup');
+    const fileInput = document.getElementById('sticker-file-input');
+    const fileBtn = document.getElementById('sticker-select-file-btn');
+    const borderSwitch = document.getElementById('sticker-border-switch');
+    const borderOptions = document.getElementById('sticker-border-options');
+    const createBtn = document.getElementById('sticker-create-btn');
+
+    if (!addBtn || !popup) return;
+
+    // Toggle Border Options visibility
+    borderSwitch.addEventListener('change', () => {
+        borderOptions.style.display = borderSwitch.checked ? 'flex' : 'none';
+    });
+
+    // Handle Button Click to show popup
+    addBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        // Use the existing logic to show popup (borrowed from existing codebase)
+        // We create a temporary container context similar to how other popups work
+        const controlPopup = document.querySelector('.control-popup');
+        const hiddenContainer = document.getElementById('hidden-controls-container');
+        
+        // Reset popup fields
+        fileInput.value = '';
+        fileBtn.textContent = 'Select Image';
+        borderSwitch.checked = false;
+        borderOptions.style.display = 'none';
+
+        if (controlPopup.style.display === 'block' && controlPopup.contains(popup)) {
+            controlPopup.style.display = 'none';
+            hiddenContainer.appendChild(popup);
+        } else {
+            // Move any existing content back
+            if (controlPopup.firstElementChild) {
+                hiddenContainer.appendChild(controlPopup.firstElementChild);
+            }
+            controlPopup.appendChild(popup);
+            
+            // Position near the button
+            const rect = addBtn.getBoundingClientRect();
+            controlPopup.style.display = 'block';
+            controlPopup.style.top = `${rect.bottom + 10}px`;
+            // Center horizontally relative to button, clamp to screen
+            let left = rect.left + (rect.width / 2) - 100; // Approx half popup width
+            controlPopup.style.left = `${Math.max(10, Math.min(window.innerWidth - 220, left))}px`;
+        }
+    });
+
+    // File Selection
+    fileBtn.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files[0]) {
+            fileBtn.textContent = fileInput.files[0].name;
+        }
+    });
+
+    // Create Action
+    createBtn.addEventListener('click', async () => {
+        if (!fileInput.files || !fileInput.files[0]) {
+            showPopup('Please select an image');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            const result = e.target.result; // Base64 string
+            
+            const isTransparent = document.getElementById('widget-transparent-switch').checked;
+            
+            const stickerData = {
+                type: 'sticker', // Distinct type
+                src: result,
+                border: borderSwitch.checked,
+                borderColor: document.getElementById('sticker-border-color').value,
+                borderWidth: document.getElementById('sticker-border-width').value,
+                transparent: isTransparent,
+                // Initial Size (will be refined by image aspect ratio in rendering if needed)
+                w: 150, 
+                h: 150,
+                x: 50,
+                y: 50
+            };
+
+            // Add to active widgets
+            activeWidgets.push(stickerData);
+            
+            // Hide popup
+            const controlPopup = document.querySelector('.control-popup');
+            const hiddenContainer = document.getElementById('hidden-controls-container');
+            controlPopup.style.display = 'none';
+            hiddenContainer.appendChild(popup);
+            
+            renderWidgets();
+            saveWidgets();
+            closeWidgetPicker();
+        };
+
+        reader.readAsDataURL(file);
+    });
 }
 
 /**
@@ -10085,6 +10226,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadSavedData();         // Load usage and lastOpened data
     loadRecentWallpapers();
     loadAvailableWidgets(); 
+	setupStickerControls();
     initializeWallpaperTracking();
 
     // --- Perform initial setup that depends on the loaded data ---
