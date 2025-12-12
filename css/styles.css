@@ -2994,6 +2994,10 @@ input[type="checkbox"]:checked::before {
     z-index: 1001;
 }
 
+.widget-instance.sticker-widget.widget-instance-overlay {
+	cursor: default;
+}
+
 .sticker-content {
     width: 100%;
     height: 100%;
@@ -3014,6 +3018,8 @@ input[type="checkbox"]:checked::before {
         drop-shadow(0 calc(var(--border-width) * -1) 0 var(--border-color))
 }
 
+.widget-instance.sticker-widget.is-dragging,
+.widget-instance.sticker:hover,
 .widget-resize-handle:hover .widget-instance.sticker-widget,
 .widget-resize-handle:active .widget-instance.sticker-widget {
 	background: var(--search-background);
