@@ -634,6 +634,30 @@
                 </select>
                 <input type="checkbox" id="gurapp-sounds-switch" checked> 
                 <button id="resetButton">RESET_BTN</button>
+                <div id="sticker-settings-popup" class="control-popup-content">
+                    <h4 style="margin: 0 0 10px 0; text-align: center;">New Sticker</h4>
+                    
+                    <input type="file" id="sticker-file-input" accept="image/png, image/jpeg, image/webp, image/gif" style="display: none;">
+                    <button id="sticker-select-file-btn" class="button-dialog" style="margin-bottom: 10px;">Photo</button>
+                    
+                    <div class="popup-control-row">
+                        <label for="sticker-border-switch">Border</label>
+                        <input type="checkbox" id="sticker-border-switch">
+                    </div>
+                    
+                    <div id="sticker-border-options" style="display: none; flex-direction: column; gap: 10px;">
+                        <div class="popup-control-row">
+                            <label>Color</label>
+                            <input type="color" id="sticker-border-color" value="#ffffff">
+                        </div>
+                        <div class="popup-control-row">
+                            <label>Width</label>
+                            <input type="range" id="sticker-border-width" min="1" max="10" value="3">
+                        </div>
+                    </div>
+            
+                    <button id="sticker-create-btn" class="button-dialog primary" style="margin-top: 10px;">Create Sticker</button>
+                </div>
             </div>
             <div class="version-info">
                 <label class="cust-label" for="version-details">
@@ -667,7 +691,11 @@
         </div>
         <div class="widget-drawer-header">
             <h2>Add Widget</h2>
-            <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button id="add-sticker-btn" class="drawer-header-button">
+                    <span class="material-symbols-rounded">sticker</span>
+                    Sticker
+                </button>
                 <label for="widget-transparent-switch" style="font-size: 14px; color: var(--text-color); cursor: pointer;">Transparency</label>
                 <input type="checkbox" id="widget-transparent-switch">
             </div>
