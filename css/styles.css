@@ -2987,7 +2987,6 @@ input[type="checkbox"]:checked::before {
 }
 
 .widget-instance.sticker-widget {
-    overflow: visible; /* Allow drop-shadows to bleed slightly if needed */
     z-index: 20; 
 }
 
@@ -3013,6 +3012,13 @@ input[type="checkbox"]:checked::before {
         drop-shadow(calc(var(--border-width) * -1) 0 0 var(--border-color))
         drop-shadow(0 var(--border-width) 0 var(--border-color))
         drop-shadow(0 calc(var(--border-width) * -1) 0 var(--border-color))
+}
+
+.widget-resize-handle:hover .widget-instance.sticker-widget,
+.widget-resize-handle:active .widget-instance.sticker-widget {
+	background: var(--search-background);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 }
 
 /* --- Widget Picker Drawer Styles --- */
