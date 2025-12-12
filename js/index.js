@@ -803,9 +803,6 @@ function renderWidgets() {
 
     // 1. Create and position all widget elements from the activeWidgets array
     activeWidgets.forEach((widget, index) => {
-        const widgetDef = availableWidgets[widget.appName]?.find(w => w.widgetId === widget.widgetId);
-        if (!widgetDef) return; // Skip rendering if definition is missing
-
         const instance = document.createElement('div');
         instance.className = 'widget-instance';
         instance.dataset.widgetIndex = index;
