@@ -3045,19 +3045,6 @@ input[type="checkbox"]:checked::before {
 	opacity: 1;
 }
 
-/* Add a visual connector line between handle and widget */
-.widget-rotate-handle::after {
-    content: '';
-    position: absolute;
-    top: 22px; /* Connect to top of handle */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 1px;
-    height: 10px; /* Reach down to the widget */
-    background: var(--glass-border);
-    z-index: -1;
-}
-
 .widget-instance.is-dragging,
 .widget-instance:hover,
 .widget-instance:has(.widget-resize-handle:hover), /* Parent contains hovered child */
