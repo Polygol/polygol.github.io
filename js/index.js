@@ -871,14 +871,115 @@ function renderWidgets() {
     // 2. Add interaction listeners to all newly created widgets
     widgetElements.forEach((instance, indexKey) => {
         const index = parseInt(indexKey);
-		const widgetData = activeWidgets[index]; // Get data to check type
+        const widgetData = activeWidgets[index]; 
         const overlay = instance.querySelector('.widget-instance-overlay');
         const resizeHandle = instance.querySelector('.widget-resize-handle');
+        
+        // --- 1. APPLY SAVED ROTATION ---
+        const currentRotation = widgetData.rotation || 0;
+        instance.style.transform = `rotate(${currentRotation}deg)`;
+
+        // --- 2. ADD ROTATION HANDLE (Stickers Only) ---
+        let rotateHandle;
+        if (widgetData.type === 'sticker') {
+            rotateHandle = document.createElement('div');
+            rotateHandle.className = 'widget-rotate-handle';
+            // Optional: Add an icon
+            rotateHandle.innerHTML = '<span class="material-symbols-rounded" style="font-size: 16px; pointer-events: none;">refresh</span>';
+            instance.appendChild(rotateHandle);
+        }
         
         let isDragging = false, longPressTimer, longPressFired = false;
         let initialMouseX, initialMouseY, initialWidgetX, initialWidgetY;
         const snapLineV = document.getElementById('snap-line-v');
         const snapLineH = document.getElementById('snap-line-h');
+
+        // --- 3. ROTATION LOGIC ---
+        let isRotating = false;
+        let initialRotation = 0;
+        let rotationStartAngle = 0;
+        let widgetCenter = { x: 0, y: 0 };
+
+        const onRotateStart = (e) => {
+            e.stopPropagation();
+            e.preventDefault(); // Prevent text selection
+            isRotating = true;
+            
+            // Allow styling parent during rotation
+            instance.classList.add('is-resizing'); // Reuse resizing style for interaction feedback
+
+            const rect = instance.getBoundingClientRect();
+            widgetCenter = {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            // Calculate initial angle of mouse relative to center (in radians)
+            rotationStartAngle = Math.atan2(clientY - widgetCenter.y, clientX - widgetCenter.x);
+            initialRotation = widgetData.rotation || 0;
+
+            document.addEventListener('mousemove', onRotateMove);
+            document.addEventListener('mouseup', onRotateEnd);
+            document.addEventListener('touchmove', onRotateMove, { passive: false });
+            document.addEventListener('touchend', onRotateEnd);
+        };
+
+        const onRotateMove = (e) => {
+            if (!isRotating) return;
+            e.preventDefault();
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            // Calculate current angle
+            const currentAngle = Math.atan2(clientY - widgetCenter.y, clientX - widgetCenter.x);
+            
+            // Difference in radians
+            const deltaAngle = currentAngle - rotationStartAngle;
+            
+            // Convert to degrees
+            const deltaDegrees = deltaAngle * (180 / Math.PI);
+            
+            let newRotation = initialRotation + deltaDegrees;
+
+            // Optional: Snap to 45 degree increments if Shift key is held (Desktop only)
+            if (e.shiftKey) {
+                newRotation = Math.round(newRotation / 45) * 45;
+            }
+
+            instance.style.transform = `rotate(${newRotation}deg)`;
+            
+            // Store temporarily on DOM for the end event to grab
+            instance.dataset.tempRotation = newRotation;
+        };
+
+        const onRotateEnd = () => {
+            if (!isRotating) return;
+            isRotating = false;
+            instance.classList.remove('is-resizing');
+
+            document.removeEventListener('mousemove', onRotateMove);
+            document.removeEventListener('mouseup', onRotateEnd);
+            document.removeEventListener('touchmove', onRotateMove);
+            document.removeEventListener('touchend', onRotateEnd);
+
+            // Save final rotation
+            const finalRotation = parseFloat(instance.dataset.tempRotation) || initialRotation;
+            const widgetToUpdate = activeWidgets[index];
+            if (widgetToUpdate) {
+                widgetToUpdate.rotation = finalRotation;
+                saveWidgets();
+            }
+        };
+
+        // Attach listeners
+        if (rotateHandle) {
+            rotateHandle.addEventListener('mousedown', onRotateStart);
+            rotateHandle.addEventListener('touchstart', onRotateStart, { passive: false });
+        }
 
         const onDragStart = (e) => {
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
