@@ -1097,6 +1097,9 @@ function renderWidgets() {
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
+			let newWidth = initialWidgetW + (clientX - initialResizeMouseX);
+            let newHeight = initialWidgetH + (clientY - initialResizeMouseY);
+
 			if (widgetData.type === 'sticker') {
                 // --- FREE RESIZING FOR STICKERS ---
                 
