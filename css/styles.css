@@ -2988,6 +2988,11 @@ input[type="checkbox"]:checked::before {
 
 .widget-instance.sticker-widget {
     overflow: visible; /* Allow drop-shadows to bleed slightly if needed */
+    z-index: 20; 
+}
+
+.widget-instance.sticker-widget.is-dragging {
+    z-index: 1001;
 }
 
 .sticker-content {
