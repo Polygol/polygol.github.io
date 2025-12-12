@@ -822,24 +822,29 @@ function renderWidgets() {
             instance.style.boxShadow = 'none';
         }
 
-        if (widget.type === 'sticker') {
+		if (widget.type === 'sticker') {
+            // --- STICKER WIDGET LOGIC ---
             instance.classList.add('sticker-widget');
             
             const img = document.createElement('img');
             img.src = widget.src;
             img.className = 'sticker-content';
             
+            // Apply border styles if enabled for this sticker
             if (widget.border) {
                 img.classList.add('has-border');
-                // Apply custom properties for the filter
                 img.style.setProperty('--border-color', widget.borderColor);
                 img.style.setProperty('--border-width', `${widget.borderWidth}px`);
             }
             
             instance.appendChild(img);
+
         } else {
-            // STANDARD APP WIDGET LOGIC
+            // --- STANDARD APP WIDGET LOGIC ---
+            // Look up the widget definition ONLY for non-sticker widgets.
             const widgetDef = availableWidgets[widget.appName]?.find(w => w.widgetId === widget.widgetId);
+            
+            // If the definition isn't found (e.g., app was uninstalled), skip rendering this widget.
             if (!widgetDef) return; 
 
             const iframe = document.createElement('iframe');
