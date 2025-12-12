@@ -927,7 +927,7 @@ function renderWidgets() {
             document.addEventListener('touchend', onRotateEnd);
         };
 
-        const onRotateMove = (e) => {
+		const onRotateMove = (e) => {
             if (!isRotating) return;
             e.preventDefault();
 
@@ -945,7 +945,16 @@ function renderWidgets() {
             
             let newRotation = initialRotation + deltaDegrees;
 
-            // Optional: Snap to 45 degree increments if Shift key is held (Desktop only)
+            // --- SNAP LOGIC ---
+            const snapThreshold = 5; // Degrees to snap within
+            const nearest90 = Math.round(newRotation / 90) * 90;
+            
+            // If we are close to a 90-degree angle (0, 90, 180, 270...), snap to it
+            if (Math.abs(newRotation - nearest90) < snapThreshold) {
+                newRotation = nearest90;
+            }
+
+            // Keep Shift key behavior for strict 45-degree increments
             if (e.shiftKey) {
                 newRotation = Math.round(newRotation / 45) * 45;
             }
