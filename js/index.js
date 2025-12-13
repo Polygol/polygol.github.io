@@ -1533,8 +1533,15 @@ function setupStickerControls() {
     const borderSwitch = document.getElementById('sticker-border-switch');
     const borderOptions = document.getElementById('sticker-border-options');
     const createBtn = document.getElementById('sticker-create-btn');
+    const transSwitch = document.getElementById('widget-transparent-switch');
+    const transLabel = document.querySelector('label[for="widget-transparent-switch"]');
 
     if (!addBtn || !popup) return;
+
+	// Prevent Transparency toggle from closing the popup
+    const stopProp = (e) => e.stopPropagation();
+    if (transSwitch) transSwitch.addEventListener('click', stopProp);
+    if (transLabel) transLabel.addEventListener('click', stopProp);
 
     // Toggle Border Options visibility
     borderSwitch.addEventListener('change', () => {
