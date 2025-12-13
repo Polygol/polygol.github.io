@@ -6213,6 +6213,14 @@ function loadRecentWallpapers() {
             wallpaper.clockStyles.clockFormat = 'H:mm:ss';
             updated = true;
         }
+		// Migration for new typography settings
+        if (wallpaper.clockStyles.letterSpacing === undefined) {
+            wallpaper.clockStyles.letterSpacing = '0';
+            wallpaper.clockStyles.textCase = 'none';
+            wallpaper.clockStyles.dateSize = '100';
+            wallpaper.clockStyles.dateOffset = '0';
+            updated = true;
+        }
     });
     
     if (updated) {
@@ -6983,6 +6991,10 @@ function switchWallpaper(direction) {
         if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
         if (glassSwitch) glassSwitch.checked = wallpaper.clockStyles.glassEnabled || false;
         if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
+        if (document.getElementById('clock-spacing-slider')) document.getElementById('clock-spacing-slider').value = wallpaper.clockStyles.letterSpacing || '0';
+        if (document.getElementById('text-case-select')) document.getElementById('text-case-select').value = wallpaper.clockStyles.textCase || 'none';
+        if (document.getElementById('date-size-slider')) document.getElementById('date-size-slider').value = wallpaper.clockStyles.dateSize || '100';
+        if (document.getElementById('date-offset-slider')) document.getElementById('date-offset-slider').value = wallpaper.clockStyles.dateOffset || '0';
         
         // Apply the styles
 		applyClockLayout();
