@@ -1990,6 +1990,10 @@ input[type="checkbox"]:checked::before {
     flex-grow: 1;
 }
 
+#sticker-settings-popup {
+    width: 200px;
+}
+
 #font-select option[value="Bricolage Grotesque"] { font-family: 'Bricolage Grotesque', sans-serif; }
 #font-select option[value="DynaPuff"] { font-family: 'DynaPuff', cursive; }
 #font-select option[value="Domine"] { font-family: 'Domine', serif; }
