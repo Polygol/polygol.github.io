@@ -496,7 +496,7 @@ function showCursorAndResetTimer() {
 const secondsSwitch = document.getElementById('seconds-switch');
 let appUsage = {};
 const weatherSwitch = document.getElementById('weather-switch');
-const MAX_RECENT_WALLPAPERS = 10;
+const MAX_RECENT_WALLPAPERS = 20;
 
 let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults to true
 let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults to true
@@ -1418,21 +1418,35 @@ function openWallpaperPicker() {
     if (!drawer || !grid || !content) return;
 
     closeControls();
-    content.scrollTop = 0; // Scroll to top
+    content.scrollTop = 0;
     grid.innerHTML = '';
 
-    // 1. Always add the Upload item first
+    // 1. Add Upload Item (Check Limit)
     const uploadItem = document.createElement('div');
     uploadItem.className = 'wallpaper-picker-item upload-item';
+    
+    // Check limit for visual feedback
+    const isFull = recentWallpapers.length >= MAX_RECENT_WALLPAPERS;
+    
     uploadItem.innerHTML = `
-        <div class="wallpaper-picker-thumbnail">
-            <span class="material-symbols-rounded">add</span>
+        <div class="wallpaper-picker-thumbnail" style="${isFull ? 'opacity: 0.5;' : ''}">
+            <span class="material-symbols-rounded">${isFull ? 'block' : 'add'}</span>
         </div>
-	    <span class="wallpaper-picker-title">${currentLanguage.UPLOAD_CUSTOM || 'Add from Files'}</span>
+        <span class="wallpaper-picker-title">${isFull ? 'Limit Reached' : (currentLanguage.UPLOAD_CUSTOM || 'Add')}</span>
     `;
+    
     uploadItem.addEventListener('click', () => {
-        uploadButton.click();
-        closeWallpaperPicker(); 
+        if (isFull) {
+            showDialog({ 
+                type: 'alert', 
+                title: 'Limit Reached', 
+                message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers. Delete some to add more.` 
+            });
+        } else {
+            // Trigger the external input
+            uploadButton.click(); 
+            closeWallpaperPicker(); 
+        }
     });
     grid.appendChild(uploadItem);
 
@@ -1492,6 +1506,8 @@ function closeWallpaperPicker() {
     setTimeout(() => {
         if (!drawer.classList.contains('open')) {
             drawer.style.display = 'none';
+            const grid = document.getElementById('wallpaper-picker-grid');
+            if (grid) grid.innerHTML = '';
         }
     }, 300);
 }
@@ -1630,6 +1646,64 @@ function setupStickerControls() {
         saveWidgets();
         closeWidgetPicker();
     });
+}
+
+async function exportCurrentWallpaper() {
+    if (recentWallpapers.length === 0) {
+        showPopup("No wallpaper to export");
+        return;
+    }
+
+    const current = recentWallpapers[currentWallpaperPosition];
+    
+    // Cannot export default/slideshow containers easily in this format logic
+    if (current.isSlideshow || !current.id) {
+        showPopup("Cannot export slideshows");
+        return;
+    }
+
+	showNotification('Preparing export', {
+		icon: 'ios_share',
+	});
+
+    try {
+        const dbRecord = await getWallpaper(current.id);
+        if (!dbRecord) throw new Error("Wallpaper data not found.");
+
+        // Convert Blob to Base64 for JSON storage
+        const base64Data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(dbRecord.blob || dataURLtoBlob(dbRecord.dataUrl));
+        });
+
+        const exportObject = {
+            version: "1.0",
+            type: "guraatmos",
+            wallpaperType: current.type,
+            isVideo: current.isVideo,
+            clockStyles: current.clockStyles,
+            widgetLayout: current.widgetLayout,
+            depthEnabled: current.depthEnabled,
+            depthDataUrl: dbRecord.depthDataUrl, // Already a base64 string if present
+            imageData: base64Data
+        };
+
+        const blob = new Blob([JSON.stringify(exportObject)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `wallpaper_${Date.now()}.guraatmos`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+    } catch (e) {
+        console.error("Export failed:", e);
+        showDialog({ type: 'alert', title: "Export Failed", message: e.message });
+    }
 }
 
 /**
@@ -2048,6 +2122,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const exportBtn = document.getElementById('wallpaper-export-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            closeWallpaperPicker(); // Close drawer first
+            exportCurrentWallpaper();
+        });
+    }
+	
     // Generic overlay click to close any active modal/drawer
     if (blurOverlay) {
         blurOverlay.addEventListener('click', () => {
@@ -5187,6 +5269,15 @@ function updateNightMode() {
 
 // Wallpaper upload functionality
 uploadButton.addEventListener("click", () => {
+    // Enforce Limit
+    if (recentWallpapers.length >= MAX_RECENT_WALLPAPERS) {
+        showDialog({ 
+            type: 'alert', 
+            title: 'Limit Reached', 
+            message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers. Please delete some before adding more.` 
+        });
+        return;
+    }
     wallpaperInput.click();
 });
 
@@ -5266,91 +5357,132 @@ async function getVideo() {
 }
 
 wallpaperInput.addEventListener("change", async event => {
-	closeWallpaperPicker(); // Close picker after a file is selected
+    closeWallpaperPicker();
     let files = Array.from(event.target.files);
     if (files.length === 0) return;
-    
+
+    // Check limit again if adding multiple files
+    if (recentWallpapers.length + files.length > MAX_RECENT_WALLPAPERS) {
+         showDialog({ type: 'alert', title: 'Limit Reached', message: `Cannot add ${files.length} files. Limit is ${MAX_RECENT_WALLPAPERS}.` });
+         return;
+    }
+
     try {
-        if (files.length === 1) {
+        let processedCount = 0;
+
+        for (let file of files) {
+            // --- NEW: Handle .guraatmos files ---
+            if (file.name.endsWith('.guraatmos')) {
+                const text = await file.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error("Invalid GuraAtmos file");
+                    continue;
+                }
+
+                if (data.type !== 'guraatmos' || !data.imageData) {
+                    continue; // Skip invalid files
+                }
+
+                const wallpaperId = `guraatmos_${Date.now()}_${Math.random()}`;
+                
+                // Convert Base64 back to Blob
+                const imageBlob = dataURLtoBlob(data.imageData);
+                const isVideo = data.isVideo || file.type.startsWith('video'); // Fallback logic
+
+                // Generate first frame if it's a video (and not provided in export, though export usually doesn't generate fresh frames on fly)
+                // For simplicity, we assume the export is an image or we handle video normally.
+                // If the exported file was a video, 'imageBlob' is that video file.
+                
+                let firstFrame = null;
+                if (data.wallpaperType.startsWith('image/gif') || data.wallpaperType.startsWith('image/webp')) {
+                     // Try to regenerate first frame for animated types
+                     try { firstFrame = await extractFirstFrame(imageBlob); } catch(e){}
+                }
+
+                const dbData = {
+                    blob: imageBlob,
+                    type: data.wallpaperType,
+                    clockStyles: data.clockStyles || {},
+                    widgetLayout: data.widgetLayout || [],
+                    depthDataUrl: data.depthDataUrl || null,
+                    depthEnabled: data.depthEnabled || false,
+                    firstFrameDataUrl: firstFrame,
+                    timestamp: Date.now()
+                };
+
+                await storeWallpaper(wallpaperId, dbData);
+
+                recentWallpapers.unshift({
+                    id: wallpaperId,
+                    type: data.wallpaperType,
+                    isVideo: data.isVideo,
+                    timestamp: Date.now(),
+                    clockStyles: data.clockStyles,
+                    widgetLayout: data.widgetLayout,
+                    depthEnabled: data.depthEnabled
+                });
+                
+                processedCount++;
+            } 
+            // --- Existing Logic for Standard Images/Videos ---
+            else if (["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "video/mp4"].includes(file.type)) {
+                // ... (Existing logic for storing blob/compression goes here) ...
+                // Re-implementing the core save logic briefly to fit the loop:
+                const wallpaperId = `wallpaper_${Date.now()}_${Math.random()}`;
+                const isVideo = file.type.startsWith("video/");
+                let dbData = { blob: file, type: file.type, clockStyles: resetAndApplyDefaultClockStyles(), widgetLayout: [] };
+                
+                if(!isVideo && file.type !== 'image/gif') {
+                     // Compress static images
+                     const compressed = await compressMedia(file);
+                     dbData = { dataUrl: compressed, type: file.type, clockStyles: resetAndApplyDefaultClockStyles(), widgetLayout: [] };
+                } else if (file.type === 'image/gif') {
+                     const ff = await extractFirstFrame(file);
+                     dbData.firstFrameDataUrl = ff;
+                }
+
+                await storeWallpaper(wallpaperId, dbData);
+                recentWallpapers.unshift({
+                    id: wallpaperId,
+                    type: file.type,
+                    isVideo: isVideo,
+                    timestamp: Date.now(),
+                    clockStyles: dbData.clockStyles,
+                    widgetLayout: []
+                });
+                processedCount++;
+            }
+        }
+
+        if (processedCount > 0) {
+            // Clean up old wallpapers if we somehow exceeded limit
+            while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
+                let removedWallpaper = recentWallpapers.pop();
+                if (removedWallpaper.id) await deleteWallpaper(removedWallpaper.id);
+            }
+
+            // Reset Slideshow mode
             localStorage.removeItem("wallpapers");
             clearInterval(slideshowInterval);
             slideshowInterval = null;
             isSlideshow = false;
-            
-            let file = files[0];
-            if (["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "video/mp4"].includes(file.type)) {
-                saveWallpaper(file);
-            } else {
-				showDialog({ 
-				    type: 'alert', 
-				    title: currentLanguage.WALLPAPER_UPDATE_FAIL 
-				});
-            }
+
+            saveRecentWallpapers();
+            currentWallpaperPosition = 0;
+            loadWidgets();
+            applyWallpaper();
+            showPopup(currentLanguage.WALLPAPER_UPDATED);
+            syncUiStates();
         } else {
-            let processedWallpapers = [];
-            for (let file of files) {
-                if (["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "video/mp4"].includes(file.type)) {
-                    const wallpaperId = `slideshow_${Date.now()}_${Math.random()}`;
-                    
-                    if (file.type.startsWith("video/")) {
-                        await storeWallpaper(wallpaperId, { blob: file, type: file.type });
-                        processedWallpapers.push({ id: wallpaperId, type: file.type, isVideo: true });
-                    } else if (file.type === 'image/gif' || file.type === 'image/webp') {
-                        const firstFrame = await extractFirstFrame(file);
-                        await storeWallpaper(wallpaperId, {
-                            blob: file,
-                            type: file.type,
-                            firstFrameDataUrl: firstFrame
-                        });
-                        processedWallpapers.push({ id: wallpaperId, type: file.type, isVideo: false });
-                    } else {
-                        let compressedData = await compressMedia(file);
-                        await storeWallpaper(wallpaperId, {
-                            dataUrl: compressedData,
-                            type: file.type
-                        });
-                        processedWallpapers.push({ id: wallpaperId, type: file.type, isVideo: false });
-                    }
-                }
-            }
-            
-	    if (processedWallpapers.length > 0) {
-	        // FIX: Reset clock styles to default for the new slideshow
-	        const defaultClockStyles = resetAndApplyDefaultClockStyles();
-	    
-	        localStorage.setItem("wallpapers", JSON.stringify(processedWallpapers));
-	        currentWallpaperIndex = 0;
-	        isSlideshow = true;
-	    
-	        recentWallpapers.unshift({
-	            isSlideshow: true,
-	            timestamp: Date.now(),
-	            clockStyles: defaultClockStyles, // Store default clock styles for slideshow
-	            widgetLayout: [] // Initialize an empty widget layout for the new slideshow
-	        });
-                
-                while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
-                    recentWallpapers.pop();
-                }
-                
-                saveRecentWallpapers();
-                currentWallpaperPosition = 0;
-                loadWidgets(); // Load the new empty widget layout
-                applyWallpaper();
-                showPopup(currentLanguage.MULTIPLE_WALLPAPERS_UPDATED);
-            } else {
-				showDialog({ 
-				    type: 'alert', 
-				    title: currentLanguage.NO_VALID_WALLPAPERS
-				});
-            }
+            showDialog({ type: 'alert', title: "No valid wallpapers imported." });
         }
+
     } catch (error) {
         console.error("Error handling wallpapers:", error);
-		showDialog({ 
-		    type: 'alert', 
-		    title: currentLanguage.WALLPAPER_SAVE_FAIL
-		});
+        showDialog({ type: 'alert', title: currentLanguage.WALLPAPER_SAVE_FAIL });
     }
 });
 
