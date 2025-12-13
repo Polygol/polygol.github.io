@@ -513,7 +513,7 @@
 
             <!-- All original controls are moved here and hidden -->
             <div id="hidden-controls-container" style="display: none;">
-                <input type="file" id="wallpaperInput" accept=".png, .jpeg, .jpg, .webp, .gif, .mp4" multiple>
+                <input type="file" id="wallpaperInput" accept=".png, .jpeg, .jpg, .webp, .gif, .mp4, .guraatmos" multiple>
                 <button id="uploadButton">Add</button>
                 <input type="range" min="0" max="20" value="0" class="wallpaper-effect-slider" id="wallpaper-blur-slider">
                 <input type="range" min="50" max="150" value="100" class="wallpaper-effect-slider" id="wallpaper-brightness-slider">
@@ -715,10 +715,16 @@
         </div>
         <div class="widget-drawer-header">
             <h2 data-lang-key="WALLPAPER">Wallpaper</h2>
-            <button id="wallpaper-submit-btn" class="drawer-header-button">
-                <span class="material-symbols-rounded">person_raised_hand</span>
-                Request
-            </button>
+            <div style="display: flex; gap: 15px;">
+                <button id="wallpaper-export-btn" class="drawer-header-button">
+                    <span class="material-symbols-rounded">ios_share</span>
+                    Export
+                </button>
+                <button id="wallpaper-submit-btn" class="drawer-header-button">
+                    <span class="material-symbols-rounded">person_raised_hand</span>
+                    Request
+                </button>
+            </div>
         </div>
         <div class="widget-drawer-content">
             <div id="wallpaper-picker-grid">
@@ -741,8 +747,6 @@
 
     <div id="dock" class="dock"></div>
     
-    <input type="file" id="wallpaperInput" accept=".jpg, .jpeg, .png">
-
     <div class="blur-overlay" id="blurOverlay"></div>
 
     <div class="blur-overlay" id="blurOverlayControls"></div>
