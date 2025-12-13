@@ -833,6 +833,10 @@ function renderWidgets() {
                 img.style.setProperty('--border-color', widget.borderColor);
                 img.style.setProperty('--border-width', `${widget.borderWidth}px`);
             }
+
+			if (widget.transparent) {
+                instance.style.overflow = 'visible';
+            }
             
             instance.appendChild(img);
 
