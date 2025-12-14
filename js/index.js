@@ -1864,9 +1864,12 @@ function updateSunEffect() {
 
 const originalUpdateSunEffect = updateSunEffect;
 updateSunEffect = function() {
-    originalUpdateSunEffect(); // Run original
-    // Add our update hook
-    EnvironmentManager.updateTimeEffect();
+    originalUpdateSunEffect(); // Run original shadow calculation
+    
+    // Add our update hook (Method name updated to match new Three.js manager)
+    if (EnvironmentManager.active && typeof EnvironmentManager.updateSunCycle === 'function') {
+        EnvironmentManager.updateSunCycle();
+    }
 };
 
 /**
