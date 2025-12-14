@@ -1906,54 +1906,51 @@ const EnvironmentManager = {
             // 1. DYNAMICALLY IMPORT MODULES
             const THREE = await import('three');
             const { Sky } = await import('three/addons/objects/Sky.js');
-            // Improved noise library for cloud generation
             const { createNoise3D } = await import('https://cdn.jsdelivr.net/npm/simplex-noise@4.0.1/+esm');
 
             const container = document.getElementById('environment-layer');
-            const overlay = document.getElementById('time-of-day-overlay'); // Using existing tinted overlay for extra blending
 
             // 2. SCENE SETUP
             const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 50000); // Massive depth
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 50000); 
             camera.position.set(0, 50, 200);
-            camera.lookAt(0, 300, 0); // Look slightly up
+            camera.lookAt(0, 300, 0); 
 
-            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false }); // Disable AA for perf on transparency
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.setClearColor(0x000000, 0);
             container.appendChild(renderer.domElement);
 
-            // 3. PEREZ SKY MODEL (Realistic Sun/Atmosphere)
-            const sky = new Sky();
+            // 3. SKY MODEL
+            const sky = new THREE.Sky(); // Changed from Sky() to THREE.Sky() or local ref depending on import
             sky.scale.setScalar(450000);
             scene.add(sky);
 
             const skyUniforms = sky.material.uniforms;
-            skyUniforms['turbidity'].value = 8;   // Air thickness/haze
-            skyUniforms['rayleigh'].value = 3;    // Blue separation
+            skyUniforms['turbidity'].value = 8;
+            skyUniforms['rayleigh'].value = 3;
             skyUniforms['mieCoefficient'].value = 0.005;
             skyUniforms['mieDirectionalG'].value = 0.7;
 
-            // 4. LIGHTING SYSTEM (Reacts to Sun)
-            // Hemispheric light simulates ground reflection + sky light
+            // 4. LIGHTING
             const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6); 
             scene.add(hemiLight);
 
             const sunLight = new THREE.DirectionalLight(0xffffff, 1);
             scene.add(sunLight);
 
-            // 5. CLOUD SYSTEM (Procedural Shaders)
-            // Generate Noise Texture
+            // 5. CLOUD SYSTEM
             const noise3D = createNoise3D();
-            const cloudTexture = this.generateCloudTexture(noise3D);
             
-            // Shader Material that simulates light passing through cloud
+            // FIX: Pass THREE object to function
+            const cloudTexture = this.generateCloudTexture(THREE, noise3D); 
+            
             const cloudMaterial = new THREE.ShaderMaterial({
                 uniforms: {
                     uMap: { value: cloudTexture },
                     uFogColor: { value: new THREE.Color(0xffffff) },
-                    uSunPosition: { value: new THREE.Vector3() }, // Linked to real sun
+                    uSunPosition: { value: new THREE.Vector3() },
                     uTime: { value: 0 },
                     uCloudColor: { value: new THREE.Color(0xffffff) }
                 },
@@ -1977,21 +1974,12 @@ const EnvironmentManager = {
                     void main() {
                         vec4 texColor = texture2D(uMap, vUv);
                         if(texColor.a < 0.05) discard;
-
-                        // Silver Lining Calculation
-                        // Calculate direction to sun
+                        
                         vec3 sunDir = normalize(uSunPosition);
                         vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-                        
-                        // How aligned is the view with the sun (0 to 1)
                         float sunViewDot = max(0.0, dot(sunDir, viewDir));
-                        
-                        // Boost rim light exponentially when looking near sun
                         float rim = pow(sunViewDot, 4.0) * 1.5; 
-                        
-                        // Combine base cloud color + Rim Light + Global tinting
-                        // Mix ambient greyness based on sun height
-                        float ambientFactor = max(0.2, sunDir.y); // Darker at night
+                        float ambientFactor = max(0.2, sunDir.y);
                         vec3 finalColor = uCloudColor * (ambientFactor + rim);
 
                         gl_FragColor = vec4(finalColor, texColor.a * (0.4 + rim * 0.2));
@@ -2002,24 +1990,16 @@ const EnvironmentManager = {
                 side: THREE.DoubleSide
             });
 
-            // Cloud Groups
             const clouds = [];
-            const cloudGeometry = new THREE.PlaneGeometry(800, 400); // Wide strips
+            const cloudGeometry = new THREE.PlaneGeometry(800, 400);
             
-            // Create "Banks" of clouds
             for(let i=0; i<15; i++) {
                 const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
-                
-                // Distribute on a slight dome
                 cloud.position.x = Math.random() * 6000 - 3000;
-                cloud.position.y = Math.random() * 500 + 400; // Horizon height
+                cloud.position.y = Math.random() * 500 + 400; 
                 cloud.position.z = -1000 - Math.random() * 2000; 
-                
                 cloud.scale.setScalar(Math.random() * 1.5 + 1);
-                
-                // Tilt to face player slightly for pseudo-volume
                 cloud.lookAt(0, -500, 0); 
-                
                 cloud.userData = { speed: Math.random() * 5 + 2 };
                 clouds.push(cloud);
                 scene.add(cloud);
@@ -2032,17 +2012,16 @@ const EnvironmentManager = {
                 sunPosition: new THREE.Vector3() 
             };
 
-            // Init rain/snow helpers using basic geometries but using physics scene
             this.initPrecipitation(THREE, scene);
 
             this.active = true;
-            this.updateSunCycle(); // Calc immediately
+            this.updateSunCycle();
             this.startLoop();
 
             window.addEventListener('resize', this.onResize.bind(this));
 
         } catch (e) {
-            console.error("Three.js/Sky module load failed. Are you offline?", e);
+            console.error("Three.js/Sky module load failed.", e);
         }
     },
 
@@ -2057,8 +2036,7 @@ const EnvironmentManager = {
         window.removeEventListener('resize', this.onResize);
     },
 
-    generateCloudTexture(noise3D) {
-        // High quality Perlin/Simplex noise texture
+    generateCloudTexture(THREE, noise3D) {
         const size = 512;
         const canvas = document.createElement('canvas');
         canvas.width = size;
@@ -2067,38 +2045,36 @@ const EnvironmentManager = {
         const imgData = ctx.createImageData(size, size);
         const data = imgData.data;
 
-        // Radial falloff center
         const cx = size / 2;
         const cy = size / 2;
 
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
                 const scale = 0.01;
-                // Layered Octaves of Noise
                 let n = 0;
                 n += noise3D(x * scale, y * scale, 0) * 1.0;
                 n += noise3D(x * scale * 2, y * scale * 2, 10) * 0.5;
                 n += noise3D(x * scale * 4, y * scale * 4, 20) * 0.25;
                 
-                // Circular mask (fade edges)
                 const dx = x - cx;
                 const dy = y - cy;
                 const dist = Math.sqrt(dx*dx + dy*dy);
-                const alpha = Math.max(0, 1 - (dist / (size * 0.5))); // Edge fade
+                const alpha = Math.max(0, 1 - (dist / (size * 0.5)));
 
-                // Flatten brightness
-                const c = Math.floor((n + 1) * 128); // Normalize -1..1 to 0..255
+                const c = Math.floor((n + 1) * 128); 
                 const cell = (x + y * size) * 4;
                 
                 data[cell] = 255;
                 data[cell + 1] = 255;
                 data[cell + 2] = 255;
-                data[cell + 3] = c * alpha * 0.8; // Apply softness
+                data[cell + 3] = c * alpha * 0.8; 
             }
         }
         ctx.putImageData(imgData, 0, 0);
-        const tex = new this.app.THREE.CanvasTexture(canvas);
-        tex.minFilter = this.app.THREE.LinearFilter; // Softer scaling
+        
+        // FIX: Use the passed THREE object directly
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.minFilter = THREE.LinearFilter;
         return tex;
     },
 
