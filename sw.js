@@ -40,7 +40,7 @@ const ASSETS_TO_CACHE = [
   'https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js',
   'https://esm.sh/trystero@0.15.1/torrent',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap',
   'https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Regular.woff2',
   'https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Medium.woff2',
