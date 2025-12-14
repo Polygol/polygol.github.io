@@ -1891,68 +1891,54 @@ function broadcastSunUpdate() {
 
 const EnvironmentManager = {
     active: false,
-    app: null, // holds Three.js refs
+    app: null, 
     weatherType: 'clear', 
     
-    // Config
-    maxParticles: 3000,
-
     async init() {
         if (this.app) return;
 
         try {
             console.log("[Env] Booting Physics-Based Sky...");
             
-            // 1. DYNAMICALLY IMPORT MODULES
-            // Note: Map 'three' and 'three/addons/' in your HTML <script type="importmap"> first
             const THREE = await import('three');
-            const { Sky } = await import('three/addons/objects/Sky.js');
             const { createNoise3D } = await import('https://cdn.jsdelivr.net/npm/simplex-noise@4.0.1/+esm');
 
             const container = document.getElementById('environment-layer');
 
-            // 2. SCENE SETUP
+            // 1. SCENE SETUP
             const scene = new THREE.Scene();
+            // Create a camera with a wide field of view
             const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 50000); 
             camera.position.set(0, 50, 200);
             camera.lookAt(0, 300, 0); 
 
+            // IMPORTANT: setClearColor alpha to 0 for transparency
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.setClearColor(0x000000, 0);
+            renderer.setClearColor(0x000000, 0); // Transparent background
             container.appendChild(renderer.domElement);
 
-            // 3. SKY MODEL
-            // FIX: Use 'new Sky()', NOT 'new THREE.Sky()'
-            const sky = new Sky(); 
-            sky.scale.setScalar(450000);
-            scene.add(sky);
+            // 2. REMOVED SKY MESH (Fixed gray screen issue)
+            // The Sky mesh is opaque and blocks the wallpaper. We will simulate sky color
+            // via the HTML #time-of-day-overlay and lighting.
 
-            const skyUniforms = sky.material.uniforms;
-            skyUniforms['turbidity'].value = 8;
-            skyUniforms['rayleigh'].value = 3;
-            skyUniforms['mieCoefficient'].value = 0.005;
-            skyUniforms['mieDirectionalG'].value = 0.7;
-
-            // 4. LIGHTING
+            // 3. LIGHTING (Reacts to SunCalc)
             const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6); 
             scene.add(hemiLight);
 
             const sunLight = new THREE.DirectionalLight(0xffffff, 1);
             scene.add(sunLight);
 
-            // 5. CLOUD SYSTEM
+            // 4. CLOUD SYSTEM
             const noise3D = createNoise3D();
+            const cloudTexture = this.generateCloudTexture(THREE, noise3D);
             
-            // Pass THREE context to the generator
-            const cloudTexture = this.generateCloudTexture(THREE, noise3D); 
-            
+            // Volumetric Cloud Shader
             const cloudMaterial = new THREE.ShaderMaterial({
                 uniforms: {
                     uMap: { value: cloudTexture },
-                    uFogColor: { value: new THREE.Color(0xffffff) },
-                    uSunPosition: { value: new THREE.Vector3() },
+                    uSunPosition: { value: new THREE.Vector3(0, 1, 0) },
                     uTime: { value: 0 },
                     uCloudColor: { value: new THREE.Color(0xffffff) }
                 },
@@ -1975,16 +1961,22 @@ const EnvironmentManager = {
 
                     void main() {
                         vec4 texColor = texture2D(uMap, vUv);
-                        if(texColor.a < 0.05) discard;
+                        if(texColor.a < 0.01) discard; // Hard cut for performance
                         
+                        // Lighting Calculation
                         vec3 sunDir = normalize(uSunPosition);
                         vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+                        
+                        // "Silver Lining" effect (Backlighting)
                         float sunViewDot = max(0.0, dot(sunDir, viewDir));
-                        float rim = pow(sunViewDot, 4.0) * 1.5; 
-                        float ambientFactor = max(0.2, sunDir.y);
-                        vec3 finalColor = uCloudColor * (ambientFactor + rim);
+                        float rim = pow(sunViewDot, 12.0) * 4.0; // Sharp bright rim
+                        
+                        // Diffuse lighting (Day vs Night darkness)
+                        float lightStrength = max(0.3, sunDir.y); // Darker base at night
+                        vec3 finalColor = uCloudColor * (lightStrength + rim * 0.5);
 
-                        gl_FragColor = vec4(finalColor, texColor.a * (0.4 + rim * 0.2));
+                        // Output color with Rim light alpha boost
+                        gl_FragColor = vec4(finalColor, texColor.a * (0.6 + rim * 0.4));
                     }
                 `,
                 transparent: true,
@@ -1993,23 +1985,27 @@ const EnvironmentManager = {
             });
 
             const clouds = [];
-            const cloudGeometry = new THREE.PlaneGeometry(800, 400);
+            const cloudGeometry = new THREE.PlaneGeometry(1000, 500);
             
+            // Create Cloud Banks
             for(let i=0; i<15; i++) {
                 const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
-                cloud.position.x = Math.random() * 6000 - 3000;
-                cloud.position.y = Math.random() * 500 + 400; 
-                cloud.position.z = -1000 - Math.random() * 2000; 
-                cloud.scale.setScalar(Math.random() * 1.5 + 1);
-                cloud.lookAt(0, -500, 0); 
-                cloud.userData = { speed: Math.random() * 5 + 2 };
+                // Distribute in a semi-circle horizon
+                cloud.position.x = (Math.random() - 0.5) * 4000;
+                cloud.position.y = Math.random() * 400 + 300; 
+                cloud.position.z = -1500 - Math.random() * 1000; 
+                
+                cloud.scale.setScalar(Math.random() * 2 + 1);
+                cloud.lookAt(0, 0, 0); // Face center
+                
+                cloud.userData = { speed: Math.random() * 2 + 0.5 };
                 clouds.push(cloud);
                 scene.add(cloud);
             }
 
-            // 6. STORE REF
+            // 5. STORE STATE
             this.app = { 
-                THREE, renderer, scene, camera, sky, skyUniforms, 
+                THREE, renderer, scene, camera, 
                 sunLight, hemiLight, clouds, cloudMaterial, 
                 sunPosition: new THREE.Vector3() 
             };
@@ -2018,28 +2014,37 @@ const EnvironmentManager = {
 
             this.active = true;
             this.updateSunCycle();
+            this.updateWeatherEffect(); // Initial check
             this.startLoop();
 
             window.addEventListener('resize', this.onResize.bind(this));
 
         } catch (e) {
-            console.error("Three.js/Sky module load failed.", e);
+            console.error("Three.js init failed:", e);
         }
     },
 
     destroy() {
         if (this.app) {
+            // Cleanup WebGL context
             this.app.renderer.dispose();
             this.app.renderer.domElement.remove();
+            
+            // Reset Overlay
+            const overlay = document.getElementById('time-of-day-overlay');
+            if(overlay) {
+                overlay.style.backgroundColor = 'transparent';
+                overlay.style.opacity = 0;
+            }
             this.app = null;
-            document.getElementById('time-of-day-overlay').style.backgroundColor = 'transparent';
         }
         this.active = false;
+        document.body.classList.remove('heavy-weather');
         window.removeEventListener('resize', this.onResize);
     },
 
     generateCloudTexture(THREE, noise3D) {
-        const size = 512;
+        const size = 256; // Reduced texture size for perf
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
@@ -2052,29 +2057,30 @@ const EnvironmentManager = {
 
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
-                const scale = 0.01;
-                let n = 0;
-                n += noise3D(x * scale, y * scale, 0) * 1.0;
-                n += noise3D(x * scale * 2, y * scale * 2, 10) * 0.5;
-                n += noise3D(x * scale * 4, y * scale * 4, 20) * 0.25;
-                
+                // Circular falloff
                 const dx = x - cx;
                 const dy = y - cy;
                 const dist = Math.sqrt(dx*dx + dy*dy);
-                const alpha = Math.max(0, 1 - (dist / (size * 0.5)));
+                const alpha = Math.max(0, 1 - (dist / (size * 0.45))); // Soft edge
 
-                const c = Math.floor((n + 1) * 128); 
-                const cell = (x + y * size) * 4;
-                
-                data[cell] = 255;
-                data[cell + 1] = 255;
-                data[cell + 2] = 255;
-                data[cell + 3] = c * alpha * 0.8; 
+                if (alpha > 0) {
+                    const scale = 0.02;
+                    // FBM Noise
+                    let n = noise3D(x * scale, y * scale, 0);
+                    n += 0.5 * noise3D(x * scale * 2, y * scale * 2, 10);
+                    
+                    const c = Math.floor(Math.max(0, n + 0.5) * 255); // Cloud whiteness
+                    
+                    const cell = (x + y * size) * 4;
+                    data[cell] = 255;
+                    data[cell + 1] = 255;
+                    data[cell + 2] = 255;
+                    data[cell + 3] = c * alpha; 
+                }
             }
         }
         ctx.putImageData(imgData, 0, 0);
         
-        // FIX: Use the passed THREE object directly
         const tex = new THREE.CanvasTexture(canvas);
         tex.minFilter = THREE.LinearFilter;
         return tex;
@@ -2082,138 +2088,103 @@ const EnvironmentManager = {
 
     initPrecipitation(THREE, scene) {
         const geometry = new THREE.BufferGeometry();
-        const count = 5000;
+        const count = 4000;
         const positions = [];
-        // Removed unused velocities array to save memory as calculation is done in loop
-        // const velocities = []; 
 
         for (let i = 0; i < count; i++) {
-            positions.push((Math.random() - 0.5) * 4000); // X
+            positions.push((Math.random() - 0.5) * 3000); // X
             positions.push(Math.random() * 2000);         // Y
-            positions.push((Math.random() - 0.5) * 2000 - 500); // Z
+            positions.push((Math.random() - 0.5) * 1500 - 500); // Z
         }
 
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         
-        // Create Materials
         this.rainMat = new THREE.PointsMaterial({
             color: 0xaaaaaa, size: 3, transparent: true, opacity: 0.8,
             blending: THREE.AdditiveBlending, depthWrite: false
         });
         
-        // Need THREE to generate snow texture here
         this.snowMat = new THREE.PointsMaterial({
-            color: 0xffffff, size: 8, transparent: true, opacity: 0.9,
-            map: this.generateSnowTexture(THREE),
+            color: 0xffffff, size: 6, transparent: true, opacity: 0.9,
             blending: THREE.AdditiveBlending, depthWrite: false
         });
 
-        // Initialize System
-        const precipSystem = new THREE.Points(geometry, this.rainMat);
-        precipSystem.visible = false;
-        scene.add(precipSystem);
-
-        // FIX: Explicitly attach to the app state object so updateWeatherEffect can find it
-        if (this.app) {
-            this.app.precipSystem = precipSystem;
-        }
-    },
-	
-    generateSnowTexture(THREE) {
-        const c = document.createElement('canvas');
-        c.width=32; c.height=32;
-        const x = c.getContext('2d');
-        x.fillStyle='white';
-        x.beginPath(); x.arc(16,16,10,0,Math.PI*2); x.fill();
-        return new THREE.CanvasTexture(c);
+        // Initialize System attached to app
+        this.app.precipSystem = new THREE.Points(geometry, this.rainMat);
+        this.app.precipSystem.visible = false;
+        scene.add(this.app.precipSystem);
     },
 
     updateSunCycle() {
-        if (!this.app || !this.app.THREE) return;
+        if (!this.app) return;
         
-        // 1. Calculate Real Sun Position (Physics Based)
         const now = new Date();
-        const THREE = this.app.THREE;
-        
-        // Geo fallback
+        // Fallback lat/lon (Timezone guess could go here)
         let lat = 40, lon = -74; 
         
-        // SunCalc calculation
+        // SunCalc to get physical position
         const sunPos = SunCalc.getPosition(now, lat, lon);
-        const phi = Math.PI / 2 - sunPos.altitude; // Elevation -> Phi
-        const theta = sunPos.azimuth; // Azimuth -> Theta
+        const phi = Math.PI / 2 - sunPos.altitude;
+        const theta = sunPos.azimuth;
 
-        // Convert spherical coordinates to 3D Cartesian
-        // We set the Sun vector very far away (r = 450000 like sky scale)
-        const r = 450000;
+        // Convert to Vector3
+        const r = 5000;
         const x = r * Math.sin(phi) * Math.cos(theta);
-        const y = r * Math.cos(phi); // Y is UP in Three.js
+        const y = r * Math.cos(phi);
         const z = r * Math.sin(phi) * Math.sin(theta);
 
-        const sunVec = new THREE.Vector3(x, y, z);
+        const sunVec = new this.app.THREE.Vector3(x, y, z);
         this.app.sunPosition.copy(sunVec);
 
-        // 2. Update Sky Shader
-        this.app.sky.material.uniforms['sunPosition'].value.copy(sunVec);
-
-        // 3. Update Scene Lighting
+        // Update Scene Lighting
         const sunNorm = sunVec.clone().normalize();
         this.app.sunLight.position.copy(sunNorm);
         
-        // Set Cloud shader uniforms
+        // Update Cloud Shader
         if (this.app.cloudMaterial) {
             this.app.cloudMaterial.uniforms['uSunPosition'].value.copy(sunNorm);
         }
 
-        // 4. Update Tint Overlay (HTML) based on Physics output
-        // The Rayleigh shader doesn't effect the HTML elements, so we do a simple
-        // approximation for the UI layers.
+        // HTML Overlay Tint (Day/Night cycle on the 2D background)
         const elevation = sunPos.altitude * (180/Math.PI);
         const overlay = document.getElementById('time-of-day-overlay');
         
-        if (elevation < -5) {
-            // Night
+        // Colors for HTML overlay (The background behind clouds)
+        if (elevation < -5) { // Night
             overlay.style.backgroundColor = '#000022'; 
             overlay.style.opacity = 0.5;
-            this.app.hemiLight.intensity = 0.1;
-            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0x111122);
-        } else if (elevation < 10) {
-            // Sunset / Sunrise (Red/Orange/Golden)
-            overlay.style.backgroundColor = '#ff5500';
-            overlay.style.opacity = 0.2;
-            this.app.hemiLight.intensity = 0.5;
-            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0xffaa77);
-        } else {
-            // Day
+            this.app.hemiLight.intensity = 0.2; // Dim 3D scene
+            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0x334466);
+        } else if (elevation < 10) { // Sunset/Sunrise
+            overlay.style.backgroundColor = '#ff6600';
+            overlay.style.opacity = 0.3;
+            this.app.hemiLight.intensity = 0.6;
+            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0xffaa88); // Pink/Orange Clouds
+        } else { // Day
             overlay.style.backgroundColor = '#ffffff';
             overlay.style.opacity = 0;
             this.app.hemiLight.intensity = 1.0;
-            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0xffffff);
+            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0xffffff); // White Clouds
         }
     },
 
     updateWeatherEffect() {
-        // Defensive check: Ensure app and precipitation system exist before accessing
         if (!this.app || !this.app.precipSystem) return;
         
         const saved = localStorage.getItem('lastWeatherData');
         let code = 0;
         if(saved) try{code=JSON.parse(saved).current.weathercode}catch(e){}
 
-        // Determine Mode
-        // Rain: 51-67, 80-82, 95+
-        let isRain = (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
-        // Snow: 71-77, 85-86
-        let isSnow = (code >= 71 && code <= 77) || (code >= 85 && code <= 86);
-        let isClouds = (code >= 1 && code <= 48) || isRain || isSnow;
+        // Map Codes
+        const isRain = (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
+        const isSnow = (code >= 71 && code <= 77) || (code >= 85 && code <= 86);
+        // Force clouds if precipitating or code says cloudy
+        const isClouds = (code >= 1 && code <= 48) || isRain || isSnow;
 
-        // Visibility
-        if(this.app.clouds) {
-            this.app.clouds.forEach(c => c.visible = isClouds);
-        }
+        // Apply
+        this.app.clouds.forEach(c => c.visible = isClouds);
         
         this.app.precipSystem.visible = (isRain || isSnow);
-        
         if (isRain) {
             this.app.precipSystem.material = this.rainMat;
             this.weatherType = 'rain';
@@ -2241,34 +2212,33 @@ const EnvironmentManager = {
 
             const { renderer, scene, camera, cloudMaterial, precipSystem, clouds } = this.app;
             
-            // Shader Time
-            if(cloudMaterial) cloudMaterial.uniforms['uTime'].value += 0.01;
+            // Cloud Shader Time
+            if(cloudMaterial) cloudMaterial.uniforms['uTime'].value += 0.005;
 
-            // Animate Clouds
+            // Animate Cloud Movement
             clouds.forEach(c => {
                 if(c.visible) {
                     c.position.x -= c.userData.speed; 
-                    // Reset if out of bounds
-                    if (c.position.x < -4000) c.position.x = 4000;
+                    if (c.position.x < -3000) c.position.x = 3000; // Loop
                 }
             });
 
-            // Animate Precip
+            // Animate Rain/Snow
             if (precipSystem && precipSystem.visible) {
                 const pos = precipSystem.geometry.attributes.position.array;
                 const isRain = this.weatherType === 'rain';
                 const speed = isRain ? 15 : 2;
 
                 for(let i=1; i<pos.length; i+=3) {
-                    pos[i] -= speed; // Y Down
+                    pos[i] -= speed; // Fall Down
                     
-                    if (!isRain) { // Wiggle Snow
-                        pos[i-1] -= Math.sin(Date.now()*0.001 + i) * 0.1;
-                    }
+                    // Simple wind wiggle for snow
+                    if (!isRain) pos[i-1] -= Math.sin(Date.now()*0.002 + i) * 0.2;
 
+                    // Reset when below screen
                     if (pos[i] < -200) {
-                        pos[i] = 1000; // Reset height
-                        pos[i-1] = (Math.random()-0.5)*4000; // Random X
+                        pos[i] = 1000;
+                        pos[i-1] = (Math.random()-0.5)*3000;
                     }
                 }
                 precipSystem.geometry.attributes.position.needsUpdate = true;
@@ -2278,7 +2248,7 @@ const EnvironmentManager = {
         };
         loop();
         
-        // Sun cycle update every 60s
+        // Refresh sun pos every 60s
         setInterval(() => this.updateSunCycle(), 60000);
     }
 };
