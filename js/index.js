@@ -1888,363 +1888,406 @@ function broadcastSunUpdate() {
 
 const EnvironmentManager = {
     active: false,
-    scene: null,
-    camera: null,
-    renderer: null,
-    clock: null,
-    
-    // Components
-    clouds: [],
-    rainSystem: null,
-    snowSystem: null,
-    ambientLight: null,
-    directionalLight: null,
+    app: null, // holds Three.js refs
+    weatherType: 'clear', 
     
     // Config
-    weatherType: 'clear', // clear, clouds, rain, snow
-    cloudTexture: null, // Generated dynamically
+    maxParticles: 3000,
 
     async init() {
-        if (this.scene) return;
+        if (this.app) return;
 
         try {
-            console.log("[Env] Initializing Realistic Scene...");
+            console.log("[Env] Booting Physics-Based Sky...");
+            
+            // 1. DYNAMICALLY IMPORT MODULES
+            const THREE = await import('three');
+            const { Sky } = await import('three/addons/objects/Sky.js');
+            // Improved noise library for cloud generation
+            const { createNoise3D } = await import('https://cdn.jsdelivr.net/npm/simplex-noise@4.0.1/+esm');
+
             const container = document.getElementById('environment-layer');
+            const overlay = document.getElementById('time-of-day-overlay'); // Using existing tinted overlay for extra blending
+
+            // 2. SCENE SETUP
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 50000); // Massive depth
+            camera.position.set(0, 50, 200);
+            camera.lookAt(0, 300, 0); // Look slightly up
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false }); // Disable AA for perf on transparency
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setClearColor(0x000000, 0);
+            container.appendChild(renderer.domElement);
+
+            // 3. PEREZ SKY MODEL (Realistic Sun/Atmosphere)
+            const sky = new Sky();
+            sky.scale.setScalar(450000);
+            scene.add(sky);
+
+            const skyUniforms = sky.material.uniforms;
+            skyUniforms['turbidity'].value = 8;   // Air thickness/haze
+            skyUniforms['rayleigh'].value = 3;    // Blue separation
+            skyUniforms['mieCoefficient'].value = 0.005;
+            skyUniforms['mieDirectionalG'].value = 0.7;
+
+            // 4. LIGHTING SYSTEM (Reacts to Sun)
+            // Hemispheric light simulates ground reflection + sky light
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6); 
+            scene.add(hemiLight);
+
+            const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+            scene.add(sunLight);
+
+            // 5. CLOUD SYSTEM (Procedural Shaders)
+            // Generate Noise Texture
+            const noise3D = createNoise3D();
+            const cloudTexture = this.generateCloudTexture(noise3D);
             
-            // 1. Setup Three.js
-            this.scene = new THREE.Scene();
+            // Shader Material that simulates light passing through cloud
+            const cloudMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    uMap: { value: cloudTexture },
+                    uFogColor: { value: new THREE.Color(0xffffff) },
+                    uSunPosition: { value: new THREE.Vector3() }, // Linked to real sun
+                    uTime: { value: 0 },
+                    uCloudColor: { value: new THREE.Color(0xffffff) }
+                },
+                vertexShader: `
+                    varying vec2 vUv;
+                    varying vec3 vWorldPosition;
+                    void main() {
+                        vUv = uv;
+                        vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                        vWorldPosition = worldPos.xyz;
+                        gl_Position = projectionMatrix * viewMatrix * worldPos;
+                    }
+                `,
+                fragmentShader: `
+                    uniform sampler2D uMap;
+                    uniform vec3 uSunPosition;
+                    uniform vec3 uCloudColor;
+                    varying vec2 vUv;
+                    varying vec3 vWorldPosition;
+
+                    void main() {
+                        vec4 texColor = texture2D(uMap, vUv);
+                        if(texColor.a < 0.05) discard;
+
+                        // Silver Lining Calculation
+                        // Calculate direction to sun
+                        vec3 sunDir = normalize(uSunPosition);
+                        vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+                        
+                        // How aligned is the view with the sun (0 to 1)
+                        float sunViewDot = max(0.0, dot(sunDir, viewDir));
+                        
+                        // Boost rim light exponentially when looking near sun
+                        float rim = pow(sunViewDot, 4.0) * 1.5; 
+                        
+                        // Combine base cloud color + Rim Light + Global tinting
+                        // Mix ambient greyness based on sun height
+                        float ambientFactor = max(0.2, sunDir.y); // Darker at night
+                        vec3 finalColor = uCloudColor * (ambientFactor + rim);
+
+                        gl_FragColor = vec4(finalColor, texColor.a * (0.4 + rim * 0.2));
+                    }
+                `,
+                transparent: true,
+                depthWrite: false,
+                side: THREE.DoubleSide
+            });
+
+            // Cloud Groups
+            const clouds = [];
+            const cloudGeometry = new THREE.PlaneGeometry(800, 400); // Wide strips
             
-            // Camera covers full screen
-            this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 10000);
-            this.camera.position.z = 1000;
-            this.scene.add(this.camera);
+            // Create "Banks" of clouds
+            for(let i=0; i<15; i++) {
+                const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+                
+                // Distribute on a slight dome
+                cloud.position.x = Math.random() * 6000 - 3000;
+                cloud.position.y = Math.random() * 500 + 400; // Horizon height
+                cloud.position.z = -1000 - Math.random() * 2000; 
+                
+                cloud.scale.setScalar(Math.random() * 1.5 + 1);
+                
+                // Tilt to face player slightly for pseudo-volume
+                cloud.lookAt(0, -500, 0); 
+                
+                cloud.userData = { speed: Math.random() * 5 + 2 };
+                clouds.push(cloud);
+                scene.add(cloud);
+            }
 
-            // Lighting (Key for realistic Time of Day)
-            this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
-            this.scene.add(this.ambientLight);
+            // 6. STORE REF
+            this.app = { 
+                THREE, renderer, scene, camera, sky, skyUniforms, 
+                sunLight, hemiLight, clouds, cloudMaterial, 
+                sunPosition: new THREE.Vector3() 
+            };
 
-            this.directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-            this.directionalLight.position.set(0, 1, 0); // High noon default
-            this.scene.add(this.directionalLight);
+            // Init rain/snow helpers using basic geometries but using physics scene
+            this.initPrecipitation(THREE, scene);
 
-            // Renderer with transparency
-            this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.renderer.setClearColor(0x000000, 0); // Transparent back
-            
-            container.appendChild(this.renderer.domElement);
-            this.clock = new THREE.Clock();
-
-            // 2. Generate Assets
-            this.cloudTexture = this.generateCloudTexture();
-
-            // 3. Initialize Systems (Hidden by default)
-            this.initClouds();
-            this.initRain();
-            this.initSnow();
-
-            // 4. State
             this.active = true;
+            this.updateSunCycle(); // Calc immediately
             this.startLoop();
-            
-            // 5. Initial Updates
-            this.updateTimeEffect();
-            this.updateWeatherEffect();
 
-            // Handle Resize
             window.addEventListener('resize', this.onResize.bind(this));
 
         } catch (e) {
-            console.error("[Env] Three.js Init Failed:", e);
+            console.error("Three.js/Sky module load failed. Are you offline?", e);
         }
     },
 
     destroy() {
-        if (this.renderer) {
-            this.renderer.domElement.remove();
-            this.renderer.dispose();
-            this.renderer = null;
-            this.scene = null;
-            this.active = false;
-            document.body.classList.remove('heavy-weather');
-            
-            const overlay = document.getElementById('time-of-day-overlay');
-            if(overlay) overlay.style.opacity = 0;
+        if (this.app) {
+            this.app.renderer.dispose();
+            this.app.renderer.domElement.remove();
+            this.app = null;
+            document.getElementById('time-of-day-overlay').style.backgroundColor = 'transparent';
         }
+        this.active = false;
+        window.removeEventListener('resize', this.onResize);
     },
 
-    // creates a soft smoke-like texture programmatically
-    generateCloudTexture() {
+    generateCloudTexture(noise3D) {
+        // High quality Perlin/Simplex noise texture
+        const size = 512;
         const canvas = document.createElement('canvas');
-        canvas.width = 32;
-        canvas.height = 32;
+        canvas.width = size;
+        canvas.height = size;
         const ctx = canvas.getContext('2d');
-        
-        // Radial gradient for soft cloud particle
-        const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-        grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-        grad.addColorStop(0.4, 'rgba(255, 255, 255, 0.6)');
-        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 32, 32);
+        const imgData = ctx.createImageData(size, size);
+        const data = imgData.data;
 
-        const tex = new THREE.CanvasTexture(canvas);
-        tex.magFilter = THREE.LinearFilter;
-        tex.minFilter = THREE.LinearFilter;
+        // Radial falloff center
+        const cx = size / 2;
+        const cy = size / 2;
+
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                const scale = 0.01;
+                // Layered Octaves of Noise
+                let n = 0;
+                n += noise3D(x * scale, y * scale, 0) * 1.0;
+                n += noise3D(x * scale * 2, y * scale * 2, 10) * 0.5;
+                n += noise3D(x * scale * 4, y * scale * 4, 20) * 0.25;
+                
+                // Circular mask (fade edges)
+                const dx = x - cx;
+                const dy = y - cy;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                const alpha = Math.max(0, 1 - (dist / (size * 0.5))); // Edge fade
+
+                // Flatten brightness
+                const c = Math.floor((n + 1) * 128); // Normalize -1..1 to 0..255
+                const cell = (x + y * size) * 4;
+                
+                data[cell] = 255;
+                data[cell + 1] = 255;
+                data[cell + 2] = 255;
+                data[cell + 3] = c * alpha * 0.8; // Apply softness
+            }
+        }
+        ctx.putImageData(imgData, 0, 0);
+        const tex = new this.app.THREE.CanvasTexture(canvas);
+        tex.minFilter = this.app.THREE.LinearFilter; // Softer scaling
         return tex;
     },
 
-    initClouds() {
-        // Create a massive group of sprite-like planes to simulate volume
-        const cloudGeo = new THREE.PlaneGeometry(500, 500);
-        
-        // This material reacts to Lights, allowing realistic sunset/night coloring
-        const cloudMat = new THREE.MeshLambertMaterial({
-            map: this.cloudTexture,
-            transparent: true,
-            opacity: 0.3,
-            depthWrite: false,
-            side: THREE.DoubleSide
-        });
+    initPrecipitation(THREE, scene) {
+        // Shared geometry for rain/snow
+        const geometry = new THREE.BufferGeometry();
+        const count = 5000;
+        const positions = [];
+        const velocities = [];
 
-        this.clouds = [];
-        // Spread chunks
-        for (let i = 0; i < 30; i++) {
-            const cloud = new THREE.Mesh(cloudGeo, cloudMat);
-            cloud.position.x = Math.random() * 2000 - 1000; // Wide spread
-            cloud.position.y = Math.random() * 200 + 100;   // Sky height
-            cloud.position.z = Math.random() * 800 - 400;   // Depth
-            cloud.rotation.z = Math.random() * 2 * Math.PI;
-            cloud.scale.setScalar(Math.random() * 1.5 + 0.5);
-            
-            // Metadata for animation
-            cloud.userData = { 
-                velocity: Math.random() * 0.2 + 0.1,
-                rotSpeed: (Math.random() - 0.5) * 0.002
-            };
-
-            cloud.visible = false; // Hidden initially
-            this.scene.add(cloud);
-            this.clouds.push(cloud);
-        }
-    },
-
-    initRain() {
-        const rainGeo = new THREE.BufferGeometry();
-        const count = 3000;
-        const posArray = new Float32Array(count * 3);
-        
-        for(let i=0; i<count*3; i+=3) {
-            posArray[i] = (Math.random() - 0.5) * 2000; // x
-            posArray[i+1] = Math.random() * 1000;       // y
-            posArray[i+2] = Math.random() * 1000;       // z
-        }
-        
-        rainGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        
-        // High speed streaks
-        const rainMat = new THREE.PointsMaterial({
-            color: 0xaaaaaa,
-            size: 2,
-            transparent: true,
-            opacity: 0.6,
-            blending: THREE.AdditiveBlending
-        });
-
-        this.rainSystem = new THREE.Points(rainGeo, rainMat);
-        this.rainSystem.visible = false;
-        this.scene.add(this.rainSystem);
-    },
-
-    initSnow() {
-        const snowGeo = new THREE.BufferGeometry();
-        const count = 1500;
-        const posArray = new Float32Array(count * 3);
-        const velocityArray = new Float32Array(count); // Individual speeds
-
-        for(let i=0; i<count; i++) {
-            const i3 = i * 3;
-            posArray[i3] = (Math.random() - 0.5) * 2000;
-            posArray[i3+1] = Math.random() * 1000;
-            posArray[i3+2] = Math.random() * 1000;
-            velocityArray[i] = Math.random() * 0.5 + 0.5;
+        for (let i = 0; i < count; i++) {
+            positions.push((Math.random() - 0.5) * 4000); // X wide
+            positions.push(Math.random() * 2000); // Y High
+            positions.push((Math.random() - 0.5) * 2000 - 500); // Z Depth (mostly in front)
+            velocities.push(0);
         }
 
-        snowGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        snowGeo.setAttribute('velocity', new THREE.BufferAttribute(velocityArray, 1));
-
-        // Use custom generated "soft" texture
-        const snowMat = new THREE.PointsMaterial({
-            map: this.cloudTexture, // Reuse cloud gradient for soft snowflake
-            size: 8,
-            transparent: true,
-            opacity: 0.8,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        
+        // Materials
+        this.rainMat = new THREE.PointsMaterial({
+            color: 0xaaaaaa, size: 3, transparent: true, opacity: 0.8,
+            blending: THREE.AdditiveBlending, depthWrite: false
+        });
+        
+        this.snowMat = new THREE.PointsMaterial({
+            color: 0xffffff, size: 8, transparent: true, opacity: 0.9,
+            map: this.generateSnowTexture(THREE), // Generate round dot
+            blending: THREE.AdditiveBlending, depthWrite: false
         });
 
-        this.snowSystem = new THREE.Points(snowGeo, snowMat);
-        this.snowSystem.visible = false;
-        this.scene.add(this.snowSystem);
+        // Initialize Systems as hidden
+        this.precipSystem = new THREE.Points(geometry, this.rainMat); // Material swap later
+        this.precipSystem.visible = false;
+        scene.add(this.precipSystem);
     },
 
-    updateTimeEffect() {
-        if (!this.active) return;
+    generateSnowTexture(THREE) {
+        const c = document.createElement('canvas');
+        c.width=32; c.height=32;
+        const x = c.getContext('2d');
+        x.fillStyle='white';
+        x.beginPath(); x.arc(16,16,10,0,Math.PI*2); x.fill();
+        return new THREE.CanvasTexture(c);
+    },
 
-        // Based on hours, set LIGHT COLOR
+    updateSunCycle() {
+        if (!this.app || !this.app.THREE) return;
+        
+        // 1. Calculate Real Sun Position (Physics Based)
         const now = new Date();
-        const hour = now.getHours();
+        const THREE = this.app.THREE;
         
-        let lightColor = new THREE.Color(0xffffff); // Noon
-        let overlayColor = 'rgba(0,0,0,0)';
-        let lightIntensity = 1.0;
+        // Geo fallback
+        let lat = 40, lon = -74; 
+        
+        // SunCalc calculation
+        const sunPos = SunCalc.getPosition(now, lat, lon);
+        const phi = Math.PI / 2 - sunPos.altitude; // Elevation -> Phi
+        const theta = sunPos.azimuth; // Azimuth -> Theta
 
-        if (hour >= 5 && hour < 8) {
-            // Dawn (Golden/Pink)
-            lightColor.setHex(0xffaa55);
-            overlayColor = 'rgba(255, 120, 50, 0.15)'; 
-            lightIntensity = 0.6;
-        } else if (hour >= 8 && hour < 17) {
-            // Day
-            lightColor.setHex(0xffffee);
-            overlayColor = 'rgba(255, 255, 220, 0.05)';
-            lightIntensity = 1.1;
-        } else if (hour >= 17 && hour < 20) {
-            // Sunset (Deep Orange/Red)
-            lightColor.setHex(0xff7722);
-            overlayColor = 'rgba(200, 60, 0, 0.2)';
-            lightIntensity = 0.5;
-        } else {
-            // Night (Blueish)
-            lightColor.setHex(0x111133);
-            overlayColor = 'rgba(0, 0, 40, 0.6)';
-            lightIntensity = 0.2;
+        // Convert spherical coordinates to 3D Cartesian
+        // We set the Sun vector very far away (r = 450000 like sky scale)
+        const r = 450000;
+        const x = r * Math.sin(phi) * Math.cos(theta);
+        const y = r * Math.cos(phi); // Y is UP in Three.js
+        const z = r * Math.sin(phi) * Math.sin(theta);
+
+        const sunVec = new THREE.Vector3(x, y, z);
+        this.app.sunPosition.copy(sunVec);
+
+        // 2. Update Sky Shader
+        this.app.sky.material.uniforms['sunPosition'].value.copy(sunVec);
+
+        // 3. Update Scene Lighting
+        const sunNorm = sunVec.clone().normalize();
+        this.app.sunLight.position.copy(sunNorm);
+        
+        // Set Cloud shader uniforms
+        if (this.app.cloudMaterial) {
+            this.app.cloudMaterial.uniforms['uSunPosition'].value.copy(sunNorm);
         }
 
-        // Apply Three.js lighting
-        if(this.ambientLight) this.ambientLight.color.lerp(lightColor, 0.1);
-        if(this.directionalLight) {
-            this.directionalLight.color.lerp(lightColor, 0.1);
-            this.directionalLight.intensity = lightIntensity;
-        }
-
-        // Apply HTML Tint Overlay (helps tint the actual wallpaper behind)
+        // 4. Update Tint Overlay (HTML) based on Physics output
+        // The Rayleigh shader doesn't effect the HTML elements, so we do a simple
+        // approximation for the UI layers.
+        const elevation = sunPos.altitude * (180/Math.PI);
         const overlay = document.getElementById('time-of-day-overlay');
-        if(overlay) {
-            overlay.style.backgroundColor = overlayColor;
-            overlay.style.opacity = 1;
+        
+        if (elevation < -5) {
+            // Night
+            overlay.style.backgroundColor = '#000022'; 
+            overlay.style.opacity = 0.5;
+            this.app.hemiLight.intensity = 0.1;
+            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0x111122);
+        } else if (elevation < 10) {
+            // Sunset / Sunrise (Red/Orange/Golden)
+            overlay.style.backgroundColor = '#ff5500';
+            overlay.style.opacity = 0.2;
+            this.app.hemiLight.intensity = 0.5;
+            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0xffaa77);
+        } else {
+            // Day
+            overlay.style.backgroundColor = '#ffffff';
+            overlay.style.opacity = 0;
+            this.app.hemiLight.intensity = 1.0;
+            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0xffffff);
         }
     },
 
     updateWeatherEffect() {
-        if (!this.active) return;
-
-        // Fetch Weather
-        const savedData = localStorage.getItem('lastWeatherData');
-        let wCode = 0;
-        if (savedData) {
-            try { wCode = JSON.parse(savedData).current.weathercode; } catch(e){}
-        }
-
-        let type = 'clear';
-        // Codes for Cloudiness (1-3)
-        if (wCode >= 1 && wCode <= 3) type = 'clouds';
-        // Fog (45, 48) - treat as clouds for now
-        else if (wCode === 45 || wCode === 48) type = 'clouds';
-        // Rain
-        else if ((wCode >= 51 && wCode <= 67) || (wCode >= 80 && wCode <= 82) || wCode >= 95) type = 'rain';
-        // Snow
-        else if ((wCode >= 71 && wCode <= 77) || wCode === 85 || wCode === 86) type = 'snow';
-
-        // Override: Force Clouds if it's Rain/Snow (clouds usually exist during rain)
-        const showClouds = (type === 'clouds' || type === 'rain' || type === 'snow');
+        if (!this.app) return;
         
-        // --- 1. Toggle Clouds ---
-        // Smoothly hide/show by adjusting target opacity is harder in logic loops, so we toggle visibility
-        this.clouds.forEach(c => {
-            c.visible = showClouds;
-            // Nighttime clouds should be darker (affected by Light already) but maybe opacity lower?
-        });
+        const saved = localStorage.getItem('lastWeatherData');
+        let code = 0;
+        if(saved) try{code=JSON.parse(saved).current.weathercode}catch(e){}
 
-        // --- 2. Toggle Rain ---
-        if (this.rainSystem) {
-            this.rainSystem.visible = (type === 'rain');
+        // Determine Mode
+        let isRain = (code >= 51 && code <= 67) || (code >= 80);
+        let isSnow = (code >= 71 && code <= 77) || (code >= 85);
+        let isClouds = (code >= 1 && code <= 48) || isRain || isSnow;
+
+        // Visibility
+        this.app.clouds.forEach(c => c.visible = isClouds);
+        
+        this.app.precipSystem.visible = (isRain || isSnow);
+        if (isRain) {
+            this.app.precipSystem.material = this.rainMat;
+            this.weatherType = 'rain';
+        } else if (isSnow) {
+            this.app.precipSystem.material = this.snowMat;
+            this.weatherType = 'snow';
+        } else {
+            this.weatherType = isClouds ? 'clouds' : 'clear';
         }
-
-        // --- 3. Toggle Snow ---
-        if (this.snowSystem) {
-            this.snowSystem.visible = (type === 'snow');
-        }
-
-        // --- 4. CSS Depth Blur ---
-        // If weather is heavy (rain/snow), add a blur to the wallpaper to create depth focus on the drops
-        const isHeavy = (type === 'rain' || type === 'snow');
-        document.body.classList.toggle('heavy-weather', isHeavy);
+        
+        document.body.classList.toggle('heavy-weather', isRain || isSnow);
     },
 
     onResize() {
-        if(!this.camera || !this.renderer) return;
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        if (!this.app) return;
+        this.app.camera.aspect = window.innerWidth / window.innerHeight;
+        this.app.camera.updateProjectionMatrix();
+        this.app.renderer.setSize(window.innerWidth, window.innerHeight);
     },
 
     startLoop() {
         const loop = () => {
-            if (!this.active || !this.scene) return;
+            if (!this.active || !this.app) return;
             requestAnimationFrame(loop);
 
-            const delta = this.clock.getDelta(); // time in seconds
+            const { renderer, scene, camera, cloudMaterial, precipSystem, clouds } = this.app;
+            
+            // Shader Time
+            if(cloudMaterial) cloudMaterial.uniforms['uTime'].value += 0.01;
 
-            // Animate Clouds (Slow drift + rotation)
-            this.clouds.forEach(c => {
-                if (c.visible) {
-                    c.rotation.z += c.userData.rotSpeed;
-                    c.position.x += c.userData.velocity * 20 * delta;
-                    
-                    // Respawn logic
-                    if (c.position.x > 1100) c.position.x = -1100;
+            // Animate Clouds
+            clouds.forEach(c => {
+                if(c.visible) {
+                    c.position.x -= c.userData.speed; 
+                    // Reset if out of bounds
+                    if (c.position.x < -4000) c.position.x = 4000;
                 }
             });
 
-            // Animate Rain
-            if (this.rainSystem && this.rainSystem.visible) {
-                const positions = this.rainSystem.geometry.attributes.position.array;
-                for(let i=1; i<positions.length; i+=3) { // Y coordinates
-                    positions[i] -= 2500 * delta; // Fall speed
-                    if (positions[i] < -500) {
-                        positions[i] = 600;
+            // Animate Precip
+            if (precipSystem && precipSystem.visible) {
+                const pos = precipSystem.geometry.attributes.position.array;
+                const isRain = this.weatherType === 'rain';
+                const speed = isRain ? 15 : 2;
+
+                for(let i=1; i<pos.length; i+=3) {
+                    pos[i] -= speed; // Y Down
+                    
+                    if (!isRain) { // Wiggle Snow
+                        pos[i-1] -= Math.sin(Date.now()*0.001 + i) * 0.1;
+                    }
+
+                    if (pos[i] < -200) {
+                        pos[i] = 1000; // Reset height
+                        pos[i-1] = (Math.random()-0.5)*4000; // Random X
                     }
                 }
-                this.rainSystem.geometry.attributes.position.needsUpdate = true;
+                precipSystem.geometry.attributes.position.needsUpdate = true;
             }
 
-            // Animate Snow (Turbulence)
-            if (this.snowSystem && this.snowSystem.visible) {
-                const positions = this.snowSystem.geometry.attributes.position.array;
-                // const velocities = this.snowSystem.geometry.attributes.velocity.array; // Optimized away for constant
-                
-                for(let i=0; i<positions.length; i+=3) {
-                    const ix = i, iy = i+1;
-                    
-                    positions[iy] -= 100 * delta; // Down
-                    positions[ix] -= 20 * delta; // Wind left
-                    
-                    // Simple wiggle
-                    if(Math.random() > 0.5) positions[ix] += Math.random(); 
-                    
-                    if (positions[iy] < -500) {
-                        positions[iy] = 600;
-                        positions[ix] = (Math.random() - 0.5) * 2000;
-                    }
-                }
-                this.snowSystem.geometry.attributes.position.needsUpdate = true;
-            }
-
-            this.renderer.render(this.scene, this.camera);
+            renderer.render(scene, camera);
         };
         loop();
+        
+        // Sun cycle update every 60s
+        setInterval(() => this.updateSunCycle(), 60000);
     }
 };
 
