@@ -369,9 +369,9 @@ body:not(.reduce-animations)::before,
     height: 100%;
     z-index: 3; /* Just above background */
     pointer-events: none;
-    mix-blend-mode: overlay;
-    opacity: 0;
+    mix-blend-mode: color-burn;
     transition: background-color 3s ease, opacity 3s ease;
+    opacity: 0;
 }
 
 /* 3. Environment Layer (Rain/Snow via Pixi.js) */
@@ -383,12 +383,19 @@ body:not(.reduce-animations)::before,
     height: 100%;
     z-index: 4; /* Above tint, below depth */
     pointer-events: none;
+    filter: blur(0px);
+    transition: filter 2s ease;
 }
 
 #environment-layer canvas {
     display: block;
     width: 100%;
     height: 100%;
+}
+
+body.heavy-weather #background-video, 
+body.heavy-weather::before {
+    filter: blur(3px) !important; /* Simulate focus on rain */
 }
 
 .force-hide {
