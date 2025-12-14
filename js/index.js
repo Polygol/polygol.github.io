@@ -11502,14 +11502,15 @@ document.addEventListener('DOMContentLoaded', async function() {
             liveEnvItem.classList.toggle('active', active);
 
             if (active) {
-                // Must ensure Depth Effect is enabled for full effect? 
-                // Optional, but realistic scenes look best with depth.
                 await EnvironmentManager.init();
-                EnvironmentManager.updateTimeEffect();
+                // FIX: Updated method name from updateTimeEffect to updateSunCycle
+                EnvironmentManager.updateSunCycle(); 
                 EnvironmentManager.updateWeatherEffect();
             } else {
                 EnvironmentManager.destroy();
-                if(EnvironmentManager.timeOverlay) EnvironmentManager.timeOverlay.style.opacity = 0;
+                // Also reset the overlay opacity manually here just in case
+                const overlay = document.getElementById('time-of-day-overlay');
+                if(overlay) overlay.style.opacity = 0;
             }
         });
 
