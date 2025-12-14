@@ -2119,8 +2119,25 @@ const EnvironmentManager = {
         if (!this.app) return;
         
         const now = new Date();
-        // Fallback lat/lon (Timezone guess could go here)
-        let lat = 40, lon = -74; 
+        
+        // Calculate approximate longitude from browser time offset (15 degrees per hour)
+        // getTimezoneOffset is positive for West (behind UTC), negative for East.
+        // Longitude: West is negative, East is positive.
+        const timeOffset = now.getTimezoneOffset(); // in minutes
+        const lon = (timeOffset / 60) * -15; 
+
+        // Estimate Latitude from Timezone Region string (Approximation for sun angle)
+        let lat = 40; // Default to mid-northern (Europe/US/Asia)
+        try {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (tz) {
+                if (tz.startsWith('Australia') || tz.startsWith('Africa/South') || tz.includes('Sao_Paulo') || tz.includes('Argentina')) {
+                    lat = -30; // Southern Hemisphere
+                } else if (tz.startsWith('Africa')) {
+                    lat = 0; // Equator
+                }
+            }
+        } catch(e) {}
         
         // SunCalc to get physical position
         const sunPos = SunCalc.getPosition(now, lat, lon);
@@ -2150,21 +2167,30 @@ const EnvironmentManager = {
         const overlay = document.getElementById('time-of-day-overlay');
         
         // Colors for HTML overlay (The background behind clouds)
-        if (elevation < -5) { // Night
+        if (elevation < -6) { // Deep Night
             overlay.style.backgroundColor = '#000022'; 
             overlay.style.opacity = 0.5;
-            this.app.hemiLight.intensity = 0.2; // Dim 3D scene
-            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0x334466);
-        } else if (elevation < 10) { // Sunset/Sunrise
-            overlay.style.backgroundColor = '#ff6600';
+            this.app.hemiLight.intensity = 0.1; 
+            this.app.sunLight.intensity = 0.0;
+            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0x112233);
+        } else if (elevation < 0) { // Civil Twilight (Dusk/Dawn)
+            overlay.style.backgroundColor = '#441133';
             overlay.style.opacity = 0.3;
+            this.app.hemiLight.intensity = 0.3;
+            this.app.sunLight.intensity = 0.2;
+            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0x664455);
+        } else if (elevation < 15) { // Golden Hour
+            overlay.style.backgroundColor = '#ff6600';
+            overlay.style.opacity = 0.25;
             this.app.hemiLight.intensity = 0.6;
-            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0xffaa88); // Pink/Orange Clouds
+            this.app.sunLight.intensity = 0.8;
+            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0xffaa88); 
         } else { // Day
             overlay.style.backgroundColor = '#ffffff';
             overlay.style.opacity = 0;
             this.app.hemiLight.intensity = 1.0;
-            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0xffffff); // White Clouds
+            this.app.sunLight.intensity = 1.2;
+            this.app.cloudMaterial.uniforms['uCloudColor'].value.setHex(0xffffff); 
         }
     },
 
