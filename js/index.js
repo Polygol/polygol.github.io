@@ -1887,174 +1887,364 @@ function broadcastSunUpdate() {
 }
 
 const EnvironmentManager = {
-    app: null,
     active: false,
-    particles: [],
-    weatherType: 'clear', // 'rain', 'snow', 'clear', 'clouds'
-    timeOverlay: document.getElementById('time-of-day-overlay'),
+    scene: null,
+    camera: null,
+    renderer: null,
+    clock: null,
     
-    // Configs
-    maxParticles: 1500,
-    speedMultiplier: 1,
+    // Components
+    clouds: [],
+    rainSystem: null,
+    snowSystem: null,
+    ambientLight: null,
+    directionalLight: null,
+    
+    // Config
+    weatherType: 'clear', // clear, clouds, rain, snow
+    cloudTexture: null, // Generated dynamically
 
     async init() {
-        if (this.app) return; // Already init
+        if (this.scene) return;
 
         try {
-            // Create Pixi Application
-            this.app = new PIXI.Application({
-                resizeTo: window,
-                backgroundAlpha: 0, // Transparent background
-                antialias: true
-            });
+            console.log("[Env] Initializing Realistic Scene...");
+            const container = document.getElementById('environment-layer');
+            
+            // 1. Setup Three.js
+            this.scene = new THREE.Scene();
+            
+            // Camera covers full screen
+            this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 10000);
+            this.camera.position.z = 1000;
+            this.scene.add(this.camera);
 
-            document.getElementById('environment-layer').appendChild(this.app.view);
+            // Lighting (Key for realistic Time of Day)
+            this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
+            this.scene.add(this.ambientLight);
+
+            this.directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            this.directionalLight.position.set(0, 1, 0); // High noon default
+            this.scene.add(this.directionalLight);
+
+            // Renderer with transparency
+            this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setClearColor(0x000000, 0); // Transparent back
+            
+            container.appendChild(this.renderer.domElement);
+            this.clock = new THREE.Clock();
+
+            // 2. Generate Assets
+            this.cloudTexture = this.generateCloudTexture();
+
+            // 3. Initialize Systems (Hidden by default)
+            this.initClouds();
+            this.initRain();
+            this.initSnow();
+
+            // 4. State
             this.active = true;
             this.startLoop();
-            console.log("[Env] Pixi.js environment initialized");
             
-            // Initial render based on cached data
-            this.updateTimeEffect(); 
+            // 5. Initial Updates
+            this.updateTimeEffect();
             this.updateWeatherEffect();
 
+            // Handle Resize
+            window.addEventListener('resize', this.onResize.bind(this));
+
         } catch (e) {
-            console.error("[Env] Failed to init Pixi:", e);
+            console.error("[Env] Three.js Init Failed:", e);
         }
     },
 
     destroy() {
-        if (this.app) {
-            this.app.destroy(true, { children: true, texture: true, baseTexture: true });
-            this.app = null;
-            this.particles = [];
+        if (this.renderer) {
+            this.renderer.domElement.remove();
+            this.renderer.dispose();
+            this.renderer = null;
+            this.scene = null;
             this.active = false;
+            document.body.classList.remove('heavy-weather');
+            
+            const overlay = document.getElementById('time-of-day-overlay');
+            if(overlay) overlay.style.opacity = 0;
         }
     },
 
+    // creates a soft smoke-like texture programmatically
+    generateCloudTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 32;
+        canvas.height = 32;
+        const ctx = canvas.getContext('2d');
+        
+        // Radial gradient for soft cloud particle
+        const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        grad.addColorStop(0.4, 'rgba(255, 255, 255, 0.6)');
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 32, 32);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.magFilter = THREE.LinearFilter;
+        tex.minFilter = THREE.LinearFilter;
+        return tex;
+    },
+
+    initClouds() {
+        // Create a massive group of sprite-like planes to simulate volume
+        const cloudGeo = new THREE.PlaneGeometry(500, 500);
+        
+        // This material reacts to Lights, allowing realistic sunset/night coloring
+        const cloudMat = new THREE.MeshLambertMaterial({
+            map: this.cloudTexture,
+            transparent: true,
+            opacity: 0.3,
+            depthWrite: false,
+            side: THREE.DoubleSide
+        });
+
+        this.clouds = [];
+        // Spread chunks
+        for (let i = 0; i < 30; i++) {
+            const cloud = new THREE.Mesh(cloudGeo, cloudMat);
+            cloud.position.x = Math.random() * 2000 - 1000; // Wide spread
+            cloud.position.y = Math.random() * 200 + 100;   // Sky height
+            cloud.position.z = Math.random() * 800 - 400;   // Depth
+            cloud.rotation.z = Math.random() * 2 * Math.PI;
+            cloud.scale.setScalar(Math.random() * 1.5 + 0.5);
+            
+            // Metadata for animation
+            cloud.userData = { 
+                velocity: Math.random() * 0.2 + 0.1,
+                rotSpeed: (Math.random() - 0.5) * 0.002
+            };
+
+            cloud.visible = false; // Hidden initially
+            this.scene.add(cloud);
+            this.clouds.push(cloud);
+        }
+    },
+
+    initRain() {
+        const rainGeo = new THREE.BufferGeometry();
+        const count = 3000;
+        const posArray = new Float32Array(count * 3);
+        
+        for(let i=0; i<count*3; i+=3) {
+            posArray[i] = (Math.random() - 0.5) * 2000; // x
+            posArray[i+1] = Math.random() * 1000;       // y
+            posArray[i+2] = Math.random() * 1000;       // z
+        }
+        
+        rainGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        
+        // High speed streaks
+        const rainMat = new THREE.PointsMaterial({
+            color: 0xaaaaaa,
+            size: 2,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending
+        });
+
+        this.rainSystem = new THREE.Points(rainGeo, rainMat);
+        this.rainSystem.visible = false;
+        this.scene.add(this.rainSystem);
+    },
+
+    initSnow() {
+        const snowGeo = new THREE.BufferGeometry();
+        const count = 1500;
+        const posArray = new Float32Array(count * 3);
+        const velocityArray = new Float32Array(count); // Individual speeds
+
+        for(let i=0; i<count; i++) {
+            const i3 = i * 3;
+            posArray[i3] = (Math.random() - 0.5) * 2000;
+            posArray[i3+1] = Math.random() * 1000;
+            posArray[i3+2] = Math.random() * 1000;
+            velocityArray[i] = Math.random() * 0.5 + 0.5;
+        }
+
+        snowGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        snowGeo.setAttribute('velocity', new THREE.BufferAttribute(velocityArray, 1));
+
+        // Use custom generated "soft" texture
+        const snowMat = new THREE.PointsMaterial({
+            map: this.cloudTexture, // Reuse cloud gradient for soft snowflake
+            size: 8,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+
+        this.snowSystem = new THREE.Points(snowGeo, snowMat);
+        this.snowSystem.visible = false;
+        this.scene.add(this.snowSystem);
+    },
+
     updateTimeEffect() {
-        // Use existing SunCalc position data
-        // We use currentSunShadow variables calculated in updateSunEffect()
+        if (!this.active) return;
+
+        // Based on hours, set LIGHT COLOR
         const now = new Date();
         const hour = now.getHours();
         
-        let color = 'transparent';
-        let opacity = 0;
+        let lightColor = new THREE.Color(0xffffff); // Noon
+        let overlayColor = 'rgba(0,0,0,0)';
+        let lightIntensity = 1.0;
 
-        // Simplified time-of-day color mapping for "Realistic" Tinting
-        // Night
-        if (hour < 5 || hour > 21) {
-            color = '#000833'; // Deep Blue Night
-            opacity = 0.6;
-        } 
-        // Dawn/Dusk
-        else if ((hour >= 5 && hour < 8) || (hour >= 18 && hour <= 21)) {
-            color = '#ff9900'; // Golden Hour
-            opacity = 0.3;
-        }
-        // Day
-        else {
-            color = '#fffae3'; // Warm Daylight
-            opacity = 0.1;
+        if (hour >= 5 && hour < 8) {
+            // Dawn (Golden/Pink)
+            lightColor.setHex(0xffaa55);
+            overlayColor = 'rgba(255, 120, 50, 0.15)'; 
+            lightIntensity = 0.6;
+        } else if (hour >= 8 && hour < 17) {
+            // Day
+            lightColor.setHex(0xffffee);
+            overlayColor = 'rgba(255, 255, 220, 0.05)';
+            lightIntensity = 1.1;
+        } else if (hour >= 17 && hour < 20) {
+            // Sunset (Deep Orange/Red)
+            lightColor.setHex(0xff7722);
+            overlayColor = 'rgba(200, 60, 0, 0.2)';
+            lightIntensity = 0.5;
+        } else {
+            // Night (Blueish)
+            lightColor.setHex(0x111133);
+            overlayColor = 'rgba(0, 0, 40, 0.6)';
+            lightIntensity = 0.2;
         }
 
-        if (this.timeOverlay) {
-            this.timeOverlay.style.backgroundColor = color;
-            this.timeOverlay.style.opacity = this.active ? opacity : 0;
+        // Apply Three.js lighting
+        if(this.ambientLight) this.ambientLight.color.lerp(lightColor, 0.1);
+        if(this.directionalLight) {
+            this.directionalLight.color.lerp(lightColor, 0.1);
+            this.directionalLight.intensity = lightIntensity;
+        }
+
+        // Apply HTML Tint Overlay (helps tint the actual wallpaper behind)
+        const overlay = document.getElementById('time-of-day-overlay');
+        if(overlay) {
+            overlay.style.backgroundColor = overlayColor;
+            overlay.style.opacity = 1;
         }
     },
 
     updateWeatherEffect() {
-        if (!this.active || !this.app) return;
+        if (!this.active) return;
 
-        // Retrieve Cached Weather Data
+        // Fetch Weather
         const savedData = localStorage.getItem('lastWeatherData');
         let wCode = 0;
         if (savedData) {
-            try {
-                wCode = JSON.parse(savedData).current.weathercode;
-            } catch(e){}
+            try { wCode = JSON.parse(savedData).current.weathercode; } catch(e){}
         }
 
-        // Determine Type
-        let newType = 'clear';
-        // Rain Codes: 51-67, 80-82
-        if ((wCode >= 51 && wCode <= 67) || (wCode >= 80 && wCode <= 82)) newType = 'rain';
-        // Snow Codes: 71-77, 85-86
-        else if ((wCode >= 71 && wCode <= 77) || wCode === 85 || wCode === 86) newType = 'snow';
-        // Thunder: 95-99
-        else if (wCode >= 95) newType = 'rain'; // Treat as rain for visuals
+        let type = 'clear';
+        // Codes for Cloudiness (1-3)
+        if (wCode >= 1 && wCode <= 3) type = 'clouds';
+        // Fog (45, 48) - treat as clouds for now
+        else if (wCode === 45 || wCode === 48) type = 'clouds';
+        // Rain
+        else if ((wCode >= 51 && wCode <= 67) || (wCode >= 80 && wCode <= 82) || wCode >= 95) type = 'rain';
+        // Snow
+        else if ((wCode >= 71 && wCode <= 77) || wCode === 85 || wCode === 86) type = 'snow';
 
-        // Only rebuild if type changed
-        if (newType !== this.weatherType) {
-            this.weatherType = newType;
-            this.rebuildParticles();
+        // Override: Force Clouds if it's Rain/Snow (clouds usually exist during rain)
+        const showClouds = (type === 'clouds' || type === 'rain' || type === 'snow');
+        
+        // --- 1. Toggle Clouds ---
+        // Smoothly hide/show by adjusting target opacity is harder in logic loops, so we toggle visibility
+        this.clouds.forEach(c => {
+            c.visible = showClouds;
+            // Nighttime clouds should be darker (affected by Light already) but maybe opacity lower?
+        });
+
+        // --- 2. Toggle Rain ---
+        if (this.rainSystem) {
+            this.rainSystem.visible = (type === 'rain');
         }
+
+        // --- 3. Toggle Snow ---
+        if (this.snowSystem) {
+            this.snowSystem.visible = (type === 'snow');
+        }
+
+        // --- 4. CSS Depth Blur ---
+        // If weather is heavy (rain/snow), add a blur to the wallpaper to create depth focus on the drops
+        const isHeavy = (type === 'rain' || type === 'snow');
+        document.body.classList.toggle('heavy-weather', isHeavy);
     },
 
-    rebuildParticles() {
-        // Clear existing
-        this.app.stage.removeChildren();
-        this.particles = [];
-
-        if (this.weatherType === 'clear') return;
-
-        // Generate Textures Programmatically (lightweight, no external assets needed)
-        const gfx = new PIXI.Graphics();
-        if (this.weatherType === 'rain') {
-            gfx.beginFill(0xffffff, 0.7);
-            gfx.drawRect(0, 0, 2, 10); // Thin Drop
-            gfx.endFill();
-        } else if (this.weatherType === 'snow') {
-            gfx.beginFill(0xffffff, 0.9);
-            gfx.drawCircle(0, 0, 3); // Flake
-            gfx.endFill();
-        }
-        const texture = this.app.renderer.generateTexture(gfx);
-
-        // Spawn Count
-        const count = this.weatherType === 'rain' ? 800 : 400;
-
-        for (let i = 0; i < count; i++) {
-            const sprite = new PIXI.Sprite(texture);
-            
-            // Random Pos
-            sprite.x = Math.random() * window.innerWidth;
-            sprite.y = Math.random() * window.innerHeight;
-            
-            // Random properties for parallax
-            const depth = Math.random() * 0.5 + 0.5; // 0.5 to 1.0
-            sprite.scale.set(depth);
-            sprite.alpha = Math.random() * 0.6 + 0.2;
-            
-            // Velocity storage
-            sprite.vy = (this.weatherType === 'rain' ? 15 : 2) * depth; 
-            sprite.vx = (this.weatherType === 'rain' ? 0.5 : 1) * (Math.random() - 0.5);
-
-            this.particles.push(sprite);
-            this.app.stage.addChild(sprite);
-        }
+    onResize() {
+        if(!this.camera || !this.renderer) return;
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
     },
 
     startLoop() {
-        this.app.ticker.add((delta) => {
-            if (this.weatherType === 'clear') return;
+        const loop = () => {
+            if (!this.active || !this.scene) return;
+            requestAnimationFrame(loop);
 
-            const height = window.innerHeight;
-            const width = window.innerWidth;
+            const delta = this.clock.getDelta(); // time in seconds
 
-            for (const p of this.particles) {
-                p.y += p.vy * delta;
-                p.x += p.vx * delta;
-
-                // Loop
-                if (p.y > height) {
-                    p.y = -10;
-                    p.x = Math.random() * width;
+            // Animate Clouds (Slow drift + rotation)
+            this.clouds.forEach(c => {
+                if (c.visible) {
+                    c.rotation.z += c.userData.rotSpeed;
+                    c.position.x += c.userData.velocity * 20 * delta;
+                    
+                    // Respawn logic
+                    if (c.position.x > 1100) c.position.x = -1100;
                 }
-                if (p.x > width) p.x = 0;
-                if (p.x < 0) p.x = width;
+            });
+
+            // Animate Rain
+            if (this.rainSystem && this.rainSystem.visible) {
+                const positions = this.rainSystem.geometry.attributes.position.array;
+                for(let i=1; i<positions.length; i+=3) { // Y coordinates
+                    positions[i] -= 2500 * delta; // Fall speed
+                    if (positions[i] < -500) {
+                        positions[i] = 600;
+                    }
+                }
+                this.rainSystem.geometry.attributes.position.needsUpdate = true;
             }
-        });
+
+            // Animate Snow (Turbulence)
+            if (this.snowSystem && this.snowSystem.visible) {
+                const positions = this.snowSystem.geometry.attributes.position.array;
+                // const velocities = this.snowSystem.geometry.attributes.velocity.array; // Optimized away for constant
+                
+                for(let i=0; i<positions.length; i+=3) {
+                    const ix = i, iy = i+1;
+                    
+                    positions[iy] -= 100 * delta; // Down
+                    positions[ix] -= 20 * delta; // Wind left
+                    
+                    // Simple wiggle
+                    if(Math.random() > 0.5) positions[ix] += Math.random(); 
+                    
+                    if (positions[iy] < -500) {
+                        positions[iy] = 600;
+                        positions[ix] = (Math.random() - 0.5) * 2000;
+                    }
+                }
+                this.snowSystem.geometry.attributes.position.needsUpdate = true;
+            }
+
+            this.renderer.render(this.scene, this.camera);
+        };
+        loop();
     }
 };
 
