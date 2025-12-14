@@ -2081,39 +2081,44 @@ const EnvironmentManager = {
     },
 
     initPrecipitation(THREE, scene) {
-        // Shared geometry for rain/snow
         const geometry = new THREE.BufferGeometry();
         const count = 5000;
         const positions = [];
-        const velocities = [];
+        // Removed unused velocities array to save memory as calculation is done in loop
+        // const velocities = []; 
 
         for (let i = 0; i < count; i++) {
-            positions.push((Math.random() - 0.5) * 4000); // X wide
-            positions.push(Math.random() * 2000); // Y High
-            positions.push((Math.random() - 0.5) * 2000 - 500); // Z Depth (mostly in front)
-            velocities.push(0);
+            positions.push((Math.random() - 0.5) * 4000); // X
+            positions.push(Math.random() * 2000);         // Y
+            positions.push((Math.random() - 0.5) * 2000 - 500); // Z
         }
 
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         
-        // Materials
+        // Create Materials
         this.rainMat = new THREE.PointsMaterial({
             color: 0xaaaaaa, size: 3, transparent: true, opacity: 0.8,
             blending: THREE.AdditiveBlending, depthWrite: false
         });
         
+        // Need THREE to generate snow texture here
         this.snowMat = new THREE.PointsMaterial({
             color: 0xffffff, size: 8, transparent: true, opacity: 0.9,
-            map: this.generateSnowTexture(THREE), // Generate round dot
+            map: this.generateSnowTexture(THREE),
             blending: THREE.AdditiveBlending, depthWrite: false
         });
 
-        // Initialize Systems as hidden
-        this.precipSystem = new THREE.Points(geometry, this.rainMat); // Material swap later
-        this.precipSystem.visible = false;
-        scene.add(this.precipSystem);
-    },
+        // Initialize System
+        const precipSystem = new THREE.Points(geometry, this.rainMat);
+        precipSystem.visible = false;
+        scene.add(precipSystem);
 
+        // FIX: Explicitly attach to the app state object so updateWeatherEffect can find it
+        if (this.app) {
+            this.app.precipSystem = precipSystem;
+        }
+    },
+	
     generateSnowTexture(THREE) {
         const c = document.createElement('canvas');
         c.width=32; c.height=32;
@@ -2188,21 +2193,27 @@ const EnvironmentManager = {
     },
 
     updateWeatherEffect() {
-        if (!this.app) return;
+        // Defensive check: Ensure app and precipitation system exist before accessing
+        if (!this.app || !this.app.precipSystem) return;
         
         const saved = localStorage.getItem('lastWeatherData');
         let code = 0;
         if(saved) try{code=JSON.parse(saved).current.weathercode}catch(e){}
 
         // Determine Mode
-        let isRain = (code >= 51 && code <= 67) || (code >= 80);
-        let isSnow = (code >= 71 && code <= 77) || (code >= 85);
+        // Rain: 51-67, 80-82, 95+
+        let isRain = (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
+        // Snow: 71-77, 85-86
+        let isSnow = (code >= 71 && code <= 77) || (code >= 85 && code <= 86);
         let isClouds = (code >= 1 && code <= 48) || isRain || isSnow;
 
         // Visibility
-        this.app.clouds.forEach(c => c.visible = isClouds);
+        if(this.app.clouds) {
+            this.app.clouds.forEach(c => c.visible = isClouds);
+        }
         
         this.app.precipSystem.visible = (isRain || isSnow);
+        
         if (isRain) {
             this.app.precipSystem.material = this.rainMat;
             this.weatherType = 'rain';
