@@ -1904,6 +1904,7 @@ const EnvironmentManager = {
             console.log("[Env] Booting Physics-Based Sky...");
             
             // 1. DYNAMICALLY IMPORT MODULES
+            // Note: Map 'three' and 'three/addons/' in your HTML <script type="importmap"> first
             const THREE = await import('three');
             const { Sky } = await import('three/addons/objects/Sky.js');
             const { createNoise3D } = await import('https://cdn.jsdelivr.net/npm/simplex-noise@4.0.1/+esm');
@@ -1923,7 +1924,8 @@ const EnvironmentManager = {
             container.appendChild(renderer.domElement);
 
             // 3. SKY MODEL
-            const sky = new THREE.Sky(); // Changed from Sky() to THREE.Sky() or local ref depending on import
+            // FIX: Use 'new Sky()', NOT 'new THREE.Sky()'
+            const sky = new Sky(); 
             sky.scale.setScalar(450000);
             scene.add(sky);
 
@@ -1943,7 +1945,7 @@ const EnvironmentManager = {
             // 5. CLOUD SYSTEM
             const noise3D = createNoise3D();
             
-            // FIX: Pass THREE object to function
+            // Pass THREE context to the generator
             const cloudTexture = this.generateCloudTexture(THREE, noise3D); 
             
             const cloudMaterial = new THREE.ShaderMaterial({
