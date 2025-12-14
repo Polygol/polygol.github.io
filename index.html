@@ -19,6 +19,7 @@
     <script src="js/lang.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
     <script type="module">
         import { joinRoom, selfId } from 'https://esm.sh/trystero@0.15.1/torrent';
         window.Trystero = { joinRoom, selfId };
@@ -251,6 +252,9 @@
     <div id="control-gesture-pane"></div>
 
     <div id="depth-layer"></div>
+    
+    <div id="environment-layer"></div>
+    <div id="time-of-day-overlay"></div> 
 
     <div class="container">
         <div class="info">
@@ -508,6 +512,10 @@
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">opacity</span></div>
                         <span class="setting-label" data-lang-key="CONTRAST_FX">Clarity</span>
                     </div>
+                    <div class="setting-item" id="setting-live-environment">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">routine</span></div>
+                        <span class="setting-label">Live Scene</span>
+                    </div>
                 </div>
             </div>
 
@@ -591,6 +599,7 @@
                 <input type="checkbox" id="seconds-switch" checked>
                 <input type="checkbox" id="clock-stack-switch">
                 <input type="checkbox" id="depth-effect-switch">
+                <input type="checkbox" id="live-environment-switch">
                 <select id="font-select">
                     <option value="Inter" data-lang="Default">LANG_DEFAULT</option>
                     <option value="Bricolage Grotesque" data-lang="Work">LANG_WORK</option>
