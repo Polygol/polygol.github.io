@@ -1862,6 +1862,13 @@ function updateSunEffect() {
 	broadcastSunUpdate();
 }
 
+const originalUpdateSunEffect = updateSunEffect;
+updateSunEffect = function() {
+    originalUpdateSunEffect(); // Run original
+    // Add our update hook
+    EnvironmentManager.updateTimeEffect();
+};
+
 /**
  * Sends the updated sun shadow value to all active Gurapp iframes.
  */
@@ -1878,6 +1885,178 @@ function broadcastSunUpdate() {
         }
     });
 }
+
+const EnvironmentManager = {
+    app: null,
+    active: false,
+    particles: [],
+    weatherType: 'clear', // 'rain', 'snow', 'clear', 'clouds'
+    timeOverlay: document.getElementById('time-of-day-overlay'),
+    
+    // Configs
+    maxParticles: 1500,
+    speedMultiplier: 1,
+
+    async init() {
+        if (this.app) return; // Already init
+
+        try {
+            // Create Pixi Application
+            this.app = new PIXI.Application({
+                resizeTo: window,
+                backgroundAlpha: 0, // Transparent background
+                antialias: true
+            });
+
+            document.getElementById('environment-layer').appendChild(this.app.view);
+            this.active = true;
+            this.startLoop();
+            console.log("[Env] Pixi.js environment initialized");
+            
+            // Initial render based on cached data
+            this.updateTimeEffect(); 
+            this.updateWeatherEffect();
+
+        } catch (e) {
+            console.error("[Env] Failed to init Pixi:", e);
+        }
+    },
+
+    destroy() {
+        if (this.app) {
+            this.app.destroy(true, { children: true, texture: true, baseTexture: true });
+            this.app = null;
+            this.particles = [];
+            this.active = false;
+        }
+    },
+
+    updateTimeEffect() {
+        // Use existing SunCalc position data
+        // We use currentSunShadow variables calculated in updateSunEffect()
+        const now = new Date();
+        const hour = now.getHours();
+        
+        let color = 'transparent';
+        let opacity = 0;
+
+        // Simplified time-of-day color mapping for "Realistic" Tinting
+        // Night
+        if (hour < 5 || hour > 21) {
+            color = '#000833'; // Deep Blue Night
+            opacity = 0.6;
+        } 
+        // Dawn/Dusk
+        else if ((hour >= 5 && hour < 8) || (hour >= 18 && hour <= 21)) {
+            color = '#ff9900'; // Golden Hour
+            opacity = 0.3;
+        }
+        // Day
+        else {
+            color = '#fffae3'; // Warm Daylight
+            opacity = 0.1;
+        }
+
+        if (this.timeOverlay) {
+            this.timeOverlay.style.backgroundColor = color;
+            this.timeOverlay.style.opacity = this.active ? opacity : 0;
+        }
+    },
+
+    updateWeatherEffect() {
+        if (!this.active || !this.app) return;
+
+        // Retrieve Cached Weather Data
+        const savedData = localStorage.getItem('lastWeatherData');
+        let wCode = 0;
+        if (savedData) {
+            try {
+                wCode = JSON.parse(savedData).current.weathercode;
+            } catch(e){}
+        }
+
+        // Determine Type
+        let newType = 'clear';
+        // Rain Codes: 51-67, 80-82
+        if ((wCode >= 51 && wCode <= 67) || (wCode >= 80 && wCode <= 82)) newType = 'rain';
+        // Snow Codes: 71-77, 85-86
+        else if ((wCode >= 71 && wCode <= 77) || wCode === 85 || wCode === 86) newType = 'snow';
+        // Thunder: 95-99
+        else if (wCode >= 95) newType = 'rain'; // Treat as rain for visuals
+
+        // Only rebuild if type changed
+        if (newType !== this.weatherType) {
+            this.weatherType = newType;
+            this.rebuildParticles();
+        }
+    },
+
+    rebuildParticles() {
+        // Clear existing
+        this.app.stage.removeChildren();
+        this.particles = [];
+
+        if (this.weatherType === 'clear') return;
+
+        // Generate Textures Programmatically (lightweight, no external assets needed)
+        const gfx = new PIXI.Graphics();
+        if (this.weatherType === 'rain') {
+            gfx.beginFill(0xffffff, 0.7);
+            gfx.drawRect(0, 0, 2, 10); // Thin Drop
+            gfx.endFill();
+        } else if (this.weatherType === 'snow') {
+            gfx.beginFill(0xffffff, 0.9);
+            gfx.drawCircle(0, 0, 3); // Flake
+            gfx.endFill();
+        }
+        const texture = this.app.renderer.generateTexture(gfx);
+
+        // Spawn Count
+        const count = this.weatherType === 'rain' ? 800 : 400;
+
+        for (let i = 0; i < count; i++) {
+            const sprite = new PIXI.Sprite(texture);
+            
+            // Random Pos
+            sprite.x = Math.random() * window.innerWidth;
+            sprite.y = Math.random() * window.innerHeight;
+            
+            // Random properties for parallax
+            const depth = Math.random() * 0.5 + 0.5; // 0.5 to 1.0
+            sprite.scale.set(depth);
+            sprite.alpha = Math.random() * 0.6 + 0.2;
+            
+            // Velocity storage
+            sprite.vy = (this.weatherType === 'rain' ? 15 : 2) * depth; 
+            sprite.vx = (this.weatherType === 'rain' ? 0.5 : 1) * (Math.random() - 0.5);
+
+            this.particles.push(sprite);
+            this.app.stage.addChild(sprite);
+        }
+    },
+
+    startLoop() {
+        this.app.ticker.add((delta) => {
+            if (this.weatherType === 'clear') return;
+
+            const height = window.innerHeight;
+            const width = window.innerWidth;
+
+            for (const p of this.particles) {
+                p.y += p.vy * delta;
+                p.x += p.vx * delta;
+
+                // Loop
+                if (p.y > height) {
+                    p.y = -10;
+                    p.x = Math.random() * width;
+                }
+                if (p.x > width) p.x = 0;
+                if (p.x < 0) p.x = width;
+            }
+        });
+    }
+};
 
 // IndexedDB setup for video storage
 const dbName = "WallpaperDB", storeName = "wallpapers", version = 1, VIDEO_VERSION = "1.0";
@@ -3219,6 +3398,13 @@ async function updateSmallWeather() {
     }
     updateTitle();
 }
+
+const originalUpdateSmallWeather = updateSmallWeather;
+updateSmallWeather = async function() {
+    await originalUpdateSmallWeather(); // Run original
+    // Add our update hook
+    EnvironmentManager.updateWeatherEffect();
+};
 
 // Updated helper function to determine if a specific hour is daytime based on timezone
 function isDaytimeForHour(timeString, timezone = 'UTC') {
@@ -11070,6 +11256,44 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
+    const liveEnvSwitch = document.getElementById('live-environment-switch');
+    const liveEnvItem = document.getElementById('setting-live-environment'); // The UI Grid Item
+    if (liveEnvSwitch && liveEnvItem) {
+        // Load State
+        const isLive = localStorage.getItem('liveEnvironmentEnabled') === 'true';
+        liveEnvSwitch.checked = isLive;
+        liveEnvItem.classList.toggle('active', isLive);
+
+        // Sync Helper for click
+        liveEnvItem.addEventListener('click', () => {
+            liveEnvSwitch.click(); // Trigger change
+        });
+
+        liveEnvSwitch.addEventListener('change', async function() {
+            const active = this.checked;
+            localStorage.setItem('liveEnvironmentEnabled', active);
+            broadcastSettingUpdate('liveEnvironmentEnabled', active.toString());
+            
+            liveEnvItem.classList.toggle('active', active);
+
+            if (active) {
+                // Must ensure Depth Effect is enabled for full effect? 
+                // Optional, but realistic scenes look best with depth.
+                await EnvironmentManager.init();
+                EnvironmentManager.updateTimeEffect();
+                EnvironmentManager.updateWeatherEffect();
+            } else {
+                EnvironmentManager.destroy();
+                if(EnvironmentManager.timeOverlay) EnvironmentManager.timeOverlay.style.opacity = 0;
+            }
+        });
+
+        // Initialize if active
+        if (isLive) {
+            await EnvironmentManager.init();
+        }
+    }
+
     const aiSwitch = document.getElementById('ai-switch');
     aiSwitch.checked = isAiAssistantEnabled;
     aiSwitch.addEventListener('change', function() {
@@ -12049,6 +12273,7 @@ const controlIdMap = {
     'dockPinned': 'dock-pinned-switch',
     'wakeLockMode': 'wake-lock-mode-select',
 	'depthEffectEnabled': 'depth-effect-switch',
+	'liveEnvironmentEnabled': 'live-environment-switch',
     'uiSoundMode': 'ui-sound-mode',
     'gurappSoundsEnabled': 'gurapp-sounds-switch',
     'letterSpacing': 'clock-spacing-slider',
