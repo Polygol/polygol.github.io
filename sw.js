@@ -1,4 +1,4 @@
-const CACHE_NAME = 'polygol-cache-16.3-r5';
+const CACHE_NAME = 'polygol-cache-16.3-r6';
 
 const ASSETS_TO_CACHE = [
   '/assets/img/regular-expressive-onload.webp',
@@ -14,6 +14,8 @@ const ASSETS_TO_CACHE = [
   '/assets/img/pwaicon/regular.png',
   '/assets/img/pwaicon/coloricon.png',
   '/assets/img/pwaicon/monochrome.png',
+  '/assets/img/text-owner-transparent.png',
+  '/assets/img/text-about-banner-transparent.png',
   '/assets/img/ver/15.png',
   '/transfer/index.html',
   '/appstore/index.html',
