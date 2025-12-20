@@ -714,6 +714,14 @@ body.one-button-nav-active .dock.show {
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
 
+.persistent-clock:active ~ #customizeModal.modal {
+	display: block !important;
+	pointer-events: none !important;
+	transform: translateX(0) translateY(0) scale(0.9) scaleY(0.8) !important;
+	opacity: 1 !important;
+	filter: blur(2.5px) !important;
+}
+
 .persistent-clock.show {
     opacity: 1;
     visibility: visible;
