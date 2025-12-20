@@ -1037,14 +1037,14 @@ body.one-button-nav-active .dock.show {
             position: fixed;
             top: 0px;
             right: 0px;
-            margin: min(5vw, 25px);
+            margin: min(5vw, 20px);
             box-sizing: border-box;
             overflow: auto;
             display: block;
             left: auto;
             bottom: auto;
             transform-origin: top right;
-            transform: translateX(0) scale(0.9) scaleY(0.8);
+            transform: translateX(0) translateY(-50%) scale(0.9) scaleY(0.8);
             opacity: 0;
             filter: blur(5px);
             width: clamp(280px, 90%, 450px);
