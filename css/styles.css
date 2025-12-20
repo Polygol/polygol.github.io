@@ -710,8 +710,8 @@ body.one-button-nav-active .dock.show {
 }
 
 #status-indicator .material-symbols-rounded {
-    font-size: 16px;
-    color: var(--secondary-text-color);
+    font-size: 14px;
+    color: transparent;
 }
 
 .persistent-clock {
