@@ -2262,11 +2262,8 @@ input[type="checkbox"]:checked::before {
     body.minimal-active .drawer-handle,
 	body.minimal-active .one-button-nav-handle {
         opacity: 0;
+		width: 0;
     }
-
-    body.minimal-active .persistent-clock {
-		opacity: 0 !important;
-	}
 
 	body-minimal-active .persistent-clock-digit,
 	body-minimal-active .persistent-colon {
