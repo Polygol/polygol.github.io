@@ -2381,69 +2381,74 @@ const IslandManager = {
         container.innerHTML = '';
         const toShow = activeIslands.slice(0, 2);
         
-        toShow.forEach(item => {
-            const el = document.createElement('div');
-            el.className = 'activity-capsule';
-            
-            let canonicalAppName = item.data.appName;
-            let appDef = null;
-            if (canonicalAppName) {
-                if (!apps[canonicalAppName]) {
-                    const match = Object.keys(apps).find(k => k.toLowerCase() === canonicalAppName.toLowerCase());
-                    if (match) canonicalAppName = match;
-                }
-                appDef = apps[canonicalAppName];
-            }
-
-            // --- 1. RENDER ICON ---
-            // Priority: Explicit Image > Explicit Icon Symbol > App Icon
-            if (item.data.imgUrl) {
-                const img = document.createElement('img');
-                img.src = item.data.imgUrl;
-                el.appendChild(img);
-            } else if (item.data.iconString) {
-                const span = document.createElement('span');
-                span.className = 'material-symbols-rounded';
-                span.textContent = item.data.iconString;
-                el.appendChild(span);
-            } else {
-                // Fallback to App Icon with FIXED Logic
-                const img = document.createElement('img');
-                let iconUrl = '/assets/appicon/system.png';
-                if (appDef && appDef.icon) {
-                    const rawIcon = appDef.icon;
-                    // FIX: Check for root-relative paths ('/') in addition to http/data
-                    if (rawIcon.startsWith('http') || rawIcon.startsWith('/') || rawIcon.startsWith('data:')) {
-                        iconUrl = rawIcon;
-                    } else {
-                        iconUrl = `/assets/appicon/${rawIcon}`;
-                    }
-                }
-                img.src = iconUrl;
-                el.appendChild(img);
-            }
-            
-            // --- 2. RENDER TEXT ---
-            if (item.data.text) {
-                el.classList.add('has-text');
-                const span = document.createElement('span');
-                span.className = 'activity-text';
-                span.textContent = item.data.text;
-                el.appendChild(span);
-            }
-            
-            // Click Handler
-            el.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (appDef) {
-                    createFullscreenEmbed(appDef.url);
-                } else if (item.data.url) {
-                    createFullscreenEmbed(item.data.url);
-                }
-            });
-
-            container.appendChild(el);
-        });
+	    toShow.forEach(item => {
+	        const el = document.createElement('div');
+	        el.className = 'activity-capsule';
+	        
+	        // Check text first to apply container class
+	        const hasText = item.data.text && item.data.text.trim().length > 0;
+	        if (hasText) el.classList.add('has-text');
+	
+	        let canonicalAppName = item.data.appName;
+	        let appDef = null;
+	        if (canonicalAppName) {
+	            if (!apps[canonicalAppName]) {
+	                const match = Object.keys(apps).find(k => k.toLowerCase() === canonicalAppName.toLowerCase());
+	                if (match) canonicalAppName = match;
+	            }
+	            appDef = apps[canonicalAppName];
+	        }
+	
+	        // --- RENDER CONTENT ---
+	        // Priority 1: Explicit Image (Media Art)
+	        if (item.data.imgUrl) {
+	            const img = document.createElement('img');
+	            img.src = item.data.imgUrl;
+	            el.appendChild(img);
+	        } 
+	        // Priority 2: Material Icon Symbol (Live Activities)
+	        else if (item.data.iconString) {
+	            const span = document.createElement('span');
+	            span.className = 'material-symbols-rounded';
+	            span.textContent = item.data.iconString;
+	            el.appendChild(span);
+	        } 
+	        // Priority 3: App Icon Fallback
+	        else {
+	            const img = document.createElement('img');
+	            let iconUrl = '/assets/appicon/system.png';
+	            if (appDef && appDef.icon) {
+	                // Handle different path types (absolute, data, relative)
+	                const rawIcon = appDef.icon;
+	                if (rawIcon.startsWith('http') || rawIcon.startsWith('/') || rawIcon.startsWith('data:')) {
+	                    iconUrl = rawIcon;
+	                } else {
+	                    iconUrl = `/assets/appicon/${rawIcon}`;
+	                }
+	            }
+	            // Error handling for image
+	            img.onerror = () => { img.src = '/assets/appicon/system.png'; };
+	            img.src = iconUrl;
+	            el.appendChild(img);
+	        }
+	        
+	        // Text Append
+	        if (hasText) {
+	            const span = document.createElement('span');
+	            span.className = 'activity-text';
+	            span.textContent = item.data.text;
+	            el.appendChild(span);
+	        }
+	        
+	        // Click Action
+	        el.addEventListener('click', (e) => {
+	            e.stopPropagation();
+	            if (appDef) createFullscreenEmbed(appDef.url);
+	            else if (item.data.url) createFullscreenEmbed(item.data.url);
+	        });
+	
+	        container.appendChild(el);
+	    });
     }
 };
 
@@ -13110,6 +13115,7 @@ window.addEventListener('message', async (event) => { // Make listener async
 
     // Handle homescreen updates from a Live Activity iframe
     if (data.type === 'live-activity-homescreen-update') {
+        // A. Handle Legacy invisible widget if present (keep existing logic)
         const homescreenWidget = document.getElementById('live-activity-homescreen');
         if (homescreenWidget) {
             const iconEl = homescreenWidget.querySelector('.material-symbols-rounded');
@@ -13118,34 +13124,48 @@ window.addEventListener('message', async (event) => { // Make listener async
             if (textEl) textEl.textContent = data.text || '';
         }
         
-        // Update Remote
+        // Update global variable for Remote Sync
         window.activeLiveActivityData = { 
             icon: data.icon || 'smart_toy', 
             text: data.text || 'Live Activity' 
         };
         updateRemoteNotifications();
-        
-        // Find which app sent this message to update its island bubble
+
+        // B. SYNC WITH ACTIVITY ISLAND
+        // Find which app iframe sent this message
+        const sourceWindow = event.source;
         let sourceAppId = null;
+        
+        // Find iframe matching source window
         const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
         for (const iframe of iframes) {
             if (iframe.contentWindow === sourceWindow) {
-                sourceAppId = iframe.dataset.appId;
+                sourceAppId = iframe.dataset.appId; // e.g., "ClockWidget"
                 break;
             }
         }
         
         if (sourceAppId) {
-            // Find active activity ID for this app (assuming 1 active for now or creating generic ID)
-            const entry = Object.entries(activeLiveActivities).find(([id, val]) => val.appName === sourceAppId);
-            const activityId = entry ? entry[0] : `island-${sourceAppId}`;
+            // Find existing Activity ID using case-insensitive search
+            // activeLiveActivities = { "id": { appName: "ClockWidget", ... } }
+            
+            const normalizedSource = sourceAppId.toLowerCase();
+            const entry = Object.entries(activeLiveActivities).find(([id, val]) => 
+                val.appName.toLowerCase() === normalizedSource
+            );
+            
+            // If found, use that ID. If not found (unlikely but safe), create a fallback ID
+            const activityId = entry ? entry[0] : `island-${sourceAppId.replace(/\s+/g, '-')}`;
 
-            // Update IslandManager with text and specific icon
+            // Push update to IslandManager
             IslandManager.update(activityId, 'live-activity', {
-                appName: sourceAppId,
-                iconString: data.icon, // Material symbol from request
-                text: data.text // Text content
+                appName: sourceAppId, // Store original casing for later icon lookup
+                iconString: data.icon, // Force this symbol over app icon
+                text: data.text        // Add text payload
             });
+            
+            // Trigger UI sync for night/minimal/status
+            updateStatusIndicator(); 
         }
         
         return;
