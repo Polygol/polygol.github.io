@@ -643,9 +643,9 @@ body.one-button-nav-active .dock.show {
 
 #dynamic-area {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 8px 10px;
+    top: 18px;
+    right: 14px;
+	height: 48px;
     display: flex;
     align-items: center;
     gap: 12px; /* Space between segments */
@@ -690,7 +690,6 @@ body.one-button-nav-active .dock.show {
 .activity-capsule .material-symbols-rounded {
     font-size: 20px;
     color: var(--text-color);
-    text-shadow: 0 0 5px var(--background-color-tr); /* Contrast against wallpaper */
 }
 
 #status-indicator {
@@ -707,15 +706,13 @@ body.one-button-nav-active .dock.show {
 .status-dot {
     width: 6px;
     height: 6px;
-    background-color: #ff3b30; /* Red */
+    background-color: var(--secondary-text-color);
     border-radius: 50%;
-    box-shadow: 0 0 4px rgba(255, 59, 48, 0.5);
 }
 
 #status-indicator .material-symbols-rounded {
     font-size: 16px;
     color: var(--secondary-text-color);
-    text-shadow: 0 0 4px var(--background-color-tr);
 }
 
 .persistent-clock {
