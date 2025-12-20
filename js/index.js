@@ -2346,7 +2346,131 @@ function getCurrentTime24() {
     return `${hours}:${minutes}:${seconds}`;
 }
 
+let unreadNotifications = 0;
+let activeIslands = []; // Objects: { id, type, content, lastUpdated }
+
+const IslandManager = {
+    // Add or Update an activity
+    update(id, type, data) {
+        const timestamp = Date.now();
+        const existingIndex = activeIslands.findIndex(i => i.id === id);
+        
+        const islandData = { id, type, data, lastUpdated: timestamp };
+
+        if (existingIndex > -1) {
+            // Update existing but preserve ID position? No, bump to top for updates?
+            // Apple style usually keeps position fixed, but let's sort by recent update.
+            activeIslands[existingIndex] = islandData;
+        } else {
+            activeIslands.unshift(islandData);
+        }
+
+        // Sort: Most recently updated first
+        activeIslands.sort((a, b) => b.lastUpdated - a.lastUpdated);
+        this.render();
+    },
+
+    remove(id) {
+        activeIslands = activeIslands.filter(i => i.id !== id);
+        this.render();
+    },
+
+    render() {
+        const container = document.getElementById('activity-island');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        // Restriction: Show max 2 activities
+        const toShow = activeIslands.slice(0, 2);
+        
+        toShow.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'activity-capsule';
+            
+            // Render Content: Image > IconString > App Icon
+            if (item.data.imgUrl) {
+                const img = document.createElement('img');
+                img.src = item.data.imgUrl;
+                el.appendChild(img);
+            } else if (item.data.iconString) {
+                const span = document.createElement('span');
+                span.className = 'material-symbols-rounded';
+                span.textContent = item.data.iconString;
+                el.appendChild(span);
+            } else {
+                // App Icon Fallback
+                const img = document.createElement('img');
+                let iconUrl = '/assets/appicon/system.png';
+                if (item.data.appName && apps[item.data.appName]) {
+                    const appDef = apps[item.data.appName];
+                    iconUrl = appDef.icon;
+                    if (!iconUrl.startsWith('http') && !iconUrl.startsWith('data:')) {
+                        iconUrl = `/assets/appicon/${iconUrl}`;
+                    }
+                }
+                img.src = iconUrl;
+                el.appendChild(img);
+            }
+            
+            // Click Handler
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // If it's a media item, ensure we open the app or widget controls
+                if (item.type === 'media' && item.data.appName) {
+                    if (apps[item.data.appName]) {
+                        createFullscreenEmbed(apps[item.data.appName].url);
+                    }
+                } else if (item.data.url) {
+                    // Live Activity - open iframe URL
+                    createFullscreenEmbed(item.data.url);
+                }
+            });
+
+            container.appendChild(el);
+        });
+    }
+};
+
+function updateStatusIndicator() {
+    const el = document.getElementById('status-indicator');
+    if (!el) return;
+
+    // Interaction: Click opens Quick Settings (Clock click)
+    el.onclick = (e) => {
+        e.stopPropagation();
+        const clock = document.getElementById('persistent-clock');
+        if (clock) clock.click();
+    };
+
+    el.innerHTML = '';
+
+    // Priority Logic: Modes override Notifications
+    // 1. Focus Mode
+    if (typeof minimalMode !== 'undefined' && minimalMode) {
+        el.innerHTML = '<span class="material-symbols-rounded">filter_tilt_shift</span>';
+        return;
+    }
+    // 2. Night Mode
+    if (typeof nightMode !== 'undefined' && nightMode) {
+        el.innerHTML = '<span class="material-symbols-rounded">bedtime</span>';
+        return;
+    }
+    // 3. Silent Mode
+    if (typeof isSilentMode !== 'undefined' && isSilentMode) {
+        el.innerHTML = '<span class="material-symbols-rounded">notifications_off</span>';
+        return;
+    }
+    // 4. Notifications
+    if (unreadNotifications > 0) {
+        const dot = document.createElement('div');
+        dot.className = 'status-dot';
+        el.appendChild(dot);
+    }
+}
+
 const persistentClock = document.getElementById('persistent-clock');
+const dynamicArea = document.getElementById('dynamic-area');
 
 document.addEventListener('DOMContentLoaded', () => {	
     // --- Get references to key elements ---
@@ -2593,6 +2717,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 	
 	const appDrawer = document.getElementById('app-drawer');
+    const dynamicArea = document.getElementByID('dynamic-area');
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
     const quickActions = document.getElementById('persistent-clock-quick-actions');
@@ -2610,7 +2735,7 @@ document.addEventListener('DOMContentLoaded', () => {
             interactionBlocker.style.display = 'block';
             interactionBlocker.style.pointerEvents = 'auto';
             interactionBlocker.style.zIndex = '9994'; // Below actions menu but above app
-            persistentClock.style.opacity = '0';
+            dynamicArea.style.opacity = '0';
 
             document.getElementById('quick-action-controls').style.display = isTouch ? 'none' : 'flex';
 
@@ -2632,7 +2757,7 @@ document.addEventListener('DOMContentLoaded', () => {
             quickActions.classList.remove('show');
             interactionBlocker.style.display = 'none';
             interactionBlocker.style.zIndex = '999';
-            persistentClock.style.opacity = '1';
+            dynamicArea.style.opacity = '1';
             // Wait for transition to finish before setting display to none
             setTimeout(() => {
                 if (!quickActions.classList.contains('show')) {
@@ -2646,7 +2771,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastTouchTime = 0;
     document.addEventListener('touchstart', () => { lastTouchTime = Date.now(); }, true);
 
-    persistentClock.addEventListener('mouseenter', () => {
+    dynamicArea.addEventListener('mouseenter', () => {
         // Ignore hover if a touch event happened recently to prevent conflicts
         if (Date.now() - lastTouchTime < 500) return;
 
@@ -2991,7 +3116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-		persistentClock.style.opacity = '0';
+		dynamicArea.style.opacity = '0';
 		customizeModal.style.display = 'block';
         customizeModal.style.pointerEvents = 'none'; 
 		customizeModal.scrollTop = 0; 
@@ -3996,6 +4121,11 @@ function addToNotificationShade(message, options = {}) {
         shade.style.pointerEvents = 'none';
         document.body.appendChild(shade);
     }
+
+    if (!options.liveActivityUrl) {
+        unreadNotifications++;
+        updateStatusIndicator();
+    }
     
     // Create notification element
     const notification = document.createElement('div');
@@ -4022,6 +4152,11 @@ function addToNotificationShade(message, options = {}) {
 	    notification.style.opacity = '0';
 	    notification.style.transform = 'translateX(50px)';
 	    notification.style.height = '0px';
+
+	    if (!options.liveActivityUrl) {
+            unreadNotifications = Math.max(0, unreadNotifications - 1);
+            updateStatusIndicator();
+        }
         
         // Remove from global list
         window.activeNotificationsList = window.activeNotificationsList.filter(n => n.id !== notif.dataset.notifId);
@@ -4246,6 +4381,8 @@ function clearAllNotifications() {
     }
     window.activeNotificationsList = [];
     updateRemoteNotifications();
+    unreadNotifications = 0;
+    updateStatusIndicator();
 }
 
 function isFullScreen() {
@@ -5662,6 +5799,8 @@ function updateMinimalMode() {
         } else {
             nightModeIcon.textContent = 'bedtime'; // Default icon
         }
+
+		updateStatusIndicator();
     }
 
 function updateNightMode() {
@@ -8815,7 +8954,7 @@ async function createFullscreenEmbed(url, options = {}) {
     appLastOpened[appName] = Date.now();
     saveLastOpenedData();
 
-    persistentClock.style.opacity = '1';
+    dynamicArea.style.opacity = '1';
 
     isAppOpen = true;
 
@@ -9450,7 +9589,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         });
 
         // 3. RESTORE HOME UI
-        persistentClock.style.opacity = '1';
+        dynamicArea.style.opacity = '1';
         updateDockVisibility();
         applyWallpaperEffects();
         document.body.style.setProperty('--bg-transform-scale', '1.05');
@@ -9514,7 +9653,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 				    embedContainer.style.pointerEvents = 'none';
                 }
 
-				persistentClock.style.opacity = '1';
+				dynamicArea.style.opacity = '1';
 				embedContainer.style.transform = 'scale(0.8)';
                 embedContainer.style.zIndex = '0';
 
@@ -9974,7 +10113,7 @@ function setupDrawerInteractions() {
 	        // Start effect after a small deadzone
 	        if (deltaY > 50) {
 		    cancelLongPress();
-		    persistentClock.style.opacity = '0';
+		    dynamicArea.style.opacity = '0';
 			
 	            // Progress is how far along the "close" gesture we are. 
 	            // A 20% screen height swipe is considered the full gesture.
@@ -10009,7 +10148,7 @@ function setupDrawerInteractions() {
 	            openEmbed.style.border = 'none';
 				openEmbed.style.cornerShape = 'square';
 	            
-		    persistentClock.style.opacity = '1';
+		    dynamicArea.style.opacity = '1';
 	        }
 	
 	        // Ensure the drawer UI is not visible
@@ -10054,7 +10193,7 @@ function setupDrawerInteractions() {
 	        }
 		    
 			cancelLongPress();
-			persistentClock.style.opacity = '0';
+			dynamicArea.style.opacity = '0';
 	
 	        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
 	        
@@ -10132,7 +10271,7 @@ function setupDrawerInteractions() {
 	            openEmbed.style.border = 'none'; // Animate border removal
 	            
 	            appDrawer.style.opacity = '0';
-				persistentClock.style.opacity = '1';
+				dynamicArea.style.opacity = '1';
                 // NEW: Apply opening effects on snap-back
                 const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
                 const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
@@ -10153,7 +10292,7 @@ function setupDrawerInteractions() {
 	
 	    } else {
 	        // LOGIC FOR FINISHING A DRAWER DRAG (NO APP OPEN)
-			persistentClock.style.opacity = '1';
+			dynamicArea.style.opacity = '1';
 	        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
 	
 	        const isSignificantSwipe = movementPercentage > 25 || isFlickUp;
@@ -11156,6 +11295,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         } else {
             minimalModeIcon.textContent = 'filter_tilt_shift'; // Minimal mode OFF
         }
+		updateStatusIndicator();
     }
     
     // Function to update silent mode icon
@@ -11168,6 +11308,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         } else {
             silentModeIcon.textContent = 'notifications'; // Silent mode OFF
         }
+		updateStatusIndicator();
     }
     
     // Function to update the temperature icon based on value
@@ -11647,7 +11788,7 @@ blurOverlayControls.addEventListener('click', () => {
 });
 
 function closeControls() {
-	persistentClock.style.opacity = '1';
+	dynamicArea.style.opacity = '1';
     customizeModal.classList.remove('show'); // Start animation
     blurOverlayControls.classList.remove('show');
 
@@ -12125,6 +12266,7 @@ function _updateActiveMediaSession() {
 		activeMediaSessionApp = null;
         window.activeMediaSessionApp = null;
         hideMediaWidget();
+        IslandManager.remove('system-media');
         // localStorage.removeItem('lastMediaMetadata');
         // localStorage.removeItem('lastMediaSessionApp');
         return;
@@ -12178,6 +12320,13 @@ function _updateActiveMediaSession() {
         // When a session first loads/activates, we assume 'paused' until the app tells us otherwise
         window.WavesHost.pushMediaUpdate(metadata, appName, 'paused');
     }
+	
+    const art = metadata.artwork && metadata.artwork[0] ? metadata.artwork[0].src : null;
+    IslandManager.update('system-media', 'media', {
+        appName: appName,
+        imgUrl: art,
+        iconString: art ? null : 'music_note'
+    });
 }
 
 function updateMediaWidgetState(playbackState) {
@@ -12619,6 +12768,12 @@ function startLiveActivity(appName, options) {
             homescreenWidget.style.display = 'flex';
         }
     }
+	
+    IslandManager.update(options.activityId, 'live-activity', {
+        appName: appName,
+        url: options.url,
+        iconString: options.icon || null
+    });
 }
 
 /**
@@ -12637,6 +12792,14 @@ function updateLiveActivity(activityId, data) {
                 iframe.contentWindow.postMessage({ type: 'live-activity-update', ...data }, targetOrigin);
             }
         }
+		
+		if (data.icon) {
+             IslandManager.update(activityId, 'live-activity', {
+                 appName: activity.appName,
+                 url: activity.options.url,
+                 iconString: data.icon
+             });
+         }
     }
 }
 
@@ -12664,6 +12827,8 @@ function stopLiveActivity(activityId) {
         }
 
         delete activeLiveActivities[activityId];
+
+        IslandManager.remove(activityId);
     }
 }
 
