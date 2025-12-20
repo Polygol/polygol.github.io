@@ -684,7 +684,6 @@ body.one-button-nav-active .dock.show {
     height: 100%;
     object-fit: cover;
     scale: 1.3;
-	border: 1px solid var(--glass-border);
 }
 
 .activity-capsule .material-symbols-rounded {
@@ -747,34 +746,11 @@ body.one-button-nav-active .dock.show {
 	    color: transparent;
 	}
 	
-	body:not(.high-contrast) .persistent-clock .persistent-colon {
-	    -webkit-mask-image: linear-gradient(black, black);
-	    -webkit-mask-clip: text;
-	    -webkit-mask-composite: source-in;
-	    mask-image: linear-gradient(black, black);
-	    mask-composite: source-in;
-	    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
-	}
-	
-	body:not(.high-contrast) .persistent-clock .persistent-clock-digit {
-	    -webkit-mask-image: linear-gradient(black, black);
-	    -webkit-mask-clip: text;
-	    -webkit-mask-composite: source-in;
-	    mask-image: linear-gradient(black, black);
-	    mask-composite: source-in;
-	    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
-	}
-	
-	body:not(.high-contrast) .persistent-clock .material-symbols-rounded {
-	    -webkit-mask-image: linear-gradient(black, black);
-	    -webkit-mask-clip: text;
-	    -webkit-mask-composite: source-in;
-	    mask-image: linear-gradient(black, black);
-	    mask-composite: source-in;
-	    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
-	}
-
-	body:not(.high-contrast) .nav-btn-small .material-symbols-rounded {
+	body:not(.high-contrast) .persistent-clock .persistent-colon,
+	body:not(.high-contrast) .persistent-clock .persistent-clock-digit,
+	body:not(.high-contrast) .persistent-clock .material-symbols-rounded,
+	body:not(.high-contrast) .nav-btn-small .material-symbols-rounded,
+	body:not(.high-contrast) #status-indicator .material-symbols-rounded {
 	    -webkit-mask-image: linear-gradient(black, black);
 	    -webkit-mask-clip: text;
 	    -webkit-mask-composite: source-in;
