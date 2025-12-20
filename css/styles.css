@@ -2238,7 +2238,6 @@ input[type="checkbox"]:checked::before {
     body.minimal-active .drawer-handle,
 	body.minimal-active .one-button-nav-handle {
         opacity: 0;
-		width: 0;
     }
 
 	body-minimal-active .persistent-clock-digit,
