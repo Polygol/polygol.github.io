@@ -645,7 +645,6 @@ body.one-button-nav-active .dock.show {
     position: fixed;
     top: 20px;
     right: 20px;
-	height: 70px;
     padding: 8px 10px;
     display: flex;
     align-items: center;
@@ -720,6 +719,7 @@ body.one-button-nav-active .dock.show {
 }
 
 .persistent-clock {
+	pointer-events: auto;
     font-size: 1.2rem;
     color: var(--text-color);
     background-color: transparent;
