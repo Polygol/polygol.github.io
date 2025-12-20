@@ -250,6 +250,10 @@ body.high-contrast .persistent-clock {
 	color: var(--text-color);
 }
 
+body.high-contrast .status-dot {
+	background-color: var(--text-color);
+}
+
 body.high-contrast .nav-pill {
 	background-color: var(--text-color);
 }
@@ -705,8 +709,8 @@ body.one-button-nav-active .dock.show {
 .status-dot {
     width: 6px;
     height: 6px;
-    background-color: var(--secondary-text-color);
     border-radius: 50%;
+    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(50px);
 }
 
 #status-indicator .material-symbols-rounded {
