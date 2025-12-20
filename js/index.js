@@ -2350,22 +2350,17 @@ let unreadNotifications = 0;
 let activeIslands = []; // Objects: { id, type, content, lastUpdated }
 
 const IslandManager = {
-    // Add or Update an activity
     update(id, type, data) {
         const timestamp = Date.now();
         const existingIndex = activeIslands.findIndex(i => i.id === id);
-        
         const islandData = { id, type, data, lastUpdated: timestamp };
 
         if (existingIndex > -1) {
-            // Update existing but preserve ID position? No, bump to top for updates?
-            // Apple style usually keeps position fixed, but let's sort by recent update.
             activeIslands[existingIndex] = islandData;
         } else {
             activeIslands.unshift(islandData);
         }
 
-        // Sort: Most recently updated first
         activeIslands.sort((a, b) => b.lastUpdated - a.lastUpdated);
         this.render();
     },
@@ -2380,15 +2375,25 @@ const IslandManager = {
         if (!container) return;
         
         container.innerHTML = '';
-        
-        // Restriction: Show max 2 activities
         const toShow = activeIslands.slice(0, 2);
         
         toShow.forEach(item => {
             const el = document.createElement('div');
             el.className = 'activity-capsule';
             
-            // Render Content: Image > IconString > App Icon
+            // --- FIX: Normalize App Name for lookup ---
+            let canonicalAppName = item.data.appName;
+            let appDef = null;
+            if (canonicalAppName) {
+                // Find case-insensitive match if direct lookup fails
+                if (!apps[canonicalAppName]) {
+                    const match = Object.keys(apps).find(k => k.toLowerCase() === canonicalAppName.toLowerCase());
+                    if (match) canonicalAppName = match;
+                }
+                appDef = apps[canonicalAppName];
+            }
+
+            // --- FIX: Icon Selection Logic ---
             if (item.data.imgUrl) {
                 const img = document.createElement('img');
                 img.src = item.data.imgUrl;
@@ -2399,11 +2404,10 @@ const IslandManager = {
                 span.textContent = item.data.iconString;
                 el.appendChild(span);
             } else {
-                // App Icon Fallback
+                // Fallback to App Icon
                 const img = document.createElement('img');
                 let iconUrl = '/assets/appicon/system.png';
-                if (item.data.appName && apps[item.data.appName]) {
-                    const appDef = apps[item.data.appName];
+                if (appDef && appDef.icon) {
                     iconUrl = appDef.icon;
                     if (!iconUrl.startsWith('http') && !iconUrl.startsWith('data:')) {
                         iconUrl = `/assets/appicon/${iconUrl}`;
@@ -2413,16 +2417,14 @@ const IslandManager = {
                 el.appendChild(img);
             }
             
-            // Click Handler
+            // --- FIX: Click Action ---
+            // Opens the Main App URL (e.g., timer/index.html) instead of the Widget URL
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
-                // If it's a media item, ensure we open the app or widget controls
-                if (item.type === 'media' && item.data.appName) {
-                    if (apps[item.data.appName]) {
-                        createFullscreenEmbed(apps[item.data.appName].url);
-                    }
+                if (appDef) {
+                    createFullscreenEmbed(appDef.url);
                 } else if (item.data.url) {
-                    // Live Activity - open iframe URL
+                    // Fallback: try opening the widget URL if no app def found (might get blocked by allowlist)
                     createFullscreenEmbed(item.data.url);
                 }
             });
@@ -12751,6 +12753,8 @@ function startLiveActivity(appName, options) {
         return;
     }
 
+    const canonicalName = Object.keys(apps).find(k => k.toLowerCase() === appName.toLowerCase()) || appName;
+
     // If an activity with this ID already exists, stop it first.
     if (activeLiveActivities[options.activityId]) {
         stopLiveActivity(options.activityId);
@@ -12777,7 +12781,7 @@ function startLiveActivity(appName, options) {
     }
 	
     IslandManager.update(options.activityId, 'live-activity', {
-        appName: appName,
+        appName: canonicalName, 
         url: options.url,
         iconString: options.icon || null
     });
