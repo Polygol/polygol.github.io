@@ -671,6 +671,7 @@ body.one-button-nav-active .dock.show {
     animation: capsule-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: auto;
     cursor: pointer;
+	overflow: hidden;
 }
 
 @keyframes capsule-pop {
@@ -681,9 +682,8 @@ body.one-button-nav-active .dock.show {
 .activity-capsule img {
     width: 100%;
     height: 100%;
-    border-radius: 10px;
-	corner-shape: superellipse(1.5);
     object-fit: cover;
+    scale: 1.3;
 }
 
 .activity-capsule .material-symbols-rounded {
