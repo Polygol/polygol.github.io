@@ -2429,8 +2429,6 @@ const IslandManager = {
 
             container.appendChild(el);
         });
-		
-        updatePersistentClock(); 
     }
 };
 
