@@ -672,7 +672,6 @@ body.one-button-nav-active .dock.show {
     align-items: center;
     justify-content: center;
     transition: all 0.3s cubic-bezier(0.2, 0, 0.38, 0.9);
-    animation: capsule-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: auto;
     cursor: pointer;
 	overflow: hidden;
@@ -765,7 +764,7 @@ body.one-button-nav-active .dock.show {
 /* Fix for misaligned colon in persistent clock */
 .persistent-clock .persistent-colon {
     position: relative;
-    top: -0.07em;
+    top: -0.08em;
 }
 
 @supports (-webkit-mask-clip: text) {
