@@ -13151,36 +13151,47 @@ window.addEventListener('message', async (event) => { // Make listener async
         updateRemoteNotifications();
 
         // B. SYNC WITH ACTIVITY ISLAND
-        // Find which app iframe sent this message
         const sourceWindow = event.source;
         let sourceAppId = null;
+        let specificActivityId = null;
         
         // Find iframe matching source window
         const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
         for (const iframe of iframes) {
             if (iframe.contentWindow === sourceWindow) {
-                sourceAppId = iframe.dataset.appId; // e.g., "ClockWidget"
+                sourceAppId = iframe.dataset.appId; 
+                
+                // Fallback: If no appId on iframe, check if it's a Live Activity frame
+                if (!sourceAppId) {
+                    const activityContainer = iframe.closest('.live-activity-notification');
+                    if (activityContainer && activityContainer.dataset.activityId) {
+                        specificActivityId = activityContainer.dataset.activityId;
+                        if (activeLiveActivities[specificActivityId]) {
+                            sourceAppId = activeLiveActivities[specificActivityId].appName;
+                        }
+                    }
+                }
                 break;
             }
         }
         
         if (sourceAppId) {
-            // Find existing Activity ID using case-insensitive search
-            // activeLiveActivities = { "id": { appName: "ClockWidget", ... } }
+            let targetActivityId = specificActivityId;
             
-            const normalizedSource = sourceAppId.toLowerCase();
-            const entry = Object.entries(activeLiveActivities).find(([id, val]) => 
-                val.appName.toLowerCase() === normalizedSource
-            );
-            
-            // If found, use that ID. If not found (unlikely but safe), create a fallback ID
-            const activityId = entry ? entry[0] : `island-${sourceAppId.replace(/\s+/g, '-')}`;
+            // If we didn't find the ID from the container, look it up by app name
+            if (!targetActivityId) {
+                const normalizedSource = sourceAppId.toLowerCase();
+                const entry = Object.entries(activeLiveActivities).find(([id, val]) => 
+                    val.appName.toLowerCase() === normalizedSource
+                );
+                targetActivityId = entry ? entry[0] : `island-${sourceAppId.replace(/\s+/g, '-')}`;
+            }
 
             // Push update to IslandManager
-            IslandManager.update(activityId, 'live-activity', {
-                appName: sourceAppId, // Store original casing for later icon lookup
-                iconString: data.icon, // Force this symbol over app icon
-                text: data.text        // Add text payload
+            IslandManager.update(targetActivityId, 'live-activity', {
+                appName: sourceAppId,
+                iconString: data.icon, 
+                text: data.text 
             });
             
             // Trigger UI sync for night/minimal/status
