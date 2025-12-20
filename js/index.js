@@ -12822,13 +12822,24 @@ function updateLiveActivity(activityId, data) {
             }
         }
 		
-		if (data.icon) {
-             IslandManager.update(activityId, 'live-activity', {
-                 appName: activity.appName,
-                 url: activity.options.url,
-                 iconString: data.icon
-             });
-         }
+        const islandUpdate = {
+            appName: activity.appName,
+            url: activity.options.url
+        };
+        let shouldUpdate = false;
+
+        if (data.icon !== undefined) {
+            islandUpdate.iconString = data.icon;
+            shouldUpdate = true;
+        }
+        if (data.text !== undefined) {
+            islandUpdate.text = data.text;
+            shouldUpdate = true;
+        }
+
+        if (shouldUpdate) {
+             IslandManager.update(activityId, 'live-activity', islandUpdate);
+        }
     }
 }
 
