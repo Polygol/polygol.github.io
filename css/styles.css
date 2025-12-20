@@ -714,6 +714,7 @@ body.one-button-nav-active .dock.show {
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
 }
 
+.persistent-clock:hover ~ #customizeModal.modal,
 .persistent-clock:active ~ #customizeModal.modal {
 	display: block !important;
 	pointer-events: none !important;
