@@ -2887,7 +2887,7 @@ document.addEventListener('DOMContentLoaded', () => {
             persistentClock.innerHTML = '<span class="material-symbols-rounded"><br></span>';
             persistentClock.style.opacity = '0';
         } else {
-            persistentClock.innerHTML = '<span class="material-symbols-rounded">keyboard_arrow_down</span>';
+            persistentClock.innerHTML = '<span class="material-symbols-rounded">maximize</span>';
             persistentClock.style.opacity = '1';
         }
 	  }
