@@ -647,7 +647,7 @@ body.one-button-nav-active .dock.show {
 
 #dynamic-area {
     position: fixed;
-    top: 18px;
+    top: 16.5px;
     right: 14px;
 	height: 48px;
     display: flex;
