@@ -2353,7 +2353,11 @@ const IslandManager = {
     update(id, type, data) {
         const timestamp = Date.now();
         const existingIndex = activeIslands.findIndex(i => i.id === id);
-        const islandData = { id, type, data, lastUpdated: timestamp };
+        // Merge existing data if updating to preserve text/icon if only one changes
+        const existingData = existingIndex > -1 ? activeIslands[existingIndex].data : {};
+        const newData = { ...existingData, ...data };
+
+        const islandData = { id, type, data: newData, lastUpdated: timestamp };
 
         if (existingIndex > -1) {
             activeIslands[existingIndex] = islandData;
@@ -2381,11 +2385,9 @@ const IslandManager = {
             const el = document.createElement('div');
             el.className = 'activity-capsule';
             
-            // --- FIX: Normalize App Name for lookup ---
             let canonicalAppName = item.data.appName;
             let appDef = null;
             if (canonicalAppName) {
-                // Find case-insensitive match if direct lookup fails
                 if (!apps[canonicalAppName]) {
                     const match = Object.keys(apps).find(k => k.toLowerCase() === canonicalAppName.toLowerCase());
                     if (match) canonicalAppName = match;
@@ -2393,7 +2395,8 @@ const IslandManager = {
                 appDef = apps[canonicalAppName];
             }
 
-            // --- FIX: Icon Selection Logic ---
+            // --- 1. RENDER ICON ---
+            // Priority: Explicit Image > Explicit Icon Symbol > App Icon
             if (item.data.imgUrl) {
                 const img = document.createElement('img');
                 img.src = item.data.imgUrl;
@@ -2404,27 +2407,37 @@ const IslandManager = {
                 span.textContent = item.data.iconString;
                 el.appendChild(span);
             } else {
-                // Fallback to App Icon
+                // Fallback to App Icon with FIXED Logic
                 const img = document.createElement('img');
                 let iconUrl = '/assets/appicon/system.png';
                 if (appDef && appDef.icon) {
-                    iconUrl = appDef.icon;
-                    if (!iconUrl.startsWith('http') && !iconUrl.startsWith('data:')) {
-                        iconUrl = `/assets/appicon/${iconUrl}`;
+                    const rawIcon = appDef.icon;
+                    // FIX: Check for root-relative paths ('/') in addition to http/data
+                    if (rawIcon.startsWith('http') || rawIcon.startsWith('/') || rawIcon.startsWith('data:')) {
+                        iconUrl = rawIcon;
+                    } else {
+                        iconUrl = `/assets/appicon/${rawIcon}`;
                     }
                 }
                 img.src = iconUrl;
                 el.appendChild(img);
             }
             
-            // --- FIX: Click Action ---
-            // Opens the Main App URL (e.g., timer/index.html) instead of the Widget URL
+            // --- 2. RENDER TEXT ---
+            if (item.data.text) {
+                el.classList.add('has-text');
+                const span = document.createElement('span');
+                span.className = 'activity-text';
+                span.textContent = item.data.text;
+                el.appendChild(span);
+            }
+            
+            // Click Handler
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (appDef) {
                     createFullscreenEmbed(appDef.url);
                 } else if (item.data.url) {
-                    // Fallback: try opening the widget URL if no app def found (might get blocked by allowlist)
                     createFullscreenEmbed(item.data.url);
                 }
             });
@@ -13111,6 +13124,29 @@ window.addEventListener('message', async (event) => { // Make listener async
             text: data.text || 'Live Activity' 
         };
         updateRemoteNotifications();
+        
+        // Find which app sent this message to update its island bubble
+        let sourceAppId = null;
+        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+        for (const iframe of iframes) {
+            if (iframe.contentWindow === sourceWindow) {
+                sourceAppId = iframe.dataset.appId;
+                break;
+            }
+        }
+        
+        if (sourceAppId) {
+            // Find active activity ID for this app (assuming 1 active for now or creating generic ID)
+            const entry = Object.entries(activeLiveActivities).find(([id, val]) => val.appName === sourceAppId);
+            const activityId = entry ? entry[0] : `island-${sourceAppId}`;
+
+            // Update IslandManager with text and specific icon
+            IslandManager.update(activityId, 'live-activity', {
+                appName: sourceAppId,
+                iconString: data.icon, // Material symbol from request
+                text: data.text // Text content
+            });
+        }
         
         return;
     }
