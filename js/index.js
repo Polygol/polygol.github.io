@@ -12822,23 +12822,31 @@ function updateLiveActivity(activityId, data) {
             }
         }
 		
+        // Prepare data for the Activity Island
         const islandUpdate = {
             appName: activity.appName,
             url: activity.options.url
         };
-        let shouldUpdate = false;
 
-        if (data.icon !== undefined) {
+        let hasUpdates = false;
+
+        // Map 'icon' from app update to 'iconString' for IslandManager
+        if (data.icon) {
             islandUpdate.iconString = data.icon;
-            shouldUpdate = true;
+            hasUpdates = true;
         }
-        if (data.text !== undefined) {
+        
+        // Map 'text' from app update
+        if (data.text) {
             islandUpdate.text = data.text;
-            shouldUpdate = true;
+            hasUpdates = true;
         }
 
-        if (shouldUpdate) {
+        // Only update the island if visual data was provided
+        if (hasUpdates) {
              IslandManager.update(activityId, 'live-activity', islandUpdate);
+             // Trigger UI sync (status indicator usually hides if island is active)
+             updateStatusIndicator();
         }
     }
 }
