@@ -2374,20 +2374,40 @@ const IslandManager = {
         this.render();
     },
 
-    render() {
+	render() {
         const container = document.getElementById('activity-island');
         if (!container) return;
         
-        container.innerHTML = '';
         const toShow = activeIslands.slice(0, 2);
+        const activeIds = new Set(toShow.map(i => i.id));
+
+        // 1. Remove stale elements
+        Array.from(container.children).forEach(child => {
+            if (!activeIds.has(child.dataset.islandId)) {
+                child.remove();
+            }
+        });
         
+        // 2. Create or Update elements
 	    toShow.forEach(item => {
-	        const el = document.createElement('div');
-	        el.className = 'activity-capsule';
+            // Try to find existing element for this activity ID
+            let el = container.querySelector(`.activity-capsule[data-island-id="${item.id}"]`);
+            
+            if (!el) {
+                el = document.createElement('div');
+                el.className = 'activity-capsule';
+                el.dataset.islandId = item.id;
+                // Append immediately so we can work with it
+                container.appendChild(el);
+            } else {
+                // If it exists, appendChild moves it to the correct sorted position without destroying it
+                container.appendChild(el);
+            }
 	        
 	        // Check text first to apply container class
 	        const hasText = item.data.text && item.data.text.trim().length > 0;
-	        if (hasText) el.classList.add('has-text');
+            if (hasText) el.classList.add('has-text');
+            else el.classList.remove('has-text');
 	
 	        let canonicalAppName = item.data.appName;
 	        let appDef = null;
@@ -2399,55 +2419,80 @@ const IslandManager = {
 	            appDef = apps[canonicalAppName];
 	        }
 	
-	        // --- RENDER CONTENT ---
-	        // Priority 1: Explicit Image (Media Art)
-	        if (item.data.imgUrl) {
-	            const img = document.createElement('img');
-	            img.src = item.data.imgUrl;
-	            el.appendChild(img);
-	        } 
-	        // Priority 2: Material Icon Symbol (Live Activities)
-	        else if (item.data.iconString) {
-	            const span = document.createElement('span');
-	            span.className = 'material-symbols-rounded';
-	            span.textContent = item.data.iconString;
-	            el.appendChild(span);
-	        } 
-	        // Priority 3: App Icon Fallback
-	        else {
-	            const img = document.createElement('img');
-	            let iconUrl = '/assets/appicon/system.png';
-	            if (appDef && appDef.icon) {
-	                // Handle different path types (absolute, data, relative)
-	                const rawIcon = appDef.icon;
-	                if (rawIcon.startsWith('http') || rawIcon.startsWith('/') || rawIcon.startsWith('data:')) {
-	                    iconUrl = rawIcon;
-	                } else {
-	                    iconUrl = `/assets/appicon/${rawIcon}`;
-	                }
-	            }
-	            // Error handling for image
-	            img.onerror = () => { img.src = '/assets/appicon/system.png'; };
-	            img.src = iconUrl;
-	            el.appendChild(img);
-	        }
+	        // --- RENDER CONTENT (Update in place) ---
+            
+            // 1. Icon Management
+            let iconEl = el.firstElementChild;
+            let desiredTag = 'IMG'; // Default
+            
+            if (!item.data.imgUrl && item.data.iconString) {
+                desiredTag = 'SPAN';
+            }
+
+            // If the existing icon is the wrong type (or missing), replace it
+            if (!iconEl || iconEl.tagName !== desiredTag || iconEl.classList.contains('activity-text')) {
+                if (iconEl && !iconEl.classList.contains('activity-text')) iconEl.remove();
+                
+                if (desiredTag === 'IMG') {
+                    iconEl = document.createElement('img');
+                    iconEl.onerror = () => { iconEl.src = '/assets/appicon/system.png'; };
+                    el.prepend(iconEl);
+                } else {
+                    iconEl = document.createElement('span');
+                    iconEl.className = 'material-symbols-rounded';
+                    el.prepend(iconEl);
+                }
+            }
+
+            // Update Icon Data
+            if (desiredTag === 'IMG') {
+                let targetSrc = item.data.imgUrl;
+                if (!targetSrc) {
+                    // App Icon Fallback
+                    targetSrc = '/assets/appicon/system.png';
+                    if (appDef && appDef.icon) {
+                        const rawIcon = appDef.icon;
+                        if (rawIcon.startsWith('http') || rawIcon.startsWith('/') || rawIcon.startsWith('data:')) {
+                            targetSrc = rawIcon;
+                        } else {
+                            targetSrc = `/assets/appicon/${rawIcon}`;
+                        }
+                    }
+                }
+                // Only update DOM if source actually changed to prevent flicker
+                if (el.dataset.lastIconSrc !== targetSrc) {
+                    iconEl.src = targetSrc;
+                    el.dataset.lastIconSrc = targetSrc;
+                }
+            } else {
+                // Material Symbol Update
+                if (iconEl.textContent !== item.data.iconString) {
+                    iconEl.textContent = item.data.iconString;
+                }
+            }
 	        
-	        // Text Append
+	        // 2. Text Management
+            let textEl = el.querySelector('.activity-text');
 	        if (hasText) {
-	            const span = document.createElement('span');
-	            span.className = 'activity-text';
-	            span.textContent = item.data.text;
-	            el.appendChild(span);
-	        }
+                if (!textEl) {
+                    textEl = document.createElement('span');
+                    textEl.className = 'activity-text';
+                    el.appendChild(textEl);
+                }
+                // Only update text content if it changed
+                if (textEl.textContent !== item.data.text) {
+                    textEl.textContent = item.data.text;
+                }
+	        } else if (textEl) {
+                textEl.remove();
+            }
 	        
-	        // Click Action
-	        el.addEventListener('click', (e) => {
+	        // Update Click Action
+	        el.onclick = (e) => {
 	            e.stopPropagation();
 	            if (appDef) createFullscreenEmbed(appDef.url);
 	            else if (item.data.url) createFullscreenEmbed(item.data.url);
-	        });
-	
-	        container.appendChild(el);
+	        };
 	    });
     }
 };
