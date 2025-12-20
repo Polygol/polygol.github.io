@@ -2717,7 +2717,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 	
 	const appDrawer = document.getElementById('app-drawer');
-    const dynamicArea = document.getElementByID('dynamic-area');
+    const dynamicArea = document.getElementById('dynamic-area');
     const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
     const quickActions = document.getElementById('persistent-clock-quick-actions');
