@@ -757,6 +757,11 @@ body.one-button-nav-active .dock.show {
 	transform-origin: top;
 }
 
+.persistent-clock.island-active {
+	letter-spacing: -1.4px;
+    font-weight: 500;
+}
+
 /* Fix for misaligned colon in persistent clock */
 .persistent-clock .persistent-colon {
     position: relative;
