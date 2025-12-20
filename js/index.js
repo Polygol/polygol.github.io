@@ -3012,11 +3012,8 @@ document.addEventListener('DOMContentLoaded', () => {
         persistentClock.style.display = 'flex';
 	  } else {
 		if (hasActivities) {
-			// HIDE INDICATOR: Priority goes to Content (Activities)
+			// Priority goes to Content (Activities)
             persistentClock.innerHTML = '<span class="material-symbols-rounded">keyboard_arrow_down</span>';
-            persistentClock.style.visiblity = 'none';
-            persistentClock.style.opacity = '0';
-            persistentClock.style.pointerEvents = 'none'; // Prevent clicking the invisible gap
         } else {
 	        const hideIndicator = localStorage.getItem('hideClockIndicator') === 'true';
 	        if (hideIndicator) {
