@@ -497,7 +497,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             }
         }
 
-        @media (max-width: 400px) {
+        @media (max-width: 500px) {
             .toolbar {
                 justify-content: flex-start;
                 gap: 10px;
