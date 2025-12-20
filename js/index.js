@@ -2429,6 +2429,8 @@ const IslandManager = {
 
             container.appendChild(el);
         });
+		
+        updatePersistentClock(); 
     }
 };
 
@@ -2988,6 +2990,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	  const isModalOpen = 
 	    (appDrawer && appDrawer.classList.contains('open')) ||
 	    document.querySelector('.fullscreen-embed[style*="display: block"]');
+
+	    const hasActivities = (typeof activeIslands !== 'undefined' && activeIslands.length > 0);
 	    
 	  if (isModalOpen) {
 	    const now = new Date();
@@ -3007,14 +3011,22 @@ document.addEventListener('DOMContentLoaded', () => {
 	    persistentClock.innerHTML = `<span class="persistent-clock-digit">${displayHours}</span><span class="persistent-colon">:</span><span class="persistent-clock-digit">${minutes}</span>`;
         persistentClock.style.display = 'flex';
 	  } else {
-        const hideIndicator = localStorage.getItem('hideClockIndicator') === 'true';
-        if (hideIndicator) {
-            persistentClock.innerHTML = '<span class="material-symbols-rounded"><br></span>';
+		if (hasActivities) {
+			// HIDE INDICATOR: Priority goes to Content (Activities)
+            persistentClock.innerHTML = '<span class="material-symbols-rounded">keyboard_arrow_down</span>';
+            persistentClock.style.visiblity = 'none';
             persistentClock.style.opacity = '0';
+            persistentClock.style.pointerEvents = 'none'; // Prevent clicking the invisible gap
         } else {
-            persistentClock.innerHTML = '<span class="material-symbols-rounded">maximize</span>';
-            persistentClock.style.opacity = '1';
-        }
+	        const hideIndicator = localStorage.getItem('hideClockIndicator') === 'true';
+	        if (hideIndicator) {
+	            persistentClock.innerHTML = '<span class="material-symbols-rounded"><br></span>';
+	            persistentClock.style.opacity = '0';
+	        } else {
+	            persistentClock.innerHTML = '<span class="material-symbols-rounded">maximize</span>';
+	            persistentClock.style.opacity = '1';
+	        }
+		}
 	  }
 	}
     
