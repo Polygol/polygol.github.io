@@ -8778,7 +8778,13 @@ async function finalizeSplitScreen(secondAppUrl) {
 
     appDrawer.classList.remove('open');
 
-    document.getElementById('split-divider').style.display = 'flex';
+    // FIX: Explicitly ensure divider is visible and z-indexed correctly
+    const divider = document.getElementById('split-divider');
+    if (divider) {
+        divider.style.display = 'flex';
+        divider.style.zIndex = '1002'; // Ensure it's above apps (1001)
+    }
+    
     updateSplitLayout(50);
 }
 
@@ -13634,11 +13640,18 @@ function discardAndCloseAppSwitcher() {
     appSwitcherVisible = false;
     isDragging = false; // Stop the current drag operation completely
 
+    // FIX: Ensure pointer events are restored for iframes if drag was abandoned
+    document.querySelectorAll('iframe').forEach(f => f.style.pointerEvents = 'auto');
+
     const overlay = document.getElementById('app-switcher-overlay');
+    overlay.style.transition = 'opacity 0.2s ease'; // Simple fade
     overlay.style.opacity = '0';
-    overlay.style.transform = 'translateX(-50%) scale(0.95)';
+    // Remove transform modification to prevent jumping/scaling
+    
     setTimeout(() => {
         overlay.style.display = 'none';
+        // Reset transform for next opening if needed, though default CSS usually handles it
+        overlay.style.transform = ''; 
     }, 200);
 
     // Make the gesture overlay non-interactive since the action is cancelled
@@ -13653,6 +13666,9 @@ function selectAndCloseAppSwitcher() {
     
     appSwitcherVisible = false; // Immediately disable further input.
     isDragging = false; // Ensure dragging state is always reset.
+
+    // FIX: Ensure pointer events are restored for iframes
+    document.querySelectorAll('iframe').forEach(f => f.style.pointerEvents = 'auto');
 
 	const selectedItem = appSwitcherApps[appSwitcherIndex];
 	if (selectedItem.type === 'split') {
@@ -13672,14 +13688,22 @@ function selectAndCloseAppSwitcher() {
 	    }
 	} else {
 	    // This is a single app
-	    createFullscreenEmbed(selectedItem.url);
+        // FIX: Handle "creating split with existing app" logic if currently selecting
+        if (splitScreenState.isSelecting) {
+            finalizeSplitScreen(selectedItem.url);
+        } else {
+    	    createFullscreenEmbed(selectedItem.url);
+        }
 	}
 
     const overlay = document.getElementById('app-switcher-overlay');
+    overlay.style.transition = 'opacity 0.2s ease'; // Simple fade
     overlay.style.opacity = '0';
-    overlay.style.transform = 'translateX(-50%) scale(0.95)';
+    // Remove transform modification to prevent jumping/scaling
+    
     setTimeout(() => {
         overlay.style.display = 'none';
+        overlay.style.transform = ''; 
     }, 200);
 }
 
