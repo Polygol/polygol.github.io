@@ -8,6 +8,8 @@ const ASSETS_TO_CACHE = [
   '/js/index.js',
   '/js/lang.js',
   '/assets/gurapp/api/gurasuraisu-api.js',
+  'https://polygol.github.io/assets/gurapp/api/gurasuraisu-api.js',
+  'https://raw.githubusercontent.com/Polygol/polygol.github.io/refs/heads/main/assets/gurapp/api/gurasuraisu-api.js',
   '/assets/ui/svg/load.svg',
   '/manifest.json',
   '/assets/img/favi/regular.png',
