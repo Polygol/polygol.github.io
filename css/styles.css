@@ -1986,7 +1986,7 @@ input[type="checkbox"]:checked::before {
     border-radius: 36px;
 }
 
-#uploadButton, #versionButton, #resetButton {
+.controls-footer-button, #uploadButton, #versionButton, #resetButton {
     background-color: var(--search-background);
     color: var(--text-color);
     font-family: 'Inter', sans-serif;
