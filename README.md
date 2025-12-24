@@ -63,7 +63,13 @@ Gurapp can extend your Polygol experience. The GitHub repository for each applic
 # I HATE MISSING ASSETS
 If you see images of Fanny BFDI, the assets could not be found. If you are running locally, make sure you have followed the steps.
 
-# Acknowledgements 
+# Forking
+You must replace the contents of these folders:
+* appicon
+* img
+* marketing
+
+# Acknowledgements
 * Application Icons: kirbIndustries
 * Timer Sound: Google
 * Fallback Fanny: jacknjellify
