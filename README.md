@@ -3,16 +3,22 @@
 # Polygol
 Ambient OS-like dashboard with clock, weather and advanced features without tracking you or displaying ads.
 
+**You can access Polygol right now at https://polygol.github.io**
+
+Documentation at https://kirbindustries.gitbook.io/polygol
+
+
 > [!TIP]
 > Polygol will run on any device with a HTML5 web browser.
 > We are designed to replace the regular dashboard experience (FireOS, etc.).
 > You can use Polygol as a substitute for better experiences for limited devices.
 
-# Available for GitHub Pages
-You can access Polygol right now at https://polygol.github.io
-
-# Documentation
-https://kirbindustries.gitbook.io/polygol
+# Features
+* Cross device functionality with Waves
+* Extensive wallpaper based customization with Custom CSS
+* Integration with applications
+* Beautiful Dynamic Glass UI
+* Smart AI assistant
 
 # Roadmap
 * Extend language support
@@ -21,11 +27,15 @@ https://kirbindustries.gitbook.io/polygol
 * Remove redundancy incode
 * Reduce file sizes
 
-# "Polygol runs slow on my device."
+# Quick Questions 
+### "Polygol runs slow on my device."
 If this is the case, try to:
 * Enable Contrast
 * Disable Dynamic Glass
 * Disable Motion
+
+### "How to transfer my Data?"
+Use https://polygol.github.io/transfer
 
 # Gurapp Applications
 Gurapp can extend your Polygol experience. The GitHub repository for each application are seperate from the `polygol.github.io` GitHub repository.
