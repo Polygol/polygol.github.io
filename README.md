@@ -28,14 +28,19 @@ Documentation at https://kirbindustries.gitbook.io/polygol
 * Reduce file sizes
 
 # Quick Questions 
-### "Polygol runs slow on my device."
+### "The device goes back to the home screen."
+* Open Settings in Polygol
+* Open System
+* In Browser section, set Keep Polygol on to "Legacy"
+
+### "How to transfer my data?"
+Use https://polygol.github.io/transfer
+
+### "It runs slow on my device."
 If this is the case, try to:
 * Enable Contrast
 * Disable Dynamic Glass
 * Disable Motion
-
-### "How to transfer my Data?"
-Use https://polygol.github.io/transfer
 
 # Gurapp Applications
 Gurapp can extend your Polygol experience. The GitHub repository for each application are seperate from the `polygol.github.io` GitHub repository.
