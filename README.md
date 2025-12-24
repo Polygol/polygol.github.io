@@ -9,17 +9,17 @@ Ambient OS-like dashboard with clock, weather and advanced features without trac
 > You can use Polygol as a substitute for better experiences for limited devices.
 
 # Available for GitHub Pages
-You can access Polygol right now at https://polygol.github.io/
+You can access Polygol right now at https://polygol.github.io
 
-# Gurapp Applications
-Gurapp can extend your Polygol experience. The GitHub repository for each application are seperate from the `polygol.github.io` GitHub repository.
+# Documentation
+https://kirbindustries.gitbook.io/polygol
 
-# Running Locally
-* Applications: You must download the Gurapps from each GitHub repository and place them in the root directory in order for Gurapps to work correctly with Polygol locally.
-* Assets: You must edit the directory path in the code, since every path assumes that the asset is in root.
-
-# I HATE MISSING ASSETS
-If you see images of Fanny BFDI, the assets could not be found. If you are running locally, make sure you have followed the steps.
+# Roadmap
+* Extend language support
+* Add QoL features for limited devices
+* Modularize code
+* Remove redundancy incode
+* Reduce file sizes
 
 # "Polygol runs slow on my device."
 If this is the case, try to:
@@ -27,8 +27,15 @@ If this is the case, try to:
 * Disable Dynamic Glass
 * Disable Motion
 
-# Documentation
-https://kirbindustries.gitbook.io/polygol
+# Gurapp Applications
+Gurapp can extend your Polygol experience. The GitHub repository for each application are seperate from the `polygol.github.io` GitHub repository.
+
+# Local Run
+* Applications: You must download the Gurapps from each GitHub repository and place them in the root directory in order for Gurapps to work correctly with Polygol locally.
+* Assets: You must edit the directory path in the code, since every path assumes that the asset is in root.
+
+# I HATE MISSING ASSETS
+If you see images of Fanny BFDI, the assets could not be found. If you are running locally, make sure you have followed the steps.
 
 # Acknowledgements 
 * Application Icons: kirbIndustries
