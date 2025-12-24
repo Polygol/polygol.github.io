@@ -1430,17 +1430,17 @@ function openWallpaperPicker() {
     
     uploadItem.innerHTML = `
         <div class="wallpaper-picker-thumbnail" style="${isFull ? 'opacity: 0.5;' : ''}">
-            <span class="material-symbols-rounded">${isFull ? 'block' : 'add'}</span>
+            <span class="material-symbols-rounded">${isFull ? 'error' : 'add'}</span>
         </div>
-        <span class="wallpaper-picker-title">${isFull ? 'Limit Reached' : (currentLanguage.UPLOAD_CUSTOM || 'Add')}</span>
+        <span class="wallpaper-picker-title">${isFull ? 'Storage full' : (currentLanguage.UPLOAD_CUSTOM || 'Add')}</span>
     `;
     
     uploadItem.addEventListener('click', () => {
         if (isFull) {
             showDialog({ 
                 type: 'alert', 
-                title: 'Limit Reached', 
-                message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers. Delete some to add more.` 
+                title: 'Wallpaper storage full', 
+                message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers.` 
             });
         } else {
             // Trigger the external input
@@ -5899,11 +5899,11 @@ function updateNightMode() {
 uploadButton.addEventListener("click", () => {
     // Enforce Limit
     if (recentWallpapers.length >= MAX_RECENT_WALLPAPERS) {
-        showDialog({ 
-            type: 'alert', 
-            title: 'Limit Reached', 
-            message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers. Please delete some before adding more.` 
-        });
+		showDialog({ 
+			type: 'alert', 
+			title: 'Wallpaper storage full', 
+			message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers.` 
+		});
         return;
     }
     wallpaperInput.click();
@@ -5991,8 +5991,12 @@ wallpaperInput.addEventListener("change", async event => {
 
     // Check limit again if adding multiple files
     if (recentWallpapers.length + files.length > MAX_RECENT_WALLPAPERS) {
-         showDialog({ type: 'alert', title: 'Limit Reached', message: `Cannot add ${files.length} files. Limit is ${MAX_RECENT_WALLPAPERS}.` });
-         return;
+		showDialog({ 
+			type: 'alert', 
+			title: 'Wallpaper storage full', 
+			message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers.` 
+		});
+		return;
     }
 
     try {
