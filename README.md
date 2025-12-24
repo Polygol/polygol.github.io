@@ -75,6 +75,9 @@ If you see images of Fanny BFDI, the assets could not be found. If you are runni
 ---
 
 © Copyright kirbIndustries 2024-2026
-You are free to fork, modify, and explore the code, under the GNU GPL License 2.0. You may not use our brand in any method not authorized, including identifiable visual assets.
+
+You are free to do anything to the code under the Do What The F*ck You Want To Public License.
+
+You may not use our brand in any method not authorized, including identifiable visual assets.
 
 AI Notice: Some sections of code are generated with various AI models. However, AI is not used at all for visual assets, such as Gurapp Icons.
