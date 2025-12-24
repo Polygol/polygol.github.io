@@ -17,7 +17,7 @@ const ASSETS_TO_CACHE = [
   '/assets/img/pwaicon/coloricon.png',
   '/assets/img/pwaicon/monochrome.png',
   '/assets/img/text-owner-transparent.png',
-  '/assets/img/text-about-banner-transparent.png',
+  'https://github.com/kirbIndustries/assets/blob/main/brand/img/colorlogotxt/text-owner-transparent.png?raw=true',
   '/assets/img/ver/15.png',
   '/transfer/index.html',
   '/appstore/index.html',
