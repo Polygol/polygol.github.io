@@ -1,9 +1,9 @@
 <img width="1200" height="630" alt="Polygol" src="https://github.com/user-attachments/assets/80472d9e-976b-45e9-8988-2cf2ea18d2f0" />
 
 # Polygol
-Ambient OS-like dashboard with clock, weather and advanced features without tracking you or displaying ads.
+⏰ Ambient OS-like dashboard with clock, weather and advanced features without tracking you or displaying ads.
 
-**You can access Polygol right now at https://polygol.github.io**
+**[>> You can access Polygol at https://polygol.github.io <<]**
 
 Documentation at https://kirbindustries.gitbook.io/polygol
 
@@ -33,11 +33,22 @@ Documentation at https://kirbindustries.gitbook.io/polygol
 * Open System
 * In Browser section, set Keep Polygol on to "Legacy"
 
+### "Why is there no clock app?"
+You must install it from the App Store.
+
+### "How to use GuraAI?"
+You must have a Google AI Studio Gemini key. 
+* Open Settings in Polygol
+* Open General
+* In GuraAI section, turn on GuraAI. It will ask for your key!"
+
 ### "How to transfer my data?"
 Use https://polygol.github.io/transfer
 
 ### "It runs slow on my device."
 If this is the case, try to:
+* Open Settings in Polygol
+* Open Display
 * Enable Contrast
 * Disable Dynamic Glass
 * Disable Motion
