@@ -5,8 +5,8 @@ Ambient OS-like dashboard with clock, weather and advanced features without trac
 
 > [!TIP]
 > Polygol will run on any device with a HTML5 web browser.
-> We are designed to replace the regular OS experience (FireOS, etc.).
-> You can use Polygol as a substitute as a "jailbreak".
+> We are designed to replace the regular dashboard experience (FireOS, etc.).
+> You can use Polygol as a substitute for better experiences for limited devices.
 
 # Available for GitHub Pages
 You can access Polygol right now at https://polygol.github.io/
