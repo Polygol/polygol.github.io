@@ -21,6 +21,12 @@ Gurapp can extend your Polygol experience. The GitHub repository for each applic
 # I HATE MISSING ASSETS
 If you see images of Fanny BFDI, the assets could not be found. If you are running locally, make sure you have followed the steps.
 
+# "Polygol runs slow on my device."
+If this is the case, try to:
+* Enable Contrast
+* Disable Dynamic Glass
+* Disable Motion
+
 # Documentation
 https://kirbindustries.gitbook.io/polygol
 
