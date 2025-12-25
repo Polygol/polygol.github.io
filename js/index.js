@@ -5757,7 +5757,17 @@ async function broadcastWidgetSnapshots() {
     }
 
     const snapshots = [];
-    const options = { logging: false, useCORS: true, scale: 0.5, allowTaint: true };
+    // Determine background color based on theme to prevent transparency artifacts
+    const isLight = document.body.classList.contains('light-theme');
+    const bgColor = isLight ? '#ffffff' : '#000000'; // Adaptive background
+
+    const options = { 
+        logging: false, 
+        useCORS: true, 
+        scale: 0.5, 
+        allowTaint: true,
+        backgroundColor: bgColor // Force background color
+    };
     
     for (const widget of widgets) {
         const index = widget.dataset.widgetIndex;
