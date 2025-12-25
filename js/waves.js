@@ -34,6 +34,8 @@ let wavesOnData = null;
 let wavesSend = null; // Response channel
 let wavesBroadcast = null; // State update channel
 let pendingAuth = {}; // Stores peerId -> { correctEmoji: '🍕', timestamp: 123 }
+let currentAuthPeerId = null; // Track who is currently attempting to pair
+let isDiscoveryActive = localStorage.getItem('waves_discovery_enabled') !== 'false'; // Default true
 
 // 1. State Management
 function getWavesHostState() {
@@ -58,6 +60,12 @@ function generatePSK() {
 function initWavesHost() {
     if (!window.Trystero) {
         window.addEventListener('trystero-ready', initWavesHost, { once: true });
+        return;
+    }
+
+    // Discovery Check
+    if (!isDiscoveryActive) {
+        console.log("[Waves] Discovery is disabled. Not joining room.");
         return;
     }
 
@@ -107,25 +115,21 @@ function initWavesHost() {
 
 // 3. Authentication Logic (2FA)
 function startEmojiAuth(peerId) {
-    // Pick 1 correct emoji and 15 distractors (Total 16)
+    currentAuthPeerId = peerId;
     const shuffled = [...EMOJIS].sort(() => 0.5 - Math.random());
     const options = shuffled.slice(0, 16);
     const correct = options[Math.floor(Math.random() * 16)];
-
-    // Store pending state
     pendingAuth[peerId] = {
         correctEmoji: correct,
         timestamp: Date.now()
     };
-
-    // Show the correct emoji on the Host screen (Settings App)
     broadcastSettingUpdate('waves_auth_challenge', correct);
-    
-    // Send options to the phone
     wavesSend({ type: 'challenge', options: options }, peerId);
 }
 
 function finalizeEmojiAuth(peerId, answer, psk) {
+    if (peerId === currentAuthPeerId) currentAuthPeerId = null; // Clear tracker
+    
     const session = pendingAuth[peerId];
     if (!session) return;
 
@@ -405,6 +409,41 @@ function resetPairingData() {
     window.location.reload();
 }
 
+function setDiscovery(enabled) {
+    isDiscoveryActive = enabled;
+    localStorage.setItem('waves_discovery_enabled', enabled);
+    
+    if (enabled) {
+        if (!wavesRoom) {
+            initWavesHost();
+            showNotification('Waves discovery enabled', { icon: 'cell_tower' });
+        }
+    } else {
+        if (wavesRoom) {
+            try {
+                wavesRoom.leave(); // Disconnect from tracker
+            } catch(e) { console.error(e); }
+            wavesRoom = null;
+            showNotification('Waves discovery disabled', { icon: 'portable_wifi_off' });
+        }
+    }
+}
+
+function rejectCurrentAuth() {
+    if (currentAuthPeerId && pendingAuth[currentAuthPeerId]) {
+        // Send failure message to remote
+        wavesSend({ type: 'auth_failed' }, currentAuthPeerId);
+        
+        // Cleanup local state
+        delete pendingAuth[currentAuthPeerId];
+        currentAuthPeerId = null;
+        
+        // Hide UI
+        broadcastSettingUpdate('waves_auth_challenge', null);
+        showNotification('Pairing request rejected', { icon: 'block' });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', initWavesHost);
 
 // Expose Public API
@@ -419,7 +458,10 @@ window.WavesHost = {
     pushLiveActivityStart,
     pushWidgetUpdate,
     clearAppUI,
-    requestRemoteUpload
+    requestRemoteUpload,
+    setDiscovery,
+    rejectCurrentAuth,
+    isDiscoveryEnabled: () => isDiscoveryActive
 };
 
 // Helper for URL origin
