@@ -179,6 +179,59 @@ async function handleRemoteCommand(payload, peerId) {
             }
             break;
 
+        case 'toggleQS':
+            // data.id: 'silent', 'night', 'focus', 'theme'
+            const idMap = {
+                'silent': 'silent_switch_qc',
+                'night': 'night-mode-qc',
+                'focus': 'minimal_mode_qc',
+                'theme': 'light_mode_qc'
+            };
+            if(idMap[data.id]) {
+                const el = document.getElementById(idMap[data.id]);
+                if(el) el.click();
+            }
+            break;
+
+        case 'getWallpapers':
+            if (window.recentWallpapers) {
+                // Generate thumbnails for the list
+                const list = await Promise.all(window.recentWallpapers.map(async (wp, index) => {
+                    if (wp.isVideo || wp.isSlideshow) return null; // Skip complex types for now
+                    
+                    let thumb = null;
+                    if (window.getWallpaper) {
+                        try {
+                            const record = await window.getWallpaper(wp.id);
+                            let src = record.dataUrl;
+                            if (record.blob) src = URL.createObjectURL(record.blob);
+                            
+                            if (src) {
+                                thumb = await compressImage(src, 200, 0.5); // Small thumbnail
+                                if (record.blob) URL.revokeObjectURL(src);
+                            }
+                        } catch(e) {}
+                    }
+                    
+                    return {
+                        index: index,
+                        thumbnail: thumb,
+                        active: index === window.currentWallpaperPosition
+                    };
+                }));
+                
+                wavesSend({ type: 'wallpaperList', data: list.filter(i => i !== null) }, peerId);
+            }
+            break;
+
+        case 'setWallpaper':
+            if (typeof window.jumpToWallpaper === 'function' && data.index !== undefined) {
+                window.jumpToWallpaper(data.index);
+                // Push update immediately
+                setTimeout(pushWallpaperUpdate, 500);
+            }
+            break;
+
         case 'clearNotifications':
             if (typeof window.clearAllNotifications === 'function') {
                 window.clearAllNotifications();
@@ -406,6 +459,30 @@ function pushWidgetUpdate(widgets) {
     });
 }
 
+async function compressImage(source, maxWidth, quality) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth) {
+                height *= maxWidth / width;
+                width = maxWidth;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(null);
+        img.src = source;
+    });
+}
+
 async function pushWallpaperUpdate() {
     if(!wavesBroadcast) return;
     
@@ -417,14 +494,17 @@ async function pushWallpaperUpdate() {
              try {
                  const record = await window.getWallpaper(wp.id);
                  if (record) {
+                     let rawData = null;
                      if (record.dataUrl) {
-                         wallpaperStr = record.dataUrl;
+                         rawData = record.dataUrl;
                      } else if (record.blob) {
-                         wallpaperStr = await new Promise((resolve) => {
-                             const reader = new FileReader();
-                             reader.onloadend = () => resolve(reader.result);
-                             reader.readAsDataURL(record.blob);
-                         });
+                         rawData = URL.createObjectURL(record.blob);
+                     }
+                     
+                     if (rawData) {
+                         // Compress for transmission
+                         wallpaperStr = await compressImage(rawData, 1080, 0.6);
+                         if (record.blob) URL.revokeObjectURL(rawData);
                      }
                  }
              } catch (e) { console.warn("[Waves] Wallpaper fetch failed", e); }
