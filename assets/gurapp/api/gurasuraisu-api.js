@@ -1134,6 +1134,17 @@ window.addEventListener('message', async (event) => {
  * in localStorage for a seamless appearance.
  */
 document.addEventListener('DOMContentLoaded', () => {
+  // NEW: Automatically request persistent storage for the Gurapp
+  if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().then(granted => {
+          if (granted) {
+              console.log("[Gurapp API] Persistent storage automatically granted.");
+          } else {
+              console.log("[Gurapp API] Persistent storage not granted (Browser may manage eviction).");
+          }
+      }).catch(e => console.warn("[Gurapp API] Storage persistence request failed:", e));
+  }
+    
   // Apply the 'standalone' class to the <html> element if not in Gurasuraisu
   if (!isInsideGurasuraisu) {
       document.documentElement.classList.add('standalone');
