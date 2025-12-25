@@ -205,33 +205,45 @@ async function handleRemoteCommand(payload, peerId) {
 
         case 'getWallpapers':
             if (window.recentWallpapers) {
-                // Generate thumbnails for the list
-                const list = await Promise.all(window.recentWallpapers.map(async (wp, index) => {
-                    if (wp.isVideo || wp.isSlideshow) return null; // Skip complex types
-                    
-                    let thumb = null;
-                    if (window.getWallpaper) {
-                        try {
-                            const record = await window.getWallpaper(wp.id);
-                            let src = record.dataUrl;
-                            if (record.blob) src = URL.createObjectURL(record.blob);
-                            
-                            if (src) {
-                                // Compress to very small thumbnail
-                                thumb = await compressImage(src, 200, 0.5); 
-                                if (record.blob) URL.revokeObjectURL(src);
+                try {
+                    // Generate thumbnails for the list
+                    const listPromises = window.recentWallpapers.map(async (wp, index) => {
+                        if (wp.isVideo || wp.isSlideshow) return null; // Skip complex types
+                        
+                        let thumb = null;
+                        if (window.getWallpaper) {
+                            try {
+                                const record = await window.getWallpaper(wp.id);
+                                let src = record.dataUrl;
+                                if (record.blob) src = URL.createObjectURL(record.blob);
+                                
+                                if (src) {
+                                    // Compress to very small thumbnail
+                                    thumb = await compressImage(src, 200, 0.5); 
+                                    if (record.blob) URL.revokeObjectURL(src);
+                                }
+                            } catch(e) {
+                                console.warn(`[Waves] Failed to load wallpaper ${index}`, e);
                             }
-                        } catch(e) {}
-                    }
-                    
-                    return {
-                        index: index,
-                        thumbnail: thumb,
-                        active: index === window.currentWallpaperPosition
-                    };
-                }));
-                
-                wavesSend({ type: 'wallpaperList', data: list.filter(i => i !== null) }, peerId);
+                        }
+                        
+                        // Return item even if thumb failed, so grid isn't empty
+                        return {
+                            index: index,
+                            thumbnail: thumb, // Can be null
+                            active: index === window.currentWallpaperPosition
+                        };
+                    });
+
+                    const list = await Promise.all(listPromises);
+                    wavesSend({ type: 'wallpaperList', data: list.filter(i => i !== null) }, peerId);
+                } catch (e) {
+                    console.error("[Waves] Error generating wallpaper list:", e);
+                    // Send empty list to stop loading spinner
+                    wavesSend({ type: 'wallpaperList', data: [] }, peerId);
+                }
+            } else {
+                wavesSend({ type: 'wallpaperList', data: [] }, peerId);
             }
             break;
 
@@ -480,23 +492,32 @@ function pushWidgetUpdate(widgets) {
 async function compressImage(source, maxWidth, quality) {
     return new Promise((resolve) => {
         const img = new Image();
+        // Cross-origin safe if using Blobs/DataURLs
         img.onload = () => {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            
-            if (width > maxWidth) {
-                height *= maxWidth / width;
-                width = maxWidth;
+            try {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            } catch (e) {
+                console.warn("[Waves] Image compression error:", e);
+                resolve(null);
             }
-            
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', quality));
         };
-        img.onerror = () => resolve(null);
+        img.onerror = () => {
+            console.warn("[Waves] Image load error");
+            resolve(null);
+        };
         img.src = source;
     });
 }
