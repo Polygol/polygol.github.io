@@ -724,6 +724,66 @@ const Gurasuraisu = {
     },
 
   /**
+   * Requests a file from the user.
+   * In Polygol, this triggers the system file handler (Local + Remote).
+   * In Standalone, this opens a native file picker.
+   * @param {string} accept - MIME types (e.g., 'image/*', '.pdf'). Defaults to '*/*'.
+   * @returns {Promise<{name: string, type: string, dataUrl: string}>}
+   */
+  requestFile: function(accept = '*/*') {
+    return new Promise((resolve, reject) => {
+        // Generate ID to track this specific request
+        const requestId = 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
+        // Setup one-time listener for the response
+        const handler = (event) => {
+            if (event.source !== window.parent) return;
+            const data = event.data;
+            if (data.type === 'file-response' && data.requestId === requestId) {
+                window.removeEventListener('message', handler);
+                if (data.error) reject(new Error(data.error));
+                else resolve(data.file);
+            }
+        };
+        window.addEventListener('message', handler);
+
+        if (isInsideGurasuraisu) {
+            this._call('requestFile', [accept, requestId]);
+        } else {
+            // Standalone Fallback
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = accept;
+            input.style.display = 'none';
+            document.body.appendChild(input);
+            
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    // Cancelled usually doesn't trigger onchange, but safe check
+                    return; 
+                }
+                const reader = new FileReader();
+                reader.onload = () => {
+                    resolve({
+                        name: file.name,
+                        type: file.type,
+                        dataUrl: reader.result
+                    });
+                    input.remove();
+                };
+                reader.onerror = () => {
+                    reject(new Error("Failed to read file"));
+                    input.remove();
+                };
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        }
+    });
+  },
+
+  /**
    * Namespace for Live Activity functions.
    */
   liveActivity: {
