@@ -236,6 +236,13 @@ async function handleRemoteCommand(payload, peerId) {
                 }, targetOrigin);
             }
             break;
+
+        case 'uploadData':
+            // data: { name, type, data (base64), requestId (optional) }
+            if (typeof window.handleRemoteFileUpload === 'function') {
+                window.handleRemoteFileUpload(data, peerId);
+            }
+            break;
             
         case 'requestScreenshot':
             // FIX: Use createCompositeScreenshot from index.js to handle iframes correctly
@@ -348,6 +355,15 @@ function pushWidgetUpdate(widgets) {
     });
 }
 
+function requestRemoteUpload(accept = '*/*', multiple = false, requestId = null) {
+    if(!wavesSend) return;
+    // Broadcast to all connected peers (or specific if needed, currently broadcast)
+    wavesSend({ 
+        type: 'requestUpload', 
+        data: { accept, multiple, requestId } 
+    });
+}
+
 function clearAppUI() {
     window.activeAppUI = null; // Clear stored state
     if(!wavesBroadcast) return;
@@ -377,7 +393,8 @@ window.WavesHost = {
     pushNotificationUpdate,
     pushLiveActivityStart,
     pushWidgetUpdate,
-    clearAppUI
+    clearAppUI,
+    requestRemoteUpload
 };
 
 // Helper for URL origin
