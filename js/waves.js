@@ -215,6 +215,23 @@ async function handleRemoteCommand(payload, peerId) {
             }
             break;
 
+        case 'setSetting':
+            // data: { key, value }
+            if (typeof setControlValueAndDispatch === 'function') {
+                setControlValueAndDispatch(data.key, data.value);
+            }
+            break;
+
+        case 'getAllSettings':
+            // Return all LS items formatted for the Settings App
+            const items = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                items.push({ key, value: localStorage.getItem(key) });
+            }
+            wavesSend({ type: 'settingsData', data: items }, peerId);
+            break;
+
         case 'getState':
             pushFullState();
             // Force a widget update
@@ -308,11 +325,13 @@ function pushFullState() {
     const state = {
         brightness: localStorage.getItem('page_brightness') || 100,
         media: null,
-        mediaState: 'paused', // Default
-        appUI: window.activeAppUI || null, // NEW: Include active app UI in full state
-        notifications: [] // NEW: Include notifications
+        mediaState: 'paused',
+        appUI: window.activeAppUI || null,
+        notifications: [],
+        accentColor: window.activeWallpaperColor || [208, 188, 255], // Default purple
+        systemStatus: window.getSystemStatus ? window.getSystemStatus() : {}
     };
-
+    
     // Gather notifications from System
     if (window.activeNotificationsList) {
         state.notifications = [...window.activeNotificationsList];
