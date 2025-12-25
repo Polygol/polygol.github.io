@@ -2755,8 +2755,6 @@ function updateStatusIndicator() {
         dot.className = 'status-dot';
         el.appendChild(dot);
     }
-
-	if (window.WavesHost) window.WavesHost.pushFullState();
 }
 
 const persistentClock = document.getElementById('persistent-clock');
@@ -11940,6 +11938,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // Update icon
         updateMinimalModeIcon(minimalMode);
+
+		if (window.WavesHost) window.WavesHost.pushFullState();
     });
 
     // Event listener for night mode control
@@ -11948,6 +11948,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         localStorage.setItem('nightMode', nightMode);
         broadcastSettingUpdate('nightMode', nightMode.toString());
         updateNightMode();
+
+		if (window.WavesHost) window.WavesHost.pushFullState(); 
     });
 
     // Event listener for silent mode control
@@ -11964,8 +11966,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Update icon
         updateSilentModeIcon(isSilentMode);
         
-        // Do NOT override showPopup based on silent mode state
-        // showNotification is handled by its own internal logic, no override needed here.
+		if (window.WavesHost) window.WavesHost.pushFullState();
     });
     
     // Initialize silent mode on page load
@@ -12011,7 +12012,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 		broadcastSettingUpdate('display_temperature', value);
         updateTemperatureIcon(value);
         updateTemperature(value);
-	temperatureControl.classList.toggle('active', value !== '0');
+		temperatureControl.classList.toggle('active', value !== '0');
+
+		if (window.WavesHost) window.WavesHost.pushFullState();
     });
     
     // Brightness control event listener
