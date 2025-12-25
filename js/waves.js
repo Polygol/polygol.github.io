@@ -238,6 +238,8 @@ async function handleRemoteCommand(payload, peerId) {
             if (typeof window.broadcastWidgetSnapshots === 'function') {
                 window.broadcastWidgetSnapshots();
             }
+            // Send wallpaper
+            pushWallpaperUpdate();
             break;
             
         case 'getApps':
@@ -404,6 +406,34 @@ function pushWidgetUpdate(widgets) {
     });
 }
 
+async function pushWallpaperUpdate() {
+    if(!wavesBroadcast) return;
+    
+    let wallpaperStr = null;
+    if (typeof window.recentWallpapers !== 'undefined' && typeof window.currentWallpaperPosition !== 'undefined') {
+        const wp = window.recentWallpapers[window.currentWallpaperPosition];
+        // Only handle standard images (skip video/slideshow for bandwidth)
+        if (wp && !wp.isVideo && !wp.isSlideshow && wp.id && typeof window.getWallpaper === 'function') {
+             try {
+                 const record = await window.getWallpaper(wp.id);
+                 if (record) {
+                     if (record.dataUrl) {
+                         wallpaperStr = record.dataUrl;
+                     } else if (record.blob) {
+                         wallpaperStr = await new Promise((resolve) => {
+                             const reader = new FileReader();
+                             reader.onloadend = () => resolve(reader.result);
+                             reader.readAsDataURL(record.blob);
+                         });
+                     }
+                 }
+             } catch (e) { console.warn("[Waves] Wallpaper fetch failed", e); }
+        }
+    }
+    
+    wavesBroadcast({ type: 'wallpaperUpdate', data: wallpaperStr });
+}
+
 function requestRemoteUpload(accept = '*/*', multiple = false, requestId = null) {
     if(!wavesSend) return;
     // Broadcast to all connected peers (or specific if needed, currently broadcast)
@@ -468,6 +498,7 @@ window.WavesHost = {
     pushNotificationUpdate,
     pushLiveActivityStart,
     pushWidgetUpdate,
+    pushWallpaperUpdate,
     clearAppUI,
     requestRemoteUpload,
     setDiscovery,
