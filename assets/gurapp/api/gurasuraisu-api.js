@@ -1090,8 +1090,17 @@ window.addEventListener('message', async (event) => {
         // Helper function to perform the capture
         const doCapture = async () => {
             try {
+                // Determine theme-based background color
+                // Gurapps sync the 'light-theme' class from the parent
+                const isLight = document.body.classList.contains('light-theme');
+                const bgColor = isLight ? '#ffffff' : '#000000';
+
                 // Generate the screenshot of the app's content
-                const canvas = await html2canvas(document.body, { useCORS: true, logging: false });
+                const canvas = await html2canvas(document.body, { 
+                    useCORS: true, 
+                    logging: false,
+                    backgroundColor: bgColor // Explicitly set background
+                });
                 const screenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
 
                 // Send the generated screenshot data back to the parent
