@@ -6172,8 +6172,7 @@ async function getVideo() {
 
 async function processWallpaperFiles(files) {
     closeWallpaperPicker();
-    let files = Array.from(event.target.files);
-    if (files.length === 0) return;
+    if (!files || files.length === 0) return;
 
     // Check limit again if adding multiple files
     if (recentWallpapers.length + files.length > MAX_RECENT_WALLPAPERS) {
