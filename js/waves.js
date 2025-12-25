@@ -1,12 +1,33 @@
 // js/waves.js - Host Side (Polygol System)
 
-const WAVES_CONFIG = { appId: 'polygol-connect-v1' };
+const WAVES_CONFIG = { 
+    appId: 'polygol-connect-v1',
+    trackerUrls: [
+        'wss://tracker.openwebtorrent.com',
+        'wss://tracker.btorrent.xyz',
+        'wss://tracker.webtorrent.dev',
+        'wss://tracker.files.fm:7073/announce'
+    ]
+};
 const EMOJIS = [
     '🍕', '🚀', '🦄', '🎈', '🌵', '🎸', '🍦', '💎', '🔥', '🌈', '📷', '🔔',
     '🐶', '🐱', '🦊', '🐼', '🐸', '🐵', '🐔', '🐧', '🦈', '🦋', '🐞', '🐝',
     '🍎', '🍌', '🍉', '🍇', '🍓', '🍒', '🍍', '🥥', '🥑', '🍆', '🥕', '🌽',
     '⚽', '🏀', '🏈', '🎾', '🎱', '🎳', '⛳', '🛹', '🚗', '✈️', '⚓', '🚲',
-    '⌚', '💡', '📚', '✏️', '🔑', '🎁', '🏆', '👑', '🕶️', '🎩', '☂️', '🎵'
+    '⌚', '💡', '📚', '✏️', '🔑', '🎁', '🏆', '👑', '🕶️', '🎩', '☂️', '🎵',
+    '🦦', '🦛', '🦣', '🦒', '🦘', '🦔', '🦥', '🐴', '🦚', '🐷', '🐮', '🐯',
+    '🦦', '🦧', '🦞', '🦐', '🦑', '🐌', '🐚', '🦀', '🦕', '🦓', '🦷', '🦬',
+    '🥑', '🍠', '🍯', '🥚', '🍢', '🍡', '🥯', '🥒', '🥬', '🍒', '🍑', '🍅',
+    '🍪', '🍩', '🍫', '🍪', '🍰', '🍿', '🍷', '🍺', '🥨', '🍻', '🍷', '🥤',
+    '🥛', '🍹', '🍧', '🍨', '🍬', '🍫', '🍓', '🍪', '🧃', '🍷', '🥂', '🍸',
+    '🍹', '🧉', '🍶', '🍽️', '🍴', '🥄', '🥢', '🥡', '🥧', '🍴', '🍽️', '🍴',
+    '⚾', '🏐', '🏑', '🎯', '🏸', '⛷️', '🏌️', '🏊‍♂️', '🤿', '🧘‍♀️', '🛷', '🚀',
+    '🛸', '🚁', '🚂', '🚟', '🚝', '🚅', '🚤', '🛥️', '🛳️', '🛶', '⛴️', '🔮',
+    '🧩', '🎲', '🎯', '🛠️', '🔨', '🪛', '🔧', '⚙️', '💻', '🖥️', '📱', '📲',
+    '🖱️', '💾', '🧰', '💼', '🪑', '🛋️', '📺', '🖼️', '🖌️', '🔗', '🪝', '🧯',
+    '🧴', '🧴', '🧪', '🧑‍🔬', '🧙‍♂️', '⚖️', '📏', '📐', '🧭', '🧳', '🛎️', '🔑', 
+    '🪄', '⚙️', '🪙', '🪜', '🔓', '🔒', '🔐', '🧰', '🪜', '💸', '🧺', '🧴',
+    '📜', '🔖', '🎴', '🧳', '🧳', '📮', '📭', '💀', '✅', '❌', '⚠️', '🔪'
 ];
 let wavesRoom = null;
 let wavesOnData = null;
@@ -86,10 +107,10 @@ function initWavesHost() {
 
 // 3. Authentication Logic (2FA)
 function startEmojiAuth(peerId) {
-    // Pick 1 correct emoji and 3 distractors
+    // Pick 1 correct emoji and 15 distractors (Total 16)
     const shuffled = [...EMOJIS].sort(() => 0.5 - Math.random());
-    const options = shuffled.slice(0, 4);
-    const correct = options[Math.floor(Math.random() * 4)];
+    const options = shuffled.slice(0, 16);
+    const correct = options[Math.floor(Math.random() * 16)];
 
     // Store pending state
     pendingAuth[peerId] = {
@@ -98,7 +119,6 @@ function startEmojiAuth(peerId) {
     };
 
     // Show the correct emoji on the Host screen (Settings App)
-    // We use the broadcast channel to tell the settings iframe to show it
     broadcastSettingUpdate('waves_auth_challenge', correct);
     
     // Send options to the phone
@@ -118,7 +138,12 @@ function finalizeEmojiAuth(peerId, answer, psk) {
     } else {
         // Fail
         wavesSend({ type: 'auth_failed' }, peerId);
-        showNotification('Auth failed: Wrong emoji', { icon: 'gpp_bad' });
+        showNotification('Auth failed: Code invalidated.', { icon: 'gpp_bad' });
+        
+        // SECURITY: Incorrect code entered. Nuke the current room/code and restart.
+        setTimeout(() => {
+            resetPairingData(); // This clears localStorage and reloads
+        }, 1500);
     }
     
     // Cleanup
