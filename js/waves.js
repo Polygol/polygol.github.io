@@ -63,12 +63,6 @@ function initWavesHost() {
         return;
     }
 
-    // Discovery Check
-    if (!isDiscoveryActive) {
-        console.log("[Waves] Discovery is disabled. Not joining room.");
-        return;
-    }
-
     let state = getWavesHostState();
     
     // Generate persistent credentials if missing
@@ -97,9 +91,16 @@ function initWavesHost() {
             if (payload.auth === state.psk) {
                 handleRemoteCommand(payload, peerId);
             } 
-            // If auth handshake
+            // A new device is trying to pair
             else if (payload.type === 'hello') {
-                startEmojiAuth(peerId);
+                // Check discovery flag
+                if (isDiscoveryActive) {
+                    startEmojiAuth(peerId);
+                } else {
+                    console.log("[Waves] Rejected new connection: Discovery is disabled.");
+                    // Tell the remote why it was rejected
+                    wavesSend({ type: 'discovery_disabled' }, peerId);
+                }
             }
             else if (payload.type === 'verify') {
                 finalizeEmojiAuth(peerId, payload.answer, state.psk);
