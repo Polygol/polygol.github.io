@@ -166,6 +166,12 @@ async function handleRemoteCommand(payload, peerId) {
                 setControlValueAndDispatch('page_brightness', data);
             }
             break;
+
+        case 'setTemperature':
+            if (typeof setControlValueAndDispatch === 'function') {
+                setControlValueAndDispatch('display_temperature', data);
+            }
+            break;
         
         case 'toggleSleep':
             if (document.body.classList.contains('blackout-active')) {
@@ -189,7 +195,11 @@ async function handleRemoteCommand(payload, peerId) {
             };
             if(idMap[data.id]) {
                 const el = document.getElementById(idMap[data.id]);
-                if(el) el.click();
+                if(el) {
+                    el.click();
+                    // Force state push after a short delay to ensure UI updated
+                    setTimeout(pushFullState, 100);
+                }
             }
             break;
 
@@ -197,7 +207,7 @@ async function handleRemoteCommand(payload, peerId) {
             if (window.recentWallpapers) {
                 // Generate thumbnails for the list
                 const list = await Promise.all(window.recentWallpapers.map(async (wp, index) => {
-                    if (wp.isVideo || wp.isSlideshow) return null; // Skip complex types for now
+                    if (wp.isVideo || wp.isSlideshow) return null; // Skip complex types
                     
                     let thumb = null;
                     if (window.getWallpaper) {
@@ -207,7 +217,8 @@ async function handleRemoteCommand(payload, peerId) {
                             if (record.blob) src = URL.createObjectURL(record.blob);
                             
                             if (src) {
-                                thumb = await compressImage(src, 200, 0.5); // Small thumbnail
+                                // Compress to very small thumbnail
+                                thumb = await compressImage(src, 200, 0.5); 
                                 if (record.blob) URL.revokeObjectURL(src);
                             }
                         } catch(e) {}
@@ -229,6 +240,8 @@ async function handleRemoteCommand(payload, peerId) {
                 window.jumpToWallpaper(data.index);
                 // Push update immediately
                 setTimeout(pushWallpaperUpdate, 500);
+                // Refresh list to update active state
+                setTimeout(() => handleRemoteCommand({type: 'getWallpapers'}, peerId), 600);
             }
             break;
 
@@ -379,11 +392,12 @@ function pushFullState() {
     
     const state = {
         brightness: localStorage.getItem('page_brightness') || 100,
+        temperature: localStorage.getItem('display_temperature') || 0,
         media: null,
         mediaState: 'paused',
         appUI: window.activeAppUI || null,
         notifications: [],
-        accentColor: window.activeWallpaperColor || [208, 188, 255], // Default purple
+        accentColor: window.activeWallpaperColor || [208, 188, 255], 
         systemStatus: window.getSystemStatus ? window.getSystemStatus() : {}
     };
     
