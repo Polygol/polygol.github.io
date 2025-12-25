@@ -204,23 +204,25 @@ async function handleRemoteCommand(payload, peerId) {
             break;
 
         case 'getWallpapers':
-            if (window.recentWallpapers) {
+            if (window.recentWallpapers && window.recentWallpapers.length > 0) {
                 try {
                     // Generate thumbnails for the list
                     const listPromises = window.recentWallpapers.map(async (wp, index) => {
                         if (wp.isVideo || wp.isSlideshow) return null; // Skip complex types
                         
                         let thumb = null;
-                        if (window.getWallpaper) {
+                        if (window.getWallpaper && wp.id) {
                             try {
                                 const record = await window.getWallpaper(wp.id);
-                                let src = record.dataUrl;
-                                if (record.blob) src = URL.createObjectURL(record.blob);
-                                
-                                if (src) {
-                                    // Compress to very small thumbnail
-                                    thumb = await compressImage(src, 200, 0.5); 
-                                    if (record.blob) URL.revokeObjectURL(src);
+                                if (record) {
+                                    let src = record.dataUrl;
+                                    if (record.blob) src = URL.createObjectURL(record.blob);
+                                    
+                                    if (src) {
+                                        // Compress to very small thumbnail
+                                        thumb = await compressImage(src, 200, 0.5); 
+                                        if (record.blob) URL.revokeObjectURL(src);
+                                    }
                                 }
                             } catch(e) {
                                 console.warn(`[Waves] Failed to load wallpaper ${index}`, e);
@@ -230,13 +232,14 @@ async function handleRemoteCommand(payload, peerId) {
                         // Return item even if thumb failed, so grid isn't empty
                         return {
                             index: index,
-                            thumbnail: thumb, // Can be null
+                            thumbnail: thumb, 
                             active: index === window.currentWallpaperPosition
                         };
                     });
 
                     const list = await Promise.all(listPromises);
-                    wavesSend({ type: 'wallpaperList', data: list.filter(i => i !== null) }, peerId);
+                    const filteredList = list.filter(i => i !== null);
+                    wavesSend({ type: 'wallpaperList', data: filteredList }, peerId);
                 } catch (e) {
                     console.error("[Waves] Error generating wallpaper list:", e);
                     // Send empty list to stop loading spinner
