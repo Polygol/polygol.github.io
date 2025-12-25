@@ -2759,6 +2759,121 @@ function updateStatusIndicator() {
 
 const persistentClock = document.getElementById('persistent-clock');
 const dynamicArea = document.getElementById('dynamic-area');
+const netIcon = document.querySelector('#network-status-indicator span');
+
+function updateNetworkInfo() {
+	// Check if API is supported
+	const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+	
+	if (!navigator.onLine) {
+		netIcon.textContent = 'signal_disconnected';
+		return;
+	}
+
+	if (!connection) {
+		netIcon.textContent = 'network_wifi'; // Fallback
+		return;
+	}
+
+	const type = connection.type; 
+
+	if (type === 'ethernet') {
+		netIcon.textContent = 'settings_ethernet';
+		return;
+	}
+
+	if (type === 'wifi' || type === 'wimax') {
+		// WiFi specific mappings
+		switch (connection.effectiveType) {
+			case '4g':
+				netIcon.textContent = 'network_wifi'; // Full signal (4)
+				break;
+			case '3g':
+				netIcon.textContent = 'network_wifi_3_bar';
+				break;
+			case '2g':
+				netIcon.textContent = 'network_wifi_2_bar';
+				break;
+			case 'slow-2g':
+				netIcon.textContent = 'network_wifi_1_bar';
+				break;
+			default:
+				netIcon.textContent = 'signal_wifi_0_bar';
+		}
+	} else {
+		// Cellular mappings (default)
+		let iconBase = 'signal_cellular_';
+		switch (connection.effectiveType) {
+			case '4g':
+				netIcon.textContent = iconBase + '4_bar';
+				break;
+			case '3g':
+				netIcon.textContent = iconBase + '3_bar';
+				break;
+			case '2g':
+				netIcon.textContent = iconBase + '2_bar';
+				break;
+			case 'slow-2g':
+				netIcon.textContent = iconBase + '1_bar';
+				break;
+			default:
+				netIcon.textContent = iconBase + 'null';
+		}
+	}
+}
+
+// --- Battery Status Logic ---
+function initBattery() {
+	if ('getBattery' in navigator) {
+		navigator.getBattery().then(battery => {
+			const batContainer = document.getElementById('battery-status-indicator');
+			const batIcon = batContainer.querySelector('span');
+			
+			// Only show the indicator if API is supported and active
+			batContainer.style.display = 'flex';
+
+			function updateBatteryUI() {
+				const level = battery.level * 100;
+				const isCharging = battery.charging;
+
+				// Update Globals for Remote
+                window.currentBatteryLevel = Math.round(level);
+                window.currentBatteryCharging = isCharging;
+
+				// Reset colors
+				batIcon.style.color = 'var(--text-color)';
+
+				if (isCharging) {
+					batIcon.textContent = 'battery_android_bolt';
+				} else {
+					if (level <= 15) {
+						batIcon.textContent = 'battery_android_1';
+						// Make it red for low battery
+						batIcon.style.color = '#ff5252'; 
+					} else if (level <= 30) {
+						batIcon.textContent = 'battery_android_2';
+					} else if (level <= 50) {
+						batIcon.textContent = 'battery_android_3';
+					} else if (level <= 65) {
+						batIcon.textContent = 'battery_android_4';
+					} else if (level <= 85) {
+						batIcon.textContent = 'battery_android_5';
+					} else if (level <= 99) {
+						batIcon.textContent = 'battery_android_6';
+					} else {
+						batIcon.textContent = 'battery_android_0';
+					}
+				}
+
+				if (window.WavesHost) window.WavesHost.pushFullState();
+			}
+
+			updateBatteryUI();
+			battery.addEventListener('chargingchange', updateBatteryUI);
+			battery.addEventListener('levelchange', updateBatteryUI);
+		});
+	}
+}
 
 document.addEventListener('DOMContentLoaded', () => {	
     // --- Get references to key elements ---
@@ -3140,116 +3255,6 @@ document.addEventListener('DOMContentLoaded', () => {
     blackoutBtn.addEventListener('mouseup', cancelBlackoutHold);
     blackoutBtn.addEventListener('mouseleave', cancelBlackoutHold);
     blackoutBtn.addEventListener('touchend', cancelBlackoutHold);
-
-	const netIcon = document.querySelector('#network-status-indicator span');
-	
-	function updateNetworkInfo() {
-		// Check if API is supported
-		const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-		
-		if (!navigator.onLine) {
-			netIcon.textContent = 'signal_disconnected';
-			return;
-		}
-
-		if (!connection) {
-			netIcon.textContent = 'network_wifi'; // Fallback
-			return;
-		}
-
-		const type = connection.type; 
-
-		if (type === 'ethernet') {
-			netIcon.textContent = 'settings_ethernet';
-			return;
-		}
-
-		if (type === 'wifi' || type === 'wimax') {
-			// WiFi specific mappings
-			switch (connection.effectiveType) {
-				case '4g':
-					netIcon.textContent = 'network_wifi'; // Full signal (4)
-					break;
-				case '3g':
-					netIcon.textContent = 'network_wifi_3_bar';
-					break;
-				case '2g':
-					netIcon.textContent = 'network_wifi_2_bar';
-					break;
-				case 'slow-2g':
-					netIcon.textContent = 'network_wifi_1_bar';
-					break;
-				default:
-					netIcon.textContent = 'signal_wifi_0_bar';
-			}
-		} else {
-			// Cellular mappings (default)
-			let iconBase = 'signal_cellular_';
-			switch (connection.effectiveType) {
-				case '4g':
-					netIcon.textContent = iconBase + '4_bar';
-					break;
-				case '3g':
-					netIcon.textContent = iconBase + '3_bar';
-					break;
-				case '2g':
-					netIcon.textContent = iconBase + '2_bar';
-					break;
-				case 'slow-2g':
-					netIcon.textContent = iconBase + '1_bar';
-					break;
-				default:
-					netIcon.textContent = iconBase + 'null';
-			}
-		}
-	}
-
-	// --- Battery Status Logic ---
-	function initBattery() {
-		if ('getBattery' in navigator) {
-			navigator.getBattery().then(battery => {
-				const batContainer = document.getElementById('battery-status-indicator');
-				const batIcon = batContainer.querySelector('span');
-				
-				// Only show the indicator if API is supported and active
-				batContainer.style.display = 'flex';
-
-				function updateBatteryUI() {
-					const level = battery.level * 100;
-					const isCharging = battery.charging;
-
-					// Reset colors
-					batIcon.style.color = 'var(--text-color)';
-
-					if (isCharging) {
-						batIcon.textContent = 'battery_android_bolt';
-					} else {
-						if (level <= 15) {
-							batIcon.textContent = 'battery_android_1';
-							// Make it red for low battery
-							batIcon.style.color = '#ff5252'; 
-						} else if (level <= 30) {
-							batIcon.textContent = 'battery_android_2';
-						} else if (level <= 50) {
-							batIcon.textContent = 'battery_android_3';
-						} else if (level <= 65) {
-							batIcon.textContent = 'battery_android_4';
-						} else if (level <= 85) {
-							batIcon.textContent = 'battery_android_5';
-						} else if (level <= 99) {
-							batIcon.textContent = 'battery_android_6';
-						} else {
-							batIcon.textContent = 'battery_android_0';
-						}
-					}
-				}
-
-				updateBatteryUI();
-				battery.addEventListener('chargingchange', updateBatteryUI);
-				battery.addEventListener('levelchange', updateBatteryUI);
-			});
-		}
-	}
 
 	// Initial calls
 	updateNetworkInfo();
@@ -4099,14 +4104,6 @@ window.getSystemStatus = function() {
     const batteryEl = document.getElementById('battery-status-indicator');
     const batteryIcon = batteryEl ? batteryEl.querySelector('span').textContent : 'battery_unknown';
     
-    // Battery Logic
-    let batteryLevel = 100;
-    let isCharging = batteryIcon.includes('bolt');
-    // Simple heuristic based on icon name
-    if (batteryIcon.includes('_0')) batteryLevel = 5;
-    else if (batteryIcon.includes('_6')) batteryLevel = 100;
-    else if (batteryIcon.includes('_5')) batteryLevel = 85;
-    
     // Context Logic
     const context = {
         theme: document.body.classList.contains('light-theme') ? 'light' : 'dark',
@@ -4119,8 +4116,8 @@ window.getSystemStatus = function() {
         minimal: minimalMode,
         night: nightMode,
         battery: {
-            level: batteryLevel,
-            charging: isCharging,
+            level: (typeof window.currentBatteryLevel !== 'undefined') ? window.currentBatteryLevel : 100,
+            charging: (typeof window.currentBatteryCharging !== 'undefined') ? window.currentBatteryCharging : false,
             icon: batteryIcon
         },
         wifi: navigator.onLine,
