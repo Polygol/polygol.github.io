@@ -7138,6 +7138,51 @@ function applyDepthLayer(source) {
     depthLayer.style.opacity = '1';
 }
 
+async function migrateWallpapersColor() {
+    console.log("[System] Checking for wallpaper color migration...");
+    let changed = false;
+
+    // Iterate through all recent wallpapers
+    for (let i = 0; i < recentWallpapers.length; i++) {
+        const wp = recentWallpapers[i];
+        
+        // If it's an image and missing color data
+        if (!wp.dominantColor && !wp.isVideo && wp.id && !wp.isSlideshow) {
+            try {
+                // Fetch the actual image data from IndexedDB
+                const record = await getWallpaper(wp.id);
+                if (record && (record.blob || record.dataUrl)) {
+                    console.log(`[Migration] Extracting color for ${wp.id}...`);
+                    const color = await extractWallpaperColor(record.blob || record.dataUrl);
+                    
+                    if (color) {
+                        // Update Memory
+                        wp.dominantColor = color;
+                        // Update Database
+                        record.dominantColor = color;
+                        await storeWallpaper(wp.id, record);
+                        changed = true;
+                    }
+                }
+            } catch (e) {
+                console.warn(`[Migration] Failed for ${wp.id}`, e);
+            }
+        }
+    }
+
+    if (changed) {
+        saveRecentWallpapers(); // Save to LocalStorage
+        console.log("[System] Wallpaper color migration complete.");
+        
+        // Re-apply current to update global state immediately
+        const current = recentWallpapers[currentWallpaperPosition];
+        if (current && current.dominantColor) {
+            window.activeWallpaperColor = current.dominantColor;
+            if (window.WavesHost) window.WavesHost.pushFullState();
+        }
+    }
+}
+
 // Load recent wallpapers from localStorage on startup
 function loadRecentWallpapers() {
   try {
@@ -11408,6 +11453,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadAvailableWidgets(); 
 	setupStickerControls();
     initializeWallpaperTracking();
+
+    setTimeout(migrateWallpapersColor, 2000); 
 
     // --- Perform initial setup that depends on the loaded data ---
     await firstSetup(); // This handles language and sets isDuringFirstSetup flag
