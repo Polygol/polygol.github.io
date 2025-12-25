@@ -527,8 +527,13 @@ const MAX_RECENT_WALLPAPERS = 20;
 
 let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults to true
 let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults to true
-let recentWallpapers = [];
+window.recentWallpapers = [];
+let recentWallpapers = window.recentWallpapers; // Alias for local scope use
 let currentWallpaperPosition = 0;
+Object.defineProperty(window, 'currentWallpaperPosition', {
+    get: function() { return currentWallpaperPosition; },
+    set: function(val) { currentWallpaperPosition = val; }
+});
 let isSlideshow = false;
 let minimizedEmbeds = {}; // Object to store minimized embeds by URL
 let appLastOpened = {};
@@ -7280,6 +7285,7 @@ function loadRecentWallpapers() {
     const savedWallpapers = localStorage.getItem('recentWallpapers');
     if (savedWallpapers) {
       recentWallpapers = JSON.parse(savedWallpapers);
+      window.recentWallpapers = recentWallpapers; // Sync window property
     }
     
 	// Migrate existing wallpapers without clock styles
@@ -7441,6 +7447,7 @@ function loadRecentWallpapers() {
 function saveRecentWallpapers() {
   try {
     localStorage.setItem('recentWallpapers', JSON.stringify(recentWallpapers));
+	window.recentWallpapers = recentWallpapers; // Sync window property
   } catch (error) {
     console.error('Error saving recent wallpapers:', error);
 	showDialog({ 
