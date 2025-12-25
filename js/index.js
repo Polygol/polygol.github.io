@@ -2755,6 +2755,8 @@ function updateStatusIndicator() {
         dot.className = 'status-dot';
         el.appendChild(dot);
     }
+
+	if (window.WavesHost) window.WavesHost.pushFullState();
 }
 
 const persistentClock = document.getElementById('persistent-clock');
@@ -8289,8 +8291,6 @@ function syncUiStates() {
     const isColorActive = document.getElementById('clock-color-switch').checked || document.getElementById('clock-gradient-switch').checked || document.getElementById('clock-glass-switch').checked;
     document.getElementById('setting-clock-color').classList.toggle('active', isColorActive);
     document.getElementById('setting-clock-shadow').classList.toggle('active', document.getElementById('clock-shadow-switch').checked);
-
-	if (window.WavesHost) window.WavesHost.pushFullState();
 }
 
 function applyWallpaperEffects() {
