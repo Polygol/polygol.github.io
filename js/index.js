@@ -6465,6 +6465,18 @@ function checkStorageQuota(data) {
     }
 }
 
+// Request persistent storage for the OS itself
+async function requestPersistentStorage() {
+    if (navigator.storage && navigator.storage.persist) {
+        try {
+            const isPersisted = await navigator.storage.persist();
+            console.log(`[System] Persistent storage granted: ${isPersisted}`);
+        } catch (e) {
+            console.warn("[System] Failed to request persistent storage:", e);
+        }
+    }
+}
+
 /**
  * Replaces an animated image background with its static first frame to pause animation.
  */
@@ -11535,6 +11547,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('DOMContentLoaded', async function() {
     // --- Load ALL data and settings first ---
+    requestPersistentStorage();
     loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
     loadSavedData();         // Load usage and lastOpened data
     loadRecentWallpapers();
