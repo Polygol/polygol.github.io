@@ -4756,6 +4756,8 @@ function exitBlackoutMode() {
 
     document.body.classList.remove('blackout-active', 'blackout-style-dim-show', 'blackout-style-dim-hide', 'blackout-style-hide-show', 'blackout-style-off');
 
+	resumeAllAnimations(); // Resume animations on wake
+
     const blocker = document.getElementById('blackout-event-overlay');
     if (blocker) {
         blocker.style.backgroundColor = 'transparent';
@@ -4814,6 +4816,8 @@ function blackoutScreen() {
 
     const sleepStyle = localStorage.getItem('sleepModeStyle') || 'dim-show';
     document.body.classList.add('blackout-active', `blackout-style-${sleepStyle}`);
+
+    pauseAllAnimations(); // Pause animations on sleep
 
     // Create a new full-screen overlay to capture all events
     const blockingOverlay = document.createElement('div');
@@ -6514,6 +6518,65 @@ function resumeAnimatedBackground() {
         } else {
             applyWallpaper();
         }
+    }
+}
+
+function pauseAnimatedStickers() {
+    document.querySelectorAll('.sticker-widget img').forEach(img => {
+        // Skip if already paused or image not fully loaded
+        if (img.dataset.isPaused === 'true' || !img.complete || img.naturalWidth === 0) return;
+
+        // 1. Save original source if not already saved
+        if (!img.dataset.originalSrc) {
+            img.dataset.originalSrc = img.src;
+        }
+
+        // 2. Create static frame using canvas
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            
+            // 3. Swap src to static data URL
+            img.src = canvas.toDataURL();
+            img.dataset.isPaused = 'true';
+        } catch(e) {
+            console.warn("Could not freeze sticker animation:", e);
+        }
+    });
+}
+
+function resumeAnimatedStickers() {
+    document.querySelectorAll('.sticker-widget img').forEach(img => {
+        if (img.dataset.isPaused === 'true' && img.dataset.originalSrc) {
+            img.src = img.dataset.originalSrc;
+            img.dataset.isPaused = 'false';
+        }
+    });
+}
+
+// Helper to pause EVERYTHING (Video, Wallpaper, Stickers)
+async function pauseAllAnimations() {
+    pauseAnimatedStickers();
+    await pauseAnimatedBackground();
+    const bgVideo = document.getElementById('background-video');
+    if (bgVideo && !bgVideo.paused) {
+        await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
+        bgVideo.pause();
+    }
+}
+
+// Helper to resume EVERYTHING
+function resumeAllAnimations() {
+    resumeAnimatedStickers();
+    resumeAnimatedBackground();
+    const bgVideo = document.getElementById('background-video');
+    if (bgVideo) {
+        bgVideo.play().then(() => {
+            animatePlaybackRate(bgVideo, bgVideo.playbackRate || 0, 1.0, 300);
+        }).catch(e => console.error("Video play failed on resume:", e));
     }
 }
 
@@ -9768,13 +9831,8 @@ async function createFullscreenEmbed(url, options = {}) {
     // Now add the transition AFTER the element is in the DOM (removed filter)
     embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
 
-    // Pause background animations (Video and Animated Images)
-    await pauseAnimatedBackground();
-    const bgVideo = document.getElementById('background-video');
-    if (bgVideo && !bgVideo.paused) {
-        await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
-        bgVideo.pause();
-    }
+    // Pause background animations
+    await pauseAllAnimations();
     
     // Clear background blur and trigger the animation
     setTimeout(() => {
@@ -10036,13 +10094,7 @@ function closeFullscreenEmbed() {
     document.body.style.setProperty('--bg-transform-scale', '1.05');
 	
     // Resume background animations
-    resumeAnimatedBackground();
-    const bgVideo = document.getElementById('background-video');
-    if (bgVideo) {
-        bgVideo.play().then(() => {
-            animatePlaybackRate(bgVideo, bgVideo.playbackRate, 1.0, 300);
-        }).catch(e => console.error("Video play failed on resume:", e));
-    }
+    resumeAllAnimations();
 
     populateDock();
     resetAutoSleepTimer(); // Reset timer when returning to home screen
@@ -10195,14 +10247,8 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
     if (interactionBlocker) {
         interactionBlocker.style.pointerEvents = 'auto';
     }
-
-    resumeAnimatedBackground();
-    const bgVideo = document.getElementById('background-video');
-    if (bgVideo) {
-        bgVideo.play().then(() => {
-            animatePlaybackRate(bgVideo, bgVideo.playbackRate, 1.0, 300);
-        }).catch(e => console.error("Video play failed on resume:", e));
-    }
+	
+    resumeAllAnimations();
 }
 
 function populateDock() {
