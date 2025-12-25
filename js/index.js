@@ -3265,12 +3265,22 @@ document.addEventListener('DOMContentLoaded', () => {
 	    showPopup(currentLanguage.ONLINE);
 		updateNetworkInfo();
 	    updateSmallWeather(); // Refresh weather data
+		if(window.WavesHost) window.WavesHost.pushFullState();
 	});
 	
 	window.addEventListener('offline', () => {
 	    showPopup(currentLanguage.OFFLINE);
 		updateNetworkInfo();
+		if(window.WavesHost) window.WavesHost.pushFullState();
 	});
+
+    if ('getBattery' in navigator) {
+        navigator.getBattery().then(batt => {
+            const push = () => { if(window.WavesHost) window.WavesHost.pushFullState(); };
+            batt.addEventListener('levelchange', push);
+            batt.addEventListener('chargingchange', push);
+        });
+    }
     
 	function updatePersistentClock() {
 	  const isModalOpen = 
@@ -4089,15 +4099,20 @@ window.getSystemStatus = function() {
     const batteryEl = document.getElementById('battery-status-indicator');
     const batteryIcon = batteryEl ? batteryEl.querySelector('span').textContent : 'battery_unknown';
     
-    // Determine Battery Level/Charging from icon name mapping (approximate)
+    // Battery Logic
     let batteryLevel = 100;
     let isCharging = batteryIcon.includes('bolt');
+    // Simple heuristic based on icon name
     if (batteryIcon.includes('_0')) batteryLevel = 5;
-    else if (batteryIcon.includes('_1')) batteryLevel = 15;
-    else if (batteryIcon.includes('_2')) batteryLevel = 30;
-    else if (batteryIcon.includes('_3')) batteryLevel = 50;
-    else if (batteryIcon.includes('_4')) batteryLevel = 65;
+    else if (batteryIcon.includes('_6')) batteryLevel = 100;
     else if (batteryIcon.includes('_5')) batteryLevel = 85;
+    
+    // Context Logic
+    const context = {
+        theme: document.body.classList.contains('light-theme') ? 'light' : 'dark',
+        highContrast: document.documentElement.classList.contains('gurasuraisu-high-contrast'),
+        reduceMotion: document.body.classList.contains('reduce-animations')
+    };
 
     return {
         silent: isSilentMode,
@@ -4108,7 +4123,8 @@ window.getSystemStatus = function() {
             charging: isCharging,
             icon: batteryIcon
         },
-        wifi: navigator.onLine
+        wifi: navigator.onLine,
+        context: context
     };
 };
 
