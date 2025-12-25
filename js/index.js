@@ -13158,7 +13158,6 @@ window.addEventListener('message', async (event) => { // Make listener async
 	    startLiveActivity,
 	    updateLiveActivity, // Forward updates
 	    stopLiveActivity,
-		requestFileUpload,
 		playUiSound: (type) => {
             if (window.SoundManager) {
                 window.SoundManager.play(type);
