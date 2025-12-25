@@ -415,18 +415,9 @@ function setDiscovery(enabled) {
     localStorage.setItem('waves_discovery_enabled', enabled);
     
     if (enabled) {
-        if (!wavesRoom) {
-            initWavesHost();
-            showNotification('Waves discovery enabled', { icon: 'cell_tower' });
-        }
+        showNotification('New device pairing is now enabled', { icon: 'cell_tower' });
     } else {
-        if (wavesRoom) {
-            try {
-                wavesRoom.leave(); // Disconnect from tracker
-            } catch(e) { console.error(e); }
-            wavesRoom = null;
-            showNotification('Waves discovery disabled', { icon: 'portable_wifi_off' });
-        }
+        showNotification('New device pairing is now disabled', { icon: 'portable_wifi_off' });
     }
 }
 
