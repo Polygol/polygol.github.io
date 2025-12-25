@@ -713,6 +713,119 @@ function showCustomPrompt(message, title = 'Prompt', defaultValue = '') {
     });
 }
 
+// File Upload Routing System
+const FileUploadManager = {
+    pendingRequests: {}, // Map requestId -> callback(files)
+    activeSystemRequest: null, // 'wallpaper' | 'sticker' | null
+
+    // Register a request from a Gurapp
+    registerAppRequest(requestId, sourceAppId, callback) {
+        this.pendingRequests[requestId] = {
+            appId: sourceAppId,
+            callback: callback
+        };
+    },
+
+    // Trigger the unified flow (Local + Remote)
+    trigger(accept, multiple, contextId = null) {
+        // 1. Open Local Input
+        // We reuse a hidden global input for system actions or create dynamic ones
+        let input = document.getElementById('global-file-input');
+        if (!input) {
+            input = document.createElement('input');
+            input.id = 'global-file-input';
+            input.type = 'file';
+            input.style.display = 'none';
+            document.body.appendChild(input);
+        }
+        
+        // Reset and Configure
+        input.value = '';
+        input.accept = accept;
+        input.multiple = multiple;
+        
+        // Store context (is this for Wallpaper? Sticker? Or an App Request ID?)
+        input.dataset.context = contextId || 'system';
+
+        // Local Handler
+        input.onchange = (e) => {
+            const files = Array.from(e.target.files);
+            this.handleFiles(files, contextId);
+        };
+        
+        input.click();
+
+        // 2. Trigger Remote Input (if Waves connected)
+        if (window.WavesHost) {
+            // Pass contextId as requestId to remote so it comes back with the file
+            window.WavesHost.requestRemoteUpload(accept, multiple, contextId);
+        }
+    },
+
+    // Handle incoming files (from Local OR Remote)
+    async handleFiles(files, contextId) {
+        // Convert to array if single file
+        const fileArray = Array.isArray(files) ? files : [files];
+        if (fileArray.length === 0) return;
+
+        console.log(`[UploadManager] Received ${fileArray.length} files for context: ${contextId}`);
+
+        if (contextId === 'wallpaper') {
+            processWallpaperFiles(fileArray);
+        } else if (contextId === 'sticker') {
+            processStickerFiles(fileArray);
+        } else if (this.pendingRequests[contextId]) {
+            // It's a Gurapp request
+            const req = this.pendingRequests[contextId];
+            
+            // Prepare files for transfer (convert to data objects if needed, 
+            // but postMessage handles Files fairly well in modern browsers, 
+            // or we convert to base64 if cross-origin issues arise).
+            // Here we send simple objects or Read them.
+            
+            const filePromises = fileArray.map(async (f) => {
+                // Read to Data URL to ensure safe transfer across iframe boundary
+                const reader = new FileReader();
+                return new Promise(resolve => {
+                    reader.onload = () => resolve({
+                        name: f.name,
+                        type: f.type,
+                        size: f.size,
+                        data: reader.result // Base64
+                    });
+                    reader.readAsDataURL(f);
+                });
+            });
+
+            const processedFiles = await Promise.all(filePromises);
+            req.callback(processedFiles);
+            
+            // Cleanup request? Usually yes, unless we expect stream. 
+            // Assuming one-shot upload per request.
+            delete this.pendingRequests[contextId];
+        }
+    }
+};
+
+window.handleRemoteFileUpload = function(data, peerId) {
+    // data: { name, type, data (base64), requestId }
+    const { name, type, data: base64, requestId } = data;
+    
+    // Convert Base64 back to File object
+    const arr = base64.split(',');
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
+    
+    const file = new File([u8arr], name, { type: type });
+    
+    // Route it
+    FileUploadManager.handleFiles([file], requestId);
+    
+    showNotification(`Received ${name} from remote`, { icon: 'download' });
+};
+
 function handleViewportResize() {
     adjustWidgetsForViewportResize(); // First, fix the data
     renderWidgets();                  // Then, re-render with the corrected data
@@ -1541,6 +1654,46 @@ function saveLastOpenedData() {
     localStorage.setItem('appLastOpened', JSON.stringify(appLastOpened));
 }
 
+async function processStickerFiles(files) {
+    if (files.length === 0) return;
+
+    // If we are just receiving files (e.g. from drag/drop or direct upload), 
+    // we apply default settings.
+    const isTransparent = document.getElementById('widget-transparent-switch')?.checked || false;
+
+    for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+
+        try {
+            // Use existing compression
+            const compressedSrc = await compressMedia(file);
+            
+            const stickerData = {
+                type: 'sticker',
+                src: compressedSrc,
+                border: false, // Default to no border for quick add
+                borderColor: '#ffffff',
+                borderWidth: '0',
+                transparent: isTransparent,
+                w: 150, 
+                h: 150,
+                x: 50,
+                y: 50
+            };
+
+            activeWidgets.push(stickerData);
+        } catch (e) {
+            console.error("Sticker processing failed", e);
+        }
+    }
+
+    renderWidgets();
+    saveWidgets();
+    showPopup("Sticker added");
+    // If this was triggered from the drawer, close it
+    closeWidgetPicker();
+}
+
 function setupStickerControls() {
     const addBtn = document.getElementById('add-sticker-btn');
     const popup = document.getElementById('sticker-settings-popup');
@@ -1593,59 +1746,92 @@ function setupStickerControls() {
         }
     });
 
-    fileBtn.addEventListener('click', () => fileInput.click());
-    
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files && fileInput.files[0]) {
-            fileBtn.textContent = fileInput.files[0].name;
-        }
-    });
+    let selectedFile = null;
 
-    createBtn.addEventListener('click', async () => {
-        if (!fileInput.files || !fileInput.files[0]) {
-            showPopup('Please select an image');
-            return;
-        }
+    // "Select Image" triggers the Unified Manager
+    if (fileBtn) {
+        // Clone to remove old listeners to be safe
+        const newBtn = fileBtn.cloneNode(true);
+        fileBtn.parentNode.replaceChild(newBtn, fileBtn);
+        
+        newBtn.addEventListener('click', () => {
+            const requestId = 'sticker-popup-select';
+            
+            // Register callback for when file arrives (Local or Remote)
+            FileUploadManager.registerAppRequest(requestId, 'System', (files) => {
+                if (files && files.length > 0) {
+                    selectedFile = files[0]; // Store for "Create" click
+                    newBtn.textContent = selectedFile.name;
+                }
+            });
 
-        const file = fileInput.files[0];
-        
-        // Show loading indication if needed, or just await
-        // Use existing compressMedia utility to convert to WebP
-        let compressedSrc;
-        try {
-            compressedSrc = await compressMedia(file);
-        } catch (e) {
-            console.error("Sticker compression failed", e);
-            showPopup("Failed to process image");
-            return;
-        }
+            // Trigger UI
+            FileUploadManager.trigger('image/*', false, requestId);
+        });
+    }
 
-        const isTransparent = document.getElementById('widget-transparent-switch').checked;
-        
-        const stickerData = {
-            type: 'sticker',
-            src: compressedSrc, // Now a WebP Data URL
-            border: borderSwitch.checked,
-            borderColor: document.getElementById('sticker-border-color').value,
-            borderWidth: document.getElementById('sticker-border-width').value,
-            transparent: isTransparent, // This controls the background
-            w: 150, 
-            h: 150,
-            x: 50,
-            y: 50
-        };
+    // "Create" uses the captured file
+    if (createBtn) {
+        const newCreate = createBtn.cloneNode(true);
+        createBtn.parentNode.replaceChild(newCreate, createBtn);
 
-        activeWidgets.push(stickerData);
+        newCreate.addEventListener('click', async () => {
+            if (!selectedFile) {
+                showPopup('Please select an image');
+                return;
+            }
+
+            try {
+                let compressedSrc;
+                // Handle File object (Local) or Data Object (Remote)
+                if (selectedFile instanceof File) {
+                    compressedSrc = await compressMedia(selectedFile);
+                } else if (selectedFile.data) {
+                    // It's a remote file object {name, type, data: base64}
+                    // compressMedia expects Blob/File. Convert base64 to Blob.
+                    const res = await fetch(selectedFile.data);
+                    const blob = await res.blob();
+                    // Re-wrap as file for compressor if needed, or just use blob
+                    compressedSrc = await compressMedia(blob);
+                }
+
+                const isTransparent = document.getElementById('widget-transparent-switch')?.checked;
+                
+                const stickerData = {
+                    type: 'sticker',
+                    src: compressedSrc,
+                    border: document.getElementById('sticker-border-switch').checked,
+                    borderColor: document.getElementById('sticker-border-color').value,
+                    borderWidth: document.getElementById('sticker-border-width').value,
+                    transparent: isTransparent,
+                    w: 150, 
+                    h: 150,
+                    x: 50,
+                    y: 50
+                };
         
-        const controlPopup = document.querySelector('.control-popup');
-        const hiddenContainer = document.getElementById('hidden-controls-container');
-        controlPopup.style.display = 'none';
-        hiddenContainer.appendChild(popup);
-        
-        renderWidgets();
-        saveWidgets();
-        closeWidgetPicker();
-    });
+                activeWidgets.push(stickerData);
+                
+                // Close popup logic...
+                const controlPopup = document.querySelector('.control-popup');
+                const hiddenContainer = document.getElementById('hidden-controls-container');
+                if(controlPopup) controlPopup.style.display = 'none';
+                if(hiddenContainer) hiddenContainer.appendChild(popup);
+                
+                renderWidgets();
+                saveWidgets();
+                closeWidgetPicker();
+                
+                // Reset
+                selectedFile = null;
+                document.getElementById('sticker-select-file-btn').textContent = 'Select Image';
+
+            } catch (e) {
+                console.error("Sticker creation error", e);
+                showPopup("Failed to create sticker");
+            }
+        });
+    }
 }
 
 async function exportCurrentWallpaper() {
@@ -5896,17 +6082,17 @@ function updateNightMode() {
 }
 
 // Wallpaper upload functionality
-uploadButton.addEventListener("click", () => {
-    // Enforce Limit
+uploadButton.addEventListener("click", (e) => {
+    // Stop default input click, use Manager
+    e.preventDefault(); 
+    e.stopPropagation();
+
     if (recentWallpapers.length >= MAX_RECENT_WALLPAPERS) {
-		showDialog({ 
-			type: 'alert', 
-			title: 'Wallpaper storage full', 
-			message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers.` 
-		});
+        showDialog({ type: 'alert', title: 'Limit Reached' });
         return;
     }
-    wallpaperInput.click();
+    
+    FileUploadManager.trigger('.png, .jpeg, .jpg, .webp, .gif, .mp4, .guraatmos', true, 'wallpaper');
 });
 
 async function storeWallpaper(key, data) {
@@ -5984,7 +6170,7 @@ async function getVideo() {
     });
 }
 
-wallpaperInput.addEventListener("change", async event => {
+async function processWallpaperFiles(files) {
     closeWallpaperPicker();
     let files = Array.from(event.target.files);
     if (files.length === 0) return;
@@ -6116,7 +6302,7 @@ wallpaperInput.addEventListener("change", async event => {
         console.error("Error handling wallpapers:", error);
         showDialog({ type: 'alert', title: currentLanguage.WALLPAPER_SAVE_FAIL });
     }
-});
+}
 
 // Function to check storage availability
 function checkStorageQuota(data) {
@@ -12684,7 +12870,8 @@ const FUNCTION_PERMISSIONS = {
 	'getLocalStorageAll': 'system-admin',
     'listCaches': 'system-admin',
 	'deleteCache': 'system-admin',
-    'forceUpdatePolygol': 'system-admin'
+    'forceUpdatePolygol': 'system-admin',
+    'clearAllNotifications': 'system-admin'
 };
 
 // --- NEW: Map for remote control from the settings app ---
@@ -12972,7 +13159,7 @@ window.addEventListener('message', async (event) => { // Make listener async
 	    startLiveActivity,
 	    updateLiveActivity, // Forward updates
 	    stopLiveActivity,
-	    clearAllNotifications,
+		requestFileUpload,
 		playUiSound: (type) => {
             if (window.SoundManager) {
                 window.SoundManager.play(type);
@@ -13022,6 +13209,7 @@ window.addEventListener('message', async (event) => { // Make listener async
         },
 
 		// Privileged Functions (already checked above)
+		clearAllNotifications,
 		installApp, 
 		deleteApp,
 		requestInstalledApps, 
@@ -13126,6 +13314,59 @@ window.addEventListener('message', async (event) => { // Make listener async
     if (data && data.action === 'userActivity') {
         showCursorAndResetTimer();
         return; // Message handled, no need to proceed further.
+    }
+
+    if (data.action === 'requestFileUpload') {
+        // args: [{ accept, multiple, requestId }]
+        const args = data.args[0];
+        const { accept, multiple, requestId } = args;
+
+        // Identify App
+        let sourceAppId = 'Unknown';
+        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+        for (const iframe of iframes) {
+            if (iframe.contentWindow === sourceWindow) {
+                sourceAppId = iframe.dataset.appId;
+                break;
+            }
+        }
+
+        // Register callback to send data back to iframe
+        // We use a unique ID combo to avoid collisions
+        const uniqueReqId = `app_${sourceAppId}_${requestId}`;
+
+        FileUploadManager.registerAppRequest(uniqueReqId, sourceAppId, (files) => {
+            // 'files' is an array of File objects or Data Objects
+            // We must serialize them to send over postMessage
+            
+            const promises = files.map(async (f) => {
+                if (f.data) return f; // Already data object
+                
+                // Read File to Base64
+                return new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve({
+                        name: f.name,
+                        type: f.type,
+                        size: f.size,
+                        data: reader.result
+                    });
+                    reader.readAsDataURL(f);
+                });
+            });
+
+            Promise.all(promises).then(serializedFiles => {
+                sourceWindow.postMessage({
+                    type: 'dialog-response', // Reusing dialog response channel or custom
+                    requestId: requestId, // Original ID from app
+                    value: serializedFiles
+                }, event.origin);
+            });
+        });
+
+        // Trigger the UI
+        FileUploadManager.trigger(accept, multiple, uniqueReqId);
+        return;
     }
 
     // Handle a Gurapp announcing it's ready for settings
