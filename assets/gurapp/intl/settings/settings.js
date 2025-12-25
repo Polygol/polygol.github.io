@@ -353,10 +353,27 @@ function initializeSettingsApp() {
         };
     
         document.getElementById('btn-reset-waves').onclick = async () => {
-            if (await Gurasuraisu.showConfirm("This will disconnect all existing remotes. Are you sure?")) {
+            if (await Gurasuraisu.showConfirm("This will disconnect and unpair all existing remotes. A new code will be generated. Confirm?")) {
                 window.parent.WavesHost.resetPairingData();
             }
         };
+
+        const discSwitch = document.getElementById('waves-discovery-switch');
+        if (discSwitch) {
+            // Get initial state from parent
+            discSwitch.checked = window.parent.WavesHost.isDiscoveryEnabled();
+            
+            discSwitch.addEventListener('change', (e) => {
+                window.parent.WavesHost.setDiscovery(e.target.checked);
+            });
+        }
+
+        const rejectBtn = document.getElementById('btn-reject-auth');
+        if (rejectBtn) {
+            rejectBtn.onclick = () => {
+                window.parent.WavesHost.rejectCurrentAuth();
+            };
+        }
 
         document.querySelectorAll('[data-modal]').forEach(btn => {
             btn.addEventListener('click', () => document.getElementById(btn.dataset.modal)?.classList.add('show'));
