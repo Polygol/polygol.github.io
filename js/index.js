@@ -6891,7 +6891,10 @@ async function applyWallpaper() {
     }
     
     // Update Waves immediately
-    if (window.WavesHost) window.WavesHost.pushFullState();
+    if (window.WavesHost) {
+        window.WavesHost.pushFullState();
+        if (window.WavesHost.pushWallpaperUpdate) window.WavesHost.pushWallpaperUpdate();
+    }
 }
 
 function ensureVideoLoaded() {
