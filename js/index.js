@@ -4113,6 +4113,15 @@ window.getSystemStatus = function() {
         reduceMotion: document.body.classList.contains('reduce-animations')
     };
 
+    // Network Logic
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const network = {
+        online: navigator.onLine,
+        type: connection ? connection.type : 'unknown',
+        effectiveType: connection ? connection.effectiveType : 'unknown',
+        downlink: connection ? connection.downlink : 0
+    };
+
     return {
         silent: isSilentMode,
         minimal: minimalMode,
@@ -4122,7 +4131,8 @@ window.getSystemStatus = function() {
             charging: (typeof window.currentBatteryCharging !== 'undefined') ? window.currentBatteryCharging : false,
             icon: batteryIcon
         },
-        wifi: navigator.onLine,
+        network: network,
+        wifi: navigator.onLine, // Legacy support
         context: context
     };
 };
@@ -5718,6 +5728,27 @@ function updateRemoteNotifications() {
     }
 }
 
+// Widget Snapshot Cache
+window.widgetSnapshotCache = {};
+
+// Listener for widget snapshots
+window.addEventListener('message', (event) => {
+    if (event.data.type === 'screenshot-response' && event.data.screenshotDataUrl) {
+        // Find which widget sent this
+        const iframes = document.querySelectorAll('.widget-instance iframe');
+        for (const iframe of iframes) {
+            if (iframe.contentWindow === event.source) {
+                const widgetInstance = iframe.closest('.widget-instance');
+                if (widgetInstance) {
+                    const index = widgetInstance.dataset.widgetIndex;
+                    window.widgetSnapshotCache[index] = event.data.screenshotDataUrl;
+                }
+                break;
+            }
+        }
+    }
+});
+
 async function broadcastWidgetSnapshots() {
     if (!window.WavesHost || document.hidden) return;
     
@@ -5728,21 +5759,45 @@ async function broadcastWidgetSnapshots() {
     }
 
     const snapshots = [];
-    // Use a lower scale for performance
     const options = { logging: false, useCORS: true, scale: 0.5, allowTaint: true };
     
     for (const widget of widgets) {
-        try {
-            // Capture the iframe content is tricky due to CORS. 
-            // We capture the container. If iframe allows it, it works. 
-            // Otherwise we might just get the container frame.
-            const canvas = await html2canvas(widget, options);
-            snapshots.push({
-                id: widget.dataset.widgetIndex,
-                img: canvas.toDataURL('image/jpeg', 0.5)
-            });
-        } catch (e) { 
-            // Silent fail
+        const index = widget.dataset.widgetIndex;
+        const iframe = widget.querySelector('iframe');
+
+        if (iframe) {
+            // It's an app widget
+            // 1. Send request for NEXT update
+            try {
+                const targetOrigin = getOriginFromUrl(iframe.src);
+                iframe.contentWindow.postMessage({ type: 'request-screenshot' }, targetOrigin);
+            } catch(e) {}
+
+            // 2. Use cached image if available, otherwise placeholder or container capture
+            if (window.widgetSnapshotCache[index]) {
+                snapshots.push({
+                    id: index,
+                    img: window.widgetSnapshotCache[index]
+                });
+            } else {
+                // Fallback: Capture container (might be white, but better than error)
+                try {
+                    const canvas = await html2canvas(widget, options);
+                    snapshots.push({
+                        id: index,
+                        img: canvas.toDataURL('image/jpeg', 0.5)
+                    });
+                } catch(e) {}
+            }
+        } else {
+            // It's a sticker or simple element
+            try {
+                const canvas = await html2canvas(widget, options);
+                snapshots.push({
+                    id: index,
+                    img: canvas.toDataURL('image/jpeg', 0.5)
+                });
+            } catch (e) {}
         }
     }
     
