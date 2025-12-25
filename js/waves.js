@@ -371,10 +371,14 @@ async function handleRemoteCommand(payload, peerId) {
             } else if (window.html2canvas) {
                 // Fallback
                 try {
+                    const isLight = document.body.classList.contains('light-theme');
+                    const bgColor = isLight ? '#ffffff' : '#000000';
+
                     const canvas = await html2canvas(document.body, { 
                         useCORS: true, 
                         logging: false,
-                        ignoreElements: (el) => el.id === 'ai-assistant-overlay'
+                        ignoreElements: (el) => el.id === 'ai-assistant-overlay',
+                        backgroundColor: bgColor // Fix transparency issues
                     });
                     const imgData = canvas.toDataURL('image/jpeg', 0.4);
                     wavesSend({ type: 'screenshot', data: imgData }, peerId);
