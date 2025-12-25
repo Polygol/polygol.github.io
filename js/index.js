@@ -493,6 +493,33 @@ function showCursorAndResetTimer() {
     cursorIdleTimeout = setTimeout(hideCursor, 10000);
 }
 
+async function extractWallpaperColor(imageSource) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        
+        img.onload = () => {
+            try {
+                const colorThief = new ColorThief();
+                // Get palette and pick the most vibrant/dominant one
+                const color = colorThief.getColor(img); 
+                resolve(color); // Returns [r, g, b]
+            } catch (e) {
+                console.warn("Color extraction failed", e);
+                resolve(null);
+            }
+        };
+
+        img.onerror = () => resolve(null);
+
+        if (imageSource instanceof Blob) {
+            img.src = URL.createObjectURL(imageSource);
+        } else {
+            img.src = imageSource;
+        }
+    });
+}
+
 const secondsSwitch = document.getElementById('seconds-switch');
 let appUsage = {};
 const weatherSwitch = document.getElementById('weather-switch');
@@ -4058,6 +4085,33 @@ dateElement.addEventListener('click', () => {
 
 startSynchronizedClockAndDate();
 
+window.getSystemStatus = function() {
+    const batteryEl = document.getElementById('battery-status-indicator');
+    const batteryIcon = batteryEl ? batteryEl.querySelector('span').textContent : 'battery_unknown';
+    
+    // Determine Battery Level/Charging from icon name mapping (approximate)
+    let batteryLevel = 100;
+    let isCharging = batteryIcon.includes('bolt');
+    if (batteryIcon.includes('_0')) batteryLevel = 5;
+    else if (batteryIcon.includes('_1')) batteryLevel = 15;
+    else if (batteryIcon.includes('_2')) batteryLevel = 30;
+    else if (batteryIcon.includes('_3')) batteryLevel = 50;
+    else if (batteryIcon.includes('_4')) batteryLevel = 65;
+    else if (batteryIcon.includes('_5')) batteryLevel = 85;
+
+    return {
+        silent: isSilentMode,
+        minimal: minimalMode,
+        night: nightMode,
+        battery: {
+            level: batteryLevel,
+            charging: isCharging,
+            icon: batteryIcon
+        },
+        wifi: navigator.onLine
+    };
+};
+
 function showPopup(message) {
     const popup = document.createElement('div');
     popup.style.position = 'fixed';
@@ -6245,30 +6299,44 @@ async function processWallpaperFiles(files) {
                 processedCount++;
             } 
             // --- Existing Logic for Standard Images/Videos ---
-            else if (["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "video/mp4"].includes(file.type)) {
-                // ... (Existing logic for storing blob/compression goes here) ...
-                // Re-implementing the core save logic briefly to fit the loop:
+            else if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
                 const wallpaperId = `wallpaper_${Date.now()}_${Math.random()}`;
                 const isVideo = file.type.startsWith("video/");
                 let dbData = { blob: file, type: file.type, clockStyles: resetAndApplyDefaultClockStyles(), widgetLayout: [] };
                 
+                // Extract Color
+                let dominantColor = null;
+                if (!isVideo) {
+                    dominantColor = await extractWallpaperColor(file);
+                }
+                // Store it in the DB record
+                dbData.dominantColor = dominantColor;
+
                 if(!isVideo && file.type !== 'image/gif') {
-                     // Compress static images
                      const compressed = await compressMedia(file);
-                     dbData = { dataUrl: compressed, type: file.type, clockStyles: resetAndApplyDefaultClockStyles(), widgetLayout: [] };
+                     dbData.dataUrl = compressed;
+                     // Clean up blob to save space if we have dataUrl
+                     delete dbData.blob; 
                 } else if (file.type === 'image/gif') {
                      const ff = await extractFirstFrame(file);
                      dbData.firstFrameDataUrl = ff;
+                     // Try to get color from first frame
+                     if (!dominantColor) {
+                         dominantColor = await extractWallpaperColor(ff);
+                         dbData.dominantColor = dominantColor;
+                     }
                 }
 
                 await storeWallpaper(wallpaperId, dbData);
+                
                 recentWallpapers.unshift({
                     id: wallpaperId,
                     type: file.type,
                     isVideo: isVideo,
                     timestamp: Date.now(),
                     clockStyles: dbData.clockStyles,
-                    widgetLayout: []
+                    widgetLayout: [],
+                    dominantColor: dominantColor // Add to memory object
                 });
                 processedCount++;
             }
@@ -6791,6 +6859,26 @@ async function applyWallpaper() {
             }
         }
     }
+
+    const current = recentWallpapers[currentWallpaperPosition];
+    if (current && current.dominantColor) {
+        window.activeWallpaperColor = current.dominantColor;
+    } else {
+        // Fallback or attempt to fetch from DB if missing in memory
+        if (current && current.id) {
+            getWallpaper(current.id).then(data => {
+                if (data && data.dominantColor) {
+                    window.activeWallpaperColor = data.dominantColor;
+                    // Update Waves if connected
+                    if (window.WavesHost) window.WavesHost.pushFullState();
+                }
+            });
+        }
+        window.activeWallpaperColor = null; // Default
+    }
+    
+    // Update Waves immediately
+    if (window.WavesHost) window.WavesHost.pushFullState();
 }
 
 function ensureVideoLoaded() {
