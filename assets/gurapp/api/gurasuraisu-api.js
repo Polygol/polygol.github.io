@@ -1087,23 +1087,33 @@ window.addEventListener('message', async (event) => {
             
       // --- Handles screenshot requests from the parent ---
       case 'request-screenshot':
-        try {
-            // Check if html2canvas is loaded in the Gurapp's window
-            if (typeof html2canvas !== 'function') {
-                console.error("html2canvas script not found in this Gurapp. Cannot fulfill screenshot request.");
-                return; 
-            }
-            // Generate the screenshot of the app's content
-            const canvas = await html2canvas(document.body, { useCORS: true, logging: false });
-            const screenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+        // Helper function to perform the capture
+        const doCapture = async () => {
+            try {
+                // Generate the screenshot of the app's content
+                const canvas = await html2canvas(document.body, { useCORS: true, logging: false });
+                const screenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
 
-            // Send the generated screenshot data back to the parent
-            window.parent.postMessage({
-                type: 'screenshot-response',
-                screenshotDataUrl: screenshotDataUrl
-            }, '*');
-        } catch (e) {
-            console.error("This Gurapp failed to generate its screenshot:", e);
+                // Send the generated screenshot data back to the parent
+                window.parent.postMessage({
+                    type: 'screenshot-response',
+                    screenshotDataUrl: screenshotDataUrl
+                }, '*');
+            } catch (e) {
+                console.error("Gurapp screenshot failed:", e);
+            }
+        };
+
+        // Check if html2canvas is loaded
+        if (typeof html2canvas !== 'function') {
+            // Inject it dynamically
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            script.onload = doCapture;
+            script.onerror = () => console.error("Failed to load html2canvas for Gurapp");
+            document.head.appendChild(script);
+        } else {
+            doCapture();
         }
         break;
     }
