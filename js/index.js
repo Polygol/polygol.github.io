@@ -13163,6 +13163,54 @@ window.addEventListener('message', async (event) => { // Make listener async
                 window.SoundManager.play(type);
             }
         },
+        requestFileUpload: (options) => {
+            const { accept, multiple, requestId } = options;
+            
+            // Identify the App sending the request using 'event.source' from the listener closure
+            let sourceAppId = 'Unknown';
+            const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+            for (const iframe of iframes) {
+                if (iframe.contentWindow === event.source) {
+                    sourceAppId = iframe.dataset.appId;
+                    break;
+                }
+            }
+
+            // Create a unique ID for the manager to track this specific request
+            const uniqueReqId = `app_${sourceAppId}_${requestId}`;
+
+            // Register the callback
+            FileUploadManager.registerAppRequest(uniqueReqId, sourceAppId, (files) => {
+                // Serialize files to send back over postMessage
+                const promises = files.map(async (f) => {
+                    if (f.data) return f; // Already a data object (from Remote)
+                    
+                    // Read local File to Base64
+                    return new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve({
+                            name: f.name,
+                            type: f.type,
+                            size: f.size,
+                            data: reader.result
+                        });
+                        reader.readAsDataURL(f);
+                    });
+                });
+
+                Promise.all(promises).then(serializedFiles => {
+                    // Send response back to the app iframe
+                    event.source.postMessage({
+                        type: 'dialog-response', 
+                        requestId: requestId, 
+                        value: serializedFiles
+                    }, event.origin);
+                });
+            });
+
+            // Trigger the UI (Local picker + Remote request)
+            FileUploadManager.trigger(accept, multiple, uniqueReqId);
+        },
 		setRemoteUI: (components) => {
             // NEW: Allow ANY running app (even background) to set remote UI if they are the sender.
             // We identify the app by matching the event source window to our iframes.
