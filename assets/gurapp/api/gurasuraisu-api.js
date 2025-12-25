@@ -724,6 +724,69 @@ const Gurasuraisu = {
     },
 
   /**
+   * Requests a file upload from the user. 
+   * In Polygol, this triggers both the local file picker and a request to the Waves Remote.
+   * @param {object} options
+   * @param {string} options.accept - MIME types (e.g., 'image/*', '.png').
+   * @param {boolean} options.multiple - Allow multiple files.
+   * @returns {Promise<File[]>} - Resolves with an array of File objects.
+   */
+  requestFile: function(options = {}) {
+      const { accept = '*/*', multiple = false } = options;
+      
+      return new Promise((resolve, reject) => {
+          if (!isInsideGurasuraisu) {
+              // Standalone Fallback: Create temporary input
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = accept;
+              input.multiple = multiple;
+              input.style.display = 'none';
+              
+              input.onchange = (e) => {
+                  if (e.target.files.length > 0) {
+                      resolve(Array.from(e.target.files));
+                  } else {
+                      // User cancelled (hard to detect reliably, but we leave promise pending or handle via focus hack if needed)
+                  }
+                  input.remove();
+              };
+              document.body.appendChild(input);
+              input.click();
+          } else {
+              // Polygol Mode: Request from Parent
+              const requestId = `file_req_${++_dialogRequestId}`;
+              _dialogCallbacks[requestId] = (filesData) => {
+                  // Reconstruct File objects from data sent by parent
+                  // filesData = [{ name, type, data (base64/blob), size }]
+                  if (!filesData) return;
+                  
+                  const files = filesData.map(f => {
+                      // Convert Base64 to Blob if necessary, or use existing blob
+                      // Parent should send Blob/File if possible, but postMessage clones it.
+                      if (f instanceof File) return f;
+                      
+                      // If data is base64 string
+                      if (typeof f.data === 'string') {
+                          const arr = f.data.split(',');
+                          const bstr = atob(arr[1] || arr[0]);
+                          let n = bstr.length;
+                          const u8arr = new Uint8Array(n);
+                          while (n--) u8arr[n] = bstr.charCodeAt(n);
+                          return new File([u8arr], f.name, { type: f.type });
+                      }
+                      return null;
+                  }).filter(f => f !== null);
+                  
+                  resolve(files);
+              };
+              
+              this._call('requestFileUpload', [{ accept, multiple, requestId }]);
+          }
+      });
+  },
+
+  /**
    * Namespace for Live Activity functions.
    */
   liveActivity: {
