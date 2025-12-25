@@ -6551,7 +6551,8 @@ function extractFirstFrame(file) {
 
 // Compression utility function
 async function compressMedia(file) {
-    if (file.type === 'image/gif') {
+    // ALLOW ANIMATED FORMATS TO PASS THROUGH WITHOUT RE-ENCODING
+    if (file.type === 'image/gif' || file.type === 'image/webp') {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = event => resolve(event.target.result);
