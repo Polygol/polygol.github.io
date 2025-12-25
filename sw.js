@@ -41,6 +41,7 @@ const ASSETS_TO_CACHE = [
   '/assets/sound/ui/tridown.mp3',
   '/assets/sound/ui/tripuck.mp3',
   'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js',
   'https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js',
   'https://esm.sh/trystero@0.15.1/torrent',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
