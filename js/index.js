@@ -11652,31 +11652,54 @@ window.systemSpeak = function(text) {
 
     const synth = window.speechSynthesis;
     
+    // 1. Check Media State
+    // If the widget shows the 'pause' icon, it means media is currently playing.
+    const playBtn = document.querySelector('#media-widget-play-pause span');
+    const wasPlaying = playBtn && playBtn.textContent === 'pause';
+    const mediaApp = window.activeMediaSessionApp;
+
     const speak = () => {
-        // Cancel pending to prevent queue pile-up
         synth.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
         const voices = synth.getVoices();
         
-        // 1. Try exact match for a high quality English voice
+        // Robust Voice Selection
         let selectedVoice = voices.find(v => v.name.includes("Google US English") || v.name.includes("Microsoft Zira"));
-        
-        // 2. Fallback to any English voice
         if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('en'));
-        
-        // 3. Fallback to default
         if (!selectedVoice) selectedVoice = voices[0];
-
         if (selectedVoice) utterance.voice = selectedVoice;
         
         utterance.rate = 1.0;
-        utterance.volume = 4.0;
+        utterance.volume = 1.0;
+        
+        // 2. Pause Media on Start
+        utterance.onstart = () => {
+            if (wasPlaying && mediaApp) {
+                // Send toggle command to pause
+                Gurasuraisu.callApp(mediaApp, 'playPause');
+            }
+        };
+
+        // 3. Resume Media on End
+        const resumeMedia = () => {
+            if (wasPlaying && mediaApp) {
+                // Check current state to ensure we don't accidentally PAUSE it 
+                // if the user manually resumed it during the speech.
+                const currentBtn = document.querySelector('#media-widget-play-pause span');
+                // Only toggle if it is currently paused (showing 'play_arrow')
+                if (currentBtn && currentBtn.textContent === 'play_arrow') {
+                    Gurasuraisu.callApp(mediaApp, 'playPause');
+                }
+            }
+        };
+
+        utterance.onend = resumeMedia;
+        utterance.onerror = resumeMedia; // Ensure resume happens even if TTS errors out
         
         synth.speak(utterance);
     };
 
-    // Chrome loads voices asynchronously
     if (synth.getVoices().length === 0) {
         synth.onvoiceschanged = speak;
     } else {
