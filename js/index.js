@@ -11671,7 +11671,7 @@ window.systemSpeak = function(text) {
         if (selectedVoice) utterance.voice = selectedVoice;
         
         utterance.rate = 1.0;
-        utterance.volume = 1.0;
+        utterance.volume = 4.0;
         
         synth.speak(utterance);
     };
