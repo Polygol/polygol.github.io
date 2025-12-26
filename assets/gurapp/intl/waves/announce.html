@@ -120,7 +120,7 @@
             }
         }
 
-        window.addEventListener('GurasuraisuReady', () => {
+        window.addEventListener("DOMContentLoaded", (event) => {
             let shouldSpeak = false;
             
             if (ttsParam === 'true') shouldSpeak = true;
