@@ -142,8 +142,11 @@ function registerPeer(peerId, profile) {
 }
 
 function notifySystemUI() {
-    if (window.updateActiveWavesPeers) {
+    if (typeof window.updateActiveWavesPeers === 'function') {
         window.updateActiveWavesPeers(connectedPeers);
+    } else {
+        // Retry shortly if index.js hasn't finished loading yet
+        setTimeout(() => notifySystemUI(), 500);
     }
 }
 
