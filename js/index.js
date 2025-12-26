@@ -1015,7 +1015,7 @@ function renderWidgets() {
 
     // Trigger snapshot update for remote
     if (window.WavesHost) {
-    	setTimeout(broadcastWidgetSnapshots, 1000);
+    	setTimeout(broadcastWidgetSnapshots, 5000);
     }
 
     // 2. Add interaction listeners to all newly created widgets
@@ -5859,7 +5859,7 @@ async function broadcastWidgetSnapshots() {
 
 // Start snapshot timer
 if (widgetSnapshotInterval) clearInterval(widgetSnapshotInterval);
-widgetSnapshotInterval = setInterval(broadcastWidgetSnapshots, 600000); // Update every 10s
+widgetSnapshotInterval = setInterval(broadcastWidgetSnapshots, 10000); // Update every 10s
 
 // Function to dynamically load the html2canvas script
 async function loadHtml2canvasScript() {
