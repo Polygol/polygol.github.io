@@ -12317,6 +12317,41 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.addEventListener('click', unlockAudio);
     document.addEventListener('touchstart', unlockAudio);
 
+    if (window.pendingManageUrl) {
+        const hasUserData = localStorage.getItem('hasVisitedBefore') === 'true';
+        let proceed = true;
+
+        if (hasUserData) {
+            // User exists: Demand confirmation
+            proceed = await showCustomConfirm(
+                "An external configuration script is requesting to be imported. Unknown scripts can harm the device and your data. Allow this to control Polygol?",
+            );
+        }
+
+        if (proceed) {
+            try {
+                showNotification('Importing configuration...', { icon: 'cloud_download' });
+                const response = await fetch(window.pendingManageUrl);
+                if (response.ok) {
+                    const scriptContent = await response.text();
+                    localStorage.setItem('customStartupScript', scriptContent);
+                    // Mark setup as complete so next boot is normal
+                    localStorage.setItem('hasVisitedBefore', 'true'); 
+                    
+                    console.log("Management script imported.");
+                    // Reload to ensure a clean state with the new script applied
+                    window.location.reload();
+                    return; 
+                } else {
+                    showDialog({ type: 'alert', title: 'Import Failed', message: `HTTP Error: ${response.status}` });
+                }
+            } catch (e) {
+                console.error("Manage Import Error:", e);
+                showDialog({ type: 'alert', title: 'Import Error', message: e.message });
+            }
+        }
+    }
+
     // --- Handle Pending App Launch (from ?s=[app] passed by HTML) ---
     if (window.pendingBootApp) {
         // Search for app case-insensitively
