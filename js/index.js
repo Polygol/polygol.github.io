@@ -10059,6 +10059,12 @@ function closeFullscreenEmbed() {
     
     if (embedContainer) {
         const url = embedContainer.dataset.embedUrl;
+        
+        // Clean up Switcher Data Immediately
+        // Remove from minimized cache to prevent ghosting in App Switcher
+        if (url && minimizedEmbeds[url]) {
+            delete minimizedEmbeds[url];
+        }
 
         // If part of a split, clear the split state from memory so the remaining app becomes standalone
         if (splitScreenState.active && (url === splitScreenState.leftAppUrl || url === splitScreenState.rightAppUrl)) {
@@ -10093,11 +10099,7 @@ function closeFullscreenEmbed() {
         embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
         embedContainer.style.transform = 'translateY(40px) scale(0.9)';
         embedContainer.style.opacity = '0';
-        
-        // Remove from minimized cache
-        if (url && minimizedEmbeds[url]) {
-            delete minimizedEmbeds[url];
-        }
+        embedContainer.style.pointerEvents = 'none'; // Prevent clicks during fade out
 
         // After animation, remove the element entirely from the DOM
         setTimeout(() => {
@@ -11631,30 +11633,39 @@ window.makeAnnouncement = function(text, forceTTS = null) {
 };
 
 window.systemSpeak = function(text) {
-    if (!text || isSilentMode) return; // Respect global silent mode
+    if (!text || isSilentMode) return;
 
     const synth = window.speechSynthesis;
     
-    const doSpeak = () => {
-        synth.cancel(); // Stop any current speech
+    const speak = () => {
+        // Cancel pending to prevent queue pile-up
+        synth.cancel();
+
         const utterance = new SpeechSynthesisUtterance(text);
         const voices = synth.getVoices();
         
-        // Priority: Google US -> Any English -> First Available
-        utterance.voice = voices.find(v => v.name.includes('Google US English')) || 
-                          voices.find(v => v.lang.startsWith('en')) || 
-                          voices[0];
+        // 1. Try exact match for a high quality English voice
+        let selectedVoice = voices.find(v => v.name.includes("Google US English") || v.name.includes("Microsoft Zira"));
         
-        utterance.rate = 0.9;
+        // 2. Fallback to any English voice
+        if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('en'));
+        
+        // 3. Fallback to default
+        if (!selectedVoice) selectedVoice = voices[0];
+
+        if (selectedVoice) utterance.voice = selectedVoice;
+        
+        utterance.rate = 1.0;
         utterance.volume = 1.0;
+        
         synth.speak(utterance);
     };
 
     // Chrome loads voices asynchronously
     if (synth.getVoices().length === 0) {
-        synth.onvoiceschanged = doSpeak;
+        synth.onvoiceschanged = speak;
     } else {
-        doSpeak();
+        speak();
     }
 };
 
