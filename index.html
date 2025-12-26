@@ -345,15 +345,6 @@
                     <div id="battery-status-indicator" class="status-qc">
                         <span class="material-symbols-rounded" style="font-size: 26px; font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;">battery_android_question</span>
                     </div>
-                    <button id="settings-app-btn" class="btn-qc" onclick="createFullscreenEmbed('/assets/gurapp/intl/settings/index.html')" style="display: none;">
-                        <span class="material-symbols-rounded" style="font-size: 18px;">settings</span>
-                    </button>
-                    <button id="fullscreen-btn" class="btn-qc" onclick="goFullscreen()">
-                        <span class="material-symbols-rounded" style="font-size: 18px;">expand_content</span>
-                    </button>
-                    <button id="blackout-btn" class="btn-qc">
-                        <span class="material-symbols-rounded" style="font-size: 18px;">power_settings_new</span>
-                    </button>
                     <div id="active-peers-container" style="display: none; align-items: center;"></div>
                 </div>
             </div>
@@ -752,6 +743,17 @@
                         <span class="material-symbols-rounded" style="font-size: 18px;">hide</span>
                     </button>
                 </div>
+            </div>
+            <div class="controls-footer">
+                <button id="settings-app-btn" class="btn-qc" onclick="createFullscreenEmbed('/assets/gurapp/intl/settings/index.html')" style="display: none;">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">settings</span>
+                </button>
+                <button id="fullscreen-btn" class="btn-qc" onclick="goFullscreen()">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">expand_content</span>
+                </button>
+                <button id="blackout-btn" class="btn-qc">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">power_settings_new</span>
+                </button>
             </div>
         </div>
     </div>
