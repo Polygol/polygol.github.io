@@ -56,6 +56,31 @@ If this is the case, try to:
 # Gurapp Applications
 Gurapp can extend your Polygol experience. The GitHub repository for each application are seperate from the `polygol.github.io` GitHub repository.
 
+# Boot States & URL Parameters
+Polygol includes a Boot State System that runs immediately upon page load (before the OS initializes).
+
+If a user visits index.html without any parameters and has not completed the setup process, they are automatically redirected to the landing page.
+## Boot Commands
+You can control the startup behavior using the ?s= query parameter. The URL is automatically cleaned after the command executes.
+
+| Parameter | Action | Description |
+| :--- | :--- | :--- |
+| `?s=oobe` | **Force Setup** | Clears the "visited" flag and forces the Out-of-Box Experience (Setup Screen) to launch. Useful for resetting or testing the onboarding flow. |
+| `?s=nooobe` | **Skip Setup** | Sets the "visited" flag to true and bypasses the Setup Screen, taking the user directly to the Desktop. |
+| `?s=manage&url=[URL]` | **Import Config** | Fetches a raw text/JS file from the provided `[URL]`, saves it as a `customStartupScript`, marks setup as complete, and loads the OS. Useful for remote management or custom deployments. |
+| `?s=[AppName]` | **Deep Link** | Skips setup and immediately launches the specified app once the system loads (e.g., `?s=Terminal`). |
+
+#### Examples
+
+* Reset and start fresh:
+`https://polygol.github.io/?s=oobe`
+* Skip setup entirely:
+`https://polygol.github.io/?s=nooobe`
+* Open the Terminal immediately:
+`https://polygol.github.io/?s=Terminal`
+* Load a custom configuration script:
+`https://polygol.github.io/?s=manage&url=https://example.com/my-config.js`
+
 # Local Run
 * Applications: You must download the Gurapps from each GitHub repository and place them in the root directory in order for Gurapps to work correctly with Polygol locally.
 * Assets: You must edit the directory path in the code, since every path assumes that the asset is in root.
