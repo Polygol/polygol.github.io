@@ -387,7 +387,7 @@ async function handleRemoteCommand(payload, peerId) {
 
         case 'announce':
             if (data.text && typeof window.makeAnnouncement === 'function') {
-                window.makeAnnouncement(data.text);
+                window.makeAnnouncement(data.text, data.tts);
             }
             break;
 
