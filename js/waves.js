@@ -64,6 +64,29 @@ function generatePSK() {
 }
 
 function initWavesHost() {
+    try {
+        const savedData = localStorage.getItem('waves_known_devices');
+        if (savedData) {
+            const knownDevices = JSON.parse(savedData);
+            
+            // Populate the connectedPeers object with saved data
+            Object.keys(knownDevices).forEach(key => {
+                const device = knownDevices[key];
+                // Use the name or ID as the key
+                connectedPeers[key] = {
+                    id: key, // Use key as ID for saved devices
+                    profile: device.profile,
+                    connectedAt: device.lastSeen || Date.now()
+                };
+            });
+            
+            // Force an immediate UI update attempt
+            notifySystemUI();
+        }
+    } catch (e) {
+        console.warn("Failed to load known devices", e);
+    }
+    
     if (!window.Trystero) {
         window.addEventListener('trystero-ready', initWavesHost, { once: true });
         return;
