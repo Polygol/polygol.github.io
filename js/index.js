@@ -3260,19 +3260,6 @@ document.addEventListener('DOMContentLoaded', () => {
     blackoutBtn.addEventListener('mouseup', cancelBlackoutHold);
     blackoutBtn.addEventListener('mouseleave', cancelBlackoutHold);
     blackoutBtn.addEventListener('touchend', cancelBlackoutHold);
-	
-    if (blackoutBtn && !document.getElementById('active-peers-container')) {
-        const peersContainer = document.createElement('div');
-        peersContainer.id = 'active-peers-container';
-        peersContainer.style.cssText = `
-            display: flex;
-            align-items: center;
-            margin-right: 12px;
-            gap: -8px; /* Overlap effect */
-        `;
-        // Insert before the blackout button
-        blackoutBtn.parentNode.insertBefore(peersContainer, blackoutBtn);
-    }
 
 	// Initial calls
 	updateNetworkInfo();
@@ -14157,7 +14144,6 @@ window.updateActiveWavesPeers = function(peersMap) {
     container.innerHTML = '';
     container.style.display = 'flex';
     container.style.alignItems = 'center';
-    container.style.marginRight = '12px';
     container.style.gap = '0'; 
 
     let index = 0;
@@ -14192,7 +14178,6 @@ window.updateActiveWavesPeers = function(peersMap) {
             width: 32px; 
             height: 32px; 
             border-radius: 50%; 
-            border: 2px solid var(--modal-background);
             object-fit: cover;
             background: var(--search-background);
             z-index: ${100 - index};
