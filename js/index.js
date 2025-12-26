@@ -10032,6 +10032,12 @@ async function createBackgroundEmbed(url) {
 
 window.launchAppSilently = createBackgroundEmbed;
 
+window.makeAnnouncement = function(text) {
+    if (!text) return;
+    const url = `/assets/gurapp/intl/waves/announce.html?text=${encodeURIComponent(text)}`;
+    createFullscreenEmbed(url);
+};
+
 function closeFullscreenEmbed() {
     // Restore the original favicon
     if (originalFaviconUrl) {
@@ -13525,6 +13531,7 @@ window.addEventListener('message', async (event) => { // Make listener async
 		showNotification, 
 		minimizeFullscreenEmbed, 
 		createFullscreenEmbed, 
+		closeFullscreenEmbed, // Allow apps to close themselves
         launchAppSilently: createBackgroundEmbed, // Expose silent launch
 		blackoutScreen,
 		registerWidget, 
