@@ -3260,6 +3260,19 @@ document.addEventListener('DOMContentLoaded', () => {
     blackoutBtn.addEventListener('mouseup', cancelBlackoutHold);
     blackoutBtn.addEventListener('mouseleave', cancelBlackoutHold);
     blackoutBtn.addEventListener('touchend', cancelBlackoutHold);
+	
+    if (blackoutBtn && !document.getElementById('active-peers-container')) {
+        const peersContainer = document.createElement('div');
+        peersContainer.id = 'active-peers-container';
+        peersContainer.style.cssText = `
+            display: flex;
+            align-items: center;
+            margin-right: 12px;
+            gap: -8px; /* Overlap effect */
+        `;
+        // Insert before the blackout button
+        blackoutBtn.parentNode.insertBefore(peersContainer, blackoutBtn);
+    }
 
 	// Initial calls
 	updateNetworkInfo();
@@ -3551,6 +3564,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000); // 1s delay to ensure DOM is fully settled
     }
 });
+
+// Function to update the Active Peers UI (Called from waves.js)
+window.updateActiveWavesPeers = function(peersMap) {
+    const container = document.getElementById('active-peers-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    
+    // Convert map to array and deduplicate by name (assuming same name = same user)
+    const uniqueUsers = new Map();
+    
+    Object.values(peersMap).forEach(p => {
+        if (p.profile && p.profile.name) {
+            // If user already exists, maybe just update timestamp? 
+            // For now, first one wins.
+            if (!uniqueUsers.has(p.profile.name)) {
+                uniqueUsers.set(p.profile.name, p.profile);
+            }
+        }
+    });
+
+    uniqueUsers.forEach(profile => {
+        const avatar = document.createElement('img');
+        avatar.src = profile.avatar || '/assets/appicon/system.png';
+        avatar.title = profile.name;
+        avatar.style.cssText = `
+            width: 32px; 
+            height: 32px; 
+            border-radius: 50%; 
+            border: 2px solid var(--modal-background);
+            margin-left: -10px;
+            object-fit: cover;
+            background: var(--surface-variant);
+        `;
+        // Handle image error
+        avatar.onerror = () => { avatar.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23fff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'; };
+        
+        container.appendChild(avatar);
+    });
+    
+    // Add margin if there are users, to separate from blackout button
+    if (uniqueUsers.size > 0) {
+        container.style.display = 'flex';
+    } else {
+        container.style.display = 'none';
+    }
+};
 
 // Function to update the document title
 function updateTitle() {
@@ -4951,6 +5011,16 @@ function createSetupScreen() {
             ]
         },
         {
+            title: "Name this Device",
+            description: "Choose a name to identify this device on your Waves network.",
+            icon: "devices",
+            isInput: true, // Custom flag for input handling
+            inputType: "text",
+            inputPlaceholder: "Name",
+            configKey: "system_device_name",
+            default: "Polygol Device"
+        },
+        {
             title: "SETUP_CANNIBALIZE",
             description: "",
 	    icon: "palette", // Add icon
@@ -5034,7 +5104,30 @@ function createSetupScreen() {
         page.appendChild(description);
         
         // Add options
-        if (pageData.options.length > 0) {
+        if (pageData.isInput) {
+            // Render Text Input for Device Name
+            const inputContainer = document.createElement('div');
+            inputContainer.className = 'setup-option';
+            inputContainer.style.cursor = 'default';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = localStorage.getItem(pageData.configKey) || pageData.default;
+            input.placeholder = pageData.inputPlaceholder;
+            input.className = 'setup-input-field'; // We'll add css for this
+            input.style.cssText = "background: transparent; border: none; color: var(--text-color); font-size: 1.2rem; width: 100%; outline: none; border-bottom: 2px solid var(--glass-border); padding: 10px;";
+            
+            input.addEventListener('input', (e) => {
+                localStorage.setItem(pageData.configKey, e.target.value);
+            });
+
+            inputContainer.appendChild(input);
+            page.appendChild(inputContainer);
+            
+            // Auto-focus
+            setTimeout(() => input.focus(), 500);
+
+        } else if (pageData.options.length > 0) {
             pageData.options.forEach(option => {
                 const optionElement = document.createElement('div');
                 optionElement.className = 'setup-option';
