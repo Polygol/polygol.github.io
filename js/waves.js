@@ -93,14 +93,14 @@ function initWavesHost() {
         wavesBroadcast = sendUpdate;
 
         wavesOnData((payload, peerId) => {
+            // Handle Handshake/Hello with Profile
             if (payload.type === 'hello') {
                 console.log(`[Waves] Hello from ${peerId}`, payload.profile);
                 
-                // If the payload has an auth token, we can check it immediately.
+                // If the payload has an auth token, check it immediately.
                 if (payload.auth === state.psk) {
-                    // Authorized Re-connection
+                    // Authorized Re-connection: Register peer and send device info
                     registerPeer(peerId, payload.profile);
-                    // Send back OUR device info
                     wavesSend({ type: 'welcome', deviceName: state.deviceName }, peerId);
                 } else if (isDiscoveryActive) {
                     // New Auth Request
@@ -111,7 +111,7 @@ function initWavesHost() {
             }
             // If valid PSK, execute command
             else if (payload.auth === state.psk) {
-                // Ensure peer is registered (in case of restart)
+                // Security: Ensure peer is registered if they send a command
                 if (!connectedPeers[peerId] && payload.profile) {
                     registerPeer(peerId, payload.profile);
                 }
