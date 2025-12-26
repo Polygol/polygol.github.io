@@ -10045,15 +10045,6 @@ async function createBackgroundEmbed(url) {
 
 window.launchAppSilently = createBackgroundEmbed;
 
-window.makeAnnouncement = function(text, forceTTS = null) {
-    if (!text) return;
-    let url = `/assets/gurapp/intl/waves/announce.html?text=${encodeURIComponent(text)}`;
-    if (forceTTS !== null) {
-        url += `&tts=${forceTTS}`;
-    }
-    createFullscreenEmbed(url);
-};
-
 function closeFullscreenEmbed() {
     // Restore the original favicon
     if (originalFaviconUrl) {
@@ -10115,16 +10106,16 @@ function closeFullscreenEmbed() {
     }
 
     // Check History Stack
-    if (window.appHistoryStack.length > 0) {
+    if (window.appHistoryStack && window.appHistoryStack.length > 0) {
         const previousUrl = window.appHistoryStack.pop();
-        console.log(`[System] Restoring from history: ${previousUrl}`);
-        
-        // Re-open the previous app immediately
-        // We use a slight timeout to ensure the previous DOM removal doesn't conflict visually
-        setTimeout(() => {
-            createFullscreenEmbed(previousUrl);
-        }, 50);
-        return; // EXIT HERE. Do not restore Home UI.
+        // Check if previous app is the same as the one closing (prevent loops)
+        if (previousUrl !== embedContainer?.dataset?.embedUrl) {
+            console.log(`[System] Restoring from history: ${previousUrl}`);
+            setTimeout(() => {
+                createFullscreenEmbed(previousUrl);
+            }, 50);
+            return; // EXIT: Do not show Home Screen
+        }
     }
 
     // --- STANDARD HOME RESTORATION (Only if history is empty) ---
@@ -11629,6 +11620,43 @@ function setupOneButtonNav() {
         });
     }
 }
+
+window.makeAnnouncement = function(text, forceTTS = null) {
+    if (!text) return;
+    let url = `/assets/gurapp/intl/waves/announce.html?text=${encodeURIComponent(text)}`;
+    if (forceTTS !== null) {
+        url += `&tts=${forceTTS}`;
+    }
+    createFullscreenEmbed(url);
+};
+
+window.systemSpeak = function(text) {
+    if (!text || isSilentMode) return; // Respect global silent mode
+
+    const synth = window.speechSynthesis;
+    
+    const doSpeak = () => {
+        synth.cancel(); // Stop any current speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        const voices = synth.getVoices();
+        
+        // Priority: Google US -> Any English -> First Available
+        utterance.voice = voices.find(v => v.name.includes('Google US English')) || 
+                          voices.find(v => v.lang.startsWith('en')) || 
+                          voices[0];
+        
+        utterance.rate = 0.9;
+        utterance.volume = 1.0;
+        synth.speak(utterance);
+    };
+
+    // Chrome loads voices asynchronously
+    if (synth.getVoices().length === 0) {
+        synth.onvoiceschanged = doSpeak;
+    } else {
+        doSpeak();
+    }
+};
 
 secondsSwitch.addEventListener('change', function() {
     showSeconds = this.checked;
@@ -13574,6 +13602,11 @@ window.addEventListener('message', async (event) => { // Make listener async
 	    startLiveActivity,
 	    updateLiveActivity, // Forward updates
 	    stopLiveActivity,
+		speakText: (text) => {
+            if (typeof window.systemSpeak === 'function') {
+                window.systemSpeak(text);
+            }
+        },
 		playUiSound: (type) => {
             if (window.SoundManager) {
                 window.SoundManager.play(type);
