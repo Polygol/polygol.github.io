@@ -92,16 +92,27 @@ function initWavesHost() {
 
         // 1. Handle Incoming Messages
         wavesOnData((payload, peerId) => {
+            // REJECT connections without a profile immediately
             if (payload.type === 'hello') {
+                if (!payload.profile || !payload.profile.name) {
+                    console.warn(`[Waves] Rejected connection from ${peerId}: Missing profile`);
+                    wavesSend({ type: 'auth_failed', reason: 'profile_missing' }, peerId);
+                    return;
+                }
+
                 // Check Auth Token
                 if (payload.auth === state.psk) {
-                    // TRUSTED DEVICE: Re-register and send immediate state
+                    // TRUSTED DEVICE: Add to active list immediately
                     registerPeer(peerId, payload.profile);
                     wavesSend({ type: 'welcome', deviceName: state.deviceName }, peerId);
                     
-                    // Force a full state push to this specific peer (or broadcast) to sync UI immediately
-                    setTimeout(pushFullState, 100);
-                    setTimeout(pushWallpaperUpdate, 200);
+                    // FIX: Push state immediately upon welcome. 
+                    // This ensures the remote gets data even if its 'getState' request fails or is sent too early.
+                    console.log(`[Waves] Authorized ${payload.profile.name}. Pushing state...`);
+                    setTimeout(() => {
+                        pushFullState();
+                        pushWallpaperUpdate();
+                    }, 200);
                 } else if (isDiscoveryActive) {
                     // NEW DEVICE: Start Emoji Auth
                     startEmojiAuth(peerId, payload.profile);
