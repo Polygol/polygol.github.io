@@ -35,12 +35,18 @@ let wavesSend = null; // Response channel
 let wavesBroadcast = null; // State update channel
 let pendingAuth = {}; // Stores peerId -> { correctEmoji: '🍕', timestamp: 123 }
 let currentAuthPeerId = null; // Track who is currently attempting to pair
+let connectedPeers = {}; // Track connected peers and their profiles { peerId: { profile: {}, lastSeen: ts } }
 let isDiscoveryActive = localStorage.getItem('waves_discovery_enabled') !== 'false'; // Default true
 
 // 1. State Management
 function getWavesHostState() {
-    const stored = localStorage.getItem('waves_host_config');
-    return stored ? JSON.parse(stored) : null;
+    let state = localStorage.getItem('waves_host_config');
+    state = state ? JSON.parse(state) : null;
+    
+    if (state) {
+        state.deviceName = localStorage.getItem('system_device_name') || "Polygol Device";
+    }
+    return state;
 }
 
 function generatePairingCode() {
@@ -87,36 +93,70 @@ function initWavesHost() {
         wavesBroadcast = sendUpdate;
 
         wavesOnData((payload, peerId) => {
-            // If valid PSK, execute command
-            if (payload.auth === state.psk) {
-                handleRemoteCommand(payload, peerId);
-            } 
-            // A new device is trying to pair
-            else if (payload.type === 'hello') {
-                // Check discovery flag
-                if (isDiscoveryActive) {
-                    startEmojiAuth(peerId);
+            if (payload.type === 'hello') {
+                console.log(`[Waves] Hello from ${peerId}`, payload.profile);
+                
+                // If the payload has an auth token, we can check it immediately.
+                if (payload.auth === state.psk) {
+                    // Authorized Re-connection
+                    registerPeer(peerId, payload.profile);
+                    // Send back OUR device info
+                    wavesSend({ type: 'welcome', deviceName: state.deviceName }, peerId);
+                } else if (isDiscoveryActive) {
+                    // New Auth Request
+                    startEmojiAuth(peerId, payload.profile);
                 } else {
-                    console.log("[Waves] Rejected new connection: Discovery is disabled.");
-                    // Tell the remote why it was rejected
                     wavesSend({ type: 'discovery_disabled' }, peerId);
                 }
             }
+            // If valid PSK, execute command
+            else if (payload.auth === state.psk) {
+                // Ensure peer is registered (in case of restart)
+                if (!connectedPeers[peerId] && payload.profile) {
+                    registerPeer(peerId, payload.profile);
+                }
+                handleRemoteCommand(payload, peerId);
+            } 
             else if (payload.type === 'verify') {
                 finalizeEmojiAuth(peerId, payload.answer, state.psk);
             }
         });
 
-        wavesRoom.onPeerJoin(peerId => {
-            // Do nothing until they say hello. 
-            // This prevents spamming anyone who accidentally joins the room.
+        wavesRoom.onPeerLeave(peerId => {
+            if (connectedPeers[peerId]) {
+                delete connectedPeers[peerId];
+                notifySystemUI();
+            }
         });
     }
 }
 
+function registerPeer(peerId, profile) {
+    if (!profile) profile = { name: "Unknown", avatar: null };
+    connectedPeers[peerId] = {
+        id: peerId,
+        profile: profile,
+        connectedAt: Date.now()
+    };
+    notifySystemUI();
+}
+
+function notifySystemUI() {
+    if (window.updateActiveWavesPeers) {
+        window.updateActiveWavesPeers(connectedPeers);
+    }
+}
+
 // 3. Authentication Logic (2FA)
-function startEmojiAuth(peerId) {
+function startEmojiAuth(peerId, profile) {
     currentAuthPeerId = peerId;
+    // Temporarily store profile for when auth succeeds
+    pendingAuth[peerId] = {
+        correctEmoji: null, // Set below
+        timestamp: Date.now(),
+        tempProfile: profile
+    };
+    
     const shuffled = [...EMOJIS].sort(() => 0.5 - Math.random());
     const options = shuffled.slice(0, 16);
     const correct = options[Math.floor(Math.random() * 16)];
@@ -135,9 +175,10 @@ function finalizeEmojiAuth(peerId, answer, psk) {
     if (!session) return;
 
     if (answer === session.correctEmoji) {
-        // Success! Send the keys to the castle
-        wavesSend({ type: 'authorized', psk: psk }, peerId);
-        showNotification('New device authorized', { icon: 'verified_user' });
+        registerPeer(peerId, session.tempProfile);
+        const state = getWavesHostState();
+        wavesSend({ type: 'authorized', psk: psk, deviceName: state.deviceName }, peerId);
+        showNotification(`Paired with ${session.tempProfile?.name || 'New Device'}`, { icon: 'verified_user' });
         // Send initial state
         setTimeout(pushFullState, 500);
     } else {
