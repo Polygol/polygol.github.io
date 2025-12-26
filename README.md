@@ -60,6 +60,7 @@ Gurapp can extend your Polygol experience. The GitHub repository for each applic
 Polygol includes a Boot State System that runs immediately upon page load (before the OS initializes).
 
 If a user visits index.html without any parameters and has not completed the setup process, they are automatically redirected to the landing page.
+
 ## Boot Commands
 You can control the startup behavior using the ?s= query parameter. The URL is automatically cleaned after the command executes.
 
@@ -70,8 +71,7 @@ You can control the startup behavior using the ?s= query parameter. The URL is a
 | `?s=manage&url=[URL]` | **Import Config** | Fetches a raw text/JS file from the provided `[URL]`, saves it as a `customStartupScript`, marks setup as complete, and loads the OS. Useful for remote management or custom deployments. |
 | `?s=[AppName]` | **Deep Link** | Skips setup and immediately launches the specified app once the system loads (e.g., `?s=Terminal`). |
 
-#### Examples
-
+## Examples
 * Reset and start fresh:
 `https://polygol.github.io/?s=oobe`
 * Skip setup entirely:
