@@ -615,6 +615,7 @@ const _fallbacks = {
 // Internal State for Sound
 let _autoSoundEnabled = true; // App dev override
 let _systemSoundsAllowed = true; // User preference from System
+let _isSilentMode = false; // Track system Silent Mode
  
 const Gurasuraisu = {
   /**
@@ -874,6 +875,21 @@ const Gurasuraisu = {
   blackout: function() {
     this._call('blackoutScreen');
   },
+
+  /**
+   * Closes the current application (Fullscreen Embed).
+   */
+  close: function() {
+    this._call('closeFullscreenEmbed');
+  },
+
+  /**
+   * Checks if the system is currently in Silent Mode.
+   * @returns {boolean}
+   */
+  isSilent: function() {
+    return _isSilentMode;
+  },
  
    /**
    * Asks the parent Gurasuraisu to send back the list of currently installed apps.
@@ -1077,6 +1093,9 @@ window.addEventListener('message', async (event) => {
         if (data.key === 'gurappSoundsEnabled') {
           _systemSoundsAllowed = (data.value === 'true');
         }
+        if (data.key === 'silentMode') {
+            _isSilentMode = (data.value === 'true');
+        }
         break;
       case 'dialog-response':
         if (data.requestId && _dialogCallbacks[data.requestId]) {
@@ -1242,6 +1261,13 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }
+
+  // Handle initial silent mode state if sent via localStorage dump
+  window.addEventListener('message', (event) => {
+      if (event.data.type === 'localStorageItemValue' && event.data.key === 'silentMode') {
+          _isSilentMode = (event.data.value === 'true');
+      }
+  });
 
   if (isInsideGurasuraisu) {
     let lastActivitySignal = 0;
