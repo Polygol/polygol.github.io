@@ -4952,7 +4952,7 @@ function createSetupScreen() {
         },
         {
             title: "Name this Device",
-            description: "Choose a name to identify this device on your Waves network.",
+            description: "Choose a name to identify this device.",
             icon: "devices",
             isInput: true, // Custom flag for input handling
             inputType: "text",
