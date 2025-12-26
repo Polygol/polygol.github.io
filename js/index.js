@@ -10032,9 +10032,12 @@ async function createBackgroundEmbed(url) {
 
 window.launchAppSilently = createBackgroundEmbed;
 
-window.makeAnnouncement = function(text) {
+window.makeAnnouncement = function(text, forceTTS = null) {
     if (!text) return;
-    const url = `/assets/gurapp/intl/waves/announce.html?text=${encodeURIComponent(text)}`;
+    let url = `/assets/gurapp/intl/waves/announce.html?text=${encodeURIComponent(text)}`;
+    if (forceTTS !== null) {
+        url += `&tts=${forceTTS}`;
+    }
     createFullscreenEmbed(url);
 };
 
