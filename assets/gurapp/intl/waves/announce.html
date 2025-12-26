@@ -76,41 +76,50 @@
     </div>
 
     <script>
-        // Parse Text
         const params = new URLSearchParams(window.location.search);
         const text = params.get('text') || "Attention";
-        
-        // Parse TTS preference ('true', 'false', or null)
         const ttsParam = params.get('tts');
         
         document.getElementById('text-display').innerText = text;
 
+        function speakText() {
+            const synth = window.speechSynthesis;
+            
+            // Helper to actually perform the speak
+            const doSpeak = () => {
+                // Cancel any pending speech
+                synth.cancel(); 
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                const voices = synth.getVoices();
+                
+                // Try to find a good English voice, or default
+                utterance.voice = voices.find(v => v.name.includes('Google US English')) || 
+                                  voices.find(v => v.lang.startsWith('en')) || 
+                                  voices[0];
+                
+                utterance.rate = 0.9;
+                synth.speak(utterance);
+            };
+
+            // Chrome loads voices asynchronously. We must wait.
+            if (synth.getVoices().length === 0) {
+                synth.onvoiceschanged = doSpeak;
+            } else {
+                doSpeak();
+            }
+        }
+
         window.addEventListener('GurasuraisuReady', () => {
-            
-            // Logic: 
-            // 1. If URL has ?tts=true, force ON.
-            // 2. If URL has ?tts=false, force OFF.
-            // 3. If URL has no tts param, fall back to System Silent Mode check.
-            
             let shouldSpeak = false;
             
-            if (ttsParam === 'true') {
-                shouldSpeak = true;
-            } else if (ttsParam === 'false') {
-                shouldSpeak = false;
-            } else {
-                // Default behavior: Speak if NOT silent
-                shouldSpeak = !Gurasuraisu.isSilent();
-            }
+            if (ttsParam === 'true') shouldSpeak = true;
+            else if (ttsParam === 'false') shouldSpeak = false;
+            else shouldSpeak = !Gurasuraisu.isSilent();
 
             if (shouldSpeak) {
-                setTimeout(() => {
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    const voices = window.speechSynthesis.getVoices();
-                    utterance.voice = voices.find(v => v.name.includes('Google US English')) || voices[0];
-                    utterance.rate = 0.9;
-                    window.speechSynthesis.speak(utterance);
-                }, 500);
+                // Slight delay to ensure DOM and AudioContext are ready
+                setTimeout(speakText, 500);
             }
 
             // Auto Close after 30 seconds
