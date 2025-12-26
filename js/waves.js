@@ -153,20 +153,18 @@ function notifySystemUI() {
 // 3. Authentication Logic (2FA)
 function startEmojiAuth(peerId, profile) {
     currentAuthPeerId = peerId;
-    // Temporarily store profile for when auth succeeds
-    pendingAuth[peerId] = {
-        correctEmoji: null, // Set below
-        timestamp: Date.now(),
-        tempProfile: profile
-    };
     
     const shuffled = [...EMOJIS].sort(() => 0.5 - Math.random());
     const options = shuffled.slice(0, 16);
     const correct = options[Math.floor(Math.random() * 16)];
+    
+    // Create the object once with ALL properties so profile isn't lost
     pendingAuth[peerId] = {
         correctEmoji: correct,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        tempProfile: profile // Store the profile here safely
     };
+    
     broadcastSettingUpdate('waves_auth_challenge', correct);
     wavesSend({ type: 'challenge', options: options }, peerId);
 }
