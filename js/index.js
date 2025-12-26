@@ -12497,6 +12497,23 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         window.pendingBootApp = null; // Clear
     }
+
+    setTimeout(() => {
+        if (window.WavesHost) {
+            console.log("[System] Initializing Waves State Sync...");
+            
+            // 1. Send Basic State (Brightness, Volume, Media)
+            window.WavesHost.pushFullState();
+            
+            // 2. Send Current Wallpaper Image
+            window.WavesHost.pushWallpaperUpdate();
+
+            // 3. Send Widget Snapshots
+            if (typeof broadcastWidgetSnapshots === 'function') {
+                broadcastWidgetSnapshots();
+            }
+        }
+    }, 10000); // 10s delay to ensure the DOM and Trystero are fully settled
 });
 
 window.onload = function() {
