@@ -3570,14 +3570,23 @@ window.updateActiveWavesPeers = function(peersMap) {
     const container = document.getElementById('active-peers-container');
     if (!container) return;
 
+    // Safety check: ensure peersMap is an object
+    if (!peersMap || typeof peersMap !== 'object') {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+
     // Use a Map to deduplicate users by name (same name = same user/account)
     const uniqueUsers = new Map();
     
+    // Base64 Fallback Icon (Generic User) to prevent 404 loops
+    const FALLBACK_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
+
     Object.values(peersMap).forEach(p => {
-        if (p.profile && p.profile.name) {
-            // Store the latest profile for this name
-            uniqueUsers.set(p.profile.name, p.profile);
-        }
+        // Ensure profile exists, otherwise create a dummy one
+        const profile = p.profile || { name: "Unknown", avatar: null };
+        uniqueUsers.set(profile.name || p.id, profile);
     });
 
     // If no users, hide and exit
@@ -3588,17 +3597,25 @@ window.updateActiveWavesPeers = function(peersMap) {
     }
 
     container.innerHTML = '';
-    container.style.display = 'flex';
+    container.style.display = 'flex'; // Ensure it becomes visible
     container.style.alignItems = 'center';
+    
+    // Remove invalid negative gap if it exists in inline styles
+    container.style.gap = '0'; 
 
     let index = 0;
     uniqueUsers.forEach(profile => {
         const avatar = document.createElement('img');
-        // If avatar is the default SVG string or null, use fallback
-        const isDefault = !profile.avatar || profile.avatar.includes('svg');
-        avatar.src = isDefault ? '/assets/appicon/system.png' : profile.avatar;
         
+        // Logic: Use provided avatar, or fallback if null/svg string
+        let src = profile.avatar;
+        if (!src || src.includes('<svg') || src.length < 10) {
+            src = FALLBACK_AVATAR;
+        }
+        
+        avatar.src = src;
         avatar.title = profile.name;
+        
         avatar.style.cssText = `
             width: 32px; 
             height: 32px; 
@@ -3606,8 +3623,9 @@ window.updateActiveWavesPeers = function(peersMap) {
             border: 2px solid var(--modal-background);
             object-fit: cover;
             background: var(--search-background);
-            z-index: ${10 - index};
+            z-index: ${100 - index}; /* Ensure stacking order */
             transition: transform 0.2s;
+            display: block;
         `;
         
         // Overlap effect: shift every avatar except the first one
@@ -3615,7 +3633,12 @@ window.updateActiveWavesPeers = function(peersMap) {
             avatar.style.marginLeft = '-12px';
         }
         
-        avatar.onerror = () => { avatar.src = '/assets/appicon/system.png'; };
+        // Robust error handling: reset to Base64 fallback if load fails
+        avatar.onerror = function() { 
+            this.onerror = null; // Prevent infinite loop
+            this.src = FALLBACK_AVATAR; 
+            this.style.background = '#888'; // Grey background for white SVG
+        };
         
         container.appendChild(avatar);
         index++;
