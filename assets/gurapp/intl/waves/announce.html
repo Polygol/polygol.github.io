@@ -79,17 +79,34 @@
         // Parse Text
         const params = new URLSearchParams(window.location.search);
         const text = params.get('text') || "Attention";
+        
+        // Parse TTS preference ('true', 'false', or null)
+        const ttsParam = params.get('tts');
+        
         document.getElementById('text-display').innerText = text;
 
         window.addEventListener('GurasuraisuReady', () => {
-            // TTS Logic
-            if (!Gurasuraisu.isSilent()) {
-                // Wait a moment for transition to finish
+            
+            // Logic: 
+            // 1. If URL has ?tts=true, force ON.
+            // 2. If URL has ?tts=false, force OFF.
+            // 3. If URL has no tts param, fall back to System Silent Mode check.
+            
+            let shouldSpeak = false;
+            
+            if (ttsParam === 'true') {
+                shouldSpeak = true;
+            } else if (ttsParam === 'false') {
+                shouldSpeak = false;
+            } else {
+                // Default behavior: Speak if NOT silent
+                shouldSpeak = !Gurasuraisu.isSilent();
+            }
+
+            if (shouldSpeak) {
                 setTimeout(() => {
                     const utterance = new SpeechSynthesisUtterance(text);
-                    // Attempt to find a good voice
                     const voices = window.speechSynthesis.getVoices();
-                    // Prefer Google US English or similar if available, otherwise default
                     utterance.voice = voices.find(v => v.name.includes('Google US English')) || voices[0];
                     utterance.rate = 0.9;
                     window.speechSynthesis.speak(utterance);
@@ -102,7 +119,6 @@
             }, 30000);
         });
 
-        // Dismiss on click
         document.body.addEventListener('click', () => {
             window.speechSynthesis.cancel();
             Gurasuraisu.close();
