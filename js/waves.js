@@ -108,10 +108,18 @@ function initWavesHost() {
                 }
             }
             else if (payload.auth === state.psk) {
-                // Ensure peer is registered if they send a command (Edge case handling)
-                if (!connectedPeers[peerId] && payload.profile) {
+                
+                // 1. ALWAYS update/refresh the peer profile if provided
+                // This ensures the UI stays populated and "online"
+                if (payload.profile) {
                     registerPeer(peerId, payload.profile);
+                } 
+                // Fallback: If we don't know this peer yet and no profile sent, register as unknown
+                else if (!connectedPeers[peerId]) {
+                    registerPeer(peerId, null);
                 }
+        
+                // 2. Handle the specific command
                 handleRemoteCommand(payload, peerId);
             } 
             else if (payload.type === 'verify') {
@@ -237,6 +245,11 @@ async function handleRemoteCommand(payload, peerId) {
     const { type, data } = payload;
 
     switch (type) {
+        case 'ping':
+            // Received heartbeat. 
+            // The registerPeer() call in the main listener has already refreshed the UI.
+            break;
+            
         case 'setBrightness':
             if (typeof setControlValueAndDispatch === 'function') {
                 setControlValueAndDispatch('page_brightness', data);
