@@ -140,9 +140,7 @@ function initWavesHost() {
         }, 2000);
     }
 }
-function registerPeer(peerId, profile) {
-    console.log(`[Waves] Peer registered ${peerId} ${profile}`);
-    
+function registerPeer(peerId, profile) {    
     // 1. Try to find existing profile in history if incoming is null
     let knownDevices = {};
     try {
