@@ -60,7 +60,6 @@ function generatePairingCode() {
 function generatePSK() {
     return 'psk_' + Math.random().toString(36).substr(2) + Date.now().toString(36);
 }
-
 function initWavesHost() {
     if (!window.Trystero) {
         window.addEventListener('trystero-ready', initWavesHost, { once: true });
@@ -69,7 +68,6 @@ function initWavesHost() {
 
     let state = getWavesHostState();
     
-    // Generate persistent credentials if missing
     if (!state) {
         state = { 
             roomId: generatePairingCode(), 
@@ -92,8 +90,8 @@ function initWavesHost() {
 
         // 1. Handle Incoming Messages
         wavesOnData((payload, peerId) => {
-            // REJECT connections without a profile immediately
             if (payload.type === 'hello') {
+                // REJECT connections without a profile
                 if (!payload.profile || !payload.profile.name) {
                     console.warn(`[Waves] Rejected connection from ${peerId}: Missing profile`);
                     wavesSend({ type: 'auth_failed', reason: 'profile_missing' }, peerId);
@@ -106,13 +104,15 @@ function initWavesHost() {
                     registerPeer(peerId, payload.profile);
                     wavesSend({ type: 'welcome', deviceName: state.deviceName }, peerId);
                     
-                    // FIX: Push state immediately upon welcome. 
-                    // This ensures the remote gets data even if its 'getState' request fails or is sent too early.
-                    console.log(`[Waves] Authorized ${payload.profile.name}. Pushing state...`);
+                    // FIX: Unicast the state specifically to THIS peer immediately.
+                    // Do not rely on broadcast here, as the peer might not be in the broadcast list yet.
+                    console.log(`[Waves] Authorized ${payload.profile.name} (${peerId}). Pushing initial state...`);
+                    
                     setTimeout(() => {
-                        pushFullState();
-                        pushWallpaperUpdate();
-                    }, 200);
+                        pushFullState(peerId);
+                        pushWallpaperUpdate(peerId);
+                        pushWidgetUpdate(null, peerId); // Send widgets too if available
+                    }, 300); // Small delay to ensure client listeners are bound
                 } else if (isDiscoveryActive) {
                     // NEW DEVICE: Start Emoji Auth
                     startEmojiAuth(peerId, payload.profile);
@@ -121,7 +121,6 @@ function initWavesHost() {
                 }
             }
             else if (payload.auth === state.psk) {
-                
                 // 1. ALWAYS update/refresh the peer profile/timestamp if provided
                 // This ensures the UI stays populated and "online"
                 if (payload.profile) {
@@ -430,37 +429,13 @@ async function handleRemoteCommand(payload, peerId) {
             break;
 
         case 'getState':
-            pushFullState();
-            getApps();
-            pushWallpaperUpdate();
+            pushFullState(peerId);
+            getApps(peerId);
+            pushWallpaperUpdate(peerId);
             break;
             
         case 'getApps':
-            try {
-                const sysApps = window.apps || {};
-                const appList = Object.entries(sysApps)
-                    .filter(([name]) => name !== "Apps") 
-                    .map(([name, details]) => {
-                        // Ensure we have a valid icon URL
-                        let iconUrl = details.icon || 'system.png'; 
-                        if (!iconUrl.startsWith('http') && !iconUrl.startsWith('data:')) {
-                            if (!iconUrl.startsWith('/')) {
-                                iconUrl = `/assets/appicon/${iconUrl}`;
-                            }
-                            // Convert to absolute URL
-                            iconUrl = new URL(iconUrl, window.location.origin).href;
-                        }
-                        return {
-                            name: name,
-                            icon: iconUrl,
-                            url: details.url,
-                            hasMiniApp: !!details.hasMiniApp
-                        };
-                    });
-                wavesSend({ type: 'appList', data: appList }, peerId);
-            } catch (e) {
-                console.error("[Waves] getApps error:", e);
-            }
+            getApps(peerId);
             break;
 
         case 'appAction':
@@ -517,8 +492,38 @@ async function handleRemoteCommand(payload, peerId) {
     }
 }
 
-// 4. Broadcasting State (To Client)
-function pushFullState() {
+// Helper for getApps to support unicast
+function getApps(targetPeerId = null) {
+    try {
+        const sysApps = window.apps || {};
+        const appList = Object.entries(sysApps)
+            .filter(([name]) => name !== "Apps") 
+            .map(([name, details]) => {
+                let iconUrl = details.icon || 'system.png'; 
+                if (!iconUrl.startsWith('http') && !iconUrl.startsWith('data:')) {
+                    if (!iconUrl.startsWith('/')) iconUrl = `/assets/appicon/${iconUrl}`;
+                    iconUrl = new URL(iconUrl, window.location.origin).href;
+                }
+                return {
+                    name: name,
+                    icon: iconUrl,
+                    url: details.url,
+                    hasMiniApp: !!details.hasMiniApp
+                };
+            });
+        
+        if (targetPeerId) {
+            wavesSend({ type: 'appList', data: appList }, targetPeerId);
+        } else if (wavesSend) {
+            // Fallback to broadcast if no ID (though wavesSend is technically unicast in this lib, 
+            // usually we don't broadcast large lists without a target)
+        }
+    } catch (e) {
+        console.error("[Waves] getApps error:", e);
+    }
+}
+
+function pushFullState(targetPeerId = null) {
     if(!wavesBroadcast) return;
     
     const state = {
@@ -532,7 +537,6 @@ function pushFullState() {
         systemStatus: window.getSystemStatus ? window.getSystemStatus() : {}
     };
     
-    // Gather notifications from System
     if (window.activeNotificationsList) {
         state.notifications = [...window.activeNotificationsList];
     }
@@ -543,14 +547,17 @@ function pushFullState() {
     const lastMediaMeta = localStorage.getItem('lastMediaMetadata');
     if (lastMediaMeta) {
         state.media = JSON.parse(lastMediaMeta);
-        // Check if the play button in DOM currently shows 'pause' icon (meaning it's playing)
         const playBtn = document.querySelector('#media-widget-play-pause span');
         if (playBtn && playBtn.textContent === 'pause') {
             state.mediaState = 'playing';
         }
     }
     
-    wavesBroadcast({ type: 'state', data: state });
+    if (targetPeerId) {
+        wavesBroadcast({ type: 'state', data: state }, targetPeerId);
+    } else {
+        wavesBroadcast({ type: 'state', data: state });
+    }
 }
 
 function pushMediaUpdate(metadata, appName, playbackState = 'paused') {
@@ -596,12 +603,22 @@ function pushLiveActivityStart(activityConfig) {
     });
 }
 
-function pushWidgetUpdate(widgets) {
+function pushWidgetUpdate(widgets, targetPeerId = null) {
     if(!wavesBroadcast) return;
-    wavesBroadcast({ 
-        type: 'widgetUpdate', 
-        data: widgets 
-    });
+    
+    // If specific widgets not passed, try to get from cache (for new connection init)
+    if (!widgets && window.widgetSnapshotCache) {
+        widgets = Object.entries(window.widgetSnapshotCache).map(([id, img]) => ({ id, img }));
+    }
+
+    if (widgets) {
+        const payload = { type: 'widgetUpdate', data: widgets };
+        if (targetPeerId) {
+            wavesBroadcast(payload, targetPeerId);
+        } else {
+            wavesBroadcast(payload);
+        }
+    }
 }
 
 async function compressImage(source, maxWidth, quality) {
@@ -637,35 +654,35 @@ async function compressImage(source, maxWidth, quality) {
     });
 }
 
-async function pushWallpaperUpdate() {
-    if(!wavesBroadcast) return;
-    
-    let wallpaperStr = null;
-    if (typeof window.recentWallpapers !== 'undefined' && typeof window.currentWallpaperPosition !== 'undefined') {
-        const wp = window.recentWallpapers[window.currentWallpaperPosition];
-        // Only handle standard images (skip video/slideshow for bandwidth)
-        if (wp && !wp.isVideo && !wp.isSlideshow && wp.id && typeof window.getWallpaper === 'function') {
-             try {
-                 const record = await window.getWallpaper(wp.id);
-                 if (record) {
-                     let rawData = null;
-                     if (record.dataUrl) {
-                         rawData = record.dataUrl;
-                     } else if (record.blob) {
-                         rawData = URL.createObjectURL(record.blob);
+function pushWallpaperUpdate(targetPeerId = null) {
+    // We defer the async logic to ensure this function returns immediately
+    (async () => {
+        if(!wavesBroadcast) return;
+        
+        let wallpaperStr = null;
+        if (typeof window.recentWallpapers !== 'undefined' && typeof window.currentWallpaperPosition !== 'undefined') {
+            const wp = window.recentWallpapers[window.currentWallpaperPosition];
+            if (wp && !wp.isVideo && !wp.isSlideshow && wp.id && typeof window.getWallpaper === 'function') {
+                 try {
+                     const record = await window.getWallpaper(wp.id);
+                     if (record) {
+                         let rawData = record.dataUrl || (record.blob ? URL.createObjectURL(record.blob) : null);
+                         if (rawData) {
+                             wallpaperStr = await compressImage(rawData, 1080, 0.6);
+                             if (record.blob) URL.revokeObjectURL(rawData);
+                         }
                      }
-                     
-                     if (rawData) {
-                         // Compress for transmission
-                         wallpaperStr = await compressImage(rawData, 1080, 0.6);
-                         if (record.blob) URL.revokeObjectURL(rawData);
-                     }
-                 }
-             } catch (e) { console.warn("[Waves] Wallpaper fetch failed", e); }
+                 } catch (e) { console.warn("[Waves] Wallpaper fetch failed", e); }
+            }
         }
-    }
-    
-    wavesBroadcast({ type: 'wallpaperUpdate', data: wallpaperStr });
+        
+        const payload = { type: 'wallpaperUpdate', data: wallpaperStr };
+        if (targetPeerId) {
+            wavesBroadcast(payload, targetPeerId);
+        } else {
+            wavesBroadcast(payload);
+        }
+    })();
 }
 
 function requestRemoteUpload(accept = '*/*', multiple = false, requestId = null) {
