@@ -166,11 +166,13 @@ function registerPeer(peerId, profile) {
 }
 
 function notifySystemUI() {
+    // Check if the UI function exists yet
     if (typeof window.updateActiveWavesPeers === 'function') {
         window.updateActiveWavesPeers(connectedPeers);
     } else {
-        // Retry shortly if index.js hasn't finished loading yet
-        setTimeout(() => notifySystemUI(), 500);
+        // If index.js hasn't loaded the function yet, retry in 100ms
+        // This fixes the empty container on page load
+        setTimeout(notifySystemUI, 100);
     }
 }
 
