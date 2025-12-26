@@ -5859,7 +5859,7 @@ async function broadcastWidgetSnapshots() {
 
 // Start snapshot timer
 if (widgetSnapshotInterval) clearInterval(widgetSnapshotInterval);
-widgetSnapshotInterval = setInterval(broadcastWidgetSnapshots, 10000); // Update every 10s
+widgetSnapshotInterval = setInterval(broadcastWidgetSnapshots, 600000); // Update every 10m
 
 // Function to dynamically load the html2canvas script
 async function loadHtml2canvasScript() {
