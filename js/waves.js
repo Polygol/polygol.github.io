@@ -95,9 +95,13 @@ function initWavesHost() {
             if (payload.type === 'hello') {
                 // Check Auth Token
                 if (payload.auth === state.psk) {
-                    // TRUSTED DEVICE: Add to active list immediately
+                    // TRUSTED DEVICE: Re-register and send immediate state
                     registerPeer(peerId, payload.profile);
                     wavesSend({ type: 'welcome', deviceName: state.deviceName }, peerId);
+                    
+                    // Force a full state push to this specific peer (or broadcast) to sync UI immediately
+                    setTimeout(pushFullState, 100);
+                    setTimeout(pushWallpaperUpdate, 200);
                 } else if (isDiscoveryActive) {
                     // NEW DEVICE: Start Emoji Auth
                     startEmojiAuth(peerId, payload.profile);
@@ -107,13 +111,18 @@ function initWavesHost() {
             }
             else if (payload.auth === state.psk) {
                 
-                // 1. ALWAYS update/refresh the peer profile if provided
+                // 1. ALWAYS update/refresh the peer profile/timestamp if provided
                 // This ensures the UI stays populated and "online"
                 if (payload.profile) {
                     registerPeer(peerId, payload.profile);
                 } 
+                // Refresh timestamp on any command
+                else if (connectedPeers[peerId]) {
+                    connectedPeers[peerId].connectedAt = Date.now();
+                }
+                
                 // Fallback: If we don't know this peer yet and no profile sent, register as unknown
-                else if (!connectedPeers[peerId]) {
+                if (!connectedPeers[peerId]) {
                     registerPeer(peerId, null);
                 }
         
@@ -140,6 +149,7 @@ function initWavesHost() {
         }, 2000);
     }
 }
+
 function registerPeer(peerId, profile) {    
     // 1. Try to find existing profile in history if incoming is null
     let knownDevices = {};
@@ -244,8 +254,10 @@ async function handleRemoteCommand(payload, peerId) {
 
     switch (type) {
         case 'ping':
-            // Received heartbeat. 
-            // The registerPeer() call in the main listener has already refreshed the UI.
+            // Received heartbeat. Update timestamp to keep alive.
+            if (connectedPeers[peerId]) {
+                connectedPeers[peerId].connectedAt = Date.now();
+            }
             break;
             
         case 'setBrightness':
