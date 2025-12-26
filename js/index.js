@@ -9517,9 +9517,10 @@ async function createFullscreenEmbed(url, options = {}) {
 	
 	const isInternalTool = internalToolUrls.includes(url);
 	const isGoogleForm = url.startsWith('https://docs.google.com/forms/');
+    const isAnnouncement = url.startsWith('/assets/gurapp/intl/waves/announce.html');
 	
 	// If the URL is not for an installed app, an internal tool, or a Google Form, block it.
-	if (!appName && !isInternalTool && !isGoogleForm) {
+	if (!appName && !isInternalTool && !isGoogleForm && !isAnnouncement) {
 	    console.warn(`Attempted to open an unknown app or non-allowlisted URL: ${url}`);
 		showDialog({ 
 		    type: 'alert', 
