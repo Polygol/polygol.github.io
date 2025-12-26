@@ -82,54 +82,29 @@
         
         document.getElementById('text-display').innerText = text;
 
-        function speakText() {
-            const synth = window.speechSynthesis;
-            
-            // Helper to actually perform the speak
-            const doSpeak = () => {
-                // Cancel any pending speech
-                synth.cancel(); 
-
-                const utterance = new SpeechSynthesisUtterance(text);
-                const voices = synth.getVoices();
-                
-                // Try to find a good English voice, or default
-                utterance.voice = voices.find(v => v.name.includes('Google US English')) || 
-                                  voices.find(v => v.lang.startsWith('en')) || 
-                                  voices[0];
-                
-                utterance.rate = 0.9;
-                synth.speak(utterance);
-            };
-
-            // Chrome loads voices asynchronously. We must wait.
-            if (synth.getVoices().length === 0) {
-                synth.onvoiceschanged = doSpeak;
-            } else {
-                doSpeak();
-            }
-        }
-
         window.addEventListener('GurasuraisuReady', () => {
             let shouldSpeak = false;
             
+            // 1. Determine if we should speak
             if (ttsParam === 'true') shouldSpeak = true;
             else if (ttsParam === 'false') shouldSpeak = false;
             else shouldSpeak = !Gurasuraisu.isSilent();
 
+            // 2. Speak via API (Parent Window)
             if (shouldSpeak) {
-                // Slight delay to ensure DOM and AudioContext are ready
-                setTimeout(speakText, 500);
+                // Short delay for visual transition
+                setTimeout(() => {
+                    Gurasuraisu.speak(text);
+                }, 500);
             }
 
-            // Auto Close after 30 seconds
+            // 3. Auto Close
             setTimeout(() => {
                 Gurasuraisu.close();
             }, 30000);
         });
 
         document.body.addEventListener('click', () => {
-            window.speechSynthesis.cancel();
             Gurasuraisu.close();
         });
     </script>
