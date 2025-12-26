@@ -11593,70 +11593,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('DOMContentLoaded', async function() {
-    // --- URL Boot State & Landing Page  ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const bootState = urlParams.get('s');
-    const hasSetup = localStorage.getItem('hasVisitedBefore') === 'true';
-
-    // Default Redirect: If user hasn't finished setup and no special command is present, go to Lander.
-    if (!hasSetup && !bootState) {
-        window.location.href = 'https://kirbindustries.gitbook.io/polygol/lander';
-        return; // Stop execution of the dashboard
-    }
-
-    // Handle Boot Commands (?s=...)
-    if (bootState) {
-        console.log(`[System] Boot state detected: ${bootState}`);
-        
-        switch (bootState) {
-            case 'oobe':
-                // Force Setup
-                localStorage.removeItem('hasVisitedBefore');
-                // Clean URL so a refresh doesn't loop
-                window.history.replaceState({}, document.title, window.location.pathname);
-                break;
-
-            case 'nooobe':
-                // Skip Setup
-                localStorage.setItem('hasVisitedBefore', 'true');
-                window.history.replaceState({}, document.title, window.location.pathname);
-                break;
-
-            case 'manage':
-                // Import Script & Skip Setup
-                const scriptUrl = urlParams.get('url');
-                if (scriptUrl) {
-                    try {
-                        showNotification('Importing configuration...', { icon: 'cloud_download' });
-                        const response = await fetch(scriptUrl);
-                        if (response.ok) {
-                            const scriptContent = await response.text();
-                            localStorage.setItem('customStartupScript', scriptContent);
-                            localStorage.setItem('hasVisitedBefore', 'true');
-                            console.log("Management script imported.");
-                        } else {
-                            console.error("Failed to fetch management script:", response.status);
-                            showDialog({ type: 'alert', title: 'Import Failed', message: 'Could not fetch the management script.' });
-                        }
-                    } catch (e) {
-                        console.error("Error in manage boot state:", e);
-                        showDialog({ type: 'alert', title: 'Import Error', message: e.message });
-                    }
-                }
-                window.history.replaceState({}, document.title, window.location.pathname);
-                break;
-
-            default:
-                // Generic Case: ?s=[AppName] -> Open App
-                // We implicitly mark setup as done to access the app
-                localStorage.setItem('hasVisitedBefore', 'true');
-                // Store the requested app name to open after apps are loaded
-                window.pendingBootApp = bootState;
-                window.history.replaceState({}, document.title, window.location.pathname);
-                break;
-        }
-    }
-	
     // --- Load ALL data and settings first ---
     requestPersistentStorage();
     loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
@@ -12381,7 +12317,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.addEventListener('click', unlockAudio);
     document.addEventListener('touchstart', unlockAudio);
 
-    // --- Handle Pending App Launch (from ?s=[app]) ---
+    // --- Handle Pending App Launch (from ?s=[app] passed by HTML) ---
     if (window.pendingBootApp) {
         // Search for app case-insensitively
         const searchName = window.pendingBootApp.toLowerCase();
@@ -12395,7 +12331,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             }, 500);
         } else {
             console.warn(`[System] Requested boot app '${window.pendingBootApp}' not found.`);
-            showNotification(`App '${window.pendingBootApp}' not found`, { icon: 'error' });
+            // Only show notification if UI is actually ready
+            setTimeout(() => {
+                showNotification(`App '${window.pendingBootApp}' not found`, { icon: 'error' });
+            }, 1000);
         }
         window.pendingBootApp = null; // Clear
     }
