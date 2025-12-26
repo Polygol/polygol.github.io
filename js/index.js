@@ -10055,6 +10055,8 @@ function closeFullscreenEmbed() {
 
 	SoundManager.play('close'); 
 
+    window.speechSynthesis.cancel();
+
     const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
     
     if (embedContainer) {
