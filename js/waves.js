@@ -407,7 +407,7 @@ async function handleRemoteCommand(payload, peerId) {
             break;
 
         case 'getState':
-            setTimeout(pushFullState, 100);
+            setTimeout(pushFullState, 5000);
             break;
             
         case 'getApps':
