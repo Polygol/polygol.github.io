@@ -66,34 +66,11 @@
                     window.history.replaceState({}, document.title, window.location.pathname);
                 } 
                 else if (bootState === 'manage') {
-                    // Import Script & Skip Setup
+                    // Store URL for processing in index.js (to allow UI prompts)
                     const scriptUrl = urlParams.get('url');
                     if (scriptUrl) {
-                        const existingData = localStorage.getItem('customStartupScript');
-                        
-                        // If data exists, we defer to index.js to show a UI confirmation modal
-                        if (existingData) {
-                            console.log("Existing configuration found. Deferring to UI for confirmation.");
-                            window.pendingManageUrl = scriptUrl;
-                        } else {
-                            // No data? Import immediately (Fast path)
-                            try {
-                                console.log('Importing configuration from:', scriptUrl);
-                                const response = await fetch(scriptUrl);
-                                if (response.ok) {
-                                    const scriptContent = await response.text();
-                                    localStorage.setItem('customStartupScript', scriptContent);
-                                    console.log("Management script imported successfully.");
-                                } else {
-                                    console.error("Failed to fetch management script:", response.status);
-                                }
-                            } catch (e) {
-                                console.error("Error in manage boot state:", e);
-                            }
-                        }
+                        window.pendingManageUrl = scriptUrl;
                     }
-                    // Always mark setup as complete for management URLs
-                    localStorage.setItem('hasVisitedBefore', 'true');
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
                 else {
