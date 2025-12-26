@@ -11623,12 +11623,25 @@ function setupOneButtonNav() {
     }
 }
 
-window.makeAnnouncement = function(text, forceTTS = null) {
+window.makeAnnouncement = function(text, forceTTS = null, profile = null) {
     if (!text) return;
+    
     let url = `/assets/gurapp/intl/waves/announce.html?text=${encodeURIComponent(text)}`;
+    
     if (forceTTS !== null) {
         url += `&tts=${forceTTS}`;
     }
+
+    // Add Sender Info
+    if (profile && profile.name) {
+        url += `&sender=${encodeURIComponent(profile.name)}`;
+        
+        // Only pass avatar if it's a valid string and not too huge (URLs have limits)
+        if (profile.avatar && profile.avatar.length < 8000) {
+            url += `&avatar=${encodeURIComponent(profile.avatar)}`;
+        }
+    }
+    
     createFullscreenEmbed(url);
 };
 
