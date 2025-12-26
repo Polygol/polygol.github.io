@@ -411,11 +411,7 @@ async function handleRemoteCommand(payload, peerId) {
             // 2. Force Send App List (Fixes empty app drawer)
             handleRemoteCommand({ type: 'getApps' }, peerId);
             
-            // 3. Force Send Wallpaper (Fixes blank wallpaper tab)
-            // Note: Sending the full list is heavy, so we send the current wallpaper image first
-            pushWallpaperUpdate();
-
-            // 3. Force Widget Snapshots (Fixes empty widgets)
+            // Force Widget Snapshots (Fixes empty widgets)
             if (typeof window.broadcastWidgetSnapshots === 'function') {
                 window.broadcastWidgetSnapshots();
             }
