@@ -385,6 +385,12 @@ async function handleRemoteCommand(payload, peerId) {
             }
             break;
 
+        case 'announce':
+            if (data.text && typeof window.makeAnnouncement === 'function') {
+                window.makeAnnouncement(data.text);
+            }
+            break;
+
         case 'setSetting':
             // data: { key, value }
             if (typeof setControlValueAndDispatch === 'function') {
