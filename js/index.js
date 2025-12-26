@@ -3565,87 +3565,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Function to update the Active Remote Users UI
-window.updateActiveWavesPeers = function(peersMap) {
-    const container = document.getElementById('active-peers-container');
-    if (!container) return;
-
-    if (!peersMap || typeof peersMap !== 'object') {
-        container.style.display = 'none';
-        container.innerHTML = '';
-        return;
-    }
-
-    const uniqueUsers = new Map();
-    // Use an encoded fallback to be safe
-    const FALLBACK_AVATAR = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
-
-    Object.values(peersMap).forEach(p => {
-        const profile = p.profile || { name: "Unknown", avatar: null };
-        // Use name as key to deduplicate sessions from same user
-        uniqueUsers.set(profile.name || p.id, profile);
-    });
-
-    if (uniqueUsers.size === 0) {
-        container.style.display = 'none';
-        container.innerHTML = '';
-        return;
-    }
-
-    container.innerHTML = '';
-    container.style.display = 'flex';
-    container.style.alignItems = 'center';
-    container.style.marginRight = '12px'; // Ensure spacing
-    container.style.gap = '0'; 
-
-    let index = 0;
-    uniqueUsers.forEach(profile => {
-        const avatar = document.createElement('img');
-        
-        let src = profile.avatar;
-        
-        // --- FIX: Handle Unencoded SVG Data URIs ---
-        if (src && src.startsWith('data:image/svg+xml')) {
-            // Check if it's raw XML (contains '<')
-            if (src.includes('<')) {
-                // Extract the SVG content and encode it
-                const content = src.substring(src.indexOf(',') + 1);
-                src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(content);
-            }
-        }
-        
-        if (!src) src = FALLBACK_AVATAR;
-        
-        avatar.src = src;
-        avatar.title = profile.name;
-        
-        avatar.style.cssText = `
-            width: 32px; 
-            height: 32px; 
-            border-radius: 50%; 
-            border: 2px solid var(--modal-background);
-            object-fit: cover;
-            background: var(--search-background);
-            z-index: ${100 - index};
-            transition: transform 0.2s;
-            display: block; /* Ensure it takes space */
-        `;
-        
-        if (index > 0) {
-            avatar.style.marginLeft = '-12px';
-        }
-        
-        avatar.onerror = function() { 
-            this.onerror = null; 
-            this.src = FALLBACK_AVATAR; 
-            this.style.background = '#888';
-        };
-        
-        container.appendChild(avatar);
-        index++;
-    });
-};
-
 // Function to update the document title
 function updateTitle() {
   let now = new Date();
@@ -14209,6 +14128,89 @@ function broadcastAllWallpaperSettings(wallpaper) {
         broadcastSettingUpdate(key, value);
     }
 }
+
+window.updateActiveWavesPeers = function(peersMap) {
+    const container = document.getElementById('active-peers-container');
+    if (!container) return;
+
+    if (!peersMap || typeof peersMap !== 'object') {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+
+    const uniqueUsers = new Map();
+    const FALLBACK_AVATAR = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
+
+    Object.values(peersMap).forEach(p => {
+        const profile = p.profile || { name: "Unknown", avatar: null };
+        uniqueUsers.set(profile.name || p.id, profile);
+    });
+
+    if (uniqueUsers.size === 0) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+
+    // Force display flex to ensure visibility
+    container.innerHTML = '';
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.marginRight = '12px';
+    container.style.gap = '0'; 
+
+    let index = 0;
+    uniqueUsers.forEach(profile => {
+        const avatar = document.createElement('img');
+        
+        let src = profile.avatar;
+        
+        // --- FIX: Smart SVG Encoding ---
+        if (src && src.startsWith('data:image/svg+xml')) {
+            const commaIndex = src.indexOf(',');
+            if (commaIndex > -1) {
+                const rawContent = src.substring(commaIndex + 1);
+                try {
+                    // 1. Decode first to handle existing %23 (colors)
+                    const decoded = decodeURIComponent(rawContent);
+                    // 2. Re-encode strictly to handle < and > characters
+                    src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(decoded);
+                } catch (e) {
+                    // Fallback if decode fails
+                    src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(rawContent);
+                }
+            }
+        }
+        
+        if (!src) src = FALLBACK_AVATAR;
+        
+        avatar.src = src;
+        avatar.title = profile.name;
+        
+        avatar.style.cssText = `
+            width: 32px; 
+            height: 32px; 
+            border-radius: 50%; 
+            border: 2px solid var(--modal-background);
+            object-fit: cover;
+            background: var(--search-background);
+            z-index: ${100 - index};
+            transition: transform 0.2s;
+            display: block; 
+            margin-left: ${index > 0 ? '-12px' : '0'};
+        `;
+        
+        avatar.onerror = function() { 
+            this.onerror = null; 
+            this.src = FALLBACK_AVATAR; 
+            this.style.background = '#888';
+        };
+        
+        container.appendChild(avatar);
+        index++;
+    });
+};
 
 function openSearch() {
     const searchContainer = document.querySelector('.app-search-container');
