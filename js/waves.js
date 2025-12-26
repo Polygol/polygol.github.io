@@ -134,31 +134,42 @@ function initWavesHost() {
         }, 2000);
     }
 }
-
 function registerPeer(peerId, profile) {
+    // 1. Try to find existing profile in history if incoming is null
+    let knownDevices = {};
+    try {
+        knownDevices = JSON.parse(localStorage.getItem('waves_known_devices') || '{}');
+    } catch(e) {}
+    
+    if (connectedPeers[peerId] && connectedPeers[peerId].profile && connectedPeers[peerId].profile.name !== "Unknown") {
+        if (!profile || profile.name === "Unknown") {
+            // Keep the existing good profile in memory
+            profile = connectedPeers[peerId].profile;
+        }
+    }
+
+    // Fallback defaults
     if (!profile) profile = { name: "Unknown", avatar: null };
     
-    // 1. Update In-Memory State (This shows the Icon)
+    // 2. Update In-Memory State (This shows the Icon)
     connectedPeers[peerId] = {
         id: peerId,
         profile: profile,
         connectedAt: Date.now()
     };
 
-    // 2. Persist to LocalStorage (History log only, not used for UI init)
-    try {
-        let known = JSON.parse(localStorage.getItem('waves_known_devices') || '{}');
-        // Save using the Name as key so we remember them next time
-        if (profile.name && profile.name !== "Unknown") {
-            known[profile.name] = {
-                profile: profile,
-                lastSeen: Date.now()
-            };
-            localStorage.setItem('waves_known_devices', JSON.stringify(known));
-        }
-    } catch(e) { console.warn("Failed to save waves device history", e); }
+    // 3. Persist to LocalStorage (Save "Known Devices" by Name)
+    if (profile.name && profile.name !== "Unknown") {
+        knownDevices[profile.name] = {
+            profile: profile,
+            lastSeen: Date.now()
+        };
+        try {
+            localStorage.setItem('waves_known_devices', JSON.stringify(knownDevices));
+        } catch(e) {}
+    }
 
-    // 3. Update UI
+    // 4. Update UI
     notifySystemUI();
 }
 
