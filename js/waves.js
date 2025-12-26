@@ -128,16 +128,40 @@ function initWavesHost() {
                 notifySystemUI();
             }
         });
+
+        setTimeout(() => {
+            if (wavesSend) {
+                // We send a generic 'ping' or just wait for Trystero to sync.
+                // Sending a state update usually wakes up the connection.
+                pushFullState(); 
+            }
+        }, 2000);
     }
 }
 
 function registerPeer(peerId, profile) {
     if (!profile) profile = { name: "Unknown", avatar: null };
+    
+    // 1. Update In-Memory State
     connectedPeers[peerId] = {
         id: peerId,
         profile: profile,
         connectedAt: Date.now()
     };
+
+    // 2. Persist to LocalStorage (Save "Known Devices")
+    try {
+        let known = JSON.parse(localStorage.getItem('waves_known_devices') || '{}');
+        // Use name as key to store the latest profile for this user
+        if (profile.name && profile.name !== "Unknown") {
+            known[profile.name] = {
+                profile: profile,
+                lastSeen: Date.now()
+            };
+            localStorage.setItem('waves_known_devices', JSON.stringify(known));
+        }
+    } catch(e) { console.warn("Failed to save waves device", e); }
+
     notifySystemUI();
 }
 
