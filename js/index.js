@@ -3565,51 +3565,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Function to update the Active Peers UI (Called from waves.js)
+// Function to update the Active Remote Users UI
 window.updateActiveWavesPeers = function(peersMap) {
     const container = document.getElementById('active-peers-container');
     if (!container) return;
 
-    container.innerHTML = '';
-    
-    // Convert map to array and deduplicate by name (assuming same name = same user)
+    // Use a Map to deduplicate users by name (same name = same user/account)
     const uniqueUsers = new Map();
     
     Object.values(peersMap).forEach(p => {
         if (p.profile && p.profile.name) {
-            // If user already exists, maybe just update timestamp? 
-            // For now, first one wins.
-            if (!uniqueUsers.has(p.profile.name)) {
-                uniqueUsers.set(p.profile.name, p.profile);
-            }
+            // Store the latest profile for this name
+            uniqueUsers.set(p.profile.name, p.profile);
         }
     });
 
+    // If no users, hide and exit
+    if (uniqueUsers.size === 0) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = '';
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+
+    let index = 0;
     uniqueUsers.forEach(profile => {
         const avatar = document.createElement('img');
-        avatar.src = profile.avatar || '/assets/appicon/system.png';
+        // If avatar is the default SVG string or null, use fallback
+        const isDefault = !profile.avatar || profile.avatar.includes('svg');
+        avatar.src = isDefault ? '/assets/appicon/system.png' : profile.avatar;
+        
         avatar.title = profile.name;
         avatar.style.cssText = `
             width: 32px; 
             height: 32px; 
             border-radius: 50%; 
             border: 2px solid var(--modal-background);
-            margin-left: -10px;
             object-fit: cover;
-            background: var(--surface-variant);
+            background: var(--search-background);
+            z-index: ${10 - index};
+            transition: transform 0.2s;
         `;
-        // Handle image error
-        avatar.onerror = () => { avatar.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23fff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'; };
+        
+        // Overlap effect: shift every avatar except the first one
+        if (index > 0) {
+            avatar.style.marginLeft = '-12px';
+        }
+        
+        avatar.onerror = () => { avatar.src = '/assets/appicon/system.png'; };
         
         container.appendChild(avatar);
+        index++;
     });
-    
-    // Add margin if there are users, to separate from blackout button
-    if (uniqueUsers.size > 0) {
-        container.style.display = 'flex';
-    } else {
-        container.style.display = 'none';
-    }
 };
 
 // Function to update the document title
