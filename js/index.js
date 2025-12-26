@@ -522,6 +522,7 @@ async function extractWallpaperColor(imageSource) {
 
 const secondsSwitch = document.getElementById('seconds-switch');
 let appUsage = {};
+window.appHistoryStack = []; // Track app navigation history
 const weatherSwitch = document.getElementById('weather-switch');
 const MAX_RECENT_WALLPAPERS = 20;
 
@@ -9454,6 +9455,17 @@ async function createFullscreenEmbed(url, options = {}) {
     }
 
     if (!isSplitActivation) {
+        // NEW: History Stack Logic
+        // If an app is currently open and active (display: block), save it to history
+        const currentActive = document.querySelector('.fullscreen-embed[style*="display: block"]');
+        
+        // Ensure we aren't just refreshing the current app
+        if (currentActive && currentActive.dataset.embedUrl !== url) {
+            // Push the URL to the stack
+            window.appHistoryStack.push(currentActive.dataset.embedUrl);
+            console.log(`[System] Pushed to history: ${currentActive.dataset.embedUrl}`);
+        }
+
         // --- Hard Reset for FULLSCREEN apps only ---
         document.querySelectorAll('.fullscreen-embed').forEach(embed => {
             if (embed.dataset.embedUrl !== url) {
@@ -10101,6 +10113,21 @@ function closeFullscreenEmbed() {
             embedContainer.remove();
         }, 300);
     }
+
+    // Check History Stack
+    if (window.appHistoryStack.length > 0) {
+        const previousUrl = window.appHistoryStack.pop();
+        console.log(`[System] Restoring from history: ${previousUrl}`);
+        
+        // Re-open the previous app immediately
+        // We use a slight timeout to ensure the previous DOM removal doesn't conflict visually
+        setTimeout(() => {
+            createFullscreenEmbed(previousUrl);
+        }, 50);
+        return; // EXIT HERE. Do not restore Home UI.
+    }
+
+    // --- STANDARD HOME RESTORATION (Only if history is empty) ---
     
     // Restore all main UI elements
     document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
