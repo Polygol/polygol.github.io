@@ -3570,26 +3570,21 @@ window.updateActiveWavesPeers = function(peersMap) {
     const container = document.getElementById('active-peers-container');
     if (!container) return;
 
-    // Safety check: ensure peersMap is an object
     if (!peersMap || typeof peersMap !== 'object') {
         container.style.display = 'none';
         container.innerHTML = '';
         return;
     }
 
-    // Use a Map to deduplicate users by name (same name = same user/account)
     const uniqueUsers = new Map();
-    
-    // Base64 Fallback Icon (Generic User) to prevent 404 loops
+    // Generic User Icon (White)
     const FALLBACK_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
 
     Object.values(peersMap).forEach(p => {
-        // Ensure profile exists, otherwise create a dummy one
         const profile = p.profile || { name: "Unknown", avatar: null };
         uniqueUsers.set(profile.name || p.id, profile);
     });
 
-    // If no users, hide and exit
     if (uniqueUsers.size === 0) {
         container.style.display = 'none';
         container.innerHTML = '';
@@ -3597,19 +3592,18 @@ window.updateActiveWavesPeers = function(peersMap) {
     }
 
     container.innerHTML = '';
-    container.style.display = 'flex'; // Ensure it becomes visible
+    container.style.display = 'flex';
     container.style.alignItems = 'center';
-    
-    // Remove invalid negative gap if it exists in inline styles
     container.style.gap = '0'; 
 
     let index = 0;
     uniqueUsers.forEach(profile => {
         const avatar = document.createElement('img');
         
-        // Logic: Use provided avatar, or fallback if null/svg string
         let src = profile.avatar;
-        if (!src || src.includes('<svg') || src.length < 10) {
+        
+        // FIX: Allow SVG Data URIs, only block raw HTML SVG strings
+        if (!src || (src.includes('<svg') && !src.startsWith('data:'))) {
             src = FALLBACK_AVATAR;
         }
         
@@ -3623,21 +3617,19 @@ window.updateActiveWavesPeers = function(peersMap) {
             border: 2px solid var(--modal-background);
             object-fit: cover;
             background: var(--search-background);
-            z-index: ${100 - index}; /* Ensure stacking order */
+            z-index: ${100 - index};
             transition: transform 0.2s;
             display: block;
         `;
         
-        // Overlap effect: shift every avatar except the first one
         if (index > 0) {
             avatar.style.marginLeft = '-12px';
         }
         
-        // Robust error handling: reset to Base64 fallback if load fails
         avatar.onerror = function() { 
-            this.onerror = null; // Prevent infinite loop
+            this.onerror = null; 
             this.src = FALLBACK_AVATAR; 
-            this.style.background = '#888'; // Grey background for white SVG
+            this.style.background = '#888';
         };
         
         container.appendChild(avatar);
