@@ -40,6 +40,63 @@
     <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js"></script>
     <script src="js/waves.js" defer></script>
     <script>
+        (async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const bootState = urlParams.get('s');
+            const hasSetup = localStorage.getItem('hasVisitedBefore') === 'true';
+
+            // 1. Default Redirect to Lander if not setup and no command
+            if (!hasSetup && !bootState) {
+                window.location.href = 'https://kirbindustries.gitbook.io/polygol/lander';
+                return; // Stop execution
+            }
+
+            // 2. Handle Boot Commands (?s=...)
+            if (bootState) {
+                console.log(`[Boot] State detected: ${bootState}`);
+                
+                if (bootState === 'oobe') {
+                    // Force Setup
+                    localStorage.removeItem('hasVisitedBefore');
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } 
+                else if (bootState === 'nooobe') {
+                    // Skip Setup
+                    localStorage.setItem('hasVisitedBefore', 'true');
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } 
+                else if (bootState === 'manage') {
+                    // Import Script & Skip Setup
+                    const scriptUrl = urlParams.get('url');
+                    if (scriptUrl) {
+                        try {
+                            console.log('Importing configuration from:', scriptUrl);
+                            const response = await fetch(scriptUrl);
+                            if (response.ok) {
+                                const scriptContent = await response.text();
+                                localStorage.setItem('customStartupScript', scriptContent);
+                                localStorage.setItem('hasVisitedBefore', 'true');
+                                console.log("Management script imported successfully.");
+                            } else {
+                                console.error("Failed to fetch management script:", response.status);
+                            }
+                        } catch (e) {
+                            console.error("Error in manage boot state:", e);
+                        }
+                    }
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } 
+                else {
+                    // Generic Case: ?s=[AppName] -> Open App
+                    // We implicitly mark setup as done to access the app
+                    localStorage.setItem('hasVisitedBefore', 'true');
+                    // Store the requested app name globally for index.js to pick up later
+                    window.pendingBootApp = bootState;
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
+        })();
+
         let FF_FOUC_FIX;
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
