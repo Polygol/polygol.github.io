@@ -407,14 +407,7 @@ async function handleRemoteCommand(payload, peerId) {
             break;
 
         case 'getState':
-            pushFullState();
-            // 2. Force Send App List (Fixes empty app drawer)
-            handleRemoteCommand({ type: 'getApps' }, peerId);
-            
-            // Force Widget Snapshots (Fixes empty widgets)
-            if (typeof window.broadcastWidgetSnapshots === 'function') {
-                window.broadcastWidgetSnapshots();
-            }
+            setTimeout(pushFullState, 100);
             break;
             
         case 'getApps':
