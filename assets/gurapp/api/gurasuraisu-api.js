@@ -890,6 +890,15 @@ const Gurasuraisu = {
   isSilent: function() {
     return _isSilentMode;
   },
+
+  /**
+   * Uses the System TTS engine to speak text.
+   * Bypasses browser autoplay policy.
+   * @param {string} text - The text to speak.
+   */
+  speak: function(text) {
+    this._call('speakText', [text]);
+  },
  
    /**
    * Asks the parent Gurasuraisu to send back the list of currently installed apps.
