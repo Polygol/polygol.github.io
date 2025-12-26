@@ -64,29 +64,6 @@ function generatePSK() {
 }
 
 function initWavesHost() {
-    try {
-        const savedData = localStorage.getItem('waves_known_devices');
-        if (savedData) {
-            const knownDevices = JSON.parse(savedData);
-            
-            // Populate the connectedPeers object with saved data
-            Object.keys(knownDevices).forEach(key => {
-                const device = knownDevices[key];
-                // Use the name or ID as the key
-                connectedPeers[key] = {
-                    id: key, // Use key as ID for saved devices
-                    profile: device.profile,
-                    connectedAt: device.lastSeen || Date.now()
-                };
-            });
-            
-            // Force an immediate UI update attempt
-            notifySystemUI();
-        }
-    } catch (e) {
-        console.warn("Failed to load known devices", e);
-    }
-    
     if (!window.Trystero) {
         window.addEventListener('trystero-ready', initWavesHost, { once: true });
         return;
@@ -97,8 +74,8 @@ function initWavesHost() {
     // Generate persistent credentials if missing
     if (!state) {
         state = { 
-            roomId: generatePairingCode(), // Short code for discovery
-            psk: generatePSK()             // Long secret for authorization
+            roomId: generatePairingCode(), 
+            psk: generatePSK()             
         };
         localStorage.setItem('waves_host_config', JSON.stringify(state));
     }
@@ -115,26 +92,23 @@ function initWavesHost() {
         const [sendUpdate, getUpdate] = wavesRoom.makeAction('waves-update');
         wavesBroadcast = sendUpdate;
 
+        // 1. Handle Incoming Messages
         wavesOnData((payload, peerId) => {
-            // Handle Handshake/Hello with Profile
             if (payload.type === 'hello') {
-                console.log(`[Waves] Hello from ${peerId}`, payload.profile);
-                
-                // If the payload has an auth token, check it immediately.
+                // Check Auth Token
                 if (payload.auth === state.psk) {
-                    // Authorized Re-connection: Register peer and send device info
+                    // TRUSTED DEVICE: Add to active list immediately
                     registerPeer(peerId, payload.profile);
                     wavesSend({ type: 'welcome', deviceName: state.deviceName }, peerId);
                 } else if (isDiscoveryActive) {
-                    // New Auth Request
+                    // NEW DEVICE: Start Emoji Auth
                     startEmojiAuth(peerId, payload.profile);
                 } else {
                     wavesSend({ type: 'discovery_disabled' }, peerId);
                 }
             }
-            // If valid PSK, execute command
             else if (payload.auth === state.psk) {
-                // Security: Ensure peer is registered if they send a command
+                // Ensure peer is registered if they send a command (Edge case handling)
                 if (!connectedPeers[peerId] && payload.profile) {
                     registerPeer(peerId, payload.profile);
                 }
@@ -145,19 +119,18 @@ function initWavesHost() {
             }
         });
 
+        // 2. Handle Disconnects (Removes Icon)
         wavesRoom.onPeerLeave(peerId => {
             if (connectedPeers[peerId]) {
+                console.log(`[Waves] Peer disconnected: ${peerId}`);
                 delete connectedPeers[peerId];
                 notifySystemUI();
             }
         });
 
+        // 3. Ping to wake up existing clients on Host Reload
         setTimeout(() => {
-            if (wavesSend) {
-                // We send a generic 'ping' or just wait for Trystero to sync.
-                // Sending a state update usually wakes up the connection.
-                pushFullState(); 
-            }
+            if (wavesBroadcast) pushFullState(); 
         }, 2000);
     }
 }
@@ -165,17 +138,17 @@ function initWavesHost() {
 function registerPeer(peerId, profile) {
     if (!profile) profile = { name: "Unknown", avatar: null };
     
-    // 1. Update In-Memory State
+    // 1. Update In-Memory State (This shows the Icon)
     connectedPeers[peerId] = {
         id: peerId,
         profile: profile,
         connectedAt: Date.now()
     };
 
-    // 2. Persist to LocalStorage (Save "Known Devices")
+    // 2. Persist to LocalStorage (History log only, not used for UI init)
     try {
         let known = JSON.parse(localStorage.getItem('waves_known_devices') || '{}');
-        // Use name as key to store the latest profile for this user
+        // Save using the Name as key so we remember them next time
         if (profile.name && profile.name !== "Unknown") {
             known[profile.name] = {
                 profile: profile,
@@ -183,8 +156,9 @@ function registerPeer(peerId, profile) {
             };
             localStorage.setItem('waves_known_devices', JSON.stringify(known));
         }
-    } catch(e) { console.warn("Failed to save waves device", e); }
+    } catch(e) { console.warn("Failed to save waves device history", e); }
 
+    // 3. Update UI
     notifySystemUI();
 }
 
