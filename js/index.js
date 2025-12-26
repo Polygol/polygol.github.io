@@ -9986,6 +9986,14 @@ createFullscreenEmbed = async function(url, options = {}) {
         return;
     }
 
+    // Case 4: Manual App Open (Clearing History)
+    // If we reach here, we are opening a single app normally via interaction.
+    // We should clear the split history and the navigation stack.
+    if (!splitScreenState.active && !isSplitActivation) {
+        splitScreenState.lastSplitPair = null;
+        window.appHistoryStack = []; // Clear history stack on manual open
+    }
+
     // Call original function
     return originalCreateFullscreenEmbed(url, options);
 };
