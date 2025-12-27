@@ -2586,11 +2586,15 @@ const IslandManager = {
 
         activeIslands.sort((a, b) => b.lastUpdated - a.lastUpdated);
         this.render();
+        updateTitle();
+        restoreCorrectFavicon();
     },
 
     remove(id) {
         activeIslands = activeIslands.filter(i => i.id !== id);
         this.render();
+        updateTitle();
+        restoreCorrectFavicon();
     },
 
 render() {
@@ -3555,21 +3559,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Function to update the document title
 function updateTitle() {
-  // 1. Gather Live Activity Texts
-  let activityString = '';
+  let titlePrefix = '';
   
-  // Check activeIslands for live activity text
+  // 1. Check Live Activities
+  const liveActivityTexts = [];
   if (typeof activeIslands !== 'undefined' && activeIslands.length > 0) {
-      const activityTexts = activeIslands
-          .filter(i => i.type === 'live-activity' && i.data && i.data.text)
-          .map(i => i.data.text);
-      
-      if (activityTexts.length > 0) {
-          activityString = activityTexts.join(' | ') + ' | ';
+      activeIslands.forEach(i => {
+          if (i.type === 'live-activity' && i.data && i.data.text) {
+              liveActivityTexts.push(i.data.text);
+          }
+      });
+  }
+
+  if (liveActivityTexts.length > 0) {
+      titlePrefix = liveActivityTexts.join(' | ') + ' | ';
+  } else {
+      // 2. Check Media (Only if no live activities)
+      if (activeMediaSessionApp && mediaSessionStack.length > 0) {
+          const session = mediaSessionStack.find(s => s.appName === activeMediaSessionApp);
+          if (session && session.metadata) {
+              const { title, artist } = session.metadata;
+              // Simple check to ensure we don't show "Unknown - Unknown" if empty
+              if (title && title !== 'Unknown Title') {
+                  titlePrefix = `${title} - ${artist || ''} | `;
+              }
+          }
       }
   }
 
-  // 2. Time & Date Logic
+  // 3. Time & Date Logic
   let now = new Date();
   let hours = now.getHours();
   let minutes = String(now.getMinutes()).padStart(2, '0');
@@ -3590,7 +3608,7 @@ function updateTitle() {
     `${displayHours}:${minutes}:${seconds}${period}` : 
     `${displayHours}:${minutes}${period}`;
 
-  // 3. Weather Logic
+  // 4. Weather Logic
   const showWeather = localStorage.getItem('showWeather') !== 'false';
   let weatherString = '';
   
@@ -3608,26 +3626,129 @@ function updateTitle() {
     }
   }
 
-  // 4. Combine: [Activity] | [Time][Weather]
-  document.title = `${activityString}${timeString}${weatherString}`;
+  document.title = `${titlePrefix}${timeString}${weatherString}`;
 }
 
-// Priority: 1. Media Album Art, 2. Active App Icon, 3. Default System Icon
-async function restoreCorrectFavicon() {
-    // 1. Check for Active Media Session with Artwork
-    if (activeMediaSessionApp && mediaSessionStack.length > 0) {
-        // Find the active session data
-        const session = mediaSessionStack.find(s => s.appName === activeMediaSessionApp);
-        const art = session?.metadata?.artwork?.[0]?.src;
+function createShapedFavicon(source, shape) {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const size = 64; 
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
         
-        if (art) {
-            // Force use of media art
-            await updateFavicon(art, true);
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+            ctx.beginPath();
+            if (shape === 'circle') {
+                ctx.arc(size/2, size/2, size/2, 0, Math.PI*2);
+            } else if (shape === 'square') {
+                // Rounded rect with 20% radius (approx 4px on 16px/32px output)
+                const x = 0, y = 0, w = size, h = size, r = size * 0.25;
+                ctx.moveTo(x+r, y);
+                ctx.arcTo(x+w, y, x+w, y+h, r);
+                ctx.arcTo(x+w, y+h, x, y+h, r);
+                ctx.arcTo(x, y+h, x, y, r);
+                ctx.arcTo(x, y, x+w, y, r);
+            }
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(img, 0, 0, size, size);
+            resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => resolve(source); // Fallback to raw URL
+        img.src = source;
+    });
+}
+
+function createCompositeFavicon(sources) {
+    return new Promise(async (resolve) => {
+        const canvas = document.createElement('canvas');
+        const size = 64;
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Apply square rounding clip first
+        const x = 0, y = 0, w = size, h = size, r = size * 0.25;
+        ctx.beginPath();
+        ctx.moveTo(x+r, y);
+        ctx.arcTo(x+w, y, x+w, y+h, r);
+        ctx.arcTo(x+w, y+h, x, y+h, r);
+        ctx.arcTo(x, y+h, x, y, r);
+        ctx.arcTo(x, y, x+w, y, r);
+        ctx.closePath();
+        ctx.clip();
+
+        // Load all images
+        const images = await Promise.all(sources.map(src => {
+            return new Promise(r => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = () => r(img);
+                img.onerror = () => r(null);
+                img.src = src;
+            });
+        }));
+
+        const validImages = images.filter(img => img !== null);
+        if (validImages.length === 0) { resolve(null); return; }
+        
+        if (validImages.length === 1) {
+            ctx.drawImage(validImages[0], 0, 0, size, size);
+        } else {
+            // Split vertical. Draw first on left, second on right.
+            // Draw into half-width slots
+            ctx.drawImage(validImages[0], 0, 0, size/2, size);
+            ctx.drawImage(validImages[1], size/2, 0, size/2, size);
+        }
+        
+        resolve(canvas.toDataURL('image/png'));
+    });
+}
+
+async function restoreCorrectFavicon() {
+    // 1. Priority: Media (Square)
+    if (activeMediaSessionApp && mediaSessionStack.length > 0) {
+        const session = mediaSessionStack.find(s => s.appName === activeMediaSessionApp);
+        if (session?.metadata?.artwork?.[0]?.src) {
+            const url = session.metadata.artwork[0].src;
+            const dataUrl = await createShapedFavicon(url, 'square');
+            updateFavicon(dataUrl, false); 
             return;
         }
     }
 
-    // 2. Check for Open App (Foreground)
+    // 2. Priority: Live Activities (Square, Composite if multiple)
+    if (typeof activeIslands !== 'undefined' && activeIslands.length > 0) {
+        const activityIcons = [];
+        activeIslands.forEach(i => {
+            if (i.type === 'live-activity') {
+                let src = i.data.imgUrl;
+                // Fallback to app icon if no specific image provided
+                if (!src && apps[i.data.appName]) src = apps[i.data.appName].icon;
+                
+                if (src) {
+                    if (!src.startsWith('http') && !src.startsWith('data:') && !src.startsWith('/')) {
+                        src = `/assets/appicon/${src}`;
+                    }
+                    if(!activityIcons.includes(src)) activityIcons.push(src);
+                }
+            }
+        });
+
+        if (activityIcons.length > 0) {
+            // Use up to 2 icons for composite
+            const dataUrl = await createCompositeFavicon(activityIcons.slice(0, 2)); 
+            if (dataUrl) {
+                updateFavicon(dataUrl, false);
+                return;
+            }
+        }
+    }
+
+    // 3. Priority: Current App (Circle)
     const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
     if (openEmbed) {
         const url = openEmbed.dataset.embedUrl;
@@ -3637,12 +3758,13 @@ async function restoreCorrectFavicon() {
             if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
                 iconUrl = `/assets/appicon/${iconUrl}`;
             }
-            await updateFavicon(iconUrl, true);
+            const dataUrl = await createShapedFavicon(iconUrl, 'circle');
+            updateFavicon(dataUrl, false);
             return;
         }
     }
 
-    // 3. Fallback to System Default
+    // 4. Default
     if (originalFaviconUrl) {
         updateFavicon(originalFaviconUrl, false);
     }
