@@ -6690,7 +6690,7 @@ async function processWallpaperFiles(files) {
         let processedCount = 0;
 
         for (let file of files) {
-            // --- NEW: Handle .guraatmos files ---
+            // --- Handle .guraatmos files ---
             if (file.name.endsWith('.guraatmos')) {
                 const text = await file.text();
                 let data;
@@ -6713,12 +6713,7 @@ async function processWallpaperFiles(files) {
 
 				let dominantColor = null;
                 let firstFrame = null;
-
-                // Generate first frame if it's a video (and not provided in export, though export usually doesn't generate fresh frames on fly)
-                // For simplicity, we assume the export is an image or we handle video normally.
-                // If the exported file was a video, 'imageBlob' is that video file.
                 
-                let firstFrame = null;
                 if (data.wallpaperType.startsWith('image/gif') || data.wallpaperType.startsWith('image/webp')) {
                      // Try to regenerate first frame for animated types
                      try { firstFrame = await extractFirstFrame(imageBlob); } catch(e){}
