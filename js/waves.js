@@ -3,13 +3,10 @@
 const WAVES_CONFIG = { 
     appId: 'polygol-connect-v1',
     trackerUrls: [
-        'wss://tracker.openwebtorrent.com',
-        'wss://tracker.btorrent.xyz',
-        'wss://tracker.webtorrent.dev',
+        'wss://tracker.ghostchu-services.top:443/announce',
         'wss://tracker.files.fm:7073/announce',
-        'wss://tracker.sloppyta.co:443/announce',
-        'wss://tracker.novage.com.ua:443/announce',
-        'wss://tracker.nanoha.org:443/announce'
+        'ws://tracker.ghostchu-services.top:80/announce',
+        'ws://tracker.files.fm:7072/announce'
     ],
     rtcConfig: {
         iceServers: [
