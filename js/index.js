@@ -2598,7 +2598,8 @@ function applySystemTint() {
         '--search-background-dark': 0.15,
         '--dark-overlay': 0.15,
         '--dark-transparent': 0.2,
-        '--glass-border-dark': 0.5,
+        '--glass-border-dark': 0.2,
+        '--text-color-dark': 0.3,
         '--secondary-text-color-dark': 0.3,
 
         // Light Mode
@@ -2609,7 +2610,8 @@ function applySystemTint() {
         '--search-background-light': 0.15,
         '--light-overlay': 0.15,
         '--light-transparent': 0.2,
-        '--glass-border-light': 0.5,
+        '--glass-border-light': 0.2,
+        '--text-color-light': 0.3,
         '--secondary-text-color-light': 0.3,
 
         // High Contrast (Higher weights to maintain personality)
@@ -2619,6 +2621,7 @@ function applySystemTint() {
         '--modal-transparent-dark-highcontrast': 0.25,
         '--search-background-dark-highcontrast': 0.25,
         '--dark-overlay-highcontrast': 0.8,
+        '--text-color-dark-highcontrast': 0.5,
         '--secondary-text-color-dark-highcontrast': 0.5,
         
         '--background-color-light-highcontrast': 0.25,
@@ -2627,6 +2630,7 @@ function applySystemTint() {
         '--modal-transparent-light-highcontrast': 0.25,
         '--search-background-light-highcontrast': 0.25,
         '--light-overlay-highcontrast': 0.8,
+        '--text-color-light-highcontrast': 0.5,
         '--secondary-text-color-light-highcontrast': 0.5
     };
 
