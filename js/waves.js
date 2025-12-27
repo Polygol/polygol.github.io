@@ -4,9 +4,7 @@ const WAVES_CONFIG = {
     appId: 'polygol-connect-v1',
     trackerUrls: [
         'wss://tracker.ghostchu-services.top:443/announce',
-        'wss://tracker.files.fm:7073/announce',
-        'ws://tracker.ghostchu-services.top:80/announce',
-        'ws://tracker.files.fm:7072/announce'
+        'wss://tracker.files.fm:7073/announce'
     ],
     rtcConfig: {
         iceServers: [
