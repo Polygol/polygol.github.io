@@ -3579,15 +3579,25 @@ function updateTitle() {
           const session = mediaSessionStack.find(s => s.appName === activeMediaSessionApp);
           if (session && session.metadata) {
               const { title, artist } = session.metadata;
-              // Simple check to ensure we don't show "Unknown - Unknown" if empty
               if (title && title !== 'Unknown Title') {
                   titlePrefix = `${title} | `;
+              }
+          }
+      } 
+      // 3. Check Active App (Only if no Live Activity and no Media info)
+      else {
+          const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+          if (openEmbed) {
+              const url = openEmbed.dataset.embedUrl;
+              const appName = Object.keys(apps).find(name => apps[name].url === url);
+              if (appName) {
+                  titlePrefix = `${appName} | `;
               }
           }
       }
   }
 
-  // 3. Time & Date Logic
+  // 4. Time & Date Logic
   let now = new Date();
   let hours = now.getHours();
   let minutes = String(now.getMinutes()).padStart(2, '0');
@@ -3608,7 +3618,7 @@ function updateTitle() {
     `${displayHours}:${minutes}:${seconds}${period}` : 
     `${displayHours}:${minutes}${period}`;
 
-  // 4. Weather Logic
+  // 5. Weather Logic
   const showWeather = localStorage.getItem('showWeather') !== 'false';
   let weatherString = '';
   
@@ -3708,7 +3718,7 @@ function createCompositeFavicon(sources) {
     });
 }
 
-async function restoreCorrectFavicon() {
+async function restoreCorrectFavicon(forceAppUrl = null) {
     // 1. Priority: Media (Square)
     if (activeMediaSessionApp && mediaSessionStack.length > 0) {
         const session = mediaSessionStack.find(s => s.appName === activeMediaSessionApp);
@@ -3720,15 +3730,13 @@ async function restoreCorrectFavicon() {
         }
     }
 
-    // 2. Priority: Live Activities (Square, Composite if multiple)
+    // 2. Priority: Live Activities (Square/Composite)
     if (typeof activeIslands !== 'undefined' && activeIslands.length > 0) {
         const activityIcons = [];
         activeIslands.forEach(i => {
             if (i.type === 'live-activity') {
                 let src = i.data.imgUrl;
-                // Fallback to app icon if no specific image provided
                 if (!src && apps[i.data.appName]) src = apps[i.data.appName].icon;
-                
                 if (src) {
                     if (!src.startsWith('http') && !src.startsWith('data:') && !src.startsWith('/')) {
                         src = `/assets/appicon/${src}`;
@@ -3739,7 +3747,6 @@ async function restoreCorrectFavicon() {
         });
 
         if (activityIcons.length > 0) {
-            // Use up to 2 icons for composite
             const dataUrl = await createCompositeFavicon(activityIcons.slice(0, 2)); 
             if (dataUrl) {
                 updateFavicon(dataUrl, false);
@@ -3749,13 +3756,22 @@ async function restoreCorrectFavicon() {
     }
 
     // 3. Priority: Current App (Circle)
-    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-    if (openEmbed) {
-        const url = openEmbed.dataset.embedUrl;
-        const appName = Object.keys(apps).find(name => apps[name].url === url);
-        if (appName && apps[appName].icon) {
-            let iconUrl = apps[appName].icon;
-            if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
+    let targetUrl = forceAppUrl;
+    
+    // If no forced URL provided, try to find it in DOM
+    if (!targetUrl) {
+        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (openEmbed) targetUrl = openEmbed.dataset.embedUrl;
+    }
+
+    if (targetUrl) {
+        const appName = Object.keys(apps).find(name => apps[name].url === targetUrl);
+        // Fallback for internal tools if not in apps list
+        let iconUrl = apps[appName]?.icon;
+        if (!iconUrl && !appName) iconUrl = 'system.png'; 
+
+        if (iconUrl) {
+            if (!iconUrl.startsWith('http') && !iconUrl.startsWith('/') && !iconUrl.startsWith('data:')) {
                 iconUrl = `/assets/appicon/${iconUrl}`;
             }
             const dataUrl = await createShapedFavicon(iconUrl, 'circle');
@@ -10156,8 +10172,15 @@ createFullscreenEmbed = async function(url, options = {}) {
         window.appHistoryStack = []; // Clear history stack on manual open
     }
 
-    // Call original function
-    return originalCreateFullscreenEmbed(url, options);
+    // Call original logic which handles DOM creation
+    const result = await originalCreateFullscreenEmbed(url, options);
+
+    // Force immediate favicon update with the URL we just opened.
+    // This bypasses the DOM query delay.
+    restoreCorrectFavicon(url);
+    updateTitle();
+
+    return result;
 };
 
 async function createBackgroundEmbed(url) {
@@ -10217,8 +10240,11 @@ window.launchAppSilently = createBackgroundEmbed;
 
 function closeFullscreenEmbed() {
     // Restore the original favicon
-    setTimeout(() => restoreCorrectFavicon(), 50);
-
+    setTimeout(() => {
+        restoreCorrectFavicon();
+        updateTitle();
+    }, 50);
+	
     isAppOpen = false;
 
 	SoundManager.play('close'); 
@@ -10337,6 +10363,12 @@ function closeFullscreenEmbed() {
 
 // Ensure the function accepts the second argument
 function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
+    // UPDATE TITLE/FAVICON
+    setTimeout(() => {
+        restoreCorrectFavicon();
+        updateTitle();
+    }, 50);
+	
     // Clear any pending cleanup
     clearTimeout(minimizeCleanupTimeout);
 	
@@ -10402,16 +10434,12 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
             el.style.transition = 'opacity 0.3s ease';
             requestAnimationFrame(() => { el.style.opacity = '1'; });
         });
-        
-        // NOTE: We leave splitScreenState.active = true so we can restore the pair later
+
         restoreCorrectFavicon();
         return; 
     }
 	
     // --- Standard Single App Minimize Logic ---
-    // Restore the original favicon when minimizing an app
-    setTimeout(() => restoreCorrectFavicon(), 50);
-
     isAppOpen = false;
 	SoundManager.play('close'); 
 	
