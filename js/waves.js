@@ -439,10 +439,13 @@ async function handleRemoteCommand(payload, peerId) {
             break;
 
         case 'getState':
-            pushFullState(peerId);
-            getApps(peerId);
-            pushWallpaperUpdate(peerId);
-            break;
+            console.log("[Waves] Initializing Waves State Sync...");
+            setTimeout(() => {
+                pushFullState(peerId);
+                getApps(peerId);
+                pushWallpaperUpdate(peerId);
+                break;
+            }, 1000);
             
         case 'getApps':
             getApps(peerId);
