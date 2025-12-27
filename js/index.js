@@ -7347,6 +7347,8 @@ async function applyWallpaper() {
         window.WavesHost.pushFullState();
         if (window.WavesHost.pushWallpaperUpdate) window.WavesHost.pushWallpaperUpdate();
     }
+
+	setTimeout(applySystemTint, 100); 
 }
 
 function ensureVideoLoaded() {
@@ -13665,6 +13667,7 @@ const FUNCTION_PERMISSIONS = {
 // Maps the 'data-key' from the settings app to the control 'id' in index.html
 const controlIdMap = {
     'theme': 'theme-switch',
+    'tintEnabled': 'tint-colors-switch',
     'animationsEnabled': 'animation-switch',
     'highContrast': 'contrast-switch',
     'gurappsEnabled': 'gurapps-switch',
