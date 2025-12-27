@@ -1097,22 +1097,22 @@ window.addEventListener('message', async (event) => {
                 '--background-color-dark', '--background-color-dark-tr',
                 '--modal-background-dark', '--modal-transparent-dark',
                 '--search-background-dark', '--dark-overlay', '--dark-transparent', '--glass-border-dark',
-                '--secondary-text-color-dark',
+                '--text-color-dark', '--secondary-text-color-dark',
                 
                 '--background-color-light', '--background-color-light-tr',
                 '--modal-background-light', '--modal-transparent-light',
                 '--search-background-light', '--light-overlay', '--light-transparent', '--glass-border-light',
-                '--secondary-text-color-light',
+                '--text-color-light', '--secondary-text-color-light',
 
                 '--background-color-dark-highcontrast', '--background-color-dark-tr-highcontrast',
                 '--modal-background-dark-highcontrast', '--modal-transparent-dark-highcontrast',
                 '--search-background-dark-highcontrast', '--dark-overlay-highcontrast', '--dark-transparent-highcontrast',
-                '--secondary-text-color-dark-highcontrast',
+                '--text-color-dark-highcontrast', '--secondary-text-color-dark-highcontrast',
                 
                 '--background-color-light-highcontrast', '--background-color-light-tr-highcontrast',
                 '--modal-background-light-highcontrast', '--modal-transparent-light-highcontrast',
                 '--search-background-light-highcontrast', '--light-overlay-highcontrast', '--light-transparent-highcontrast',
-                '--secondary-text-color-light-highcontrast'
+                '--text-color-light-highcontrast', '--secondary-text-color-light-highcontrast'
             ];
             varsToRemove.forEach(v => document.documentElement.style.removeProperty(v));
         }
