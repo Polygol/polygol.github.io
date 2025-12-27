@@ -2541,6 +2541,7 @@ function promptToInstallPWA() {
 
 // --- Color Tinting Logic ---
 let tintEnabled = localStorage.getItem('tintEnabled') === 'true';
+window.currentTintVariables = null; // Store calculated vars for new apps
 
 // Helper to parse CSS color strings (rgb, rgba, hex) into {r,g,b,a}
 function parseCssColor(str) {
@@ -2597,32 +2598,36 @@ function applySystemTint() {
         '--search-background-dark': 0.15,
         '--dark-overlay': 0.15,
         '--dark-transparent': 0.2,
-        '--glass-border-dark': 0.3,
+        '--glass-border-dark': 0.5,
+        '--secondary-text-color-dark': 0.3,
 
         // Light Mode
-        '--background-color-light': 0.08,
-        '--background-color-light-tr': 0.08,
-        '--modal-background-light': 0.08,
-        '--modal-transparent-light': 0.08,
-        '--search-background-light': 0.08,
-        '--light-overlay': 0.08,
-        '--light-transparent': 0.1,
-        '--glass-border-light': 0.3,
+        '--background-color-light': 0.15,
+        '--background-color-light-tr': 0.15,
+        '--modal-background-light': 0.15,
+        '--modal-transparent-light': 0.15,
+        '--search-background-light': 0.15,
+        '--light-overlay': 0.15,
+        '--light-transparent': 0.2,
+        '--glass-border-light': 0.5,
+        '--secondary-text-color-light': 0.3,
 
-        // High Contrast (Lower weights to maintain legibility)
-        '--background-color-dark-highcontrast': 0.05,
-        '--background-color-dark-tr-highcontrast': 0.05,
-        '--modal-background-dark-highcontrast': 0.05,
-        '--modal-transparent-dark-highcontrast': 0.05,
-        '--search-background-dark-highcontrast': 0.05,
-        '--dark-overlay-highcontrast': 0.05,
+        // High Contrast (Higher weights to maintain personality)
+        '--background-color-dark-highcontrast': 0.25,
+        '--background-color-dark-tr-highcontrast': 0.25,
+        '--modal-background-dark-highcontrast': 0.25,
+        '--modal-transparent-dark-highcontrast': 0.25,
+        '--search-background-dark-highcontrast': 0.25,
+        '--dark-overlay-highcontrast': 0.8,
+        '--secondary-text-color-dark-highcontrast': 0.5,
         
-        '--background-color-light-highcontrast': 0.05,
-        '--background-color-light-tr-highcontrast': 0.05,
-        '--modal-background-light-highcontrast': 0.05,
-        '--modal-transparent-light-highcontrast': 0.05,
-        '--search-background-light-highcontrast': 0.05,
-        '--light-overlay-highcontrast': 0.05
+        '--background-color-light-highcontrast': 0.25,
+        '--background-color-light-tr-highcontrast': 0.25,
+        '--modal-background-light-highcontrast': 0.25,
+        '--modal-transparent-light-highcontrast': 0.25,
+        '--search-background-light-highcontrast': 0.25,
+        '--light-overlay-highcontrast': 0.8,
+        '--secondary-text-color-light-highcontrast': 0.5
     };
 
     // 1. Always clear existing overrides first to read the true CSS values
@@ -2651,7 +2656,8 @@ function applySystemTint() {
     // 3. Apply new values
     Object.entries(newVars).forEach(([key, val]) => root.style.setProperty(key, val));
     
-    // 4. Send to apps
+    // 4. Update global state and broadcast
+    window.currentTintVariables = newVars;
     broadcastThemeVariables(newVars);
 }
 
@@ -14313,6 +14319,13 @@ window.addEventListener('message', async (event) => { // Make listener async
 
 		const glassEffectsEnabled = localStorage.getItem('glassEffectsEnabled') !== 'false';
 		sourceWindow.postMessage({ type: 'glassEffectsUpdate', enabled: glassEffectsEnabled }, targetOrigin);
+
+        if (window.currentTintVariables) {
+            sourceWindow.postMessage({
+                type: 'themeVariablesUpdate',
+                variables: window.currentTintVariables
+            }, targetOrigin);
+        }
 
         sourceWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow, shadowStrong: currentSunShadowStrong }, targetOrigin);
 
