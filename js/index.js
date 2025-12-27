@@ -13753,7 +13753,7 @@ const controlIdMap = {
     'wallpaperBrightness': 'wallpaper-brightness-slider',
     'wallpaperContrast': 'wallpaper-contrast-slider',
 	'glassEffectsEnabled': 'glass-effects-switch',
-	'tintEnabled': 'tint-colors-switch';
+	'tintEnabled': 'tint-colors-switch',
     'showWeather': 'weather-switch',
     'page_brightness': 'brightness-control',
     'display_temperature': 'thermostat-control',
