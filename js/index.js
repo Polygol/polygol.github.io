@@ -6697,7 +6697,7 @@ async function processWallpaperFiles(files) {
                 try {
                     data = JSON.parse(text);
                 } catch (e) {
-                    console.error("Invalid GuraAtmos file");
+                    console.error("Invalid GuraAtmosphere file");
                     continue;
                 }
 
@@ -6711,6 +6711,9 @@ async function processWallpaperFiles(files) {
                 const imageBlob = dataURLtoBlob(data.imageData);
                 const isVideo = data.isVideo || file.type.startsWith('video'); // Fallback logic
 
+				let dominantColor = null;
+                let firstFrame = null;
+
                 // Generate first frame if it's a video (and not provided in export, though export usually doesn't generate fresh frames on fly)
                 // For simplicity, we assume the export is an image or we handle video normally.
                 // If the exported file was a video, 'imageBlob' is that video file.
@@ -6721,6 +6724,22 @@ async function processWallpaperFiles(files) {
                      try { firstFrame = await extractFirstFrame(imageBlob); } catch(e){}
                 }
 
+                try {
+                    // Try to extract from the blob (image/video)
+                    if (data.wallpaperType.startsWith('video/')) {
+                        firstFrame = await extractVideoFrame(imageBlob);
+                        dominantColor = await extractWallpaperColor(firstFrame);
+                    } else {
+                         // Standard image or GIF
+                         if (data.wallpaperType.startsWith('image/gif')) {
+                             firstFrame = await extractFirstFrame(imageBlob);
+                             dominantColor = await extractWallpaperColor(firstFrame);
+                         } else {
+                             dominantColor = await extractWallpaperColor(imageBlob);
+                         }
+                    }
+                } catch(e) { console.warn("Color extract on import failed", e); }
+
                 const dbData = {
                     blob: imageBlob,
                     type: data.wallpaperType,
@@ -6729,6 +6748,7 @@ async function processWallpaperFiles(files) {
                     depthDataUrl: data.depthDataUrl || null,
                     depthEnabled: data.depthEnabled || false,
                     firstFrameDataUrl: firstFrame,
+                    dominantColor: dominantColor,
                     timestamp: Date.now()
                 };
 
@@ -6741,7 +6761,8 @@ async function processWallpaperFiles(files) {
                     timestamp: Date.now(),
                     clockStyles: data.clockStyles,
                     widgetLayout: data.widgetLayout,
-                    depthEnabled: data.depthEnabled
+                    depthEnabled: data.depthEnabled,
+					dominantColor: dominantColor
                 });
                 
                 processedCount++;
@@ -6754,26 +6775,29 @@ async function processWallpaperFiles(files) {
                 
                 // Extract Color
                 let dominantColor = null;
-                if (!isVideo) {
-                    dominantColor = await extractWallpaperColor(file);
+                let firstFrame = null;
+				
+                if (isVideo) {
+                     try {
+                        firstFrame = await extractVideoFrame(file);
+                        dbData.firstFrameDataUrl = firstFrame;
+                        dominantColor = await extractWallpaperColor(firstFrame);
+                     } catch(e) { console.warn("Video process failed", e); }
+                } else {
+                    if (file.type === 'image/gif' || file.type === 'image/webp') {
+                         firstFrame = await extractFirstFrame(file);
+                         dbData.firstFrameDataUrl = firstFrame;
+                         dominantColor = await extractWallpaperColor(firstFrame);
+                    } else {
+                         dominantColor = await extractWallpaperColor(file);
+                         // Compress static images
+                         const compressed = await compressMedia(file);
+                         dbData.dataUrl = compressed;
+                         delete dbData.blob; 
+                    }
                 }
-                // Store it in the DB record
+                
                 dbData.dominantColor = dominantColor;
-
-                if(!isVideo && file.type !== 'image/gif') {
-                     const compressed = await compressMedia(file);
-                     dbData.dataUrl = compressed;
-                     // Clean up blob to save space if we have dataUrl
-                     delete dbData.blob; 
-                } else if (file.type === 'image/gif') {
-                     const ff = await extractFirstFrame(file);
-                     dbData.firstFrameDataUrl = ff;
-                     // Try to get color from first frame
-                     if (!dominantColor) {
-                         dominantColor = await extractWallpaperColor(ff);
-                         dbData.dominantColor = dominantColor;
-                     }
-                }
 
                 await storeWallpaper(wallpaperId, dbData);
                 
@@ -7068,6 +7092,58 @@ function dataURLtoBlob(dataurl) {
     return new Blob([u8arr], {type:mime});
 }
 
+/**
+ * Extracts the first frame of a Video file as a data URL.
+ * @param {File|Blob} file - The video file.
+ * @returns {Promise<string>} A promise that resolves with the data URL of the first frame.
+ */
+function extractVideoFrame(file) {
+    return new Promise((resolve, reject) => {
+        const video = document.createElement('video');
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'auto'; // Need data to render frame
+        
+        let resolved = false;
+
+        const onComplete = (dataUrl) => {
+            if (resolved) return;
+            resolved = true;
+            URL.revokeObjectURL(video.src);
+            video.remove();
+            resolve(dataUrl);
+        };
+
+        video.onloadeddata = () => {
+            // Wait a tick to ensure rendering
+            video.currentTime = 0.1; // Seek slightly to ensure frame availability
+        };
+
+        video.onseeked = () => {
+             try {
+                 const canvas = document.createElement('canvas');
+                 canvas.width = video.videoWidth;
+                 canvas.height = video.videoHeight;
+                 const ctx = canvas.getContext('2d');
+                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                 const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                 onComplete(dataUrl);
+             } catch (e) {
+                 reject(e);
+             }
+        };
+
+        video.onerror = (e) => {
+             if (resolved) return;
+             resolved = true;
+             URL.revokeObjectURL(video.src);
+             reject("Video load error");
+        };
+        
+        video.src = URL.createObjectURL(file);
+    });
+}
+
 async function saveWallpaper(file, customStyles = null) {
     try {
         const wallpaperId = `wallpaper_${Date.now()}`;
@@ -7102,12 +7178,23 @@ async function saveWallpaper(file, customStyles = null) {
             updateClockAndDate();
         }
 
+        // Determine Color and Frame
+        let dominantColor = null;
+        let firstFrame = null;
+
         if (file.type.startsWith("video/")) {
+             try {
+                 firstFrame = await extractVideoFrame(file);
+                 dominantColor = await extractWallpaperColor(firstFrame);
+             } catch (e) { console.warn("Video processing failed", e); }
+			
             await storeWallpaper(wallpaperId, {
                 blob: file,
                 type: file.type,
                 clockStyles: stylesToApply,
-                widgetLayout: []
+                widgetLayout: [],
+                dominantColor: dominantColor,
+                firstFrameDataUrl: firstFrame
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
@@ -7115,16 +7202,20 @@ async function saveWallpaper(file, customStyles = null) {
                 isVideo: true,
                 timestamp: Date.now(),
                 clockStyles: stylesToApply,
-                widgetLayout: []
+                widgetLayout: [],
+                dominantColor: dominantColor
             });
         } else if (file.type === 'image/gif' || file.type === 'image/webp') {
-            const firstFrame = await extractFirstFrame(file);
+            firstFrame = await extractFirstFrame(file);
+            dominantColor = await extractWallpaperColor(firstFrame);
+            
             await storeWallpaper(wallpaperId, {
                 blob: file,
                 type: file.type,
                 firstFrameDataUrl: firstFrame,
                 clockStyles: stylesToApply,
-                widgetLayout: []
+                widgetLayout: [],
+                dominantColor: dominantColor
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
@@ -7132,15 +7223,20 @@ async function saveWallpaper(file, customStyles = null) {
                 isVideo: false,
                 timestamp: Date.now(),
                 clockStyles: stylesToApply,
-                widgetLayout: []
+                widgetLayout: [],
+                dominantColor: dominantColor
             });
         } else {
+            // Standard Image
+            dominantColor = await extractWallpaperColor(file);
             let compressedData = await compressMedia(file);
+            
             await storeWallpaper(wallpaperId, {
                 dataUrl: compressedData,
                 type: file.type,
                 clockStyles: stylesToApply,
-                widgetLayout: [] // Initialize with an empty layout
+                widgetLayout: [],
+                dominantColor: dominantColor
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
@@ -7148,7 +7244,8 @@ async function saveWallpaper(file, customStyles = null) {
                 isVideo: false,
                 timestamp: Date.now(),
                 clockStyles: stylesToApply,
-                widgetLayout: [] // Also initialize here
+                widgetLayout: [],
+                dominantColor: dominantColor
             });
         }
         
@@ -7203,6 +7300,26 @@ async function applyWallpaper() {
     if (slideshowWallpapers && slideshowWallpapers.length > 0) {
         async function displaySlideshow() {
             let wallpaper = slideshowWallpapers[currentWallpaperIndex];
+			
+            // Dynamic Color Tinting for Slideshow
+            let color = wallpaper.dominantColor;
+            // If missing in LS object, try fetch from DB on the fly
+            if (!color && wallpaper.id) {
+                try {
+                    const data = await getWallpaper(wallpaper.id);
+                    if (data && data.dominantColor) {
+                        color = data.dominantColor;
+                        // Update local cache so next loop is faster
+                        wallpaper.dominantColor = color; 
+                    }
+                } catch(e){}
+            }
+            if (color) {
+                window.activeWallpaperColor = color;
+                applySystemTint();
+                if (window.WavesHost) window.WavesHost.pushFullState();
+            }
+			
             try {
                 if (wallpaper.isVideo) {
                     let videoData = await getWallpaper(wallpaper.id);
@@ -7380,30 +7497,36 @@ async function applyWallpaper() {
         }
     }
 
+    // Single Wallpaper Color Logic
     const current = recentWallpapers[currentWallpaperPosition];
     if (current && current.dominantColor) {
         window.activeWallpaperColor = current.dominantColor;
-    } else {
-        // Fallback or attempt to fetch from DB if missing in memory
-        if (current && current.id) {
-            getWallpaper(current.id).then(data => {
-                if (data && data.dominantColor) {
-                    window.activeWallpaperColor = data.dominantColor;
-                    // Update Waves if connected
+    } else if (current && current.id) {
+        // Fallback fetch
+        getWallpaper(current.id).then(data => {
+            if (data && data.dominantColor) {
+                window.activeWallpaperColor = data.dominantColor;
+                // Tint needs to be re-applied if color was fetched late
+                setTimeout(() => {
+                    applySystemTint();
                     if (window.WavesHost) window.WavesHost.pushFullState();
-                }
-            });
-        }
-        window.activeWallpaperColor = null; // Default
+                }, 50);
+            }
+        });
+        window.activeWallpaperColor = null; 
+    } else {
+        window.activeWallpaperColor = null;
     }
+    
+    // Apply tint (will use null/default if no color yet, then update via async fetch above)
+    // Delay slightly to allow async fetch to potentially complete if it's fast
+    setTimeout(applySystemTint, 100);
     
     // Update Waves immediately
     if (window.WavesHost) {
         window.WavesHost.pushFullState();
         if (window.WavesHost.pushWallpaperUpdate) window.WavesHost.pushWallpaperUpdate();
     }
-
-	setTimeout(applySystemTint, 100); 
 }
 
 function ensureVideoLoaded() {
@@ -7667,23 +7790,32 @@ async function migrateWallpapersColor() {
     console.log("[System] Checking for wallpaper color migration...");
     let changed = false;
 
-    // Iterate through all recent wallpapers
     for (let i = 0; i < recentWallpapers.length; i++) {
         const wp = recentWallpapers[i];
         
-        // If it's an image and missing color data
-        if (!wp.dominantColor && !wp.isVideo && wp.id && !wp.isSlideshow) {
+        if (!wp.dominantColor && wp.id && !wp.isSlideshow) {
             try {
-                // Fetch the actual image data from IndexedDB
                 const record = await getWallpaper(wp.id);
                 if (record && (record.blob || record.dataUrl)) {
                     console.log(`[Migration] Extracting color for ${wp.id}...`);
-                    const color = await extractWallpaperColor(record.blob || record.dataUrl);
+                    let color = null;
+                    
+                    if (wp.isVideo) {
+                        // Extract frame first
+                        let blob = record.blob; // Videos are usually blobs
+                        if (blob) {
+                            try {
+                                const frame = await extractVideoFrame(blob);
+                                color = await extractWallpaperColor(frame);
+                            } catch(e) {}
+                        }
+                    } else {
+                        // Images
+                        color = await extractWallpaperColor(record.blob || record.dataUrl);
+                    }
                     
                     if (color) {
-                        // Update Memory
                         wp.dominantColor = color;
-                        // Update Database
                         record.dominantColor = color;
                         await storeWallpaper(wp.id, record);
                         changed = true;
@@ -7696,13 +7828,13 @@ async function migrateWallpapersColor() {
     }
 
     if (changed) {
-        saveRecentWallpapers(); // Save to LocalStorage
+        saveRecentWallpapers();
         console.log("[System] Wallpaper color migration complete.");
         
-        // Re-apply current to update global state immediately
         const current = recentWallpapers[currentWallpaperPosition];
         if (current && current.dominantColor) {
             window.activeWallpaperColor = current.dominantColor;
+            applySystemTint();
             if (window.WavesHost) window.WavesHost.pushFullState();
         }
     }
