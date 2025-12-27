@@ -2539,6 +2539,90 @@ function promptToInstallPWA() {
     }
 }
 
+// --- Color Tinting Logic ---
+let tintEnabled = localStorage.getItem('tintEnabled') === 'true';
+
+function mixColors(base, tint, weight) {
+    const t = tint || [128, 128, 128]; // Fallback
+    const r = Math.round(base[0] * (1 - weight) + t[0] * weight);
+    const g = Math.round(base[1] * (1 - weight) + t[1] * weight);
+    const b = Math.round(base[2] * (1 - weight) + t[2] * weight);
+    return [r, g, b];
+}
+
+function applySystemTint() {
+    const root = document.documentElement;
+    const wallpaperColor = window.activeWallpaperColor; // [r, g, b]
+
+    if (!tintEnabled || !wallpaperColor) {
+        // Reset to defaults (remove inline styles so CSS takes over)
+        const varsToRemove = [
+            '--background-color-dark', '--background-color-dark-tr',
+            '--modal-background-dark', '--search-background-dark',
+            '--glass-border-dark',
+            '--background-color-light', '--background-color-light-tr',
+            '--modal-background-light', '--search-background-light',
+            '--glass-border-light'
+        ];
+        varsToRemove.forEach(v => root.style.removeProperty(v));
+        broadcastThemeVariables(null); // Null triggers reset in apps
+        return;
+    }
+
+    // Define Base Colors (Matches CSS defaults)
+    const baseDark = [28, 28, 28]; // #1c1c1c
+    const baseLight = [240, 240, 240]; // #f0f0f0
+    const baseModalDark = [51, 51, 51];
+    const baseModalLight = [220, 220, 220];
+    const baseBorderDark = [100, 100, 100];
+    const baseBorderLight = [200, 200, 200];
+
+    // Calculate Tints (Weight determines strength of tint)
+    const tintWeightDark = 0.15;
+    const tintWeightLight = 0.08;
+
+    const darkBg = mixColors(baseDark, wallpaperColor, tintWeightDark);
+    const lightBg = mixColors(baseLight, wallpaperColor, tintWeightLight);
+    
+    const darkModal = mixColors(baseModalDark, wallpaperColor, tintWeightDark);
+    const lightModal = mixColors(baseModalLight, wallpaperColor, tintWeightLight);
+    
+    const darkBorder = mixColors(baseBorderDark, wallpaperColor, 0.3);
+    const lightBorder = mixColors(baseBorderLight, wallpaperColor, 0.3);
+
+    // Apply variables
+    const vars = {
+        '--background-color-dark': `rgb(${darkBg.join(',')})`,
+        '--background-color-dark-tr': `rgba(${darkBg.join(',')}, 0.7)`,
+        '--modal-background-dark': `rgba(${darkModal.join(',')}, 0.8)`,
+        '--search-background-dark': `rgba(${darkModal.join(',')}, 0.5)`,
+        '--glass-border-dark': `rgba(${darkBorder.join(',')}, 0.3)`, // Increased alpha for visibility
+        
+        '--background-color-light': `rgb(${lightBg.join(',')})`,
+        '--background-color-light-tr': `rgba(${lightBg.join(',')}, 0.7)`,
+        '--modal-background-light': `rgba(${lightModal.join(',')}, 0.8)`,
+        '--search-background-light': `rgba(${lightModal.join(',')}, 0.5)`,
+        '--glass-border-light': `rgba(${lightBorder.join(',')}, 0.3)`
+    };
+
+    Object.entries(vars).forEach(([key, val]) => root.style.setProperty(key, val));
+    
+    broadcastThemeVariables(vars);
+}
+
+function broadcastThemeVariables(variables) {
+    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    iframes.forEach(iframe => {
+        if (iframe.contentWindow) {
+            const targetOrigin = getOriginFromUrl(iframe.src);
+            iframe.contentWindow.postMessage({
+                type: 'themeVariablesUpdate',
+                variables: variables
+            }, targetOrigin);
+        }
+    });
+}
+
 // Add 12/24 hour format functionality
 let use12HourFormat = localStorage.getItem('use12HourFormat') === 'true'; // Default to 24-hour format if not set
 
