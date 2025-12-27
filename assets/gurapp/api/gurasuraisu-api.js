@@ -1085,6 +1085,25 @@ window.addEventListener('message', async (event) => {
             feBlend.setAttribute('mode', data.theme === 'light' ? 'lighten' : 'darken');
         }
         break;
+      case 'themeVariablesUpdate':
+        if (data.variables) {
+            // Apply overrides
+            Object.entries(data.variables).forEach(([key, val]) => {
+                document.documentElement.style.setProperty(key, val);
+            });
+        } else {
+            // Reset to defaults (remove overrides)
+            const varsToRemove = [
+                '--background-color-dark', '--background-color-dark-tr',
+                '--modal-background-dark', '--search-background-dark',
+                '--glass-border-dark',
+                '--background-color-light', '--background-color-light-tr',
+                '--modal-background-light', '--search-background-light',
+                '--glass-border-light'
+            ];
+            varsToRemove.forEach(v => document.documentElement.style.removeProperty(v));
+        }
+        break;
       case 'animationsUpdate':
         document.body.classList.toggle('reduce-animations', !data.enabled);
         break;
