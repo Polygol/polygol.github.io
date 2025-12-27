@@ -6,8 +6,17 @@ const WAVES_CONFIG = {
         'wss://tracker.openwebtorrent.com',
         'wss://tracker.btorrent.xyz',
         'wss://tracker.webtorrent.dev',
-        'wss://tracker.files.fm:7073/announce'
-    ]
+        'wss://tracker.files.fm:7073/announce',
+        'wss://tracker.sloppyta.co:443/announce',
+        'wss://tracker.novage.com.ua:443/announce',
+        'wss://tracker.nanoha.org:443/announce'
+    ],
+    rtcConfig: {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' }
+        ]
+    }
 };
 const EMOJIS = [
     '🍕','🚀','🦄','🎈','🌵','🎸','🍦','💎','🔥','🌈','📷','🔔',
