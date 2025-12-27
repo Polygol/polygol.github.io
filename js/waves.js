@@ -444,8 +444,8 @@ async function handleRemoteCommand(payload, peerId) {
                 pushFullState(peerId);
                 getApps(peerId);
                 pushWallpaperUpdate(peerId);
-                break;
             }, 1000);
+        break;
             
         case 'getApps':
             getApps(peerId);
