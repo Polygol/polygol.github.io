@@ -8299,7 +8299,8 @@ async function removeWallpaper(index) {
     if (index === currentWallpaperPosition) {
         currentWallpaperPosition = Math.max(0, currentWallpaperPosition - 1);
         saveCurrentPosition();
-        switchWallpaper("none");
+        // FIX: Pass true to skip saving widgets, as activeWidgets currently holds data for the DELETED wallpaper
+        switchWallpaper("none", true);
     } else if (index < currentWallpaperPosition) {
         currentWallpaperPosition--;
         saveCurrentPosition();
@@ -8613,11 +8614,14 @@ function checkWallpaperState() {
   }
 }
 
-function switchWallpaper(direction) {
+function switchWallpaper(direction, skipSave = false) {
     if (recentWallpapers.length === 0) return;
 
     // Save the layout of the current (outgoing) wallpaper
-    saveWidgets();
+    // Only save if we aren't deleting the current wallpaper
+    if (!skipSave) {
+        saveWidgets();
+    }
     
     // Calculate new position
     let newPosition = currentWallpaperPosition;
