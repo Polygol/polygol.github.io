@@ -3581,7 +3581,7 @@ function updateTitle() {
               const { title, artist } = session.metadata;
               // Simple check to ensure we don't show "Unknown - Unknown" if empty
               if (title && title !== 'Unknown Title') {
-                  titlePrefix = `${title} • ${artist || ''} | `;
+                  titlePrefix = `${title} | `;
               }
           }
       }
@@ -3645,7 +3645,7 @@ function createShapedFavicon(source, shape) {
                 ctx.arc(size/2, size/2, size/2, 0, Math.PI*2);
             } else if (shape === 'square') {
                 // Rounded square (50% radius)
-                const x = 0, y = 0, w = size, h = size, r = size * 0.5;
+                const x = 0, y = 0, w = size, h = size, r = size * 0.25;
                 ctx.moveTo(x+r, y);
                 ctx.arcTo(x+w, y, x+w, y+h, r);
                 ctx.arcTo(x+w, y+h, x, y+h, r);
