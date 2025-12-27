@@ -78,6 +78,7 @@ function initWavesHost() {
 
     let state = getWavesHostState();
     
+    // Generate persistent credentials if missing
     if (!state) {
         state = { 
             roomId: generatePairingCode(), 
@@ -101,7 +102,7 @@ function initWavesHost() {
         // 1. Handle Incoming Messages
         wavesOnData((payload, peerId) => {
             if (payload.type === 'hello') {
-                // REJECT connections without a profile
+                // Reject connections without a profile
                 if (!payload.profile || !payload.profile.name) {
                     console.warn(`[Waves] Rejected connection from ${peerId}: Missing profile`);
                     wavesSend({ type: 'auth_failed', reason: 'profile_missing' }, peerId);
@@ -114,39 +115,31 @@ function initWavesHost() {
                     registerPeer(peerId, payload.profile);
                     wavesSend({ type: 'welcome', deviceName: state.deviceName }, peerId);
                     
-                    // FIX: Unicast the state specifically to THIS peer immediately.
-                    // Do not rely on broadcast here, as the peer might not be in the broadcast list yet.
+                    // UNICAST state push immediately to this peer
                     console.log(`[Waves] Authorized ${payload.profile.name} (${peerId}). Pushing initial state...`);
-                    
                     setTimeout(() => {
                         pushFullState(peerId);
                         pushWallpaperUpdate(peerId);
-                        pushWidgetUpdate(null, peerId); // Send widgets too if available
-                    }, 300); // Small delay to ensure client listeners are bound
+                        pushWidgetUpdate(null, peerId); 
+                    }, 300);
                 } else if (isDiscoveryActive) {
                     // NEW DEVICE: Start Emoji Auth
                     startEmojiAuth(peerId, payload.profile);
                 } else {
                     wavesSend({ type: 'discovery_disabled' }, peerId);
                 }
+                return;
             }
-            else if (payload.auth === state.psk) {
-                // 1. ALWAYS update/refresh the peer profile/timestamp if provided
-                // This ensures the UI stays populated and "online"
+            
+            // Standard Command Handling
+            if (payload.auth === state.psk) {
                 if (payload.profile) {
                     registerPeer(peerId, payload.profile);
                 } 
-                // Refresh timestamp on any command
-                else if (connectedPeers[peerId]) {
-                    connectedPeers[peerId].connectedAt = Date.now();
-                }
-                
-                // Fallback: If we don't know this peer yet and no profile sent, register as unknown
-                if (!connectedPeers[peerId]) {
+                else if (!connectedPeers[peerId]) {
                     registerPeer(peerId, null);
                 }
         
-                // 2. Handle the specific command
                 handleRemoteCommand(payload, peerId);
             } 
             else if (payload.type === 'verify') {
@@ -154,7 +147,6 @@ function initWavesHost() {
             }
         });
 
-        // 2. Handle Disconnects (Removes Icon)
         wavesRoom.onPeerLeave(peerId => {
             if (connectedPeers[peerId]) {
                 console.log(`[Waves] Peer disconnected: ${peerId}`);
@@ -439,13 +431,12 @@ async function handleRemoteCommand(payload, peerId) {
             break;
 
         case 'getState':
-            console.log("[Waves] Initializing Waves State Sync...");
-            setTimeout(() => {
-                pushFullState(peerId);
-                getApps(peerId);
-                pushWallpaperUpdate(peerId);
-            }, 1000);
-        break;
+            // Explicit request: Unicast response
+            pushFullState(peerId);
+            getApps(peerId);
+            pushWallpaperUpdate(peerId);
+            pushWidgetUpdate(null, peerId);
+            break;
             
         case 'getApps':
             getApps(peerId);
