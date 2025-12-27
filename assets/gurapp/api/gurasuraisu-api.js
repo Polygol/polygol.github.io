@@ -1092,14 +1092,25 @@ window.addEventListener('message', async (event) => {
                 document.documentElement.style.setProperty(key, val);
             });
         } else {
-            // Reset to defaults (remove overrides)
+            // Reset to defaults by removing inline styles
+            // We iterate through a known list of tintable vars to be safe, 
+            // or we could track what we set. Here we use the standard list.
             const varsToRemove = [
                 '--background-color-dark', '--background-color-dark-tr',
-                '--modal-background-dark', '--search-background-dark',
-                '--glass-border-dark',
+                '--modal-background-dark', '--modal-transparent-dark',
+                '--search-background-dark', '--dark-overlay', '--dark-transparent', '--glass-border-dark',
+                
                 '--background-color-light', '--background-color-light-tr',
-                '--modal-background-light', '--search-background-light',
-                '--glass-border-light'
+                '--modal-background-light', '--modal-transparent-light',
+                '--search-background-light', '--light-overlay', '--light-transparent', '--glass-border-light',
+
+                '--background-color-dark-highcontrast', '--background-color-dark-tr-highcontrast',
+                '--modal-background-dark-highcontrast', '--modal-transparent-dark-highcontrast',
+                '--search-background-dark-highcontrast', '--dark-overlay-highcontrast', '--dark-transparent-highcontrast',
+                
+                '--background-color-light-highcontrast', '--background-color-light-tr-highcontrast',
+                '--modal-background-light-highcontrast', '--modal-transparent-light-highcontrast',
+                '--search-background-light-highcontrast', '--light-overlay-highcontrast', '--light-transparent-highcontrast'
             ];
             varsToRemove.forEach(v => document.documentElement.style.removeProperty(v));
         }
