@@ -2622,7 +2622,7 @@ function applySystemTint() {
         '--search-background-dark-highcontrast': 0.25,
         '--dark-overlay-highcontrast': 0.8,
         '--text-color-dark-highcontrast': 0.3,
-        '--secondary-text-color-dark-highcontrast': 0.3,
+        '--secondary-text-color-dark-highcontrast': 0.5,
         
         '--background-color-light-highcontrast': 0.25,
         '--background-color-light-tr-highcontrast': 0.25,
@@ -2631,7 +2631,7 @@ function applySystemTint() {
         '--search-background-light-highcontrast': 0.25,
         '--light-overlay-highcontrast': 0.8,
         '--text-color-light-highcontrast': 0.3,
-        '--secondary-text-color-light-highcontrast': 0.3
+        '--secondary-text-color-light-highcontrast': 0.5
     };
 
     // 1. Always clear existing overrides first to read the true CSS values
