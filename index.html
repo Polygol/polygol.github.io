@@ -40,6 +40,8 @@
     <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js"></script>
     <script src="js/waves.js" defer></script>
     <script>
+        // Boot
+        
         (async function() {
             const urlParams = new URLSearchParams(window.location.search);
             const bootState = urlParams.get('s');
@@ -179,6 +181,20 @@
                 // Do not suppress default browser error handler
             }
         };
+
+        if ('locks' in navigator) {
+            navigator.locks.request('polygol_instance', { ifAvailable: true }, async (lock) => {
+                if (!lock) {
+                    // Lock is held by another tab. Stop execution and show error.
+                    document.documentElement.innerHTML = '';
+                    document.body.style.cssText = "margin:0;padding:0;display:flex;height:100vh;justify-content:center;align-items:center;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;";
+                    document.body.innerHTML = "<div style='text-align:center;'><h1>Polygol is running</h1><p>Please use the existing tab.</p></div>";
+                    throw new Error("Polygol is already running in another tab.");
+                }
+                // Hold the lock for the lifetime of this tab
+                return new Promise(() => {}); 
+            });
+        }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
