@@ -10271,13 +10271,6 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 	            embedContainer.style.opacity = '0';
 	        }
 			
-			if (window.WavesHost) {
-                const appName = embedContainer.querySelector('iframe')?.dataset.appId;
-                if (appName && window.activeAppUI && window.activeAppUI.appName === appName) {
-    			    window.WavesHost.clearAppUI(); 
-                }
-			}
-			
             const cleanupDelay = animate ? 300 : 0;
 
 			minimizeCleanupTimeout = setTimeout(() => {
