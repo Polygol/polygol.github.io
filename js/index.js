@@ -2542,72 +2542,109 @@ function promptToInstallPWA() {
 // --- Color Tinting Logic ---
 let tintEnabled = localStorage.getItem('tintEnabled') === 'true';
 
+// Helper to mix two RGB arrays with a weight (0.0 to 1.0)
 function mixColors(base, tint, weight) {
-    const t = tint || [128, 128, 128]; // Fallback
-    const r = Math.round(base[0] * (1 - weight) + t[0] * weight);
-    const g = Math.round(base[1] * (1 - weight) + t[1] * weight);
-    const b = Math.round(base[2] * (1 - weight) + t[2] * weight);
+    if (!tint) return base;
+    const r = Math.round(base[0] * (1 - weight) + tint[0] * weight);
+    const g = Math.round(base[1] * (1 - weight) + tint[1] * weight);
+    const b = Math.round(base[2] * (1 - weight) + tint[2] * weight);
     return [r, g, b];
 }
 
 function applySystemTint() {
     const root = document.documentElement;
-    const wallpaperColor = window.activeWallpaperColor; // [r, g, b]
+    const wallpaperColor = window.activeWallpaperColor; // Expected: {r, g, b} or [r, g, b]
 
-    if (!tintEnabled || !wallpaperColor) {
-        // Reset to defaults (remove inline styles so CSS takes over)
-        const varsToRemove = [
-            '--background-color-dark', '--background-color-dark-tr',
-            '--modal-background-dark', '--search-background-dark',
-            '--glass-border-dark',
-            '--background-color-light', '--background-color-light-tr',
-            '--modal-background-light', '--search-background-light',
-            '--glass-border-light'
-        ];
-        varsToRemove.forEach(v => root.style.removeProperty(v));
-        broadcastThemeVariables(null); // Null triggers reset in apps
+    // Convert object to array if necessary
+    let tintColor = null;
+    if (wallpaperColor) {
+        tintColor = Array.isArray(wallpaperColor) 
+            ? wallpaperColor 
+            : [wallpaperColor.r, wallpaperColor.g, wallpaperColor.b];
+    }
+
+    // List of variables to reset if tinting is disabled
+    const allTintableVars = [
+        '--background-color-dark', '--background-color-dark-tr',
+        '--modal-background-dark', '--modal-transparent-dark',
+        '--search-background-dark', '--dark-overlay', '--dark-transparent', '--glass-border-dark',
+        
+        '--background-color-light', '--background-color-light-tr',
+        '--modal-background-light', '--modal-transparent-light',
+        '--search-background-light', '--light-overlay', '--light-transparent', '--glass-border-light',
+        
+        '--background-color-dark-highcontrast', '--background-color-dark-tr-highcontrast',
+        '--modal-background-dark-highcontrast', '--modal-transparent-dark-highcontrast',
+        '--search-background-dark-highcontrast', '--dark-overlay-highcontrast', '--dark-transparent-highcontrast',
+        
+        '--background-color-light-highcontrast', '--background-color-light-tr-highcontrast',
+        '--modal-background-light-highcontrast', '--modal-transparent-light-highcontrast',
+        '--search-background-light-highcontrast', '--light-overlay-highcontrast', '--light-transparent-highcontrast'
+    ];
+
+    if (!tintEnabled || !tintColor) {
+        // Reset to CSS defaults by removing inline styles
+        allTintableVars.forEach(v => root.style.removeProperty(v));
+        broadcastThemeVariables(null); // Signal apps to reset
         return;
     }
 
-    // Define Base Colors (Matches CSS defaults)
-    const baseDark = [28, 28, 28]; // #1c1c1c
-    const baseLight = [240, 240, 240]; // #f0f0f0
-    const baseModalDark = [51, 51, 51];
-    const baseModalLight = [220, 220, 220];
-    const baseBorderDark = [100, 100, 100];
-    const baseBorderLight = [200, 200, 200];
+    // Configuration for Base Colors (RGB) and Opacity (Alpha)
+    // These match the defaults in styles(25).css
+    const config = {
+        // Dark Mode
+        '--background-color-dark': { base: [28, 28, 28], alpha: 1, weight: 0.1 },
+        '--background-color-dark-tr': { base: [28, 28, 28], alpha: 0.7, weight: 0.1 },
+        '--modal-background-dark': { base: [51, 51, 51], alpha: 0.8, weight: 0.1 },
+        '--modal-transparent-dark': { base: [51, 51, 51], alpha: 0.7, weight: 0.1 },
+        '--search-background-dark': { base: [51, 51, 51], alpha: 0.5, weight: 0.1 },
+        '--dark-overlay': { base: [51, 51, 51], alpha: 0.2, weight: 0.1 },
+        '--dark-transparent': { base: [255, 255, 255], alpha: 0.1, weight: 0.2 }, // Tint white transparents slightly more
+        '--glass-border-dark': { base: [100, 100, 100], alpha: 0.2, weight: 0.3 }, // Borders take more color
 
-    // Calculate Tints (Weight determines strength of tint)
-    const tintWeightDark = 0.15;
-    const tintWeightLight = 0.08;
+        // Light Mode
+        '--background-color-light': { base: [240, 240, 240], alpha: 1, weight: 0.05 },
+        '--background-color-light-tr': { base: [240, 240, 240], alpha: 0.7, weight: 0.05 },
+        '--modal-background-light': { base: [220, 220, 220], alpha: 0.8, weight: 0.05 },
+        '--modal-transparent-light': { base: [240, 240, 240], alpha: 0.7, weight: 0.05 },
+        '--search-background-light': { base: [220, 220, 220], alpha: 0.5, weight: 0.05 },
+        '--light-overlay': { base: [220, 220, 220], alpha: 0.2, weight: 0.05 },
+        '--light-transparent': { base: [255, 255, 255], alpha: 0.1, weight: 0.1 },
+        '--glass-border-light': { base: [200, 200, 200], alpha: 0.2, weight: 0.3 },
 
-    const darkBg = mixColors(baseDark, wallpaperColor, tintWeightDark);
-    const lightBg = mixColors(baseLight, wallpaperColor, tintWeightLight);
-    
-    const darkModal = mixColors(baseModalDark, wallpaperColor, tintWeightDark);
-    const lightModal = mixColors(baseModalLight, wallpaperColor, tintWeightLight);
-    
-    const darkBorder = mixColors(baseBorderDark, wallpaperColor, 0.3);
-    const lightBorder = mixColors(baseBorderLight, wallpaperColor, 0.3);
+        // High Contrast Dark
+        '--background-color-dark-highcontrast': { base: [28, 28, 28], alpha: 1, weight: 0.05 },
+        '--background-color-dark-tr-highcontrast': { base: [28, 28, 28], alpha: 1, weight: 0.05 },
+        '--modal-background-dark-highcontrast': { base: [51, 51, 51], alpha: 1, weight: 0.05 },
+        '--modal-transparent-dark-highcontrast': { base: [51, 51, 51], alpha: 1, weight: 0.05 },
+        '--search-background-dark-highcontrast': { base: [51, 51, 51], alpha: 1, weight: 0.05 },
+        '--dark-overlay-highcontrast': { base: [28, 28, 28], alpha: 1, weight: 0.05 },
+        '--dark-transparent-highcontrast': { base: [0, 0, 0], alpha: 1, weight: 0 }, // Keep pure black
 
-    // Apply variables
-    const vars = {
-        '--background-color-dark': `rgb(${darkBg.join(',')})`,
-        '--background-color-dark-tr': `rgba(${darkBg.join(',')}, 0.7)`,
-        '--modal-background-dark': `rgba(${darkModal.join(',')}, 0.8)`,
-        '--search-background-dark': `rgba(${darkModal.join(',')}, 0.5)`,
-        '--glass-border-dark': `rgba(${darkBorder.join(',')}, 0.3)`, // Increased alpha for visibility
-        
-        '--background-color-light': `rgb(${lightBg.join(',')})`,
-        '--background-color-light-tr': `rgba(${lightBg.join(',')}, 0.7)`,
-        '--modal-background-light': `rgba(${lightModal.join(',')}, 0.8)`,
-        '--search-background-light': `rgba(${lightModal.join(',')}, 0.5)`,
-        '--glass-border-light': `rgba(${lightBorder.join(',')}, 0.3)`
+        // High Contrast Light
+        '--background-color-light-highcontrast': { base: [240, 240, 240], alpha: 1, weight: 0.05 },
+        '--background-color-light-tr-highcontrast': { base: [240, 240, 240], alpha: 1, weight: 0.05 },
+        '--modal-background-light-highcontrast': { base: [220, 220, 220], alpha: 1, weight: 0.05 },
+        '--modal-transparent-light-highcontrast': { base: [240, 240, 240], alpha: 1, weight: 0.05 },
+        '--search-background-light-highcontrast': { base: [220, 220, 220], alpha: 1, weight: 0.05 },
+        '--light-overlay-highcontrast': { base: [240, 240, 240], alpha: 1, weight: 0.05 },
+        '--light-transparent-highcontrast': { base: [255, 255, 255], alpha: 1, weight: 0 } // Keep pure white
     };
 
-    Object.entries(vars).forEach(([key, val]) => root.style.setProperty(key, val));
-    
-    broadcastThemeVariables(vars);
+    const computedVars = {};
+
+    Object.entries(config).forEach(([key, settings]) => {
+        const mixed = mixColors(settings.base, tintColor, settings.weight);
+        const val = `rgba(${mixed[0]}, ${mixed[1]}, ${mixed[2]}, ${settings.alpha})`;
+        
+        // Apply to Host
+        root.style.setProperty(key, val);
+        
+        // Save for Broadcast
+        computedVars[key] = val;
+    });
+
+    broadcastThemeVariables(computedVars);
 }
 
 function broadcastThemeVariables(variables) {
@@ -12105,6 +12142,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
+    const tintSwitch = document.getElementById('tint-colors-switch');
+    if (tintSwitch) {
+        tintSwitch.checked = tintEnabled;
+        tintSwitch.addEventListener('change', function() {
+            tintEnabled = this.checked;
+            localStorage.setItem('tintEnabled', tintEnabled);
+            broadcastSettingUpdate('tintEnabled', tintEnabled.toString());
+            applySystemTint();
+        });
+    }
+
 	const glassEffectsSwitch = document.getElementById('glass-effects-switch');
 	if (glassEffectsSwitch) {
 	    glassEffectsSwitch.checked = glassEffectsEnabled;
@@ -13697,6 +13745,7 @@ const controlIdMap = {
     'wallpaperBrightness': 'wallpaper-brightness-slider',
     'wallpaperContrast': 'wallpaper-contrast-slider',
 	'glassEffectsEnabled': 'glass-effects-switch',
+	'tintEnabled': 'tint-colors-switch';
     'showWeather': 'weather-switch',
     'page_brightness': 'brightness-control',
     'display_temperature': 'thermostat-control',
