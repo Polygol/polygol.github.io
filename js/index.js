@@ -13168,6 +13168,7 @@ function showMediaWidget(metadata) {
     // Use a timeout to allow the display property to apply before animating opacity/transform
     setTimeout(() => {
         widget.style.opacity = '1';
+        widget.style.height = '';
         widget.style.transform = 'scale(1)';
     }, 10);
 }
