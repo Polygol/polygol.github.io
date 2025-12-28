@@ -258,6 +258,10 @@ body.high-contrast .persistent-clock {
 	color: var(--text-color);
 }
 
+body.high-contrast #status-indicator .material-symbols-rounded {
+	color: var(--text-color);
+}
+
 body.high-contrast .status-dot {
 	background-color: var(--text-color);
 }
