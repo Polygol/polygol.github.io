@@ -1648,6 +1648,14 @@ body.one-button-nav-active .dock.show {
     flex-grow: 1;
 }
 
+body.high-contrast #media-widget-progress-bar {
+	background-color: var(--background-color);
+}
+
+body.high-contrast #media-widget-progress {
+	background-color: var(--background-color-tr-op);
+}
+
 #media-widget-progress {
     width: 0%;
     height: 100%;
