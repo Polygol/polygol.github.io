@@ -47,25 +47,23 @@ window.SoundManager = SoundManager; // Expose to global scope for API access
 
 // --- Performance Auto-Detection ---
 function detectPerformanceProfile() {
-    // Only run once per device install to establish baseline
     if (localStorage.getItem('performanceConfigured') === 'true') return;
 
     console.log("[System] Assessing hardware performance...");
     let score = 0;
     
-    // 1. CPU Cores (Weight: 3)
-    // Most modern mobiles have 8 cores, laptops 4-8+. 
+    // 1. CPU Cores
     const cores = navigator.hardwareConcurrency || 4;
     if (cores >= 8) score += 3;
     else if (cores >= 6) score += 2;
     else if (cores >= 4) score += 1;
     
-    // 2. Memory (Weight: 2) - API available in Chromium-based browsers
+    // 2. Memory
     const ram = navigator.deviceMemory || 4; 
     if (ram >= 8) score += 2;
     else if (ram >= 4) score += 1;
     
-    // 3. GPU/Renderer Check (Weight: 1)
+    // 3. GPU Check
     let isWeakGPU = false;
     try {
         const canvas = document.createElement('canvas');
@@ -74,8 +72,7 @@ function detectPerformanceProfile() {
             const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
             if (debugInfo) {
                 const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL).toLowerCase();
-                // Check for software renderers or older mobile chips known to struggle with backdrop-filter
-                if (renderer.includes('llvm') || renderer.includes('swiftshader') || renderer.includes('mali-400') || renderer.includes('adreno 3')) {
+                if (renderer.includes('llvm') || renderer.includes('swiftshader') || renderer.includes('mali') || renderer.includes('adreno')) {
                     isWeakGPU = true;
                 }
             }
@@ -86,28 +83,33 @@ function detectPerformanceProfile() {
 
     console.log(`[System] Performance Score: ${score}/6`);
 
-    // Decision Logic
-    // Score <= 3: Low/Mid End -> Disable expensive glass effects
-    // Score <= 2: Low End -> Disable animations
+    // Revised Decision Logic
     
-    if (score <= 3 || isWeakGPU) {
-        console.log("[System] Performance limits detected. Optimizing defaults.");
-        
-        // Disable Glass (Heavy GPU usage due to backdrop-filter)
+    // 1. Dynamic Glass (SVG Filters are extremely heavy)
+    // Disable on anything that isn't top-tier (Score < 5) to ensure 60fps
+    if (score < 5 || isWeakGPU) {
         if (localStorage.getItem('glassEffectsEnabled') === null) {
+            console.log("[System] Disabling Glass Effects for performance.");
             localStorage.setItem('glassEffectsEnabled', 'false');
         }
+    } else {
+        if (localStorage.getItem('glassEffectsEnabled') === null) localStorage.setItem('glassEffectsEnabled', 'true');
+    }
+
+    // 2. Low End Optimizations (Score <= 2)
+    if (score <= 2) {
+        console.log("[System] Low-end device detected. Maximizing performance.");
         
-        // Disable Motion (Compositing cost) if score is very low
-        if (score <= 2 && localStorage.getItem('animationsEnabled') === null) {
+        // Enable High Contrast (Removes all backdrop-filters entirely)
+        if (localStorage.getItem('highContrast') === null) {
+            localStorage.setItem('highContrast', 'true');
+        }
+        
+        // Disable Animations
+        if (localStorage.getItem('animationsEnabled') === null) {
             localStorage.setItem('animationsEnabled', 'false');
         }
-
-        // Note: We do not automatically enable High Contrast as it drastically changes the aesthetic,
-        // but disabling glass/motion covers 90% of performance issues.
     } else {
-        // High End: Enable fancy features by default
-        if (localStorage.getItem('glassEffectsEnabled') === null) localStorage.setItem('glassEffectsEnabled', 'true');
         if (localStorage.getItem('animationsEnabled') === null) localStorage.setItem('animationsEnabled', 'true');
     }
 
