@@ -906,7 +906,7 @@ body.one-button-nav-active .dock.show {
 
 .info.glass-effect .date,
 .clock.glass-effect > * {
-    color: var(--background-color-tr-op) !important;
+    color: var(--accent) !important;
     background: none !important; /* Ensure no other backgrounds interfere */
 
     -webkit-mask-image: linear-gradient(black, black);
