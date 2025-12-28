@@ -2600,7 +2600,8 @@ function applySystemTint() {
         '--dark-transparent': 0.2,
         '--glass-border-dark': 0.2,
         '--text-color-dark': 0.1,
-        '--secondary-text-color-dark': 0.3,
+        '--secondary-text-color-dark': 0.1,
+        '--accent-dark': 0.5,
 
         // Light Mode
         '--background-color-light': 0.15,
@@ -2612,7 +2613,8 @@ function applySystemTint() {
         '--light-transparent': 0.2,
         '--glass-border-light': 0.2,
         '--text-color-light': 0.1,
-        '--secondary-text-color-light': 0.3,
+        '--secondary-text-color-light': 0.1,
+        '--accent-light': 0.5,
 
         // High Contrast (Higher weights to maintain personality)
         '--background-color-dark-highcontrast': 0.25,
@@ -2622,7 +2624,8 @@ function applySystemTint() {
         '--search-background-dark-highcontrast': 0.25,
         '--dark-overlay-highcontrast': 0.8,
         '--text-color-dark-highcontrast': 0.3,
-        '--secondary-text-color-dark-highcontrast': 0.5,
+        '--secondary-text-color-dark-highcontrast': 0.3,
+        '--accent-dark-highcontrast': 0.6,
         
         '--background-color-light-highcontrast': 0.25,
         '--background-color-light-tr-highcontrast': 0.25,
@@ -2631,7 +2634,8 @@ function applySystemTint() {
         '--search-background-light-highcontrast': 0.25,
         '--light-overlay-highcontrast': 0.8,
         '--text-color-light-highcontrast': 0.3,
-        '--secondary-text-color-light-highcontrast': 0.5
+        '--secondary-text-color-light-highcontrast': 0.3,
+	    '--accent-light-highcontrast': 0.6
     };
 
     // 1. Always clear existing overrides first to read the true CSS values
