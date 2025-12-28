@@ -130,6 +130,7 @@
     --background-color-dark-tr: rgba(28, 28, 28, 0.7);
     --text-color-dark: #f9f9f9;
     --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
+    --accent-dark: rgba(255, 255, 255, 0.7);
     --modal-background-dark: rgba(51, 51, 51, 0.8);
     --modal-transparent-dark: rgba(51, 51, 51, 0.7);
     --search-background-dark: rgba(51, 51, 51, 0.5);
@@ -142,6 +143,7 @@
 	--background-color-light-tr: rgba(240, 240, 240, 0.7);
     --text-color-light: #333333;
     --secondary-text-color-light: rgba(0, 0, 0, 0.7);
+    --accent-light: rgba(0, 0, 0, 0.7);
     --modal-background-light: rgba(220, 220, 220, 0.8);
     --modal-transparent-light: rgba(240, 240, 240, 0.7);
     --search-background-light: rgba(220, 220, 220, 0.5);
@@ -154,6 +156,7 @@
     --background-color-dark-tr-highcontrast: #1c1c1c;
     --text-color-dark-highcontrast: #f9f9f9;
     --secondary-text-color-dark-highcontrast: #b3b3b3;
+    --accent-dark-highcontrast: #b3b3b3;
     --modal-background-dark-highcontrast: #333333;
     --modal-transparent-dark-highcontrast: #333333;
     --search-background-dark-highcontrast: #333333;
@@ -165,6 +168,7 @@
     --background-color-light-tr-highcontrast: #f0f0f0;
     --text-color-light-highcontrast: #333333;
     --secondary-text-color-light-highcontrast: #4d4d4d;
+    --accent-light-highcontrast: #4d4d4d;
     --modal-background-light-highcontrast: #dcdcdc;
     --modal-transparent-light-highcontrast: #f0f0f0;
     --search-background-light-highcontrast: #dcdcdc;
@@ -180,6 +184,7 @@
     --background-color-tr-op: var(--background-color-light-tr);
     --text-color: var(--text-color-dark);
     --secondary-text-color: var(--secondary-text-color-dark);
+    --accent: var(--accent-dark);
     --modal-background: var(--modal-background-dark);
     --modal-transparent: var(--modal-transparent-dark);
     --search-background: var(--search-background-dark);
@@ -196,6 +201,7 @@ body.light-theme {
     --background-color-tr-op: var(--background-color-dark-tr);
     --text-color: var(--text-color-light);
     --secondary-text-color: var(--secondary-text-color-light);
+    --accent: var(--accent-light);
     --modal-background: var(--modal-background-light);
     --modal-transparent: var(--modal-transparent-light);
     --search-background: var(--search-background-light);
@@ -212,6 +218,7 @@ body.high-contrast:not(.light-theme) {
     --background-color-tr: var(--background-color-dark-tr-highcontrast);
     --background-color-tr-op: var(--background-color-light-tr-highcontrast);
     --secondary-text-color: var(--secondary-text-color-dark-highcontrast);
+    --accent: var(--accent-dark-highcontrast);
     --modal-background: var(--modal-background-dark-highcontrast);
     --modal-transparent: var(--modal-transparent-dark-highcontrast);
     --search-background: var(--search-background-dark-highcontrast);
@@ -219,7 +226,7 @@ body.high-contrast:not(.light-theme) {
     --overlay-color: var(--dark-overlay-highcontrast);
     --overlay-color-op: var(--light-overlay-highcontrast);
     --transparent-color: var(--dark-transparent-highcontrast);
-    --glass-border: var(--secondary-text-color-dark-highcontrast);
+    --glass-border: var(--accent-dark-highcontrast);
 }
 
 /* For light theme with high contrast */
@@ -227,6 +234,7 @@ body.high-contrast.light-theme {
     --background-color-tr: var(--background-color-light-tr-highcontrast);
     --background-color-tr-op: var(--background-color-dark-tr-highcontrast);
     --secondary-text-color: var(--secondary-text-color-light-highcontrast);
+    --accent: var(--accent-light-highcontrast);
     --modal-background: var(--modal-background-light-highcontrast);
     --modal-transparent: var(--modal-transparent-light-highcontrast);
     --search-background: var(--search-background-light-highcontrast);
@@ -234,7 +242,7 @@ body.high-contrast.light-theme {
     --overlay-color: var(--light-overlay-highcontrast);
     --overlay-color-op: var(--dark-overlay-highcontrast);
     --transparent-color: var(--light-transparent-highcontrast);
-    --glass-border: var(--secondary-text-color-light-highcontrast);
+    --glass-border: var(--accent-light-highcontrast);
 }
 
 /* Universal backdrop-filter removal for high contrast */
@@ -1337,7 +1345,7 @@ body.one-button-nav-active .dock.show {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: var(--secondary-text-color);
+    background: var(--accent);
     cursor: pointer;
     border: 1px solid var(--glass-border);
     transition: width 0.3s, height 0.3s, transform 0.3s;
@@ -1353,7 +1361,7 @@ body.one-button-nav-active .dock.show {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: var(--secondary-text-color);
+    background: var(--accent);
     cursor: pointer;
     border: 1px solid var(--glass-border);
     transition: width 0.3s, height 0.3s, transform 0.3s;
@@ -1438,7 +1446,7 @@ body.one-button-nav-active .dock.show {
 }
 
 .setting-item.active .setting-icon-bg {
-     background-color: var(--secondary-text-color);
+     background-color: var(--accent);
      color: var(--background-color);
      border-radius: 35px;
      corner-shape: superellipse(1.5);
@@ -1643,7 +1651,7 @@ body.one-button-nav-active .dock.show {
 #media-widget-progress {
     width: 0%;
     height: 100%;
-    background-color: var(--secondary-text-color);
+    background-color: var(--accent);
     border-radius: 6px;
     transition: width 0.2s ease; /* Smooth transition for progress */
 }
@@ -1716,7 +1724,7 @@ body.one-button-nav-active .dock.show {
 }
 
 .qcontrol-item.active {
-    background-color: var(--secondary-text-color);
+    background-color: var(--accent);
     color: var(--background-color);
     border-radius: 35px !important;
     corner-shape: superellipse(1.5);
@@ -1882,7 +1890,7 @@ body.one-button-nav-active .dock.show {
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: var(--secondary-text-color);
+    background: var(--accent);
     cursor: pointer;
     border: 1px solid var(--glass-border);
     transition: width 0.3s, height 0.3s, transform 0.3s;
@@ -1898,7 +1906,7 @@ body.one-button-nav-active .dock.show {
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: var(--secondary-text-color);
+    background: var(--accent);
     cursor: pointer;
     border: 1px solid var(--glass-border);
     transition: width 0.3s, height 0.3s, transform 0.3s;
@@ -1960,7 +1968,7 @@ input[type="checkbox"]::before {
     position: absolute;
     width: 20px;
     height: 20px;
-    background-color: var(--secondary-text-color);
+    background-color: var(--accent);
     border-radius: 50%;
     top: 50%;
     left: 6.5px;
@@ -1972,7 +1980,7 @@ input[type="checkbox"]::before {
 }
 
 input[type="checkbox"]:checked {
-    background-color: var(--secondary-text-color);
+    background-color: var(--accent);
 }
 
 input[type="checkbox"]:checked::before {
@@ -2047,7 +2055,7 @@ input[type="checkbox"]:checked::before {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: var(--secondary-text-color);
+    background: var(--accent);
     cursor: pointer;
     border: 1px solid var(--glass-border);
     transition: width 0.3s, height 0.3s, transform 0.3s;
@@ -2063,7 +2071,7 @@ input[type="checkbox"]:checked::before {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: var(--secondary-text-color);
+    background: var(--accent);
     cursor: pointer;
     border: 1px solid var(--glass-border);
     transition: width 0.3s, height 0.3s, transform 0.3s;
@@ -2527,7 +2535,7 @@ input[type="checkbox"]:checked::before {
 
         .setup-option.selected {
 		    border-color: var(--text-color);
-		    background-color: var(--secondary-text-color);
+		    background-color: var(--accent);
 		    color: var(--background-color);
 		    corner-shape: superellipse(1.5);
 		}
