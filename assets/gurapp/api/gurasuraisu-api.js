@@ -393,7 +393,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         }
         
         input[type="checkbox"]:checked::before {
-            background-color: var(--overlay-color-op);
+            background-color: var(--tonal);
             transform: translateY(-50%);
             width: 46px;
             height: 40px;
