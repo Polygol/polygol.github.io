@@ -575,9 +575,58 @@ async function extractWallpaperColor(imageSource) {
         img.onload = () => {
             try {
                 const colorThief = new ColorThief();
-                // Get palette and pick the most vibrant/dominant one
-                const color = colorThief.getColor(img); 
-                resolve(color); // Returns [r, g, b]
+                // Get a palette of 10 colors
+                const palette = colorThief.getPalette(img, 10);
+                
+                if (!palette || palette.length === 0) {
+                    resolve(null);
+                    return;
+                }
+
+                // Analyze palette
+                const scored = palette.map(rgb => {
+                    const hsl = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+                    return {
+                        rgb: rgb,
+                        hsl: hsl,
+                        saturation: hsl[1]
+                    };
+                });
+
+                // Filter for saturated colors (Saturation > 15%)
+                // This ignores dull grays unless the whole image is gray
+                let candidates = scored.filter(c => c.saturation > 0.15);
+                
+                // Fallback to original palette if no saturated colors found
+                if (candidates.length === 0) candidates = scored;
+
+                // Sort by Saturation (descending) to find the most vibrant color for Primary
+                candidates.sort((a, b) => b.saturation - a.saturation);
+
+                const primary = candidates[0].rgb;
+                let secondary = primary;
+
+                // Find a secondary color (for backgrounds)
+                // We prefer a different tone. Try to find one with a hue distance.
+                if (candidates.length > 1) {
+                    // Try to find a color with at least 30 degrees hue difference (0.08 in 0-1 scale)
+                    const pH = candidates[0].hsl[0];
+                    const distinct = candidates.find(c => Math.abs(c.hsl[0] - pH) > 0.08);
+                    
+                    if (distinct) {
+                        secondary = distinct.rgb;
+                    } else {
+                        // If no distinct hue, take the second most saturated
+                        secondary = candidates[1].rgb;
+                    }
+                }
+
+                // Return structured object
+                resolve({ 
+                    primary: { r: primary[0], g: primary[1], b: primary[2] },
+                    secondary: { r: secondary[0], g: secondary[1], b: secondary[2] }
+                });
+
             } catch (e) {
                 console.warn("Color extraction failed", e);
                 resolve(null);
@@ -2652,90 +2701,102 @@ function mixColors(base, tint, weight) {
 
 function applySystemTint() {
     const root = document.documentElement;
-    const wallpaperColor = window.activeWallpaperColor; // Expected: {r, g, b} or [r, g, b]
+    const wallpaperColors = window.activeWallpaperColor; // Now expects { primary, secondary }
 
-    // Convert object to standard format
-    let tintColor = null;
-    if (wallpaperColor) {
-        tintColor = Array.isArray(wallpaperColor) 
-            ? { r: wallpaperColor[0], g: wallpaperColor[1], b: wallpaperColor[2] } 
-            : wallpaperColor;
+    // Normalize input
+    let primaryTint = null;
+    let backgroundTint = null;
+
+    if (wallpaperColors) {
+        if (wallpaperColors.primary) {
+            // New Object Structure
+            primaryTint = wallpaperColors.primary;
+            backgroundTint = wallpaperColors.secondary || primaryTint;
+        } else if (Array.isArray(wallpaperColors)) {
+            // Legacy Array Structure
+            primaryTint = { r: wallpaperColors[0], g: wallpaperColors[1], b: wallpaperColors[2] };
+            backgroundTint = primaryTint;
+        } else {
+             // Legacy Object Structure?
+             primaryTint = wallpaperColors;
+             backgroundTint = wallpaperColors;
+        }
     }
 
     // Define variables to tint and their intensity weights
-    const tintWeights = {
-        // Dark Mode
-        '--background-color-dark': 0.15,
-        '--background-color-dark-tr': 0.15,
-        '--modal-background-dark': 0.15,
-        '--modal-transparent-dark': 0.15,
-        '--search-background-dark': 0.15,
-        '--dark-overlay': 0.15,
-        '--dark-transparent': 0.2,
-        '--glass-border-dark': 0.2,
-        '--text-color-dark': 0.1,
-        '--secondary-text-color-dark': 0.1,
-        '--accent-dark': 0.5,
+	const tintWeights = {
+	    '--background-color-dark': { w: 0.15, type: 'bg' },
+	    '--background-color-dark-tr': { w: 0.15, type: 'bg' },
+	    '--modal-background-dark': { w: 0.15, type: 'bg' },
+	    '--modal-transparent-dark': { w: 0.15, type: 'bg' },
+	    '--search-background-dark': { w: 0.15, type: 'primary' },
+	    '--dark-overlay': { w: 0.15, type: 'bg' },
+	    '--dark-transparent': { w: 0.2, type: 'bg' },
+	    '--glass-border-dark': { w: 0.2, type: 'primary' },
+	    '--text-color-dark': { w: 0.1, type: 'primary' },
+	    '--secondary-text-color-dark': { w: 0.1, type: 'primary' },
+	    '--accent-dark': { w: 0.5, type: 'primary' },
+	
+	    '--background-color-light': { w: 0.15, type: 'bg' },
+	    '--background-color-light-tr': { w: 0.15, type: 'bg' },
+	    '--modal-background-light': { w: 0.15, type: 'bg' },
+	    '--modal-transparent-light': { w: 0.15, type: 'bg' },
+	    '--search-background-light': { w: 0.15, type: 'primary' },
+	    '--light-overlay': { w: 0.15, type: 'bg' },
+	    '--light-transparent': { w: 0.2, type: 'bg' },
+	    '--glass-border-light': { w: 0.2, type: 'primary' },
+	    '--text-color-light': { w: 0.1, type: 'primary' },
+	    '--secondary-text-color-light': { w: 0.1, type: 'primary' },
+	    '--accent-light': { w: 0.5, type: 'primary' },
 
-        // Light Mode
-        '--background-color-light': 0.15,
-        '--background-color-light-tr': 0.15,
-        '--modal-background-light': 0.15,
-        '--modal-transparent-light': 0.15,
-        '--search-background-light': 0.15,
-        '--light-overlay': 0.15,
-        '--light-transparent': 0.2,
-        '--glass-border-light': 0.2,
-        '--text-color-light': 0.1,
-        '--secondary-text-color-light': 0.1,
-        '--accent-light': 0.5,
+	    '--background-color-dark-highcontrast': { w: 0.25, type: 'bg' },
+	    '--background-color-dark-tr-highcontrast': { w: 0.25, type: 'bg' },
+	    '--modal-background-dark-highcontrast': { w: 0.25, type: 'bg' },
+	    '--modal-transparent-dark-highcontrast': { w: 0.25, type: 'bg' },
+	    '--search-background-dark-highcontrast': { w: 0.25, type: 'primary' },
+	    '--dark-overlay-highcontrast': { w: 0.8, type: 'bg' },
+	    '--text-color-dark-highcontrast': { w: 0.3, type: 'primary' },
+	    '--secondary-text-color-dark-highcontrast': { w: 0.3, type: 'primary' },
+	    '--accent-dark-highcontrast': { w: 0.6, type: 'primary' },
+	
+	    '--background-color-light-highcontrast': { w: 0.25, type: 'bg' },
+	    '--background-color-light-tr-highcontrast': { w: 0.25, type: 'bg' },
+	    '--modal-background-light-highcontrast': { w: 0.25, type: 'bg' },
+	    '--modal-transparent-light-highcontrast': { w: 0.25, type: 'bg' },
+	    '--search-background-light-highcontrast': { w: 0.25, type: 'primary' },
+	    '--light-overlay-highcontrast': { w: 0.8, type: 'bg' },
+	    '--text-color-light-highcontrast': { w: 0.3, type: 'primary' },
+	    '--secondary-text-color-light-highcontrast': { w: 0.3, type: 'primary' },
+	    '--accent-light-highcontrast': { w: 0.6, type: 'primary' }
+	};
 
-        // High Contrast (Higher weights to maintain personality)
-        '--background-color-dark-highcontrast': 0.25,
-        '--background-color-dark-tr-highcontrast': 0.25,
-        '--modal-background-dark-highcontrast': 0.25,
-        '--modal-transparent-dark-highcontrast': 0.25,
-        '--search-background-dark-highcontrast': 0.25,
-        '--dark-overlay-highcontrast': 0.8,
-        '--text-color-dark-highcontrast': 0.3,
-        '--secondary-text-color-dark-highcontrast': 0.3,
-        '--accent-dark-highcontrast': 0.6,
-        
-        '--background-color-light-highcontrast': 0.25,
-        '--background-color-light-tr-highcontrast': 0.25,
-        '--modal-background-light-highcontrast': 0.25,
-        '--modal-transparent-light-highcontrast': 0.25,
-        '--search-background-light-highcontrast': 0.25,
-        '--light-overlay-highcontrast': 0.8,
-        '--text-color-light-highcontrast': 0.3,
-        '--secondary-text-color-light-highcontrast': 0.3,
-	    '--accent-light-highcontrast': 0.6
-    };
-
-    // 1. Always clear existing overrides first to read the true CSS values
     Object.keys(tintWeights).forEach(key => root.style.removeProperty(key));
 
-    if (!tintEnabled || !tintColor) {
-        broadcastThemeVariables(null); // Signal apps to reset
+    if (!tintEnabled || !primaryTint) {
+        window.currentTintVariables = null;
+        broadcastThemeVariables(null); 
         return;
     }
 
     const newVars = {};
     const computedStyle = getComputedStyle(root);
 
-    // 2. Read base from CSS, Mix, and Store
-    Object.entries(tintWeights).forEach(([key, weight]) => {
+    // 2. Mix Colors
+    Object.entries(tintWeights).forEach(([key, config]) => {
         const cssValue = computedStyle.getPropertyValue(key);
         const baseColor = parseCssColor(cssValue);
         
         if (baseColor) {
-            const mixed = mixColors(baseColor, tintColor, weight);
+            // Select Primary or Secondary/Background tint based on config
+            const tint = config.type === 'bg' ? backgroundTint : primaryTint;
+            
+            const mixed = mixColors(baseColor, tint, config.w);
             const val = `rgba(${mixed.r}, ${mixed.g}, ${mixed.b}, ${mixed.a})`;
             newVars[key] = val;
         }
     });
 
-    // 3. Apply new values
+    // 3. Apply
     Object.entries(newVars).forEach(([key, val]) => root.style.setProperty(key, val));
     
     // 4. Update global state and broadcast
@@ -7866,16 +7927,19 @@ async function migrateWallpapersColor() {
     for (let i = 0; i < recentWallpapers.length; i++) {
         const wp = recentWallpapers[i];
         
-        if (!wp.dominantColor && wp.id && !wp.isSlideshow) {
+        // Force re-extraction if dominantColor is missing OR if it is in the old Array format
+        const needsUpdate = !wp.dominantColor || Array.isArray(wp.dominantColor);
+
+        if (needsUpdate && wp.id && !wp.isSlideshow) {
             try {
                 const record = await getWallpaper(wp.id);
                 if (record && (record.blob || record.dataUrl)) {
-                    console.log(`[Migration] Extracting color for ${wp.id}...`);
+                    console.log(`[Migration] Extracting advanced color for ${wp.id}...`);
                     let color = null;
                     
                     if (wp.isVideo) {
                         // Extract frame first
-                        let blob = record.blob; // Videos are usually blobs
+                        let blob = record.blob;
                         if (blob) {
                             try {
                                 const frame = await extractVideoFrame(blob);
