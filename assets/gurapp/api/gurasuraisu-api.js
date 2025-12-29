@@ -1144,7 +1144,10 @@ window.addEventListener('message', async (event) => {
         document.documentElement.style.setProperty('--sun-shadow-strong', data.shadowStrong);
         break;
       case 'glassEffectsUpdate':
-        document.documentElement.classList.toggle('gurasuraisu-glass-disabled', !data.enabled);
+        // data.value contains the CSS string (e.g. "blur(17.5px)")
+        if (data.value) {
+            document.documentElement.style.setProperty('--edge-refraction-filter', data.value);
+        }
         break;
       case 'settingUpdate':
         if (data.key === 'gurappSoundsEnabled') {
