@@ -83,17 +83,20 @@ function detectPerformanceProfile() {
 
     console.log(`[System] Performance Score: ${score}/6`);
 
-    // Revised Decision Logic
-    
-    // 1. Dynamic Glass (SVG Filters are extremely heavy)
-    // Disable on anything that isn't top-tier (Score < 5) to ensure 60fps
-    if (score < 5 || isWeakGPU) {
-        if (localStorage.getItem('glassEffectsMode') === null) {
-            console.log("[System] Defaulting Glass Effects to Frosted for performance.");
-            localStorage.setItem('glassEffectsMode', 'frosted');
+    // 1. Glass Effects
+    if (localStorage.getItem('glassEffectsMode') === null) {
+        if (score >= 5 && !isWeakGPU) {
+            // High-end: Enable full Liquid effects
+            localStorage.setItem('glassEffectsMode', 'on');
+        } else if (score >= 4) {
+            // Mid-range: Use Frosted (Blur only, cheaper than SVG)
+            console.log("[System] Defaulting Glass Effects to Focused.");
+            localStorage.setItem('glassEffectsMode', 'focused');
+        } else {
+            // Low-end: Disable effects
+            console.log("[System] Disabling Glass Effects for performance.");
+            localStorage.setItem('glassEffectsMode', 'off');
         }
-    } else {
-        if (localStorage.getItem('glassEffectsMode') === null) localStorage.setItem('glassEffectsMode', 'on');
     }
 
     // 2. Low End Optimizations (Score <= 2)
@@ -14630,8 +14633,9 @@ window.addEventListener('message', async (event) => { // Make listener async
         const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
         sourceWindow.postMessage({ type: 'contrastUpdate', enabled: highContrastEnabled }, targetOrigin);
 
-		const glassEffectsEnabled = localStorage.getItem('glassEffectsEnabled') !== 'false';
-		sourceWindow.postMessage({ type: 'glassEffectsUpdate', enabled: glassEffectsEnabled }, targetOrigin);
+        const glassMode = localStorage.getItem('glassEffectsMode') || 'on';
+        const glassValue = getGlassFilterValue(glassMode);
+		sourceWindow.postMessage({ type: 'glassEffectsUpdate', value: glassValue }, targetOrigin);
 
         if (window.currentTintVariables) {
             sourceWindow.postMessage({
