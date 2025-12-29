@@ -205,14 +205,17 @@
                         <input type="checkbox" class="toggle-switch" data-key="highContrast">
                     </div>
                 </div>
-                <div class="setting-item" id="setting-glassEffectsEnabled">
+                <div class="setting-item">
                     <div class="setting-info">
                         <span class="setting-label">Dynamic Glass</span>
-                        <span class="setting-description">Enable the crunchy, tasty and smooth material</span>
+                        <span class="setting-description">Adjust the crunchy, tasty and smooth material</span>
                     </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" data-key="glassEffectsEnabled" checked>
-                    </div>
+                    <select class="styled-select" id="glass-effects-mode" data-key="glassEffectsMode">
+                        <option value="on">Liquid</option>
+                        <option value="focused">Focused</option>
+                        <option value="frosted">Frosted</option>
+                        <option value="off">Off</option>
+                    </select>
                 </div>
             </div>
         </div>
