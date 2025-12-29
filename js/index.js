@@ -164,6 +164,162 @@ function determineSoundContext(element) {
     return null; 
 }
 
+// --- Dynamic Resource Manager ---
+const ResourceManager = {
+    // Configuration
+    FPS_CHECK_INTERVAL: 2000,
+    MEMORY_CHECK_INTERVAL: 20000, // Check memory every 20s (API is slow)
+    MIN_ACCEPTABLE_FPS: 25,
+    
+    // State
+    lastFrameTime: 0,
+    frameCount: 0,
+    lastFpsCheck: 0,
+    isStruggling: false,
+    appActivity: {}, // Map url -> timestamp
+    
+    // Limits (bytes)
+    // Default to conservative limits if deviceMemory is unknown
+    softMemoryLimit: (navigator.deviceMemory || 4) * 1024 * 1024 * 1024 * 0.7, // 70% of RAM
+    
+    init() {
+        console.log("[System] Resource Manager Initialized");
+        this.lastFpsCheck = performance.now();
+        requestAnimationFrame(t => this.loop(t));
+        
+        // Start Memory Loop
+        setInterval(() => this.checkMemory(), this.MEMORY_CHECK_INTERVAL);
+        
+        // Hook into visibility to pause checks when backgrounded
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.isStruggling = false; // Reset assumptions
+            }
+        });
+    },
+
+    // 1. Mark App Activity (Call this when opening/restoring apps)
+    markAppActive(url) {
+        this.appActivity[url] = Date.now();
+    },
+
+    // 2. The Loop (CPU/Lag Detection)
+    loop(now) {
+        this.frameCount++;
+        
+        if (now - this.lastFpsCheck > this.FPS_CHECK_INTERVAL) {
+            const fps = (this.frameCount / (now - this.lastFpsCheck)) * 1000;
+            
+            // Logic: If FPS is low AND we have windows open
+            const hasWindows = document.querySelector('.fullscreen-embed') || Object.keys(minimizedEmbeds).length > 0;
+            
+            if (hasWindows && fps < this.MIN_ACCEPTABLE_FPS) {
+                console.warn(`[System] High Load Detected (${fps.toFixed(1)} FPS). Adapting...`);
+                this.handleHighLoad();
+            } else {
+                // Recovery logic could go here, but we avoid "bouncing" settings
+                this.isStruggling = false;
+            }
+
+            this.lastFpsCheck = now;
+            this.frameCount = 0;
+        }
+        
+        requestAnimationFrame(t => this.loop(t));
+    },
+
+    // 3. Memory API Check
+    async checkMemory() {
+        // Guard: API availability and Cross-Origin Isolation
+        if (!performance.measureUserAgentSpecificMemory) return;
+        if (!window.crossOriginIsolated) {
+            // Fallback: If not isolated, rely on heuristic (App Count)
+            const appCount = Object.keys(minimizedEmbeds).length;
+            const maxApps = (navigator.deviceMemory || 4); // Roughly 1 bg app per GB
+            if (appCount > maxApps) {
+                console.warn("[System] Heuristic Memory Pressure. Cleaning up...");
+                this.killLeastUsedApp();
+            }
+            return;
+        }
+
+        try {
+            const result = await performance.measureUserAgentSpecificMemory();
+            const used = result.bytes;
+            
+            if (used > this.softMemoryLimit) {
+                console.warn(`[System] Memory Critical: ${(used / 1024 / 1024).toFixed(0)}MB used.`);
+                this.killLeastUsedApp();
+            }
+        } catch (error) {
+            if (error instanceof DOMException && error.name === "SecurityError") {
+                console.log("[System] Memory measurement blocked by security context.");
+            }
+        }
+    },
+
+    // 4. Mitigation Strategies
+    
+    handleHighLoad() {
+        if (this.isStruggling) return; // Already acted recently
+        this.isStruggling = true;
+
+        // Step 1: Downgrade Glass Effects
+        const currentMode = localStorage.getItem('glassEffectsMode') || 'on';
+        
+        if (currentMode === 'on') {
+            console.log("[System] Downgrading Glass to Focused.");
+            this.applyDowngrade('focused');
+            showNotification('Optimizing performance...', { icon: 'speed' });
+        } else if (currentMode === 'focused') {
+            console.log("[System] Downgrading Glass to Frosted.");
+            this.applyDowngrade('frosted');
+        } else if (currentMode === 'frosted') {
+            console.log("[System] Downgrading Glass to Off.");
+            this.applyDowngrade('off');
+        }
+    },
+
+    applyDowngrade(mode) {
+        localStorage.setItem('glassEffectsMode', mode);
+        // Update UI control if present
+        const select = document.getElementById('glass-effects-mode');
+        if (select) select.value = mode;
+        // Broadcast
+        broadcastSettingUpdate('glassEffectsMode', mode);
+        applyGlassEffects();
+    },
+
+    killLeastUsedApp() {
+        const bgApps = Object.keys(minimizedEmbeds);
+        if (bgApps.length === 0) return; // No background apps to kill
+
+        // Find oldest timestamp
+        let oldestUrl = null;
+        let oldestTime = Infinity;
+
+        bgApps.forEach(url => {
+            const time = this.appActivity[url] || 0;
+            if (time < oldestTime) {
+                oldestTime = time;
+                oldestUrl = url;
+            }
+        });
+
+        if (oldestUrl) {
+            const appName = Object.keys(apps).find(n => apps[n].url === oldestUrl) || "Background App";
+            console.log(`[System] OOM Killer closing: ${appName}`);
+            
+            // Clean up DOM and Cache
+            const container = minimizedEmbeds[oldestUrl];
+            if (container) container.remove();
+            delete minimizedEmbeds[oldestUrl];
+            
+            showNotification(`Closed ${appName} to free memory`, { icon: 'memory' });
+        }
+    }
+};
+
 const WALLPAPER_SUBMISSION_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeSYSJalaX0HCZe0helcK5NCuc0U47tQc6KaO1OAsBs5HxK1A/viewform?embedded=true';
 
 // Wallpaper presets with associated clock styles
@@ -10546,6 +10702,10 @@ async function createFullscreenEmbed(url, options = {}) {
 // Wrapper to intercept app open calls
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
 createFullscreenEmbed = async function(url, options = {}) {
+    // Log activity for Resource Manager
+    ResourceManager.markAppActive(url);
+    return originalCreateFullscreenEmbed2(url, options);
+	
     // Default options to empty object if undefined
     const { isSplitActivation = false } = options || {};
 
@@ -12394,7 +12554,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     loadAvailableWidgets(); 
 	setupStickerControls();
     initializeWallpaperTracking();
-
+    ResourceManager.init();
     setTimeout(migrateWallpapersColor, 2000); 
 
     // --- Perform initial setup that depends on the loaded data ---
