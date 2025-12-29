@@ -136,6 +136,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --text-color-dark: #f9f9f9;
             --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
             --accent-dark: rgba(255, 255, 255, 0.7);
+            --tonal-dark: rgba(255, 255, 255, 0.7);
             --modal-background-dark: rgba(51, 51, 51, 0.8);
             --modal-transparent-dark: rgba(51, 51, 51, 0.7);
             --search-background-dark: rgba(51, 51, 51, 0.5);
@@ -149,6 +150,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --text-color-light: #333333;
             --secondary-text-color-light: rgba(0, 0, 0, 0.7);
             --accent-light: rgba(0, 0, 0, 0.7);
+            --tonal-light: rgba(0, 0, 0, 0.7);
             --modal-background-light: rgba(220, 220, 220, 0.8);
             --modal-transparent-light: rgba(240, 240, 240, 0.7);
             --search-background-light: rgba(220, 220, 220, 0.5);
@@ -162,6 +164,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --text-color-dark-highcontrast: #f9f9f9;
             --secondary-text-color-dark-highcontrast: #b3b3b3;
             --accent-dark-highcontrast: #b3b3b3;
+            --tonal-dark-highcontrast: #b3b3b3;
             --modal-background-dark-highcontrast: #333333;
             --modal-transparent-dark-highcontrast: #333333;
             --search-background-dark-highcontrast: #333333;
@@ -174,6 +177,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --text-color-light-highcontrast: #333333;
             --secondary-text-color-light-highcontrast: #4d4d4d;
             --accent-light-highcontrast: #4d4d4d;
+            --tonal-light-highcontrast: #4d4d4d;
             --modal-background-light-highcontrast: #dcdcdc;
             --modal-transparent-light-highcontrast: #f0f0f0;
             --search-background-light-highcontrast: #dcdcdc;
@@ -190,6 +194,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --text-color: var(--text-color-dark);
             --secondary-text-color: var(--secondary-text-color-dark);
             --accent: var(--accent-dark);
+            --tonal: var(--tonal-dark);
             --modal-background: var(--modal-background-dark);
             --modal-transparent: var(--modal-transparent-dark);
             --search-background: var(--search-background-dark);
@@ -207,6 +212,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --text-color: var(--text-color-light);
             --secondary-text-color: var(--secondary-text-color-light);
             --accent: var(--accent-light);
+            --tonal: var(--tonal-light);
             --modal-background: var(--modal-background-light);
             --modal-transparent: var(--modal-transparent-light);
             --search-background: var(--search-background-light);
@@ -224,6 +230,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --background-color-tr-op: var(--background-color-light-tr-highcontrast);
             --secondary-text-color: var(--secondary-text-color-dark-highcontrast);
             --accent: var(--accent-dark-highcontrast);
+            --tonal: var(--tonal-dark-highcontrast);
             --modal-background: var(--modal-background-dark-highcontrast);
             --modal-transparent: var(--modal-transparent-dark-highcontrast);
             --search-background: var(--search-background-dark-highcontrast);
@@ -240,6 +247,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --background-color-tr-op: var(--background-color-dark-tr-highcontrast);
             --secondary-text-color: var(--secondary-text-color-light-highcontrast);
             --accent: var(--accent-light-highcontrast);
+            --tonal: var(--tonal-light-highcontrast);
             --modal-background: var(--modal-background-light-highcontrast);
             --modal-transparent: var(--modal-transparent-light-highcontrast);
             --search-background: var(--search-background-light-highcontrast);
@@ -1105,22 +1113,22 @@ window.addEventListener('message', async (event) => {
                 '--background-color-dark', '--background-color-dark-tr',
                 '--modal-background-dark', '--modal-transparent-dark',
                 '--search-background-dark', '--dark-overlay', '--dark-transparent', '--glass-border-dark',
-                '--text-color-dark', '--secondary-text-color-dark', '--accent-dark',
+                '--text-color-dark', '--secondary-text-color-dark', '--accent-dark', '--tonal-dark',
                 
                 '--background-color-light', '--background-color-light-tr',
                 '--modal-background-light', '--modal-transparent-light',
                 '--search-background-light', '--light-overlay', '--light-transparent', '--glass-border-light',
-                '--text-color-light', '--secondary-text-color-light', '--accent-light',
+                '--text-color-light', '--secondary-text-color-light', '--accent-light', '--tonal-light',
 
                 '--background-color-dark-highcontrast', '--background-color-dark-tr-highcontrast',
                 '--modal-background-dark-highcontrast', '--modal-transparent-dark-highcontrast',
                 '--search-background-dark-highcontrast', '--dark-overlay-highcontrast', '--dark-transparent-highcontrast',
-                '--text-color-dark-highcontrast', '--secondary-text-color-dark-highcontrast', '--accent-dark-highcontrast',
+                '--text-color-dark-highcontrast', '--secondary-text-color-dark-highcontrast', '--accent-dark-highcontrast', '--tonal-dark-highcontrast',
                 
                 '--background-color-light-highcontrast', '--background-color-light-tr-highcontrast',
                 '--modal-background-light-highcontrast', '--modal-transparent-light-highcontrast',
                 '--search-background-light-highcontrast', '--light-overlay-highcontrast', '--light-transparent-highcontrast',
-                '--text-color-light-highcontrast', '--secondary-text-color-light-highcontrast', '--accent-light-highcontrast'
+                '--text-color-light-highcontrast', '--secondary-text-color-light-highcontrast', '--accent-light-highcontrast', '--tonal-light-highcontrast'
             ];
             varsToRemove.forEach(v => document.documentElement.style.removeProperty(v));
         }
