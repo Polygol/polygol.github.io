@@ -164,24 +164,23 @@ function determineSoundContext(element) {
     return null; 
 }
 
+// Global Interaction Tracker for Performance Heuristics
+window.lastUserInteraction = Date.now();
+['mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'].forEach(evt => {
+    window.addEventListener(evt, () => {
+        window.lastUserInteraction = Date.now();
+    }, { passive: true, capture: true });
+});
+
 // --- Dynamic Resource Manager ---
 const ResourceManager = {
     // Configuration
     FPS_CHECK_INTERVAL: 2000,
     MEMORY_CHECK_INTERVAL: 20000,
-    MIN_ACCEPTABLE_FPS: 24,
-    // Browser throttling usually drops FPS to 1-10. True lag is usually 10-23.
+    // We rely on relative drops now, but keep a sanity floor
+    MIN_ABSOLUTE_FPS: 15, 
     THROTTLE_FPS_THRESHOLD: 10, 
-    RECOVERY_THRESHOLD: 5, // Number of clean intervals before restoring
-    
-    // State
-    lastFrameTime: 0,
-    frameCount: 0,
-    lastFpsCheck: 0,
-    isStruggling: false,
-    recoveryCounter: 0,
-    originalGlassMode: null, // Store user preference
-    appActivity: {},
+    RECOVERY_THRESHOLD: 5, 
     
     // State
     lastFrameTime: 0,
@@ -191,7 +190,8 @@ const ResourceManager = {
     recoveryCounter: 0,
     originalGlassMode: null, 
     appActivity: {},
-    pressureState: 'nominal', // nominal, fair, serious, critical
+    pressureState: 'nominal',
+    maxObservedFps: 0, // Baseline for relative drop detection
     
     // Limits (bytes)
     softMemoryLimit: (navigator.deviceMemory || 4) * 1024 * 1024 * 1024 * 0.7,
@@ -208,6 +208,9 @@ const ResourceManager = {
             if (document.hidden) {
                 this.isStruggling = false;
                 this.recoveryCounter = 0;
+                // Don't count frames when hidden to avoid messing up averages
+                this.lastFpsCheck = performance.now();
+                this.frameCount = 0;
             }
         });
     },
@@ -219,6 +222,7 @@ const ResourceManager = {
                     const lastRecord = records[records.length - 1];
                     this.pressureState = lastRecord.state;
                     
+                    // Trigger adaptation immediately on critical thermal/CPU pressure
                     if (this.pressureState === 'critical') {
                         console.warn(`[System] Critical CPU Pressure detected.`);
                         this.handleHighLoad();
@@ -228,7 +232,6 @@ const ResourceManager = {
                 await observer.observe('cpu', { sampleInterval: 2000 });
                 console.log("[System] Compute Pressure API active.");
             } catch (e) {
-                // Not supported or permission denied
                 console.log("[System] Compute Pressure API not available:", e);
             }
         }
@@ -245,29 +248,44 @@ const ResourceManager = {
             const duration = now - this.lastFpsCheck;
             const fps = (this.frameCount / duration) * 1000;
             
-            const hasWindows = document.querySelector('.fullscreen-embed') || Object.keys(minimizedEmbeds).length > 0;
-            
-            if (!document.hidden && hasWindows) {
-                // High Load Detection (Low FPS or Critical Pressure)
-                const isHighPressure = this.pressureState === 'critical';
-                const isLaggy = fps < this.MIN_ACCEPTABLE_FPS && fps > this.THROTTLE_FPS_THRESHOLD;
+            // Dynamic Baseline: Learn the screen's refresh rate capabilities
+            if (fps > this.maxObservedFps) {
+                this.maxObservedFps = fps;
+            }
 
-                if (isLaggy || isHighPressure) {
-                    if(isLaggy) console.warn(`[System] Visual Lag Detected (${fps.toFixed(1)} FPS).`);
+            const hasWindows = document.querySelector('.fullscreen-embed') || Object.keys(minimizedEmbeds).length > 0;
+            const isInteracting = (Date.now() - window.lastUserInteraction) < 5000; // User active in last 5s
+            const isPressureHigh = this.pressureState === 'critical' || this.pressureState === 'serious';
+
+            if (!document.hidden && hasWindows) {
+                // Calculate Dynamic Threshold (e.g. 70% of Max observed, but at least 25)
+                // If 144Hz screen, drop to 100Hz is fine. Drop to 40Hz is bad.
+                // If 60Hz screen, drop to 40Hz is bad.
+                const relativeThreshold = this.maxObservedFps * 0.7;
+                const threshold = Math.max(this.MIN_ABSOLUTE_FPS, relativeThreshold);
+
+                // Detect Lag
+                // 1. Must be below dynamic threshold
+                // 2. Must be above "Idle/Throttled" threshold (browser stops rendering when nothing changes)
+                const isLaggy = fps < threshold && fps > this.THROTTLE_FPS_THRESHOLD;
+
+                // Decision: Only complain about lag if the user is actually doing something 
+                // OR if the hardware is explicitly reporting pressure.
+                // This ignores "idle decay" where browsers lower FPS to save battery during static content.
+                if ((isLaggy && (isInteracting || isPressureHigh)) || (this.pressureState === 'critical')) {
+                    if (isLaggy) console.warn(`[System] Visual Lag Detected (${fps.toFixed(1)} / ${this.maxObservedFps.toFixed(0)} FPS).`);
                     this.handleHighLoad();
                     this.recoveryCounter = 0;
                 } 
                 // Recovery Logic
-                else if (fps >= this.MIN_ACCEPTABLE_FPS) {
+                else if (fps >= threshold) {
                     if (this.isStruggling) {
-                        // Only recover if pressure allows (nominal or fair)
                         if (this.pressureState !== 'critical' && this.pressureState !== 'serious') {
                             this.recoveryCounter++;
                             if (this.recoveryCounter >= this.RECOVERY_THRESHOLD) {
                                 this.attemptRecovery();
                             }
                         } else {
-                            // If pressure is serious, reset recovery counter to delay restoration
                             this.recoveryCounter = 0; 
                         }
                     }
@@ -281,17 +299,16 @@ const ResourceManager = {
         requestAnimationFrame(t => this.loop(t));
     },
 
-    // 3. Memory API Check
     async checkMemory() {
-        // Guard: API availability and Cross-Origin Isolation
         if (!performance.measureUserAgentSpecificMemory) return;
         if (!window.crossOriginIsolated) {
-            // Fallback: If not isolated, rely on heuristic (App Count)
+            // Heuristic Fallback
             const appCount = Object.keys(minimizedEmbeds).length;
-            const maxApps = (navigator.deviceMemory || 4); // Roughly 1 bg app per GB
+            const maxApps = (navigator.deviceMemory || 4);
             if (appCount > maxApps) {
-                console.warn("[System] Heuristic Memory Pressure. Cleaning up...");
-                this.killLeastUsedApp();
+                console.warn("[System] Heuristic Memory Pressure.");
+                this.handleHighLoad(); // Downgrade visuals
+                this.killLeastUsedApp(); // Free memory
             }
             return;
         }
@@ -299,19 +316,13 @@ const ResourceManager = {
         try {
             const result = await performance.measureUserAgentSpecificMemory();
             const used = result.bytes;
-            
             if (used > this.softMemoryLimit) {
                 console.warn(`[System] Memory Critical: ${(used / 1024 / 1024).toFixed(0)}MB used.`);
-                this.killLeastUsedApp();
+                this.handleHighLoad(); // Trigger visual downgrade
+                this.killLeastUsedApp(); // Trigger memory release
             }
-        } catch (error) {
-            if (error instanceof DOMException && error.name === "SecurityError") {
-                console.log("[System] Memory measurement blocked by security context.");
-            }
-        }
+        } catch (error) {}
     },
-
-    // 4. Mitigation Strategies
 
     handleHighLoad() {
         if (this.isStruggling) return; 
@@ -319,7 +330,6 @@ const ResourceManager = {
 
         const currentMode = localStorage.getItem('glassEffectsMode') || 'on';
         
-        // Store original preference if we haven't already modified it
         if (!this.originalGlassMode) {
             this.originalGlassMode = currentMode;
         }
@@ -339,7 +349,6 @@ const ResourceManager = {
         console.log("[System] Performance stabilized. Restoring settings.");
         this.applyDowngrade(this.originalGlassMode);
         
-        // Reset State
         this.isStruggling = false;
         this.originalGlassMode = null;
         this.recoveryCounter = 0;
