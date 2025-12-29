@@ -270,14 +270,10 @@ const ResourceManager = {
         if (currentMode === 'on') {
             console.log("[System] Downgrading Glass to Focused.");
             this.applyDowngrade('focused');
-            showNotification('Optimizing performance...', { icon: 'speed' });
-        } else if (currentMode === 'focused') {
-            console.log("[System] Downgrading Glass to Frosted.");
-            this.applyDowngrade('frosted');
-        } else if (currentMode === 'frosted') {
-            console.log("[System] Downgrading Glass to Off.");
-            this.applyDowngrade('off');
-        }
+        } else if (currentMode === 'focused' || currentMode === 'frosted') {
+		    console.log("[System] Downgrading Glass to Off.");
+		    this.applyDowngrade('off');
+		}
     },
 
     applyDowngrade(mode) {
