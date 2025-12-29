@@ -530,6 +530,19 @@ function getApps(targetPeerId = null) {
 function pushFullState(targetPeerId = null) {
     if(!wavesBroadcast) return;
     
+    // Convert activeWallpaperColor to simple array for Remote compatibility
+    let accentColor = [208, 188, 255]; // Default
+    if (window.activeWallpaperColor) {
+        if (window.activeWallpaperColor.primary) {
+            // New Object Structure: Use Primary
+            const p = window.activeWallpaperColor.primary;
+            accentColor = [p.r, p.g, p.b];
+        } else if (Array.isArray(window.activeWallpaperColor)) {
+            // Old Array Structure
+            accentColor = window.activeWallpaperColor;
+        }
+    }
+
     const state = {
         brightness: localStorage.getItem('page_brightness') || 100,
         temperature: localStorage.getItem('display_temperature') || 0,
@@ -537,24 +550,18 @@ function pushFullState(targetPeerId = null) {
         mediaState: 'paused',
         appUI: window.activeAppUI || null,
         notifications: [],
-        accentColor: window.activeWallpaperColor || [208, 188, 255], 
+        accentColor: accentColor, 
         systemStatus: window.getSystemStatus ? window.getSystemStatus() : {}
     };
     
-    if (window.activeNotificationsList) {
-        state.notifications = [...window.activeNotificationsList];
-    }
-    if (window.activeLiveActivityData) {
-        state.notifications.unshift(window.activeLiveActivityData);
-    }
+    if (window.activeNotificationsList) state.notifications = [...window.activeNotificationsList];
+    if (window.activeLiveActivityData) state.notifications.unshift(window.activeLiveActivityData);
 
     const lastMediaMeta = localStorage.getItem('lastMediaMetadata');
     if (lastMediaMeta) {
         state.media = JSON.parse(lastMediaMeta);
         const playBtn = document.querySelector('#media-widget-play-pause span');
-        if (playBtn && playBtn.textContent === 'pause') {
-            state.mediaState = 'playing';
-        }
+        if (playBtn && playBtn.textContent === 'pause') state.mediaState = 'playing';
     }
     
     if (targetPeerId) {
