@@ -334,7 +334,7 @@ const ResourceManager = {
             if (container) container.remove();
             delete minimizedEmbeds[oldestUrl];
             
-            showNotification(`Closed ${appName} to free memory`, { icon: 'memory' });
+            showPopup(`Closed ${appName} to free memory`);
         }
     }
 };
