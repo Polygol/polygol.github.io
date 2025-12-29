@@ -168,57 +168,68 @@ function determineSoundContext(element) {
 const ResourceManager = {
     // Configuration
     FPS_CHECK_INTERVAL: 2000,
-    MEMORY_CHECK_INTERVAL: 20000, // Check memory every 20s (API is slow)
-    MIN_ACCEPTABLE_FPS: 25,
+    MEMORY_CHECK_INTERVAL: 20000,
+    MIN_ACCEPTABLE_FPS: 20,
+    // Browser throttling usually drops FPS to 1-10. True lag is usually 15-20.
+    THROTTLE_FPS_THRESHOLD: 10, 
+    RECOVERY_THRESHOLD: 5, // Number of clean intervals before restoring
     
     // State
     lastFrameTime: 0,
     frameCount: 0,
     lastFpsCheck: 0,
     isStruggling: false,
-    appActivity: {}, // Map url -> timestamp
+    recoveryCounter: 0,
+    originalGlassMode: null, // Store user preference
+    appActivity: {},
     
     // Limits (bytes)
-    // Default to conservative limits if deviceMemory is unknown
-    softMemoryLimit: (navigator.deviceMemory || 4) * 1024 * 1024 * 1024 * 0.7, // 70% of RAM
+    softMemoryLimit: (navigator.deviceMemory || 4) * 1024 * 1024 * 1024 * 0.7,
     
     init() {
         console.log("[System] Resource Manager Initialized");
         this.lastFpsCheck = performance.now();
         requestAnimationFrame(t => this.loop(t));
-        
-        // Start Memory Loop
         setInterval(() => this.checkMemory(), this.MEMORY_CHECK_INTERVAL);
         
-        // Hook into visibility to pause checks when backgrounded
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                this.isStruggling = false; // Reset assumptions
+                this.isStruggling = false;
+                this.recoveryCounter = 0;
             }
         });
     },
 
-    // 1. Mark App Activity (Call this when opening/restoring apps)
     markAppActive(url) {
         this.appActivity[url] = Date.now();
     },
 
-    // 2. The Loop (CPU/Lag Detection)
     loop(now) {
         this.frameCount++;
         
         if (now - this.lastFpsCheck > this.FPS_CHECK_INTERVAL) {
-            const fps = (this.frameCount / (now - this.lastFpsCheck)) * 1000;
+            const duration = now - this.lastFpsCheck;
+            const fps = (this.frameCount / duration) * 1000;
             
-            // Logic: If FPS is low AND we have windows open
             const hasWindows = document.querySelector('.fullscreen-embed') || Object.keys(minimizedEmbeds).length > 0;
             
-            if (hasWindows && fps < this.MIN_ACCEPTABLE_FPS) {
-                console.warn(`[System] High Load Detected (${fps.toFixed(1)} FPS). Adapting...`);
-                this.handleHighLoad();
-            } else {
-                // Recovery logic could go here, but we avoid "bouncing" settings
-                this.isStruggling = false;
+            // Only analyze if visible and apps are running
+            if (!document.hidden && hasWindows) {
+                // If FPS is bad (<25) BUT not "idle/throttled" bad (>10)
+                if (fps < this.MIN_ACCEPTABLE_FPS && fps > this.THROTTLE_FPS_THRESHOLD) {
+                    console.warn(`[System] High Load Detected (${fps.toFixed(1)} FPS). Adapting...`);
+                    this.handleHighLoad();
+                    this.recoveryCounter = 0;
+                } 
+                // If FPS is good
+                else if (fps >= this.MIN_ACCEPTABLE_FPS) {
+                    if (this.isStruggling) {
+                        this.recoveryCounter++;
+                        if (this.recoveryCounter >= this.RECOVERY_THRESHOLD) {
+                            this.attemptRecovery();
+                        }
+                    }
+                }
             }
 
             this.lastFpsCheck = now;
@@ -259,13 +270,17 @@ const ResourceManager = {
     },
 
     // 4. Mitigation Strategies
-    
+
     handleHighLoad() {
-        if (this.isStruggling) return; // Already acted recently
+        if (this.isStruggling) return; 
         this.isStruggling = true;
 
-        // Step 1: Downgrade Glass Effects
         const currentMode = localStorage.getItem('glassEffectsMode') || 'on';
+        
+        // Store original preference if we haven't already modified it
+        if (!this.originalGlassMode) {
+            this.originalGlassMode = currentMode;
+        }
         
         if (currentMode === 'on') {
             console.log("[System] Downgrading Glass to Focused.");
@@ -276,21 +291,30 @@ const ResourceManager = {
 		}
     },
 
+    attemptRecovery() {
+        if (!this.originalGlassMode) return;
+        
+        console.log("[System] Performance stabilized. Restoring settings.");
+        this.applyDowngrade(this.originalGlassMode);
+        
+        // Reset State
+        this.isStruggling = false;
+        this.originalGlassMode = null;
+        this.recoveryCounter = 0;
+    },
+
     applyDowngrade(mode) {
         localStorage.setItem('glassEffectsMode', mode);
-        // Update UI control if present
         const select = document.getElementById('glass-effects-mode');
         if (select) select.value = mode;
-        // Broadcast
         broadcastSettingUpdate('glassEffectsMode', mode);
         applyGlassEffects();
     },
 
     killLeastUsedApp() {
         const bgApps = Object.keys(minimizedEmbeds);
-        if (bgApps.length === 0) return; // No background apps to kill
+        if (bgApps.length === 0) return;
 
-        // Find oldest timestamp
         let oldestUrl = null;
         let oldestTime = Infinity;
 
@@ -306,7 +330,6 @@ const ResourceManager = {
             const appName = Object.keys(apps).find(n => apps[n].url === oldestUrl) || "Background App";
             console.log(`[System] OOM Killer closing: ${appName}`);
             
-            // Clean up DOM and Cache
             const container = minimizedEmbeds[oldestUrl];
             if (container) container.remove();
             delete minimizedEmbeds[oldestUrl];
