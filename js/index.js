@@ -183,6 +183,16 @@ const ResourceManager = {
     originalGlassMode: null, // Store user preference
     appActivity: {},
     
+    // State
+    lastFrameTime: 0,
+    frameCount: 0,
+    lastFpsCheck: 0,
+    isStruggling: false,
+    recoveryCounter: 0,
+    originalGlassMode: null, 
+    appActivity: {},
+    pressureState: 'nominal', // nominal, fair, serious, critical
+    
     // Limits (bytes)
     softMemoryLimit: (navigator.deviceMemory || 4) * 1024 * 1024 * 1024 * 0.7,
     
@@ -192,12 +202,36 @@ const ResourceManager = {
         requestAnimationFrame(t => this.loop(t));
         setInterval(() => this.checkMemory(), this.MEMORY_CHECK_INTERVAL);
         
+        this.initPressureObserver();
+
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 this.isStruggling = false;
                 this.recoveryCounter = 0;
             }
         });
+    },
+
+    async initPressureObserver() {
+        if ('PressureObserver' in window) {
+            try {
+                const observer = new PressureObserver((records) => {
+                    const lastRecord = records[records.length - 1];
+                    this.pressureState = lastRecord.state;
+                    
+                    if (this.pressureState === 'critical') {
+                        console.warn(`[System] Critical CPU Pressure detected.`);
+                        this.handleHighLoad();
+                        this.recoveryCounter = 0;
+                    }
+                });
+                await observer.observe('cpu', { sampleInterval: 2000 });
+                console.log("[System] Compute Pressure API active.");
+            } catch (e) {
+                // Not supported or permission denied
+                console.log("[System] Compute Pressure API not available:", e);
+            }
+        }
     },
 
     markAppActive(url) {
@@ -213,20 +247,28 @@ const ResourceManager = {
             
             const hasWindows = document.querySelector('.fullscreen-embed') || Object.keys(minimizedEmbeds).length > 0;
             
-            // Only analyze if visible and apps are running
             if (!document.hidden && hasWindows) {
-                // If FPS is bad (<25) BUT not "idle/throttled" bad (>10)
-                if (fps < this.MIN_ACCEPTABLE_FPS && fps > this.THROTTLE_FPS_THRESHOLD) {
-                    console.warn(`[System] High Load Detected (${fps.toFixed(1)} FPS). Adapting...`);
+                // High Load Detection (Low FPS or Critical Pressure)
+                const isHighPressure = this.pressureState === 'critical';
+                const isLaggy = fps < this.MIN_ACCEPTABLE_FPS && fps > this.THROTTLE_FPS_THRESHOLD;
+
+                if (isLaggy || isHighPressure) {
+                    if(isLaggy) console.warn(`[System] Visual Lag Detected (${fps.toFixed(1)} FPS).`);
                     this.handleHighLoad();
                     this.recoveryCounter = 0;
                 } 
-                // If FPS is good
+                // Recovery Logic
                 else if (fps >= this.MIN_ACCEPTABLE_FPS) {
                     if (this.isStruggling) {
-                        this.recoveryCounter++;
-                        if (this.recoveryCounter >= this.RECOVERY_THRESHOLD) {
-                            this.attemptRecovery();
+                        // Only recover if pressure allows (nominal or fair)
+                        if (this.pressureState !== 'critical' && this.pressureState !== 'serious') {
+                            this.recoveryCounter++;
+                            if (this.recoveryCounter >= this.RECOVERY_THRESHOLD) {
+                                this.attemptRecovery();
+                            }
+                        } else {
+                            // If pressure is serious, reset recovery counter to delay restoration
+                            this.recoveryCounter = 0; 
                         }
                     }
                 }
