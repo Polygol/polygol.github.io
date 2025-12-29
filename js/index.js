@@ -10704,7 +10704,6 @@ const originalCreateFullscreenEmbed = createFullscreenEmbed;
 createFullscreenEmbed = async function(url, options = {}) {
     // Log activity for Resource Manager
     ResourceManager.markAppActive(url);
-    return originalCreateFullscreenEmbed2(url, options);
 	
     // Default options to empty object if undefined
     const { isSplitActivation = false } = options || {};
