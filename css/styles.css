@@ -1118,7 +1118,7 @@ body.one-button-nav-active .dock.show {
 		}
 		
 		.button-dialog.primary {
-		    background-color: var(--text-color);
+		    background-color: var(--accent);
 		    color: var(--background-color);
 		}
 
@@ -2260,14 +2260,14 @@ input[type="checkbox"]:checked::before {
     }
     
     .indicator-dot.active {
-      background-color: var(--text-color);
+      background-color: var(--accent);
       transform: scale(1.3);
     }
 
     .indicator-dot.dragging {
       z-index: 2;
       transition: none;
-      background-color: var(--text-color);
+      background-color: var(--accent);
       transform: scale(1.8);
     }
     
@@ -3591,7 +3591,7 @@ body.light-theme .app-switcher-item.selected {
 #split-divider:hover .split-handle-bar {
 	width: 8px;
     height: 60px;
-    background-color: var(--text-color);
+    background-color: var(--accent);
     box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
