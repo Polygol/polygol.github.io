@@ -88,12 +88,12 @@ function detectPerformanceProfile() {
     // 1. Dynamic Glass (SVG Filters are extremely heavy)
     // Disable on anything that isn't top-tier (Score < 5) to ensure 60fps
     if (score < 5 || isWeakGPU) {
-        if (localStorage.getItem('glassEffectsEnabled') === null) {
-            console.log("[System] Disabling Glass Effects for performance.");
-            localStorage.setItem('glassEffectsEnabled', 'false');
+        if (localStorage.getItem('glassEffectsMode') === null) {
+            console.log("[System] Defaulting Glass Effects to Frosted for performance.");
+            localStorage.setItem('glassEffectsMode', 'frosted');
         }
     } else {
-        if (localStorage.getItem('glassEffectsEnabled') === null) localStorage.setItem('glassEffectsEnabled', 'true');
+        if (localStorage.getItem('glassEffectsMode') === null) localStorage.setItem('glassEffectsMode', 'on');
     }
 
     // 2. Low End Optimizations (Score <= 2)
@@ -6674,8 +6674,45 @@ function updateOneButtonNavVisibility() {
     document.body.classList.toggle('one-button-nav-active', oneButtonNavEnabled);
 }
 
-function updateGlassEffects() {
-    document.body.classList.toggle('glass-effects-disabled', !glassEffectsEnabled);
+function getGlassFilterValue(mode) {
+    switch (mode) {
+        case 'focused': return 'grayscale(0)';
+        case 'frosted': return 'blur(17.5px)';
+        case 'off': return 'none'; // Will effectively disable backdrop-filter due to CSS syntax rules or explicit override
+        case 'on': 
+        default: return "url('#edge-refraction-only')";
+    }
+}
+
+function applyGlassEffects() {
+    // 1. Get Mode (Migration Logic)
+    let mode = localStorage.getItem('glassEffectsMode');
+    if (!mode) {
+        // Migrate old boolean setting
+        const oldSetting = localStorage.getItem('glassEffectsEnabled');
+        if (oldSetting === 'false') mode = 'frosted'; // Old behavior for disabled was frosted
+        else mode = 'on';
+        localStorage.setItem('glassEffectsMode', mode);
+        localStorage.removeItem('glassEffectsEnabled');
+    }
+
+    const root = document.documentElement;
+    const filterValue = getGlassFilterValue(mode);
+
+    // 2. Apply to Host
+    root.style.setProperty('--edge-refraction-filter', filterValue);
+
+    // 3. Broadcast to Gurapps
+    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    iframes.forEach(iframe => {
+        if (iframe.contentWindow) {
+            const targetOrigin = getOriginFromUrl(iframe.src);
+            iframe.contentWindow.postMessage({
+                type: 'glassEffectsUpdate',
+                value: filterValue // Send the raw CSS value
+            }, targetOrigin);
+        }
+    });
 }
 	
 function applyAlignment(alignment) {
@@ -12448,31 +12485,26 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
-	const glassEffectsSwitch = document.getElementById('glass-effects-switch');
-	if (glassEffectsSwitch) {
-	    glassEffectsSwitch.checked = glassEffectsEnabled;
-	    updateGlassEffects(); // Apply on load
-	
-	    glassEffectsSwitch.addEventListener('change', function() {
-	        glassEffectsEnabled = this.checked;
-	        const value = glassEffectsEnabled.toString();
-	        localStorage.setItem('glassEffectsEnabled', value);
-	        broadcastSettingUpdate('glassEffectsEnabled', value);
-	        updateGlassEffects();
-	
-	        // Broadcast specifically to all Gurapps
-	        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
-	        iframes.forEach(iframe => {
-	            if (iframe.contentWindow) {
-	                const targetOrigin = getOriginFromUrl(iframe.src);
-	                iframe.contentWindow.postMessage({
-	                    type: 'glassEffectsUpdate',
-	                    enabled: glassEffectsEnabled
-	                }, targetOrigin);
-	            }
-	        });
-	    });
-	}
+    const glassModeSelect = document.getElementById('glass-effects-mode');
+    if (glassModeSelect) {
+        // Set initial value
+        let currentMode = localStorage.getItem('glassEffectsMode');
+        if (!currentMode) {
+             const old = localStorage.getItem('glassEffectsEnabled');
+             currentMode = (old === 'false') ? 'frosted' : 'on';
+        }
+        glassModeSelect.value = currentMode;
+        
+        // Listener
+        glassModeSelect.addEventListener('change', function() {
+            localStorage.setItem('glassEffectsMode', this.value);
+            broadcastSettingUpdate('glassEffectsMode', this.value);
+            applyGlassEffects();
+        });
+    }
+    
+    // Apply immediately
+    applyGlassEffects();
     
     initAppDraw(); // Now this will use the fully populated 'apps' object
     initializeCustomization(); // Now reads correct styles and applies them to DOM
@@ -14039,7 +14071,7 @@ const controlIdMap = {
     'wallpaperBlur': 'wallpaper-blur-slider',
     'wallpaperBrightness': 'wallpaper-brightness-slider',
     'wallpaperContrast': 'wallpaper-contrast-slider',
-	'glassEffectsEnabled': 'glass-effects-switch',
+    'glassEffectsMode': 'glass-effects-mode', 
 	'tintEnabled': 'tint-colors-switch',
     'showWeather': 'weather-switch',
     'page_brightness': 'brightness-control',
