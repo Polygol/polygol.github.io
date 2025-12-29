@@ -2290,7 +2290,8 @@ input[type="checkbox"]:checked::before {
 	}
     
     body.minimal-active .drawer-handle,
-	body.minimal-active .one-button-nav-handle {
+	body.minimal-active .one-button-nav-handle,
+	body.minimal-active .nav-btn-small {
         opacity: 0;
     }
 
@@ -2330,6 +2331,7 @@ input[type="checkbox"]:checked::before {
 	body.blackout-active .persistent-clock,
 	body.blackout-active .drawer-handle,
 	body.blackout-active #one-button-nav-handle,
+	body.blackout-active .nav-btn-small,
 	body.blackout-active #dock,
 	body.blackout-active .page-indicator,
 	body.blackout-active #customizeModal.modal.show {
