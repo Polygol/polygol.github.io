@@ -2736,6 +2736,7 @@ function applySystemTint() {
 	    '--text-color-dark': { w: 0.1, type: 'primary' },
 	    '--secondary-text-color-dark': { w: 0.1, type: 'primary' },
 	    '--accent-dark': { w: 0.6, type: 'primary' },
+	    '--tonal-dark': { w: 0.6, type: 'bg' },
 	
 	    '--background-color-light': { w: 0.2, type: 'bg' },
 	    '--background-color-light-tr': { w: 0.2, type: 'bg' },
@@ -2748,6 +2749,7 @@ function applySystemTint() {
 	    '--text-color-light': { w: 0.1, type: 'primary' },
 	    '--secondary-text-color-light': { w: 0.1, type: 'primary' },
 	    '--accent-light': { w: 0.6, type: 'primary' },
+	    '--tonal-light': { w: 0.6, type: 'bg' },
 
 	    '--background-color-dark-highcontrast': { w: 0.2, type: 'bg' },
 	    '--background-color-dark-tr-highcontrast': { w: 0.2, type: 'bg' },
@@ -2758,6 +2760,7 @@ function applySystemTint() {
 	    '--text-color-dark-highcontrast': { w: 0.3, type: 'primary' },
 	    '--secondary-text-color-dark-highcontrast': { w: 0.3, type: 'primary' },
 	    '--accent-dark-highcontrast': { w: 0.6, type: 'primary' },
+	    '--tonal-dark-highcontrast': { w: 0.6, type: 'bg' },
 	
 	    '--background-color-light-highcontrast': { w: 0.2, type: 'bg' },
 	    '--background-color-light-tr-highcontrast': { w: 0.2, type: 'bg' },
@@ -2767,7 +2770,8 @@ function applySystemTint() {
 	    '--light-overlay-highcontrast': { w: 0.8, type: 'bg' },
 	    '--text-color-light-highcontrast': { w: 0.3, type: 'primary' },
 	    '--secondary-text-color-light-highcontrast': { w: 0.3, type: 'primary' },
-	    '--accent-light-highcontrast': { w: 0.6, type: 'primary' }
+	    '--accent-light-highcontrast': { w: 0.6, type: 'primary' },
+	    '--tonal-light-highcontrast': { w: 0.6, type: 'bg' }
 	};
 
     Object.keys(tintWeights).forEach(key => root.style.removeProperty(key));
