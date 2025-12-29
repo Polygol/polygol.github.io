@@ -2352,7 +2352,10 @@ input[type="checkbox"]:checked::before {
 
 	/* Style 2: Show Wallpaper, Hide Content */
 	body.blackout-active.blackout-style-dim-hide .container,
-	body.blackout-active.blackout-style-dim-hide .widget-grid {
+	body.blackout-active.blackout-style-dim-hide .widget-grid
+	body.blackout-active.blackout-style-dim-hide #dynamic-area,
+	body.blackout-active.blackout-style-dim-hide #environment-layer,
+	body.blackout-active.blackout-style-dim-hide #time-of-day-overlay {
 	    display: none !important;
 	}
 	body.blackout-active.blackout-style-dim-hide::before,
@@ -2365,7 +2368,9 @@ input[type="checkbox"]:checked::before {
 	    background-color: #000 !important;
 	}
 	body.blackout-active.blackout-style-hide-show::before,
-	body.blackout-active.blackout-style-hide-show #background-video {
+	body.blackout-active.blackout-style-hide-show #background-video,
+	body.blackout-active.blackout-style-hide-show #environment-layer,
+	body.blackout-active.blackout-style-hide-show #time-of-day-overlay {
 	    display: none !important;
 	}
 
@@ -2373,10 +2378,14 @@ input[type="checkbox"]:checked::before {
 	body.blackout-active.blackout-style-off {
 	    background-color: #000 !important;
 	}
+	body.blackout-active.blackout-style-off #dynamic-area,
 	body.blackout-active.blackout-style-off::before,
 	body.blackout-active.blackout-style-off #background-video,
 	body.blackout-active.blackout-style-off .container,
-	body.blackout-active.blackout-style-off .widget-grid {
+	body.blackout-active.blackout-style-off .widget-grid,
+	body.blackout-active.blackout-style-off #depth-layer,
+	body.blackout-active.blackout-style-off #environment-layer,
+	body.blackout-active.blackout-style-off #time-of-day-overlay {
 	    display: none !important;
 	}
 
