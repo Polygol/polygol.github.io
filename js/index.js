@@ -169,8 +169,8 @@ const ResourceManager = {
     // Configuration
     FPS_CHECK_INTERVAL: 2000,
     MEMORY_CHECK_INTERVAL: 20000,
-    MIN_ACCEPTABLE_FPS: 25,
-    // Browser throttling usually drops FPS to 1-10. True lag is usually 15-24.
+    MIN_ACCEPTABLE_FPS: 24,
+    // Browser throttling usually drops FPS to 1-10. True lag is usually 10-23.
     THROTTLE_FPS_THRESHOLD: 10, 
     RECOVERY_THRESHOLD: 5, // Number of clean intervals before restoring
     
