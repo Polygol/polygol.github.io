@@ -2352,7 +2352,7 @@ input[type="checkbox"]:checked::before {
 
 	/* Style 2: Show Wallpaper, Hide Content */
 	body.blackout-active.blackout-style-dim-hide .container,
-	body.blackout-active.blackout-style-dim-hide .widget-grid
+	body.blackout-active.blackout-style-dim-hide .widget-grid,
 	body.blackout-active.blackout-style-dim-hide #dynamic-area,
 	body.blackout-active.blackout-style-dim-hide #environment-layer,
 	body.blackout-active.blackout-style-dim-hide #time-of-day-overlay {
