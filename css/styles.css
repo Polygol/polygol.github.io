@@ -1327,6 +1327,8 @@ body.one-button-nav-active .dock.show {
 /* Brightness Control Styles */
 .qc-sliders {
     margin-top: 15px;
+    display: flex;
+    gap: 10px;
 }
 
 .brightness-slider-container {
