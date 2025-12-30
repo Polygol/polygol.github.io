@@ -5555,11 +5555,9 @@ function goFullscreen() {
 
 function updateFullscreenButtonVisibility() {
     const fullscreenBtn = document.getElementById('fullscreen-btn');
-    const settingsBtn = document.getElementById('settings-app-btn');
-    if (fullscreenBtn && settingsBtn) {
+    if (fullscreenBtn) {
         const isCurrentlyFullScreen = isFullScreen();
         fullscreenBtn.style.display = isCurrentlyFullScreen ? 'none' : 'flex';
-        settingsBtn.style.display = isCurrentlyFullScreen ? 'flex' : 'none';
     }
 }
 
