@@ -1621,7 +1621,6 @@ body.one-button-nav-active .dock.show {
 }
 
 .media-widget-info .artist {
-    font-size: 0.9em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
