@@ -190,6 +190,7 @@ const ResourceManager = {
     recoveryCounter: 0,
     originalGlassMode: null, 
     appActivity: {},
+    gurappMetrics: {},
     pressureState: 'nominal',
     maxObservedFps: 0, // Baseline for relative drop detection
     
@@ -211,6 +212,16 @@ const ResourceManager = {
                 // Don't count frames when hidden to avoid messing up averages
                 this.lastFpsCheck = performance.now();
                 this.frameCount = 0;
+            }
+        });
+
+        window.addEventListener('message', (e) => {
+            if (e.data.type === 'gurapp-performance-report') {
+                this.gurappMetrics[e.data.appId] = {
+                    fps: e.data.fps,
+                    memory: e.data.memory,
+                    lastUpdate: Date.now()
+                };
             }
         });
     },
@@ -246,11 +257,25 @@ const ResourceManager = {
         
         if (now - this.lastFpsCheck > this.FPS_CHECK_INTERVAL) {
             const duration = now - this.lastFpsCheck;
-            const fps = (this.frameCount / duration) * 1000;
+            const systemFps = (this.frameCount / duration) * 1000;
+            
+            // Calculate Global FPS (System + Active Apps)
+            let totalFps = systemFps;
+            let count = 1;
+            
+            Object.values(this.gurappMetrics).forEach(m => {
+                // Only count recent reports (last 5s)
+                if (Date.now() - m.lastUpdate < 5000) {
+                    totalFps += m.fps;
+                    count++;
+                }
+            });
+            
+            const averageFps = totalFps / count;
             
             // Dynamic Baseline: Learn the screen's refresh rate capabilities
-            if (fps > this.maxObservedFps) {
-                this.maxObservedFps = fps;
+            if (fps > averageFps) {
+                averageFps = fps;
             }
 
             const hasWindows = document.querySelector('.fullscreen-embed') || Object.keys(minimizedEmbeds).length > 0;
@@ -261,7 +286,7 @@ const ResourceManager = {
                 // Calculate Dynamic Threshold (e.g. 70% of Max observed, but at least 25)
                 // If 144Hz screen, drop to 100Hz is fine. Drop to 40Hz is bad.
                 // If 60Hz screen, drop to 40Hz is bad.
-                const relativeThreshold = this.maxObservedFps * 0.7;
+                const relativeThreshold = averageFps * 0.7;
                 const threshold = Math.max(this.MIN_ABSOLUTE_FPS, relativeThreshold);
 
                 // Detect Lag
@@ -273,7 +298,7 @@ const ResourceManager = {
                 // OR if the hardware is explicitly reporting pressure.
                 // This ignores "idle decay" where browsers lower FPS to save battery during static content.
                 if ((isLaggy && (isInteracting || isPressureHigh)) || (this.pressureState === 'critical')) {
-                    if (isLaggy) console.warn(`[System] Visual Lag Detected (${fps.toFixed(1)} / ${this.maxObservedFps.toFixed(0)} FPS).`);
+                    if (isLaggy) console.warn(`[System] Visual Lag Detected (${fps.toFixed(1)} / ${averageFps.toFixed(0)} FPS).`);
                     this.handleHighLoad();
                     this.recoveryCounter = 0;
                 } 
