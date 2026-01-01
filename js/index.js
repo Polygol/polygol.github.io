@@ -6289,6 +6289,8 @@ function handleAnimationChange() {
 
 animationSwitch.addEventListener('change', handleAnimationChange);
 
+// GuraAI will be removed
+
 const AI_DB_NAME = 'GuraAIDB';
 const AI_STORE_NAME = 'ChatHistory';
 
