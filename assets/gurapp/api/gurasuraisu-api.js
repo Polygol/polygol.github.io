@@ -1405,6 +1405,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { capture: true });
   }
 
+    // --- Performance Reporting ---
+    let frameCount = 0;
+    let lastTime = performance.now();
+    const REPORT_INTERVAL = 2000;
+
+    function reportPerformance() {
+        const now = performance.now();
+        frameCount++;
+
+        if (now - lastTime >= REPORT_INTERVAL) {
+            const fps = (frameCount / (now - lastTime)) * 1000;
+            
+            // Send metrics to parent
+            window.parent.postMessage({
+                type: 'gurapp-performance-report',
+                appId: document.body.dataset.appName || 'Unknown',
+                fps: fps,
+                memory: performance.memory ? performance.memory.usedJSHeapSize : 0
+            }, '*');
+
+            frameCount = 0;
+            lastTime = now;
+        }
+        requestAnimationFrame(reportPerformance);
+    }
+    
+    // Start reporting
+    requestAnimationFrame(reportPerformance);
+
   // Announce API presence to enable full-screen mode and readiness for settings.
   if (isInsideGurasuraisu) {
     window.parent.postMessage({ type: 'gurasuraisu-api-present' }, '*');
