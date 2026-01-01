@@ -3300,10 +3300,11 @@ input[type="checkbox"]:checked::before {
 }
 
 .widget-picker-preview {
-    width: 150px;
-    height: 150px;
+    width: 200px;
+    height: 200px;
 	overflow: auto;
     border: 1px solid var(--glass-border);
+	box-shadow: var(--sun-shadow);
     border-radius: 35px;
 	corner-shape: superellipse(1.5);
     display: flex;
