@@ -1833,14 +1833,14 @@ function openWidgetPicker() {
                 iframe.style.pointerEvents = 'none'; // Make the preview non-interactive
 
                 // Calculate the widget's actual size
-                const baseUnit = 150;
+                const baseUnit = 200;
                 const widgetWidth = widgetData.defaultSize ? widgetData.defaultSize[0] * baseUnit : baseUnit;
                 const widgetHeight = widgetData.defaultSize ? widgetData.defaultSize[1] * baseUnit : baseUnit;
                 iframe.style.width = `${widgetWidth}px`;
                 iframe.style.height = `${widgetHeight}px`;
 
-                // Scale the iframe down to fit into the preview container (e.g., 150px wide)
-                const previewBoxWidth = 150;
+                // Scale the iframe down to fit into the preview container 
+                const previewBoxWidth = 200;
                 const scale = previewBoxWidth / widgetWidth;
                 iframe.style.transform = `scale(${scale})`;
                 iframe.style.transformOrigin = 'center';
