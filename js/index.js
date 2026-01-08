@@ -10213,9 +10213,22 @@ async function finalizeSplitScreen(secondAppUrl) {
     // 1. Clean up the selecting state visually on the first app
     const firstEmbed = getEmbedContainer(firstAppUrl);
     if(firstEmbed) {
+        // FIX: Ensure first app is treated as active if it was minimized
+        if (minimizedEmbeds[firstAppUrl]) {
+            delete minimizedEmbeds[firstAppUrl];
+        }
+
         firstEmbed.classList.remove('split-selecting');
         firstEmbed.classList.remove('split-left', 'split-right');
         firstEmbed.classList.add(sideForSecondApp === 'right' ? 'split-left' : 'split-right');
+        
+        // FIX: Force visibility and z-index. The app might have been minimized/hidden
+        // during the selection process (e.g. accessing home screen).
+        firstEmbed.style.display = 'block';
+        firstEmbed.style.opacity = '1';
+        firstEmbed.style.zIndex = '1001';
+        // Restore pointer events in case they were disabled by drawer logic
+        firstEmbed.style.pointerEvents = 'auto';
         
         // Force layout update on first app immediately
         updateSplitLayout(50);
