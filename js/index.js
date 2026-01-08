@@ -10197,12 +10197,28 @@ async function finalizeSplitScreen(secondAppUrl) {
     const sideForSecondApp = splitScreenState.selectingSide;
     splitScreenState[sideForSecondApp === 'right' ? 'rightAppUrl' : 'leftAppUrl'] = secondAppUrl;
     
-    // 1. Clean up the selecting state visually
+    // FIX: Set Global State IMMEDIATELY to prevent race conditions during app load/animation
+    // This ensures the handle appears and closing logic works even if the app takes time to restore.
+    splitScreenState.active = true;
+    splitScreenState.isSelecting = false;
+    splitScreenState.lastSplitPair = { left: splitScreenState.leftAppUrl, right: splitScreenState.rightAppUrl };
+
+    // FIX: Show divider immediately
+    const divider = document.getElementById('split-divider');
+    if (divider) {
+        divider.style.display = 'flex';
+        divider.style.zIndex = '1002'; // Ensure it's above apps (1001)
+    }
+
+    // 1. Clean up the selecting state visually on the first app
     const firstEmbed = getEmbedContainer(firstAppUrl);
     if(firstEmbed) {
         firstEmbed.classList.remove('split-selecting');
         firstEmbed.classList.remove('split-left', 'split-right');
         firstEmbed.classList.add(sideForSecondApp === 'right' ? 'split-left' : 'split-right');
+        
+        // Force layout update on first app immediately
+        updateSplitLayout(50);
     }
 
     // 2. Properly initialize the second app
@@ -10211,20 +10227,9 @@ async function finalizeSplitScreen(secondAppUrl) {
         splitSide: sideForSecondApp 
     });
 
-    // 3. Set Global State
-    splitScreenState.active = true;
-    splitScreenState.isSelecting = false;
-    splitScreenState.lastSplitPair = { left: splitScreenState.leftAppUrl, right: splitScreenState.rightAppUrl };
-
     appDrawer.classList.remove('open');
-
-    // FIX: Explicitly ensure divider is visible and z-indexed correctly
-    const divider = document.getElementById('split-divider');
-    if (divider) {
-        divider.style.display = 'flex';
-        divider.style.zIndex = '1002'; // Ensure it's above apps (1001)
-    }
     
+    // Ensure final layout is correct
     updateSplitLayout(50);
 }
 
