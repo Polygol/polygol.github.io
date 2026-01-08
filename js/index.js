@@ -6219,12 +6219,12 @@ const AI_ICON_DEFAULT = 'auto_awesome';
 // --- App Switcher State ---
 let appSwitcherVisible = false;
 let appSwitcherApps = [];
-let appIndex = 0;
+let appSwitcherIndex = 0;
 let isTabKeyDown = false;
 let shiftSpaceSequenceTimer = null;
 
 // Theme switching functionality
-function setupTheme() {
+function setupThemeSwitcher() {
     // Check and set initial theme
     const currentTheme = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('light-theme', currentTheme === 'light');
