@@ -10423,6 +10423,7 @@ async function createFullscreenEmbed(url, options = {}) {
                         minimizedEmbeds[embed.dataset.embedUrl] = embed;
                     }
                     embed.style.display = 'none'; // Hide immediately
+                    embed.style.contentVisibility = 'hidden'; // OPTIMIZATION
                     embed.style.opacity = '0';
                     embed.style.zIndex = '0';
                 }
@@ -10575,6 +10576,7 @@ async function createFullscreenEmbed(url, options = {}) {
 		embedContainer.style.border = '1px solid var(--glass-border)';
         embedContainer.style.overflow = 'clip';
         embedContainer.style.display = 'block'; // Ensure visibility
+        embedContainer.style.removeProperty('content-visibility'); // OPTIMIZATION: Ensure rendering
 
 		const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
 	    const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
@@ -10620,6 +10622,7 @@ async function createFullscreenEmbed(url, options = {}) {
             el.style.opacity = '0';
             setTimeout(() => {
                 el.classList.add('force-hide');
+                el.style.contentVisibility = 'hidden'; // OPTIMIZATION
             }, 300);
         });
 
@@ -10774,6 +10777,7 @@ async function createFullscreenEmbed(url, options = {}) {
         el.style.opacity = '0';
         setTimeout(() => {
             el.classList.add('force-hide');
+            el.style.contentVisibility = 'hidden'; // OPTIMIZATION
         }, 300);
     });
 
@@ -11111,8 +11115,9 @@ function closeFullscreenEmbed() {
     
     // Restore all main UI elements
     document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-	el.classList.remove('force-hide');
+	    el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay || ''; // Restore original display property
+        el.style.removeProperty('content-visibility'); // OPTIMIZATION: Enable rendering
         el.style.transition = 'opacity 0.3s ease';
 
         requestAnimationFrame(() => {
@@ -11200,6 +11205,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
                 setTimeout(() => {
                     if (minimizedEmbeds[url] === embed) {
                         embed.style.display = 'none';
+                        embed.style.contentVisibility = 'hidden'; // OPTIMIZATION
                         embed.style.pointerEvents = 'none';
                         embed.style.zIndex = '0';
                     }
@@ -11217,11 +11223,12 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         // Restore interaction blocker
         const interactionBlocker = document.getElementById('interaction-blocker');
         if (interactionBlocker) interactionBlocker.style.pointerEvents = 'auto';
-
+		
         // Unhide all main UI elements
         document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
             el.classList.remove('force-hide');
             el.style.display = el.dataset.originalDisplay || '';
+            el.style.removeProperty('content-visibility'); // OPTIMIZATION
             el.style.transition = 'opacity 0.3s ease';
             requestAnimationFrame(() => { el.style.opacity = '1'; });
         });
@@ -11265,6 +11272,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
                 
                 if (minimizedEmbeds[url] === embedContainer) {
                     embedContainer.style.display = 'none';
+                    embedContainer.style.contentVisibility = 'hidden'; // OPTIMIZATION
 				    embedContainer.style.pointerEvents = 'none';
                 }
 
@@ -11283,6 +11291,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
     document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 	    el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay;
+        el.style.removeProperty('content-visibility'); // OPTIMIZATION
         el.style.transition = 'opacity 0.3s ease';
         requestAnimationFrame(() => { el.style.opacity = '1'; });
     });
@@ -11783,8 +11792,9 @@ function setupDrawerInteractions() {
 
 				// Restore all main UI elements
 			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-				el.classList.remove('force-hide');
+				    el.classList.remove('force-hide');
 			        el.style.display = el.dataset.originalDisplay;
+                    el.style.removeProperty('content-visibility'); // OPTIMIZATION
 			        el.style.transition = 'opacity 0.3s ease';
 			
 			        requestAnimationFrame(() => {
@@ -11925,8 +11935,9 @@ function setupDrawerInteractions() {
                 document.body.style.setProperty('--bg-transform-scale', '1.05');				
 			    // Restore all main UI elements
 			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-				el.classList.remove('force-hide');
+				    el.classList.remove('force-hide');
 			        el.style.display = el.dataset.originalDisplay;
+                    el.style.removeProperty('content-visibility'); // OPTIMIZATION
 			        el.style.transition = 'opacity 0.3s ease';
 			
 			        requestAnimationFrame(() => {
@@ -11957,6 +11968,7 @@ function setupDrawerInteractions() {
 			        el.style.opacity = '0';
 			        setTimeout(() => {
 			            el.classList.add('force-hide');
+                        el.style.contentVisibility = 'hidden'; // OPTIMIZATION
 			        }, 300);
 			    });
 	        } else {
@@ -11975,8 +11987,9 @@ function setupDrawerInteractions() {
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
 				// Restore all main UI elements
 			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-				el.classList.remove('force-hide');
+				    el.classList.remove('force-hide');
 			        el.style.display = el.dataset.originalDisplay;
+                    el.style.removeProperty('content-visibility'); // OPTIMIZATION
 			        el.style.transition = 'opacity 0.3s ease';
 			
 			        requestAnimationFrame(() => {
@@ -12337,8 +12350,9 @@ function setupDrawerInteractions() {
             document.body.style.setProperty('--bg-transform-scale', '1.05');			
 			// Restore all main UI elements
 		    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-			el.classList.remove('force-hide');
+			    el.classList.remove('force-hide');
 		        el.style.display = el.dataset.originalDisplay;
+                el.style.removeProperty('content-visibility'); // OPTIMIZATION
 		        el.style.transition = 'opacity 0.3s ease';
 		
 		        requestAnimationFrame(() => {
@@ -12497,6 +12511,7 @@ function setupOneButtonNav() {
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
                 el.style.display = el.dataset.originalDisplay || '';
+                el.style.removeProperty('content-visibility'); // OPTIMIZATION
                 el.style.transition = 'opacity 0.3s ease';
                 requestAnimationFrame(() => { el.style.opacity = '1'; });
             });
@@ -12527,6 +12542,7 @@ function setupOneButtonNav() {
             appDrawer.classList.remove('open');
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
+                el.style.removeProperty('content-visibility'); // OPTIMIZATION
                 el.style.opacity = '1';
             });
 			resetIndicatorTimeout();
@@ -12548,7 +12564,10 @@ function setupOneButtonNav() {
                     el.dataset.originalDisplay = window.getComputedStyle(el).display;
                 }
                 el.style.opacity = '0';
-                setTimeout(() => { el.classList.add('force-hide'); }, 300);
+                setTimeout(() => { 
+                    el.classList.add('force-hide'); 
+                    el.style.contentVisibility = 'hidden'; // OPTIMIZATION
+                }, 300);
             });
 			resetIndicatorTimeout();
         }
