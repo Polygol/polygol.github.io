@@ -6210,7 +6210,8 @@ let isAiAssistantEnabled = localStorage.getItem('aiAssistantEnabled') === 'true'
 let glassEffectsEnabled = localStorage.getItem('glassEffectsEnabled') !== 'false'; // Default to true
 let geminiApiKey = localStorage.getItem('geminiApiKey');
 let genAI; // Will be initialized if AI is enabled
-let minimizeCleanupTimeout = null;
+let minimizeCleanupTimeout = null; 
+const minimizeTimeouts = {}; // Track timeouts per app URL
 let chatSession; // For conversational memory
 const AI_ICON_THINKING_SVG = `<svg width="24" height="24" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--text-color);"><style>.spinner_V8m1{transform-origin:center;animation:spinner_zKoa 2s linear infinite}.spinner_V8m1 circle{stroke-linecap:round;animation:spinner_YpZS 1.5s ease-in-out infinite}@keyframes spinner_zKoa{100%{transform:rotate(360deg)}}@keyframes spinner_YpZS{0%{stroke-dasharray:0 150;stroke-dashoffset:0}47.5%{stroke-dasharray:42 150;stroke-dashoffset:-16}95%,100%{stroke-dasharray:42 150;stroke-dashoffset:-59}}</style><g class="spinner_V8m1"><circle cx="12" cy="12" r="9.5" fill="none" stroke-width="3"></circle></g></svg>`;
 const AI_ICON_DEFAULT = 'auto_awesome';
@@ -10411,12 +10412,20 @@ async function createFullscreenEmbed(url, options = {}) {
         // --- Hard Reset for FULLSCREEN apps only ---
         document.querySelectorAll('.fullscreen-embed').forEach(embed => {
             if (embed.dataset.embedUrl !== url) {
-                if (embed.dataset.embedUrl) {
-                    minimizedEmbeds[embed.dataset.embedUrl] = embed;
+                // FIX: Check if this embed is part of an active split. If so, DO NOT HIDE IT.
+                // This prevents the system from "unsplitting" when restoring the pair or switching focus.
+                const isPartOfActiveSplit = splitScreenState.active && 
+                    (embed.dataset.embedUrl === splitScreenState.leftAppUrl || 
+                     embed.dataset.embedUrl === splitScreenState.rightAppUrl);
+
+                if (!isPartOfActiveSplit) {
+                    if (embed.dataset.embedUrl) {
+                        minimizedEmbeds[embed.dataset.embedUrl] = embed;
+                    }
+                    embed.style.display = 'none'; // Hide immediately
+                    embed.style.opacity = '0';
+                    embed.style.zIndex = '0';
                 }
-                embed.style.display = 'none'; // Hide immediately
-                embed.style.opacity = '0';
-                embed.style.zIndex = '0';
             }
         });
     }
@@ -10444,9 +10453,13 @@ async function createFullscreenEmbed(url, options = {}) {
     }
 	
     // If we are about to restore this app, cancel any pending cleanup timer for it.
-    if (minimizedEmbeds[url]) {
-        clearTimeout(minimizeCleanupTimeout);
+    // FIX: Clear the specific timeout for this URL
+    if (minimizeTimeouts[url]) {
+        clearTimeout(minimizeTimeouts[url]);
+        delete minimizeTimeouts[url];
     }
+    // Also clear global one just in case
+    clearTimeout(minimizeCleanupTimeout);
 
 	// 1. Check if Gurapps are disabled entirely
     // This uses the 'gurappsEnabled' variable you already have.
@@ -11217,7 +11230,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         return; 
     }
 	
-    // --- Standard Single App Minimize Logic ---
+	// --- Standard Single App Minimize Logic ---
     isAppOpen = false;
 	SoundManager.play('close'); 
 	
@@ -11230,6 +11243,11 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         if (url) {
             minimizedEmbeds[url] = embedContainer;
 
+            // FIX: Cancel existing timeout for this specific app
+            if (minimizeTimeouts[url]) {
+                clearTimeout(minimizeTimeouts[url]);
+            }
+
 	        if (animate) {
 	            embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 	            embedContainer.style.transform = 'translateY(40px)';
@@ -11238,7 +11256,10 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 			
             const cleanupDelay = animate ? 300 : 0;
 
-			minimizeCleanupTimeout = setTimeout(() => {
+            // FIX: Store timeout in dictionary keyed by URL. 
+            // This prevents race conditions where minimizing App A then App B 
+            // would orphan App A's timer, causing it to hide A later even if restored.
+			minimizeTimeouts[url] = setTimeout(() => {
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
                 
@@ -11253,6 +11274,8 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 
 				resetIndicatorTimeout();
 				updateDockVisibility();
+                
+                delete minimizeTimeouts[url]; // Clean up map entry
             }, cleanupDelay);
         }
     }
