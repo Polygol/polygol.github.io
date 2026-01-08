@@ -10495,8 +10495,9 @@ async function createFullscreenEmbed(url, options = {}) {
 	
     if (embedContainer) {
         // Restore the minimized embed
-        // FIX: Removed variable shadowing that caused crash when reusing active DOM elements.
-        // The variable 'embedContainer' is already defined in the outer scope.
+        
+        // FIX: Removed variable shadowing 'const embedContainer = ...' 
+        // to prevent crash when reusing active DOM elements.
 
         // Remove from cache immediately
         if (minimizedEmbeds[url]) delete minimizedEmbeds[url];
@@ -10520,16 +10521,12 @@ async function createFullscreenEmbed(url, options = {}) {
                 embedContainer.style.setProperty('left', `${splitPercent}%`, 'important');
                 embedContainer.style.setProperty('right', '0', 'important');
             }
-
         } else if (!isSplitActivation) {
             // Standard restore, remove split artifacts
             embedContainer.classList.remove('split-left', 'split-right');
-            // FIX: Use removeProperty to ensure !important styles are cleared
-            embedContainer.style.removeProperty('width');
-            embedContainer.style.removeProperty('left');
-            embedContainer.style.removeProperty('right');
             embedContainer.style.width = '';
             embedContainer.style.left = '';
+            embedContainer.style.removeProperty('right');
         }
 		
         // First, remove any existing transitions
@@ -10542,7 +10539,7 @@ async function createFullscreenEmbed(url, options = {}) {
 		embedContainer.style.cornerShape = 'superellipse(1.5)';
 		embedContainer.style.border = '1px solid var(--glass-border)';
         embedContainer.style.overflow = 'clip';
-        embedContainer.style.display = 'block';
+        embedContainer.style.display = 'block'; // Ensure visibility
 
 		const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
 	    const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
