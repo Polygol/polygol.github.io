@@ -2604,6 +2604,7 @@ input[type="checkbox"]:checked::before {
     border-radius: 50px 50px 0 0;
 	corner-shape: superellipse(1.5);
 	filter: blur(5px);
+	content-visibility: hidden;
 }
 
 #app-drawer {
@@ -2634,6 +2635,7 @@ input[type="checkbox"]:checked::before {
 		    opacity: 1;
 		    transform: none;
 		    filter: none;
+			content-visibility: auto;
         }
 
         .app-drawer-handle {
