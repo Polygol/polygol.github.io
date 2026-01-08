@@ -10497,7 +10497,6 @@ async function createFullscreenEmbed(url, options = {}) {
         // Restore the minimized embed
         // FIX: Removed variable shadowing that caused crash when reusing active DOM elements.
         // The variable 'embedContainer' is already defined in the outer scope.
-        // Redeclaring it as 'const' caused it to be undefined if the app wasn't in minimizedEmbeds.
 
         // Remove from cache immediately
         if (minimizedEmbeds[url]) delete minimizedEmbeds[url];
@@ -10507,11 +10506,28 @@ async function createFullscreenEmbed(url, options = {}) {
             embedContainer.classList.remove('split-left', 'split-right');
             embedContainer.classList.add(splitSide === 'left' ? 'split-left' : 'split-right');
             embedContainer.style.zIndex = '1001';
-            // Force width update
-            if (splitScreenState.active) updateSplitLayout(splitScreenState.splitPercentage || 50);
+            
+            // FIX: Force width/position update immediately to override any stale inline styles
+            // This is necessary because 'updateSplitLayout' checks 'splitScreenState.active',
+            // which isn't true yet during the initialization of the second app.
+            const splitPercent = splitScreenState.splitPercentage || 50;
+            if (splitSide === 'left') {
+                embedContainer.style.setProperty('width', `${splitPercent}%`, 'important');
+                embedContainer.style.setProperty('left', '0', 'important');
+                embedContainer.style.setProperty('right', 'auto', 'important');
+            } else {
+                embedContainer.style.setProperty('width', `${100 - splitPercent}%`, 'important');
+                embedContainer.style.setProperty('left', `${splitPercent}%`, 'important');
+                embedContainer.style.setProperty('right', '0', 'important');
+            }
+
         } else if (!isSplitActivation) {
             // Standard restore, remove split artifacts
             embedContainer.classList.remove('split-left', 'split-right');
+            // FIX: Use removeProperty to ensure !important styles are cleared
+            embedContainer.style.removeProperty('width');
+            embedContainer.style.removeProperty('left');
+            embedContainer.style.removeProperty('right');
             embedContainer.style.width = '';
             embedContainer.style.left = '';
         }
