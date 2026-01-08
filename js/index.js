@@ -10238,8 +10238,12 @@ function exitSplitScreen(survivingUrl = null) {
     splitScreenState.active = false;
     splitScreenState.isSelecting = false;
     
-    // Clear history so it doesn't auto-restore later
-    splitScreenState.lastSplitPair = null;
+    // FIX: Only clear history if we are explicitly destroying the split 
+    // by maximizing one side (survivingUrl). 
+    // If survivingUrl is null (minimize all / switch away), we keep the pair in memory.
+    if (survivingUrl) {
+        splitScreenState.lastSplitPair = null;
+    }
     
     const { leftAppUrl, rightAppUrl } = splitScreenState;
     
@@ -10926,7 +10930,10 @@ createFullscreenEmbed = async function(url, options = {}) {
     // If we reach here, we are opening a single app normally via interaction.
     // We should clear the split history and the navigation stack.
     if (!splitScreenState.active && !isSplitActivation) {
-        splitScreenState.lastSplitPair = null;
+        // FIX: Do not wipe lastSplitPair here. 
+        // This allows switching to a 3rd app and then coming back to restore the split A+B.
+        // splitScreenState.lastSplitPair = null; 
+        
         window.appHistoryStack = []; // Clear history stack on manual open
     }
 
