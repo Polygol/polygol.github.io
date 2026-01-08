@@ -10495,10 +10495,12 @@ async function createFullscreenEmbed(url, options = {}) {
 	
     if (embedContainer) {
         // Restore the minimized embed
-        const embedContainer = minimizedEmbeds[url];
+        // FIX: Removed variable shadowing that caused crash when reusing active DOM elements.
+        // The variable 'embedContainer' is already defined in the outer scope.
+        // Redeclaring it as 'const' caused it to be undefined if the app wasn't in minimizedEmbeds.
 
         // Remove from cache immediately
-        delete minimizedEmbeds[url];
+        if (minimizedEmbeds[url]) delete minimizedEmbeds[url];
 
         // Ensure split classes are correct upon restore
         if (isSplitActivation && splitSide) {
