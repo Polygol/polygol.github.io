@@ -10411,8 +10411,11 @@ async function createFullscreenEmbed(url, options = {}) {
             if (inDom.style.display === 'none') {
                 minimizedEmbeds[url] = inDom; // Re-link cache
                 embedContainer = inDom;
-            } else if (!isSplitActivation) {
-                // App is already active/visible. Just return (focus).
+            } else if (isSplitActivation) {
+                // FIX: Explicitly reuse existing container for split activation to prevent duplicates
+                embedContainer = inDom;
+            } else {
+                // App is already active/visible and not splitting. Just return (focus).
                 return; 
             }
         }
