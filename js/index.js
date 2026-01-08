@@ -194,14 +194,24 @@ const ResourceManager = {
     pressureState: 'nominal',
     maxObservedFps: 0, // Baseline for relative drop detection
     
+    // IDs for cancellation
+    rafId: null,
+    intervalId: null,
+    
     // Limits (bytes)
     softMemoryLimit: (navigator.deviceMemory || 4) * 1024 * 1024 * 1024 * 0.7,
     
     init() {
+        if (localStorage.getItem('resourceManagerEnabled') === 'false') {
+            console.log("[System] Resource Manager disabled by user settings.");
+            return;
+        }
+        if (this.rafId) return; // Already running
+
         console.log("[System] Resource Manager Initialized");
         this.lastFpsCheck = performance.now();
-        requestAnimationFrame(t => this.loop(t));
-        setInterval(() => this.checkMemory(), this.MEMORY_CHECK_INTERVAL);
+        this.rafId = requestAnimationFrame(t => this.loop(t));
+        this.intervalId = setInterval(() => this.checkMemory(), this.MEMORY_CHECK_INTERVAL);
         
         this.initPressureObserver();
 
@@ -224,6 +234,18 @@ const ResourceManager = {
                 };
             }
         });
+    },
+
+    stop() {
+        if (this.rafId) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
+        }
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+        console.log("[System] Resource Manager Stopped");
     },
 
     async initPressureObserver() {
@@ -257,7 +279,6 @@ const ResourceManager = {
         
         if (now - this.lastFpsCheck > this.FPS_CHECK_INTERVAL) {
             const duration = now - this.lastFpsCheck;
-            // FIX: Rename 'systemFps' to 'fps' to resolve ReferenceError
             const fps = (this.frameCount / duration) * 1000;
             
             // Calculate Global FPS (System + Active Apps)
@@ -323,7 +344,7 @@ const ResourceManager = {
             this.frameCount = 0;
         }
         
-        requestAnimationFrame(t => this.loop(t));
+        this.rafId = requestAnimationFrame(t => this.loop(t));
     },
 
     async checkMemory() {
@@ -13645,7 +13666,8 @@ function getEffectiveSettingValue(key) {
         'showWeather', 
         'aiAssistantEnabled',
         'gurappSoundsEnabled',
-        'glassEffectsEnabled'
+        'glassEffectsEnabled',
+        'resourceManagerEnabled'
     ];
     if (defaultsTrue.includes(key)) {
         return (rawValue !== 'false').toString();
@@ -14377,7 +14399,8 @@ function setControlValueAndDispatch(key, value) {
     // Handle settings without a direct UI control in index.html
     const settingsWithoutDirectControl = [
         'sleepModeStyle', 'slideshowInterval', 'hideClockIndicator',
-        'autoSleepEnabled', 'autoSleepDuration', 'autoSleepScope'
+        'autoSleepEnabled', 'autoSleepDuration', 'autoSleepScope',
+		'resourceManagerEnabled'
     ];
     if (settingsWithoutDirectControl.includes(key)) {
         localStorage.setItem(key, value);
@@ -14391,6 +14414,10 @@ function setControlValueAndDispatch(key, value) {
         }
         if (key === 'hideClockIndicator') {
             updatePersistentClock();
+        }
+        if (key === 'resourceManagerEnabled') {
+            if (value === 'true') ResourceManager.init();
+            else ResourceManager.stop();
         }
         return;
     }
