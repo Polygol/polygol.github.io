@@ -428,6 +428,7 @@ body.heavy-weather::before {
 
 .force-hide {
     display: none !important;
+	content-visibility: hidden !important;
 }
 
 /* Disabled
