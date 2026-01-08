@@ -257,10 +257,11 @@ const ResourceManager = {
         
         if (now - this.lastFpsCheck > this.FPS_CHECK_INTERVAL) {
             const duration = now - this.lastFpsCheck;
-            const systemFps = (this.frameCount / duration) * 1000;
+            // FIX: Rename 'systemFps' to 'fps' to resolve ReferenceError
+            const fps = (this.frameCount / duration) * 1000;
             
             // Calculate Global FPS (System + Active Apps)
-            let totalFps = systemFps;
+            let totalFps = fps;
             let count = 1;
             
             Object.values(this.gurappMetrics).forEach(m => {
@@ -271,7 +272,8 @@ const ResourceManager = {
                 }
             });
             
-            const averageFps = totalFps / count;
+            // FIX: Change 'const' to 'let' to allow reassignment below
+            let averageFps = totalFps / count;
             
             // Dynamic Baseline: Learn the screen's refresh rate capabilities
             if (fps > averageFps) {
