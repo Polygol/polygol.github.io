@@ -3305,7 +3305,7 @@ function updateStatusIndicator() {
     // Priority Logic: Modes override Notifications
     // 1. Focus Mode
     if (typeof minimalMode !== 'undefined' && minimalMode) {
-        el.innerHTML = '<span class="material-symbols-rounded">filter_tilt_shift</span>';
+        el.innerHTML = '<span class="material-symbols-rounded">screen_record</span>';
         return;
     }
     // 2. Night Mode
@@ -6219,12 +6219,12 @@ const AI_ICON_DEFAULT = 'auto_awesome';
 // --- App Switcher State ---
 let appSwitcherVisible = false;
 let appSwitcherApps = [];
-let appSwitcherIndex = 0;
+let appIndex = 0;
 let isTabKeyDown = false;
 let shiftSpaceSequenceTimer = null;
 
 // Theme switching functionality
-function setupThemeSwitcher() {
+function setupTheme() {
     // Check and set initial theme
     const currentTheme = localStorage.getItem('theme') || 'dark';
     document.body.classList.toggle('light-theme', currentTheme === 'light');
@@ -15512,14 +15512,12 @@ function openAppSwitcher() {
             
             itemDiv.appendChild(createIcon(item.leftUrl));
             itemDiv.appendChild(createIcon(item.rightUrl));
-            itemDiv.innerHTML += `<span>${appNameL} | ${appNameR}</span>`;
             itemDiv.dataset.leftUrl = item.leftUrl;
             itemDiv.dataset.rightUrl = item.rightUrl;
 
         } else { // Single app
             const appName = Object.keys(apps).find(name => apps[name].url === item.url) || 'Unknown App';
             itemDiv.appendChild(createIcon(item.url));
-            itemDiv.innerHTML += `<span>${appName}</span>`;
             itemDiv.dataset.url = item.url;
         }
         
