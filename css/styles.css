@@ -3446,7 +3446,7 @@ input[type="checkbox"]:checked::before {
 /* --- App Switcher (Alt+Tab) Styles --- */
 #app-switcher-overlay {
     position: fixed;
-    bottom: 25px;
+    bottom: 35px;
     left: 50%;
     transform: translateX(-50%);
     background-color: var(--search-background);
