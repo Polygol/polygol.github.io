@@ -3446,26 +3446,27 @@ input[type="checkbox"]:checked::before {
 /* --- App Switcher (Alt+Tab) Styles --- */
 #app-switcher-overlay {
     position: fixed;
-    bottom: 120px; /* Position above the dock/handle area */
+    bottom: 25px;
     left: 50%;
     transform: translateX(-50%);
     background-color: var(--search-background);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
     border: 1px solid var(--glass-border);
-	corner-shape: superellipse(1.5);
+    corner-shape: superellipse(1.5);
     border-radius: 50px;
-    padding: 10px 20px;
+    padding: 6px 8px;
     box-shadow: var(--sun-shadow), 0 8px 30px rgba(0, 0, 0, 0.2);
     z-index: 10000;
     opacity: 0;
     transform: translateX(-50%) scale(0.95);
     transition: opacity 0.2s ease, transform 0.2s ease;
     max-width: 90vw;
+    transform-origin: bottom;
 }
 
 #app-switcher-list {
     display: flex;
-    gap: 16px;
+    gap: 4px;
     align-items: center;
 }
 
@@ -3473,28 +3474,16 @@ input[type="checkbox"]:checked::before {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
     padding: 8px;
     border-radius: 35px;
-	corner-shape: superellipse(1.5);
+    corner-shape: superellipse(1.5);
     transition: background-color 0.2s;
-    width: 70px; /* Fixed width */
+    aspect-ratio: 1 / 1;
 }
 
-.app-switcher-item.selected {
-    background-color: rgba(255, 255, 255, 0.15);
-    scale: 1.1;
-	gap: 0;
-	padding: 10px 8px 12px 8px;
-}
-
-.app-switcher-item.selected span {
-	font-size: 0;
-	opacity: 0;
-}
-
-body.light-theme .app-switcher-item.selected {
-    background-color: rgba(0, 0, 0, 0.1);
+.app-switcher-item.selected .app-icon-img {
+	scale: 1.2;
+    filter: brightness(1.5);
 }
 
 .app-switcher-item .app-icon-img {
@@ -3502,35 +3491,20 @@ body.light-theme .app-switcher-item.selected {
     height: 60px;
 }
 
-.app-switcher-item span {
-    font-size: 12px;
-    color: var(--secondary-text-color);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-    text-align: center;
-}
-
 /* --- Modified App Switcher for Split View --- */
 .app-switcher-item.is-split-pair {
-    width: 110px; /* Wider to accommodate two icons */
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
-    gap: 4px;
-    padding: 10px;
+    padding: 16px;
+    display: flex;
+    aspect-ratio: auto;
 }
 
 .app-switcher-item.is-split-pair .app-icon-img {
     width: 40px;
     height: 40px;
-}
-
-.app-switcher-item.is-split-pair span {
-    width: 100%;
-    font-size: 10px;
-    margin-top: 4px;
+    margin: -10px;
 }
 
 /* Visual state when picking the second app */
