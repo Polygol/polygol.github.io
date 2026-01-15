@@ -6916,16 +6916,16 @@ function updateGurappsVisibility() {
     if (gurappsEnabled) {
         // Show Gurapps elements
         if (drawerHandle) drawerHandle.style.display = "flex";
-        if (splitTrigger) splitTrigger.classList.remove("permanently-hidden");
-        if (dock) dock.classList.remove("permanently-hidden");
+        if (splitTrigger) splitTrigger.classList.remove("force-hide");
+        if (dock) dock.classList.remove("force-hide");
         
         // Reset app functionality
         document.body.classList.remove("gurapps-disabled");
     } else {
         // Hide Gurapps elements
         if (drawerHandle) drawerHandle.style.display = "none";
-        if (splitTrigger) splitTrigger.classList.add("permanently-hidden");
-        if (dock) dock.classList.add("permanently-hidden");
+        if (splitTrigger) splitTrigger.classList.add("force-hide");
+        if (dock) dock.classList.add("force-hide");
         
         // Add class to body for CSS targeting
         document.body.classList.add("gurapps-disabled");
