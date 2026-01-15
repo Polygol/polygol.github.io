@@ -6910,11 +6910,13 @@ async function handleAiQuery() {
 // Function to handle Gurapps visibility
 function updateGurappsVisibility() {
     const drawerHandle = document.querySelector(".drawer-handle");
+    const splitTrigger = document.getElementById("split-screen-trigger");
     const dock = document.getElementById("dock");
     
     if (gurappsEnabled) {
         // Show Gurapps elements
         if (drawerHandle) drawerHandle.style.display = "flex";
+        if (splitTrigger) splitTrigger.classList.remove("permanently-hidden");
         if (dock) dock.classList.remove("permanently-hidden");
         
         // Reset app functionality
@@ -6922,6 +6924,7 @@ function updateGurappsVisibility() {
     } else {
         // Hide Gurapps elements
         if (drawerHandle) drawerHandle.style.display = "none";
+        if (splitTrigger) splitTrigger.classList.add("permanently-hidden");
         if (dock) dock.classList.add("permanently-hidden");
         
         // Add class to body for CSS targeting
