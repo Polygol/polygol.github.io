@@ -5017,38 +5017,62 @@ function showPopup(message) {
     }, duration);
 }
 
+// Notification Queue System
+const notificationQueue = [];
+let isShowingNotification = false;
+
+function processNotificationQueue() {
+    if (isShowingNotification || notificationQueue.length === 0) return;
+    
+    isShowingNotification = true;
+    const { message, options, resolve } = notificationQueue.shift();
+    
+    const popupControls = createOnScreenPopup(message, options, () => {
+        isShowingNotification = false;
+        setTimeout(processNotificationQueue, 300); // Delay before next
+    });
+    
+    window.SoundManager.play('popup');
+    resolve(popupControls);
+}
+
 function showNotification(message, options = {}) {
-    let popupNotification = null;
-    
-    // Only create on-screen popup if silent mode is NOT active
-    if (!isSilentMode) {
-        popupNotification = createOnScreenPopup(message, options);
-		window.SoundManager.play('error');
-    }
-    
-    // Always create persistent notification in the shade
+    // Always create persistent notification in the shade immediately
     const shadeNotification = addToNotificationShade(message, options);
+    
+    let popupControls = { close: () => {}, update: () => {} };
+
+    // Only queue on-screen popup if silent mode is NOT active
+    if (!isSilentMode) {
+        // Return a promise-like object structure to maintain API compatibility
+        // though the popup won't appear immediately.
+        new Promise((resolve) => {
+            notificationQueue.push({ message, options, resolve });
+            processNotificationQueue();
+        }).then(controls => {
+            popupControls = controls;
+        });
+    }
     
     // Return control methods
     return {
-        closePopup: () => {
-            if (popupNotification) popupNotification.close(); // Only call if popup was created
-        },
+        closePopup: () => popupControls.close(),
         closeShade: shadeNotification.close,
         update: (newMessage) => {
-            if (popupNotification) popupNotification.update(newMessage); // Only update if popup was created
+            popupControls.update(newMessage);
             shadeNotification.update(newMessage);
         }
     };
 }
 
 // Creates a temporary on-screen popup (similar to original showPopup)
-function createOnScreenPopup(message, options = {}) {
+function createOnScreenPopup(message, options = {}, onClosed) {
     const popup = document.createElement('div');
     popup.className = 'on-screen-notification';
     popup.style.position = 'fixed';
     popup.style.top = '20px';
     popup.style.right = '20px';
+	popup.style.transform = 'translateY(-150%) scale(0.95)';
     popup.style.width = 'clamp(200px, 90%, 500px)';
     popup.style.backgroundColor = 'var(--search-background)';
     popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(2.5px)';
@@ -5065,15 +5089,59 @@ function createOnScreenPopup(message, options = {}) {
     popup.style.border = '1px solid var(--glass-border)';
 
     const closeMe = () => {
-        clearTimeout(timeoutId); // Clear auto-dismiss timer
+        clearTimeout(timeoutId);
+        popup.style.transition = 'transform 0.3s ease-in, opacity 0.3s';
+        popup.style.transform = 'translateX(-50%) translateY(-150%)'; // Slide back up
         popup.style.opacity = '0';
         setTimeout(() => {
-            if (document.body.contains(popup)) {
-                document.body.removeChild(popup);
-                // Readjust positions of any remaining popups
-            }
-        }, 500);
+            if (document.body.contains(popup)) document.body.removeChild(popup);
+            if (onClosed) onClosed();
+        }, 300);
     };
+    
+    // --- Swipe to Dismiss Logic ---
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+
+    const handleStart = (y) => {
+        startY = y;
+        isDragging = true;
+        popup.style.transition = 'none'; // Disable transition for direct tracking
+        popup.style.cursor = 'grabbing';
+    };
+
+    const handleMove = (y) => {
+        if (!isDragging) return;
+        currentY = y;
+        const deltaY = currentY - startY;
+        // Allow dragging up (negative delta) freely, resist dragging down
+        const translateY = deltaY < 0 ? deltaY : deltaY * 0.2; 
+        popup.style.transform = `translateY(${translateY}px)`;
+        popup.style.opacity = Math.max(0, 1 - (Math.abs(deltaY) / 100));
+    };
+
+    const handleEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        popup.style.cursor = 'grab';
+        const deltaY = currentY - startY;
+
+        if (deltaY < -50) { // Swiped up enough
+            closeMe();
+        } else {
+            // Snap back
+            popup.style.transform = 'translateY(0)';
+            popup.style.opacity = '1';
+        }
+    };
+
+    popup.addEventListener('touchstart', (e) => handleStart(e.touches[0].clientY), {passive: true});
+    popup.addEventListener('touchmove', (e) => handleMove(e.touches[0].clientY), {passive: true});
+    popup.addEventListener('touchend', handleEnd);
+    popup.addEventListener('mousedown', (e) => handleStart(e.clientY));
+    document.addEventListener('mousemove', (e) => isDragging && handleMove(e.clientY));
+    document.addEventListener('mouseup', () => isDragging && handleEnd());
     
     // Check for specific words to determine icon
     const checkWords = window.checkWords || ['updated', 'complete', 'done', 'success', 'completed', 'ready', 'successfully', 'accepted', 'accept', 'yes'];
@@ -5167,28 +5235,16 @@ function createOnScreenPopup(message, options = {}) {
         popup.appendChild(actionButton);
     }
     
-    // Get all existing popups
-    const existingPopups = document.querySelectorAll('.on-screen-notification');
+	document.body.appendChild(popup);
     
-    // If there is already a popup, remove the oldest one
-    if (existingPopups.length >= 1) {
-        document.body.removeChild(existingPopups[0]);
-    }
-    
-    // Recalculate positions for all popups
-    const remainingPopups = document.querySelectorAll('.on-screen-notification');
-    remainingPopups.forEach((p, index) => {
-        p.style.top = `${20 + (index * 70)}px`;
+    // Trigger Entry Animation
+    requestAnimationFrame(() => {
+        popup.style.transform = 'translateX(-50%) translateY(0)';
+        popup.style.opacity = '1';
     });
     
-    // Position the new popup
-    popup.style.top = `${20 + (remainingPopups.length * 70)}px`;
-    
-    document.body.appendChild(popup);
-	SoundManager.play('popup');
-    
-    // Auto-dismiss on-screen popup
-    const timeoutId = setTimeout(closeMe, 10000);
+    // Auto-dismiss duration (Queue system handles one at a time)
+    const timeoutId = setTimeout(closeMe, 5000);
     
     // Return control methods
     return {
@@ -5217,6 +5273,27 @@ function addToNotificationShade(message, options = {}) {
         shade.style.padding = '20px';
         shade.style.pointerEvents = 'none';
         document.body.appendChild(shade);
+    }
+
+    // Ensure "Clear All" button exists at the bottom
+    let clearBtn = document.getElementById('notification-clear-btn');
+    if (!clearBtn) {
+        clearBtn = document.createElement('button');
+        clearBtn.id = 'notification-clear-btn';
+        clearBtn.innerHTML = '<span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle; margin-right: 5px;">close</span>';
+        clearBtn.className = 'btn-qc'; // Reuse quick control style
+        clearBtn.style.cssText = `
+            margin-top: auto; align-self: flex-end; pointer-events: auto;
+            background: var(--search-background); backdrop-filter: var(--edge-refraction-filter);
+            border: 1px solid var(--glass-border); padding: 8px 16px; border-radius: 20px;
+            color: var(--text-color); cursor: pointer; font-size: 14px; 
+            box-shadow: var(--sun-shadow); flex-shrink: 0;
+        `;
+        clearBtn.onclick = (e) => {
+            e.stopPropagation();
+            clearAllNotifications();
+        };
+        shade.appendChild(clearBtn);
     }
 
     if (!options.liveActivityUrl) {
@@ -5262,7 +5339,7 @@ function addToNotificationShade(message, options = {}) {
 	    // Remove after animation completes
 	    setTimeout(() => {
 	        if (shade.contains(notification)) {
-	            shade.removeChild(notification);
+	            notification.remove();
 	        }
 	    }, 300);
 	}
@@ -5431,16 +5508,22 @@ function addToNotificationShade(message, options = {}) {
         }
     }, { passive: true });
     
-    notification.addEventListener('touchend', () => {
+	notification.addEventListener('touchend', () => {
         const diff = currentX - startX;
         if (diff > 100) {
             // Swipe threshold reached, dismiss notification
             notification.style.transform = 'translateX(400px)';
             notification.style.opacity = '0';
+            
+            if (!options.liveActivityUrl) {
+                unreadNotifications = Math.max(0, unreadNotifications - 1);
+                updateStatusIndicator();
+            }
+            window.activeNotificationsList = window.activeNotificationsList.filter(n => n.id !== notification.dataset.notifId);
+            updateRemoteNotifications();
+
             setTimeout(() => {
-                if (shade.contains(notification)) {
-                    shade.removeChild(notification);
-                }
+                notification.remove();
             }, 300);
         } else {
             // Reset position
@@ -5448,6 +5531,9 @@ function addToNotificationShade(message, options = {}) {
             notification.style.opacity = '1';
         }
     });
+    
+    // Add to notification shade (Insert BEFORE the clear button)
+    shade.insertBefore(notification, clearBtn);
     
     // Add to notification shade
     shade.appendChild(notification);
@@ -5474,7 +5560,14 @@ function clearAllNotifications() {
     // Remove all notification elements except live activities
     if (shade) {
         const notifs = shade.querySelectorAll('.shade-notification:not(.live-activity-notification)');
-        notifs.forEach(n => n.remove());
+        // Animate them out
+        notifs.forEach((n, index) => {
+            setTimeout(() => {
+                n.style.transform = 'translateX(100px)';
+                n.style.opacity = '0';
+                setTimeout(() => n.remove(), 300);
+            }, index * 50);
+        });
     }
     window.activeNotificationsList = [];
     updateRemoteNotifications();
