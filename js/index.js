@@ -5091,7 +5091,7 @@ function createOnScreenPopup(message, options = {}, onClosed) {
     const closeMe = () => {
         clearTimeout(timeoutId);
         popup.style.transition = 'transform 0.3s ease-in, opacity 0.3s';
-        popup.style.transform = 'translateX(-50%) translateY(-150%)'; // Slide back up
+        popup.style.transform = 'translateY(-150%)'; // Slide back up
         popup.style.opacity = '0';
         setTimeout(() => {
             if (document.body.contains(popup)) document.body.removeChild(popup);
@@ -5239,7 +5239,7 @@ function createOnScreenPopup(message, options = {}, onClosed) {
     
     // Trigger Entry Animation
     requestAnimationFrame(() => {
-        popup.style.transform = 'translateX(-50%) translateY(0)';
+        popup.style.transform = 'translateY(0)';
         popup.style.opacity = '1';
     });
     
@@ -5280,14 +5280,10 @@ function addToNotificationShade(message, options = {}) {
     if (!clearBtn) {
         clearBtn = document.createElement('button');
         clearBtn.id = 'notification-clear-btn';
-        clearBtn.innerHTML = '<span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle; margin-right: 5px;">close</span>';
+        clearBtn.innerHTML = '<span class="material-symbols-rounded" style="font-size: 16px;">close</span>';
         clearBtn.className = 'btn-qc'; // Reuse quick control style
         clearBtn.style.cssText = `
-            margin-top: auto; align-self: flex-end; pointer-events: auto;
-            background: var(--search-background); backdrop-filter: var(--edge-refraction-filter);
-            border: 1px solid var(--glass-border); padding: 8px 16px; border-radius: 20px;
-            color: var(--text-color); cursor: pointer; font-size: 14px; 
-            box-shadow: var(--sun-shadow); flex-shrink: 0;
+            background: var(--search-background); backdrop-filter: none; flex-shrink: 0; margin-left: auto; margin-bottom: 10px;
         `;
         clearBtn.onclick = (e) => {
             e.stopPropagation();
