@@ -5274,9 +5274,10 @@ function addToNotificationShade(message, options = {}) {
         document.body.appendChild(shade);
     }
 
-    // Ensure "Clear All" button exists at the bottom
     let clearBtn = document.getElementById('notification-clear-btn');
-    if (!clearBtn) {
+    
+    // Only create button if this is a standard notification (Live Activities aren't cleared by it)
+    if (!options.liveActivityUrl && !clearBtn) {
         clearBtn = document.createElement('button');
         clearBtn.id = 'notification-clear-btn';
         clearBtn.innerHTML = '<span class="material-symbols-rounded" style="font-size: 16px;">close</span>';
@@ -5290,6 +5291,19 @@ function addToNotificationShade(message, options = {}) {
         };
         shade.appendChild(clearBtn);
     }
+
+    // Helper to check if shade/button should be removed
+    const checkShadeState = () => {
+        const notifs = shade.querySelectorAll('.shade-notification');
+        const clearable = shade.querySelectorAll('.shade-notification:not(.live-activity-notification)');
+        const btn = document.getElementById('notification-clear-btn');
+
+        if (notifs.length === 0) {
+            shade.remove();
+        } else if (clearable.length === 0 && btn) {
+            btn.remove();
+        }
+    };
 
     if (!options.liveActivityUrl) {
         unreadNotifications++;
@@ -5335,6 +5349,7 @@ function addToNotificationShade(message, options = {}) {
 	    setTimeout(() => {
 	        if (shade.contains(notification)) {
 	            notification.remove();
+				checkShadeState();
 	        }
 	    }, 300);
 	}
@@ -5506,10 +5521,11 @@ function addToNotificationShade(message, options = {}) {
 	notification.addEventListener('touchend', () => {
         const diff = currentX - startX;
         if (diff > 100) {
-            // Swipe threshold reached, dismiss notification
+            // Swipe threshold reached
             notification.style.transform = 'translateX(400px)';
             notification.style.opacity = '0';
             
+            // Update Data
             if (!options.liveActivityUrl) {
                 unreadNotifications = Math.max(0, unreadNotifications - 1);
                 updateStatusIndicator();
@@ -5517,17 +5533,19 @@ function addToNotificationShade(message, options = {}) {
             window.activeNotificationsList = window.activeNotificationsList.filter(n => n.id !== notification.dataset.notifId);
             updateRemoteNotifications();
 
+            // Cleanup DOM
             setTimeout(() => {
                 notification.remove();
+                checkShadeState(); // Check if we need to remove button/shade
             }, 300);
         } else {
-            // Reset position
             notification.style.transform = 'translateX(0)';
             notification.style.opacity = '1';
         }
     });
     
-    // Add to notification shade (Insert BEFORE the clear button)
+    // Add to notification shade.
+    // If clearBtn exists, insert before it. If null (no button), appends to end.
     shade.insertBefore(notification, clearBtn);
     
     // Add to notification shade
@@ -5552,17 +5570,34 @@ function addToNotificationShade(message, options = {}) {
 
 function clearAllNotifications() {
     const shade = document.querySelector('.notification-shade');
-    // Remove all notification elements except live activities
     if (shade) {
+        // 1. Remove Button immediately
+        const btn = document.getElementById('notification-clear-btn');
+        if (btn) btn.remove();
+
+        // 2. Animate out notifications
         const notifs = shade.querySelectorAll('.shade-notification:not(.live-activity-notification)');
-        // Animate them out
-        notifs.forEach((n, index) => {
-            setTimeout(() => {
-                n.style.transform = 'translateX(100px)';
-                n.style.opacity = '0';
-                setTimeout(() => n.remove(), 300);
-            }, index * 50);
-        });
+        
+        if (notifs.length > 0) {
+            notifs.forEach((n, index) => {
+                setTimeout(() => {
+                    n.style.transform = 'translateX(100px)';
+                    n.style.opacity = '0';
+                    setTimeout(() => {
+                        n.remove();
+                        // Final cleanup check after last item removal
+                        if (shade.querySelectorAll('.shade-notification').length === 0) {
+                            shade.remove();
+                        }
+                    }, 300);
+                }, index * 50);
+            });
+        } else {
+            // Edge case: button existed but list empty? Check shade removal.
+            if (shade.querySelectorAll('.shade-notification').length === 0) {
+                shade.remove();
+            }
+        }
     }
     window.activeNotificationsList = [];
     updateRemoteNotifications();
