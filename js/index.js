@@ -5072,7 +5072,8 @@ function createOnScreenPopup(message, options = {}, onClosed) {
     popup.style.position = 'fixed';
     popup.style.top = '20px';
     popup.style.right = '20px';
-	popup.style.transform = 'translateY(-150%) scale(0.95)';
+	popup.style.transform = 'translateY(-150%) scale(0.8)';
+	popup.style.transformOrigin = 'top-right';
     popup.style.width = 'clamp(200px, 90%, 500px)';
     popup.style.backgroundColor = 'var(--search-background)';
     popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(2.5px)';
@@ -5090,8 +5091,7 @@ function createOnScreenPopup(message, options = {}, onClosed) {
 
     const closeMe = () => {
         clearTimeout(timeoutId);
-        popup.style.transition = 'transform 0.3s ease-in, opacity 0.3s';
-        popup.style.transform = 'translateY(-150%)'; // Slide back up
+        popup.style.transform = 'translateY(-150%) scale(0.8)'; // Slide back up
         popup.style.opacity = '0';
         setTimeout(() => {
             if (document.body.contains(popup)) document.body.removeChild(popup);
@@ -5107,7 +5107,6 @@ function createOnScreenPopup(message, options = {}, onClosed) {
     const handleStart = (y) => {
         startY = y;
         isDragging = true;
-        popup.style.transition = 'none'; // Disable transition for direct tracking
         popup.style.cursor = 'grabbing';
     };
 
