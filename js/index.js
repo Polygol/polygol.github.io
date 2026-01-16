@@ -5256,24 +5256,7 @@ function createOnScreenPopup(message, options = {}, onClosed) {
 
 // Adds a notification to the notification shade
 function addToNotificationShade(message, options = {}) {
-    // Get or create notification shade
     let shade = document.querySelector('.notification-shade');
-    if (!shade) {
-        shade = document.createElement('div');
-        shade.className = 'notification-shade';
-        shade.style.position = 'fixed';
-        shade.style.top = '0';
-        shade.style.right = '0';
-        shade.style.width = '350px';
-        shade.style.maxWidth = '100%';
-        shade.style.height = '100%';
-        shade.style.overflowY = 'auto';
-        shade.style.zIndex = '9999995';
-        shade.style.padding = '20px';
-        shade.style.pointerEvents = 'none';
-        document.body.appendChild(shade);
-    }
-
     let clearBtn = document.getElementById('notification-clear-btn');
     
     // Only create button if this is a standard notification (Live Activities aren't cleared by it)
@@ -5292,15 +5275,14 @@ function addToNotificationShade(message, options = {}) {
         shade.appendChild(clearBtn);
     }
 
-    // Helper to check if shade/button should be removed
+    // Helper to check if button should be removed
     const checkShadeState = () => {
-        const notifs = shade.querySelectorAll('.shade-notification');
         const clearable = shade.querySelectorAll('.shade-notification:not(.live-activity-notification)');
         const btn = document.getElementById('notification-clear-btn');
 
-        if (notifs.length === 0) {
-            shade.remove();
-        } else if (clearable.length === 0 && btn) {
+        // Only remove the button if no clearable notifications remain.
+        // We do NOT remove the shade container itself.
+        if (clearable.length === 0 && btn) {
             btn.remove();
         }
     };
@@ -5585,18 +5567,10 @@ function clearAllNotifications() {
                     n.style.opacity = '0';
                     setTimeout(() => {
                         n.remove();
-                        // Final cleanup check after last item removal
-                        if (shade.querySelectorAll('.shade-notification').length === 0) {
-                            shade.remove();
-                        }
+                        // No shade removal logic here
                     }, 300);
                 }, index * 50);
             });
-        } else {
-            // Edge case: button existed but list empty? Check shade removal.
-            if (shade.querySelectorAll('.shade-notification').length === 0) {
-                shade.remove();
-            }
         }
     }
     window.activeNotificationsList = [];
