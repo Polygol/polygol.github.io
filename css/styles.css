@@ -1608,7 +1608,6 @@ body.one-button-nav-active .dock.show {
     margin: 55px 60px 8px 2px;
     z-index: 1;
     pointer-events: none;
-    text-shadow: 0 0 4px var(--background-color);
 }
 
 .media-widget-info .title {
@@ -1647,35 +1646,42 @@ body.one-button-nav-active .dock.show {
     font-size: 10px;
     font-variant-numeric: tabular-nums;
     color: var(--secondary-text-color);
-    text-shadow: 0 0 4px var(--background-color);
 }
 
 #media-widget-progress-bar {
-    height: 6px;
-    border-radius: 6px;
-    overflow: hidden;
+    height: 12px;
+    border-radius: 0;
+    overflow: visible;
     margin: 0;
-    background-color: var(--overlay-color);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
-    box-shadow: var(--sun-shadow);
-    border: 1px solid var(--glass-border);
+    box-shadow: none;
+    border: none;
     flex-grow: 1;
-}
-
-body.high-contrast #media-widget-progress-bar {
-	background-color: var(--background-color);
-}
-
-body.high-contrast #media-widget-progress {
-	background-color: var(--background-color-tr-op);
 }
 
 #media-widget-progress {
     width: 0%;
     height: 100%;
-    background-color: var(--accent);
-    border-radius: 6px;
-    transition: width 0.2s ease; /* Smooth transition for progress */
+    background-color: var(--text-color);
+    border-radius: 0;
+    transition: width 0.2s ease;
+    --wave: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0,5 Q5,10 10,5 T20,5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' /%3E%3C/svg%3E);
+    -webkit-mask-image: var(--wave);
+    mask-image: var(--wave);
+    -webkit-mask-size: 15px 100%;
+    mask-size: 15px 100%;
+    -webkit-mask-repeat: repeat-x;
+    mask-repeat: repeat-x;
+    -webkit-mask-position: 0 center;
+    mask-position: 0 center;
+    animation: wave-move 1s linear infinite;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+}
+
+@keyframes wave-move {
+    0% { -webkit-mask-position: 0 center; mask-position: 0 center; }
+    100% { -webkit-mask-position: -15px center; mask-position: -15px center; }
 }
 
 .media-widget-controls {
