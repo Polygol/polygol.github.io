@@ -407,6 +407,7 @@
             </div>
 
             <div id="media-session-widget" class="media-widget" style="display: none;">
+                <div style="background: var(--background-color);width: 100%;height: 100%;position: fixed;left: 0;top: 0;"> </div>
                 <img id="media-widget-art" src="" alt="Album Art">
                 <div class="app-icon-img">
                     <img id="media-widget-app-icon" src="" class="media-widget-app-icon" style="display: none;" />
@@ -427,7 +428,11 @@
                 <div class="media-widget-controls">
                     <button id="media-widget-prev"><span class="material-symbols-rounded">skip_previous</span></button>
                     <div id="media-widget-progress-bar">
-                        <div id="media-widget-progress"></div>
+                        <div style="display: flex;flex-direction: row;height: 16px;align-items: center;">
+                            <div" id="media-widget-progress"></div>
+                            <div style="z-index: 4;width: 6px;background-color: var(--text-color);border-radius: 16px;margin-right: 4px;flex-shrink: 0;height: 16px;margin-left: -6px;"></div>
+                            <div style="background: var(--overlay-color);width: 100%;height: 6px;border-radius: 10px;backdrop-filter: blur(2.5px) saturate(2) var(--edge-refraction-filter);box-shadow: var(--sun-shadow);border: 1px solid var(--glass-border);"></div>
+                        </div>
                     </div>
                     <button id="media-widget-next"><span class="material-symbols-rounded">skip_next</span></button>
                 </div>
