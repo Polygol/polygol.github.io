@@ -682,7 +682,8 @@ const MARGIN = 20;
 // --- Dialog Management ---
 let activeDialog = null; // Tracks the currently displayed dialog
 let dialogQueue = []; // Queue for pending dialog requests
-let dialogOpenTimeout = null; // Safety timer for opening animations
+let dialogOpenTimeout = null;    // Timer for adding .show class
+let dialogPointerTimeout = null; // Timer for enabling pointer-events
 
 let originalFaviconUrl = '';
 
@@ -1032,15 +1033,16 @@ function _displayDialog(options) {
     const buttons = document.getElementById('dialogButtons');
     const blurOverlay = document.getElementById('blurOverlay');
 
-    // Clear any pending open timers to prevent race conditions
+    // Cleanup previous timers if rapid switching occurring
     if (dialogOpenTimeout) clearTimeout(dialogOpenTimeout);
+    if (dialogPointerTimeout) clearTimeout(dialogPointerTimeout);
 
     if (options.type === 'confirm') {
         title.textContent = options.message || '';
         message.textContent = '';
     } else {
         title.textContent = options.title || '';
-        message.textContent = options.message || ''; 
+        message.textContent = options.message || '';
     }
     buttons.innerHTML = '';
     promptContainer.style.display = 'none';
@@ -1063,7 +1065,7 @@ function _displayDialog(options) {
         noBtn.className = 'button-dialog';
         noBtn.onclick = () => closeDialog(false);
         buttons.appendChild(noBtn);
-    } else { 
+    } else {
         if (options.type === 'prompt') {
             const cancelBtn = document.createElement('button');
             cancelBtn.textContent = currentLanguage.CANCEL || 'Cancel';
@@ -1079,16 +1081,20 @@ function _displayDialog(options) {
         buttons.appendChild(okBtn);
     }
 
-    blurOverlay.style.pointerEvents = 'none';
+	blurOverlay.style.pointerEvents = 'none';
     blurOverlay.style.display = 'block';
     dialog.style.display = 'block';
     
-    // Store timeout ID to allow cancellation
+    // Start Animation
     dialogOpenTimeout = setTimeout(() => {
         blurOverlay.classList.add('show');
         dialog.classList.add('show');
-        setTimeout(() => {
+        dialogOpenTimeout = null; // Animation started successfully
+
+		// Re-enable clicks after the animation starts
+        dialogPointerTimeout = setTimeout(() => {
             blurOverlay.style.pointerEvents = 'auto';
+            dialogPointerTimeout = null;
         }, 150);
     }, 10);
 }
@@ -1096,12 +1102,10 @@ function _displayDialog(options) {
 function closeDialog(value) {
     if (!activeDialog) return;
 
-    // Stop opening animation if this is closed immediately
-    if (dialogOpenTimeout) clearTimeout(dialogOpenTimeout);
-
     const dialog = document.getElementById('dialogModal');
     const blurOverlay = document.getElementById('blurOverlay');
 
+    // Resolve Promise/Message
     if (activeDialog.source && activeDialog.requestId) {
         activeDialog.source.postMessage({
             type: 'dialog-response',
@@ -1112,11 +1116,31 @@ function closeDialog(value) {
         activeDialog.resolve(value);
     }
     
+    // Handle Fast Close (Before animation started)
+    if (dialogOpenTimeout) {
+        clearTimeout(dialogOpenTimeout);
+        dialogOpenTimeout = null;
+        if (dialogPointerTimeout) { clearTimeout(dialogPointerTimeout); dialogPointerTimeout = null; }
+        
+        dialog.classList.remove('show');
+        blurOverlay.classList.remove('show');
+        dialog.style.display = 'none';
+        blurOverlay.style.display = 'none';
+        blurOverlay.style.pointerEvents = '';
+        
+        activeDialog = null;
+        processDialogQueue();
+        return;
+    }
+
+    // Handle Normal Close
+    if (dialogPointerTimeout) { clearTimeout(dialogPointerTimeout); dialogPointerTimeout = null; }
+
     dialog.classList.remove('show');
     blurOverlay.classList.remove('show');
     
-    // Reset pointer events immediately to avoid stuck state
-    blurOverlay.style.pointerEvents = ''; 
+    // Reset pointer events immediately so overlay doesn't block while fading
+    blurOverlay.style.pointerEvents = '';
 
     setTimeout(() => {
         dialog.style.display = 'none';
@@ -1127,7 +1151,7 @@ function closeDialog(value) {
     }, 300);
 
     activeDialog = null;
-    processDialogQueue(); 
+    processDialogQueue();
 }
 
 function processDialogQueue() {
