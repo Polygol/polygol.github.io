@@ -121,12 +121,9 @@ async function confirmBlockAd(container) {
     if (adQueue.length === 0) return;
     const adToBlock = adQueue[0];
 
-    // Use Global confirm if available, otherwise native
     let confirmed = false;
     if (typeof showCustomConfirm === 'function') {
-        confirmed = await showCustomConfirm(`Hide ads for "${adToBlock.name}"?`);
-    } else {
-        confirmed = confirm(`Hide ads for "${adToBlock.name}"?`);
+        confirmed = await showCustomConfirm(`Hide ads for ${adToBlock.name}?`);
     }
 
     if (confirmed) {
