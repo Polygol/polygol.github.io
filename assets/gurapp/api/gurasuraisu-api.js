@@ -666,7 +666,13 @@ const Gurasuraisu = {
   /**
    * Shows a more advanced notification on-screen and in the notification shade.
    * @param {string} message - The text to display.
-   * @param {object} [options] - Optional parameters like icon and button text.
+   * @param {object} [options] - Optional parameters.
+   * @param {string} [options.icon] - Material Symbols icon name (e.g., 'error', 'check_circle', 'info').
+   * @param {string} [options.heading] - Optional heading text to display above the message.
+   * @param {string} [options.buttonText] - Optional button text. If provided, a button will be shown.
+   * @param {function} [options.buttonAction] - Function to call when button is clicked (only works in parent context, not from iframe).
+   * @param {object} [options.gurappAction] - Action to send to a Gurapp when button is clicked. Format: { appName, functionName, args }.
+   * @param {boolean} [options.system] - Set to true for system notifications (hides app icon/title).
    */
   showNotification: function(message, options = {}) {
     // Note: 'buttonAction' functions cannot be passed from the iframe.
