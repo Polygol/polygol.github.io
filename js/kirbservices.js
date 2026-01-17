@@ -26,7 +26,7 @@ async function initAdsService() {
         }
 
         // 2. Filter Blocked Ads
-        const blockedAds = JSON.parse(localStorage.getItem('blocked_ads') || '[]');
+        const blockedAds = JSON.parse(localStorage.getItem('kirbindustriesAdsService_blockedAds') || '[]');
         adQueue = data.ads.filter(ad => !blockedAds.includes(ad.id));
 
         if (adQueue.length === 0) {
@@ -82,7 +82,7 @@ function renderCurrentAd() {
     setTimeout(() => {
         if (headerEl) headerEl.textContent = ad.name;
         if (descEl) descEl.textContent = ad.description;
-        if (iconEl) iconEl.textContent = ad.icon || 'star'; // Default icon
+        if (iconEl) iconEl.textContent = ad.icon || 'star'; 
         
         if (imgEl) {
             imgEl.src = ad.image || ''; 
@@ -115,6 +115,29 @@ function nextAd() {
     
     renderCurrentAd();
     resetAdTimer();
+}
+
+async function confirmBlockAd(container) {
+    if (adQueue.length === 0) return;
+    const adToBlock = adQueue[0];
+
+    // Use Global confirm if available, otherwise native
+    let confirmed = false;
+    if (typeof showCustomConfirm === 'function') {
+        confirmed = await showCustomConfirm(`Hide ads for "${adToBlock.name}"?`);
+    } else {
+        confirmed = confirm(`Hide ads for "${adToBlock.name}"?`);
+    }
+
+    if (confirmed) {
+        blockAd();
+    } else {
+        // User cancelled, snap back
+        container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        container.style.transform = 'translateX(0)';
+        container.style.opacity = '1';
+        resetAdTimer();
+    }
 }
 
 function blockAd() {
@@ -152,6 +175,8 @@ function setupAdGestures(element) {
         isAdDragging = true;
         adStartX = x;
         element.style.transition = 'none';
+        // Pause rotation while user interacts
+        if (adTimer) clearInterval(adTimer);
     };
 
     const handleMove = (x) => {
@@ -173,22 +198,24 @@ function setupAdGestures(element) {
         element.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
 
         const diff = adCurrentX - adStartX;
-        const threshold = 100; // px to trigger action
+        const threshold = 80; // px to trigger action
 
-        if (diff > threshold) {
-            // Swipe Right -> Next Ad
-            element.style.transform = 'translateX(120%)';
-            element.style.opacity = '0';
-            setTimeout(nextAd, 300);
-        } else if (diff < -threshold) {
-            // Swipe Left -> Block Ad
+        if (diff < -threshold) {
+            // Swipe LEFT -> Next Ad
             element.style.transform = 'translateX(-120%)';
             element.style.opacity = '0';
-            setTimeout(blockAd, 300);
+            setTimeout(nextAd, 300);
+        } else if (diff > threshold) {
+            // Swipe RIGHT -> Confirm Block
+            element.style.transform = 'translateX(120%)';
+            element.style.opacity = '0';
+            // Wait for animation to finish before showing dialog
+            setTimeout(() => confirmBlockAd(element), 300);
         } else {
             // Snap Back
             element.style.transform = 'translateX(0)';
             element.style.opacity = '1';
+            resetAdTimer();
         }
     };
 
