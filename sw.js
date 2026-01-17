@@ -8,7 +8,7 @@ const ASSETS_TO_CACHE = [
   '/js/index.js',
   '/js/lang.js',
   '/js/kirbservices.js',
-  '/js/lang.js',
+  '/js/waves.js',
   '/assets/gurapp/api/gurasuraisu-api.js',
   'https://polygol.github.io/assets/gurapp/api/gurasuraisu-api.js',
   'https://raw.githubusercontent.com/Polygol/polygol.github.io/refs/heads/main/assets/gurapp/api/gurasuraisu-api.js',
