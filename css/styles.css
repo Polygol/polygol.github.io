@@ -1145,7 +1145,7 @@ body.one-button-nav-active .dock.show {
             transform: translateX(0) translateY(-50%) scale(0.9) scaleY(0.8) scaleX(0.5);
             opacity: 0;
             filter: blur(5px);
-            width: clamp(280px, 90%, 450px);
+            width: clamp(280px, 90%, 500px);
             z-index: 9999 !important;
             border-radius: 50px;
 		    background: var(--search-background);
@@ -1405,8 +1405,8 @@ body.one-button-nav-active .dock.show {
 
 .settings-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+    gap: 12px;
     border-bottom: 2px solid var(--transparent-color);
     border-radius: 0 !important;
     padding-bottom: 10px;
