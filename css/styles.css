@@ -1656,6 +1656,7 @@ body.one-button-nav-active .dock.show {
     box-shadow: none;
     border: none;
     flex-grow: 1;
+	z-index: 1;
 }
 
 #media-widget-progress {
