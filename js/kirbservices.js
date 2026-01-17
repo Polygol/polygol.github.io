@@ -209,6 +209,7 @@ function setupAdGestures(element) {
             // Swipe RIGHT -> Confirm Block
             element.style.transform = 'translateX(120%)';
             element.style.opacity = '0';
+            closeControls();
             // Wait for animation to finish before showing dialog
             setTimeout(() => confirmBlockAd(element), 300);
         } else {
