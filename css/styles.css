@@ -1406,7 +1406,7 @@ body.one-button-nav-active .dock.show {
 .settings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
-    gap: 12px;
+    gap: 10px;
     border-bottom: 2px solid var(--transparent-color);
     border-radius: 0 !important;
     padding-bottom: 10px;
@@ -1759,7 +1759,7 @@ body.high-contrast #media-widget-progress {
 
 .qcontrol-item .material-symbols-rounded {
     font-size: 24px;
-    margin-right: 10px;
+    margin-right: 12px;
     flex-shrink: 0;
 }
 
