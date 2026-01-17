@@ -681,7 +681,8 @@ const MARGIN = 20;
 
 // --- Dialog Management ---
 let activeDialog = null; // Tracks the currently displayed dialog
-let dialogQueue = [];    // Queue for pending dialog requests
+let dialogQueue = []; // Queue for pending dialog requests
+let dialogOpenTimeout = null; // Safety timer for opening animations
 
 let originalFaviconUrl = '';
 
@@ -1031,13 +1032,15 @@ function _displayDialog(options) {
     const buttons = document.getElementById('dialogButtons');
     const blurOverlay = document.getElementById('blurOverlay');
 
+    // Clear any pending open timers to prevent race conditions
+    if (dialogOpenTimeout) clearTimeout(dialogOpenTimeout);
+
     if (options.type === 'confirm') {
-        // For confirms, use the message as the title and leave the message body empty.
         title.textContent = options.message || '';
         message.textContent = '';
     } else {
         title.textContent = options.title || '';
-        message.textContent = options.message || ''; // Using textContent for security
+        message.textContent = options.message || ''; 
     }
     buttons.innerHTML = '';
     promptContainer.style.display = 'none';
@@ -1060,7 +1063,7 @@ function _displayDialog(options) {
         noBtn.className = 'button-dialog';
         noBtn.onclick = () => closeDialog(false);
         buttons.appendChild(noBtn);
-    } else { // For 'alert' and 'prompt'
+    } else { 
         if (options.type === 'prompt') {
             const cancelBtn = document.createElement('button');
             cancelBtn.textContent = currentLanguage.CANCEL || 'Cancel';
@@ -1076,13 +1079,14 @@ function _displayDialog(options) {
         buttons.appendChild(okBtn);
     }
 
-	blurOverlay.style.pointerEvents = 'none'; // Temporarily disable clicks
+    blurOverlay.style.pointerEvents = 'none';
     blurOverlay.style.display = 'block';
     dialog.style.display = 'block';
-    setTimeout(() => {
+    
+    // Store timeout ID to allow cancellation
+    dialogOpenTimeout = setTimeout(() => {
         blurOverlay.classList.add('show');
         dialog.classList.add('show');
-		// Re-enable clicks after the animation starts
         setTimeout(() => {
             blurOverlay.style.pointerEvents = 'auto';
         }, 150);
@@ -1092,10 +1096,12 @@ function _displayDialog(options) {
 function closeDialog(value) {
     if (!activeDialog) return;
 
+    // Stop opening animation if this is closed immediately
+    if (dialogOpenTimeout) clearTimeout(dialogOpenTimeout);
+
     const dialog = document.getElementById('dialogModal');
     const blurOverlay = document.getElementById('blurOverlay');
 
-    // Respond to iframe or resolve local promise
     if (activeDialog.source && activeDialog.requestId) {
         activeDialog.source.postMessage({
             type: 'dialog-response',
@@ -1106,9 +1112,12 @@ function closeDialog(value) {
         activeDialog.resolve(value);
     }
     
-    // Hide UI
     dialog.classList.remove('show');
     blurOverlay.classList.remove('show');
+    
+    // Reset pointer events immediately to avoid stuck state
+    blurOverlay.style.pointerEvents = ''; 
+
     setTimeout(() => {
         dialog.style.display = 'none';
         const isAnyModalOpen = document.querySelector('.modal.show, .widget-drawer.open');
@@ -1118,7 +1127,7 @@ function closeDialog(value) {
     }, 300);
 
     activeDialog = null;
-    processDialogQueue(); // Process the next item in the queue
+    processDialogQueue(); 
 }
 
 function processDialogQueue() {
