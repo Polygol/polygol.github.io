@@ -593,6 +593,7 @@ function setupServiceWorkerUpdateListener() {
                                 // A new SW is waiting. Show the notification.
                                 showNotification('A system update of Polygol is available', {
 									icon: 'update',
+									system: true,
                                     buttonText: 'Restart and update',
                                     buttonAction: () => {
                                         newWorker.postMessage({ action: 'skipWaiting' });
@@ -619,14 +620,14 @@ function setupServiceWorkerUpdateListener() {
 
 async function forceUpdatePolygol() {
     if (!('serviceWorker' in navigator)) {
-        showNotification('Service Worker not supported', { icon: 'error' });
+        showNotification('Service Worker not supported', { icon: 'error', system: true });
         return 'Update check failed: Service Worker not supported.';
     }
 
     try {
         const registration = await navigator.serviceWorker.getRegistration();
         if (!registration) {
-            showNotification('No active Service Worker found', { icon: 'error' });
+            showNotification('No active Service Worker found', { icon: 'error', system: true });
             return 'Update check failed: No registration found.';
         }
 
@@ -668,7 +669,7 @@ async function forceUpdatePolygol() {
 
     } catch (error) {
         console.error('[SW] Force update failed:', error);
-        showNotification('Checking updates failed. Try again later', { icon: 'error' });
+        showNotification('Checking updates failed. Try again later', { icon: 'error', system: true });
         return 'Update check failed.';
     }
 }
@@ -5133,20 +5134,20 @@ function createOnScreenPopup(message, options = {}, onClosed) {
     popup.style.top = '20px';
     popup.style.right = '20px';
 	popup.style.transform = 'translateY(-150%) scale(0.8)';
-	popup.style.transformOrigin = 'top right';
+	popup.style.transformOrigin = 'right top';
     popup.style.width = 'clamp(200px, 90%, 500px)';
     popup.style.backgroundColor = 'var(--search-background)';
     popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(2.5px)';
     popup.style.boxShadow = 'var(--sun-shadow), 0 0 10px rgba(0, 0, 0, 0.2)';
     popup.style.color = 'var(--text-color)';
-    popup.style.padding = '14px 14px 14px 16px';
+    popup.style.padding = options.buttonText ? '10px 10px 10px 12px' : '12px 12px 12px 14px';
     popup.style.borderRadius = '35px';
 	popup.style.cornerShape = 'superellipse(1.5)';
     popup.style.zIndex = '9999996';
     popup.style.transition = 'opacity 0.5s';
     popup.style.display = 'flex';
     popup.style.alignItems = 'center';
-    popup.style.gap = '16px';
+    popup.style.gap = '12px';
     popup.style.border = '1px solid var(--glass-border)';
 
     const closeMe = () => {
@@ -5217,36 +5218,91 @@ function createOnScreenPopup(message, options = {}, onClosed) {
         iconType = 'info';
     }
     
-    // Add icon
-    const icon = document.createElement('span');
-    icon.className = 'material-symbols-rounded';
-	icon.style.background = "var(--accent)";
-	icon.style.padding = "6px";
-	icon.style.fontSize = "24px";
-	icon.style.borderRadius = "35%";
-	icon.style.color = "var(--background-color)";
-	icon.style.cornerShape = "superellipse(1.25)";
-    icon.textContent = iconType;
-    popup.appendChild(icon);
+    // Add app icon and title if appName is provided and not a system notification
+    const showAppInfo = options.appName && !options.system && apps[options.appName];
+    if (showAppInfo) {
+        const appIconContainer = document.createElement('div');
+        appIconContainer.className = 'app-icon-img';
+        appIconContainer.style.width = '42px';
+        
+        const appIconImg = document.createElement('img');
+        appIconImg.className = 'media-widget-app-icon';
+        appIconImg.style.display = 'block';
+        let iconUrl = apps[options.appName].icon;
+        if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
+            iconUrl = `/assets/appicon/${iconUrl}`;
+        }
+        appIconImg.src = iconUrl;
+        appIconContainer.appendChild(appIconImg);
+        popup.appendChild(appIconContainer);
+    }
     
-    // Add message text
-    const messageText = document.createElement('div');
-	messageText.style.width = '-webkit-fill-available';
+    // Content container
+    const contentContainer = document.createElement('div');
+    contentContainer.style.width = '-webkit-fill-available';
+    contentContainer.style.display = 'flex';
+    contentContainer.style.flexDirection = 'column';
+    contentContainer.style.gap = '4px';
+    
+    // Header with icon and heading
+    if (options.heading) {
+        const headerContainer = document.createElement('div');
+        headerContainer.style.display = 'flex';
+        headerContainer.style.alignItems = 'center';
+        headerContainer.style.gap = '6px';
+        
+        const notificationIcon = document.createElement('span');
+        notificationIcon.className = 'material-symbols-rounded';
+        notificationIcon.style.fontSize = '18px';
+        notificationIcon.textContent = iconType;
+        headerContainer.appendChild(notificationIcon);
+        
+        const headingText = document.createElement('span');
+        headingText.style.fontWeight = '500';
+        headingText.style.fontFamily = "'Open Runde', 'Inter'";
+        headingText.textContent = options.heading;
+        headerContainer.appendChild(headingText);
+        
+        contentContainer.appendChild(headerContainer);
+    } else {
+        // If no heading, show icon inline (for backward compatibility)
+        const headerContainer = document.createElement('div');
+        headerContainer.style.display = 'flex';
+        headerContainer.style.alignItems = 'center';
+        headerContainer.style.gap = '6px';
+        
+        const notificationIcon = document.createElement('span');
+        notificationIcon.className = 'material-symbols-rounded';
+        notificationIcon.style.fontSize = '18px';
+        notificationIcon.textContent = iconType;
+        headerContainer.appendChild(notificationIcon);
+        
+        contentContainer.appendChild(headerContainer);
+    }
+    
+    // Body text
+    const messageText = document.createElement('span');
     messageText.textContent = message;
-    popup.appendChild(messageText);
+    contentContainer.appendChild(messageText);
+    
+    popup.appendChild(contentContainer);
     
     // Check if a button should be added
     if (options.buttonText) {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.marginTop = '4px';
+        
         const actionButton = document.createElement('button');
         actionButton.textContent = options.buttonText;
-        actionButton.style.padding = '10px 18px';
-        actionButton.style.borderRadius = '20px';
+        actionButton.style.padding = '8px 14px';
+        actionButton.style.borderRadius = '40px';
         actionButton.style.border = '1px solid var(--glass-border)';
 	    actionButton.style.boxShadow = 'var(--sun-shadow)';
-        actionButton.style.backgroundColor = 'var(--text-color)';
+        actionButton.style.backgroundColor = 'var(--accent)';
         actionButton.style.color = 'var(--background-color)';
         actionButton.style.cursor = 'pointer';
-		actionButton.style.fontFamily = '"Inter", sans-serif';
+		actionButton.style.fontFamily = 'Inter, sans-serif';
 		actionButton.style.fontWeight = '500';
         
         // Handle local action or Gurapp-specific action
@@ -5291,7 +5347,8 @@ function createOnScreenPopup(message, options = {}, onClosed) {
             });
         }
         
-        popup.appendChild(actionButton);
+        buttonContainer.appendChild(actionButton);
+        contentContainer.appendChild(buttonContainer);
     }
     
 	document.body.appendChild(popup);
@@ -5309,7 +5366,10 @@ function createOnScreenPopup(message, options = {}, onClosed) {
     return {
         close: closeMe,
         update: (newMessage) => {
-            messageText.textContent = newMessage;
+            const textElement = contentContainer.querySelector('span:last-of-type');
+            if (textElement) {
+                textElement.textContent = newMessage;
+            }
         }
     };
 }
@@ -5422,15 +5482,32 @@ function addToNotificationShade(message, options = {}) {
         });
         updateRemoteNotifications();
 		
+		// Add app icon and title if appName is provided and not a system notification
+		const showAppInfo = options.appName && !options.system && apps[options.appName];
+		if (showAppInfo) {
+			const appIconContainer = document.createElement('div');
+			appIconContainer.className = 'app-icon-img';
+			appIconContainer.style.width = '42px';
+			
+			const appIconImg = document.createElement('img');
+			appIconImg.className = 'media-widget-app-icon';
+			appIconImg.style.display = 'block';
+			let iconUrl = apps[options.appName].icon;
+			if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
+				iconUrl = `/assets/appicon/${iconUrl}`;
+			}
+			appIconImg.src = iconUrl;
+			appIconContainer.appendChild(appIconImg);
+			notification.appendChild(appIconContainer);
+		}
+		
 		// Content container
 	    const contentContainer = document.createElement('div');
+	    contentContainer.style.width = '-webkit-fill-available';
 	    contentContainer.style.display = 'flex';
-	    contentContainer.style.alignItems = 'center';
-	    contentContainer.style.gap = '16px';
-	    contentContainer.style.width = '100%';
+	    contentContainer.style.flexDirection = 'column';
+	    contentContainer.style.gap = '4px';
 	    
-	    let iconType = 'notifications';
-	
 	    let iconTypeForShade = 'notifications'; // Default icon
 	    if (options.icon) { // Prefer explicit icon from options
 	        iconTypeForShade = options.icon;
@@ -5438,21 +5515,44 @@ function addToNotificationShade(message, options = {}) {
 	        iconTypeForShade = 'notifications';
 	    }
 	    
-	    // Create icon
-	    const icon = document.createElement('span');
-	    icon.className = 'material-symbols-rounded';
-	    icon.textContent = iconTypeForShade;
-		icon.style.background = "var(--accent)";
-		icon.style.padding = "6px";
-		icon.style.fontSize = "24px";
-		icon.style.borderRadius = "35%";
-		icon.style.color = "var(--background-color)";
-		icon.style.cornerShape = "superellipse(1.25)";
-	    contentContainer.appendChild(icon);
+	    // Header with icon and heading
+	    if (options.heading) {
+	        const headerContainer = document.createElement('div');
+	        headerContainer.style.display = 'flex';
+	        headerContainer.style.alignItems = 'center';
+	        headerContainer.style.gap = '6px';
+	        
+	        const notificationIcon = document.createElement('span');
+	        notificationIcon.className = 'material-symbols-rounded';
+	        notificationIcon.style.fontSize = '18px';
+	        notificationIcon.textContent = iconTypeForShade;
+	        headerContainer.appendChild(notificationIcon);
+	        
+	        const headingText = document.createElement('span');
+	        headingText.style.fontWeight = '500';
+	        headingText.style.fontFamily = "'Open Runde', 'Inter'";
+	        headingText.textContent = options.heading;
+	        headerContainer.appendChild(headingText);
+	        
+	        contentContainer.appendChild(headerContainer);
+	    } else {
+	        // If no heading, show icon inline (for backward compatibility)
+	        const headerContainer = document.createElement('div');
+	        headerContainer.style.display = 'flex';
+	        headerContainer.style.alignItems = 'center';
+	        headerContainer.style.gap = '6px';
+	        
+	        const notificationIcon = document.createElement('span');
+	        notificationIcon.className = 'material-symbols-rounded';
+	        notificationIcon.style.fontSize = '18px';
+	        notificationIcon.textContent = iconTypeForShade;
+	        headerContainer.appendChild(notificationIcon);
+	        
+	        contentContainer.appendChild(headerContainer);
+	    }
 	    
 	    // Create message text
-	    const messageText = document.createElement('div');
-	    messageText.style.flex = '1';
+	    const messageText = document.createElement('span');
 	    messageText.style.wordBreak = 'break-word';
 	    messageText.textContent = message;
 	    contentContainer.appendChild(messageText);
@@ -5464,33 +5564,42 @@ function addToNotificationShade(message, options = {}) {
 	    closeBtn.style.cursor = 'pointer';
 	    closeBtn.style.fontSize = '16px';
 	    closeBtn.style.opacity = '0.5';
+	    closeBtn.style.marginLeft = 'auto';
+	    closeBtn.style.alignSelf = 'flex-start';
 	    closeBtn.addEventListener('click', (e) => {
 	        e.stopPropagation();
 	        closeNotification(notification);
 	    });
 	    closeBtn.style.transition = 'opacity 0.2s';
 		
-	    contentContainer.appendChild(closeBtn);
+	    // Wrap content and close button
+	    const wrapperContainer = document.createElement('div');
+	    wrapperContainer.style.display = 'flex';
+	    wrapperContainer.style.alignItems = 'flex-start';
+	    wrapperContainer.style.gap = '12px';
+	    wrapperContainer.style.width = '100%';
 	    
-	    notification.appendChild(contentContainer);
+	    wrapperContainer.appendChild(contentContainer);
+	    wrapperContainer.appendChild(closeBtn);
+	    
+	    notification.appendChild(wrapperContainer);
 	    
 	    // Add action button if specified
 	    if (options.buttonText) {
 	        const buttonContainer = document.createElement('div');
 	        buttonContainer.style.display = 'flex';
-	        buttonContainer.style.justifyContent = 'flex-end';
+	        buttonContainer.style.marginTop = '4px';
 	        
 	        const actionButton = document.createElement('button');
 	        actionButton.textContent = options.buttonText;
-	        actionButton.style.padding = '8px 16px';
-	        actionButton.style.borderRadius = '18px';
+	        actionButton.style.padding = '8px 14px';
+	        actionButton.style.borderRadius = '40px';
 	        actionButton.style.border = '1px solid var(--glass-border)';
-	        actionButton.style.backgroundColor = 'var(--text-color)';
+	        actionButton.style.backgroundColor = 'var(--accent)';
 	        actionButton.style.color = 'var(--background-color)';
 	        actionButton.style.cursor = 'pointer';
-	        actionButton.style.fontFamily = '"Inter", sans-serif';
+	        actionButton.style.fontFamily = 'Inter, sans-serif';
 			actionButton.style.fontWeight = '500';
-	        actionButton.style.fontSize = '14px';
 	        actionButton.style.transition = 'background-color 0.2s';
 			actionButton.style.boxShadow = 'var(--sun-shadow)';
 	        
@@ -5537,7 +5646,7 @@ function addToNotificationShade(message, options = {}) {
 	        }
 	        
 	        buttonContainer.appendChild(actionButton);
-	        notification.appendChild(buttonContainer);
+	        contentContainer.appendChild(buttonContainer);
 	    }
 	}
     
@@ -5604,7 +5713,10 @@ function addToNotificationShade(message, options = {}) {
         close: () => closeNotification(notification),
         update: (newMessage) => {
             if (!options.liveActivityUrl) { // Can't update an iframe's content this way
-                messageText.textContent = newMessage;
+                const textElement = contentContainer.querySelector('span:last-of-type');
+                if (textElement) {
+                    textElement.textContent = newMessage;
+                }
             }
         }
     };
@@ -15323,6 +15435,22 @@ window.addEventListener('message', async (event) => { // Make listener async
 
         if (typeof funcToCall === 'function') {
             try {
+                // Track app origin for showNotification
+                let sourceAppId = null;
+                if (funcName === 'showNotification') {
+                    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+                    for (const iframe of iframes) {
+                        if (iframe.contentWindow === sourceWindow) {
+                            sourceAppId = iframe.dataset.appId;
+                            break;
+                        }
+                    }
+                    // Add appName to options if not already set and not a system notification
+                    if (sourceAppId && args[1] && typeof args[1] === 'object' && !args[1].system && !args[1].appName) {
+                        args[1].appName = sourceAppId;
+                    }
+                }
+                
                 const result = await funcToCall.apply(window, args);
                 
                 let messageType = 'parentActionSuccess';
