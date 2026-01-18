@@ -18,13 +18,14 @@ function initializeSettingsApp() {
         'page-data': 'Your Account',
         'page-general': 'General',
         'page-about': 'About',
-        'page-storage': 'Storage',
+        'page-storage': 'Manage Storage',
         'page-db-details': 'Database',
         'page-store-viewer': 'Store Data',
         'page-record-editor': 'Edit Record',
         'page-localstorage': 'Local Storage',
         'page-cache': 'Cache Storage',
-        'page-connect': 'Connections'
+        'page-connect': 'Connections',
+        'page-licenses': 'Acknowledgements'
     };
 
     function navigateTo(pageId) {
@@ -219,6 +220,53 @@ function initializeSettingsApp() {
         // This call will now work because the event listeners are guaranteed to be bound.
         Gurasuraisu.setLocalStorageItem(key, valueToSet);
     }
+    
+    // --- Markdown Parser for Licenses ---
+    async function loadLicenses() {
+        const container = document.getElementById('licenses-container');
+        if (container.dataset.loaded) return;
+
+        try {
+            const response = await fetch('/about/external.md');
+            if (!response.ok) throw new Error('Network response was not ok');
+            const text = await response.text();
+            
+            let html = '';
+            const lines = text.split('\n');
+
+            lines.forEach(line => {
+                const indentMatch = line.match(/^(\s*)/);
+                const indentLevel = indentMatch ? Math.floor(indentMatch[1].length / 4) : 0;
+                let cleanLine = line.trim();
+                
+                if (cleanLine.startsWith('# ')) {
+                    html += `<h1 style="font-size: 1.4rem; font-weight: 700; margin: 20px 0 15px; font-family: 'Open Runde';">${cleanLine.substring(2)}</h1>`;
+                } else if (cleanLine.startsWith('## ')) {
+                    html += `<h2 style="font-size: 1.1rem; font-weight: 600; margin: 20px 0 10px; color: var(--accent); font-family: 'Open Runde';">${cleanLine.substring(3)}</h2>`;
+                } else if (cleanLine.startsWith('* ') || cleanLine.startsWith('- ')) {
+                    let content = cleanLine.substring(2)
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: var(--accent); text-decoration: underline;">$1</a>');
+                    
+                    const marginLeft = 5 + (indentLevel * 20);
+                    html += `<div style="margin-left: ${marginLeft}px; margin-bottom: 6px; display: flex; align-items: flex-start; line-height: 1.4; font-size: 0.95rem;"><span style="margin-right: 8px; opacity: 0.7;">•</span><span>${content}</span></div>`;
+                } else if (cleanLine.startsWith('---')) {
+                    html += `<hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 25px 0;">`;
+                } else if (cleanLine.length > 0) {
+                     let content = cleanLine
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: var(--accent); text-decoration: underline;">$1</a>');
+                     html += `<p style="margin-bottom: 10px; line-height: 1.5; opacity: 0.9; font-size: 0.95rem;">${content}</p>`;
+                }
+            });
+            
+            container.innerHTML = html;
+            container.dataset.loaded = 'true';
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = '<div style="padding: 20px; text-align: center; color: #ff5252;">Failed to load license information.</div>';
+        }
+    }
 
     function bindEventListeners() {
         document.querySelectorAll('.nav-item[data-page]').forEach(item => {
@@ -226,6 +274,11 @@ function initializeSettingsApp() {
                 navigateTo(item.dataset.page);
             });
         });
+
+        const licenseBtn = document.querySelector('.nav-item[data-page="page-licenses"]');
+        if (licenseBtn) {
+            licenseBtn.addEventListener('click', loadLicenses);
+        }
 
         backBtn.addEventListener('click', navigateBack);
         
