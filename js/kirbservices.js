@@ -14,6 +14,13 @@ async function initAdsService() {
     const container = document.getElementById('kirbindustries-ads-service');
     if (!container) return;
 
+    // 0. Check Connectivity
+    if (!navigator.onLine) {
+        container.style.display = 'none';
+        if (adTimer) clearInterval(adTimer);
+        return;
+    }
+
     try {
         // 1. Fetch Data
         const response = await fetch(AD_SOURCE_URL);
@@ -227,6 +234,19 @@ function setupAdGestures(element) {
     document.addEventListener('mousemove', e => { if(isAdDragging) { e.preventDefault(); handleMove(e.clientX); } });
     document.addEventListener('mouseup', handleEnd);
 }
+
+// Connectivity Listeners
+window.addEventListener('online', () => {
+    // Re-initialize (fetch new data/resume) when connection returns
+    initAdsService();
+});
+
+window.addEventListener('offline', () => {
+    // Immediately hide and pause when connection is lost
+    const container = document.getElementById('kirbindustries-ads-service');
+    if (container) container.style.display = 'none';
+    if (adTimer) clearInterval(adTimer);
+});
 
 // Initialize
 document.addEventListener('DOMContentLoaded', initAdsService);
