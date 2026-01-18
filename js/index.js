@@ -4737,6 +4737,19 @@ function startSynchronizedClockAndDate() {
             }
         }
 
+// Helper to calculate distance between two coordinates
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
 function getTemperatureUnit(country) {
     // Countries that primarily use Fahrenheit
     const fahrenheitCountries = ['US', 'USA', 'United States', 'Liberia', 'Myanmar', 'Burma'];
@@ -4751,25 +4764,68 @@ async function fetchLocationAndWeather() {
         navigator.geolocation.getCurrentPosition(async (position) => {
             try {
                 const { latitude, longitude } = position.coords;
-                const geocodingUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+                
+                // Timezone
+                let timezone = 'UTC';
+                try {
+                    timezone = await getTimezoneFromCoords(latitude, longitude);
+                } catch (e) {
+                    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                }
+
+                // --- Geocoding with Caching (Nominatim Policy Compliance) ---
                 let city = 'Unknown Location';
                 let country = '';
-                let timezone = 'UTC';
                 
-                try {
-                    const geocodingResponse = await fetch(geocodingUrl);
-                    const geocodingData = await geocodingResponse.json();
-                    city = geocodingData.address.city ||
-                        geocodingData.address.town ||
-                        geocodingData.address.village ||
-                        'Unknown Location';
-                    country = geocodingData.address.country || '';
+                // Retrieve cached geocoding data
+                const cachedGeo = JSON.parse(localStorage.getItem('cached_geo_data') || '{}');
+                const CACHE_RADIUS_KM = 2.0; // Reuse address if within 2km
+                
+                let useCachedAddress = false;
+                if (cachedGeo.latitude && cachedGeo.longitude) {
+                    const dist = getDistanceFromLatLonInKm(latitude, longitude, cachedGeo.latitude, cachedGeo.longitude);
+                    // Use cache if we haven't moved significantly
+                    if (dist < CACHE_RADIUS_KM) {
+                        useCachedAddress = true;
+                    }
+                }
+
+                if (useCachedAddress) {
+                    // console.log("[Weather] Using cached address info.");
+                    city = cachedGeo.city;
+                    country = cachedGeo.country;
+                } else {
+                    // Fetch new address from Nominatim
+                    // Policy: Max 1 req/sec. This app updates weather every 10m, so we are compliant per client.
+                    const geocodingUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
                     
-                    // Get timezone based on coordinates
-                    timezone = await getTimezoneFromCoords(latitude, longitude);
-                } catch (geocodingError) {
-                    console.warn('Failed to retrieve location details', geocodingError);
-                    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    try {
+                        const geocodingResponse = await fetch(geocodingUrl);
+                        if (!geocodingResponse.ok) throw new Error("Geocoding API error");
+                        
+                        const geocodingData = await geocodingResponse.json();
+                        city = geocodingData.address.city ||
+                            geocodingData.address.town ||
+                            geocodingData.address.village ||
+                            'Unknown Location';
+                        country = geocodingData.address.country || '';
+                        
+                        // Update cache
+                        localStorage.setItem('cached_geo_data', JSON.stringify({
+                            latitude,
+                            longitude,
+                            city,
+                            country,
+                            timestamp: Date.now()
+                        }));
+                    } catch (geocodingError) {
+                        console.warn('Geocoding failed:', geocodingError);
+                        // Fallback to cache if available
+                        if (cachedGeo.city) {
+                            city = cachedGeo.city;
+                            country = cachedGeo.country;
+                        }
+                    }
                 }
 
                 // Determine temperature unit based on location
@@ -4797,7 +4853,8 @@ async function fetchLocationAndWeather() {
                     temperatureUnit,
                     current: currentWeatherData.current_weather,
                     dailyForecast: dailyForecastData.daily,
-                    hourlyForecast: hourlyForecastData.hourly
+                    hourlyForecast: hourlyForecastData.hourly,
+                    attribution: "Weather data by Open-Meteo.com, Geocoding by OpenStreetMap"
                 };
  
                 localStorage.setItem('lastWeatherData', JSON.stringify(weatherData));
