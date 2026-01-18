@@ -5446,6 +5446,8 @@ function createOnScreenPopup(message, options = {}, onClosed) {
     }
     
 	document.body.appendChild(popup);
+
+    void popup.offsetHeight;
     
     // Trigger Entry Animation
     requestAnimationFrame(() => {
