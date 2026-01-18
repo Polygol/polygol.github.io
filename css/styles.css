@@ -2976,6 +2976,7 @@ input[type="checkbox"]:checked::before {
 		    height: 32px;
 		    border-radius: 35%;
 			corner-shape: superellipse(1.25);
+			object-fit: cover;
 		}
 		
 		.legacy-app-header span {
