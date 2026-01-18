@@ -45,6 +45,7 @@ It does not include our self made assets/libraries/frameworks.
     *   License: [SIL Open Font License (OFL)](https://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL)
 
 ## Assets & Media
+Note: Wallpaper information is seperate from this file.
 *   **Setup Music**
     *   Track: "Brittle Rille - Reunited" by Kevin MacLeod
     *   License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
@@ -57,6 +58,10 @@ It does not include our self made assets/libraries/frameworks.
     *   Source: Google
 *   **Fallback Fanny**
     *   Character "Fanny" courtesy of jacknjellify (BFDI)
+*   **Polygol 16 Branding**
+    *   Character "Sixteen" courtesy of jacknjellify (BFDI)
+*   **Airy OOBE**
+    *   Character "Airy" courtesy of Cheesy Hfj (ONE)
 
 ## Data & Services
 *   **Weather Data**
