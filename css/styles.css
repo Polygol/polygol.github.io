@@ -862,7 +862,8 @@ body.one-button-nav-active .dock.show {
 .app-icon-img img {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
 	corner-shape: inherit;
     border-radius: inherit;
     transform: scale(1.15);
