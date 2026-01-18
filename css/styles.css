@@ -1673,7 +1673,6 @@ body.one-button-nav-active .dock.show {
 }
 
 #media-widget-progress-bar {
-    height: 12px;
     border-radius: 0;
     overflow: visible;
     margin: 0;
