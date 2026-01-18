@@ -4003,7 +4003,7 @@ document.addEventListener('DOMContentLoaded', () => {
                      iconUrl = `/assets/appicon/${iconUrl}`;
                  }
                  img.src = iconUrl || '';
-                 img.style.cssText = 'width: 32px; height: 32px; border-radius: 35%; corner-shape: superellipse(1.25);';
+                 img.style.cssText = 'width: 32px; height: 32px; border-radius: 35%; corner-shape: superellipse(1.25); object-fit: cover;';
                  
                  const closeBtn = document.createElement('button');
                  closeBtn.className = 'btn-qc';
