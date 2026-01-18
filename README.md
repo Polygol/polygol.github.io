@@ -95,13 +95,7 @@ You must replace the contents of these folders:
 * marketing
 
 # Acknowledgements
-* Application Icons: kirbIndustries
-* Timer Sound: Google
-* Fallback Fanny: jacknjellify
-* Setup Music: Brittle Rille - Reunited by Kevin MacLeod (CC BY 4.0)
-* UI Sounds from Notification Sounds (https://notificationsounds.com, CC BY 4.0)
-
-(This is not the entire list. Check the repo for more information.)
+See assets/about/external.md
 
 ---
 
