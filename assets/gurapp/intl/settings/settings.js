@@ -280,6 +280,11 @@ function initializeSettingsApp() {
             licenseBtn.addEventListener('click', loadLicenses);
         }
 
+        const aboutBtn = document.querySelector('.nav-item[data-page="page-about"]');
+        if (aboutBtn) {
+            aboutBtn.addEventListener('click', updateVersionDisplay);
+        }
+
         backBtn.addEventListener('click', navigateBack);
         
         document.querySelectorAll('.toggle-switch, .styled-select, .styled-slider, .color-picker, .form-input').forEach(control => {
@@ -451,6 +456,15 @@ function initializeSettingsApp() {
                 if (e.target === overlay) overlay.classList.remove('show');
             });
         });
+    }
+    
+    function updateVersionDisplay() {
+        const versionLabel = document.querySelector('#page-about .setting-info .setting-label');
+        const parentVersion = window.parent.systemVersion;
+        
+        if (versionLabel && parentVersion) {
+            versionLabel.textContent = `Polygol ${parentVersion}`;
+        }
     }
 
     // --- Real-time Syncing ---
@@ -647,12 +661,6 @@ function initializeSettingsApp() {
     // --- INITIALIZATION ---
     bindEventListeners();
     updateHeader();
-    
-    // Version Info
-    const versionLabel = document.querySelector('#page-about .setting-info .setting-label');
-    if (versionLabel && window.parent.systemVersion) {
-        versionLabel.textContent = `Polygol ${window.parent.systemVersion}`;
-    }
     
     // Announce readiness to the parent, which will trigger the initial settings sync.
     if (window.parent) {
