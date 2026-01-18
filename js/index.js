@@ -605,7 +605,19 @@ function setupServiceWorkerUpdateListener() {
     if (!('serviceWorker' in navigator)) return;
 
     // Load Version Info on startup
-    updateSystemVersionUI();
+    updateSystemVersionUI().then(() => {
+        // Daily Auto-Check Logic
+        const lastCheck = parseInt(localStorage.getItem('last_sw_check') || '0');
+        const ONE_DAY = 24 * 60 * 60 * 1000;
+        
+        if (Date.now() - lastCheck > ONE_DAY) {
+            console.log("[System] Running scheduled daily update check...");
+            navigator.serviceWorker.getRegistration().then(reg => {
+                if (reg) reg.update();
+                localStorage.setItem('last_sw_check', Date.now().toString());
+            });
+        }
+    });
 
     const isUpdate = navigator.serviceWorker.controller !== null;
 
@@ -622,10 +634,11 @@ function setupServiceWorkerUpdateListener() {
             }
 
             const showUpdateNotification = () => {
-                showNotification(`Update available: Polygol`, {
-                    icon: 'system_update',
+                showNotification(`A new system update is ready to install. (Version ${newV})`, {
+					header: 'System update',
+                    icon: 'update',
                     system: true,
-                    buttonText: 'Restart',
+                    buttonText: 'Restart and Install',
                     buttonAction: () => {
                         worker.postMessage({ action: 'skipWaiting' });
                     }
