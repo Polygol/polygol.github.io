@@ -15473,8 +15473,17 @@ window.addEventListener('message', async (event) => { // Make listener async
                         }
                     }
                     // Add appName to options if not already set and not a system notification
-                    if (sourceAppId && args[1] && typeof args[1] === 'object' && !args[1].system && !args[1].appName) {
-                        args[1].appName = sourceAppId;
+                    // Security: Prevent apps from marking notifications as system notifications
+                    if (sourceAppId && args[1] && typeof args[1] === 'object') {
+                        // Remove system flag if set by an app (security measure)
+                        if (args[1].system === true) {
+                            console.warn(`[Polygol Security] App '${sourceAppId}' attempted to mark notification as system. Flag removed.`);
+                            delete args[1].system;
+                        }
+                        // Add appName to options if not already set
+                        if (!args[1].appName) {
+                            args[1].appName = sourceAppId;
+                        }
                     }
                 }
                 
