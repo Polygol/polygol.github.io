@@ -13187,12 +13187,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 	const brightnessSlider = document.getElementById('brightness-control');
     const screenCurveSlider = document.getElementById('screen-curve-slider');
 
-    if (screenCurveSlider) {
+	if (screenCurveSlider) {
         const applyScreenCurve = (val) => {
             document.body.style.borderRadius = `${val}px`;
             document.body.style.cornerShape = 'superellipse(1.5)';
+            // Force body to contain fixed elements so they get clipped by the border radius
+            document.body.style.transform = val > 0 ? 'translateZ(0)' : '';
         };
-
+	
         // Init
         const savedCurve = localStorage.getItem('screenCurve') || '0';
         screenCurveSlider.value = savedCurve;
