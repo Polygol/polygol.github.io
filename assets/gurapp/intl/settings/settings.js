@@ -428,6 +428,20 @@ function initializeSettingsApp() {
             };
         }
 
+        const updatesSwitch = document.getElementById('updates-switch');
+        if (updatesSwitch) {
+            // Default to true if not set
+            const currentVal = window.parent.localStorage.getItem('updatesEnabled');
+            updatesSwitch.checked = currentVal !== 'false'; 
+            
+            updatesSwitch.addEventListener('change', (e) => {
+                 window.parent.postMessage({ 
+                    action: 'setSetting', 
+                    args: { key: 'updatesEnabled', value: e.target.checked.toString() }
+                }, '*');
+            });
+        }
+
         document.querySelectorAll('[data-modal]').forEach(btn => {
             btn.addEventListener('click', () => document.getElementById(btn.dataset.modal)?.classList.add('show'));
         });
@@ -633,6 +647,13 @@ function initializeSettingsApp() {
     // --- INITIALIZATION ---
     bindEventListeners();
     updateHeader();
+    
+    // Version Info
+    const versionLabel = document.querySelector('#page-about .setting-info .setting-label');
+    if (versionLabel && window.parent.systemVersion) {
+        versionLabel.textContent = `Polygol ${window.parent.systemVersion}`;
+    }
+    
     // Announce readiness to the parent, which will trigger the initial settings sync.
     if (window.parent) {
         window.parent.postMessage({ type: 'gurapp-ready' }, window.location.origin);
