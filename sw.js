@@ -1,4 +1,4 @@
-const CACHE_NAME = 'polygol-cache-16.5b-r3';
+const CACHE_NAME = 'polygol-cache-16.5b-r5';
 
 const ASSETS_TO_CACHE = [
   '/assets/img/regular-expressive-onload.webp',
@@ -14,6 +14,7 @@ const ASSETS_TO_CACHE = [
   'https://raw.githubusercontent.com/Polygol/polygol.github.io/refs/heads/main/assets/gurapp/api/gurasuraisu-api.js',
   '/assets/ui/svg/load.svg',
   '/manifest.json',
+  '/about/external.md',
   '/assets/img/favi/regular.png',
   '/assets/img/pwaicon/regular.png',
   '/assets/img/pwaicon/coloricon.png',
