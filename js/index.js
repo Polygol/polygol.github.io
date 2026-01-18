@@ -572,105 +572,128 @@ const WALLPAPER_PRESETS = [
     }
 ];
 
-function setupServiceWorkerUpdateListener() {
-    if ('serviceWorker' in navigator) {
-        // This flag is crucial. It checks if a controller was active on page load.
-        // If not, it's a first install, and we should not reload the page.
-        const isUpdate = navigator.serviceWorker.controller !== null;
+// --- System Version Management ---
+async function fetchSystemVersion() {
+    try {
+        const response = await fetch('/sw.js');
+        const text = await response.text();
+        const match = text.match(/const CORE_CACHE_VERSION = '(.*)';/);
+        if (match && match[1]) {
+            return match[1];
+        }
+    } catch (e) {
+        console.warn("Could not fetch SW version", e);
+    }
+    return "Unknown";
+}
 
-        navigator.serviceWorker.getRegistration().then(reg => {
-            if (!reg) return;
-
-            // This fires when a new SW is found and starts installing
-            reg.onupdatefound = () => {
-                const newWorker = reg.installing;
-                if (newWorker) {
-                    // This fires when the new SW moves to the 'installed' state (i.e., it's now waiting)
-                    newWorker.onstatechange = () => {
-                        if (newWorker.state === 'installed') {
-                            // Check if there's a controller. If not, this is the first SW install.
-                            if (navigator.serviceWorker.controller) {
-                                // A new SW is waiting. Show the notification.
-                                showNotification('A system update of Polygol is available', {
-									icon: 'update',
-									system: true,
-                                    buttonText: 'Restart and update',
-                                    buttonAction: () => {
-                                        newWorker.postMessage({ action: 'skipWaiting' });
-                                    }
-                                });
-                            }
-                        }
-                    };
-                }
-            };
-        });
-
-        // This fires when the new SW has taken control of the page
-        let refreshing;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            // Only reload the page if it's a genuine update.
-            if (!refreshing && isUpdate) {
-                window.location.reload();
-                refreshing = true;
-            }
-        });
+async function updateSystemVersionUI() {
+    const version = await fetchSystemVersion();
+    window.systemVersion = version; // Expose globally
+    
+    // Update System Info Label
+    const infoLabel = document.querySelector('.version-info span');
+    if (infoLabel) {
+        infoLabel.textContent = `Polygol ${version}`;
     }
 }
 
+// --- Service Worker Logic ---
+let updateNotificationInterval = null;
+
+function setupServiceWorkerUpdateListener() {
+    if (!('serviceWorker' in navigator)) return;
+
+    // Load Version Info on startup
+    updateSystemVersionUI();
+
+    const isUpdate = navigator.serviceWorker.controller !== null;
+
+    navigator.serviceWorker.getRegistration().then(reg => {
+        if (!reg) return;
+
+        // Function to handle a waiting worker
+        const handleWaitingWorker = (worker) => {
+            const updatesEnabled = localStorage.getItem('updatesEnabled') !== 'false';
+            
+            if (!updatesEnabled) {
+                console.log("[AutoUpdate] Update available but disabled by user settings.");
+                return; 
+            }
+
+            const showUpdateNotification = () => {
+                showNotification(`Update available: Polygol`, {
+                    icon: 'system_update',
+                    system: true,
+                    buttonText: 'Restart',
+                    buttonAction: () => {
+                        worker.postMessage({ action: 'skipWaiting' });
+                    }
+                });
+            };
+
+            // Show immediately
+            showUpdateNotification();
+
+            // Set hourly reminder
+            if (updateNotificationInterval) clearInterval(updateNotificationInterval);
+            updateNotificationInterval = setInterval(() => {
+                console.log("[AutoUpdate] Sending hourly reminder.");
+                showUpdateNotification();
+            }, 3600000); // 1 hour
+        };
+
+        // Check if there is already a waiting worker on load
+        if (reg.waiting) {
+            handleWaitingWorker(reg.waiting);
+        }
+
+        reg.onupdatefound = () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+                newWorker.onstatechange = () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        handleWaitingWorker(newWorker);
+                    }
+                };
+            }
+        };
+    });
+
+    let refreshing;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing && isUpdate) {
+            window.location.reload();
+            refreshing = true;
+        }
+    });
+}
+
+// Force Update: Triggered by Settings
 async function forceUpdatePolygol() {
     if (!('serviceWorker' in navigator)) {
         showNotification('Service Worker not supported', { icon: 'error', system: true });
-        return 'Update check failed: Service Worker not supported.';
+        return;
     }
-
+    
     try {
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (!registration) {
-            showNotification('No active Service Worker found', { icon: 'error', system: true });
-            return 'Update check failed: No registration found.';
-        }
-
-        // --- THE FIX: We don't check registration.installing here. ---
-        // Instead, we attach a listener that will fire ONLY IF an update is found.
-        registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            if (newWorker) {
-                // Listen for when the new worker has finished installing
-                newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed') {
-                        // The existing 'onupdatefound' listener in setupServiceWorkerUpdateListener
-                        // will now correctly detect this new worker and show the "Update & Reload" prompt.
-                        // We just give the user initial feedback.
-                        showPopup('A system update will install soon');
-                    }
-                });
-            }
-        });
-
-        // Now, trigger the update check. The listener above will handle the result.
-        await registration.update();
-
-        // After a brief moment, if no 'updatefound' event has fired, we can assume
-        // we are on the latest version. We use a timeout for this check.
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (!reg) { showNotification('No registration', {icon:'error'}); return; }
+        
+        await reg.update();
+        
+        // Give it a moment to find something
         setTimeout(() => {
-            // If there's still no new worker installing, it means no update was found.
-            if (!registration.installing) {
-                showDialog({ 
+            if (!reg.installing && !reg.waiting) {
+                 showDialog({ 
 				    type: 'alert', 
-				    title: 'Polygol is up to date', 
-				    message: 'No updates found were found.' 
+				    title: 'System is up to date', 
+				    message: `Polygol ${window.systemVersion} is the latest version.` 
 				});
             }
-        }, 2000); // 2-second timeout to wait for the update check to complete.
-
-
-        return 'Update check initiated.';
-
-    } catch (error) {
-        console.error('[SW] Force update failed:', error);
-        showNotification('Checking updates failed. Try again later', { icon: 'error', system: true });
-        return 'Update check failed.';
+        }, 1000);
+    } catch(e) {
+        console.error(e);
     }
 }
 
