@@ -13184,7 +13184,28 @@ document.addEventListener('DOMContentLoaded', async function() {
     const temperaturePopupValue = document.getElementById('thermostat-popup-value');
     
     // Brightness elements
-    const brightnessSlider = document.getElementById('brightness-control');
+	const brightnessSlider = document.getElementById('brightness-control');
+    const screenCurveSlider = document.getElementById('screen-curve-slider');
+
+    if (screenCurveSlider) {
+        const applyScreenCurve = (val) => {
+            document.body.style.borderRadius = `${val}px`;
+            document.body.style.cornerShape = 'superellipse(1.5)';
+        };
+
+        // Init
+        const savedCurve = localStorage.getItem('screenCurve') || '0';
+        screenCurveSlider.value = savedCurve;
+        applyScreenCurve(savedCurve);
+
+        // Listener
+        screenCurveSlider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            applyScreenCurve(val);
+            localStorage.setItem('screenCurve', val);
+            broadcastSettingUpdate('screenCurve', val);
+        });
+    }
     
     // Create brightness overlay div if it doesn't exist
     if (!document.getElementById('brightness-overlay')) {
@@ -14729,6 +14750,7 @@ const controlIdMap = {
 	'liveEnvironmentEnabled': 'live-environment-switch',
     'uiSoundMode': 'ui-sound-mode',
     'gurappSoundsEnabled': 'gurapp-sounds-switch',
+    'screenCurve': 'screen-curve-slider',
     'letterSpacing': 'clock-spacing-slider',
     'textCase': 'text-case-select',
     'dateSize': 'date-size-slider',
