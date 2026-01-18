@@ -324,24 +324,28 @@ input[type="submit"]:active,
   filter: brightness(1.5);
 }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--background-color);
-            background-image: none !important;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            transition: background-color 0.3s, color 0.3s, background-image 0.5s;
-            color: var(--text-color);
-            overflow: hidden;
-            user-select: none;
-            overscroll-behavior: none;
-            touch-action: manipulation;
-            /* Set the default value on the body element */
-            --bg-transform-scale: 1.05; 
-        }
+html {
+    background-color: #000;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background-color);
+    background-image: none !important;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	margin: 0;
+	transition: background-color 0.3s, color 0.3s, background-image 0.5s;
+	color: var(--text-color);
+	overflow: hidden;
+	user-select: none;
+	overscroll-behavior: none;
+	touch-action: manipulation;
+	/* Set the default value on the body element */
+	--bg-transform-scale: 1.05; 
+}
 
 body::before, #background-video {
     content: '';
