@@ -2326,6 +2326,7 @@ input[type="checkbox"]:checked::before {
     opacity: 0;
 	filter: blur(10px);
     transition: opacity 0.3s ease, filter 0.3s;
+	backdrop-filter: blur(50px);
 }
 
 .wallpaper-switcher-overlay.visible {
@@ -2354,7 +2355,7 @@ input[type="checkbox"]:checked::before {
     width: 300px;
     height: 200px;
     border-radius: 35px;
-	corner-shape: superellipse(1.5)
+	corner-shape: superellipse(1.5);
     position: relative;
     scroll-snap-align: center;
     background-size: cover;
