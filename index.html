@@ -697,15 +697,25 @@
 
     <div id="wallpaper-creator-modal" class="modal">
         <div class="modal-content">
-            <h3>Create Wallpaper</h3>
+            <h3>Add Wallpaper</h3>
             <div class="form-group">
                 <label>Type</label>
                 <select id="creator-type" class="styled-select" onchange="toggleCreatorInputs()">
+                    <option value="file">Import</option>
                     <option value="color">Solid Color</option>
                     <option value="gradient">Gradient</option>
                 </select>
             </div>
-            <div id="creator-color-input" class="form-group">
+            
+            <!-- File Input Section -->
+            <div id="creator-file-input" class="form-group">
+                <div style="text-align: center; padding: 20px; border: 2px dashed var(--glass-border); border-radius: 20px; cursor: pointer;" onclick="document.getElementById('wallpaperInput').click()">
+                    <span class="material-symbols-rounded">publish</span>
+                    <p style="margin: 5px 0 0;">Import</p>
+                </div>
+            </div>
+
+            <div id="creator-color-input" class="form-group" style="display: none;">
                 <label>Color</label>
                 <input type="color" id="creator-color-val" value="#000000" class="form-input" style="height: 50px; padding: 5px;">
             </div>
@@ -719,7 +729,7 @@
             </div>
             <div class="form-row">
                 <button class="button-dialog" onclick="closeCreatorModal()">Cancel</button>
-                <button class="button-dialog primary" onclick="saveCreatedWallpaper()">Create</button>
+                <button id="creator-save-btn" class="button-dialog primary" onclick="saveCreatedWallpaper()" style="display: none;">Done</button>
             </div>
         </div>
     </div>
