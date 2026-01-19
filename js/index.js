@@ -8939,7 +8939,7 @@ function renderSwitcherCards(container) {
             renderSwitcherCards(container); // Re-render to update active state
 			setTimeout(() => {
 				closeWallpaperSwitcher(); 
-			}, 500);
+			}, 800);
         };
 
         card.appendChild(editBtn);
