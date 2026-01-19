@@ -2462,6 +2462,37 @@ input[type="checkbox"]:checked::before {
     cursor: pointer;
 }
 
+.wallpaper-cards-container.rearranging {
+    gap: 10px;
+    overflow-x: hidden; /* Lock scrolling during rearrange */
+    flex-wrap: wrap; /* visual mode */
+    justify-content: center;
+}
+
+.wallpaper-cards-container.rearranging .switcher-card {
+    width: 25%;
+    height: 60%;
+    transform: scale(0.9);
+}
+
+.switcher-card.is-ghost {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.switcher-card-drag-clone {
+    position: fixed;
+    z-index: 10001;
+    pointer-events: none;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+    opacity: 0.9;
+    transform: scale(1.05);
+    border-radius: 35px;
+	corner-shape: superellipse(1.5);
+    background-size: cover;
+    background-position: center;
+}
+
     body.minimal-active #blurOverlayControls {
 	    backdrop-filter: blur(10px) !important;
 	}
