@@ -2327,11 +2327,13 @@ input[type="checkbox"]:checked::before {
 	filter: blur(10px);
     transition: opacity 0.3s ease, filter 0.3s;
 	backdrop-filter: blur(50px);
+    transform: scale(1.5);
 }
 
 .wallpaper-switcher-overlay.visible {
     opacity: 1;
 	filter: none;
+	transform: none;
 }
 
 .wallpaper-cards-container {
