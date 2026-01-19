@@ -8820,20 +8820,29 @@ function openWallpaperSwitcher() {
 function setupCardGestures(card, index, container) {
     let startX = 0;
     let startY = 0;
+    // Initialize current to 0, but will sync on down
     let currentX = 0;
     let currentY = 0;
     let isPressed = false;
     let isSwipingUp = false;
+    let hasMoved = false; // Track if intentional movement occurred
 
     const onPointerDown = (e) => {
         if (e.button === 2) return; // Ignore right click
         
         isPressed = true;
+        hasMoved = false;
+        isSwipingUp = false;
+        
+        // Sync start positions
         startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
         startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        currentX = startX;
+        currentY = startY;
         
         // Start Long Press Timer for Rearrange
         wallpaperLongPressTimer = setTimeout(() => {
+            // Only rearrange if we are still holding and haven't started swiping up
             if (isPressed && !isSwipingUp) {
                 startRearranging(index, card, startX, startY);
             }
@@ -8849,7 +8858,12 @@ function setupCardGestures(card, index, container) {
         const deltaX = currentX - startX;
         const deltaY = currentY - startY;
 
-        // Logic 1: Rearranging
+        // Detect if user moved enough to consider it a drag/swipe vs a jittery tap
+        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+            hasMoved = true;
+        }
+
+        // Logic 1: Rearranging (Happens after timer fires)
         if (isRearrangingWallpapers) {
             e.preventDefault(); // Stop scroll
             updateRearrangeDrag(currentX, currentY, container);
@@ -8860,7 +8874,7 @@ function setupCardGestures(card, index, container) {
         // Check if movement is vertical and significant
         if (deltaY < -20 && Math.abs(deltaY) > Math.abs(deltaX)) {
             isSwipingUp = true;
-            clearTimeout(wallpaperLongPressTimer); // Cancel rearrange
+            clearTimeout(wallpaperLongPressTimer); // Cancel rearrange timer
             
             // Visual feedback for swipe
             card.style.transform = `translateY(${deltaY}px) scale(0.95)`;
@@ -8869,24 +8883,24 @@ function setupCardGestures(card, index, container) {
     };
 
     const onPointerUp = async (e) => {
+        // Always clear the long press timer on release
         clearTimeout(wallpaperLongPressTimer);
         
         if (isRearrangingWallpapers) {
+            // User was rearranging, just stop. Do NOT select.
             stopRearranging();
         } else if (isSwipingUp) {
+            // User was swiping up (Delete Logic)
             const deltaY = currentY - startY;
-            // Threshold to delete
             if (deltaY < -150) {
-                // Delete
+                // Committed Delete
                 card.style.transition = 'transform 0.3s, opacity 0.3s';
                 card.style.transform = `translateY(-100vh)`;
                 card.style.opacity = '0';
                 
                 if (await showCustomConfirm(currentLanguage.WALLPAPER_REMOVE_CONFIRM || "Delete this wallpaper?")) {
                     await removeWallpaper(index);
-                    // Rerender handled by removeWallpaper -> renderSwitcherCards
                 } else {
-                    // Reset if cancelled
                     card.style.transform = '';
                     card.style.opacity = '';
                 }
@@ -8895,10 +8909,18 @@ function setupCardGestures(card, index, container) {
                 card.style.transform = '';
                 card.style.opacity = '';
             }
+        } else {
+            // Standard Tap Logic
+            // Only select if we didn't move significantly (prevent selecting on sloppy scroll clicks)
+            if (!hasMoved) {
+                jumpToWallpaper(index);
+                closeWallpaperSwitcher();
+            }
         }
         
         isPressed = false;
         isSwipingUp = false;
+        hasMoved = false;
     };
 
     card.addEventListener('mousedown', onPointerDown);
@@ -9177,14 +9199,6 @@ function renderSwitcherCards(container) {
                 card.appendChild(check);
             }
         }
-
-        // Click to select (Only if not rearranging/swiping)
-        card.onclick = () => {
-            if (!isRearrangingWallpapers) {
-                jumpToWallpaper(index);
-                closeWallpaperSwitcher(); 
-            }
-        };
 
         container.appendChild(card);
     });
