@@ -8891,6 +8891,7 @@ function closeWallpaperSwitcher() {
         overlay.style.display = 'none';
         // Restore UI
         document.querySelector('.container').classList.remove('force-hide');
+	    document.querySelector('.widget-grid').classList.remove('force-hide');
         updateDockVisibility();
     }, 300);
 }
