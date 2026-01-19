@@ -2374,11 +2374,11 @@ input[type="checkbox"]:checked::before {
 .switcher-edit-btn {
     position: absolute;
     top: 15px;
-    left: 15px;
+    left: 18px;
 	color: var(--text-color);
     border: 1px solid var(--glass-border);
     font-family: 'Inter';
-    padding: 8px 14px 8px 12px;
+    padding: 8px 14px;
     background: var(--search-background);
 	backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
     border: 1px solid var(--glass-border);
@@ -2398,10 +2398,6 @@ input[type="checkbox"]:checked::before {
 	filter: brightness(1.5);
 }
 
-.switcher-edit-btn .material-symbols-rounded {
-    font-size: 16px;
-}
-
 .switcher-check {
     position: absolute;
     bottom: 15px;
@@ -2412,8 +2408,7 @@ input[type="checkbox"]:checked::before {
 	border: 1px solid var(--glass-border);
 	box-shadow: var(--sun-shadow);
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+	padding: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2430,7 +2425,6 @@ input[type="checkbox"]:checked::before {
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
-    padding: 12px 24px;
     border-radius: 30px;
     font-weight: 500;
     display: flex;
