@@ -2363,6 +2363,7 @@ input[type="checkbox"]:checked::before {
     cursor: pointer;
     overflow: hidden;
     border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
 }
 
 .switcher-card.is-dragging {
@@ -2374,13 +2375,16 @@ input[type="checkbox"]:checked::before {
     position: absolute;
     top: 15px;
     left: 15px;
-    background: var(--search-background);
-	backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px)
+	color: var(--text-color);
     border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-size: 13px;
-    font-weight: 600;
+    font-family: 'Inter';
+    padding: 8px 14px 8px 12px;
+    background: var(--search-background);
+	backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    border: 1px solid var(--glass-border);
+	box-shadow: var(--sun-shadow);
+    border-radius: 50px;
+    font-weight: 500;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -2405,6 +2409,8 @@ input[type="checkbox"]:checked::before {
     background: var(--accent);
 	backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
     color: var(--background-color);
+	border: 1px solid var(--glass-border);
+	box-shadow: var(--sun-shadow);
     border-radius: 50%;
     width: 24px;
     height: 24px;
@@ -2412,14 +2418,18 @@ input[type="checkbox"]:checked::before {
     align-items: center;
     justify-content: center;
     font-size: 16px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
 .switcher-add-btn {
     margin-top: 30px;
+	color: var(--text-color);
+    border: 1px solid var(--glass-border);
+    font-family: 'Inter';
+    padding: 8px 18px 8px 12px;
     background: var(--search-background);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
-    border: 1px solid var(--glass-border)
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
     padding: 12px 24px;
     border-radius: 30px;
     font-weight: 500;
