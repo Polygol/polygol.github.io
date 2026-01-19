@@ -8962,7 +8962,7 @@ function renderSwitcherCards(container, isInitialOpen = false) {
         // Edit Button
         const editBtn = document.createElement('button');
         editBtn.className = 'switcher-edit-btn';
-        editBtn.innerHTML = '<span class="material-symbols-rounded">settings</span> Edit';
+        editBtn.innerHTML = 'Edit';
         editBtn.onclick = (e) => {
             e.stopPropagation();
             openWallpaperEditMenu(index);
