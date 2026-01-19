@@ -283,7 +283,7 @@ body.high-contrast .nav-btn-small .material-symbols-rounded {
 }
 
 * {
-  transition: all 0.3s cubic-bezier(.3,1.2,.64,1) !important; /* Temporary */
+  transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1) !important; /* Temporary */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -309,7 +309,7 @@ input[type="submit"],
 .clickable {
   cursor: pointer;
   transform: scale(1);
-  transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+  transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
 }
 
 /* Active effect (when clicking down) */
@@ -320,7 +320,7 @@ input[type="button"]:active,
 input[type="submit"]:active,
 .clickable:active {
   transform: scale(0.96);
-  transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+  transition: transform 0.1s cubic-bezier(.2, 1.3, .64, 1);
   filter: brightness(1.5);
 }
 
@@ -538,7 +538,7 @@ input[type="color"]::-moz-color-swatch {
     z-index: 9996;
     touch-action: none;
     user-select: none;
-    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
 }
 
 .drawer-handle::before {
@@ -563,7 +563,7 @@ input[type="color"]::-moz-color-swatch {
 
 .drawer-handle:active .nav-pill {
     transform: translateY(-5px) scale(1.2);
-    transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: transform 0.1s cubic-bezier(.2, 1.3, .64, 1);
 }
 
 .drawer-handle:active {
@@ -581,7 +581,7 @@ input[type="color"]::-moz-color-swatch {
 
 .nav-pill {
 	transform: scale(1);
-    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9), opacity 0.3s ease, background-color 0.3s, width 0.3s;
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1), opacity 0.3s ease, background-color 0.3s, width 0.3s;
     width: 100%;
     height: 2.5px;
     background-color: transparent;
@@ -606,14 +606,14 @@ input[type="color"]::-moz-color-swatch {
     z-index: 9996;
     touch-action: manipulation;
     user-select: none;
-    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9), opacity 0.3s ease;
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1), opacity 0.3s ease;
 }
 
 #one-button-nav-handle .nav-pill {
     width: 20px;
     height: 5px;
     border-radius: 5px;
-    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
 }
 
 #one-button-nav-handle:active .nav-pill {
@@ -692,7 +692,7 @@ body.one-button-nav-active .dock.show {
 	display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
     pointer-events: auto;
     cursor: pointer;
 	overflow: hidden;
@@ -739,7 +739,7 @@ body.one-button-nav-active .dock.show {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.3s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1);
     pointer-events: auto; /* Clickable to open Quick Settings */
     cursor: pointer;
 }
@@ -772,7 +772,7 @@ body.one-button-nav-active .dock.show {
     gap: 0;
     cursor: pointer;
     transform: scale(1);
-    transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: all 0.15s cubic-bezier(.2, 1.3, .64, 1);
 	font-weight: bold;
 	transform-origin: top;
 }
@@ -809,7 +809,7 @@ body.one-button-nav-active .dock.show {
 
 .persistent-clock:active {
     transform: scale(1.04) scaleY(1.1);
-    transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: transform 0.1s cubic-bezier(.2, 1.3, .64, 1);
 }
 
 .persistent-clock.show {
@@ -1279,7 +1279,7 @@ body.one-button-nav-active .dock.show {
     border-radius: 50px;
     height: 52px;
     transform: scale(1);
-    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
     border: 1px solid var(--glass-border);
 	gap: 10px;
     font-size: 1.2rem;
@@ -1475,13 +1475,13 @@ body.one-button-nav-active .dock.show {
 
 .setting-item .setting-icon-bg {
     transform: scale(1);
-    transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: all 0.15s cubic-bezier(.2, 1.3, .64, 1);
 	box-shadow: var(--sun-shadow);
 }
 
 .setting-item:active .setting-icon-bg {
     transform: scale(0.96);
-    transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: all 0.1s cubic-bezier(.2, 1.3, .64, 1);
     filter: brightness(1.5);
 }
 
@@ -1612,7 +1612,7 @@ body.one-button-nav-active .dock.show {
     object-fit: cover;
     flex-shrink: 0;
     cursor: pointer;
-    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
 	mix-blend-mode: overlay;
     border-radius: inherit;
     corner-shape: inherit;
@@ -1620,7 +1620,7 @@ body.one-button-nav-active .dock.show {
 
 #media-widget-art:active {
     transform: scale(1.04);
-    transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: transform 0.1s cubic-bezier(.2, 1.3, .64, 1);
     filter: brightness(1.5);
 }
 
@@ -2009,7 +2009,7 @@ input[type="checkbox"] {
     border-radius: 16px;
     position: relative;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1);
+    transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
     border: 1px solid var(--glass-border);
     cursor: pointer;
     box-shadow: var(--sun-shadow);
@@ -2028,7 +2028,7 @@ input[type="checkbox"]::before {
     border: 1px solid var(--glass-border);
     box-sizing: border-box;
     box-shadow: var(--sun-shadow);
-	transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1);
+	transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
 }
 
 input[type="checkbox"]:checked {
@@ -2073,12 +2073,12 @@ input[type="checkbox"]:checked::before {
     box-shadow: var(--sun-shadow), 0 4px 20px rgba(0, 0, 0, 0.15);
     cursor: pointer;
     transform: scale(1);
-    transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
 }
 
 .control-popup select:active {
     transform: scale(0.96);
-    transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: transform 0.1s cubic-bezier(.2, 1.3, .64, 1);
     filter: brightness(1.5);
 }
 
@@ -2867,7 +2867,7 @@ input[type="checkbox"]:checked::before {
 		    padding: 0;
 		    gap: 0;
 		    left: 50%;
-		    transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1);
+		    transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
 		    z-index: 9996;
 		    box-shadow: var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1);
 		    transform-origin: bottom;
@@ -2895,14 +2895,14 @@ input[type="checkbox"]:checked::before {
             height: auto;
             aspect-ratio: 1/1;
             transform: scale(1);
-            transition: filter 0.2s, transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+            transition: filter 0.2s, transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
             cursor: pointer;
         }
 
         .dock-icon:active {
             transform: scale(1.2);
             filter: brightness(1.5);
-            transition: filter 0.2s transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+            transition: filter 0.2s transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
             cursor: pointer;
         }
 
@@ -3251,7 +3251,7 @@ input[type="checkbox"]:checked::before {
     height: 100%;
     background-color: var(--background-color);
     z-index: 9996;
-    transition: opacity 0.4s cubic-bezier(0.2, 0, 0.38, 0.9);
+    transition: opacity 0.4s cubic-bezier(.2, 1.3, .64, 1);
     display: flex;
     flex-direction: column;
 	pointer-events: none;
