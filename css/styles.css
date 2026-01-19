@@ -2335,15 +2335,15 @@ input[type="checkbox"]:checked::before {
 }
 
 .wallpaper-cards-container {
-    display: flex;
+	display: flex;
     gap: 30px;
     overflow-x: auto;
     padding: 40px 10vw;
-    width: 100%;
+    width: calc(100% - 10vw);
     scroll-snap-type: x mandatory;
-    scrollbar-width: none; /* Hide scrollbar */
+    scrollbar-width: none;
     align-items: center;
-    height: 60vh;
+    height: 100%;
 }
 
 .wallpaper-cards-container::-webkit-scrollbar {
@@ -2352,8 +2352,8 @@ input[type="checkbox"]:checked::before {
 
 .switcher-card {
     flex: 0 0 auto;
-    width: 300px;
-    height: 200px;
+    width: 90%;
+    height: 90%;
     border-radius: 35px;
 	corner-shape: superellipse(1.5);
     position: relative;
@@ -2416,7 +2416,7 @@ input[type="checkbox"]:checked::before {
 }
 
 .switcher-add-btn {
-    margin-top: 30px;
+    margin-bottom: 30px;
 	color: var(--text-color);
     border: 1px solid var(--glass-border);
     font-family: 'Inter';
