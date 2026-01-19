@@ -316,7 +316,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         .clickable {
         	cursor: pointer;
         	transform: scale(1);
-        	transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1);
+        	transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1), filter 0.3s cubic-bezier(.2, 1.3, .64, 1);
         }
         
         /* Active effect (when clicking down) */
@@ -328,7 +328,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         .clickable:active {
         	transform: scale(1.1);
         	filter: brightness(1.5);
-        	transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1);
+        	transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1), filter 0.3s cubic-bezier(.2, 1.3, .64, 1);
         }
 
         input[type="color"] {
