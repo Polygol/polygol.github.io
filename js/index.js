@@ -438,139 +438,20 @@ const ResourceManager = {
     }
 };
 
-const WALLPAPER_SUBMISSION_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeSYSJalaX0HCZe0helcK5NCuc0U47tQc6KaO1OAsBs5HxK1A/viewform?embedded=true';
-
-// Wallpaper presets with associated clock styles
-const WALLPAPER_PRESETS = [
-    {
-        name: 'Sprayed Glass',
-        description: 'Oops, sorry, I spilled the glass.',
-        artist: '', // Internal, we made it
-        sourceUrl: '', // Internal, no source
-        license: '', // Internal, license is same as repo
-        thumbnailUrl: '/assets/img/wallpapers/thumb_sg1.png',
-        fullUrl: '/assets/img/wallpapers/Sprayed%20Glass.png',
-        clockStyles: {
-            font: 'Inter', weight: '1000', colorEnabled: false,
-            stackEnabled: false, alignment: 'center', shadowEnabled: false,
-            gradientEnabled: false, glassEnabled: true, roundness: '1',
-			wallpaperEffects: {
-                light: { blur: '0', brightness: '100', contrast: '100' },
-                dark: { blur: '0', brightness: '50', contrast: '150' }
-            }
+let WALLPAPER_PRESETS = [];
+async function fetchWallpaperPresets() {
+    try {
+        const res = await fetch('/assets/img/wallpapers/index.json');
+        if (res.ok) {
+            WALLPAPER_PRESETS = await res.json();
         }
-    },
-    {
-        name: 'Polyhills',
-        description: 'The classic Polygol hills background. Yummy?',
-        artist: '', // Internal, we made it
-        sourceUrl: '', // Internal, no source
-        license: '', // Internal, license is same as repo
-        thumbnailUrl: '/assets/img/wallpapers/thumb_p1.png',
-        fullUrl: '/assets/img/wallpapers/Polyhills.png',
-        clockStyles: {
-            font: 'Inter', weight: '700', colorEnabled: false,
-            stackEnabled: false, alignment: 'center', shadowEnabled: false,
-            gradientEnabled: false, glassEnabled: false, roundness: '100',
-			wallpaperEffects: {
-                light: { blur: '0', brightness: '100', contrast: '100' },
-                dark: { blur: '0', brightness: '75', contrast: '125' }
-            }
-        }
-    },
-    {
-        name: 'Clouds',
-        description: 'Fluffy fluddly floofy cloudy clouds',
-        artist: '', // Internal, we made it
-        sourceUrl: '', // Internal, no source
-        license: '', // Internal, license is same as repo
-        thumbnailUrl: '/assets/img/wallpapers/thumb_c1.png',
-        fullUrl: '/assets/img/wallpapers/Clouds.png',
-        clockStyles: {
-            font: 'Climate Crisis', weight: '700', colorEnabled: false,
-            stackEnabled: true, alignment: 'center', shadowEnabled: false,
-            gradientEnabled: false, glassEnabled: true, roundness: '0',
-			wallpaperEffects: {
-                light: { blur: '0', brightness: '100', contrast: '100' },
-                dark: { blur: '0', brightness: '50', contrast: '150' }
-            }
-        }
-    },
-    {
-        name: 'Gaty and Two',
-        description: 'Oh my fence!',
-        artist: 'HTwins.net',
-        sourceUrl: 'https://youtu.be/xXvSiWCCvhQ&t=987', 
-        license: '© 2023 Jacknjellify',
-        thumbnailUrl: '/assets/img/wallpapers/thumb_gat1E.png',
-        fullUrl: '/assets/img/wallpapers/Gaty%20and%20Two%20%28E%29.png',
-        clockStyles: {
-            font: 'Inter', weight: '1000', colorEnabled: false,
-            stackEnabled: false, alignment: 'center', shadowEnabled: false,
-            gradientEnabled: false, glassEnabled: true, roundness: '100', clockSize: '-20',
-			clockPosX: '50', clockPosY: '20',
-			wallpaperEffects: {
-                light: { blur: '0', brightness: '100', contrast: '100' },
-                dark: { blur: '0', brightness: '50', contrast: '150' }
-            }
-        }
-    },
-    {
-        name: 'Depressed Two',
-        description: 'h',
-        artist: 'HTwins.net',
-        sourceUrl: 'https://youtu.be/yyjAYG89-N0&t=1535', 
-        license: '© 2025 Jacknjellify',
-        thumbnailUrl: '/assets/img/wallpapers/thumb_dt1E.png',
-        fullUrl: '/assets/img/wallpapers/Depressed%20Two%20%28E%29.png',
-        clockStyles: {
-            font: 'Inter', weight: '1000', colorEnabled: false,
-            stackEnabled: false, alignment: 'center', shadowEnabled: false,
-            gradientEnabled: false, glassEnabled: true, roundness: '100', clockSize: '-20',
-			clockPosX: '50', clockPosY: '20',
-			wallpaperEffects: {
-                light: { blur: '0', brightness: '100', contrast: '100' },
-                dark: { blur: '0', brightness: '50', contrast: '150' }
-            }
-        }
-    },
-    {
-        name: 'Broadway Top',
-        description: 'Historic folly, by Capability Brown, with exhibitions and links to the Arts and Craft Movement.',
-        artist: '', // Internal, we made it
-        sourceUrl: '', // Internal, no source
-        license: '', // Internal, license is same as repo
-        thumbnailUrl: '/assets/img/wallpapers/thumb_bt1.png',
-        fullUrl: '/assets/img/wallpapers/Broadway%20Top.png',
-        clockStyles: {
-            font: 'Domine', weight: '700', color: '#bfe5bd', colorEnabled: true,
-            stackEnabled: true, alignment: 'center', shadowEnabled: false,
-            gradientEnabled: false, glassEnabled: false, roundness: '0',
-			wallpaperEffects: {
-                light: { blur: '0', brightness: '100', contrast: '100' },
-                dark: { blur: '0', brightness: '75', contrast: '125' }
-            }
-        }
-    },
-    {
-        name: 'Castelo de Óbidos',
-        description: 'Grand medieval castle with roots dating to the 9th century & hotel rooms you can book inside.',
-        artist: '', // Internal, we made it
-        sourceUrl: '', // Internal, no source
-        license: '', // Internal, license is same as repo
-        thumbnailUrl: '/assets/img/wallpapers/thumb_cdo1.png',
-        fullUrl: '/assets/img/wallpapers/Castelo%20de%20Óbidos.png',
-        clockStyles: {
-            font: 'Bricolage Grotesque', weight: '200', color: '#cbfff7', colorEnabled: true,
-            stackEnabled: false, alignment: 'center', shadowEnabled: false,
-            gradientEnabled: false, glassEnabled: false, roundness: '0',
-			wallpaperEffects: {
-                light: { blur: '0', brightness: '100', contrast: '100' },
-                dark: { blur: '0', brightness: '75', contrast: '125' }
-			}
-        }
+    } catch (e) {
+        console.warn("Failed to load wallpaper presets", e);
     }
-];
+}
+// Call this early
+fetchWallpaperPresets();
+const WALLPAPER_SUBMISSION_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeSYSJalaX0HCZe0helcK5NCuc0U47tQc6KaO1OAsBs5HxK1A/viewform?embedded=true';
 
 // --- System Version Management ---
 async function fetchSystemVersion() {
@@ -3065,6 +2946,15 @@ function parseCssColor(str) {
     return null;
 }
 
+function hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
 function mixColors(base, tint, weight) {
     if (!base || !tint) return base;
     const r = Math.round(base.r * (1 - weight) + tint.r * weight);
@@ -3691,6 +3581,16 @@ document.addEventListener('DOMContentLoaded', () => {
             openWallpaperPicker();
         });
     }
+	
+	document.getElementById('wallpaper-switcher-overlay').addEventListener('click', (e) => {
+	    if (e.target.id === 'wallpaper-switcher-overlay') {
+	        closeWallpaperSwitcher();
+	    }
+	});
+	
+	document.getElementById('switcher-add-btn').onclick = () => {
+	    openWallpaperPicker();
+	};
 
 	// --- Add event listeners to close drawers ---
     const blurOverlay = document.getElementById('blurOverlay');
@@ -8235,8 +8135,27 @@ async function applyWallpaper() {
             if (currentWallpaper.clockStyles) {
                 applyCustomWallpaperStyles(currentWallpaper.clockStyles);
             }
+			
             try {
-                if (currentWallpaper.isVideo) {
+	            if (currentWallpaper.type === 'color') {
+	                 document.body.style.backgroundImage = 'none';
+	                 document.body.style.backgroundColor = currentWallpaper.data; // Hex code
+	                 
+	                 // Hide video if present
+	                 const v = document.getElementById("background-video");
+	                 if(v) v.remove();
+	                 
+	                 window.activeWallpaperColor = hexToRgb(currentWallpaper.data); // Helper needed
+	            } 
+	            else if (currentWallpaper.type === 'gradient') {
+	                 document.body.style.backgroundImage = currentWallpaper.data; // linear-gradient(...)
+	                 document.body.style.backgroundColor = '';
+	                 
+	                 const v = document.getElementById("background-video");
+	                 if(v) v.remove();
+	                 
+	                 window.activeWallpaperColor = null; // Hard to extract dom color from CSS gradient string
+	            } else if (currentWallpaper.isVideo) {
                     let videoData = await getWallpaper(currentWallpaper.id);
                     if (videoData && videoData.blob) {
                         let existingVideo = document.querySelector("#background-video");
@@ -8850,6 +8769,259 @@ function saveRecentWallpapers() {
 		title: currentLanguage.WALLPAPER_HISTORY_FAIL
 	});
   }
+}
+
+// --- Wallpaper Switcher Logic ---
+let wallpaperPressTimer;
+const WALLPAPER_PRESS_DURATION = 800;
+let isWallpaperSwitcherOpen = false;
+
+function setupWallpaperInteraction() {
+    const bgLayer = document.body; // Or specific element if you have one
+    
+    const startPress = (e) => {
+        // Ignore if clicking on interactive elements
+        if (e.target.closest('.widget-instance') || 
+            e.target.closest('.dock') || 
+            e.target.closest('.app-drawer') || 
+            e.target.closest('.modal')) return;
+
+        wallpaperPressTimer = setTimeout(() => {
+            openWallpaperSwitcher();
+        }, WALLPAPER_PRESS_DURATION);
+    };
+
+    const cancelPress = () => {
+        clearTimeout(wallpaperPressTimer);
+    };
+
+    window.addEventListener('mousedown', startPress);
+    window.addEventListener('touchstart', startPress);
+    window.addEventListener('mouseup', cancelPress);
+    window.addEventListener('touchend', cancelPress);
+    window.addEventListener('mousemove', cancelPress); // Cancel on drag
+}
+
+// Run this on load
+setupWallpaperInteraction();
+
+function openWallpaperSwitcher() {
+    isWallpaperSwitcherOpen = true;
+    const overlay = document.getElementById('wallpaper-switcher-overlay');
+    const container = document.getElementById('wallpaper-cards-container');
+    
+    // Hide UI
+    document.querySelector('.container').classList.add('force-hide');
+    document.getElementById('dock').classList.remove('show');
+
+    // Render Cards
+    renderSwitcherCards(container);
+    
+    overlay.style.display = 'flex';
+    setTimeout(() => overlay.classList.add('visible'), 10);
+}
+
+function closeWallpaperSwitcher() {
+    isWallpaperSwitcherOpen = false;
+    const overlay = document.getElementById('wallpaper-switcher-overlay');
+    overlay.classList.remove('visible');
+    
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        // Restore UI
+        document.querySelector('.container').classList.remove('force-hide');
+        updateDockVisibility();
+    }, 300);
+}
+
+function renderSwitcherCards(container) {
+    container.innerHTML = '';
+    
+    recentWallpapers.forEach((wp, index) => {
+        const card = document.createElement('div');
+        card.className = `switcher-card ${index === currentWallpaperPosition ? 'active' : ''}`;
+        
+        // Background preview
+        if (wp.type === 'color') {
+            card.style.backgroundColor = wp.data;
+        } else if (wp.type === 'gradient') {
+            card.style.backgroundImage = wp.data;
+        } else if (wp.id) {
+            // Async fetch for images/video thumbs
+            getWallpaper(wp.id).then(data => {
+                if (data) {
+                    const src = data.dataUrl || (data.blob ? URL.createObjectURL(data.blob) : '');
+                    // Ideally use firstFrameDataUrl for video
+                    const bgSrc = (wp.isVideo && data.firstFrameDataUrl) ? data.firstFrameDataUrl : src;
+                    card.style.backgroundImage = `url('${bgSrc}')`;
+                }
+            });
+        }
+
+        // Edit Button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'switcher-edit-btn';
+        editBtn.innerHTML = '<span class="material-symbols-rounded">settings</span> Edit';
+        editBtn.onclick = (e) => {
+            e.stopPropagation();
+            openWallpaperEditMenu(index);
+        };
+        
+        // Active Check
+        if (index === currentWallpaperPosition) {
+            const check = document.createElement('div');
+            check.className = 'switcher-check';
+            check.innerHTML = '<span class="material-symbols-rounded">check</span>';
+            card.appendChild(check);
+        }
+
+        // Click to select
+        card.onclick = () => {
+            jumpToWallpaper(index);
+            renderSwitcherCards(container); // Re-render to update active state
+        };
+
+        card.appendChild(editBtn);
+        container.appendChild(card);
+    });
+
+    // Scroll to active
+    setTimeout(() => {
+        const activeCard = container.querySelector('.switcher-card.active');
+        if (activeCard) activeCard.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+    }, 100);
+}
+
+// --- Edit Menu (Replace Image) ---
+async function openWallpaperEditMenu(index) {
+    // We want to keep clock styles/widgets but replace the file.
+    // 1. Trigger file picker
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,video/*';
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // 2. Process File
+        // Similar to saveWallpaper but we UPDATE instead of INSERT NEW
+        try {
+            const wp = recentWallpapers[index];
+            const isVideo = file.type.startsWith('video/');
+            
+            let dbData = {
+                ...wp, // Keep existing metadata
+                type: file.type,
+                timestamp: Date.now()
+            };
+            
+            // Reset depth/colors as image changed
+            dbData.depthEnabled = false; 
+            dbData.depthDataUrl = null;
+            
+            // Extract new data
+            if (isVideo) {
+                 const frame = await extractVideoFrame(file);
+                 dbData.firstFrameDataUrl = frame;
+                 dbData.dominantColor = await extractWallpaperColor(frame);
+                 dbData.blob = file;
+            } else {
+                 // Image
+                 dbData.dominantColor = await extractWallpaperColor(file);
+                 const compressed = await compressMedia(file);
+                 dbData.dataUrl = compressed;
+                 delete dbData.blob; // Clean up old blob if switching formats
+            }
+
+            // Update DB
+            await storeWallpaper(wp.id, dbData);
+            
+            // Update Memory
+            recentWallpapers[index] = {
+                ...wp,
+                type: file.type,
+                isVideo: isVideo,
+                dominantColor: dbData.dominantColor,
+                depthEnabled: false
+            };
+            
+            saveRecentWallpapers();
+            
+            // Refresh
+            if (index === currentWallpaperPosition) {
+                applyWallpaper();
+            }
+            renderSwitcherCards(document.getElementById('wallpaper-cards-container'));
+            showPopup("Wallpaper image updated");
+
+        } catch (e) {
+            console.error("Failed to replace wallpaper", e);
+            showDialog({type:'alert', title:'Update Failed'});
+        }
+    };
+    
+    input.click();
+}
+
+// --- Creator Logic ---
+function openCreatorModal() {
+    closeWallpaperSwitcher();
+    document.getElementById('wallpaper-creator-modal').classList.add('show');
+}
+
+function toggleCreatorInputs() {
+    const type = document.getElementById('creator-type').value;
+    document.getElementById('creator-color-input').style.display = type === 'color' ? 'block' : 'none';
+    document.getElementById('creator-gradient-input').style.display = type === 'gradient' ? 'block' : 'none';
+}
+
+function closeCreatorModal() {
+    document.getElementById('wallpaper-creator-modal').classList.remove('show');
+}
+
+async function saveCreatedWallpaper() {
+    const type = document.getElementById('creator-type').value;
+    let dataVal = '';
+    
+    if (type === 'color') {
+        dataVal = document.getElementById('creator-color-val').value;
+    } else {
+        const c1 = document.getElementById('creator-grad-1').value;
+        const c2 = document.getElementById('creator-grad-2').value;
+        const ang = document.getElementById('creator-grad-angle').value;
+        dataVal = `linear-gradient(${ang}deg, ${c1}, ${c2})`;
+    }
+
+    // Save
+    const wallpaperId = `wp_gen_${Date.now()}`;
+    const newWp = {
+        id: wallpaperId,
+        type: type,
+        data: dataVal, // We store the CSS string directly in a property for these types
+        isVideo: false,
+        timestamp: Date.now(),
+        clockStyles: resetAndApplyDefaultClockStyles(),
+        widgetLayout: []
+    };
+    
+    recentWallpapers.unshift(newWp);
+    
+    // For non-file wallpapers, we might not need IndexedDB blobs, 
+    // but to keep logic consistent we can store the meta there.
+    await storeWallpaper(wallpaperId, {
+        type: type,
+        data: dataVal, // custom field
+        clockStyles: newWp.clockStyles,
+        widgetLayout: []
+    });
+
+    saveRecentWallpapers();
+    closeCreatorModal();
+    
+    // Jump to it
+    currentWallpaperPosition = 0;
+    applyWallpaper();
 }
 
 // Add these variables to track the indicator
