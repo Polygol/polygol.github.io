@@ -2420,9 +2420,8 @@ input[type="checkbox"]:checked::before {
 	color: var(--text-color);
     border: 1px solid var(--glass-border);
     font-family: 'Inter';
-    padding: 8px 18px 8px 12px;
-    background: var(--search-background);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    padding: 8px 18px 8px 14px;
+    background: var(--overlay-color);
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
     border-radius: 30px;
