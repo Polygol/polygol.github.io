@@ -8804,7 +8804,7 @@ function openWallpaperSwitcher() {
     document.getElementById('dock').classList.remove('show');
 
     // Render Cards
-    renderSwitcherCards(container);
+    renderSwitcherCards(container, true);
     
     // Setup Scrollbar & Wheel
     setupSwitcherScrolling(container);
@@ -8983,11 +8983,14 @@ function renderSwitcherCards(container) {
         container.appendChild(card);
     });
 	
-	// Scroll to active immediately (no animation)
+	// Scroll to active (Instant on entry, Smooth on update)
     setTimeout(() => {
         const activeCard = container.querySelector('.switcher-card.active');
         if (activeCard) {
-            activeCard.scrollIntoView({ behavior: 'auto', inline: 'center' });
+            activeCard.scrollIntoView({ 
+                behavior: isInitialOpen ? 'auto' : 'smooth', 
+                inline: 'center' 
+            });
         }
     }, 0);
 }
@@ -9052,7 +9055,7 @@ async function openWallpaperEditMenu(index) {
             if (index === currentWallpaperPosition) {
                 applyWallpaper();
             }
-            renderSwitcherCards(document.getElementById('wallpaper-cards-container'));
+            renderSwitcherCards(document.getElementById('wallpaper-cards-container'), false);
             showPopup("Wallpaper image updated");
 
         } catch (e) {
