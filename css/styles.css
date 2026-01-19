@@ -2223,7 +2223,7 @@ input[type="checkbox"]:checked::before {
 
     .page-indicator {
       position: fixed;
-      bottom: 30px;
+      bottom: 25px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
@@ -2234,9 +2234,9 @@ input[type="checkbox"]:checked::before {
       background-color: var(--search-background);
       backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
 	  box-shadow: var(--sun-shadow);
-      padding: 7px 8px;
+      padding: 10px 12px;
       border: 1px solid var(--glass-border);
-      border-radius: 20px;
+      border-radius: 40px;
       filter: none;
     }
 
