@@ -1,0 +1,130 @@
+[
+    {
+        name: 'Sprayed Glass',
+        description: 'Oops, sorry, I spilled the glass.',
+        artist: '', // Internal, we made it
+        sourceUrl: '', // Internal, no source
+        license: '', // Internal, license is same as repo
+        thumbnailUrl: '/assets/img/wallpapers/thumb_sg1.png',
+        fullUrl: '/assets/img/wallpapers/Sprayed%20Glass.png',
+        clockStyles: {
+            font: 'Inter', weight: '1000', colorEnabled: false,
+            stackEnabled: false, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: true, roundness: '1',
+			wallpaperEffects: {
+                light: { blur: '0', brightness: '100', contrast: '100' },
+                dark: { blur: '0', brightness: '50', contrast: '150' }
+            }
+        }
+    },
+    {
+        name: 'Polyhills',
+        description: 'The classic Polygol hills background. Yummy?',
+        artist: '', // Internal, we made it
+        sourceUrl: '', // Internal, no source
+        license: '', // Internal, license is same as repo
+        thumbnailUrl: '/assets/img/wallpapers/thumb_p1.png',
+        fullUrl: '/assets/img/wallpapers/Polyhills.png',
+        clockStyles: {
+            font: 'Inter', weight: '700', colorEnabled: false,
+            stackEnabled: false, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: false, roundness: '100',
+			wallpaperEffects: {
+                light: { blur: '0', brightness: '100', contrast: '100' },
+                dark: { blur: '0', brightness: '75', contrast: '125' }
+            }
+        }
+    },
+    {
+        name: 'Clouds',
+        description: 'Fluffy fluddly floofy cloudy clouds',
+        artist: '', // Internal, we made it
+        sourceUrl: '', // Internal, no source
+        license: '', // Internal, license is same as repo
+        thumbnailUrl: '/assets/img/wallpapers/thumb_c1.png',
+        fullUrl: '/assets/img/wallpapers/Clouds.png',
+        clockStyles: {
+            font: 'Climate Crisis', weight: '700', colorEnabled: false,
+            stackEnabled: true, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: true, roundness: '0',
+			wallpaperEffects: {
+                light: { blur: '0', brightness: '100', contrast: '100' },
+                dark: { blur: '0', brightness: '50', contrast: '150' }
+            }
+        }
+    },
+    {
+        name: 'Gaty and Two',
+        description: 'Oh my fence!',
+        artist: 'HTwins.net',
+        sourceUrl: 'https://youtu.be/xXvSiWCCvhQ&t=987', 
+        license: '© 2023 Jacknjellify',
+        thumbnailUrl: '/assets/img/wallpapers/thumb_gat1E.png',
+        fullUrl: '/assets/img/wallpapers/Gaty%20and%20Two%20%28E%29.png',
+        clockStyles: {
+            font: 'Inter', weight: '1000', colorEnabled: false,
+            stackEnabled: false, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: true, roundness: '100', clockSize: '-20',
+			clockPosX: '50', clockPosY: '20',
+			wallpaperEffects: {
+                light: { blur: '0', brightness: '100', contrast: '100' },
+                dark: { blur: '0', brightness: '50', contrast: '150' }
+            }
+        }
+    },
+    {
+        name: 'Depressed Two',
+        description: 'h',
+        artist: 'HTwins.net',
+        sourceUrl: 'https://youtu.be/yyjAYG89-N0&t=1535', 
+        license: '© 2025 Jacknjellify',
+        thumbnailUrl: '/assets/img/wallpapers/thumb_dt1E.png',
+        fullUrl: '/assets/img/wallpapers/Depressed%20Two%20%28E%29.png',
+        clockStyles: {
+            font: 'Inter', weight: '1000', colorEnabled: false,
+            stackEnabled: false, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: true, roundness: '100', clockSize: '-20',
+			clockPosX: '50', clockPosY: '20',
+			wallpaperEffects: {
+                light: { blur: '0', brightness: '100', contrast: '100' },
+                dark: { blur: '0', brightness: '50', contrast: '150' }
+            }
+        }
+    },
+    {
+        name: 'Broadway Top',
+        description: 'Historic folly, by Capability Brown, with exhibitions and links to the Arts and Craft Movement.',
+        artist: '', // Internal, we made it
+        sourceUrl: '', // Internal, no source
+        license: '', // Internal, license is same as repo
+        thumbnailUrl: '/assets/img/wallpapers/thumb_bt1.png',
+        fullUrl: '/assets/img/wallpapers/Broadway%20Top.png',
+        clockStyles: {
+            font: 'Domine', weight: '700', color: '#bfe5bd', colorEnabled: true,
+            stackEnabled: true, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: false, roundness: '0',
+			wallpaperEffects: {
+                light: { blur: '0', brightness: '100', contrast: '100' },
+                dark: { blur: '0', brightness: '75', contrast: '125' }
+            }
+        }
+    },
+    {
+        name: 'Castelo de Óbidos',
+        description: 'Grand medieval castle with roots dating to the 9th century & hotel rooms you can book inside.',
+        artist: '', // Internal, we made it
+        sourceUrl: '', // Internal, no source
+        license: '', // Internal, license is same as repo
+        thumbnailUrl: '/assets/img/wallpapers/thumb_cdo1.png',
+        fullUrl: '/assets/img/wallpapers/Castelo%20de%20Óbidos.png',
+        clockStyles: {
+            font: 'Bricolage Grotesque', weight: '200', color: '#cbfff7', colorEnabled: true,
+            stackEnabled: false, alignment: 'center', shadowEnabled: false,
+            gradientEnabled: false, glassEnabled: false, roundness: '0',
+			wallpaperEffects: {
+                light: { blur: '0', brightness: '100', contrast: '100' },
+                dark: { blur: '0', brightness: '75', contrast: '125' }
+			}
+        }
+    }
+]
