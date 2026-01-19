@@ -8933,30 +8933,36 @@ function closeWallpaperSwitcher() {
     }, 300);
 }
 
-function renderSwitcherCards(container) {
+// Global Drag State
+let rearrangeDragInfo = null;
+
+function renderSwitcherCards(container, isInitialOpen = false) {
     container.innerHTML = '';
     
     recentWallpapers.forEach((wp, index) => {
         const card = document.createElement('div');
         card.className = `switcher-card ${index === currentWallpaperPosition ? 'active' : ''}`;
+        card.dataset.index = index; // Store index for drag logic
         
         // Background preview
         if (wp.id) {
-            // Async fetch for images/video thumbs
             getWallpaper(wp.id).then(data => {
                 if (data) {
                     const src = data.dataUrl || (data.blob ? URL.createObjectURL(data.blob) : '');
-                    // Ideally use firstFrameDataUrl for video
                     const bgSrc = (wp.isVideo && data.firstFrameDataUrl) ? data.firstFrameDataUrl : src;
                     card.style.backgroundImage = `url('${bgSrc}')`;
                 }
             });
+        } else if (wp.type === 'color') {
+            card.style.backgroundColor = wp.data;
+        } else if (wp.type === 'gradient') {
+            card.style.backgroundImage = wp.data;
         }
 
         // Edit Button
         const editBtn = document.createElement('button');
         editBtn.className = 'switcher-edit-btn';
-        editBtn.innerHTML = 'Edit';
+        editBtn.innerHTML = '<span class="material-symbols-rounded">settings</span> Edit';
         editBtn.onclick = (e) => {
             e.stopPropagation();
             openWallpaperEditMenu(index);
@@ -8970,26 +8976,207 @@ function renderSwitcherCards(container) {
             card.appendChild(check);
         }
 
-        // Click to select
+        // --- Interaction Logic ---
+        
+        // 1. Click to Select
         card.onclick = () => {
+            if (container.classList.contains('rearranging')) return;
             jumpToWallpaper(index);
-            renderSwitcherCards(container); // Re-render to update active state
-			setTimeout(() => {
-				closeWallpaperSwitcher(); 
-			}, 600);
+            closeWallpaperSwitcher();
         };
+
+        // 2. Swipe Up to Delete
+        let touchStartY = 0;
+        let touchStartX = 0;
+        
+        card.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+
+        card.addEventListener('touchend', async (e) => {
+            if (container.classList.contains('rearranging')) return;
+            
+            const deltaY = e.changedTouches[0].clientY - touchStartY;
+            const deltaX = e.changedTouches[0].clientX - touchStartX;
+
+            // Check for vertical swipe up (negative Y) and low horizontal movement
+            if (deltaY < -80 && Math.abs(deltaX) < 50) {
+                if (await showCustomConfirm("Delete this wallpaper?", "Delete")) {
+                    await removeWallpaper(index);
+                    // Re-render switcher to show updated list
+                    renderSwitcherCards(container, false);
+                }
+            }
+        });
+
+        // 3. Hold to Rearrange
+        let longPressTimer;
+        
+        const startDrag = (e) => {
+            if (container.classList.contains('rearranging')) return;
+            
+            // Prevent context menu
+            if (e.type === 'contextmenu') e.preventDefault();
+
+            longPressTimer = setTimeout(() => {
+                initializeRearrange(index, card, e, container);
+            }, 500); // 500ms hold time
+        };
+
+        const cancelDrag = () => {
+            clearTimeout(longPressTimer);
+        };
+
+        card.addEventListener('mousedown', startDrag);
+        card.addEventListener('touchstart', startDrag, { passive: true });
+        
+        card.addEventListener('mouseup', cancelDrag);
+        card.addEventListener('mouseleave', cancelDrag);
+        card.addEventListener('touchend', cancelDrag);
+        card.addEventListener('touchmove', cancelDrag); // Cancel if scrolling
 
         card.appendChild(editBtn);
         container.appendChild(card);
     });
-	
-	// Scroll to active immediately (no animation)
+
+    // Scroll to active (Instant on entry, Smooth on update)
     setTimeout(() => {
         const activeCard = container.querySelector('.switcher-card.active');
         if (activeCard) {
-            activeCard.scrollIntoView({ behavior: 'auto', inline: 'center' });
+            activeCard.scrollIntoView({ 
+                behavior: isInitialOpen ? 'auto' : 'smooth', 
+                inline: 'center' 
+            });
         }
     }, 0);
+}
+
+function initializeRearrange(startIndex, cardElement, event, container) {
+    // 1. Enter Rearrange Mode
+    container.classList.add('rearranging');
+    
+    // 2. Create Clone for visual dragging
+    const rect = cardElement.getBoundingClientRect();
+    const clone = cardElement.cloneNode(true);
+    clone.className = 'switcher-card-drag-clone';
+    clone.style.width = `${rect.width}px`;
+    clone.style.height = `${rect.height}px`;
+    clone.style.left = `${rect.left}px`;
+    clone.style.top = `${rect.top}px`;
+    
+    // Hide buttons on clone for cleaner look
+    const btns = clone.querySelectorAll('button');
+    btns.forEach(b => b.style.display = 'none');
+
+    document.body.appendChild(clone);
+    
+    // Hide original
+    cardElement.classList.add('is-ghost');
+
+    // 3. Setup State
+    rearrangeDragInfo = {
+        startIndex: startIndex,
+        currentIndex: startIndex,
+        clone: clone,
+        ghost: cardElement,
+        container: container,
+        offsetX: (event.touches ? event.touches[0].clientX : event.clientX) - rect.left,
+        offsetY: (event.touches ? event.touches[0].clientY : event.clientY) - rect.top,
+        itemWidth: rect.width,
+        itemHeight: rect.height
+    };
+
+    // 4. Attach Global Listeners
+    document.addEventListener('mousemove', handleRearrangeMove);
+    document.addEventListener('touchmove', handleRearrangeMove, { passive: false });
+    document.addEventListener('mouseup', handleRearrangeEnd);
+    document.addEventListener('touchend', handleRearrangeEnd);
+}
+
+function handleRearrangeMove(e) {
+    if (!rearrangeDragInfo) return;
+    e.preventDefault();
+
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    // Move Clone
+    const clone = rearrangeDragInfo.clone;
+    clone.style.left = `${clientX - rearrangeDragInfo.offsetX}px`;
+    clone.style.top = `${clientY - rearrangeDragInfo.offsetY}px`;
+
+    // Detect Swap
+    // We check which card we are hovering over
+    const elements = document.elementsFromPoint(clientX, clientY);
+    const targetCard = elements.find(el => el.classList.contains('switcher-card') && !el.classList.contains('is-ghost') && !el.classList.contains('switcher-card-drag-clone'));
+
+    if (targetCard) {
+        const targetIndex = parseInt(targetCard.dataset.index);
+        
+        if (targetIndex !== rearrangeDragInfo.currentIndex) {
+            const container = rearrangeDragInfo.container;
+            const ghost = rearrangeDragInfo.ghost;
+            
+            // Visual DOM Swap
+            if (targetIndex > rearrangeDragInfo.currentIndex) {
+                container.insertBefore(ghost, targetCard.nextSibling);
+            } else {
+                container.insertBefore(ghost, targetCard);
+            }
+            
+            // Update Index data on DOM to reflect new order
+            // Note: We don't update ALL indices yet, just track where the ghost is.
+            // But to make the next swap logic work, we need to pretend the swap happened.
+            // A simpler way is to trust the visual flow and just track the final index based on position in parent.
+            
+            rearrangeDragInfo.currentIndex = Array.from(container.children).indexOf(ghost);
+        }
+    }
+}
+
+function handleRearrangeEnd(e) {
+    if (!rearrangeDragInfo) return;
+
+    const { startIndex, clone, container, ghost } = rearrangeDragInfo;
+    
+    // 1. Determine final index based on DOM order
+    // The ghost is currently sitting in the new position in the DOM
+    const allCards = Array.from(container.querySelectorAll('.switcher-card'));
+    const finalIndex = allCards.indexOf(ghost);
+
+    // 2. Update Data Array
+    if (finalIndex !== -1 && finalIndex !== startIndex) {
+        const item = recentWallpapers.splice(startIndex, 1)[0];
+        recentWallpapers.splice(finalIndex, 0, item);
+        
+        // Update current position pointer if needed
+        if (currentWallpaperPosition === startIndex) {
+            currentWallpaperPosition = finalIndex;
+        } else if (startIndex < currentWallpaperPosition && finalIndex >= currentWallpaperPosition) {
+            currentWallpaperPosition--;
+        } else if (startIndex > currentWallpaperPosition && finalIndex <= currentWallpaperPosition) {
+            currentWallpaperPosition++;
+        }
+        
+        saveRecentWallpapers();
+        saveCurrentPosition();
+    }
+
+    // 3. Cleanup
+    clone.remove();
+    ghost.classList.remove('is-ghost');
+    container.classList.remove('rearranging');
+
+    document.removeEventListener('mousemove', handleRearrangeMove);
+    document.removeEventListener('touchmove', handleRearrangeMove);
+    document.removeEventListener('mouseup', handleRearrangeEnd);
+    document.removeEventListener('touchend', handleRearrangeEnd);
+
+    rearrangeDragInfo = null;
+    
+    // 4. Full Re-render to ensure clean state
+    renderSwitcherCards(container, false);
 }
 
 // --- Edit Menu (Replace Image) ---
