@@ -303,10 +303,10 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         .reduce-animations input[type="submit"]:active,
         .reduce-animations .clickable:active {
             /* Apply scale instantly without transition */
-            transform: scale(0.98) !important;
+            transform: scale(1.1) !important;
             transition: none !important;
         }
-
+        
         /* For all clickable elements */
         [onclick], 
         button, 
@@ -314,9 +314,9 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         input[type="button"], 
         input[type="submit"],
         .clickable {
-            cursor: pointer;
-            transform: scale(1);
-            transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
+        	cursor: pointer;
+        	transform: scale(1);
+        	transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1);
         }
         
         /* Active effect (when clicking down) */
@@ -326,9 +326,8 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         input[type="button"]:active, 
         input[type="submit"]:active,
         .clickable:active {
-            transform: scale(0.96);
-            transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-            filter: brightness(1.5);
+        	transform: scale(1.1);
+        	filter: brightness(1.5);
         }
 
         input[type="color"] {
