@@ -2384,7 +2384,7 @@ input[type="checkbox"]:checked::before {
     flex: 0 0 auto;
     width: 90%;
     height: 90%;
-    border-radius: 35px;
+    border-radius: 50px;
 	corner-shape: superellipse(1.5);
     position: relative;
     scroll-snap-align: center;
