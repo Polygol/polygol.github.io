@@ -8761,7 +8761,7 @@ function saveRecentWallpapers() {
 
 // --- Wallpaper Switcher Logic ---
 let wallpaperPressTimer;
-const WALLPAPER_PRESS_DURATION = 800;
+const WALLPAPER_PRESS_DURATION = 500;
 let isWallpaperSwitcherOpen = false;
 
 function setupWallpaperInteraction() {
