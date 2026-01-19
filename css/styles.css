@@ -2338,10 +2338,10 @@ input[type="checkbox"]:checked::before {
 
 .switcher-scroll-track {
     width: 200px;
-    height: 4px;
+    height: 8px;
     background: var(--transparent-color);
-    border-radius: 4px;
-    margin-bottom: 10px;
+    border-radius: 8px;
+    margin-top: 30px;
     position: relative;
     cursor: pointer;
 }
@@ -2367,7 +2367,7 @@ input[type="checkbox"]:checked::before {
 	display: flex;
     gap: 30px;
     overflow-x: auto;
-    padding: 40px 10vw;
+    padding: 0 10vw;
     width: calc(100% - 10vw);
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
