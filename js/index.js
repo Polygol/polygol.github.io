@@ -8137,25 +8137,7 @@ async function applyWallpaper() {
             }
 			
             try {
-	            if (currentWallpaper.type === 'color') {
-	                 document.body.style.backgroundImage = 'none';
-	                 document.body.style.backgroundColor = currentWallpaper.data; // Hex code
-	                 
-	                 // Hide video if present
-	                 const v = document.getElementById("background-video");
-	                 if(v) v.remove();
-	                 
-	                 window.activeWallpaperColor = hexToRgb(currentWallpaper.data); // Helper needed
-	            } 
-	            else if (currentWallpaper.type === 'gradient') {
-	                 document.body.style.backgroundImage = currentWallpaper.data; // linear-gradient(...)
-	                 document.body.style.backgroundColor = '';
-	                 
-	                 const v = document.getElementById("background-video");
-	                 if(v) v.remove();
-	                 
-	                 window.activeWallpaperColor = null; // Hard to extract dom color from CSS gradient string
-	            } else if (currentWallpaper.isVideo) {
+				if (currentWallpaper.isVideo) {
                     let videoData = await getWallpaper(currentWallpaper.id);
                     if (videoData && videoData.blob) {
                         let existingVideo = document.querySelector("#background-video");
@@ -8842,11 +8824,7 @@ function renderSwitcherCards(container) {
         card.className = `switcher-card ${index === currentWallpaperPosition ? 'active' : ''}`;
         
         // Background preview
-        if (wp.type === 'color') {
-            card.style.backgroundColor = wp.data;
-        } else if (wp.type === 'gradient') {
-            card.style.backgroundImage = wp.data;
-        } else if (wp.id) {
+        if (wp.id) {
             // Async fetch for images/video thumbs
             getWallpaper(wp.id).then(data => {
                 if (data) {
@@ -8962,66 +8940,6 @@ async function openWallpaperEditMenu(index) {
     };
     
     input.click();
-}
-
-// --- Creator Logic ---
-function openCreatorModal() {
-    closeWallpaperSwitcher();
-    document.getElementById('wallpaper-creator-modal').classList.add('show');
-}
-
-function toggleCreatorInputs() {
-    const type = document.getElementById('creator-type').value;
-    document.getElementById('creator-color-input').style.display = type === 'color' ? 'block' : 'none';
-    document.getElementById('creator-gradient-input').style.display = type === 'gradient' ? 'block' : 'none';
-}
-
-function closeCreatorModal() {
-    document.getElementById('wallpaper-creator-modal').classList.remove('show');
-}
-
-async function saveCreatedWallpaper() {
-    const type = document.getElementById('creator-type').value;
-    let dataVal = '';
-    
-    if (type === 'color') {
-        dataVal = document.getElementById('creator-color-val').value;
-    } else {
-        const c1 = document.getElementById('creator-grad-1').value;
-        const c2 = document.getElementById('creator-grad-2').value;
-        const ang = document.getElementById('creator-grad-angle').value;
-        dataVal = `linear-gradient(${ang}deg, ${c1}, ${c2})`;
-    }
-
-    // Save
-    const wallpaperId = `wp_gen_${Date.now()}`;
-    const newWp = {
-        id: wallpaperId,
-        type: type,
-        data: dataVal, // We store the CSS string directly in a property for these types
-        isVideo: false,
-        timestamp: Date.now(),
-        clockStyles: resetAndApplyDefaultClockStyles(),
-        widgetLayout: []
-    };
-    
-    recentWallpapers.unshift(newWp);
-    
-    // For non-file wallpapers, we might not need IndexedDB blobs, 
-    // but to keep logic consistent we can store the meta there.
-    await storeWallpaper(wallpaperId, {
-        type: type,
-        data: dataVal, // custom field
-        clockStyles: newWp.clockStyles,
-        widgetLayout: []
-    });
-
-    saveRecentWallpapers();
-    closeCreatorModal();
-    
-    // Jump to it
-    currentWallpaperPosition = 0;
-    applyWallpaper();
 }
 
 // Add these variables to track the indicator
