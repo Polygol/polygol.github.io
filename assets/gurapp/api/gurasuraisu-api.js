@@ -366,7 +366,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             border-radius: 16px;
             position: relative;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1);
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
             border: 1px solid var(--glass-border);
             cursor: pointer;
             box-shadow: var(--sun-shadow);
@@ -385,7 +385,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             border: 1px solid var(--glass-border);
             box-sizing: border-box;
             box-shadow: var(--sun-shadow);
-        	transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1);
+        	transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
         }
         
         input[type="checkbox"]:checked {
@@ -460,7 +460,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             padding: 14px 14px;
             font-size: 0;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(.3, 1.2, .64, 1) ! IMPORTANT;
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1) ! IMPORTANT;
             display: flex;
             align-items: center;
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
