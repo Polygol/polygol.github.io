@@ -3588,9 +3588,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	    }
 	});
 	
-	document.getElementById('switcher-add-btn').onclick = () => {
-	    openWallpaperPicker();
-	};
+	const switcherAddBtn = document.getElementById('switcher-add-btn');
+	if (switcherAddBtn) {
+	    switcherAddBtn.onclick = () => {
+	        closeWallpaperSwitcher(); // Close switcher first
+	        setTimeout(() => {
+	             openWallpaperPicker(); // Open drawer after slight delay for transition
+	        }, 100);
+	    };
+	}
 
 	// --- Add event listeners to close drawers ---
     const blurOverlay = document.getElementById('blurOverlay');
@@ -8794,13 +8800,86 @@ function openWallpaperSwitcher() {
     
     // Hide UI
     document.querySelector('.container').classList.add('force-hide');
+    document.querySelector('.widget-grid').classList.add('force-hide');
     document.getElementById('dock').classList.remove('show');
 
     // Render Cards
     renderSwitcherCards(container);
     
+    // Setup Scrollbar & Wheel
+    setupSwitcherScrolling(container);
+
     overlay.style.display = 'flex';
     setTimeout(() => overlay.classList.add('visible'), 10);
+}
+
+function setupSwitcherScrolling(container) {
+    const track = document.getElementById('switcher-track');
+    const thumb = document.getElementById('switcher-thumb');
+
+    // 1. Mouse Wheel -> Horizontal Scroll
+    container.onwheel = (e) => {
+        if (e.deltaY !== 0) {
+            e.preventDefault();
+            container.scrollLeft += e.deltaY;
+        }
+    };
+
+    // 2. Update Thumb Position on Scroll
+    const updateThumb = () => {
+        const scrollRatio = container.scrollLeft / (container.scrollWidth - container.clientWidth);
+        const trackWidth = track.clientWidth;
+        const thumbWidth = Math.max(30, (container.clientWidth / container.scrollWidth) * trackWidth);
+        
+        thumb.style.width = `${thumbWidth}px`;
+        
+        const maxTranslate = trackWidth - thumbWidth;
+        const translate = scrollRatio * maxTranslate;
+        
+        if (!isNaN(translate)) {
+            thumb.style.transform = `translateX(${translate}px)`;
+        }
+    };
+
+    container.onscroll = updateThumb;
+    // Initial calc
+    setTimeout(updateThumb, 0);
+    window.addEventListener('resize', updateThumb);
+
+    // 3. Drag Thumb
+    let isDraggingThumb = false;
+    let startX = 0;
+    let startScrollLeft = 0;
+
+    thumb.onmousedown = (e) => {
+        isDraggingThumb = true;
+        startX = e.clientX;
+        startScrollLeft = container.scrollLeft;
+        thumb.style.cursor = 'grabbing';
+        e.preventDefault();
+    };
+
+    window.onmousemove = (e) => {
+        if (!isDraggingThumb) return;
+        const delta = e.clientX - startX;
+        const trackWidth = track.clientWidth;
+        const thumbWidth = thumb.clientWidth;
+        const maxTranslate = trackWidth - thumbWidth;
+        
+        // Calculate percentage moved relative to track
+        const moveRatio = delta / maxTranslate;
+        
+        // Apply to scroll container
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        container.scrollLeft = startScrollLeft + (moveRatio * maxScroll);
+    };
+
+    window.onmouseup = () => {
+        if(isDraggingThumb) {
+            isDraggingThumb = false;
+            thumb.style.cursor = 'grab';
+        }
+    };
 }
 
 function closeWallpaperSwitcher() {
@@ -8857,6 +8936,9 @@ function renderSwitcherCards(container) {
         card.onclick = () => {
             jumpToWallpaper(index);
             renderSwitcherCards(container); // Re-render to update active state
+			setTimeout(() => {
+				closeWallpaperSwitcher(); 
+			}, 500);
         };
 
         card.appendChild(editBtn);
