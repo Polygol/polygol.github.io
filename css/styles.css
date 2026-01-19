@@ -2336,6 +2336,33 @@ input[type="checkbox"]:checked::before {
 	transform: none;
 }
 
+.switcher-scroll-track {
+    width: 200px;
+    height: 4px;
+    background: var(--transparent-color);
+    border-radius: 4px;
+    margin-bottom: 10px;
+    position: relative;
+    cursor: pointer;
+}
+
+.switcher-scroll-thumb {
+    height: 8px;
+    background: var(--accent);
+    border-radius: 8px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50px; /* Will be calculated by JS */
+    cursor: grab;
+    transition: background-color 0.2s;
+}
+
+.switcher-scroll-thumb:active {
+    background: var(--accent);
+    cursor: grabbing;
+}
+
 .wallpaper-cards-container {
 	display: flex;
     gap: 30px;
