@@ -1959,7 +1959,7 @@ function openWallpaperPicker() {
         <span class="wallpaper-picker-title">${isFull ? 'Storage full' : (currentLanguage.UPLOAD_CUSTOM || 'Add')}</span>
     `;
     
-    uploadItem.addEventListener('click', () => {
+	uploadItem.addEventListener('click', () => {
         if (isFull) {
             showDialog({ 
                 type: 'alert', 
@@ -1967,9 +1967,9 @@ function openWallpaperPicker() {
                 message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers.` 
             });
         } else {
-            // Trigger the external input
-            uploadButton.click(); 
+            // Open the Creator Modal instead of direct upload
             closeWallpaperPicker(); 
+            openCreatorModal();
         }
     });
     grid.appendChild(uploadItem);
@@ -7400,6 +7400,7 @@ async function getVideo() {
 
 async function processWallpaperFiles(files) {
     closeWallpaperPicker();
+    closeCreatorModal(); // Ensure creator modal closes if used
     if (!files || files.length === 0) return;
 
     // Check limit again if adding multiple files
@@ -8966,14 +8967,28 @@ async function openWallpaperEditMenu(index) {
 
 // --- Creator Logic ---
 function openCreatorModal() {
-    closeWallpaperSwitcher();
+    closeWallpaperSwitcher(); // Close switcher if open
+    closeWallpaperPicker();   // Close preset picker if open
+    
+    // Reset to File option by default
+    document.getElementById('creator-type').value = 'file';
+    toggleCreatorInputs();
+    
     document.getElementById('wallpaper-creator-modal').classList.add('show');
 }
 
 function toggleCreatorInputs() {
     const type = document.getElementById('creator-type').value;
+    const saveBtn = document.getElementById('creator-save-btn');
+
+    document.getElementById('creator-file-input').style.display = type === 'file' ? 'block' : 'none';
     document.getElementById('creator-color-input').style.display = type === 'color' ? 'block' : 'none';
     document.getElementById('creator-gradient-input').style.display = type === 'gradient' ? 'block' : 'none';
+
+    // Hide "Create" button for files (upload happens instantly via input change)
+    if (saveBtn) {
+        saveBtn.style.display = type === 'file' ? 'none' : 'block';
+    }
 }
 
 function closeCreatorModal() {
