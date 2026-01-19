@@ -2347,9 +2347,10 @@ input[type="checkbox"]:checked::before {
 }
 
 .switcher-scroll-thumb {
-    height: 8px;
+    margin-top: -6px; /* Center vertically (half of height) */
+    height: 20px;
     background: var(--accent);
-    border-radius: 8px;
+    border-radius: 20px;
     position: absolute;
     top: 0;
     left: 0;
