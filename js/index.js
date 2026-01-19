@@ -8765,29 +8765,73 @@ const WALLPAPER_PRESS_DURATION = 500;
 let isWallpaperSwitcherOpen = false;
 
 function setupWallpaperInteraction() {
-    const bgLayer = document.body; // Or specific element if you have one
-    
+    let startX = 0;
+    let startY = 0;
+    let isPressing = false;
+
     const startPress = (e) => {
-        // Ignore if clicking on interactive elements
-        if (e.target.closest('.widget-instance') || 
+        // Ignore if clicking on interactive elements or if switcher is already open
+        if (isWallpaperSwitcherOpen || 
+            e.target.closest('.widget-instance') || 
             e.target.closest('.dock') || 
             e.target.closest('.app-drawer') || 
-            e.target.closest('.modal')) return;
+            e.target.closest('.modal') ||
+            e.target.closest('.persistent-clock') || 
+            e.target.closest('#status-indicator')) return;
+
+        isPressing = true;
+        // Handle both mouse and touch coordinates
+        if (e.type === 'touchstart') {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        } else {
+            startX = e.clientX;
+            startY = e.clientY;
+        }
 
         wallpaperPressTimer = setTimeout(() => {
-            openWallpaperSwitcher();
+            if (isPressing) {
+                openWallpaperSwitcher();
+                isPressing = false; // Stop tracking this press
+            }
         }, WALLPAPER_PRESS_DURATION);
     };
 
     const cancelPress = () => {
-        clearTimeout(wallpaperPressTimer);
+        if (isPressing) {
+            clearTimeout(wallpaperPressTimer);
+            isPressing = false;
+        }
+    };
+
+    const checkMove = (e) => {
+        if (!isPressing) return;
+        
+        let cx, cy;
+        if (e.type === 'touchmove') {
+            cx = e.touches[0].clientX;
+            cy = e.touches[0].clientY;
+        } else {
+            cx = e.clientX;
+            cy = e.clientY;
+        }
+
+        // Allow 10px movement tolerance to prevent accidental cancellations
+        if (Math.abs(cx - startX) > 10 || Math.abs(cy - startY) > 10) {
+            cancelPress();
+        }
     };
 
     window.addEventListener('mousedown', startPress);
-    window.addEventListener('touchstart', startPress);
+    window.addEventListener('touchstart', startPress, { passive: true });
+    
     window.addEventListener('mouseup', cancelPress);
     window.addEventListener('touchend', cancelPress);
-    window.addEventListener('mousemove', cancelPress); // Cancel on drag
+    
+    window.addEventListener('mousemove', checkMove);
+    window.addEventListener('touchmove', checkMove, { passive: true });
+    
+    window.addEventListener('scroll', cancelPress);
 }
 
 // Run this on load
@@ -8796,11 +8840,20 @@ setupWallpaperInteraction();
 function openWallpaperSwitcher() {
     isWallpaperSwitcherOpen = true;
     const overlay = document.getElementById('wallpaper-switcher-overlay');
+    
+    // Prevent right click on the switcher
+    overlay.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); return false; };
     const container = document.getElementById('wallpaper-cards-container');
     
+    // Block pointer events temporarily (500ms) to prevent the "release" of the long-press 
+    // from being registered as a click on the card that appears.
+    overlay.style.pointerEvents = 'none';
+    setTimeout(() => {
+        if(isWallpaperSwitcherOpen) overlay.style.pointerEvents = 'auto';
+    }, 500);
+
     // Hide UI
     document.querySelector('.container').classList.add('force-hide');
-    document.querySelector('.widget-grid').classList.add('force-hide');
     document.getElementById('dock').classList.remove('show');
 
     // Render Cards
