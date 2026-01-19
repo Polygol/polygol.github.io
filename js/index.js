@@ -8933,7 +8933,7 @@ function closeWallpaperSwitcher() {
     }, 300);
 }
 
-function renderSwitcherCards(container) {
+function renderSwitcherCards(container, isInitialOpen = false) {
     container.innerHTML = '';
     
     recentWallpapers.forEach((wp, index) => {
