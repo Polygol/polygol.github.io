@@ -8763,6 +8763,10 @@ function saveRecentWallpapers() {
 let wallpaperPressTimer;
 const WALLPAPER_PRESS_DURATION = 500;
 let isWallpaperSwitcherOpen = false;
+let isRearrangingWallpapers = false;
+let dragGhostElement = null;
+let draggingWallpaperIndex = -1;
+let wallpaperLongPressTimer = null;
 
 function setupWallpaperInteraction() {
     const bgLayer = document.body; // Or specific element if you have one
@@ -8811,6 +8815,192 @@ function openWallpaperSwitcher() {
 
     overlay.style.display = 'flex';
     setTimeout(() => overlay.classList.add('visible'), 10);
+}
+
+function setupCardGestures(card, index, container) {
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let isPressed = false;
+    let isSwipingUp = false;
+
+    const onPointerDown = (e) => {
+        if (e.button === 2) return; // Ignore right click
+        
+        isPressed = true;
+        startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        
+        // Start Long Press Timer for Rearrange
+        wallpaperLongPressTimer = setTimeout(() => {
+            if (isPressed && !isSwipingUp) {
+                startRearranging(index, card, startX, startY);
+            }
+        }, 500);
+    };
+
+    const onPointerMove = (e) => {
+        if (!isPressed) return;
+        
+        currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        currentY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        
+        const deltaX = currentX - startX;
+        const deltaY = currentY - startY;
+
+        // Logic 1: Rearranging
+        if (isRearrangingWallpapers) {
+            e.preventDefault(); // Stop scroll
+            updateRearrangeDrag(currentX, currentY, container);
+            return;
+        }
+
+        // Logic 2: Swipe Up to Delete
+        // Check if movement is vertical and significant
+        if (deltaY < -20 && Math.abs(deltaY) > Math.abs(deltaX)) {
+            isSwipingUp = true;
+            clearTimeout(wallpaperLongPressTimer); // Cancel rearrange
+            
+            // Visual feedback for swipe
+            card.style.transform = `translateY(${deltaY}px) scale(0.95)`;
+            card.style.opacity = Math.max(0.3, 1 - (Math.abs(deltaY) / 300));
+        }
+    };
+
+    const onPointerUp = async (e) => {
+        clearTimeout(wallpaperLongPressTimer);
+        
+        if (isRearrangingWallpapers) {
+            stopRearranging();
+        } else if (isSwipingUp) {
+            const deltaY = currentY - startY;
+            // Threshold to delete
+            if (deltaY < -150) {
+                // Delete
+                card.style.transition = 'transform 0.3s, opacity 0.3s';
+                card.style.transform = `translateY(-100vh)`;
+                card.style.opacity = '0';
+                
+                if (await showCustomConfirm(currentLanguage.WALLPAPER_REMOVE_CONFIRM || "Delete this wallpaper?")) {
+                    await removeWallpaper(index);
+                    // Rerender handled by removeWallpaper -> renderSwitcherCards
+                } else {
+                    // Reset if cancelled
+                    card.style.transform = '';
+                    card.style.opacity = '';
+                }
+            } else {
+                // Snap back
+                card.style.transform = '';
+                card.style.opacity = '';
+            }
+        }
+        
+        isPressed = false;
+        isSwipingUp = false;
+    };
+
+    card.addEventListener('mousedown', onPointerDown);
+    card.addEventListener('touchstart', onPointerDown, {passive: false});
+
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('touchmove', onPointerMove, {passive: false});
+
+    window.addEventListener('mouseup', onPointerUp);
+    window.addEventListener('touchend', onPointerUp);
+}
+
+function startRearranging(index, originalCard, clientX, clientY) {
+    isRearrangingWallpapers = true;
+    draggingWallpaperIndex = index;
+
+    const container = document.getElementById('wallpaper-cards-container');
+    container.classList.add('rearranging');
+    
+    // Create Ghost
+    dragGhostElement = originalCard.cloneNode(false); // Clone div without children (no buttons)
+    dragGhostElement.className = 'switcher-card-ghost';
+    dragGhostElement.style.backgroundImage = originalCard.style.backgroundImage;
+    dragGhostElement.style.backgroundColor = originalCard.style.backgroundColor;
+    dragGhostElement.style.left = `${clientX - 125}px`; // Center on pointer (width/2)
+    dragGhostElement.style.top = `${clientY - 80}px`;  // Center on pointer (height/2)
+    
+    document.body.appendChild(dragGhostElement);
+    
+    // Hide original in the grid immediately
+    // We re-render to apply the 'is-hidden-drag' class based on draggingWallpaperIndex
+    renderSwitcherCards(container); 
+    
+    // Provide haptic feedback if available
+    if (navigator.vibrate) navigator.vibrate(50);
+}
+
+function updateRearrangeDrag(x, y, container) {
+    if (!dragGhostElement) return;
+    
+    // Move Ghost
+    dragGhostElement.style.left = `${x - 125}px`;
+    dragGhostElement.style.top = `${y - 80}px`;
+
+    // Detect hover over other cards
+    // Simple logic: Calculate which index we are hovering
+    // Since we are in a flex/grid flow, we can use elementFromPoint
+    
+    // We hide the ghost pointer events so we can see what's under it
+    const elementBelow = document.elementFromPoint(x, y);
+    const cardBelow = elementBelow ? elementBelow.closest('.switcher-card') : null;
+
+    if (cardBelow) {
+        // Find index of cardBelow in the container children (ignoring edit buttons etc if they are separated)
+        // Actually easier to match by ID if we assigned them, or just index in list
+        const newIndex = Array.from(container.children).indexOf(cardBelow);
+
+        if (newIndex !== -1 && newIndex !== draggingWallpaperIndex) {
+            // Swap Data
+            const movedItem = recentWallpapers[draggingWallpaperIndex];
+            recentWallpapers.splice(draggingWallpaperIndex, 1);
+            recentWallpapers.splice(newIndex, 0, movedItem);
+
+            // Update Current Selection pointer if it moved
+            if (currentWallpaperPosition === draggingWallpaperIndex) {
+                currentWallpaperPosition = newIndex;
+            } else if (currentWallpaperPosition === newIndex) {
+                currentWallpaperPosition = draggingWallpaperIndex;
+            } else if (draggingWallpaperIndex < currentWallpaperPosition && newIndex >= currentWallpaperPosition) {
+                currentWallpaperPosition--;
+            } else if (draggingWallpaperIndex > currentWallpaperPosition && newIndex <= currentWallpaperPosition) {
+                currentWallpaperPosition++;
+            }
+            
+            // Save order
+            saveCurrentPosition(); // Updates localstorage order preference
+            localStorage.setItem('recentWallpapers', JSON.stringify(recentWallpapers));
+
+            // Update index tracker
+            draggingWallpaperIndex = newIndex;
+
+            // Re-render grid (Ghost stays visible, original card at new index becomes hidden)
+            renderSwitcherCards(container);
+        }
+    }
+}
+
+function stopRearranging() {
+    isRearrangingWallpapers = false;
+    draggingWallpaperIndex = -1;
+    
+    const container = document.getElementById('wallpaper-cards-container');
+    container.classList.remove('rearranging');
+    
+    if (dragGhostElement) {
+        dragGhostElement.remove();
+        dragGhostElement = null;
+    }
+    
+    // Final render to show all cards normally
+    renderSwitcherCards(container);
+    saveRecentWallpapers();
 }
 
 function setupSwitcherScrolling(container) {
@@ -8938,7 +9128,17 @@ function renderSwitcherCards(container) {
     
     recentWallpapers.forEach((wp, index) => {
         const card = document.createElement('div');
-        card.className = `switcher-card ${index === currentWallpaperPosition ? 'active' : ''}`;
+        let classString = `switcher-card ${index === currentWallpaperPosition ? 'active' : ''}`;
+        
+        // Hide the card currently being rearranged so the ghost replaces it
+        if (isRearrangingWallpapers && index === draggingWallpaperIndex) {
+            classString += ' is-hidden-drag';
+        }
+        
+        card.className = classString;
+        
+        // Attach Gestures
+        setupCardGestures(card, index, container);
         
         // Background preview
         if (wp.id) {
@@ -8946,40 +9146,46 @@ function renderSwitcherCards(container) {
             getWallpaper(wp.id).then(data => {
                 if (data) {
                     const src = data.dataUrl || (data.blob ? URL.createObjectURL(data.blob) : '');
-                    // Ideally use firstFrameDataUrl for video
                     const bgSrc = (wp.isVideo && data.firstFrameDataUrl) ? data.firstFrameDataUrl : src;
                     card.style.backgroundImage = `url('${bgSrc}')`;
                 }
             });
+        } else if (wp.type === 'color' || wp.type === 'gradient') {
+             // Basic support for legacy types if present
+             if(wp.type === 'color') card.style.backgroundColor = wp.data;
+             else card.style.backgroundImage = wp.data;
         }
 
-        // Edit Button
-        const editBtn = document.createElement('button');
-        editBtn.className = 'switcher-edit-btn';
-        editBtn.innerHTML = 'Edit';
-        editBtn.onclick = (e) => {
-            e.stopPropagation();
-            openWallpaperEditMenu(index);
-        };
-        
-        // Active Check
-        if (index === currentWallpaperPosition) {
-            const check = document.createElement('div');
-            check.className = 'switcher-check';
-            check.innerHTML = '<span class="material-symbols-rounded">check</span>';
-            card.appendChild(check);
+        // Only add buttons/checks if NOT rearranging (cleaner look)
+        if (!isRearrangingWallpapers) {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'switcher-edit-btn';
+            editBtn.innerHTML = 'Edit';
+            // Stop propagation to prevent triggering swipe/rearrange on the button
+            editBtn.onmousedown = (e) => e.stopPropagation();
+            editBtn.ontouchstart = (e) => e.stopPropagation();
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+                openWallpaperEditMenu(index);
+            };
+            card.appendChild(editBtn);
+            
+            if (index === currentWallpaperPosition) {
+                const check = document.createElement('div');
+                check.className = 'switcher-check';
+                check.innerHTML = '<span class="material-symbols-rounded">check</span>';
+                card.appendChild(check);
+            }
         }
 
-        // Click to select
+        // Click to select (Only if not rearranging/swiping)
         card.onclick = () => {
-            jumpToWallpaper(index);
-            renderSwitcherCards(container); // Re-render to update active state
-			setTimeout(() => {
-				closeWallpaperSwitcher(); 
-			}, 600);
+            if (!isRearrangingWallpapers) {
+                jumpToWallpaper(index);
+                closeWallpaperSwitcher(); 
+            }
         };
 
-        card.appendChild(editBtn);
         container.appendChild(card);
     });
 	
