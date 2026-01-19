@@ -3563,8 +3563,8 @@ input[type="checkbox"]:checked::before {
 
 #wallpaper-picker-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 30px;
 }
 
 .wallpaper-picker-item {
@@ -3573,8 +3573,6 @@ input[type="checkbox"]:checked::before {
     align-items: center;
     text-align: center;
     cursor: pointer;
-    padding: 10px;
-    border-radius: 18px;
     transition: background-color 0.2s;
 }
 
