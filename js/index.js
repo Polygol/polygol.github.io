@@ -8845,12 +8845,12 @@ function openWallpaperSwitcher() {
     overlay.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); return false; };
     const container = document.getElementById('wallpaper-cards-container');
     
-    // Block pointer events temporarily (500ms) to prevent the "release" of the long-press 
+    // Block pointer events temporarily (200ms) to prevent the "release" of the long-press 
     // from being registered as a click on the card that appears.
     overlay.style.pointerEvents = 'none';
     setTimeout(() => {
         if(isWallpaperSwitcherOpen) overlay.style.pointerEvents = 'auto';
-    }, 500);
+    }, 200);
 
     // Hide UI
     document.querySelector('.container').classList.add('force-hide');
