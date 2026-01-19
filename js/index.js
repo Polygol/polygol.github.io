@@ -3759,7 +3759,7 @@ document.addEventListener('DOMContentLoaded', () => {
     persistentClock.addEventListener('mouseleave', hideQuickActions);
     quickActions.addEventListener('mouseleave', hideQuickActions);
     interactionBlocker.addEventListener('click', hideQuickActions); // Tap outside to close
-    persistentClock.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('contextmenu', e => e.preventDefault());
 
     // --- Touch Long-Press Logic ---
     persistentClock.addEventListener('touchstart', (e) => {
@@ -8817,55 +8817,67 @@ function setupSwitcherScrolling(container) {
     const track = document.getElementById('switcher-track');
     const thumb = document.getElementById('switcher-thumb');
 
-    // 1. Mouse Wheel -> Horizontal Scroll
+    // 1. Mouse Wheel -> Horizontal Scroll (Vertical delta drives Horizontal scroll)
+    // Removed existing onwheel to replace with addEventListener for better control if needed
     container.onwheel = (e) => {
         if (e.deltaY !== 0) {
             e.preventDefault();
+            // Scroll 3x faster than standard for snappier feel through cards
             container.scrollLeft += e.deltaY;
         }
     };
 
     // 2. Update Thumb Position on Scroll
     const updateThumb = () => {
-        const scrollRatio = container.scrollLeft / (container.scrollWidth - container.clientWidth);
-        const trackWidth = track.clientWidth;
-        const thumbWidth = Math.max(30, (container.clientWidth / container.scrollWidth) * trackWidth);
+        // Calculate scroll percentage
+        const maxScrollLeft = container.scrollWidth - container.clientWidth;
+        if (maxScrollLeft <= 0) {
+            thumb.style.width = '100%';
+            thumb.style.transform = `translateX(0px)`;
+            return;
+        }
         
+        const scrollRatio = container.scrollLeft / maxScrollLeft;
+        const trackWidth = track.clientWidth;
+        
+        // Dynamic thumb size based on content ratio
+        const thumbWidth = Math.max(30, (container.clientWidth / container.scrollWidth) * trackWidth);
         thumb.style.width = `${thumbWidth}px`;
         
         const maxTranslate = trackWidth - thumbWidth;
         const translate = scrollRatio * maxTranslate;
         
-        if (!isNaN(translate)) {
-            thumb.style.transform = `translateX(${translate}px)`;
-        }
+        thumb.style.transform = `translateX(${translate}px)`;
     };
 
     container.onscroll = updateThumb;
-    // Initial calc
+    // Initial calc and resize listener
     setTimeout(updateThumb, 0);
     window.addEventListener('resize', updateThumb);
 
-    // 3. Drag Thumb
+    // 3. Drag Logic (Mouse & Touch)
     let isDraggingThumb = false;
     let startX = 0;
     let startScrollLeft = 0;
 
-    thumb.onmousedown = (e) => {
+    const handleDragStart = (clientX) => {
         isDraggingThumb = true;
-        startX = e.clientX;
+        startX = clientX;
         startScrollLeft = container.scrollLeft;
         thumb.style.cursor = 'grabbing';
-        e.preventDefault();
+        document.body.style.userSelect = 'none'; // Prevent selection while dragging
     };
 
-    window.onmousemove = (e) => {
+    const handleDragMove = (clientX) => {
         if (!isDraggingThumb) return;
-        const delta = e.clientX - startX;
+        
+        const delta = clientX - startX;
         const trackWidth = track.clientWidth;
         const thumbWidth = thumb.clientWidth;
         const maxTranslate = trackWidth - thumbWidth;
         
+        if (maxTranslate <= 0) return;
+
         // Calculate percentage moved relative to track
         const moveRatio = delta / maxTranslate;
         
@@ -8874,12 +8886,37 @@ function setupSwitcherScrolling(container) {
         container.scrollLeft = startScrollLeft + (moveRatio * maxScroll);
     };
 
-    window.onmouseup = () => {
-        if(isDraggingThumb) {
+    const handleDragEnd = () => {
+        if (isDraggingThumb) {
             isDraggingThumb = false;
             thumb.style.cursor = 'grab';
+            document.body.style.userSelect = '';
         }
     };
+
+    // Mouse Events
+    thumb.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent card clicks
+        handleDragStart(e.clientX);
+    });
+    
+    // Touch Events
+    thumb.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Prevent default scroll
+        e.stopPropagation();
+        handleDragStart(e.touches[0].clientX);
+    }, { passive: false });
+
+    // Global Move/Up (Passive: false for touch to prevent scrolling page)
+    window.addEventListener('mousemove', (e) => handleDragMove(e.clientX));
+    window.addEventListener('touchmove', (e) => {
+        if (isDraggingThumb) e.preventDefault();
+        handleDragMove(e.touches[0].clientX);
+    }, { passive: false });
+
+    window.addEventListener('mouseup', handleDragEnd);
+    window.addEventListener('touchend', handleDragEnd);
 }
 
 function closeWallpaperSwitcher() {
@@ -8945,12 +8982,14 @@ function renderSwitcherCards(container) {
         card.appendChild(editBtn);
         container.appendChild(card);
     });
-
-    // Scroll to active
+	
+	// Scroll to active immediately (no animation)
     setTimeout(() => {
         const activeCard = container.querySelector('.switcher-card.active');
-        if (activeCard) activeCard.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-    }, 100);
+        if (activeCard) {
+            activeCard.scrollIntoView({ behavior: 'auto', inline: 'center' });
+        }
+    }, 0);
 }
 
 // --- Edit Menu (Replace Image) ---
