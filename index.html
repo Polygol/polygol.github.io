@@ -328,6 +328,15 @@
     <div id="environment-layer"></div>
     <div id="time-of-day-overlay"></div> 
 
+    <div id="wallpaper-switcher-overlay" class="wallpaper-switcher-overlay">
+        <div class="wallpaper-cards-container" id="wallpaper-cards-container">
+            <!-- Cards injected via JS -->
+        </div>
+        <button id="switcher-add-btn" class="switcher-add-btn">
+            <span class="material-symbols-rounded">add</span> Add wallpaper
+        </button>
+    </div>
+
     <div class="container">
         <div class="info">
             <div class="date" id="date"></div>
@@ -682,6 +691,35 @@
         <div class="widget-drawer-content">
             <div id="wallpaper-picker-grid">
                 <!-- Presets and upload option will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="wallpaper-creator-modal" class="modal">
+        <div class="modal-content">
+            <h3>Create Wallpaper</h3>
+            <div class="form-group">
+                <label>Type</label>
+                <select id="creator-type" class="styled-select" onchange="toggleCreatorInputs()">
+                    <option value="color">Solid Color</option>
+                    <option value="gradient">Gradient</option>
+                </select>
+            </div>
+            <div id="creator-color-input" class="form-group">
+                <label>Color</label>
+                <input type="color" id="creator-color-val" value="#000000" class="form-input" style="height: 50px; padding: 5px;">
+            </div>
+            <div id="creator-gradient-input" class="form-group" style="display: none;">
+                <label>Starting color</label>
+                <input type="color" id="creator-grad-1" value="#000000" class="form-input" style="height: 50px; padding: 5px;">
+                <label>Ending color</label>
+                <input type="color" id="creator-grad-2" value="#ffffff" class="form-input" style="height: 50px; padding: 5px;">
+                <label>Angle</label>
+                <input type="range" id="creator-grad-angle" min="0" max="360" value="45">
+            </div>
+            <div class="form-row">
+                <button class="button-dialog" onclick="closeCreatorModal()">Cancel</button>
+                <button class="button-dialog primary" onclick="saveCreatedWallpaper()">Create</button>
             </div>
         </div>
     </div>
