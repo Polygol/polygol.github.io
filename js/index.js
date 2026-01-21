@@ -426,14 +426,12 @@ const ResourceManager = {
                 oldestUrl = url;
             }
         });
-
-        if (oldestUrl) {
-            const appName = Object.keys(apps).find(n => apps[n].url === oldestUrl) || "Background App";
+		
+		if (oldestUrl) {
+            const appName = Object.keys(apps).find(n => apps[n].url === oldestUrl) || "an app";
             console.log(`[System] OOM Killer closing: ${appName}`);
             
-            const container = minimizedEmbeds[oldestUrl];
-            if (container) container.remove();
-            delete minimizedEmbeds[oldestUrl];
+            forceCloseApp(oldestUrl);
             
             showPopup(`Closed ${appName} to free memory`);
         }
@@ -5823,14 +5821,10 @@ function blackoutScreen() {
         }
     }
 
-    urlsToRemove.forEach(url => {
-        const embedContainer = minimizedEmbeds[url];
-        if (embedContainer) {
-            embedContainer.remove(); // Remove from DOM
-        }
-        delete minimizedEmbeds[url]; // Remove from cache
+	urlsToRemove.forEach(url => {
+        forceCloseApp(url);
     });
-
+	
     // Apply power saving settings
     setControlValueAndDispatch('highContrast', 'true');
     setControlValueAndDispatch('animationsEnabled', 'false');
@@ -11417,6 +11411,59 @@ function closeFullscreenEmbed() {
 	updateDockVisibility();
 }
 
+function forceCloseApp(url) {
+    if (!url) return;
+
+    // 1. Remove from minimized cache
+    const minimized = minimizedEmbeds[url];
+    if (minimized) {
+        minimized.remove();
+        delete minimizedEmbeds[url];
+    }
+    
+    // 2. Remove from DOM if active/background (and not caught by minimized check)
+    const active = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"]`);
+    if (active) active.remove();
+
+    // 3. Clean up Switcher Snapshot
+    if (typeof appSnapshots !== 'undefined' && appSnapshots[url]) {
+        delete appSnapshots[url];
+    }
+
+    // 4. Clean up Split State
+    if (typeof splitScreenState !== 'undefined' && splitScreenState.active) {
+        if (url === splitScreenState.leftAppUrl || url === splitScreenState.rightAppUrl) {
+            splitScreenState.active = false;
+            splitScreenState.leftAppUrl = null;
+            splitScreenState.rightAppUrl = null;
+            const divider = document.getElementById('split-divider');
+            if (divider) divider.style.display = 'none';
+        }
+    }
+
+    // 5. Clean up System Resources (Media, Activities, Waves)
+    if (typeof apps !== 'undefined') {
+        const appName = Object.keys(apps).find(name => apps[name].url === url);
+        if (appName) {
+            if (typeof clearMediaSession === 'function') clearMediaSession(appName);
+            
+            if (typeof activeLiveActivities !== 'undefined') {
+                Object.keys(activeLiveActivities).forEach(activityId => {
+                    if (activeLiveActivities[activityId].appName === appName) {
+                        if (typeof stopLiveActivity === 'function') stopLiveActivity(activityId);
+                    }
+                });
+            }
+            
+            if (window.WavesHost && window.activeAppUI && window.activeAppUI.appName === appName) {
+                 window.WavesHost.clearAppUI(); 
+            }
+        }
+    }
+    
+    console.log(`[System] Force closed app: ${url}`);
+}
+
 // Ensure the function accepts the second argument
 function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
     // UPDATE TITLE/FAVICON
@@ -15873,24 +15920,17 @@ function setupAppCardGestures(card, url, container) {
             const currentY = e.type.includes('mouse') ? e.clientY : (e.changedTouches ? e.changedTouches[0].clientY : 0);
             const deltaY = currentY - startY;
 
-            if (deltaY < -150) {
+			if (deltaY < -150) {
                 // CLOSE APP
                 card.style.transition = 'transform 0.3s, opacity 0.3s';
                 card.style.transform = `translateY(-100vh)`;
                 card.style.opacity = '0';
                 
                 setTimeout(() => {
-                    // Logic to close/kill app
-                    if (minimizedEmbeds[url]) {
-                        minimizedEmbeds[url].remove();
-                        delete minimizedEmbeds[url];
-                    }
-                    const active = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"]`);
-                    if (active) active.remove();
-
-                    delete appSnapshots[url];
+                    // Use shared function for proper cleanup (Media, Activities, DOM)
+                    forceCloseApp(url);
                     
-                    // Re-render
+                    // Re-render switcher
                     renderAppCards(container);
                     
                     // If no apps left, close switcher
