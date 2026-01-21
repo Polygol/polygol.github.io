@@ -16043,6 +16043,26 @@ function setupAppCardGestures(card, url, container) {
 
 // --- App Switcher Functions ---
 function openAppSwitcher() {
+    // Force Close App Drawer if it's open
+    const appDrawer = document.getElementById('app-drawer');
+    if (appDrawer && appDrawer.classList.contains('open')) {
+        appDrawer.classList.remove('open');
+        appDrawer.style.bottom = '-100%';
+        appDrawer.style.opacity = '0';
+        
+        // Restore Main UI visibility
+        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+            el.classList.remove('force-hide');
+            el.style.display = el.dataset.originalDisplay || '';
+            el.style.opacity = '1';
+            el.style.removeProperty('content-visibility');
+        });
+        
+        // Hide Drawer Blocker
+        const interactionBlocker = document.getElementById('interaction-blocker');
+        if(interactionBlocker) interactionBlocker.style.display = 'none';
+    }
+
     const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
     const openUrl = openEmbed ? openEmbed.dataset.embedUrl : null;
     const minimizedUrls = Object.keys(minimizedEmbeds);
