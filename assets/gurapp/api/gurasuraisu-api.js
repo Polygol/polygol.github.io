@@ -1174,6 +1174,15 @@ window.addEventListener('message', async (event) => {
       case 'request-screenshot':
         // Helper function to perform the capture
         const doCapture = async () => {
+            // Save current shadow state to prevent html2canvas artifacts
+            const root = document.documentElement;
+            const originalShadow = root.style.getPropertyValue('--sun-shadow');
+            const originalShadowStrong = root.style.getPropertyValue('--sun-shadow-strong');
+            
+            // Temporarily hide shadows
+            root.style.setProperty('--sun-shadow', 'none');
+            root.style.setProperty('--sun-shadow-strong', 'none');
+
             try {
                 // Determine theme-based background color
                 // Gurapps sync the 'light-theme' class from the parent
@@ -1195,6 +1204,10 @@ window.addEventListener('message', async (event) => {
                 }, '*');
             } catch (e) {
                 console.error("Gurapp screenshot failed:", e);
+            } finally {
+                // Restore shadows
+                if (originalShadow) root.style.setProperty('--sun-shadow', originalShadow);
+                if (originalShadowStrong) root.style.setProperty('--sun-shadow-strong', originalShadowStrong);
             }
         };
 
