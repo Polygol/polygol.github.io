@@ -16137,16 +16137,21 @@ function initAppDraw() {
 async function openAppSwitcherUI() {
     if (isAppSwitcherOpen) return;
     
-    // 1. If an app is currently open, snapshot it first
+    // 1. If an app is currently open, snapshot it dynamically
     const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
     if (activeEmbed) {
         const url = activeEmbed.dataset.embedUrl;
-        // We await here briefly to try and get a fresh image, but strict timeout
-        try { await captureAppScreenshot(url); } catch(e){}
+        // Fire and forget - update UI when ready
+        captureAppScreenshot(url).then(() => {
+            if (isAppSwitcherOpen && appSnapshots[url]) {
+                const card = document.querySelector(`.app-switcher-card[data-app-url="${url}"]`);
+                if (card) card.style.backgroundImage = `url('${appSnapshots[url]}')`;
+            }
+        });
     }
 
     isAppSwitcherOpen = true;
-    
+	
     // Hide UI
     document.getElementById('dock').classList.remove('show');
     const drawerPill = document.querySelector('.drawer-pill');
@@ -16201,12 +16206,13 @@ function renderAppCards(container) {
         return;
     }
 
-    allRunningApps.forEach((url, index) => {
+	allRunningApps.forEach((url, index) => {
         const appName = Object.keys(apps).find(k => apps[k].url === url) || 'App';
         const appDetails = apps[appName];
         
         const card = document.createElement('div');
         card.className = `app-switcher-card ${url === activeUrl ? 'active' : ''}`;
+        card.dataset.appUrl = url;
         
         // Background Image (Screenshot)
         if (appSnapshots[url]) {
