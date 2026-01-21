@@ -16153,6 +16153,8 @@ async function openAppSwitcherUI() {
     if (drawerPill) drawerPill.style.opacity = '0';
 	const drawerHandle = document.querySelector('.drawer-handle');
 	if (drawerHandle) drawerHandle.style.pointerEvents = 'none';
+    const navBtnSmall = document.querySelector('.nav-btn-small');
+    if (navBtnSmall) navBtnSmall.style.display = 'none';
     
     const overlay = document.getElementById('app-switcher-ui');
     const container = document.getElementById('app-cards-container');
@@ -16176,6 +16178,8 @@ function closeAppSwitcherUI() {
 	    if (drawerPill) drawerPill.style.opacity = '1';
 		const drawerHandle = document.querySelector('.drawer-handle');
 		if (drawerHandle) drawerHandle.style.pointerEvents = 'auto';
+	    const navBtnSmall = document.querySelector('.nav-btn-small');
+	    if (navBtnSmall) navBtnSmall.style.display = 'flex';
 		updateDockVisibility();
     }, 300);
 }
