@@ -15902,7 +15902,19 @@ function renderAppCards(container) {
     
     // Combine unique URLs
     const allRunningApps = [...new Set([activeUrl, ...minimizedUrls].filter(Boolean))];
-    
+
+    allRunningApps.sort((a, b) => {
+        const getName = (u) => Object.keys(apps).find(k => apps[k].url === u);
+        const timeA = appLastOpened[getName(a)] || 0;
+        const timeB = appLastOpened[getName(b)] || 0;
+        
+        // Force active app to top if timestamps are equal or missing
+        if (a === activeUrl) return -1;
+        if (b === activeUrl) return 1;
+        
+        return timeB - timeA;
+    });
+        
     if (allRunningApps.length === 0) {
         container.innerHTML = 'No recent items';
         // Allow closing by clicking background
