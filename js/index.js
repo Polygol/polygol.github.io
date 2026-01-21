@@ -16075,10 +16075,17 @@ function openAppSwitcher() {
     // Sort by most recently used
     displayItems.sort((a, b) => b.timestamp - a.timestamp);
 
-    if (displayItems.length < (splitScreenState.active ? 1 : 2)) return;
+    // Add App Library (Drawer) at the start
+    displayItems.unshift({
+        type: 'drawer',
+        name: 'App Library',
+        url: 'internal://library'
+    });
+
+    if (displayItems.length < 2) return; // Need at least Drawer + 1 App to switch
 
     appSwitcherVisible = true;
-    appSwitcherApps = displayItems; // The array now contains objects, not just URLs
+    appSwitcherApps = displayItems; 
 
     const switcherList = document.getElementById('app-switcher-list');
     switcherList.innerHTML = '';
@@ -16086,6 +16093,24 @@ function openAppSwitcher() {
     appSwitcherApps.forEach(item => {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'app-switcher-item';
+
+        if (item.type === 'drawer') {
+            // Render Drawer Icon
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'app-icon-img';
+            imgContainer.style.display = 'flex';
+            imgContainer.style.alignItems = 'center';
+            imgContainer.style.justifyContent = 'center';
+            imgContainer.style.background = 'var(--search-background)';
+            
+            // Use Material Symbol for Apps
+            imgContainer.innerHTML = `<span class="material-symbols-rounded" style="font-size: 32px; color: var(--text-color);">action_key</span>`;
+            
+            itemDiv.appendChild(imgContainer);
+            itemDiv.dataset.type = 'drawer';
+            switcherList.appendChild(itemDiv);
+            return; // Skip standard processing
+        }
 
         const createIcon = (url) => {
             const appName = Object.keys(apps).find(name => apps[name].url === url) || '...';
@@ -16194,7 +16219,45 @@ function selectAndCloseAppSwitcher() {
     document.querySelectorAll('iframe').forEach(f => f.style.pointerEvents = 'auto');
 
 	const selectedItem = appSwitcherApps[appSwitcherIndex];
-	if (selectedItem.type === 'split') {
+    
+	if (selectedItem.type === 'drawer') {
+        // Open App Drawer
+        const appDrawer = document.getElementById('app-drawer');
+        const dock = document.getElementById('dock');
+        
+        // 1. Hide Dock if showing
+        if (dock) {
+             dock.classList.remove('show');
+             dock.style.boxShadow = 'none';
+        }
+
+        // 2. Open Drawer (Ensure Z-Index is above current app)
+        appDrawer.classList.add('open');
+        appDrawer.style.zIndex = '1005';
+        appDrawer.style.bottom = '0%';
+        appDrawer.style.opacity = '1';
+        createAppIcons(); 
+        
+        // 3. Only restore background UI if NO app is open (Optimization)
+        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (!openEmbed) {
+            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+                el.classList.remove('force-hide');
+                el.style.display = el.dataset.originalDisplay || '';
+                el.style.opacity = '1';
+                el.style.removeProperty('content-visibility');
+            });
+        }
+
+        // 4. Update Indicators & Interaction Blocker
+        const interactionBlocker = document.getElementById('interaction-blocker');
+        if(interactionBlocker) {
+            interactionBlocker.style.display = 'block';
+            interactionBlocker.style.pointerEvents = 'auto';
+        }
+        resetIndicatorTimeout();
+        
+    } else if (selectedItem.type === 'split') {
 	    // This is a split pair, restore it
 	    if (!splitScreenState.active) { // only restore if not already active
 	        exitSplitScreen(null); // Clear any single app
