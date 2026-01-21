@@ -16171,7 +16171,7 @@ function closeAppSwitcherUI() {
         
         // Restore UI
         const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if !(activeEmbed) {
+		if (!activeEmbed) {
             // Home screen
             document.querySelector('.container').classList.remove('force-hide');
             updateDockVisibility();
