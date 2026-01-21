@@ -6491,8 +6491,60 @@ const AI_ICON_DEFAULT = 'auto_awesome';
 let appSwitcherVisible = false;
 let appSwitcherApps = [];
 let appSwitcherIndex = 0;
+let appSnapshots = {};
+let isAppSwitcherOpen = false;
+let appSwitcherScrollInitialized = false;
 let isTabKeyDown = false;
 let shiftSpaceSequenceTimer = null;
+
+async function captureAppScreenshot(url) {
+    // Find the embed
+    const container = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"]`);
+    if (!container) return;
+
+    const iframe = container.querySelector('iframe');
+    if (!iframe) return;
+
+    try {
+        // 1. Try to get screenshot via API (if app supports it)
+        // This relies on the existing message listener for 'screenshot-response'
+        // We'll wrap it in a promise
+        const ssData = await new Promise((resolve) => {
+            const timeout = setTimeout(() => resolve(null), 500); // 500ms timeout
+            
+            const handler = (e) => {
+                if (e.source === iframe.contentWindow && e.data.type === 'screenshot-response') {
+                    clearTimeout(timeout);
+                    window.removeEventListener('message', handler);
+                    resolve(e.data.screenshotDataUrl);
+                }
+            };
+            window.addEventListener('message', handler);
+            
+            // Request
+            const targetOrigin = getOriginFromUrl(iframe.src);
+            iframe.contentWindow.postMessage({ type: 'request-screenshot' }, targetOrigin);
+        });
+
+        if (ssData) {
+            appSnapshots[url] = ssData;
+            return;
+        }
+
+        // 2. Fallback: Html2Canvas on the container (might be blank for cross-origin iframes, but captures background color)
+        const canvas = await html2canvas(container, { 
+            logging: false, 
+            useCORS: true,
+            width: container.offsetWidth,
+            height: container.offsetHeight,
+            scale: 0.5 // Lower res for performance
+        });
+        appSnapshots[url] = canvas.toDataURL('image/jpeg', 0.6);
+
+    } catch (e) {
+        console.warn("Snapshot failed for", url, e);
+    }
+}
 
 // Theme switching functionality
 function setupThemeSwitcher() {
@@ -11803,6 +11855,13 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 	
     // Clear any pending cleanup
     clearTimeout(minimizeCleanupTimeout);
+
+    // Capture screenshot before minimizing
+    const targetUrl = urlToMinimize || (document.querySelector('.fullscreen-embed[style*="display: block"]')?.dataset?.embedUrl);
+    if (targetUrl) {
+        // Fire and forget, don't await to keep UI snappy
+        captureAppScreenshot(targetUrl);
+    }
 	
     // --- Split Screen Support: Handle split screen minimization ---
     if (splitScreenState.active) {
@@ -12247,12 +12306,11 @@ function setupDrawerInteractions() {
 	const appDrawerHandle = document.querySelector('.app-drawer-handle');
     const oneButtonNavHandle = document.getElementById('one-button-nav-handle');
 
-    const startLongPress = (e) => {
-        // Only trigger long press if AI is enabled and not already dragging the drawer.
-        if (oneButtonNavEnabled) return; // Disable for gesture mode
-        if (isAiAssistantEnabled && !isDragging) {
+	const startLongPress = (e) => {
+        if (oneButtonNavEnabled) return; 
+        if (!isDragging) {
              longPressTimer = setTimeout(() => {
-                showAiAssistant();
+                openAppSwitcherUI();
             }, longPressDuration);
         }
     };
@@ -13951,6 +14009,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     `;
     document.head.appendChild(style);
+
+	document.getElementById('app-switcher-ui').addEventListener('click', (e) => {
+	    if (e.target.id === 'app-switcher-ui') {
+	        closeAppSwitcherUI();
+	    }
+	});
 
     // --- Add other event listeners ---
     const languageSwitcher = document.getElementById('language-switcher');
@@ -16112,6 +16176,216 @@ function initAppDraw() {
     });
 
     setupDrawerInteractions();
+}
+
+async function openAppSwitcherUI() {
+    if (isAppSwitcherOpen) return;
+    
+    // 1. If an app is currently open, snapshot it first
+    const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+    if (activeEmbed) {
+        const url = activeEmbed.dataset.embedUrl;
+        // We await here briefly to try and get a fresh image, but strict timeout
+        try { await captureAppScreenshot(url); } catch(e){}
+    }
+
+    isAppSwitcherOpen = true;
+    
+    // Hide UI
+    document.getElementById('dock').classList.remove('show');
+    const drawerPill = document.querySelector('.drawer-pill');
+    if (drawerPill) drawerPill.style.opacity = '0';
+    
+    // Hide any active app visually (but keep in DOM)
+    if (activeEmbed) {
+        activeEmbed.style.opacity = '0';
+        activeEmbed.style.pointerEvents = 'none';
+    }
+
+    const overlay = document.getElementById('app-switcher-ui');
+    const container = document.getElementById('app-cards-container');
+    
+    renderAppCards(container);
+    
+    overlay.style.display = 'flex';
+    setTimeout(() => overlay.classList.add('visible'), 10);
+}
+
+function closeAppSwitcherUI() {
+    isAppSwitcherOpen = false;
+    const overlay = document.getElementById('app-switcher-ui');
+    overlay.classList.remove('visible');
+    
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        
+        // Restore UI
+        const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (activeEmbed) {
+            activeEmbed.style.opacity = '1';
+            activeEmbed.style.pointerEvents = 'auto';
+        } else {
+            // Home screen
+            document.querySelector('.container').classList.remove('force-hide');
+            updateDockVisibility();
+            const drawerPill = document.querySelector('.drawer-pill');
+            if (drawerPill) drawerPill.style.opacity = '1';
+        }
+    }, 300);
+}
+
+function renderAppCards(container) {
+    container.innerHTML = '';
+    
+    // Gather all running apps (Active + Minimized)
+    const activeUrl = document.querySelector('.fullscreen-embed[style*="display: block"]')?.dataset?.embedUrl;
+    const minimizedUrls = Object.keys(minimizedEmbeds);
+    
+    // Combine unique URLs
+    const allRunningApps = [...new Set([activeUrl, ...minimizedUrls].filter(Boolean))];
+    
+    if (allRunningApps.length === 0) {
+        container.innerHTML = 'No recent items';
+        // Allow closing by clicking background
+        container.onclick = closeAppSwitcherUI;
+        return;
+    }
+
+    allRunningApps.forEach((url, index) => {
+        const appName = Object.keys(apps).find(k => apps[k].url === url) || 'App';
+        const appDetails = apps[appName];
+        
+        const card = document.createElement('div');
+        card.className = `app-switcher-card ${url === activeUrl ? 'active' : ''}`;
+        
+        // Background Image (Screenshot)
+        if (appSnapshots[url]) {
+            card.style.backgroundImage = `url('${appSnapshots[url]}')`;
+        } else {
+            // Fallback gradient
+            card.style.background = 'black';
+        }
+
+        // Title
+        const title = document.createElement('div');
+        title.className = 'app-switcher-title';
+        title.textContent = appName;
+        card.appendChild(title);
+
+		// Icon 
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'app-icon-img';
+        
+        const img = document.createElement('img');
+        img.alt = appName;
+        
+        let iconSrc = appDetails?.icon || 'system.png';
+        if (!iconSrc.startsWith('http') && !iconSrc.startsWith('/')) iconSrc = `/assets/appicon/${iconSrc}`;
+        img.src = iconSrc;
+        
+        iconDiv.appendChild(img);
+        card.appendChild(iconDiv);
+
+        // Gestures (Swipe up to close, tap to open)
+        setupAppCardGestures(card, url, container);
+
+        container.appendChild(card);
+    });
+
+    // Scroll to active
+    setTimeout(() => {
+        const activeCard = container.querySelector('.app-switcher-card.active');
+        if (activeCard) {
+            activeCard.scrollIntoView({ behavior: 'auto', inline: 'center' });
+        }
+    }, 0);
+}
+
+function setupAppCardGestures(card, url, container) {
+    let startY = 0;
+    let isSwipingUp = false;
+    let startX = 0; // Track X to differentiate scroll from swipe
+
+    const onPointerDown = (e) => {
+        startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        isSwipingUp = false;
+        
+        window.addEventListener('mousemove', onPointerMove);
+        window.addEventListener('touchmove', onPointerMove, {passive: false});
+        window.addEventListener('mouseup', onPointerUp);
+        window.addEventListener('touchend', onPointerUp);
+    };
+
+    const onPointerMove = (e) => {
+        const currentY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        const currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const deltaY = currentY - startY;
+        const deltaX = currentX - startX;
+
+        // If moving vertically significantly more than horizontally
+        if (deltaY < -20 && Math.abs(deltaY) > Math.abs(deltaX)) {
+            isSwipingUp = true;
+            // Visual feedback
+            card.style.transform = `translateY(${deltaY}px) scale(0.9)`;
+            card.style.opacity = Math.max(0.3, 1 - (Math.abs(deltaY) / 300));
+        }
+    };
+
+    const onPointerUp = (e) => {
+        window.removeEventListener('mousemove', onPointerMove);
+        window.removeEventListener('touchmove', onPointerMove);
+        window.removeEventListener('mouseup', onPointerUp);
+        window.removeEventListener('touchend', onPointerUp);
+
+        if (isSwipingUp) {
+            const currentY = e.type.includes('mouse') ? e.clientY : (e.changedTouches ? e.changedTouches[0].clientY : 0);
+            const deltaY = currentY - startY;
+
+            if (deltaY < -150) {
+                // CLOSE APP
+                card.style.transition = 'transform 0.3s, opacity 0.3s';
+                card.style.transform = `translateY(-100vh)`;
+                card.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // Logic to close/kill app
+                    if (minimizedEmbeds[url]) {
+                        minimizedEmbeds[url].remove();
+                        delete minimizedEmbeds[url];
+                    }
+                    const active = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"]`);
+                    if (active) active.remove();
+
+                    delete appSnapshots[url];
+                    
+                    // Re-render
+                    renderAppCards(container);
+                    
+                    // If no apps left, close switcher
+                    if (container.children.length === 0) closeAppSwitcherUI();
+                }, 300);
+            } else {
+                // Snap back
+                card.style.transform = '';
+                card.style.opacity = '';
+            }
+        } else {
+            // Tap to Open
+            // Only if we didn't drag much
+            const currentX = e.type.includes('mouse') ? e.clientX : (e.changedTouches ? e.changedTouches[0].clientX : 0);
+            if (Math.abs(currentX - startX) < 10 && Math.abs(e.type.includes('mouse') ? e.clientY : (e.changedTouches ? e.changedTouches[0].clientY : 0) - startY) < 10) {
+                closeAppSwitcherUI();
+                // Delay slightly to allow UI to fade
+                setTimeout(() => {
+                    createFullscreenEmbed(url);
+                }, 100);
+            }
+        }
+    };
+
+    card.addEventListener('mousedown', onPointerDown);
+    card.addEventListener('touchstart', onPointerDown, {passive: false});
 }
 
 // --- App Switcher Functions ---
