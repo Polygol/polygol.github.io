@@ -15954,7 +15954,7 @@ function renderAppCards(container) {
             fallbackBg.style.transform = 'scale(1.1)'; 
             
             card.appendChild(fallbackBg);
-            card.style.backgroundColor = 'var(--accent)';
+            card.style.backgroundColor = 'var(--background-color)';
             card.style.overflow = 'hidden';
         }
 
