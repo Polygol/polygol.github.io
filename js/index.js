@@ -16156,10 +16156,10 @@ function openAppSwitcher() {
             imgContainer.style.display = 'flex';
             imgContainer.style.alignItems = 'center';
             imgContainer.style.justifyContent = 'center';
-            imgContainer.style.background = 'var(--search-background)';
+            imgContainer.style.background = 'var(--accent)';
             
             // Use Material Symbol for Apps
-            imgContainer.innerHTML = `<span class="material-symbols-rounded" style="font-size: 32px; color: var(--text-color);">action_key</span>`;
+            imgContainer.innerHTML = `<span class="material-symbols-rounded" style="font-size: 36px; color: var(--background-color);">action_key</span>`;
             
             itemDiv.appendChild(imgContainer);
             itemDiv.dataset.type = 'drawer';
