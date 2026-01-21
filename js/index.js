@@ -16150,7 +16150,7 @@ async function openAppSwitcherUI() {
     // Hide UI
     document.getElementById('dock').classList.remove('show');
     const drawerPill = document.querySelector('.drawer-pill');
-    if (drawerPill) drawerPill.style.opacity = '0';
+    if (drawerPill) drawerPill.style.pointerEvents = 'none';
     
     const overlay = document.getElementById('app-switcher-ui');
     const container = document.getElementById('app-cards-container');
@@ -16176,7 +16176,7 @@ function closeAppSwitcherUI() {
             document.querySelector('.container').classList.remove('force-hide');
             updateDockVisibility();
             const drawerPill = document.querySelector('.drawer-pill');
-            if (drawerPill) drawerPill.style.opacity = '1';
+            if (drawerPill) drawerPill.style.pointerEvents = 'auto';
         }
     }, 300);
 }
