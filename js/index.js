@@ -4,7 +4,10 @@
 
 // DB Schemas for backup functionality
 const DB_SCHEMAS = {
-    'WallpaperDB': { version: 1, stores: ['wallpapers'] } }] }
+	WallpaperDB: {
+		version: 1,
+		stores: ['wallpapers']
+	}
 };
 
 const SoundManager = {
