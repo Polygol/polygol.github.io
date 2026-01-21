@@ -15925,6 +15925,12 @@ function renderAppCards(container) {
 	allRunningApps.forEach((url, index) => {
         const appName = Object.keys(apps).find(k => apps[k].url === url) || 'App';
         const appDetails = apps[appName];
+        let iconSrc = appDetails?.icon || 'system.png';
+        if (iconSrc && (iconSrc.startsWith('http') || iconSrc.startsWith('/') || iconSrc.startsWith('data:'))) {
+            // Use as is
+        } else {
+            iconSrc = `/assets/appicon/${iconSrc}`;
+        }
         
         const card = document.createElement('div');
         card.className = `app-switcher-card ${url === activeUrl ? 'active' : ''}`;
@@ -15948,15 +15954,6 @@ function renderAppCards(container) {
         
         const img = document.createElement('img');
         img.alt = appName;
-        
-        let iconSrc = appDetails?.icon || 'system.png';
-        
-        if (iconSrc && (iconSrc.startsWith('http') || iconSrc.startsWith('/') || iconSrc.startsWith('data:'))) {
-            // Use as is
-        } else {
-            iconSrc = `/assets/appicon/${iconSrc}`;
-        }
-        
         img.src = iconSrc;
         
         iconDiv.appendChild(img);
