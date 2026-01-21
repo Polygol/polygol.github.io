@@ -15940,12 +15940,22 @@ function renderAppCards(container) {
         if (appSnapshots[url]) {
             card.style.backgroundImage = `url('${appSnapshots[url]}')`;
         } else {
-            // Fallback: Show App Icon
-            card.style.backgroundImage = `url('${iconSrc}')`;
-            card.style.backgroundSize = '72px'; // Reasonable size for centered icon
-            card.style.backgroundRepeat = 'no-repeat';
-            card.style.backgroundPosition = 'center';
-            card.style.backgroundColor = 'var(--background-color)';
+            // Fallback: Blurred App Icon taking up 100%
+            const fallbackBg = document.createElement('div');
+            fallbackBg.style.position = 'absolute';
+            fallbackBg.style.width = '100%';
+            fallbackBg.style.height = '100%';
+            fallbackBg.style.top = '0';
+            fallbackBg.style.left = '0';
+            fallbackBg.style.backgroundImage = `url('${iconSrc}')`;
+            fallbackBg.style.backgroundSize = 'cover';
+            fallbackBg.style.backgroundPosition = 'center';
+            fallbackBg.style.filter = 'blur(10px)';
+            fallbackBg.style.transform = 'scale(1.1)'; 
+            
+            card.appendChild(fallbackBg);
+            card.style.backgroundColor = 'var(--accent)';
+            card.style.overflow = 'hidden';
         }
 
 		// Icon 
