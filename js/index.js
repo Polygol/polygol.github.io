@@ -8817,73 +8817,40 @@ const WALLPAPER_PRESS_DURATION = 500;
 let isWallpaperSwitcherOpen = false;
 
 function setupWallpaperInteraction() {
-    let startX = 0;
-    let startY = 0;
-    let isPressing = false;
-
     const startPress = (e) => {
-        // Ignore if clicking on interactive elements or if switcher is already open
-        if (isWallpaperSwitcherOpen || 
-            e.target.closest('.widget-instance') || 
-            e.target.closest('.dock') || 
-            e.target.closest('.app-drawer') || 
-            e.target.closest('.modal') ||
-            e.target.closest('.persistent-clock') || 
-            e.target.closest('#status-indicator')) return;
+        // Strict check: Only allow if clicking directly on background elements
+        const t = e.target;
+        
+        // Check if the target is the Body, HTML, specific background layers, 
+        // or the layout container (but NOT its children like clock text)
+        const isWallpaper = 
+            t === document.body ||
+            t === document.documentElement ||
+            t.id === 'background-video' ||
+            t.id === 'depth-layer' ||
+            t.id === 'environment-layer' ||
+            t.id === 'time-of-day-overlay' ||
+            t.id === 'widget-grid' ||
+            t.classList.contains('container'); 
 
-        isPressing = true;
-        // Handle both mouse and touch coordinates
-        if (e.type === 'touchstart') {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-        } else {
-            startX = e.clientX;
-            startY = e.clientY;
-        }
+        if (!isWallpaper) return;
 
         wallpaperPressTimer = setTimeout(() => {
-            if (isPressing) {
-                openWallpaperSwitcher();
-                isPressing = false; // Stop tracking this press
-            }
+            if (navigator.vibrate) navigator.vibrate(50);
+            openWallpaperSwitcher();
         }, WALLPAPER_PRESS_DURATION);
     };
 
     const cancelPress = () => {
-        if (isPressing) {
-            clearTimeout(wallpaperPressTimer);
-            isPressing = false;
-        }
-    };
-
-    const checkMove = (e) => {
-        if (!isPressing) return;
-        
-        let cx, cy;
-        if (e.type === 'touchmove') {
-            cx = e.touches[0].clientX;
-            cy = e.touches[0].clientY;
-        } else {
-            cx = e.clientX;
-            cy = e.clientY;
-        }
-
-        // Allow 10px movement tolerance to prevent accidental cancellations
-        if (Math.abs(cx - startX) > 10 || Math.abs(cy - startY) > 10) {
-            cancelPress();
-        }
+        clearTimeout(wallpaperPressTimer);
     };
 
     window.addEventListener('mousedown', startPress);
     window.addEventListener('touchstart', startPress, { passive: true });
-    
     window.addEventListener('mouseup', cancelPress);
     window.addEventListener('touchend', cancelPress);
-    
-    window.addEventListener('mousemove', checkMove);
-    window.addEventListener('touchmove', checkMove, { passive: true });
-    
-    window.addEventListener('scroll', cancelPress);
+    window.addEventListener('mousemove', cancelPress); 
+    window.addEventListener('touchmove', cancelPress);
 }
 
 // Run this on load
