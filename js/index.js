@@ -15922,7 +15922,13 @@ function renderAppCards(container) {
         img.alt = appName;
         
         let iconSrc = appDetails?.icon || 'system.png';
-        if (!iconSrc.startsWith('http') && !iconSrc.startsWith('/')) iconSrc = `/assets/appicon/${iconSrc}`;
+        
+        if (iconSrc && (iconSrc.startsWith('http') || iconSrc.startsWith('/') || iconSrc.startsWith('data:'))) {
+            // Use as is
+        } else {
+            iconSrc = `/assets/appicon/${iconSrc}`;
+        }
+        
         img.src = iconSrc;
         
         iconDiv.appendChild(img);
