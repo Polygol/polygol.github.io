@@ -15934,8 +15934,12 @@ function renderAppCards(container) {
         if (appSnapshots[url]) {
             card.style.backgroundImage = `url('${appSnapshots[url]}')`;
         } else {
-            // Fallback
-            card.style.background = 'var(--background-color)';
+            // Fallback: Show App Icon
+            card.style.backgroundImage = `url('${iconSrc}')`;
+            card.style.backgroundSize = '72px'; // Reasonable size for centered icon
+            card.style.backgroundRepeat = 'no-repeat';
+            card.style.backgroundPosition = 'center';
+            card.style.backgroundColor = 'var(--background-color)';
         }
 
 		// Icon 
