@@ -2494,6 +2494,43 @@ input[type="checkbox"]:checked::before {
     background-position: center;
 }
 
+/* App Switcher Specifics */
+.app-switcher-card {
+    flex: 0 0 auto;
+    width: 90%;
+    height: 90%;
+    border-radius: 50px;
+	corner-shape: superellipse(1.5);
+    position: relative;
+    scroll-snap-align: center;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+}
+
+.app-switcher-card .app-icon-img {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 48px; /* Force square based on width */
+    z-index: 2;
+}
+
+.app-switcher-title {
+    position: absolute;
+    top: 15px;
+    width: 100%;
+    text-align: center;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 2;
+}
+
     body.minimal-active #blurOverlayControls {
 	    backdrop-filter: blur(10px) !important;
 	}
