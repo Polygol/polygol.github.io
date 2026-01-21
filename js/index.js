@@ -11414,23 +11414,20 @@ function closeFullscreenEmbed() {
 function forceCloseApp(url) {
     if (!url) return;
 
-    // 1. Remove from minimized cache
-    const minimized = minimizedEmbeds[url];
-    if (minimized) {
-        minimized.remove();
+    // 1. Identify if we are closing the currently focused/visible app
+    const activeElement = document.querySelector('.fullscreen-embed[style*="display: block"]');
+    const isActiveApp = activeElement && activeElement.dataset.embedUrl === url;
+
+    // 2. Resource Cleanup
+    // Minimized Cache
+    if (minimizedEmbeds[url]) {
         delete minimizedEmbeds[url];
     }
-    
-    // 2. Remove from DOM if active/background (and not caught by minimized check)
-    const active = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"]`);
-    if (active) active.remove();
-
-    // 3. Clean up Switcher Snapshot
+    // Switcher Snapshots
     if (typeof appSnapshots !== 'undefined' && appSnapshots[url]) {
         delete appSnapshots[url];
     }
-
-    // 4. Clean up Split State
+    // Split Screen State
     if (typeof splitScreenState !== 'undefined' && splitScreenState.active) {
         if (url === splitScreenState.leftAppUrl || url === splitScreenState.rightAppUrl) {
             splitScreenState.active = false;
@@ -11440,26 +11437,93 @@ function forceCloseApp(url) {
             if (divider) divider.style.display = 'none';
         }
     }
-
-    // 5. Clean up System Resources (Media, Activities, Waves)
-    if (typeof apps !== 'undefined') {
-        const appName = Object.keys(apps).find(name => apps[name].url === url);
-        if (appName) {
-            if (typeof clearMediaSession === 'function') clearMediaSession(appName);
-            
-            if (typeof activeLiveActivities !== 'undefined') {
-                Object.keys(activeLiveActivities).forEach(activityId => {
-                    if (activeLiveActivities[activityId].appName === appName) {
-                        if (typeof stopLiveActivity === 'function') stopLiveActivity(activityId);
-                    }
-                });
-            }
-            
-            if (window.WavesHost && window.activeAppUI && window.activeAppUI.appName === appName) {
-                 window.WavesHost.clearAppUI(); 
-            }
+    // App-Specific Resources (Media, Activities, Waves)
+    const appName = Object.keys(apps).find(name => apps[name].url === url);
+    if (appName) {
+        if (typeof clearMediaSession === 'function') clearMediaSession(appName);
+        
+        if (typeof activeLiveActivities !== 'undefined') {
+            Object.keys(activeLiveActivities).forEach(activityId => {
+                if (activeLiveActivities[activityId].appName === appName) {
+                    if (typeof stopLiveActivity === 'function') stopLiveActivity(activityId);
+                }
+            });
+        }
+        
+        if (window.WavesHost && window.activeAppUI && window.activeAppUI.appName === appName) {
+             window.WavesHost.clearAppUI(); 
         }
     }
+
+    // 3. UI Restoration Logic (Only if the app was active)
+    if (isActiveApp) {
+        isAppOpen = false;
+        
+        if (typeof SoundManager !== 'undefined') SoundManager.play('close');
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+        // Check History Stack
+        if (window.appHistoryStack && window.appHistoryStack.length > 0) {
+            const previousUrl = window.appHistoryStack.pop();
+            // If prev is different, we go back instead of Home
+            if (previousUrl !== url) {
+                // Kill current DOM
+                const embeds = document.querySelectorAll(`.fullscreen-embed[data-embed-url="${url}"]`);
+                embeds.forEach(el => el.remove());
+                
+                // Open previous
+                createFullscreenEmbed(previousUrl);
+                console.log(`[System] Force closed ${url}, navigating back to ${previousUrl}`);
+                return; 
+            }
+        }
+
+        // Restore Home Screen UI
+        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+            el.classList.remove('force-hide');
+            el.style.display = el.dataset.originalDisplay || ''; 
+            el.style.removeProperty('content-visibility'); 
+            el.style.transition = 'opacity 0.3s ease';
+            requestAnimationFrame(() => { el.style.opacity = '1'; });
+        });
+
+        // Hide App Management Label
+        document.querySelectorAll('#app-management-info').forEach(el => {
+            if (!el.dataset.originalDisplay) el.dataset.originalDisplay = window.getComputedStyle(el).display;
+            el.style.transition = 'opacity 0.3s ease';
+            el.style.opacity = '0';
+            setTimeout(() => el.classList.add('force-hide'), 300);
+        });
+
+        // Hide Overlays
+        const swipeOverlay = document.getElementById('swipe-overlay');
+        if(swipeOverlay) {
+            swipeOverlay.style.display = 'none';
+            swipeOverlay.style.pointerEvents = 'none';
+        }
+        const interactionBlocker = document.getElementById('interaction-blocker');
+        if(interactionBlocker) interactionBlocker.style.pointerEvents = 'auto';
+
+        // Restore Effects
+        applyWallpaperEffects();
+        document.body.style.setProperty('--bg-transform-scale', '1.05');
+        resumeAllAnimations();
+        populateDock();
+        resetAutoSleepTimer();
+        resetIndicatorTimeout();
+        updateDockVisibility();
+        
+        // Update Title
+        setTimeout(() => {
+            restoreCorrectFavicon();
+            updateTitle();
+        }, 50);
+    }
+
+    // 4. Final DOM Removal
+    // This removes the iframe container for the specified URL, effectively killing the app.
+    const embeds = document.querySelectorAll(`.fullscreen-embed[data-embed-url="${url}"]`);
+    embeds.forEach(el => el.remove());
     
     console.log(`[System] Force closed app: ${url}`);
 }
