@@ -6506,9 +6506,7 @@ async function captureAppScreenshot(url) {
     if (!iframe) return;
 
     try {
-        // 1. Try to get screenshot via API (if app supports it)
-        // This relies on the existing message listener for 'screenshot-response'
-        // We'll wrap it in a promise
+        // Try to get screenshot via API (if app supports it)
         const ssData = await new Promise((resolve) => {
             const timeout = setTimeout(() => resolve(null), 500); // 500ms timeout
             
@@ -6528,18 +6526,10 @@ async function captureAppScreenshot(url) {
 
         if (ssData) {
             appSnapshots[url] = ssData;
-            return;
+        } else {
+            // Fallback removed to save resources. 
+            // If the app doesn't support the screenshot API, we simply don't show a preview.
         }
-
-        // 2. Fallback: Html2Canvas on the container (might be blank for cross-origin iframes, but captures background color)
-        const canvas = await html2canvas(container, { 
-            logging: false, 
-            useCORS: true,
-            width: container.offsetWidth,
-            height: container.offsetHeight,
-            scale: 0.5 // Lower res for performance
-        });
-        appSnapshots[url] = canvas.toDataURL('image/jpeg', 0.6);
 
     } catch (e) {
         console.warn("Snapshot failed for", url, e);
@@ -8836,7 +8826,6 @@ function setupWallpaperInteraction() {
         if (!isWallpaper) return;
 
         wallpaperPressTimer = setTimeout(() => {
-            if (navigator.vibrate) navigator.vibrate(50);
             openWallpaperSwitcher();
         }, WALLPAPER_PRESS_DURATION);
     };
@@ -16163,12 +16152,6 @@ async function openAppSwitcherUI() {
     const drawerPill = document.querySelector('.drawer-pill');
     if (drawerPill) drawerPill.style.opacity = '0';
     
-    // Hide any active app visually (but keep in DOM)
-    if (activeEmbed) {
-        activeEmbed.style.opacity = '0';
-        activeEmbed.style.pointerEvents = 'none';
-    }
-
     const overlay = document.getElementById('app-switcher-ui');
     const container = document.getElementById('app-cards-container');
     
@@ -16188,10 +16171,7 @@ function closeAppSwitcherUI() {
         
         // Restore UI
         const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (activeEmbed) {
-            activeEmbed.style.opacity = '1';
-            activeEmbed.style.pointerEvents = 'auto';
-        } else {
+        if !(activeEmbed) {
             // Home screen
             document.querySelector('.container').classList.remove('force-hide');
             updateDockVisibility();
@@ -16229,15 +16209,9 @@ function renderAppCards(container) {
         if (appSnapshots[url]) {
             card.style.backgroundImage = `url('${appSnapshots[url]}')`;
         } else {
-            // Fallback gradient
-            card.style.background = 'black';
+            // Fallback
+            card.style.background = 'var(--background-color)';
         }
-
-        // Title
-        const title = document.createElement('div');
-        title.className = 'app-switcher-title';
-        title.textContent = appName;
-        card.appendChild(title);
 
 		// Icon 
         const iconDiv = document.createElement('div');
