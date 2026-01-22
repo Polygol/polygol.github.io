@@ -126,6 +126,34 @@
         }
     },
     {
+        "name": "Tennis Golf Warp",
+        "description": "Hmmm ¯\_(ツ)_/¯",
+        "artist": "%20",
+        "license": "Assets from Jacknjellify",
+        "thumbnailUrl": "/assets/img/wallpapers/thumb_tgw1.png",
+        "fullUrl": "/assets/img/wallpapers/Tennis%20Golf%20Warp.png",
+        "clockStyles": {
+            "font": "Shag-Lounge",
+            "customFontName": "Shag-Lounge",
+            "customFontUrl": "https://db.onlinewebfonts.com/t/468c67c3a57b93870b455fc4ec30dbe1.woff2",
+            "weight": "1000",
+            "colorEnabled": false,
+            "stackEnabled": true,
+            "alignment": "center",
+            "shadowEnabled": false,
+            "gradientEnabled": false,
+            "glassEnabled": true,
+            "roundness": "100",
+            "clockSize": "0",
+            "clockPosX": "50",
+            "clockPosY": "20",
+            "wallpaperEffects": {
+                "light": { "blur": "0", "brightness": "100", "contrast": "100" },
+                "dark": { "blur": "0", "brightness": "50", "contrast": "150" }
+            }
+        }
+    },
+    {
         "name": "Broadway Top",
         "description": "Historic folly, by Capability Brown, with exhibitions and links to the Arts and Craft Movement.",
         "artist": "",
