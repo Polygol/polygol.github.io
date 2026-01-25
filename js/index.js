@@ -10174,8 +10174,8 @@ function initializeCustomization() {
 
 // App definitions
 var apps = {
-    "App Store": {
-        url: "/appstore/index.html",
+    "kirbStore": {
+        url: "/kirbstore/index.html",
         icon: "appstore.png"
 	},
 
@@ -10327,7 +10327,7 @@ async function deleteApp(appName) {
     const appToDelete = apps[appName];
 	if (
 		appToDelete && 
-		(appToDelete.url.includes('/appstore/index.html') ||
+		(appToDelete.url.includes('/kirbstore/index.html') ||
 		appToDelete.url.includes('/assets/gurapp/intl/settings/'))
 	) {
 	showDialog({ 
@@ -14748,7 +14748,7 @@ window.Gurasuraisu = Gurasuraisu; // FIX: Explicitly expose to window
 const TRUSTED_APP_PERMISSIONS = {
     'Settings': ['system-admin'], // Full access to everything, needs permissions to change settings
     'Terminal': ['system-admin'], // Full access to everything
-    'App Store': ['app-management']  // Can only manage apps
+    'kirbStore': ['app-management']  // Can only manage apps
 };
 
 // Maps function names to the required permission level.
@@ -14757,7 +14757,7 @@ const FUNCTION_PERMISSIONS = {
     // App Management Permissions
     'installApp': 'app-management',
     'deleteApp': 'app-management',
-    'requestInstalledApps': 'app-management', // Let App Store see what's installed
+    'requestInstalledApps': 'app-management', // Let kirbStore see what's installed
 
     // System Admin Permissions (Terminal Only)
     'getLocalStorageItem': 'system-admin',
