@@ -711,17 +711,19 @@ body.one-button-nav-active .dock.show {
 }
 
 .activity-capsule.has-text {
-	background-color: var(--search-background);
+    background-color: var(--search-background);
     padding: 4px 8px;
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
-    border-radius: 35px;
+    border-radius: 50px;
     backdrop-filter: blur(2.5px) saturate(2) var(--edge-refraction-filter);
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     font-size: 12px;
-    gap: 0;
-	font-variant-numeric: tabular-nums;
+    gap: 4px;
+    font-variant-numeric: tabular-nums;
+    height: 16px;
+    corner-shape: round;
 }
 	
 @keyframes capsule-pop {
