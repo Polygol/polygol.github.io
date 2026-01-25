@@ -312,7 +312,7 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: var(--secondary-text-color);
+    background: var(--accent);
     cursor: pointer;
     outline: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
@@ -327,7 +327,7 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: var(--secondary-text-color);
+    background: var(--accent);
     cursor: pointer;
     outline: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
