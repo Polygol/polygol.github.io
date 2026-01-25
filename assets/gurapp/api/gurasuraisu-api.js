@@ -462,6 +462,16 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             transform: scale(1.1);
         }
 
+        select {
+            background-color: var(--search-background);
+            color: var(--text-color);
+            padding: 8px 16px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            border-radius: 50px;
+            cursor: pointer;
+        }
+
         select option {
             background-color: var(--background-color);
             color: var(--text-color);
