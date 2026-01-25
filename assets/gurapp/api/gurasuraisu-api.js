@@ -131,6 +131,8 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --sun-shadow: 0 0 0 0 transparent;
             
             /* Dark Theme (Default) Variables */
+            --background-mono-dark: #1c1c1c;
+            --background-pure-dark: #000000;
             --background-color-dark: #1c1c1c;
             --background-color-dark-tr: rgba(28, 28, 28, 0.7);
             --text-color-dark: #f9f9f9;
@@ -145,6 +147,8 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --glass-border-dark: rgba(100, 100, 100, 0.2);
             
             /* Light Theme Variables */
+            --background-mono-light: #f0f0f0;
+            --background-pure-light: #ffffff;
             --background-color-light: #f0f0f0;
         	--background-color-light-tr: rgba(240, 240, 240, 0.7);
             --text-color-light: #333333;
@@ -188,6 +192,8 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --base-font-size: clamp(16px, 2vw + 1rem, 24px);
             
             /* Default to Dark Theme */
+            --background-mono: var(--background-mono-dark);
+            --background-pure: var(--background-pure-dark);
             --background-color: var(--background-color-dark);
             --background-color-tr: var(--background-color-dark-tr);
             --background-color-tr-op: var(--background-color-light-tr);
@@ -206,6 +212,8 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         }
         
         body.light-theme {
+            --background-mono: var(--background-mono-light);
+            --background-pure: var(--background-pure-light);
             --background-color: var(--background-color-light);
             --background-color-tr: var(--background-color-light-tr);
             --background-color-tr-op: var(--background-color-dark-tr);
@@ -226,6 +234,8 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         
         /* For dark theme (default) with high contrast */
         html.gurasuraisu-high-contrast body:not(.light-theme) {
+            --background-mono: var(--background-mono-dark);
+            --background-pure: var(--background-pure-dark);
             --background-color-tr: var(--background-color-dark-tr-highcontrast);
             --background-color-tr-op: var(--background-color-light-tr-highcontrast);
             --secondary-text-color: var(--secondary-text-color-dark-highcontrast);
@@ -243,6 +253,8 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         
         /* For light theme with high contrast */
         html.gurasuraisu-high-contrast body.light-theme {
+            --background-mono: var(--background-mono-light);
+            --background-pure: var(--background-pure-light);
             --background-color-tr: var(--background-color-light-tr-highcontrast);
             --background-color-tr-op: var(--background-color-dark-tr-highcontrast);
             --secondary-text-color: var(--secondary-text-color-light-highcontrast);
