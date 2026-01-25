@@ -415,6 +415,53 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             border-radius: 36px;
         }
 
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 34px;
+            background: var(--search-background);
+            border-radius: 20px;
+            padding: 0 8px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            outline: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            transition: width 0.3s, height 0.3s, transform 0.3s;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:active {
+            width: 24px;
+            height: 24px;
+            transform: scale(1.1);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            outline: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            transition: width 0.3s, height 0.3s, transform 0.3s;
+        }
+        
+        input[type="range"]::-moz-range-thumb:active {
+            width: 24px;
+            height: 24px;
+            transform: scale(1.1);
+        }
+
         select option {
             background-color: var(--background-color);
             color: var(--text-color);
