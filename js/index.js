@@ -4959,7 +4959,7 @@ function showPopup(message) {
     popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(2.5px)';
     popup.style.boxShadow = 'var(--sun-shadow)';
     popup.style.color = 'var(--text-color)';
-    popup.style.padding = '10px 18px';
+    popup.style.padding = '10px 16px';
     popup.style.borderRadius = '40px';
 	popup.style.cornerShape = 'round';
     popup.style.zIndex = '9999996';
