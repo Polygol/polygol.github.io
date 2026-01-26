@@ -10178,7 +10178,10 @@ var apps = {
         url: "/kirbstore/index.html",
         icon: "appstore.png"
 	},
-
+    "Assistant": {
+        url: "https://kirbindustries.gitbook.io/polygol/assistant-for-polygol",
+        icon: "assistant.png"
+	},
     "Settings": {
         url: "/assets/gurapp/intl/settings/index.html",
         icon: "settings.png"
