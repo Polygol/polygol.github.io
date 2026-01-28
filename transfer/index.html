@@ -340,38 +340,42 @@
                     } catch (e) { console.warn(e); }
                 }
 
-                // 4. External Apps
+                // 4. External Apps (File-per-app streaming)
                 const appUrls = getInstalledApps();
-                const extAppsData = {};
                 
                 if (appUrls.length > 0) {
-                    logStatus(`Backing up ${appUrls.length} apps...`);
+                    logStatus(`Backing up ${appUrls.length} external apps...`);
                     for (const url of appUrls) {
-                        logStatus(`Backing up ${url}...`);
+                        logStatus(`Contacting ${url}...`);
                         const result = await processExternalApp(url, 'admin-export');
-                        if (result.data && result.data.indexedDB) {
-                            // Recursively scan result.data for Blobs and convert to ZIP references
-                            const dbs = result.data.indexedDB;
-                            for (const dbName in dbs) {
-                                for (const sName in dbs[dbName].stores) {
-                                    const records = dbs[dbName].stores[sName];
-                                    for (let i = 0; i < records.length; i++) {
-                                        const val = records[i].value;
-                                        if (val instanceof Blob) {
-                                            const buf = new Uint8Array(await val.arrayBuffer());
-                                            const path = `apps/${btoa(url)}/${dbName}/${sName}_${i}.bin`;
-                                            zipData[path] = buf;
-                                            records[i].value = { _type: 'blob_ref', path: path, mime: val.type };
+                        
+                        if (result.data) {
+                            const appFolder = `apps/${btoa(url)}`; // Use base64 URL as folder name
+                            
+                            // Process any binary Blobs within the app's exported data
+                            if (result.data.indexedDB) {
+                                for (const dbName in result.data.indexedDB) {
+                                    const db = result.data.indexedDB[dbName];
+                                    for (const sName in db.stores) {
+                                        const records = db.stores[sName];
+                                        for (let i = 0; i < records.length; i++) {
+                                            const val = records[i].value;
+                                            if (val instanceof Blob) {
+                                                const buf = new Uint8Array(await val.arrayBuffer());
+                                                const bPath = `${appFolder}/idb/${dbName}/${sName}_${i}.bin`;
+                                                zipData[bPath] = buf;
+                                                records[i].value = { _type: 'blob_ref', path: bPath, mime: val.type };
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                        if (result.data) {
-                            extAppsData[url] = result.data;
+                            
+                            // Store this specific app's JSON data as its own file
+                            // This prevents the giant string RangeError
+                            zipData[`${appFolder}/data.json`] = fflate.strToU8(JSON.stringify(result.data));
                         }
                     }
-                    zipData['externalApps.json'] = fflate.strToU8(JSON.stringify(extAppsData));
                 }
 
                 // 5. Compress
@@ -521,13 +525,35 @@
                     db.close();
                 }
 
-                // 4. Restore Apps
-                if (unzipped['externalApps.json']) {
-                    const extData = JSON.parse(fflate.strFromU8(unzipped['externalApps.json']));
-                    const urls = Object.keys(extData);
-                    logStatus(`Restoring ${urls.length} apps...`);
-                    for (const url of urls) {
-                        await processExternalApp(url, 'admin-import', extData[url]);
+                // 4. Restore Apps (Iterate through app folders)
+                const appDataFiles = Object.keys(unzipped).filter(k => k.startsWith('apps/') && k.endsWith('/data.json'));
+                
+                if (appDataFiles.length > 0) {
+                    logStatus(`Restoring ${appDataFiles.length} external applications...`);
+                    for (const filePath of appDataFiles) {
+                        // Extract original URL from folder name (base64)
+                        const encodedUrl = filePath.split('/')[1];
+                        const url = atob(encodedUrl);
+                        
+                        logStatus(`Restoring ${url}...`);
+                        const appPayload = JSON.parse(fflate.strFromU8(unzipped[filePath]));
+
+                        // Reconstruct Blobs for this app
+                        if (appPayload.indexedDB) {
+                            for (const dbName in appPayload.indexedDB) {
+                                const db = appPayload.indexedDB[dbName];
+                                for (const sName in db.stores) {
+                                    for (const rec of db.stores[sName]) {
+                                        if (rec.value && rec.value._type === 'blob_ref') {
+                                            const fileData = unzipped[rec.value.path];
+                                            if (fileData) rec.value = new Blob([fileData], { type: rec.value.mime });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        await processExternalApp(url, 'admin-import', appPayload);
                     }
                 }
 
