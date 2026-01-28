@@ -698,8 +698,6 @@ function initializeSettingsApp() {
     // Announce readiness to the parent, which will trigger the initial settings sync.
     if (window.parent) {
         window.parent.postMessage({ type: 'gurapp-ready' }, window.location.origin);
-        Gurasuraisu.getLocalStorageItem('displayScale');
-        Gurasuraisu.getLocalStorageItem('smartDisplayZoom');
     }
 }
 
