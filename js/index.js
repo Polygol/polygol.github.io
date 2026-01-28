@@ -720,7 +720,7 @@ async function updateSystemVersionUI() {
 // --- Service Worker Logic ---
 let updateNotificationInterval = null;
 
-function setupServiceWorkerUpdateListener() {
+async function setupServiceWorkerUpdateListener() {
     if (!('serviceWorker' in navigator)) return;
 
     // Load Version Info on startup
