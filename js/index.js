@@ -3729,9 +3729,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         controlPopup.appendChild(controlElement);
         const rect = sourceElement.getBoundingClientRect();
+        const zoom = parseFloat(document.body.style.zoom) / 100 || 1;
         controlPopup.style.display = 'block';
-        const top = rect.bottom + 8;
-        const left = rect.left + (rect.width / 2) - (controlPopup.offsetWidth / 2);
+        const top = (rect.bottom + 8) / zoom;
+        const left = (rect.left + (rect.width / 2) - (controlPopup.offsetWidth / 2)) / zoom;
         controlPopup.style.top = `${top}px`;
         controlPopup.style.left = `${left}px`;
     }
@@ -14013,7 +14014,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Temperature control popup
     temperatureControl.addEventListener('click', function(e) {
-        // If the popup is already open, and the click is NOT inside the popup or on the control, close it
         if (
             temperaturePopup.style.display === 'block' &&
             !temperaturePopup.contains(e.target) &&
@@ -14023,10 +14023,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             return;
         }
 
-        // Otherwise, open it as usual
         const rect = temperatureControl.getBoundingClientRect();
-        temperaturePopup.style.top = `${rect.bottom + 5}px`;
-        temperaturePopup.style.left = `${rect.left + (rect.width / 2) - (155 / 2)}px`; // Center the popup
+        const zoom = parseFloat(document.body.style.zoom) / 100 || 1;
+        temperaturePopup.style.top = `${(rect.bottom + 5) / zoom}px`;
+        temperaturePopup.style.left = `${(rect.left + (rect.width / 2) - (155 / 2)) / zoom}px`;
         temperaturePopup.style.display = 'block';
     });
     
