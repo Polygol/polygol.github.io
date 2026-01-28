@@ -1533,7 +1533,7 @@ document.addEventListener('DOMContentLoaded', () => {
       window.addEventListener('message', async (event) => {
           if (event.source !== window.parent) return;
           const data = event.data;
-
+  
           // Helper: Blob to Base64
           const blobToBase64 = (blob) => {
               return new Promise((resolve, reject) => {
@@ -1543,7 +1543,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   reader.readAsDataURL(blob);
               });
           };
-
+  
           // Helper: Base64 to Blob
           const base64ToBlob = (dataUrl) => {
               const arr = dataUrl.split(',');
@@ -1554,14 +1554,14 @@ document.addEventListener('DOMContentLoaded', () => {
               while (n--) u8arr[n] = bstr.charCodeAt(n);
               return new Blob([u8arr], { type: mime });
           };
-          
+  
           if (data.type === 'admin-export') {
               try {
                   const exportPayload = { 
                       localStorage: { ...localStorage },
                       indexedDB: {} 
                   };
-
+  
                   if (window.indexedDB && window.indexedDB.databases) {
                       const dbs = await window.indexedDB.databases();
                       for (const dbInfo of dbs) {
@@ -1570,10 +1570,10 @@ document.addEventListener('DOMContentLoaded', () => {
                               const req = indexedDB.open(dbName);
                               req.onsuccess = () => r(req.result);
                           });
-
+  
                           exportPayload.indexedDB[dbName] = { stores: {}, storeInfo: [] };
                           const storeNames = Array.from(db.objectStoreNames);
-
+  
                           for (const sName of storeNames) {
                               const tx = db.transaction(sName, 'readonly');
                               const store = tx.objectStore(sName);
@@ -1588,7 +1588,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                       return { name: i.name, keyPath: i.keyPath, unique: i.unique };
                                   })
                               });
-
+  
                               // Collect Records via Cursor
                               const records = [];
                               await new Promise(r => {
@@ -1605,34 +1605,34 @@ document.addEventListener('DOMContentLoaded', () => {
                           db.close();
                       }
                   }
-
+  
                   window.parent.postMessage({
                       type: 'admin-export-response',
                       appUrl: window.location.href,
                       data: exportPayload
                   }, '*');
-
+  
               } catch (e) {
                   console.error("Export failed", e);
                   window.parent.postMessage({ type: 'admin-export-response', error: e.message }, '*');
               }
           }
-
+  
           if (data.type === 'admin-import') {
               try {
                   const { localStorage: lsData, indexedDB: idbData } = data.payload;
-
+  
                   // 1. Restore LS
                   localStorage.clear();
                   for (const k in lsData) localStorage.setItem(k, lsData[k]);
-
+  
                   // 2. Restore IDB
                   if (window.indexedDB && window.indexedDB.databases) {
                       const currentDbs = await window.indexedDB.databases();
                       for (const db of currentDbs) {
                           await new Promise(r => { const req = indexedDB.deleteDatabase(db.name); req.onsuccess = r; req.onerror = r; });
                       }
-
+  
                       for (const dbName in idbData) {
                           const dbInfo = idbData[dbName];
                           const req = indexedDB.open(dbName);
@@ -1646,39 +1646,38 @@ document.addEventListener('DOMContentLoaded', () => {
                                   }
                               });
                           };
-
+  
                           const db = await new Promise((res, rej) => {
                               req.onsuccess = () => res(req.result);
                               req.onerror = rej;
                           });
-
+  
                           const tx = db.transaction(Object.keys(dbInfo.stores), 'readwrite');
-                            for (const storeName in dbInfo.stores) {
-                                  const store = tx.objectStore(storeName);
-                                  const records = dbInfo.stores[storeName];
-                                  const sInfo = dbInfo.storeInfo.find(x => x.name === storeName);
+                          for (const storeName in dbInfo.stores) {
+                              const store = tx.objectStore(storeName);
+                              const records = dbInfo.stores[storeName];
+                              const sInfo = dbInfo.storeInfo.find(x => x.name === storeName);
+                              
+                              // Optimization: Clear store first to ensure clean overwrite
+                              store.clear();
+  
+                              for (const rec of records) {
+                                  let val = rec.value;
+                                  let key = rec.key;
                                   
-                                  // Optimization: Clear store first to ensure clean overwrite
-                                  store.clear();
-    
-                                  for (const rec of records) {
-                                      let val = rec.value;
-                                      let key = rec.key;
-                                      
-                                      // Legacy Base64 check
-                                      if (val && val._isBlob && typeof val.data === 'string') val = base64ToBlob(val.data);
-    
-                                      try {
-                                          // CRITICAL: If store has keyPath, don't provide key param
-                                          // If store uses out-of-line keys, the key is required
-                                          if (sInfo && (sInfo.keyPath !== null && sInfo.keyPath !== "")) {
-                                              store.put(val);
-                                          } else {
-                                              store.put(val, key);
-                                          }
-                                      } catch (err) {
-                                          console.error(`Store ${storeName} put failed:`, err);
+                                  // Legacy Base64 check
+                                  if (val && val._isBlob && typeof val.data === 'string') val = base64ToBlob(val.data);
+  
+                                  try {
+                                      // CRITICAL: If store has keyPath, don't provide key param
+                                      // If store uses out-of-line keys, the key is required
+                                      if (sInfo && (sInfo.keyPath !== null && sInfo.keyPath !== "")) {
+                                          store.put(val);
+                                      } else {
+                                          store.put(val, key);
                                       }
+                                  } catch (err) {
+                                      console.error(`Store ${storeName} put failed:`, err);
                                   }
                               }
                           }
@@ -1692,7 +1691,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   window.parent.postMessage({ type: 'admin-action-complete', error: e.message }, '*');
               }
           }
-
+  
           if (data.type === 'admin-wipe') {
               try {
                   localStorage.clear();
