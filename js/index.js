@@ -6362,14 +6362,17 @@ async function createAutomaticBackup() {
                     const records = await getStoreDataForBackup(db, storeName);
                     
                     // Binary processing
-                    for (let i = 0; i < records.length; i++) {
+					for (let i = 0; i < records.length; i++) {
                         const rec = records[i];
-                        if (rec.value && rec.value.blob instanceof Blob) {
-                            const blob = rec.value.blob;
-                            const buf = new Uint8Array(await blob.arrayBuffer());
-                            const path = `indexedDB/${dbName}/${storeName}_blobs/${i}.bin`;
-                            zipData[path] = buf;
-                            rec.value.blob = { _type: 'blob_ref', path: path, mime: blob.type };
+                        let val = rec.value;
+                        const path = `idb/${dbName}/${storeName}/rec_${i}.bin`;
+
+                        if (val instanceof Blob) {
+                            zipData[path] = new Uint8Array(await val.arrayBuffer());
+                            rec.value = { _type: 'bin_ref', mime: val.type };
+                        } else if (val && val.blob instanceof Blob) {
+                            zipData[path] = new Uint8Array(await val.blob.arrayBuffer());
+                            rec.value.blob = { _type: 'bin_ref', mime: val.blob.type };
                         }
                     }
                     
