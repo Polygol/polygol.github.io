@@ -209,6 +209,14 @@ function initializeSettingsApp() {
             }
         }
 
+        // Handle Night Stand Config Visibility
+        if (key === 'nightStandEnabled') {
+            const configContainer = document.getElementById('night-stand-config');
+            if (configContainer) {
+                configContainer.style.display = (value === 'true') ? 'block' : 'none';
+            }
+        }
+
         if (controls.length === 0) return;
         controls.forEach(control => {
             // Prevent overwriting the value while the user is actively adjusting the slider
