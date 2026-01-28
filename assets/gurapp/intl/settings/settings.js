@@ -201,11 +201,12 @@ function initializeSettingsApp() {
     function updateControl(key, value) {
         const controls = document.querySelectorAll(`[data-key="${key}"]`);
         
-        // Handle Smart Zoom Visibility logic side-effect
+        // Handle Smart Zoom Visibility logic side-effect (Default: true if empty string/null)
         if (key === 'smartDisplayZoom') {
             const manualContainer = document.getElementById('manual-zoom-container');
             if (manualContainer) {
-                manualContainer.style.display = (value === 'true') ? 'none' : 'flex';
+                const isSmart = (value === 'true' || value === '' || value === null);
+                manualContainer.style.display = isSmart ? 'none' : 'flex';
             }
         }
 
