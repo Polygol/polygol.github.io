@@ -2371,10 +2371,11 @@ function setupStickerControls() {
             controlPopup.appendChild(popup);
             
             const rect = addBtn.getBoundingClientRect();
+            const zoom = parseFloat(document.body.style.zoom) / 100 || 1;
             controlPopup.style.display = 'block';
-            controlPopup.style.top = `${rect.bottom + 10}px`;
-            let left = rect.left + (rect.width / 2) - 100;
-            controlPopup.style.left = `${Math.max(10, Math.min(window.innerWidth - 220, left))}px`;
+            controlPopup.style.top = `${(rect.bottom + 10) / zoom}px`;
+            let left = (rect.left + (rect.width / 2) - 100) / zoom;
+            controlPopup.style.left = `${Math.max(10, Math.min((window.innerWidth / zoom) - 220, left))}px`;
         }
     });
 
