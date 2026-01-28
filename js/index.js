@@ -14903,7 +14903,7 @@ function setControlValueAndDispatch(key, value) {
     const settingsWithoutDirectControl = [
         'sleepModeStyle', 'slideshowInterval', 'hideClockIndicator',
         'autoSleepEnabled', 'autoSleepDuration', 'autoSleepScope',
-		'resourceManagerEnabled'
+		'resourceManagerEnabled', 'displayScale'
     ];
     if (settingsWithoutDirectControl.includes(key)) {
         localStorage.setItem(key, value);
