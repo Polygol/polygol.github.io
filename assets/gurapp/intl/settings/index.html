@@ -634,6 +634,20 @@
                 </div>
                 <div class="setting-item">
                     <div class="setting-info">
+                        <span class="setting-label">Color Filter</span>
+                        <span class="setting-description">Help with color blindness or sensitivity</span>
+                    </div>
+                    <select class="styled-select" data-key="colorFilter">
+                        <option value="none">Off</option>
+                        <option value="grayscale">Grayscale</option>
+                        <option value="invert">Inverted</option>
+                        <option value="protanopia">Protanopia (Red-Blind)</option>
+                        <option value="deuteranopia">Deuteranopia (Green-Blind)</option>
+                        <option value="tritanopia">Tritanopia (Blue-Blind)</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
                         <span class="setting-label">Smart Display Zoom</span>
                         <span class="setting-description">Automatically adjust display scale</span>
                     </div>
@@ -653,6 +667,13 @@
             </div>
             <div class="setting-section">
                 <h2 class="section-title">Motor</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Switch Access</span>
+                        <span class="setting-description">Navigate the interface using Tab/Space/Enter</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="keyboardNavEnabled">
+                </div>
                 <div class="setting-item" id="setting-oneButtonNavEnabled">
                     <div class="setting-info">
                         <span class="setting-label">Disable Gestures</span>
@@ -666,6 +687,12 @@
             </div>
             <div class="setting-section">
                 <h2 class="section-title">Hearing</h2>
+                <div class="setting-item slider-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Sound Feedback Volume</span>
+                    </div>
+                    <input type="range" min="0" max="100" class="styled-slider" data-key="sfxVolume">
+                </div>
             </div>
         </div>
         <!-- About Page -->
