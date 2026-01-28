@@ -377,6 +377,25 @@ function determineSoundContext(element) {
     return null; 
 }
 
+/**
+ * Scans for elements using backdrop-filters and applies hardware acceleration hints.
+ */
+function optimizeBackdropElements(root = document.body) {
+    if (!root) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
+    let node;
+    while (node = walker.nextNode()) {
+        const style = window.getComputedStyle(node);
+        if (style.backdropFilter !== 'none' || style.webkitBackdropFilter !== 'none') {
+            node.style.backfaceVisibility = 'hidden';
+            node.style.webkitBackfaceVisibility = 'hidden';
+            if (!style.willChange.includes('filter')) {
+                node.style.willChange = (style.willChange === 'auto' ? '' : style.willChange + ', ') + 'filter';
+            }
+        }
+    }
+}
+
 // Global Interaction Tracker for Performance Heuristics
 window.lastUserInteraction = Date.now();
 ['mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'].forEach(evt => {
@@ -4300,6 +4319,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (mutation.type === 'childList') {
                 let changed = false;
                 mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1) optimizeBackdropElements(node);
+                    if (node.nodeType === 1 &&
+                        node.classList &&
+                        node.classList.contains('fullscreen-embed')) {
                     if (node.nodeType === 1 &&
                         node.classList &&
                         node.classList.contains('fullscreen-embed')) {
@@ -13488,6 +13511,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Initial check
     updateDockVisibility();
+    optimizeBackdropElements();
 
     const wakeLockSelect = document.getElementById('wake-lock-mode-select');
     if (wakeLockSelect) {
