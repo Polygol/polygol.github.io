@@ -364,7 +364,26 @@
                 if (appUrls.length > 0) {
                     logStatus(`Backing up ${appUrls.length} apps...`);
                     for (const url of appUrls) {
+                        logStatus(`Backing up ${url}...`);
                         const result = await processExternalApp(url, 'admin-export');
+                        if (result.data && result.data.indexedDB) {
+                            // Recursively scan result.data for Blobs and convert to ZIP references
+                            const dbs = result.data.indexedDB;
+                            for (const dbName in dbs) {
+                                for (const sName in dbs[dbName].stores) {
+                                    const records = dbs[dbName].stores[sName];
+                                    for (let i = 0; i < records.length; i++) {
+                                        const val = records[i].value;
+                                        if (val instanceof Blob) {
+                                            const buf = new Uint8Array(await val.arrayBuffer());
+                                            const path = `apps/${btoa(url)}/${dbName}/${sName}_${i}.bin`;
+                                            zipData[path] = buf;
+                                            records[i].value = { _type: 'blob_ref', path: path, mime: val.type };
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         if (result.data) {
                             extAppsData[url] = result.data;
                         }
