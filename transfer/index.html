@@ -124,10 +124,8 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/msgpack@1.0.3/lib/msgpack.min.js"></script>
     <script type="module">
-        // Import MessagePack from CDN
-        import { encode, decodeAsyncGenerator } from 'https://cdn.jsdelivr.net/npm/@msgpack/msgpack@3.0.0-beta2/dist/index.es.min.js';
-
         const exportBtn = document.getElementById('export-btn');
         const importBtn = document.getElementById('import-btn');
         const importFileInput = document.getElementById('import-file');
