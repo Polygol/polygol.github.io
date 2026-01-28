@@ -356,7 +356,13 @@
                 }
 
                 // 4. External Apps (File-per-app streaming)
-                const appUrls = getInstalledApps();
+                const appUrls = getInstalledApps().filter(url => {
+                    try {
+                        const appOrigin = new URL(url, window.location.origin).origin;
+                        // Only export if origin is different; same-origin data is already captured locally.
+                        return appOrigin !== window.location.origin;
+                    } catch(e) { return false; }
+                });
                 
                 if (appUrls.length > 0) {
                     logStatus(`Backing up ${appUrls.length} external apps...`);
