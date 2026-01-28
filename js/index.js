@@ -5517,8 +5517,9 @@ function createOnScreenPopup(message, options = {}, onClosed) {
     contentContainer.style.flexDirection = 'column';
     contentContainer.style.gap = '4px';
     
-    // Header with icon and heading
-    if (options.heading) {
+    // Header with icon and heading (Supports 'header' or 'heading' keys)
+    const headerTitle = options.header || options.heading;
+    if (headerTitle) {
         const headerContainer = document.createElement('div');
         headerContainer.style.display = 'flex';
         headerContainer.style.alignItems = 'center';
@@ -5533,7 +5534,7 @@ function createOnScreenPopup(message, options = {}, onClosed) {
         const headingText = document.createElement('span');
         headingText.style.fontWeight = '500';
         headingText.style.fontFamily = "'Open Runde', 'Inter'";
-        headingText.textContent = options.heading;
+        headingText.textContent = headerTitle;
         headerContainer.appendChild(headingText);
         
         contentContainer.appendChild(headerContainer);
@@ -5791,8 +5792,9 @@ function addToNotificationShade(message, options = {}) {
 	        iconTypeForShade = 'notifications';
 	    }
 	    
-	    // Header with icon and heading
-	    if (options.heading) {
+	    // Header with icon and heading (Supports 'header' or 'heading' keys)
+        const headerTitle = options.header || options.heading;
+	    if (headerTitle) {
 	        const headerContainer = document.createElement('div');
 	        headerContainer.style.display = 'flex';
 	        headerContainer.style.alignItems = 'center';
@@ -5807,7 +5809,7 @@ function addToNotificationShade(message, options = {}) {
 	        const headingText = document.createElement('span');
 	        headingText.style.fontWeight = '500';
 	        headingText.style.fontFamily = "'Open Runde', 'Inter'";
-	        headingText.textContent = options.heading;
+	        headingText.textContent = headerTitle;
 	        headerContainer.appendChild(headingText);
 	        
 	        contentContainer.appendChild(headerContainer);
