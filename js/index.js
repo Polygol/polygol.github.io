@@ -740,11 +740,11 @@ async function setupServiceWorkerUpdateListener() {
 
     const isUpdate = navigator.serviceWorker.controller !== null;
 
-    navigator.serviceWorker.getRegistration().then(reg => {
+    navigator.serviceWorker.getRegistration().then(async reg => {
         if (!reg) return;
 
         // Function to handle a waiting worker
-        const handleWaitingWorker = (worker) => {
+        const handleWaitingWorker = async (worker) => {
             const updatesEnabled = localStorage.getItem('updatesEnabled') !== 'false';
             
             if (!updatesEnabled) {
@@ -756,8 +756,8 @@ async function setupServiceWorkerUpdateListener() {
             const newV = await fetchSystemVersion();
 
             const showUpdateNotification = () => {
-                showNotification(`A new system update is ready to install. (Version ${newV})`, {
-					header: 'System update',
+                showNotification(`System update is available to install.`, {
+					header: 'Polygol ${newV}',
                     icon: 'update',
                     system: true,
                     buttonText: 'Restart and Install',
@@ -780,15 +780,15 @@ async function setupServiceWorkerUpdateListener() {
 
         // Check if there is already a waiting worker on load
         if (reg.waiting) {
-            handleWaitingWorker(reg.waiting);
+            await handleWaitingWorker(reg.waiting);
         }
 
         reg.onupdatefound = () => {
             const newWorker = reg.installing;
             if (newWorker) {
-                newWorker.onstatechange = () => {
+                newWorker.onstatechange = async () => {
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        handleWaitingWorker(newWorker);
+                        await handleWaitingWorker(newWorker);
                     }
                 };
             }
