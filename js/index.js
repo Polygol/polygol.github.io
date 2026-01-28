@@ -1238,6 +1238,10 @@ window.handleRemoteFileUpload = function(data, peerId) {
 };
 
 function handleViewportResize() {
+    if (localStorage.getItem('smartDisplayZoom') === 'true') {
+        const smartScale = calculateSmartZoom();
+        document.body.style.zoom = `${smartScale}%`;
+    }
     adjustWidgetsForViewportResize(); // First, fix the data
     renderWidgets();                  // Then, re-render with the corrected data
 }
@@ -2920,6 +2924,15 @@ function promptToInstallPWA() {
 // --- Color Tinting Logic ---
 let tintEnabled = localStorage.getItem('tintEnabled') === 'true';
 window.currentTintVariables = null; // Store calculated vars for new apps
+
+function calculateSmartZoom() {
+    const width = window.innerWidth;
+    // Heuristics for different screen sizes
+    if (width <= 500) return 85;  // Mobile
+    if (width <= 1024) return 90; // Tablet/Small Laptop
+    if (width >= 2560) return 125; // Large/High-Res Display
+    return 100; // Standard Desktop
+}
 
 // Helper to parse CSS color strings (rgb, rgba, hex) into {r,g,b,a}
 function parseCssColor(str) {
@@ -13429,7 +13442,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // Initialize display scale
-    if (storedDisplayScale !== '100') {
+    if (localStorage.getItem('smartDisplayZoom') === 'true') {
+        const smartScale = calculateSmartZoom();
+        document.body.style.zoom = `${smartScale}%`;
+    } else if (storedDisplayScale !== '100') {
         document.body.style.zoom = `${storedDisplayScale}%`;
     }
     
@@ -14196,6 +14212,7 @@ function listCommonSettings() {
         'clockStackEnabled': localStorage.getItem('clockStackEnabled'),
         'selectedLanguage': localStorage.getItem('selectedLanguage'),
 		'displayScale': localStorage.getItem('displayScale'),
+		'smartDisplayZoom': localStorage.getItem('smartDisplayZoom'),
     };
 }
 
@@ -14903,7 +14920,7 @@ function setControlValueAndDispatch(key, value) {
     const settingsWithoutDirectControl = [
         'sleepModeStyle', 'slideshowInterval', 'hideClockIndicator',
         'autoSleepEnabled', 'autoSleepDuration', 'autoSleepScope',
-		'resourceManagerEnabled', 'displayScale'
+		'resourceManagerEnabled', 'displayScale', 'smartDisplayZoom'
     ];
     if (settingsWithoutDirectControl.includes(key)) {
         localStorage.setItem(key, value);
@@ -14924,6 +14941,15 @@ function setControlValueAndDispatch(key, value) {
         }
         if (key === 'displayScale') {
             document.body.style.zoom = `${value}%`;
+        }
+        if (key === 'smartDisplayZoom') {
+            if (value === 'true') {
+                const smartScale = calculateSmartZoom();
+                document.body.style.zoom = `${smartScale}%`;
+            } else {
+                const manualScale = localStorage.getItem('displayScale') || '100';
+                document.body.style.zoom = `${manualScale}%`;
+            }
         }
         return;
     }
