@@ -282,49 +282,39 @@
         async function handleExport() {
             logStatus('Starting export...');
             try {
-                // 1. Gather External App Data
-                const appUrls = getInstalledApps();
-                const externalAppData = {};
+                // We construct the JSON manually using a Blob array to avoid "Invalid string length" errors
+                // caused by stringifying the entire system at once.
+                const jsonParts = [];
                 
-                if (appUrls.length > 0) {
-                    logStatus(`Backing up ${appUrls.length} external applications...`);
-                    for (const url of appUrls) {
-                        logStatus(`Contacting ${url}...`);
-                        const result = await processExternalApp(url, 'admin-export');
-                        if (result.data) {
-                            externalAppData[url] = result.data;
-                        } else {
-                            logStatus(`Warning: Failed to backup ${url} (${result.error || 'Unknown error'})`, true);
-                        }
-                    }
-                }
+                // Header
+                const header = {
+                    gurasuraisu_transfer_version: "1.3",
+                    export_timestamp: new Date().toISOString(),
+                    data: {} // We will close this manually
+                };
+                // Push header string up to the "data" opening brace
+                jsonParts.push(`{"gurasuraisu_transfer_version":"${header.gurasuraisu_transfer_version}","export_timestamp":"${header.export_timestamp}","data":{`);
 
-                // 2. Gather localStorage
+                // 1. Gather and Push LocalStorage
                 const localStorageData = {};
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
                     localStorageData[key] = localStorage.getItem(key);
                 }
                 logStatus('localStorage data collected.');
+                
+                jsonParts.push(`"localStorage":${JSON.stringify(localStorageData)},`);
 
-                // 2. Dynamically gather IndexedDB data and schema
+                // 2. Gather and Push IndexedDB
                 const indexedDbData = {};
                 const dbs = await indexedDB.databases();
-                if (dbs.length === 0) {
-                     logStatus('No IndexedDB databases found to export.');
-                } else {
-                    logStatus(`Found ${dbs.length} databases to export...`);
-                }
-
+                
                 for (const dbInfo of dbs) {
                     const dbName = dbInfo.name;
                     try {
                         logStatus(`Accessing IndexedDB: ${dbName}...`);
                         const db = await openDb(dbName);
-                        indexedDbData[dbName] = {
-                            stores: {},
-                            storeInfo: []
-                        };
+                        indexedDbData[dbName] = { stores: {}, storeInfo: [] };
                         const storeNames = Array.from(db.objectStoreNames);
                         
                         const tempTx = db.transaction(storeNames, 'readonly');
@@ -333,12 +323,7 @@
                              const indexNames = Array.from(store.indexNames);
                              const indexes = indexNames.map(indexName => {
                                  const index = store.index(indexName);
-                                 return {
-                                     name: index.name,
-                                     keyPath: index.keyPath,
-                                     unique: index.unique,
-                                     multiEntry: index.multiEntry
-                                 };
+                                 return { name: index.name, keyPath: index.keyPath, unique: index.unique, multiEntry: index.multiEntry };
                              });
 
                              indexedDbData[dbName].storeInfo.push({
@@ -354,25 +339,48 @@
                         }
                         db.close();
                     } catch (dbError) {
-                        logStatus(`Could not access or read DB: ${dbName}. Skipping. Error: ${dbError.message}`, true);
+                        logStatus(`Skipping DB ${dbName}: ${dbError.message}`, true);
                     }
                 }
                 logStatus('IndexedDB data collected.');
+                
+                jsonParts.push(`"indexedDB":${JSON.stringify(indexedDbData)},`);
 
-                // 3. Package and download
-                const transferData = {
-                    gurasuraisu_transfer_version: "1.3", // Bump for external apps
-                    export_timestamp: new Date().toISOString(),
-                    data: {
-                        localStorage: localStorageData,
-                        indexedDB: indexedDbData,
-                        externalApps: externalAppData
-                    },
-                };
+                // 3. Process and Stream External Apps
+                jsonParts.push(`"externalApps":{`);
+                const appUrls = getInstalledApps();
+                
+                if (appUrls.length > 0) {
+                    logStatus(`Backing up ${appUrls.length} external applications...`);
+                    let firstApp = true;
+                    for (const url of appUrls) {
+                        logStatus(`Contacting ${url}...`);
+                        // Force garbage collection of previous loop data if browser allows
+                        // by keeping result scoped locally
+                        const result = await processExternalApp(url, 'admin-export');
+                        
+                        if (result.data) {
+                            if (!firstApp) jsonParts.push(',');
+                            // Manually create JSON Key-Value pair
+                            jsonParts.push(`${JSON.stringify(url)}:${JSON.stringify(result.data)}`);
+                            firstApp = false;
+                        } else {
+                            logStatus(`Warning: Failed to backup ${url} (${result.error || 'Unknown'})`, true);
+                        }
+                    }
+                }
+                jsonParts.push(`}`); // End externalApps
 
+                jsonParts.push(`}}`); // End data, End root
+
+                // 4. Create Blob and Download
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
                 const fileName = `polygol_transfer_${timestamp}.guradata`;
-                downloadFile(JSON.stringify(transferData, null, 2), fileName, 'application/json');
+                
+                logStatus('Assembling file...');
+                const finalBlob = new Blob(jsonParts, { type: 'application/json' });
+                
+                downloadBlob(finalBlob, fileName); // Helper needed below
 
                 logStatus(`Export successful! File '${fileName}' is downloading.`);
 
@@ -380,6 +388,15 @@
                 logStatus(`Export failed: ${error.message}`, true);
                 console.error(error);
             }
+        }
+
+        // Helper for Blob download
+        function downloadBlob(blob, fileName) {
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(a.href);
         }
 
         // --- IMPORT LOGIC ---
