@@ -208,6 +208,33 @@
                     </select>
                 </div>
             </div>
+            <div class="setting-section">
+                <h2 class="section-title">Night Stand</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Night Stand</span>
+                        <span class="setting-description">Tint screen red and hide wallpaper</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="nightStandEnabled">
+                </div>
+                
+                <div id="night-stand-config" style="display:none; background: var(--search-background); padding: 20px; border-radius: 20px; margin: 10px 0 20px; border: 1px solid var(--glass-border);">
+                    <div class="setting-item" style="border:none; padding: 5px 0; background: transparent; box-shadow: none;">
+                        <span class="setting-label" style="font-size: 14px;">Schedule</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="time" class="form-input" data-key="nightStandStart" style="width: auto;">
+                            <span style="opacity: 0.5;">to</span>
+                            <input type="time" class="form-input" data-key="nightStandEnd" style="width: auto;">
+                        </div>
+                    </div>
+                    <div class="setting-item slider-item" style="border:none; padding: 5px 0; background: transparent; box-shadow: none;">
+                        <div class="setting-info">
+                            <span class="setting-label" style="font-size: 14px;">Dim Level</span>
+                        </div>
+                        <input type="range" min="20" max="100" class="styled-slider" data-key="nightStandBrightness">
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Sound & Haptics Page -->
