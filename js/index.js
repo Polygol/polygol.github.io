@@ -3141,19 +3141,19 @@ function calculateSmartZoom() {
     // Elements should be readable from a distance (3-10ft) or glanceable.
 	
     // 1. Mobile (Portrait/Handheld)
-    // It is not optimized well for this usecase! Please reduce the size, thank you.
+    // Grrr
     if (width < 600) return 90;
 
     // 2. Tablet / Smart Display (600px - 1280px)
-    // The ideal formatting for the applicant. Okay, this is good, nice one.
+    // Yoy
     if (width <= 1280) return 110;
 
     // 3. Wall Displays / Monitors (1280px - 2500px)
-    // Bit big! Must adjust to be bigger to make more reading.
+    // Wow
     if (width <= 2500) return 125;
 
     // 4. Large TV / 4K (> 2500px)
-    // Wow! So big! I must change it to be biggest I can be! Thank you.
+    // Uh
     return 150;
 }
 
