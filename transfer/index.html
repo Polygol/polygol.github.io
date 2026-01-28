@@ -344,9 +344,9 @@
                     chunks.push(encode(item));
                 }
 
-                const blob = new Blob(chunks, { type: 'application/x-gurapack' });
+                const blob = new Blob(chunks, { type: 'application/x-guradata' });
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const fileName = `polygol_backup_${timestamp}.gurapack`; // New Extension
+                const fileName = `polygol_backup_${timestamp}.guradata`; // New Extension
 
                 downloadBlob(blob, fileName);
                 logStatus(`Success! Downloaded ${fileName} (${(blob.size/1024/1024).toFixed(2)} MB)`);
