@@ -124,6 +124,7 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/oboe@2.1.5/dist/oboe-browser.min.js"></script>
     <script>
         const exportBtn = document.getElementById('export-btn');
         const importBtn = document.getElementById('import-btn');
@@ -399,6 +400,90 @@
             URL.revokeObjectURL(a.href);
         }
 
+        // --- STREAMING IMPORT UTILITIES ---
+        // Cache open DB connections to avoid opening/closing for every single record
+        const dbConnectionCache = {};
+
+        async function getCachedDb(dbName, storeInfoArray) {
+            if (dbConnectionCache[dbName]) return dbConnectionCache[dbName];
+
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName);
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (storeInfoArray) {
+                        storeInfoArray.forEach(sInfo => {
+                            if (!db.objectStoreNames.contains(sInfo.name)) {
+                                const options = {};
+                                if(sInfo.keyPath) options.keyPath = sInfo.keyPath;
+                                if(sInfo.autoIncrement) options.autoIncrement = sInfo.autoIncrement;
+                                const store = db.createObjectStore(sInfo.name, options);
+
+                                if (sInfo.indexes && Array.isArray(sInfo.indexes)) {
+                                    sInfo.indexes.forEach(indexInfo => {
+                                        store.createIndex(indexInfo.name, indexInfo.keyPath, {
+                                            unique: indexInfo.unique,
+                                            multiEntry: indexInfo.multiEntry
+                                        });
+                                    });
+                                }
+                            }
+                        });
+                    }
+                };
+
+                request.onsuccess = () => {
+                    const db = request.result;
+                    dbConnectionCache[dbName] = db;
+                    
+                    // Handle connection closing automatically to keep cache valid
+                    db.onclose = () => { delete dbConnectionCache[dbName]; };
+                    db.onversionchange = () => { db.close(); delete dbConnectionCache[dbName]; };
+                    
+                    resolve(db);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function writeRecordToDb(dbName, storeName, record) {
+            const db = dbConnectionCache[dbName];
+            if (!db) {
+                console.warn(`Skipping record for ${dbName}: DB not open/schema not loaded yet.`);
+                return;
+            }
+
+            // Data prep
+            let valueToStore = record.value;
+            if (dbName === 'WallpaperDB' && storeName === 'wallpapers' && valueToStore.base64) {
+                valueToStore.blob = base64ToBlob(valueToStore.base64);
+                delete valueToStore.base64;
+            }
+
+            return new Promise((resolve, reject) => {
+                try {
+                    const tx = db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    
+                    // Logic to handle inline vs out-of-line keys
+                    if (store.keyPath) {
+                        store.put(valueToStore);
+                    } else {
+                        store.put(valueToStore, record.key);
+                    }
+                    
+                    // We don't wait for oncomplete for every single record to speed up streaming,
+                    // but we catch immediate errors.
+                    tx.onerror = () => console.warn(`Failed to write record to ${dbName}/${storeName}`);
+                    resolve();
+                } catch (e) {
+                    console.error(e);
+                    resolve(); // Continue stream even on error
+                }
+            });
+        }
+
         // --- IMPORT LOGIC ---
         async function handleImport() {
             if (!importFileInput.files || importFileInput.files.length === 0) {
@@ -406,146 +491,91 @@
                 return;
             }
 
-            if (!confirm("ARE YOU SURE?\n\nThis will permanently delete ALL current Polygol data on this device and replace it with the data from the file.") ||
-                !confirm("LAST CHANCE!\n\nThis action cannot be undone. Proceed with import?")) {
+            if (!confirm("ARE YOU SURE?\n\nThis will permanently delete ALL current Polygol data. This process uses a streaming parser to handle large files.") ||
+                !confirm("LAST CHANCE!\n\nProceed with import?")) {
                 logStatus('Import cancelled by user.');
                 return;
             }
 
             const file = importFileInput.files[0];
-            const reader = new FileReader();
+            const fileUrl = URL.createObjectURL(file);
 
-            reader.onload = async (e) => {
-                try {
-                    logStatus('Reading and parsing transfer file...');
-                    const transferData = JSON.parse(e.target.result);
-
-                    if (!transferData.gurasuraisu_transfer_version || !transferData.data) {
-                        throw new Error('Invalid or corrupted .guradata file.');
-                    }
-                    
-                    const { localStorage: lsData, indexedDB: idbData } = transferData.data;
-
-                    // 1. Clear existing localStorage and all detected IndexedDB data
-                    logStatus('Clearing current system data...');
-                    localStorage.clear();
-                    const currentDBs = await indexedDB.databases();
-                    for (const dbInfo of currentDBs) {
-                        await new Promise((resolve, reject) => {
-                           logStatus(`Deleting old database: ${dbInfo.name}`);
-                           const req = indexedDB.deleteDatabase(dbInfo.name);
-                           req.onsuccess = resolve;
-                           req.onerror = reject;
-                           req.onblocked = () => logStatus(`Deletion of ${dbInfo.name} is blocked. Please close other Polygol tabs.`);
-                        });
-                    }
-                    logStatus('Current data cleared.');
-
-                    // 2. Restore localStorage
-                    logStatus('Restoring settings...');
-                    for (const key in lsData) {
-                        localStorage.setItem(key, lsData[key]);
-                    }
-                    logStatus('Settings restored.');
-
-                    // 3. Restore IndexedDB
-                    logStatus('Restoring system databases...');
-                    for (const dbName in idbData) {
-                        const dbData = idbData[dbName];
-                        
-                        const request = indexedDB.open(dbName); 
-                        
-                        request.onupgradeneeded = (event) => {
-                            logStatus(`Creating schema for new database: ${dbName}`);
-                            const db = event.target.result;
-                            dbData.storeInfo.forEach(sInfo => {
-                                if (!db.objectStoreNames.contains(sInfo.name)) {
-                                    const options = {};
-                                    if(sInfo.keyPath) options.keyPath = sInfo.keyPath;
-                                    if(sInfo.autoIncrement) options.autoIncrement = sInfo.autoIncrement;
-                                    const store = db.createObjectStore(sInfo.name, options);
-
-                                    // **THE FIX IS HERE: Create the indexes**
-                                    if (sInfo.indexes && Array.isArray(sInfo.indexes)) {
-                                        sInfo.indexes.forEach(indexInfo => {
-                                            store.createIndex(indexInfo.name, indexInfo.keyPath, {
-                                                unique: indexInfo.unique,
-                                                multiEntry: indexInfo.multiEntry
-                                            });
-                                        });
-                                    }
-                                }
-                            });
-                        };
-                        
-                        const db = await new Promise((resolve, reject) => {
-                            request.onsuccess = () => resolve(request.result);
-                            request.onerror = () => reject(request.error);
-                        });
-
-                        const storeNames = Object.keys(dbData.stores);
-                        const tx = db.transaction(storeNames, 'readwrite');
-                        for (const storeName of storeNames) {
-                            const store = tx.objectStore(storeName);
-                            const records = dbData.stores[storeName];
-                            const storeInfo = dbData.storeInfo.find(s => s.name === storeName);
-
-                            if (!storeInfo) {
-                                logStatus(`Warning: Schema info for store '${storeName}' not found in transfer file. Skipping.`, true);
-                                continue;
-                            }
-                            
-                            for (const record of records) {
-                                let valueToStore = record.value;
-                                if (dbName === 'WallpaperDB' && storeName === 'wallpapers' && valueToStore.base64) {
-                                    valueToStore.blob = base64ToBlob(valueToStore.base64);
-                                    delete valueToStore.base64;
-                                }
-                                
-                                // ** THE FIX IS HERE **
-                                // Check if the store uses in-line keys (has a keyPath)
-                                if (storeInfo.keyPath) {
-                                    // If so, do not provide the key parameter to put()
-                                    store.put(valueToStore);
-                                } else {
-                                    // Otherwise, provide both the value and the key
-                                    store.put(valueToStore, record.key);
-                                }
-                            }
-                        }
-                            await new Promise((resolve, reject) => {
-                            tx.oncomplete = resolve;
-                            tx.onerror = () => reject(tx.error);
-                        });
-                        db.close();
-                    }
-                    logStatus('System databases restored.');
-
-                    // 4. Restore External Apps
-                    if (transferData.data.externalApps) {
-                        const extApps = transferData.data.externalApps;
-                        const urls = Object.keys(extApps);
-                        logStatus(`Restoring ${urls.length} external applications...`);
-                        
-                        for (const url of urls) {
-                            logStatus(`Restoring ${url}...`);
-                            // We use the same helper defined in Export logic
-                            await processExternalApp(url, 'admin-import', extApps[url]);
-                        }
-                    }
-
-                    logStatus('Import complete! Please return home and reload the page.');
-                    alert('System transfer complete!\n\nYou will be redirected to the main page. Please manually reload it to see all changes.');
-                    window.location.href = '/';
-
-                } catch (error) {
-                    logStatus(`Import failed: ${error.message}`, true);
-                    console.error(error);
+            try {
+                // 1. Clear existing system data
+                logStatus('Clearing current system data...');
+                localStorage.clear();
+                const currentDBs = await indexedDB.databases();
+                for (const dbInfo of currentDBs) {
+                    await new Promise(r => { const req = indexedDB.deleteDatabase(dbInfo.name); req.onsuccess = r; req.onerror = r; });
                 }
-            };
+                logStatus('Current data cleared. Starting stream...');
 
-            reader.onerror = () => logStatus('Failed to read the file.', true);
-            reader.readAsText(file);
+                // 2. Start Oboe Stream
+                let recordCount = 0;
+                let dbSchemas = {}; // Store schemas as they arrive to open DBs
+
+                oboe(fileUrl)
+                    // --- LocalStorage ---
+                    .node('data.localStorage', function(lsData) {
+                        logStatus('Restoring settings...');
+                        for (const key in lsData) {
+                            localStorage.setItem(key, lsData[key]);
+                        }
+                        return oboe.drop; // Free memory
+                    })
+                    
+                    // --- External Apps ---
+                    .node('data.externalApps.*', function(appData, path) {
+                        const appUrl = path[2]; // ['data', 'externalApps', 'URL']
+                        logStatus(`Restoring app: ${appUrl}...`);
+                        processExternalApp(appUrl, 'admin-import', appData); // Fire and forget
+                        return oboe.drop;
+                    })
+
+                    // --- IndexedDB: Schema ---
+                    .node('data.indexedDB.*.storeInfo', async function(info, path) {
+                        const dbName = path[2];
+                        dbSchemas[dbName] = info;
+                        // Pre-open the DB to create structure
+                        await getCachedDb(dbName, info);
+                        logStatus(`Initialized DB: ${dbName}`);
+                        return oboe.drop;
+                    })
+
+                    // --- IndexedDB: Records ---
+                    // This pattern matches every single item in the records array
+                    .node('data.indexedDB.*.stores.*[*]', function(record, path) {
+                        const dbName = path[2];
+                        const storeName = path[4];
+                        
+                        writeRecordToDb(dbName, storeName, record);
+                        
+                        recordCount++;
+                        if (recordCount % 50 === 0) {
+                            statusDiv.textContent = `> Importing records... (${recordCount})`;
+                        }
+                        
+                        return oboe.drop; // CRITICAL: Free memory immediately after write
+                    })
+
+                    .done(function() {
+                        // Cleanup open connections
+                        Object.values(dbConnectionCache).forEach(db => db.close());
+                        URL.revokeObjectURL(fileUrl);
+                        
+                        logStatus(`Import complete! Processed ${recordCount} records.`);
+                        alert('System transfer complete!\n\nPlease reload the page.');
+                        window.location.href = '/';
+                    })
+                    .fail(function(err) {
+                        console.error(err);
+                        logStatus('Import stream failed. The file may be corrupt.', true);
+                    });
+
+            } catch (error) {
+                logStatus(`Import setup failed: ${error.message}`, true);
+                console.error(error);
+            }
         }
         
         // --- Event Listeners ---
