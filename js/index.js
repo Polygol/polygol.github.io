@@ -208,14 +208,34 @@ KeyboardNavigationManager.init();
 // --- Color Filter Logic ---
 function applyColorFilter() {
     const mode = localStorage.getItem('colorFilter') || 'none';
-    const html = document.documentElement;
+    let overlay = document.getElementById('a11y-overlay');
     
-    // Remove existing filter classes
-    html.classList.remove('filter-grayscale', 'filter-invert', 'filter-protanopia', 'filter-deuteranopia', 'filter-tritanopia');
-    
-    if (mode !== 'none') {
-        html.classList.add(`filter-${mode}`);
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'a11y-overlay';
+        document.body.appendChild(overlay);
     }
+    
+    if (mode === 'none') {
+        overlay.style.display = 'none';
+        overlay.style.backdropFilter = 'none';
+        overlay.style.webkitBackdropFilter = 'none';
+        return;
+    }
+
+    overlay.style.display = 'block';
+    
+    let filterVal = '';
+    switch (mode) {
+        case 'grayscale': filterVal = 'grayscale(1)'; break;
+        case 'invert': filterVal = 'invert(1)'; break;
+        case 'protanopia': filterVal = 'url("#a11y-protanopia")'; break;
+        case 'deuteranopia': filterVal = 'url("#a11y-deuteranopia")'; break;
+        case 'tritanopia': filterVal = 'url("#a11y-tritanopia")'; break;
+    }
+    
+    overlay.style.backdropFilter = filterVal;
+    overlay.style.webkitBackdropFilter = filterVal;
 }
 
 // Inject SVG Filters for Color Blindness
