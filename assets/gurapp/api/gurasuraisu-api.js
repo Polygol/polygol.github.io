@@ -823,7 +823,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
 
         const svgFilterHtml = `
             <svg style="display: none">
-                <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
+                <filter id="edge-refraction-only" color-interpolation-filters="linearRGB"color-rendering="optimizeSpeed"shape-rendering="crispEdges">
                     <feComposite operator="out"></feComposite>
                     <feComposite result="distMap"></feComposite>
                     <feDisplacementMap in="SourceGraphic" scale="15" result="pass1"></feDisplacementMap>
