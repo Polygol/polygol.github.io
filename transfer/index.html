@@ -181,27 +181,38 @@
             });
         }
 
-        async function getStoreData(db, storeName) {
+        // Efficiently streams records into the zipData object one-by-one
+        async function streamStoreToZip(db, storeName, dbName, zipData) {
             return new Promise((resolve, reject) => {
                 const transaction = db.transaction(storeName, 'readonly');
                 const store = transaction.objectStore(storeName);
-                const records = [];
-                
-                // Use cursor for memory efficiency (avoids loading all keys + all values simultaneously)
                 const request = store.openCursor();
+                let count = 0;
                 
-                request.onsuccess = (event) => {
+                request.onsuccess = async (event) => {
                     const cursor = event.target.result;
                     if (cursor) {
-                        // We return raw values here. 
-                        // Blob processing/conversion happens in the main handleExport function now.
-                        records.push({ key: cursor.key, value: cursor.value });
+                        const key = cursor.key;
+                        let val = cursor.value;
+                        const recordPath = `idb/${dbName}/${storeName}/rec_${count}`;
+
+                        // 1. Handle Blobs
+                        if (val instanceof Blob || (val && val.blob instanceof Blob)) {
+                            const b = val.blob || val;
+                            zipData[`${recordPath}.bin`] = new Uint8Array(await b.arrayBuffer());
+                            val = { _type: 'bin_ref', mime: b.type }; 
+                        }
+
+                        // 2. Store individual record metadata/object as tiny JSON
+                        // Stringifying a single record is safe; stringifying an array of 10,000 is not.
+                        zipData[`${recordPath}.json`] = fflate.strToU8(JSON.stringify({ key, value: val }));
+                        
+                        count++;
                         cursor.continue();
                     } else {
-                        resolve(records);
+                        resolve(count);
                     }
                 };
-                
                 request.onerror = () => reject(request.error);
             });
         }
@@ -262,7 +273,7 @@
             });
         }
 
-// --- EXPORT LOGIC (ZIP) ---
+        // --- EXPORT LOGIC (ZIP) ---
         async function handleExport() {
             logStatus('Starting export (v2 - Binary)...');
             const exportBtn = document.getElementById('export-btn');
@@ -290,71 +301,34 @@
                 
                 for (const dbInfo of dbs) {
                     const dbName = dbInfo.name;
-                    logStatus(`Backing up DB: ${dbName}...`);
+                    logStatus(`Saving data: ${dbName}...`);
                     
                     try {
                         const db = await openDb(dbName);
                         const storeNames = Array.from(db.objectStoreNames);
-                        
-                        // Collect Schema
                         const schemaInfo = [];
-                        const tx = db.transaction(storeNames, 'readonly');
                         
                         for (const storeName of storeNames) {
+                            // Extract Schema
+                            const tx = db.transaction(storeName, 'readonly');
                             const store = tx.objectStore(storeName);
-                            
-                            // Schema
-                            const indexNames = Array.from(store.indexNames);
-                            const indexes = indexNames.map(indexName => {
-                                const index = store.index(indexName);
-                                return { name: index.name, keyPath: index.keyPath, unique: index.unique, multiEntry: index.multiEntry };
-                            });
-                            
                             schemaInfo.push({
                                 name: store.name,
                                 keyPath: store.keyPath,
                                 autoIncrement: store.autoIncrement,
-                                indexes: indexes
+                                indexes: Array.from(store.indexNames).map(n => {
+                                    const i = store.index(n);
+                                    return { name: i.name, keyPath: i.keyPath, unique: i.unique };
+                                })
                             });
-
-                            // Data
-                            const records = await getStoreData(db, storeName);
                             
-                            // Process Records for Blobs
-                            for (let i = 0; i < records.length; i++) {
-                                const rec = records[i];
-                                let val = rec.value;
-
-                                // WallpaperDB Specific: Handle blob objects
-                                if (val && val.blob instanceof Blob) {
-                                    const blob = val.blob;
-                                    const buffer = new Uint8Array(await blob.arrayBuffer());
-                                    const blobPath = `indexedDB/${dbName}/${storeName}_blobs/${i}.bin`;
-                                    
-                                    // Add binary to ZIP
-                                    zipData[blobPath] = buffer;
-                                    
-                                    // Replace in JSON with reference
-                                    val.blob = { _type: 'blob_ref', path: blobPath, mime: blob.type };
-                                }
-                                // Handle direct Blobs if any (generic)
-                                else if (val instanceof Blob) {
-                                    const buffer = new Uint8Array(await val.arrayBuffer());
-                                    const blobPath = `indexedDB/${dbName}/${storeName}_blobs/${i}_raw.bin`;
-                                    zipData[blobPath] = buffer;
-                                    rec.value = { _type: 'blob_ref', path: blobPath, mime: val.type };
-                                }
-                            }
-                            
-                            zipData[`indexedDB/${dbName}/${storeName}.json`] = fflate.strToU8(JSON.stringify(records));
+                            // Stream Data directly into zipData object
+                            await streamStoreToZip(db, storeName, dbName, zipData);
                         }
                         
-                        zipData[`indexedDB/${dbName}/schema.json`] = fflate.strToU8(JSON.stringify(schemaInfo));
+                        zipData[`idb/${dbName}/_schema.json`] = fflate.strToU8(JSON.stringify(schemaInfo));
                         db.close();
-
-                    } catch (e) {
-                        console.warn(`Skipping DB ${dbName}`, e);
-                    }
+                    } catch (e) { console.warn(e); }
                 }
 
                 // 4. External Apps
