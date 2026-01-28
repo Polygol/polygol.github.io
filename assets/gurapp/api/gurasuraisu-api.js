@@ -1607,11 +1607,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                               const processedRecords = [];
                               for (let i = 0; i < records.length; i++) {
-                                  let val = records[i];
-                                  // Serialize Blobs
-                                  if (val instanceof Blob) val = { _isBlob: true, data: await blobToBase64(val) };
-                                  // Handle object/array structures containing blobs if necessary (simplified here)
-                                  processedRecords.push({ key: keys[i], value: val });
+                                  processedRecords.push({ key: keys[i], value: records[i] });
                               }
                               idbData[dbName].stores[storeName] = processedRecords;
                           }
@@ -1666,14 +1662,16 @@ document.addEventListener('DOMContentLoaded', () => {
                           });
 
                           const tx = db.transaction(Object.keys(dbInfo.stores), 'readwrite');
-                          for (const storeName in dbInfo.stores) {
+                              for (const storeName in dbInfo.stores) {
                               const store = tx.objectStore(storeName);
                               const records = dbInfo.stores[storeName];
                               const sInfo = dbInfo.storeInfo.find(x => x.name === storeName);
 
                               for (const rec of records) {
                                   let val = rec.value;
-                                  if (val && val._isBlob) val = base64ToBlob(val.data);
+                                  // Backward Compatibility: Only convert if it's a legacy Base64 container
+                                  if (val && val._isBlob && typeof val.data === 'string') val = base64ToBlob(val.data);
+                                  
                                   if (sInfo && sInfo.keyPath) store.put(val);
                                   else store.put(val, rec.key);
                               }
