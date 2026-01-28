@@ -118,6 +118,14 @@
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
+                <div class="setting-item nav-item" data-page="page-a11y">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">accessible_forward</span>
+                        <span class="setting-label">Accessibility</span>
+                        <span class="setting-description">Personalize Polygol in ways that work best for you</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
             </div>
              <div class="setting-section">
                 <div class="setting-item nav-item" data-page="page-data">
@@ -185,24 +193,6 @@
                     </div>
                     <div class="setting-control">
                         <input type="checkbox" class="toggle-switch" id="tint-colors-switch" data-key="tintEnabled">
-                    </div>
-                </div>
-                <div class="setting-item" id="setting-animationsEnabled">
-                    <div class="setting-info">
-                        <span class="setting-label">Motion</span>
-                        <span class="setting-description">Enable animations</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" data-key="animationsEnabled">
-                    </div>
-                </div>
-                <div class="setting-item" id="setting-highContrast">
-                    <div class="setting-info">
-                        <span class="setting-label">Contrast</span>
-                        <span class="setting-description">Reduce visual complexity</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" data-key="highContrast">
                     </div>
                 </div>
                 <div class="setting-item">
@@ -493,16 +483,6 @@
                                data-key="gurappsEnabled">
                     </div>
                 </div>
-                <div class="setting-item" id="setting-oneButtonNavEnabled">
-                    <div class="setting-info">
-                        <span class="setting-label">Disable Gestures</span>
-                        <span class="setting-description">Use a button at the bottom to control Gurapps<br>Click once to open the Dock/close current Gurapp/close App Drawer<br>Click twice to open the App Drawer on Home Screen</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" 
-                               data-key="oneButtonNavEnabled">
-                    </div>
-                </div>
             </div>
             <div class="setting-section">
                 <h2 class="section-title">Browser</h2>
@@ -601,6 +581,53 @@
                     <input type="checkbox" class="toggle-switch" 
                            data-key="use12HourFormat">
                 </div>
+            </div>
+        </div>
+        <!-- Accessibility Page -->
+        <div class="page" id="page-a11y">
+            <div class="setting-section">
+                <h2 class="section-title">Vision</h2>
+                <div class="setting-item" id="setting-animationsEnabled">
+                    <div class="setting-info">
+                        <span class="setting-label">Motion</span>
+                        <span class="setting-description">Enable animations</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" data-key="animationsEnabled">
+                    </div>
+                </div>
+                <div class="setting-item" id="setting-highContrast">
+                    <div class="setting-info">
+                        <span class="setting-label">Contrast</span>
+                        <span class="setting-description">Reduce visual complexity</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" data-key="highContrast">
+                    </div>
+                </div>
+                <div class="setting-item slider-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Display Zoom</span>
+                        <span class="setting-description">Scale the interface size</span>
+                    </div>
+                    <input type="range" min="75" max="150" value="100" class="styled-slider" data-key="displayScale">
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Motor</h2>
+                <div class="setting-item" id="setting-oneButtonNavEnabled">
+                    <div class="setting-info">
+                        <span class="setting-label">Disable Gestures</span>
+                        <span class="setting-description">Use a button at the bottom to control Gurapps<br>Click once to open the Dock/close current Gurapp/close App Drawer<br>Click twice to open the App Drawer on Home Screen</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" 
+                               data-key="oneButtonNavEnabled">
+                    </div>
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Hearing</h2>
             </div>
         </div>
         <!-- About Page -->
