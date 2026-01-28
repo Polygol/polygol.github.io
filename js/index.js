@@ -1854,18 +1854,9 @@ function renderWidgets() {
             finalY = Math.max(MARGIN, Math.min(finalY, gridContainer.offsetHeight - instance.offsetHeight - MARGIN));
 
             const widgetRect = { left: finalX, top: finalY, right: finalX + instance.offsetWidth, bottom: finalY + instance.offsetHeight };
-            
-            // Check for overlap with the clock container
-            const isOverlappingClock = !(widgetRect.right < clockRect.left || widgetRect.left > clockRect.right || widgetRect.bottom < clockRect.top || widgetRect.top > clockRect.bottom);
 
-            // UPDATED LOGIC: If it's a sticker, ignore clock collision. If it's a normal widget, enforce it.
-            if (widgetData.type !== 'sticker' && isOverlappingClock) {
-                // Collision with clock, do not update position (Standard Widgets)
-            } else {
-                // No collision OR it's a sticker (allow overlap)
-                instance.style.left = `${finalX}px`;
-                instance.style.top = `${finalY}px`;
-            }
+			instance.style.left = `${finalX}px`;
+            instance.style.top = `${finalY}px`;
         };
 		
         const onDragEnd = () => {
