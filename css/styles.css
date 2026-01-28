@@ -3854,8 +3854,8 @@ input[type="checkbox"]:checked::before {
 
         @media (min-width: 800px) {
             .app-drawer {
-                left: 5vw;
-                width: 90vw;
+                left: 5%;
+                width: 90%;
                 border: 1px solid var(--glass-border);
 				border-radius: 50px;
 				corner-shape: superellipse(1.5);
