@@ -13343,6 +13343,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     const storedTemperature = localStorage.getItem('display_temperature') || '0';
     const storedBrightness = localStorage.getItem('page_brightness') || '100';
     const storedDisplayScale = localStorage.getItem('displayScale') || '100';
+
+    // Night Stand Variables
+    let nightStandActive = false;
+    let preNightStandBrightness = '100';
     
     // Get elements using your existing IDs
     const lightModeControl = document.getElementById('light_mode_qc');
@@ -13363,6 +13367,75 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Brightness elements
 	const brightnessSlider = document.getElementById('brightness-control');
     const screenCurveSlider = document.getElementById('screen-curve-slider');
+
+    // --- Night Stand Logic ---
+    function checkNightStand() {
+        const enabled = localStorage.getItem('nightStandEnabled') === 'true';
+        if (!enabled) {
+            if (nightStandActive) toggleNightStand(false);
+            return;
+        }
+
+        const start = localStorage.getItem('nightStandStart') || '22:00';
+        const end = localStorage.getItem('nightStandEnd') || '07:00';
+        
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        
+        const [startH, startM] = start.split(':').map(Number);
+        const [endH, endM] = end.split(':').map(Number);
+        const startTime = startH * 60 + startM;
+        const endTime = endH * 60 + endM;
+        
+        let shouldBeActive = false;
+        
+        if (endTime < startTime) {
+            // Spans midnight (e.g. 22:00 to 07:00)
+            shouldBeActive = currentTime >= startTime || currentTime < endTime;
+        } else {
+            // Same day (e.g. 01:00 to 05:00)
+            shouldBeActive = currentTime >= startTime && currentTime < endTime;
+        }
+        
+        if (shouldBeActive !== nightStandActive) {
+            toggleNightStand(shouldBeActive);
+        }
+    }
+
+    function toggleNightStand(active) {
+        nightStandActive = active;
+        
+        if (active) {
+            console.log('[System] Entering Night Stand Mode');
+            // Save current brightness
+            preNightStandBrightness = localStorage.getItem('page_brightness') || '100';
+            
+            // Force Night Mode
+            if (!nightMode) document.getElementById('night-mode-qc').click();
+            
+            // Apply Red Tint & Hide Wallpaper via CSS class
+            document.body.classList.add('night-stand-active');
+            
+            // Set Dim Brightness
+            const dimLevel = localStorage.getItem('nightStandBrightness') || '40';
+            // Update slider UI and overlay without saving to main LS key (preserve user pref)
+            if (brightnessSlider) brightnessSlider.value = dimLevel;
+            updateBrightness(dimLevel);
+            
+        } else {
+            console.log('[System] Exiting Night Stand Mode');
+            document.body.classList.remove('night-stand-active');
+            
+            // Restore Brightness
+            if (brightnessSlider) brightnessSlider.value = preNightStandBrightness;
+            updateBrightness(preNightStandBrightness);
+        }
+    }
+
+    // Check every minute
+    setInterval(checkNightStand, 60000);
+    // Initial check
+    setTimeout(checkNightStand, 2000);
 
 	if (screenCurveSlider) {
         const applyScreenCurve = (val) => {
@@ -14232,6 +14305,10 @@ function listCommonSettings() {
         'selectedLanguage': localStorage.getItem('selectedLanguage'),
 		'displayScale': localStorage.getItem('displayScale'),
 		'smartDisplayZoom': localStorage.getItem('smartDisplayZoom'),
+		'nightStandEnabled': localStorage.getItem('nightStandEnabled'),
+		'nightStandStart': localStorage.getItem('nightStandStart'),
+		'nightStandEnd': localStorage.getItem('nightStandEnd'),
+		'nightStandBrightness': localStorage.getItem('nightStandBrightness'),
     };
 }
 
@@ -14915,7 +14992,11 @@ const controlIdMap = {
     'letterSpacing': 'clock-spacing-slider',
     'textCase': 'text-case-select',
     'dateSize': 'date-size-slider',
-    'dateOffset': 'date-offset-slider'
+    'dateOffset': 'date-offset-slider',
+    'nightStandEnabled': 'nightStandEnabled',
+    'nightStandStart': 'nightStandStart',
+    'nightStandEnd': 'nightStandEnd',
+    'nightStandBrightness': 'nightStandBrightness'
 };
 
 // --- NEW: Function to broadcast a setting update to the settings app ---
@@ -14939,7 +15020,8 @@ function setControlValueAndDispatch(key, value) {
     const settingsWithoutDirectControl = [
         'sleepModeStyle', 'slideshowInterval', 'hideClockIndicator',
         'autoSleepEnabled', 'autoSleepDuration', 'autoSleepScope',
-		'resourceManagerEnabled', 'displayScale', 'smartDisplayZoom'
+		'resourceManagerEnabled', 'displayScale', 'smartDisplayZoom',
+        'nightStandEnabled', 'nightStandStart', 'nightStandEnd', 'nightStandBrightness'
     ];
     if (settingsWithoutDirectControl.includes(key)) {
         localStorage.setItem(key, value);
@@ -14969,6 +15051,10 @@ function setControlValueAndDispatch(key, value) {
                 const manualScale = localStorage.getItem('displayScale') || '100';
                 document.body.style.zoom = `${manualScale}%`;
             }
+        }
+        return;
+        if (key.startsWith('nightStand')) {
+            checkNightStand();
         }
         return;
     }
