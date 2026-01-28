@@ -6308,88 +6308,107 @@ function checkForAutomaticBackup() {
 
 // Function to create the backup file and notify the user
 async function createAutomaticBackup() {
+    // Dynamic load of fflate
+    if (typeof fflate === 'undefined') {
+        await new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/fflate@0.8.0';
+            script.onload = resolve;
+            document.head.appendChild(script);
+        });
+    }
+
     showPopup(currentLanguage.BACKUP_STARTED || 'Starting automatic backup');
+    
     try {
-        // 1. Gather localStorage
+        const zipData = {};
+        const meta = { version: "2.0", timestamp: new Date().toISOString(), type: "auto-backup" };
+        zipData['meta.json'] = fflate.strToU8(JSON.stringify(meta));
+
+        // 1. LocalStorage
         const localStorageData = {};
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key) { // Ensure key is not null
-                 localStorageData[key] = localStorage.getItem(key);
-            }
+            if (key) localStorageData[key] = localStorage.getItem(key);
         }
+        zipData['localStorage.json'] = fflate.strToU8(JSON.stringify(localStorageData));
 
-        // 2. Dynamically gather IndexedDB data and schema
-        const indexedDbData = {};
+        // 2. IndexedDB (Binary Efficient)
         const dbs = await indexedDB.databases();
         for (const dbInfo of dbs) {
-             const dbName = dbInfo.name;
-             try {
+            const dbName = dbInfo.name;
+            try {
                 const db = await initDbForBackup(dbName);
-                indexedDbData[dbName] = {
-                    stores: {},
-                    storeInfo: []
-                };
                 const storeNames = Array.from(db.objectStoreNames);
-
-                const tempTx = db.transaction(storeNames, 'readonly');
+                const schemaInfo = [];
+                
+                const tx = db.transaction(storeNames, 'readonly');
+                
                 for (const storeName of storeNames) {
-                     const store = tempTx.objectStore(storeName);
-                     const indexNames = Array.from(store.indexNames);
-                     const indexes = indexNames.map(indexName => {
-                         const index = store.index(indexName);
-                         return {
-                             name: index.name,
-                             keyPath: index.keyPath,
-                             unique: index.unique,
-                             multiEntry: index.multiEntry
-                         };
-                     });
-                     indexedDbData[dbName].storeInfo.push({
-                         name: store.name,
-                         keyPath: store.keyPath,
-                         autoIncrement: store.autoIncrement,
-                         indexes: indexes
-                     });
-                }
+                    const store = tx.objectStore(storeName);
+                    // Schema extraction
+                    const indexes = Array.from(store.indexNames).map(idx => {
+                        const i = store.index(idx);
+                        return { name: i.name, keyPath: i.keyPath, unique: i.unique, multiEntry: i.multiEntry };
+                    });
+                    schemaInfo.push({
+                        name: store.name,
+                        keyPath: store.keyPath,
+                        autoIncrement: store.autoIncrement,
+                        indexes: indexes
+                    });
 
-                for (const storeName of storeNames) {
-                    indexedDbData[dbName].stores[storeName] = await getStoreDataForBackup(db, storeName);
+                    // Data extraction
+                    const records = await getStoreDataForBackup(db, storeName);
+                    
+                    // Binary processing
+                    for (let i = 0; i < records.length; i++) {
+                        const rec = records[i];
+                        if (rec.value && rec.value.blob instanceof Blob) {
+                            const blob = rec.value.blob;
+                            const buf = new Uint8Array(await blob.arrayBuffer());
+                            const path = `indexedDB/${dbName}/${storeName}_blobs/${i}.bin`;
+                            zipData[path] = buf;
+                            rec.value.blob = { _type: 'blob_ref', path: path, mime: blob.type };
+                        }
+                    }
+                    
+                    zipData[`indexedDB/${dbName}/${storeName}.json`] = fflate.strToU8(JSON.stringify(records));
                 }
+                
+                zipData[`indexedDB/${dbName}/schema.json`] = fflate.strToU8(JSON.stringify(schemaInfo));
                 db.close();
-            } catch (dbError) {
-                console.warn(`Could not access DB for backup: ${dbName}. Skipping.`, dbError);
+            } catch (e) {
+                console.warn(`Backup skipped DB ${dbName}`, e);
             }
         }
 
-        // 3. Package data
-        const transferData = {
-            gurasuraisu_transfer_version: "1.2", // Match new version with schema
-            export_timestamp: new Date().toISOString(),
-            data: {
-                localStorage: localStorageData,
-                indexedDB: indexedDbData,
-            },
-        };
-
-        const backupBlob = new Blob([JSON.stringify(transferData, null, 2)], { type: 'application/json' });
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const fileName = `polygol_backup_${timestamp}.guradata`;
-        
-        // 4. Update timestamp and notify user
-        localStorage.setItem('lastBackupTimestamp', Date.now().toString());
-        
-		if (await showCustomConfirm(currentLanguage.BACKUP_READY || 'Weekly backup is ready. Download now?')) {
-			downloadBackupFile(backupBlob, fileName);
-        }
+        // 3. Compress
+        fflate.zip(zipData, { level: 1 }, (err, data) => {
+            if (err) {
+                console.error(err);
+                showPopup("Backup failed during compression.");
+                return;
+            }
+            
+            const backupBlob = new Blob([data], { type: 'application/zip' });
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `polygol_backup_${timestamp}.guradata`;
+            
+            localStorage.setItem('lastBackupTimestamp', Date.now().toString());
+            
+            // Notify user
+            showDialog({ 
+                type: 'confirm', 
+                title: 'Backup Ready', 
+                message: currentLanguage.BACKUP_READY || 'Weekly backup is ready. Download now?' 
+            }).then((result) => {
+                if (result) downloadBackupFile(backupBlob, fileName);
+            });
+        });
 
     } catch (error) {
         console.error('Automatic backup failed:', error);
-		showDialog({ 
-		    type: 'alert', 
-		    title: 'Automatic backup failed', 
-		    message: 'Please manually download your data using the System Transfer tool.' 
-		});
     }
 }
 
@@ -6426,37 +6445,21 @@ async function getStoreDataForBackup(db, storeName) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(storeName, 'readonly');
         const store = transaction.objectStore(storeName);
-        const request = store.getAll();
-        request.onsuccess = async () => {
-            const records = request.result;
-            if (db.name === 'WallpaperDB' && storeName === 'wallpapers') {
-                const keysRequest = store.getAllKeys();
-                keysRequest.onsuccess = async () => {
-                    const keys = keysRequest.result;
-                    const keyedRecords = [];
-                    for (let i = 0; i < records.length; i++) {
-                        let recordValue = records[i];
-                        if (recordValue.blob) {
-                            recordValue.base64 = await blobToBase64(recordValue.blob);
-                            delete recordValue.blob;
-                        }
-                        keyedRecords.push({ key: keys[i], value: recordValue });
-                    }
-                    resolve(keyedRecords);
-                };
-                keysRequest.onerror = reject;
+        const records = [];
+        
+        const request = store.openCursor();
+        
+        request.onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                records.push({ key: cursor.key, value: cursor.value });
+                cursor.continue();
             } else {
-                 // For other DBs, also include keys for robust import
-                const keysRequest = store.getAllKeys();
-                keysRequest.onsuccess = () => {
-                    const keys = keysRequest.result;
-                    const keyedRecords = records.map((record, i) => ({ key: keys[i], value: record }));
-                    resolve(keyedRecords);
-                };
-                keysRequest.onerror = reject;
+                resolve(records);
             }
         };
-        request.onerror = reject;
+        
+        request.onerror = () => reject(request.error);
     });
 }
 
