@@ -611,12 +611,174 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
     // Conditionally add Gurasuraisu-specific styles.
     if (isInsideGurasuraisu) {
         css += `
-            /* Add CSS later */
+            html, body {
+                overscroll-behavior: none !important; /* Prevent swipe-to-back navigation */
+            }
+        
+            .a11y-focused {
+                outline: 4px solid var(--accent) !important;
+                outline-offset: -4px !important;
+                z-index: 999999 !important;
+                transition: outline 0.1s !important;
+            }
         `;
     }
 
     style.textContent = css;
     document.head.appendChild(style);
+
+    // Disable Ctrl+Wheel (Browser Zoom) inside Gurapps
+    if (isInsideGurasuraisu) {
+        window.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Prevent pinch-zoom gestures from scaling the page
+        window.addEventListener('touchmove', function(e) {
+            if (e.scale !== 1 && e.scale !== undefined) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    }
+
+    // --- Switch Control (Keyboard Navigation) ---
+    const KeyboardNavigationManager = {
+        enabled: false,
+        focusedIndex: -1,
+        interactiveElements: [],
+        
+        init() {
+            // Sync initial state
+            // Listen for keydown
+            window.addEventListener('keydown', (e) => this.handleKey(e));
+        },
+        
+        setEnabled(state) {
+            this.enabled = state === 'true' || state === true;
+        },
+
+        scan() {
+            const all = document.querySelectorAll('*');
+            this.interactiveElements = [];
+            
+            const isVisible = (el) => {
+                const style = window.getComputedStyle(el);
+                return style.display !== 'none' && 
+                       style.visibility !== 'hidden' && 
+                       style.opacity !== '0';
+            };
+
+            for (let el of all) {
+                if (!isVisible(el)) continue;
+
+                const tag = el.tagName;
+                const style = window.getComputedStyle(el);
+                const role = el.getAttribute('role');
+                
+                const isClickable = 
+                    style.cursor === 'pointer' || 
+                    tag === 'BUTTON' || 
+                    tag === 'INPUT' || 
+                    tag === 'SELECT' || 
+                    tag === 'A' || 
+                    tag === 'TEXTAREA' ||
+                    role === 'button' ||
+                    el.onclick != null;
+
+                if (isClickable) {
+                    this.interactiveElements.push(el);
+                }
+            }
+        },
+
+        handleKey(e) {
+            if (!this.enabled) return;
+
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Scan if empty or invalid
+                if (this.interactiveElements.length === 0 || 
+                    (this.focusedIndex >= 0 && !document.body.contains(this.interactiveElements[this.focusedIndex]))) {
+                    this.scan();
+                }
+                
+                // If still empty, exit immediately
+                if (this.interactiveElements.length === 0) {
+                     Gurasuraisu._call('switchControlExit', [e.shiftKey ? 'backward' : 'forward']);
+                     return;
+                }
+
+                if (e.shiftKey) {
+                    this.focusedIndex--;
+                    if (this.focusedIndex < 0) {
+                        // Exit Backward
+                        this.focusedIndex = -1;
+                        this.updateFocus();
+                        Gurasuraisu._call('switchControlExit', ['backward']);
+                        return;
+                    }
+                } else {
+                    this.focusedIndex++;
+                    if (this.focusedIndex >= this.interactiveElements.length) {
+                        // Exit Forward
+                        this.focusedIndex = -1;
+                        this.updateFocus();
+                        Gurasuraisu._call('switchControlExit', ['forward']);
+                        return;
+                    }
+                }
+                
+                this.updateFocus();
+            }
+
+            if (e.key === 'Enter' || e.key === ' ') {
+                if (this.focusedIndex >= 0 && this.interactiveElements[this.focusedIndex]) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const el = this.interactiveElements[this.focusedIndex];
+                    el.click();
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.focus();
+                }
+            }
+        },
+
+        updateFocus() {
+            document.querySelectorAll('.a11y-focused').forEach(el => el.classList.remove('a11y-focused'));
+            
+            if (this.focusedIndex >= 0 && this.interactiveElements[this.focusedIndex]) {
+                const el = this.interactiveElements[this.focusedIndex];
+                el.classList.add('a11y-focused');
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        },
+
+        startNavigation(direction) {
+            this.enabled = true; // Ensure enabled when handed off
+            this.scan();
+            if (this.interactiveElements.length === 0) {
+                // If nothing to focus, bounce back
+                Gurasuraisu._call('switchControlExit', [direction]);
+                return;
+            }
+
+            if (direction === 'forward') {
+                this.focusedIndex = 0;
+            } else {
+                this.focusedIndex = this.interactiveElements.length - 1;
+            }
+            this.updateFocus();
+            // Ensure window has focus so key events register
+            window.focus();
+        }
+    };
+    
+    if (isInsideGurasuraisu) {
+        KeyboardNavigationManager.init();
+    }
 
     // Inject SVG Filter for glass effects, overriding if one already exists
     document.addEventListener('DOMContentLoaded', () => {
@@ -1231,7 +1393,13 @@ window.addEventListener('message', async (event) => {
         if (data.key === 'silentMode') {
             _isSilentMode = (data.value === 'true');
         }
+        if (data.key === 'keyboardNavEnabled') {
+            KeyboardNavigationManager.setEnabled(data.value);
+        }
         break;
+      case 'switch-control-enter':
+          KeyboardNavigationManager.startNavigation(data.direction);
+          break;
       case 'dialog-response':
         if (data.requestId && _dialogCallbacks[data.requestId]) {
             _dialogCallbacks[data.requestId](data.value);
