@@ -647,6 +647,23 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             }
         }, { passive: false });
 
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            history.go(1);
+        };
+        
+        // 2. Block navigation keyboard shortcuts
+        window.addEventListener('keydown', (e) => {
+            const isNavigationKey = 
+                (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) || // Alt + Left/Right
+                (e.metaKey && (e.key === '[' || e.key === ']')); // Cmd + [ / ] (Mac)
+        
+            if (isNavigationKey) {
+                e.preventDefault();
+                console.log("[System] Browser navigation shortcut blocked.");
+            }
+        }, { capture: true });
+
         // Forward Global Shortcuts to System
         let isTabKeyDown = false;
         document.addEventListener('keydown', (e) => {
