@@ -17,6 +17,7 @@ function initializeSettingsApp() {
         'page-system': 'System',
         'page-data': 'Your Account',
         'page-general': 'General',
+        'page-a11y': 'Accessibility',
         'page-about': 'About',
         'page-storage': 'Manage Storage',
         'page-db-details': 'Database',
