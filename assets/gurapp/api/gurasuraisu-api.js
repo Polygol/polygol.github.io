@@ -1673,21 +1673,28 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Scans for elements using backdrop-filters and applies hardware acceleration hints.
      */
+    let backdropOptimizationTimer;
     function optimizeBackdropElements(root = document.body) {
-        if (!root) return;
-        const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
-        let node;
-        while (node = walker.nextNode()) {
-            const style = window.getComputedStyle(node);
-            if (style.backdropFilter !== 'none' || style.webkitBackdropFilter !== 'none') {
-                node.style.backfaceVisibility = 'hidden';
-                node.style.webkitBackfaceVisibility = 'hidden';
-                // Promote to a compositor layer to stabilize the filter rendering
-                if (!style.willChange.includes('filter')) {
-                    node.style.willChange = (style.willChange === 'auto' ? '' : style.willChange + ', ') + 'filter';
+        clearTimeout(backdropOptimizationTimer);
+        backdropOptimizationTimer = setTimeout(() => {
+            if (!root) return;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
+            let node;
+            while (node = walker.nextNode()) {
+                // Performance Check: only check style if element likely has a filter
+                const style = window.getComputedStyle(node);
+                const hasFilter = style.backdropFilter !== 'none' && style.backdropFilter !== '' || 
+                                  style.webkitBackdropFilter !== 'none' && style.webkitBackdropFilter !== '';
+                
+                if (hasFilter) {
+                    node.style.backfaceVisibility = 'hidden';
+                    node.style.webkitBackfaceVisibility = 'hidden';
+                    if (!style.willChange.includes('filter')) {
+                        node.style.willChange = (style.willChange === 'auto' ? '' : style.willChange + ', ') + 'filter';
+                    }
                 }
             }
-        }
+        }, 150); // Wait 150ms for DOM to settle
     }
     
     let frameCount = 0;
