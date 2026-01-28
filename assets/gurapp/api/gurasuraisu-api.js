@@ -1598,9 +1598,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                           idbData[dbName] = { stores: {}, storeInfo: [] };
                           const storeNames = Array.from(db.objectStoreNames);
-                          const tx = db.transaction(storeNames, 'readonly');
 
                           for (const storeName of storeNames) {
+                              // Create a new transaction for every store to prevent auto-commit timeouts
+                              const tx = db.transaction(storeName, 'readonly');
                               const store = tx.objectStore(storeName);
                               
                               // Schema Info
@@ -1636,6 +1637,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                   processedRecords.push({ key: keys[i], value: val });
                               }
                               idbData[dbName].stores[storeName] = processedRecords;
+                              // Ensure transaction finishes before starting next loop
+                              await new Promise(r => { tx.oncomplete = r; tx.onerror = r; });
                           }
                           db.close();
                       }
