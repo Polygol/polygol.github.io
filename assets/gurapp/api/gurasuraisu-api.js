@@ -1527,6 +1527,192 @@ document.addEventListener('DOMContentLoaded', () => {
     window.parent.postMessage({ type: 'gurasuraisu-api-present' }, '*');
     window.parent.postMessage({ type: 'gurapp-ready' }, '*');
   }
+
+  // --- System Admin Listeners (Backup/Restore/Wipe) ---
+  if (isInsideGurasuraisu) {
+      window.addEventListener('message', async (event) => {
+          if (event.source !== window.parent) return;
+          const data = event.data;
+
+          // Helper: Blob to Base64
+          const blobToBase64 = (blob) => {
+              return new Promise((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(blob);
+              });
+          };
+
+          // Helper: Base64 to Blob
+          const base64ToBlob = (dataUrl) => {
+              const arr = dataUrl.split(',');
+              const mime = arr[0].match(/:(.*?);/)[1];
+              const bstr = atob(arr[1]);
+              let n = bstr.length;
+              const u8arr = new Uint8Array(n);
+              while (n--) u8arr[n] = bstr.charCodeAt(n);
+              return new Blob([u8arr], { type: mime });
+          };
+
+          if (data.type === 'admin-export') {
+              try {
+                  // 1. LocalStorage
+                  const lsData = { ...localStorage };
+
+                  // 2. IndexedDB
+                  const idbData = {};
+                  if (window.indexedDB && window.indexedDB.databases) {
+                      const dbs = await window.indexedDB.databases();
+                      for (const dbInfo of dbs) {
+                          const dbName = dbInfo.name;
+                          const db = await new Promise((res, rej) => {
+                              const req = indexedDB.open(dbName);
+                              req.onsuccess = () => res(req.result);
+                              req.onerror = () => rej(req.error);
+                          });
+
+                          idbData[dbName] = { stores: {}, storeInfo: [] };
+                          const storeNames = Array.from(db.objectStoreNames);
+                          const tx = db.transaction(storeNames, 'readonly');
+
+                          for (const storeName of storeNames) {
+                              const store = tx.objectStore(storeName);
+                              
+                              // Schema Info
+                              const indexNames = Array.from(store.indexNames);
+                              const indexes = indexNames.map(idx => {
+                                  const i = store.index(idx);
+                                  return { name: i.name, keyPath: i.keyPath, unique: i.unique, multiEntry: i.multiEntry };
+                              });
+                              idbData[dbName].storeInfo.push({
+                                  name: store.name, 
+                                  keyPath: store.keyPath, 
+                                  autoIncrement: store.autoIncrement,
+                                  indexes: indexes 
+                              });
+
+                              // Data
+                              const records = await new Promise((res, rej) => {
+                                  const req = store.getAll();
+                                  req.onsuccess = () => res(req.result);
+                                  req.onerror = rej;
+                              });
+                              
+                              const keys = await new Promise((res, rej) => {
+                                  const req = store.getAllKeys();
+                                  req.onsuccess = () => res(req.result);
+                                  req.onerror = rej;
+                              });
+
+                              const processedRecords = [];
+                              for (let i = 0; i < records.length; i++) {
+                                  let val = records[i];
+                                  // Serialize Blobs
+                                  if (val instanceof Blob) val = { _isBlob: true, data: await blobToBase64(val) };
+                                  // Handle object/array structures containing blobs if necessary (simplified here)
+                                  processedRecords.push({ key: keys[i], value: val });
+                              }
+                              idbData[dbName].stores[storeName] = processedRecords;
+                          }
+                          db.close();
+                      }
+                  }
+
+                  window.parent.postMessage({
+                      type: 'admin-export-response',
+                      appUrl: window.location.href, // Identity
+                      data: { localStorage: lsData, indexedDB: idbData }
+                  }, '*');
+
+              } catch (e) {
+                  console.error("Export failed", e);
+                  window.parent.postMessage({ type: 'admin-export-response', error: e.message }, '*');
+              }
+          }
+
+          if (data.type === 'admin-import') {
+              try {
+                  const { localStorage: lsData, indexedDB: idbData } = data.payload;
+
+                  // 1. Restore LS
+                  localStorage.clear();
+                  for (const k in lsData) localStorage.setItem(k, lsData[k]);
+
+                  // 2. Restore IDB
+                  if (window.indexedDB && window.indexedDB.databases) {
+                      const currentDbs = await window.indexedDB.databases();
+                      for (const db of currentDbs) {
+                          await new Promise(r => { const req = indexedDB.deleteDatabase(db.name); req.onsuccess = r; req.onerror = r; });
+                      }
+
+                      for (const dbName in idbData) {
+                          const dbInfo = idbData[dbName];
+                          const req = indexedDB.open(dbName);
+                          
+                          req.onupgradeneeded = (e) => {
+                              const db = e.target.result;
+                              dbInfo.storeInfo.forEach(s => {
+                                  if (!db.objectStoreNames.contains(s.name)) {
+                                      const store = db.createObjectStore(s.name, { keyPath: s.keyPath, autoIncrement: s.autoIncrement });
+                                      if(s.indexes) s.indexes.forEach(idx => store.createIndex(idx.name, idx.keyPath, { unique: idx.unique, multiEntry: idx.multiEntry }));
+                                  }
+                              });
+                          };
+
+                          const db = await new Promise((res, rej) => {
+                              req.onsuccess = () => res(req.result);
+                              req.onerror = rej;
+                          });
+
+                          const tx = db.transaction(Object.keys(dbInfo.stores), 'readwrite');
+                          for (const storeName in dbInfo.stores) {
+                              const store = tx.objectStore(storeName);
+                              const records = dbInfo.stores[storeName];
+                              const sInfo = dbInfo.storeInfo.find(x => x.name === storeName);
+
+                              for (const rec of records) {
+                                  let val = rec.value;
+                                  if (val && val._isBlob) val = base64ToBlob(val.data);
+                                  if (sInfo && sInfo.keyPath) store.put(val);
+                                  else store.put(val, rec.key);
+                              }
+                          }
+                          await new Promise(r => { tx.oncomplete = r; tx.onerror = r; });
+                          db.close();
+                      }
+                  }
+                  window.parent.postMessage({ type: 'admin-action-complete' }, '*');
+              } catch (e) {
+                  console.error("Import failed", e);
+                  window.parent.postMessage({ type: 'admin-action-complete', error: e.message }, '*');
+              }
+          }
+
+          if (data.type === 'admin-wipe') {
+              try {
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  if (window.indexedDB && window.indexedDB.databases) {
+                      const dbs = await window.indexedDB.databases();
+                      for (const db of dbs) {
+                          await new Promise(r => { 
+                              const req = indexedDB.deleteDatabase(db.name); 
+                              req.onsuccess = r; req.onerror = r; 
+                          });
+                      }
+                  }
+                  if ('serviceWorker' in navigator) {
+                      const regs = await navigator.serviceWorker.getRegistrations();
+                      for(const reg of regs) await reg.unregister();
+                  }
+                  window.parent.postMessage({ type: 'admin-action-complete' }, '*');
+              } catch (e) {
+                  window.parent.postMessage({ type: 'admin-action-complete', error: e.message }, '*');
+              }
+          }
+      });
+  }
 });
 
 // Announce that the API is ready
