@@ -725,6 +725,9 @@ function setupServiceWorkerUpdateListener() {
                 return; 
             }
 
+            // Define newV by fetching the latest version from the script
+            const newV = await fetchSystemVersion();
+
             const showUpdateNotification = () => {
                 showNotification(`A new system update is ready to install. (Version ${newV})`, {
 					header: 'System update',
