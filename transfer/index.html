@@ -259,7 +259,7 @@
                 }
             }
 
-            // 4. IndexedDB (The Heavy Lifter)
+            // 4. IndexedDB
             if (window.indexedDB && window.indexedDB.databases) {
                 const dbs = await window.indexedDB.databases();
                 for (const dbInfo of dbs) {
@@ -272,58 +272,62 @@
                     });
 
                     const storeNames = Array.from(db.objectStoreNames);
-                    const tx = db.transaction(storeNames, 'readonly');
-
+                    
                     for (const storeName of storeNames) {
-                        const store = tx.objectStore(storeName);
-                        
-                        // Extract Schema
-                        const indexNames = Array.from(store.indexNames);
-                        const indexes = indexNames.map(idx => {
-                            const i = store.index(idx);
-                            return { name: i.name, keyPath: i.keyPath, unique: i.unique, multiEntry: i.multiEntry };
+                        // 4a. Get Schema and Keys (Fast, Single Transaction)
+                        const { schema, keys } = await new Promise((resolve, reject) => {
+                            const tx = db.transaction(storeName, 'readonly');
+                            const store = tx.objectStore(storeName);
+                            
+                            const indexNames = Array.from(store.indexNames);
+                            const indexes = indexNames.map(idx => {
+                                const i = store.index(idx);
+                                return { name: i.name, keyPath: i.keyPath, unique: i.unique, multiEntry: i.multiEntry };
+                            });
+                            
+                            const sch = {
+                                name: store.name, 
+                                keyPath: store.keyPath, 
+                                autoIncrement: store.autoIncrement,
+                                indexes: indexes 
+                            };
+                            
+                            const kReq = store.getAllKeys();
+                            kReq.onsuccess = () => resolve({ schema: sch, keys: kReq.result });
+                            kReq.onerror = () => reject(kReq.error);
                         });
-                        
-                        const schema = {
-                            name: store.name, 
-                            keyPath: store.keyPath, 
-                            autoIncrement: store.autoIncrement,
-                            indexes: indexes 
-                        };
 
                         yield { type: 'dbSchema', db: dbName, schema: schema };
 
-                        // Stream Records using Promisified Cursor Pattern
-                        // We must bridge the event-based cursor to the async generator to use 'yield'
-                        const request = store.openCursor();
-                        
-                        let cursorResolve;
-                        let cursorReject;
-                        // Create the initial promise to wait for the first record
-                        let cursorPromise = new Promise((res, rej) => { cursorResolve = res; cursorReject = rej; });
-
-                        request.onsuccess = (event) => cursorResolve(event.target.result);
-                        request.onerror = (event) => cursorReject(event);
-
-                        while (true) {
-                            // Wait for the cursor to move to the next item
-                            const cursor = await cursorPromise;
-                            if (!cursor) break; // End of store
-
-                            const safeValue = await serializeBinaryData(cursor.value);
+                        // 4b. Fetch Records in Batches
+                        const BATCH_SIZE = 20;
+                        for (let i = 0; i < keys.length; i += BATCH_SIZE) {
+                            const batchKeys = keys.slice(i, i + BATCH_SIZE);
                             
-                            // Yield allows the MessagePack encoder to stream this chunk immediately
-                            yield { 
-                                type: 'dbRecord', 
-                                db: dbName, 
-                                store: storeName, 
-                                key: cursor.key, 
-                                value: safeValue 
-                            };
+                            // Fetch batch data in a new transaction to avoid timeout during processing
+                            const batchValues = await new Promise((resolve, reject) => {
+                                const tx = db.transaction(storeName, 'readonly');
+                                const store = tx.objectStore(storeName);
+                                const promises = batchKeys.map(key => new Promise((r, j) => {
+                                    const req = store.get(key);
+                                    req.onsuccess = () => r(req.result);
+                                    req.onerror = () => j(req.error);
+                                }));
+                                
+                                Promise.all(promises).then(resolve).catch(reject);
+                            });
 
-                            // Reset the promise for the next iteration BEFORE calling continue
-                            cursorPromise = new Promise((res, rej) => { cursorResolve = res; cursorReject = rej; });
-                            cursor.continue();
+                            // Process batch (serialize blobs, etc) - This is async and outside transaction
+                            for (let j = 0; j < batchValues.length; j++) {
+                                const safeValue = await serializeBinaryData(batchValues[j]);
+                                yield { 
+                                    type: 'dbRecord', 
+                                    db: dbName, 
+                                    store: storeName, 
+                                    key: batchKeys[j], 
+                                    value: safeValue 
+                                };
+                            }
                         }
                     }
                     db.close();
