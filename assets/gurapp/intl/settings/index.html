@@ -605,12 +605,23 @@
                         <input type="checkbox" class="toggle-switch" data-key="highContrast">
                     </div>
                 </div>
-                <div class="setting-item slider-item">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Smart Display Zoom</span>
+                        <span class="setting-description">Automatically adjust display scale</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="smartDisplayZoom">
+                </div>
+                <div class="setting-item slider-item" id="manual-zoom-container">
                     <div class="setting-info">
                         <span class="setting-label">Display Zoom</span>
                         <span class="setting-description">Scale the interface size</span>
                     </div>
-                    <input type="range" min="75" max="150" value="100" class="styled-slider" data-key="displayScale">
+                    <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                        <input type="range" min="75" max="150" value="100" class="styled-slider" 
+                               data-key="displayScale" style="flex-grow: 1;">
+                        <button class="action-btn" id="btn-reset-zoom" style="padding: 6px 12px; font-size: 12px; margin: 0;">Reset</button>
+                    </div>
                 </div>
             </div>
             <div class="setting-section">
