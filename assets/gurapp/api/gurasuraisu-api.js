@@ -614,6 +614,11 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             html, body {
                 overscroll-behavior: none !important; /* Prevent swipe-to-back navigation */
             }
+
+            /* Disable native focus for all elements to prevent browser interference */
+            :focus {
+            	outline: none !important;
+            }
         
             .a11y-focused {
                 outline: 4px solid var(--accent) !important;
