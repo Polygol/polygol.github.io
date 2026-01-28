@@ -125,7 +125,7 @@
     </div>
 
     <script type="module">
-        import { encode, decodeAsyncGenerator } from 'https://cdn.jsdelivr.net/npm/@msgpack/msgpack@3.1.3/+esm';
+        import { encode, decodeMultiStream } from 'https://cdn.jsdelivr.net/npm/@msgpack/msgpack@3.1.3/+esm';
         
         const exportBtn = document.getElementById('export-btn');
         const importBtn = document.getElementById('import-btn');
@@ -335,9 +335,9 @@
         async function handleExport() {
             try {
                 const chunks = [];
-                // The encode function consumes our async generator
-                for await (const chunk of encode(generateExportData())) {
-                    chunks.push(chunk);
+                // Iterate through the generator, encode each item individually, and add to chunks
+                for await (const item of generateExportData()) {
+                    chunks.push(encode(item));
                 }
 
                 const blob = new Blob(chunks, { type: 'application/x-gurapack' });
@@ -404,9 +404,12 @@
                 logStatus('Reading binary stream...');
                 let count = 0;
 
-                // Decode the stream
-                for await (const item of decodeAsyncGenerator(file.stream())) {
-                    if (item.type === 'localStorage') {
+                // Decode the stream using decodeMultiStream
+                for await (const item of decodeMultiStream(file.stream())) {
+                    if (item.type === 'header') {
+                        console.log("Importing Backup Version:", item.version);
+                    }
+                    else if (item.type === 'localStorage') {
                         const data = item.data;
                         for (const k in data) localStorage.setItem(k, data[k]);
                     }
