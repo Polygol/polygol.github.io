@@ -45,7 +45,182 @@ const SoundManager = {
     }
 };
 
+    play: function(type) {
+        // 1. Check Global Settings
+        const mode = localStorage.getItem('uiSoundMode') || 'silent_off';
+        const isSilent = localStorage.getItem('silentMode') === 'true';
+
+        if (mode === 'always_off') return;
+        if (mode === 'silent_off' && isSilent) return;
+
+        // 2. Play Sound
+        const audio = this.sounds[type];
+        if (audio) {
+            // Clone to allow rapid-fire playback (overlapping sounds)
+            const clone = audio.cloneNode();
+            
+            // Apply volume setting (default 40%)
+            const volSetting = localStorage.getItem('sfxVolume');
+            const volume = volSetting ? parseInt(volSetting) / 100 : 0.4;
+            clone.volume = Math.max(0, Math.min(1, volume));
+            
+            clone.play().catch(e => { /* Ignore autoplay blocks */ });
+        }
+    }
+};
+
 window.SoundManager = SoundManager; // Expose to global scope for API access
+
+// --- Keyboard Navigation Manager (Switch Access) ---
+const KeyboardNavigationManager = {
+    enabled: false,
+    focusedIndex: -1,
+    interactiveElements: [],
+    
+    init() {
+        this.enabled = localStorage.getItem('keyboardNavEnabled') === 'true';
+        document.addEventListener('keydown', (e) => this.handleKey(e));
+        
+        // Listen for DOM changes to refresh list? 
+        // For performance, we'll scan on Tab press instead of MutationObserver
+    },
+    
+    scan() {
+        // 1. Find everything that looks clickable
+        const all = document.querySelectorAll('*');
+        this.interactiveElements = [];
+        
+        // Filter visible elements
+        const isVisible = (el) => {
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none' && 
+                   style.visibility !== 'hidden' && 
+                   style.opacity !== '0' &&
+                   el.offsetParent !== null;
+        };
+
+        for (let el of all) {
+            if (!isVisible(el)) continue;
+
+            const tag = el.tagName;
+            const style = window.getComputedStyle(el);
+            const role = el.getAttribute('role');
+            
+            // Criteria for interactivity
+            const isClickable = 
+                style.cursor === 'pointer' || 
+                tag === 'BUTTON' || 
+                tag === 'INPUT' || 
+                tag === 'SELECT' || 
+                tag === 'A' || 
+                tag === 'TEXTAREA' ||
+                tag === 'IFRAME' || // Allow focusing frames to pass control?
+                role === 'button' ||
+                el.onclick != null;
+
+            // Exclude specific containers that shouldn't be focused directly
+            const isExcluded = el.id === 'dynamic-area' || el.classList.contains('widget-grid');
+
+            if (isClickable && !isExcluded) {
+                this.interactiveElements.push(el);
+            }
+        }
+    },
+    
+    handleKey(e) {
+        if (!this.enabled) return;
+        
+        if (e.key === 'Tab') {
+            e.preventDefault(); // Stop native browser navigation
+            e.stopPropagation();
+
+            if (this.interactiveElements.length === 0) this.scan();
+            
+            // Re-scan if focused element is gone
+            if (this.focusedIndex >= 0 && !document.body.contains(this.interactiveElements[this.focusedIndex])) {
+                this.scan();
+                this.focusedIndex = -1;
+            }
+
+            if (e.shiftKey) {
+                this.focusedIndex--;
+                if (this.focusedIndex < 0) this.focusedIndex = this.interactiveElements.length - 1;
+            } else {
+                this.focusedIndex++;
+                if (this.focusedIndex >= this.interactiveElements.length) this.focusedIndex = 0;
+            }
+            
+            this.updateFocus();
+        }
+        
+        if (e.key === 'Enter' || e.key === ' ') {
+            if (this.focusedIndex >= 0 && this.interactiveElements[this.focusedIndex]) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const el = this.interactiveElements[this.focusedIndex];
+                
+                // Visual feedback
+                el.style.transform = 'scale(0.95)';
+                setTimeout(() => el.style.transform = '', 100);
+                
+                el.click();
+                if (el.tagName === 'INPUT') el.focus();
+            }
+        }
+    },
+    
+    updateFocus() {
+        // Remove old focus
+        document.querySelectorAll('.a11y-focused').forEach(el => el.classList.remove('a11y-focused'));
+        
+        // Apply new focus
+        if (this.focusedIndex >= 0 && this.interactiveElements[this.focusedIndex]) {
+            const el = this.interactiveElements[this.focusedIndex];
+            el.classList.add('a11y-focused');
+            
+            // Scroll into view if needed
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            SoundManager.play('select');
+        }
+    }
+};
+
+KeyboardNavigationManager.init();
+
+// --- Color Filter Logic ---
+function applyColorFilter() {
+    const mode = localStorage.getItem('colorFilter') || 'none';
+    const html = document.documentElement;
+    
+    // Remove existing filter classes
+    html.classList.remove('filter-grayscale', 'filter-invert', 'filter-protanopia', 'filter-deuteranopia', 'filter-tritanopia');
+    
+    if (mode !== 'none') {
+        html.classList.add(`filter-${mode}`);
+    }
+}
+
+// Inject SVG Filters for Color Blindness
+document.addEventListener('DOMContentLoaded', () => {
+    const svgFilters = `
+    <svg style="display: none">
+        <defs>
+            <filter id="a11y-protanopia">
+                <feColorMatrix type="matrix" values="0.567, 0.433, 0, 0, 0 0.558, 0.442, 0, 0, 0 0, 0.242, 0.758, 0, 0 0, 0, 0, 1, 0" />
+            </filter>
+            <filter id="a11y-deuteranopia">
+                <feColorMatrix type="matrix" values="0.625, 0.375, 0, 0, 0 0.7, 0.3, 0, 0, 0 0, 0.3, 0.7, 0, 0 0, 0, 0, 1, 0" />
+            </filter>
+            <filter id="a11y-tritanopia">
+                <feColorMatrix type="matrix" values="0.95, 0.05, 0, 0, 0 0, 0.433, 0.567, 0, 0 0, 0.475, 0.525, 0, 0 0, 0, 0, 1, 0" />
+            </filter>
+        </defs>
+    </svg>`;
+    document.body.insertAdjacentHTML('beforeend', svgFilters);
+    applyColorFilter();
+});
 
 // --- Performance Auto-Detection ---
 function detectPerformanceProfile() {
@@ -14309,6 +14484,9 @@ function listCommonSettings() {
 		'nightStandStart': localStorage.getItem('nightStandStart'),
 		'nightStandEnd': localStorage.getItem('nightStandEnd'),
 		'nightStandBrightness': localStorage.getItem('nightStandBrightness'),
+		'colorFilter': localStorage.getItem('colorFilter'),
+		'keyboardNavEnabled': localStorage.getItem('keyboardNavEnabled'),
+		'sfxVolume': localStorage.getItem('sfxVolume'),
     };
 }
 
@@ -14996,7 +15174,10 @@ const controlIdMap = {
     'nightStandEnabled': 'nightStandEnabled',
     'nightStandStart': 'nightStandStart',
     'nightStandEnd': 'nightStandEnd',
-    'nightStandBrightness': 'nightStandBrightness'
+    'nightStandBrightness': 'nightStandBrightness',
+    'colorFilter': 'colorFilter',
+    'sfxVolume': 'sfxVolume',
+    'keyboardNavEnabled': 'keyboardNavEnabled'
 };
 
 // --- NEW: Function to broadcast a setting update to the settings app ---
@@ -15021,7 +15202,8 @@ function setControlValueAndDispatch(key, value) {
         'sleepModeStyle', 'slideshowInterval', 'hideClockIndicator',
         'autoSleepEnabled', 'autoSleepDuration', 'autoSleepScope',
 		'resourceManagerEnabled', 'displayScale', 'smartDisplayZoom',
-        'nightStandEnabled', 'nightStandStart', 'nightStandEnd', 'nightStandBrightness'
+        'nightStandEnabled', 'nightStandStart', 'nightStandEnd', 'nightStandBrightness',
+	    'colorFilter', 'keyboardNavEnabled', 'sfxVolume'
     ];
     if (settingsWithoutDirectControl.includes(key)) {
         localStorage.setItem(key, value);
@@ -15057,6 +15239,12 @@ function setControlValueAndDispatch(key, value) {
             checkNightStand();
         }
         return;
+        if (key === 'colorFilter') {
+            applyColorFilter();
+        }
+        if (key === 'keyboardNavEnabled') {
+            KeyboardNavigationManager.enabled = (value === 'true');
+        }
     }
 	
 	const controlId = controlIdMap[key];
