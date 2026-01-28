@@ -641,6 +641,33 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
                 e.preventDefault();
             }
         }, { passive: false });
+
+        // Forward Global Shortcuts to System
+        let isTabKeyDown = false;
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') isTabKeyDown = true;
+            
+            if (e.code === 'Space') {
+                 if (isTabKeyDown) {
+                     // Tab + Space: App Switcher
+                     e.preventDefault();
+                     Gurasuraisu._call('performSystemShortcut', ['appSwitcher']);
+                 } else if (e.shiftKey) {
+                     // Shift + Space: Home / Drawer
+                     e.preventDefault();
+                     Gurasuraisu._call('performSystemShortcut', ['home']);
+                 }
+            }
+            
+            // E (after Shift+Space sequence)
+            if (e.key.toLowerCase() === 'e') {
+                // We send this speculatively; the parent decides if it's valid based on timer
+                Gurasuraisu._call('performSystemShortcut', ['actionE']);
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Tab') isTabKeyDown = false;
+        });
     }
 
     // --- Switch Control (Keyboard Navigation) ---
