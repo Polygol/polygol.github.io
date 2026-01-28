@@ -4321,21 +4321,18 @@ document.addEventListener('DOMContentLoaded', () => {
         embedObserver.observe(appDrawer, { attributes: true });
     }
     
-    // Watch for new embed elements being added
+    // Watch for new elements being added
     const bodyObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === 'childList') {
                 let changed = false;
                 mutation.addedNodes.forEach(node => {
-                    if (node.nodeType === 1) optimizeBackdropElements(node);
-                    if (node.nodeType === 1 &&
-                        node.classList &&
-                        node.classList.contains('fullscreen-embed')) {
-                    if (node.nodeType === 1 &&
-                        node.classList &&
-                        node.classList.contains('fullscreen-embed')) {
-                        embedObserver.observe(node, { attributes: true });
-                        changed = true;
+                    if (node.nodeType === 1) {
+                        optimizeBackdropElements(node);
+                        if (node.classList && node.classList.contains('fullscreen-embed')) {
+                            embedObserver.observe(node, { attributes: true });
+                            changed = true;
+                        }
                     }
                 });
                 if (changed) {
