@@ -13310,6 +13310,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const storedSilentMode = localStorage.getItem('silentMode') === 'true';
     const storedTemperature = localStorage.getItem('display_temperature') || '0';
     const storedBrightness = localStorage.getItem('page_brightness') || '100';
+    const storedDisplayScale = localStorage.getItem('displayScale') || '100';
     
     // Get elements using your existing IDs
     const lightModeControl = document.getElementById('light_mode_qc');
@@ -13425,6 +13426,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (storedBrightness) {
         brightnessSlider.value = storedBrightness;
         updateBrightness(storedBrightness);
+    }
+
+    // Initialize display scale
+    if (storedDisplayScale !== '100') {
+        document.body.style.zoom = `${storedDisplayScale}%`;
     }
     
     // Initialize icons based on current states
@@ -14189,6 +14195,7 @@ function listCommonSettings() {
         'clockColorEnabled': localStorage.getItem('clockColorEnabled'),
         'clockStackEnabled': localStorage.getItem('clockStackEnabled'),
         'selectedLanguage': localStorage.getItem('selectedLanguage'),
+		'displayScale': localStorage.getItem('displayScale'),
     };
 }
 
@@ -14914,6 +14921,9 @@ function setControlValueAndDispatch(key, value) {
         if (key === 'resourceManagerEnabled') {
             if (value === 'true') ResourceManager.init();
             else ResourceManager.stop();
+        }
+        if (key === 'displayScale') {
+            document.body.style.zoom = `${value}%`;
         }
         return;
     }
