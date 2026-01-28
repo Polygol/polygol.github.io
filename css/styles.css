@@ -121,6 +121,11 @@
     cursor: pointer;
 }
 
+/* Disable native focus for all elements to prevent browser interference */
+:focus {
+	outline: none !important;
+}
+
 :root {
     --edge-refraction-filter: url('#edge-refraction-only');
     --sun-shadow: 0 0 0 0 transparent;
