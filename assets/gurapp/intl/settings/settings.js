@@ -200,6 +200,15 @@ function initializeSettingsApp() {
     // --- UI Update & Event Binding Logic ---
     function updateControl(key, value) {
         const controls = document.querySelectorAll(`[data-key="${key}"]`);
+        
+        // Handle Smart Zoom Visibility logic side-effect
+        if (key === 'smartDisplayZoom') {
+            const manualContainer = document.getElementById('manual-zoom-container');
+            if (manualContainer) {
+                manualContainer.style.display = (value === 'true') ? 'none' : 'flex';
+            }
+        }
+
         if (controls.length === 0) return;
         controls.forEach(control => {
             // Prevent overwriting the value while the user is actively adjusting the slider
@@ -314,6 +323,17 @@ function initializeSettingsApp() {
             // Call the new API function
             Gurasuraisu.forceUpdate();
         };
+
+        // Display Zoom Reset
+        const resetZoomBtn = document.getElementById('btn-reset-zoom');
+        if (resetZoomBtn) {
+            resetZoomBtn.onclick = () => {
+                // Update local slider UI
+                updateControl('displayScale', '100');
+                // Send update to parent
+                Gurasuraisu.setSettingValue('displayScale', '100');
+            };
+        }
 
         // Setup Navigation for Storage Page
         const storageBtn = document.querySelector('.nav-item[data-page="page-storage"]');
@@ -670,6 +690,7 @@ function initializeSettingsApp() {
     if (window.parent) {
         window.parent.postMessage({ type: 'gurapp-ready' }, window.location.origin);
         Gurasuraisu.getLocalStorageItem('displayScale');
+        Gurasuraisu.getLocalStorageItem('smartDisplayZoom');
     }
 }
 
