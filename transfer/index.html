@@ -209,12 +209,13 @@
                 let val = rec.value;
                 const recordPath = `idb/${dbName}/${storeName}/rec_${i}`;
 
-                if (val instanceof Blob || (val && val.blob instanceof Blob)) {
-                    const b = val.blob || val;
-                    // Read actual data only when needed for the ZIP
-                    const buffer = new Uint8Array(await b.arrayBuffer());
-                    zipData[`${recordPath}.bin`] = buffer;
-                    val = { _type: 'bin_ref', mime: b.type }; 
+                if (val instanceof Blob) {
+                    zipData[`${recordPath}.bin`] = new Uint8Array(await val.arrayBuffer());
+                    val = { _type: 'bin_ref', mime: val.type };
+                } else if (val && val.blob instanceof Blob) {
+                    zipData[`${recordPath}.bin`] = new Uint8Array(await val.blob.arrayBuffer());
+                    // Keep the object, only swap the 'blob' property for a reference
+                    val = { ...val, blob: { _type: 'bin_ref', mime: val.blob.type } };
                 }
 
                 // Individual JSON files prevent RangeError: Invalid string length
@@ -394,10 +395,12 @@
                                             const recordPath = `${appFolder}/idb/${dbName}/${sName}/rec_${i}`;
 
                                             // Process Blobs from external apps
-                                            if (val instanceof Blob || (val && val.blob instanceof Blob)) {
-                                                const b = val.blob || val;
-                                                zipData[`${recordPath}.bin`] = new Uint8Array(await b.arrayBuffer());
-                                                val = { _type: 'bin_ref', mime: b.type };
+                                            if (val instanceof Blob) {
+                                                zipData[`${recordPath}.bin`] = new Uint8Array(await val.arrayBuffer());
+                                                val = { _type: 'bin_ref', mime: val.type };
+                                            } else if (val && val.blob instanceof Blob) {
+                                                zipData[`${recordPath}.bin`] = new Uint8Array(await val.blob.arrayBuffer());
+                                                val = { ...val, blob: { _type: 'bin_ref', mime: val.blob.type } };
                                             }
 
                                             // Save individual record
@@ -601,13 +604,17 @@
 
                                 for (const rFile of recordFiles) {
                                     const rec = JSON.parse(fflate.strFromU8(unzipped[rFile]));
-                                    
-                                    // Reconstruct Blobs
                                     const binFile = unzipped[rFile.replace('.json', '.bin')];
-                                    if (binFile && rec.value && rec.value._type === 'bin_ref') {
-                                        const blob = new Blob([binFile], { type: rec.value.mime });
-                                        if (rec.value.blob) rec.value.blob = blob; // Check for nested blob object
-                                        else rec.value = blob;
+
+                                    if (binFile) {
+                                        // Case 1: The value IS the blob reference
+                                        if (rec.value && rec.value._type === 'bin_ref') {
+                                            rec.value = new Blob([binFile], { type: rec.value.mime });
+                                        } 
+                                        // Case 2: The value is an object CONTAINING a blob reference (e.g. WallpaperDB)
+                                        else if (rec.value && rec.value.blob && rec.value.blob._type === 'bin_ref') {
+                                            rec.value.blob = new Blob([binFile], { type: rec.value.blob.mime });
+                                        }
                                     }
                                     records.push(rec);
                                 }
