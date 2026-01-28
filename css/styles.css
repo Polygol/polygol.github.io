@@ -336,6 +336,10 @@ input[type="submit"]:active,
 	transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1), filter 0.3s cubic-bezier(.2, 1.3, .64, 1);
 }
 
+html {
+    overscroll-behavior: none;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--background-color);
