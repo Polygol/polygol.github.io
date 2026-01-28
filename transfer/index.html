@@ -185,41 +185,24 @@
             return new Promise((resolve, reject) => {
                 const transaction = db.transaction(storeName, 'readonly');
                 const store = transaction.objectStore(storeName);
-                const request = store.getAll();
-                request.onsuccess = async () => {
-                    const records = request.result;
-                    // Special handling for WallpaperDB blobs
-                    if (db.name === 'WallpaperDB' && storeName === 'wallpapers') {
-                        const keysRequest = store.getAllKeys();
-                        keysRequest.onsuccess = async () => {
-                            const keys = keysRequest.result;
-                            const keyedRecords = [];
-                            for (let i = 0; i < records.length; i++) {
-                                let recordValue = records[i];
-                                if (recordValue.blob) {
-                                    recordValue.base64 = await blobToBase64(recordValue.blob);
-                                    delete recordValue.blob;
-                                }
-                                keyedRecords.push({ key: keys[i], value: recordValue });
-                            }
-                            resolve(keyedRecords);
-                        }
-                        keysRequest.onerror = reject;
+                const records = [];
+                
+                // Use cursor for memory efficiency (avoids loading all keys + all values simultaneously)
+                const request = store.openCursor();
+                
+                request.onsuccess = (event) => {
+                    const cursor = event.target.result;
+                    if (cursor) {
+                        // We return raw values here. 
+                        // Blob processing/conversion happens in the main handleExport function now.
+                        records.push({ key: cursor.key, value: cursor.value });
+                        cursor.continue();
                     } else {
-                        // For other DBs, try to get keys if a keyPath is not set
-                        const keysRequest = store.getAllKeys();
-                        keysRequest.onsuccess = () => {
-                             const keys = keysRequest.result;
-                             const keyedRecords = records.map((record, i) => ({
-                                 key: keys[i],
-                                 value: record
-                             }));
-                             resolve(keyedRecords);
-                        };
-                        keysRequest.onerror = reject;
+                        resolve(records);
                     }
                 };
-                request.onerror = reject;
+                
+                request.onerror = () => reject(request.error);
             });
         }
 
