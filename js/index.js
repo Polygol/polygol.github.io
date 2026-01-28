@@ -3140,19 +3140,23 @@ function calculateSmartZoom() {
     const width = window.innerWidth;
     // Elements should be readable from a distance (3-10ft) or glanceable.
 	
-    // 1. Mobile (Portrait/Handheld)
+    // Watch
+    // Unusable
+    if (width < 400) return 60;
+	
+    // Mobile
     // Grrr
-    if (width < 600) return 90;
+    if (width <= 600) return 90;
 
-    // 2. Tablet / Smart Display (600px - 1280px)
+    // Tablet / smart display
     // Yoy
     if (width <= 1280) return 110;
 
-    // 3. Wall Displays / Monitors (1280px - 2500px)
+    // Monitors / wall display
     // Wow
     if (width <= 2500) return 125;
 
-    // 4. Large TV / 4K (> 2500px)
+    // 4k
     // Uh
     return 150;
 }
