@@ -124,9 +124,7 @@
         </div>
     </div>
 
-    <script type="module">
-        import { encode, decodeMultiStream } from 'https://cdn.jsdelivr.net/npm/@msgpack/msgpack@3.1.3/+esm';
-        
+    <script>
         const exportBtn = document.getElementById('export-btn');
         const importBtn = document.getElementById('import-btn');
         const importFileInput = document.getElementById('import-file');
@@ -140,7 +138,259 @@
             statusDiv.style.color = isError ? '#ef9a9a' : '#a5d6a7';
         }
 
-        // --- File Utilities ---
+        // --- File & Blob Utilities ---
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        function base64ToBlob(dataUrl) {
+            const arr = dataUrl.split(',');
+            const mimeMatch = arr[0].match(/:(.*?);/);
+            if (!mimeMatch) throw new Error("Invalid Data URL");
+            const mime = mimeMatch[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], { type: mime });
+        }
+
+        function downloadFile(content, fileName, contentType) {
+            const a = document.createElement("a");
+            const file = new Blob([content], { type: contentType });
+            a.href = URL.createObjectURL(file);
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        // --- IndexedDB Utilities ---
+        function openDb(dbName) {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+            });
+        }
+
+        async function getStoreData(db, storeName) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(storeName, 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.getAll();
+                request.onsuccess = async () => {
+                    const records = request.result;
+                    // Special handling for WallpaperDB blobs
+                    if (db.name === 'WallpaperDB' && storeName === 'wallpapers') {
+                        const keysRequest = store.getAllKeys();
+                        keysRequest.onsuccess = async () => {
+                            const keys = keysRequest.result;
+                            const keyedRecords = [];
+                            for (let i = 0; i < records.length; i++) {
+                                let recordValue = records[i];
+                                if (recordValue.blob) {
+                                    recordValue.base64 = await blobToBase64(recordValue.blob);
+                                    delete recordValue.blob;
+                                }
+                                keyedRecords.push({ key: keys[i], value: recordValue });
+                            }
+                            resolve(keyedRecords);
+                        }
+                        keysRequest.onerror = reject;
+                    } else {
+                        // For other DBs, try to get keys if a keyPath is not set
+                        const keysRequest = store.getAllKeys();
+                        keysRequest.onsuccess = () => {
+                             const keys = keysRequest.result;
+                             const keyedRecords = records.map((record, i) => ({
+                                 key: keys[i],
+                                 value: record
+                             }));
+                             resolve(keyedRecords);
+                        };
+                        keysRequest.onerror = reject;
+                    }
+                };
+                request.onerror = reject;
+            });
+        }
+
+        // --- External App Utilities ---
+        function getInstalledApps() {
+            try {
+                const apps = JSON.parse(localStorage.getItem('userInstalledApps') || '{}');
+                // Merge with default system apps if they aren't in LS (optional, based on system design)
+                // For now, we trust the LS list + standard system apps logic is usually handled by index.js
+                return Object.values(apps).map(app => app.url);
+            } catch (e) {
+                return [];
+            }
+        }
+
+        async function processExternalApp(url, action, payload = null) {
+            return new Promise((resolve) => {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = url;
+                
+                // Add to DOM to trigger load
+                document.body.appendChild(iframe);
+
+                const cleanup = () => {
+                    window.removeEventListener('message', messageHandler);
+                    if(document.body.contains(iframe)) document.body.removeChild(iframe);
+                };
+
+                // Timeout to prevent hanging
+                const timeout = setTimeout(() => {
+                    cleanup();
+                    resolve({ url, error: 'Timeout' });
+                }, 5000);
+
+                const messageHandler = (event) => {
+                    if (event.source !== iframe.contentWindow) return;
+                    
+                    // 1. Wait for Ready
+                    if (event.data.type === 'gurapp-ready' || event.data.type === 'gurasuraisu-api-present') {
+                        // Send Command
+                        iframe.contentWindow.postMessage({
+                            type: action,
+                            payload: payload
+                        }, '*');
+                    }
+
+                    // 2. Wait for Response
+                    if (event.data.type === 'admin-export-response' || event.data.type === 'admin-action-complete') {
+                        clearTimeout(timeout);
+                        cleanup();
+                        resolve(event.data);
+                    }
+                };
+
+                window.addEventListener('message', messageHandler);
+            });
+        }
+
+        // --- EXPORT LOGIC ---
+        async function handleExport() {
+            logStatus('Starting export...');
+            try {
+                // We construct the JSON manually using a Blob array to avoid "Invalid string length" errors
+                // caused by stringifying the entire system at once.
+                const jsonParts = [];
+                
+                // Header
+                const header = {
+                    gurasuraisu_transfer_version: "1.3",
+                    export_timestamp: new Date().toISOString(),
+                    data: {} // We will close this manually
+                };
+                // Push header string up to the "data" opening brace
+                jsonParts.push(`{"gurasuraisu_transfer_version":"${header.gurasuraisu_transfer_version}","export_timestamp":"${header.export_timestamp}","data":{`);
+
+                // 1. Gather and Push LocalStorage
+                const localStorageData = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    localStorageData[key] = localStorage.getItem(key);
+                }
+                logStatus('localStorage data collected.');
+                
+                jsonParts.push(`"localStorage":${JSON.stringify(localStorageData)},`);
+
+                // 2. Gather and Push IndexedDB
+                const indexedDbData = {};
+                const dbs = await indexedDB.databases();
+                
+                for (const dbInfo of dbs) {
+                    const dbName = dbInfo.name;
+                    try {
+                        logStatus(`Accessing IndexedDB: ${dbName}...`);
+                        const db = await openDb(dbName);
+                        indexedDbData[dbName] = { stores: {}, storeInfo: [] };
+                        const storeNames = Array.from(db.objectStoreNames);
+                        
+                        const tempTx = db.transaction(storeNames, 'readonly');
+                        for (const storeName of storeNames) {
+                             const store = tempTx.objectStore(storeName);
+                             const indexNames = Array.from(store.indexNames);
+                             const indexes = indexNames.map(indexName => {
+                                 const index = store.index(indexName);
+                                 return { name: index.name, keyPath: index.keyPath, unique: index.unique, multiEntry: index.multiEntry };
+                             });
+
+                             indexedDbData[dbName].storeInfo.push({
+                                 name: store.name,
+                                 keyPath: store.keyPath,
+                                 autoIncrement: store.autoIncrement,
+                                 indexes: indexes
+                             });
+                        }
+
+                        for (const storeName of storeNames) {
+                            indexedDbData[dbName].stores[storeName] = await getStoreData(db, storeName);
+                        }
+                        db.close();
+                    } catch (dbError) {
+                        logStatus(`Skipping DB ${dbName}: ${dbError.message}`, true);
+                    }
+                }
+                logStatus('IndexedDB data collected.');
+                
+                jsonParts.push(`"indexedDB":${JSON.stringify(indexedDbData)},`);
+
+                // 3. Process and Stream External Apps
+                jsonParts.push(`"externalApps":{`);
+                const appUrls = getInstalledApps();
+                
+                if (appUrls.length > 0) {
+                    logStatus(`Backing up ${appUrls.length} external applications...`);
+                    let firstApp = true;
+                    for (const url of appUrls) {
+                        logStatus(`Contacting ${url}...`);
+                        // Force garbage collection of previous loop data if browser allows
+                        // by keeping result scoped locally
+                        const result = await processExternalApp(url, 'admin-export');
+                        
+                        if (result.data) {
+                            if (!firstApp) jsonParts.push(',');
+                            // Manually create JSON Key-Value pair
+                            jsonParts.push(`${JSON.stringify(url)}:${JSON.stringify(result.data)}`);
+                            firstApp = false;
+                        } else {
+                            logStatus(`Warning: Failed to backup ${url} (${result.error || 'Unknown'})`, true);
+                        }
+                    }
+                }
+                jsonParts.push(`}`); // End externalApps
+
+                jsonParts.push(`}}`); // End data, End root
+
+                // 4. Create Blob and Download
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const fileName = `polygol_transfer_${timestamp}.guradata`;
+                
+                logStatus('Assembling file...');
+                const finalBlob = new Blob(jsonParts, { type: 'application/json' });
+                
+                downloadBlob(finalBlob, fileName); // Helper needed below
+
+                logStatus(`Export successful! File '${fileName}' is downloading.`);
+
+            } catch (error) {
+                logStatus(`Export failed: ${error.message}`, true);
+                console.error(error);
+            }
+        }
+
+        // Helper for Blob download
         function downloadBlob(blob, fileName) {
             const a = document.createElement("a");
             a.href = URL.createObjectURL(blob);
@@ -149,311 +399,156 @@
             URL.revokeObjectURL(a.href);
         }
 
-        // Convert Blob to Uint8Array for MessagePack storage
-        async function blobToBuffer(blob) {
-            return new Uint8Array(await blob.arrayBuffer());
-        }
-
-        // Recursively find Blobs in objects and convert to MsgPack-friendly format
-        // Structure: { __dataType: 'blob', mime: 'image/png', data: Uint8Array }
-        async function serializeBinaryData(obj) {
-            if (obj instanceof Blob) {
-                return {
-                    __dataType: 'blob',
-                    mime: obj.type,
-                    data: await blobToBuffer(obj)
-                };
-            } else if (Array.isArray(obj)) {
-                return Promise.all(obj.map(item => serializeBinaryData(item)));
-            } else if (obj !== null && typeof obj === 'object') {
-                const newObj = {};
-                for (const key in obj) {
-                    newObj[key] = await serializeBinaryData(obj[key]);
-                }
-                return newObj;
-            }
-            return obj;
-        }
-
-        // Convert MsgPack binary structure back to Blob
-        function deserializeBinaryData(obj) {
-            if (obj !== null && typeof obj === 'object') {
-                if (obj.__dataType === 'blob') {
-                    return new Blob([obj.data], { type: obj.mime });
-                }
-                if (Array.isArray(obj)) {
-                    return obj.map(item => deserializeBinaryData(item));
-                }
-                const newObj = {};
-                for (const key in obj) {
-                    newObj[key] = deserializeBinaryData(obj[key]);
-                }
-                return newObj;
-            }
-            return obj;
-        }
-
-        // --- External App Utilities ---
-        function getInstalledApps() {
-            try {
-                const apps = JSON.parse(localStorage.getItem('userInstalledApps') || '{}');
-                return Object.values(apps).map(app => app.url);
-            } catch (e) { return []; }
-        }
-
-        async function processExternalApp(url, action, payload = null) {
-            return new Promise((resolve) => {
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = url;
-                document.body.appendChild(iframe);
-
-                const cleanup = () => {
-                    window.removeEventListener('message', messageHandler);
-                    if(document.body.contains(iframe)) document.body.removeChild(iframe);
-                };
-
-                const timeout = setTimeout(() => {
-                    cleanup();
-                    resolve({ url, error: 'Timeout' });
-                }, 5000);
-
-                const messageHandler = (event) => {
-                    if (event.source !== iframe.contentWindow) return;
-                    if (event.data.type === 'gurapp-ready' || event.data.type === 'gurasuraisu-api-present') {
-                        iframe.contentWindow.postMessage({ type: action, payload }, '*');
-                    }
-                    if (event.data.type === 'admin-export-response' || event.data.type === 'admin-action-complete') {
-                        clearTimeout(timeout);
-                        cleanup();
-                        resolve(event.data);
-                    }
-                };
-                window.addEventListener('message', messageHandler);
-            });
-        }
-
-        // --- EXPORT LOGIC ---
-        // We use an Async Generator to stream data to the MessagePack Encoder chunk by chunk.
-        async function* generateExportData() {
-            logStatus('Starting binary export...');
-
-            // 1. Header
-            yield { type: 'header', version: '2.0', timestamp: new Date().toISOString() };
-
-            // 2. LocalStorage
-            logStatus('Exporting settings...');
-            yield { type: 'localStorage', data: { ...localStorage } };
-
-            // 3. External Apps
-            const appUrls = getInstalledApps();
-            if (appUrls.length > 0) {
-                logStatus(`Exporting ${appUrls.length} external apps...`);
-                for (const url of appUrls) {
-                    const res = await processExternalApp(url, 'admin-export');
-                    if (res.data) {
-                        // We assume app data is JSON-compatible for now. 
-                        // If apps return Blobs, the serialization helper should be applied here too.
-                        yield { type: 'appData', url, data: res.data };
-                    }
-                }
-            }
-
-            // 4. IndexedDB
-            if (window.indexedDB && window.indexedDB.databases) {
-                const dbs = await window.indexedDB.databases();
-                for (const dbInfo of dbs) {
-                    const dbName = dbInfo.name;
-                    logStatus(`Exporting database: ${dbName}...`);
-                    
-                    const db = await new Promise(r => {
-                        const req = indexedDB.open(dbName);
-                        req.onsuccess = () => r(req.result);
-                    });
-
-                    const storeNames = Array.from(db.objectStoreNames);
-                    
-                    for (const storeName of storeNames) {
-                        // 4a. Get Schema and Keys (Fast, Single Transaction)
-                        const { schema, keys } = await new Promise((resolve, reject) => {
-                            const tx = db.transaction(storeName, 'readonly');
-                            const store = tx.objectStore(storeName);
-                            
-                            const indexNames = Array.from(store.indexNames);
-                            const indexes = indexNames.map(idx => {
-                                const i = store.index(idx);
-                                return { name: i.name, keyPath: i.keyPath, unique: i.unique, multiEntry: i.multiEntry };
-                            });
-                            
-                            const sch = {
-                                name: store.name, 
-                                keyPath: store.keyPath, 
-                                autoIncrement: store.autoIncrement,
-                                indexes: indexes 
-                            };
-                            
-                            const kReq = store.getAllKeys();
-                            kReq.onsuccess = () => resolve({ schema: sch, keys: kReq.result });
-                            kReq.onerror = () => reject(kReq.error);
-                        });
-
-                        yield { type: 'dbSchema', db: dbName, schema: schema };
-
-                        // 4b. Fetch Records in Batches
-                        const BATCH_SIZE = 20;
-                        for (let i = 0; i < keys.length; i += BATCH_SIZE) {
-                            const batchKeys = keys.slice(i, i + BATCH_SIZE);
-                            
-                            // Fetch batch data in a new transaction to avoid timeout during processing
-                            const batchValues = await new Promise((resolve, reject) => {
-                                const tx = db.transaction(storeName, 'readonly');
-                                const store = tx.objectStore(storeName);
-                                const promises = batchKeys.map(key => new Promise((r, j) => {
-                                    const req = store.get(key);
-                                    req.onsuccess = () => r(req.result);
-                                    req.onerror = () => j(req.error);
-                                }));
-                                
-                                Promise.all(promises).then(resolve).catch(reject);
-                            });
-
-                            // Process batch (serialize blobs, etc) - This is async and outside transaction
-                            for (let j = 0; j < batchValues.length; j++) {
-                                const safeValue = await serializeBinaryData(batchValues[j]);
-                                yield { 
-                                    type: 'dbRecord', 
-                                    db: dbName, 
-                                    store: storeName, 
-                                    key: batchKeys[j], 
-                                    value: safeValue 
-                                };
-                            }
-                        }
-                    }
-                    db.close();
-                }
-            }
-            logStatus('Export generation complete.');
-        }
-
-        async function handleExport() {
-            try {
-                const chunks = [];
-                // Iterate through the generator, encode each item individually, and add to chunks
-                for await (const item of generateExportData()) {
-                    chunks.push(encode(item));
-                }
-
-                const blob = new Blob(chunks, { type: 'application/x-guradata' });
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const fileName = `polygol_backup_${timestamp}.guradata`; // New Extension
-
-                downloadBlob(blob, fileName);
-                logStatus(`Success! Downloaded ${fileName} (${(blob.size/1024/1024).toFixed(2)} MB)`);
-
-            } catch (e) {
-                logStatus(`Export Error: ${e.message}`, true);
-                console.error(e);
-            }
-        }
-
         // --- IMPORT LOGIC ---
-        const dbConnectionCache = {};
-
-        async function getCachedDb(dbName, schema) {
-            if (dbConnectionCache[dbName]) return dbConnectionCache[dbName];
-
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(dbName);
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    if (schema && !db.objectStoreNames.contains(schema.name)) {
-                        const store = db.createObjectStore(schema.name, { 
-                            keyPath: schema.keyPath, 
-                            autoIncrement: schema.autoIncrement 
-                        });
-                        if (schema.indexes) {
-                            schema.indexes.forEach(idx => {
-                                store.createIndex(idx.name, idx.keyPath, { unique: idx.unique, multiEntry: idx.multiEntry });
-                            });
-                        }
-                    }
-                };
-                request.onsuccess = () => {
-                    const db = request.result;
-                    dbConnectionCache[dbName] = db;
-                    // Auto-close handler
-                    db.onclose = () => delete dbConnectionCache[dbName];
-                    db.onversionchange = () => { db.close(); delete dbConnectionCache[dbName]; };
-                    resolve(db);
-                };
-                request.onerror = () => reject(request.error);
-            });
-        }
-
         async function handleImport() {
-            if (!importFileInput.files.length) { logStatus('No file selected.', true); return; }
-            if (!confirm("This will overwrite all system data. Continue?")) return;
+            if (!importFileInput.files || importFileInput.files.length === 0) {
+                logStatus('No file selected for import.', true);
+                return;
+            }
+
+            if (!confirm("ARE YOU SURE?\n\nThis will permanently delete ALL current Polygol data on this device and replace it with the data from the file.") ||
+                !confirm("LAST CHANCE!\n\nThis action cannot be undone. Proceed with import?")) {
+                logStatus('Import cancelled by user.');
+                return;
+            }
 
             const file = importFileInput.files[0];
-            
-            try {
-                logStatus('Wiping system...');
-                localStorage.clear();
-                const currentDBs = await indexedDB.databases();
-                for (const db of currentDBs) {
-                    await new Promise(r => { const req = indexedDB.deleteDatabase(db.name); req.onsuccess = r; req.onerror = r; });
-                }
+            const reader = new FileReader();
 
-                logStatus('Reading binary stream...');
-                let count = 0;
+            reader.onload = async (e) => {
+                try {
+                    logStatus('Reading and parsing transfer file...');
+                    const transferData = JSON.parse(e.target.result);
 
-                // Decode the stream using decodeMultiStream
-                for await (const item of decodeMultiStream(file.stream())) {
-                    if (item.type === 'header') {
-                        console.log("Importing Backup Version:", item.version);
+                    if (!transferData.gurasuraisu_transfer_version || !transferData.data) {
+                        throw new Error('Invalid or corrupted .guradata file.');
                     }
-                    else if (item.type === 'localStorage') {
-                        const data = item.data;
-                        for (const k in data) localStorage.setItem(k, data[k]);
+                    
+                    const { localStorage: lsData, indexedDB: idbData } = transferData.data;
+
+                    // 1. Clear existing localStorage and all detected IndexedDB data
+                    logStatus('Clearing current system data...');
+                    localStorage.clear();
+                    const currentDBs = await indexedDB.databases();
+                    for (const dbInfo of currentDBs) {
+                        await new Promise((resolve, reject) => {
+                           logStatus(`Deleting old database: ${dbInfo.name}`);
+                           const req = indexedDB.deleteDatabase(dbInfo.name);
+                           req.onsuccess = resolve;
+                           req.onerror = reject;
+                           req.onblocked = () => logStatus(`Deletion of ${dbInfo.name} is blocked. Please close other Polygol tabs.`);
+                        });
                     }
-                    else if (item.type === 'appData') {
-                        logStatus(`Restoring app: ${item.url}`);
-                        // No await here to speed up, assuming apps handle queueing
-                        processExternalApp(item.url, 'admin-import', item.data);
+                    logStatus('Current data cleared.');
+
+                    // 2. Restore localStorage
+                    logStatus('Restoring settings...');
+                    for (const key in lsData) {
+                        localStorage.setItem(key, lsData[key]);
                     }
-                    else if (item.type === 'dbSchema') {
-                        // Open/Create DB structure
-                        await getCachedDb(item.db, item.schema);
-                    }
-                    else if (item.type === 'dbRecord') {
-                        const db = dbConnectionCache[item.db];
-                        if (db) {
-                            // Convert Uint8Arrays back to Blobs
-                            const value = deserializeBinaryData(item.value);
-                            const tx = db.transaction(item.store, 'readwrite');
-                            const store = tx.objectStore(item.store);
-                            if (store.keyPath) store.put(value);
-                            else store.put(value, item.key);
+                    logStatus('Settings restored.');
+
+                    // 3. Restore IndexedDB
+                    logStatus('Restoring system databases...');
+                    for (const dbName in idbData) {
+                        const dbData = idbData[dbName];
+                        
+                        const request = indexedDB.open(dbName); 
+                        
+                        request.onupgradeneeded = (event) => {
+                            logStatus(`Creating schema for new database: ${dbName}`);
+                            const db = event.target.result;
+                            dbData.storeInfo.forEach(sInfo => {
+                                if (!db.objectStoreNames.contains(sInfo.name)) {
+                                    const options = {};
+                                    if(sInfo.keyPath) options.keyPath = sInfo.keyPath;
+                                    if(sInfo.autoIncrement) options.autoIncrement = sInfo.autoIncrement;
+                                    const store = db.createObjectStore(sInfo.name, options);
+
+                                    // **THE FIX IS HERE: Create the indexes**
+                                    if (sInfo.indexes && Array.isArray(sInfo.indexes)) {
+                                        sInfo.indexes.forEach(indexInfo => {
+                                            store.createIndex(indexInfo.name, indexInfo.keyPath, {
+                                                unique: indexInfo.unique,
+                                                multiEntry: indexInfo.multiEntry
+                                            });
+                                        });
+                                    }
+                                }
+                            });
+                        };
+                        
+                        const db = await new Promise((resolve, reject) => {
+                            request.onsuccess = () => resolve(request.result);
+                            request.onerror = () => reject(request.error);
+                        });
+
+                        const storeNames = Object.keys(dbData.stores);
+                        const tx = db.transaction(storeNames, 'readwrite');
+                        for (const storeName of storeNames) {
+                            const store = tx.objectStore(storeName);
+                            const records = dbData.stores[storeName];
+                            const storeInfo = dbData.storeInfo.find(s => s.name === storeName);
+
+                            if (!storeInfo) {
+                                logStatus(`Warning: Schema info for store '${storeName}' not found in transfer file. Skipping.`, true);
+                                continue;
+                            }
+                            
+                            for (const record of records) {
+                                let valueToStore = record.value;
+                                if (dbName === 'WallpaperDB' && storeName === 'wallpapers' && valueToStore.base64) {
+                                    valueToStore.blob = base64ToBlob(valueToStore.base64);
+                                    delete valueToStore.base64;
+                                }
+                                
+                                // ** THE FIX IS HERE **
+                                // Check if the store uses in-line keys (has a keyPath)
+                                if (storeInfo.keyPath) {
+                                    // If so, do not provide the key parameter to put()
+                                    store.put(valueToStore);
+                                } else {
+                                    // Otherwise, provide both the value and the key
+                                    store.put(valueToStore, record.key);
+                                }
+                            }
                         }
-                        count++;
-                        if (count % 100 === 0) logStatus(`Imported ${count} records...`);
+                            await new Promise((resolve, reject) => {
+                            tx.oncomplete = resolve;
+                            tx.onerror = () => reject(tx.error);
+                        });
+                        db.close();
                     }
+                    logStatus('System databases restored.');
+
+                    // 4. Restore External Apps
+                    if (transferData.data.externalApps) {
+                        const extApps = transferData.data.externalApps;
+                        const urls = Object.keys(extApps);
+                        logStatus(`Restoring ${urls.length} external applications...`);
+                        
+                        for (const url of urls) {
+                            logStatus(`Restoring ${url}...`);
+                            // We use the same helper defined in Export logic
+                            await processExternalApp(url, 'admin-import', extApps[url]);
+                        }
+                    }
+
+                    logStatus('Import complete! Please return home and reload the page.');
+                    alert('System transfer complete!\n\nYou will be redirected to the main page. Please manually reload it to see all changes.');
+                    window.location.href = '/';
+
+                } catch (error) {
+                    logStatus(`Import failed: ${error.message}`, true);
+                    console.error(error);
                 }
+            };
 
-                // Cleanup
-                Object.values(dbConnectionCache).forEach(db => db.close());
-
-                logStatus('Import Complete!');
-                alert('Restore successful. Reloading...');
-                window.location.href = '/';
-
-            } catch (e) {
-                logStatus(`Import Error: ${e.message}`, true);
-                console.error(e);
-            }
+            reader.onerror = () => logStatus('Failed to read the file.', true);
+            reader.readAsText(file);
         }
-
+        
+        // --- Event Listeners ---
         exportBtn.addEventListener('click', handleExport);
         importBtn.addEventListener('click', handleImport);
 
@@ -468,8 +563,10 @@
         });
 
         returnHomeBtn.addEventListener('click', () => {
+            logStatus('Redirecting to main page...');
             window.location.href = '/';
         });
+
     </script>
 </body>
 </html>
