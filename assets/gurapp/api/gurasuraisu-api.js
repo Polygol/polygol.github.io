@@ -1557,68 +1557,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
           if (data.type === 'admin-export') {
               try {
-                  // 1. LocalStorage
-                  const lsData = { ...localStorage };
+                  const exportPayload = { 
+                      localStorage: { ...localStorage },
+                      indexedDB: {} 
+                  };
 
-                  // 2. IndexedDB
-                  const idbData = {};
                   if (window.indexedDB && window.indexedDB.databases) {
                       const dbs = await window.indexedDB.databases();
                       for (const dbInfo of dbs) {
                           const dbName = dbInfo.name;
-                          const db = await new Promise((res, rej) => {
+                          const db = await new Promise(r => {
                               const req = indexedDB.open(dbName);
-                              req.onsuccess = () => res(req.result);
-                              req.onerror = () => rej(req.error);
+                              req.onsuccess = () => r(req.result);
                           });
 
-                          idbData[dbName] = { stores: {}, storeInfo: [] };
+                          exportPayload.indexedDB[dbName] = { stores: {} };
                           const storeNames = Array.from(db.objectStoreNames);
-                          const tx = db.transaction(storeNames, 'readonly');
 
-                          for (const storeName of storeNames) {
-                              const store = tx.objectStore(storeName);
+                          for (const sName of storeNames) {
+                              const tx = db.transaction(sName, 'readonly');
+                              const store = tx.objectStore(sName);
                               
-                              // Schema Info
-                              const indexNames = Array.from(store.indexNames);
-                              const indexes = indexNames.map(idx => {
-                                  const i = store.index(idx);
-                                  return { name: i.name, keyPath: i.keyPath, unique: i.unique, multiEntry: i.multiEntry };
+                              // Use cursor to avoid RangeError on large stores
+                              const records = [];
+                              await new Promise(r => {
+                                  store.openCursor().onsuccess = (e) => {
+                                      const cursor = e.target.result;
+                                      if (cursor) {
+                                          records.push({ key: cursor.key, value: cursor.value });
+                                          cursor.continue();
+                                      } else { r(); }
+                                  };
                               });
-                              idbData[dbName].storeInfo.push({
-                                  name: store.name, 
-                                  keyPath: store.keyPath, 
-                                  autoIncrement: store.autoIncrement,
-                                  indexes: indexes 
-                              });
-
-                              // Data
-                              const records = await new Promise((res, rej) => {
-                                  const req = store.getAll();
-                                  req.onsuccess = () => res(req.result);
-                                  req.onerror = rej;
-                              });
-                              
-                              const keys = await new Promise((res, rej) => {
-                                  const req = store.getAllKeys();
-                                  req.onsuccess = () => res(req.result);
-                                  req.onerror = rej;
-                              });
-
-                              const processedRecords = [];
-                              for (let i = 0; i < records.length; i++) {
-                                  processedRecords.push({ key: keys[i], value: records[i] });
-                              }
-                              idbData[dbName].stores[storeName] = processedRecords;
+                              exportPayload.indexedDB[dbName].stores[sName] = records;
                           }
                           db.close();
                       }
                   }
 
+                  // To avoid string length issues when sending to parent, 
+                  // we send the object directly. postMessage clones the object 
+                  // using the structured clone algorithm, which does NOT 
+                  // involve JSON.stringify and has no string length limit.
                   window.parent.postMessage({
                       type: 'admin-export-response',
-                      appUrl: window.location.href, // Identity
-                      data: { localStorage: lsData, indexedDB: idbData }
+                      appUrl: window.location.href,
+                      data: exportPayload
                   }, '*');
 
               } catch (e) {
