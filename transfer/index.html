@@ -464,139 +464,173 @@
         }
 
         async function handleZipImport(file) {
-            logStatus('Reading binary archive...');
+            logStatus('Reading archive...');
+            
             try {
                 const buffer = new Uint8Array(await file.arrayBuffer());
+                
+                // Unzip all files into memory structure
                 const unzipped = fflate.unzipSync(buffer);
                 
-                // 1. Wipe current system data
-                logStatus('Wiping current storage...');
+                // 1. Wipe Data
+                logStatus('Clearing current system data...');
                 localStorage.clear();
-                if (window.indexedDB.databases) {
-                    const dbs = await indexedDB.databases();
-                    for (const db of dbs) {
-                        await new Promise(r => { 
-                            const req = indexedDB.deleteDatabase(db.name); 
-                            req.onsuccess = r; req.onerror = r; 
-                        });
-                    }
+                const currentDBs = await indexedDB.databases();
+                for (const dbInfo of currentDBs) {
+                    await new Promise(r => { 
+                        const req = indexedDB.deleteDatabase(dbInfo.name); 
+                        req.onsuccess = r; req.onerror = r; 
+                    });
                 }
 
                 // 2. Restore LocalStorage
                 if (unzipped['localStorage.json']) {
-                    const lsData = JSON.parse(fflate.strFromU8(unzipped['localStorage.json']));
+                    const str = fflate.strFromU8(unzipped['localStorage.json']);
+                    const lsData = JSON.parse(str);
                     for (const k in lsData) localStorage.setItem(k, lsData[k]);
-                    logStatus('Settings restored.');
                 }
 
-                // 3. Restore System IndexedDB (File-per-record reconstruction)
-                const systemDbSchemas = Object.keys(unzipped).filter(k => k.startsWith('idb/') && k.endsWith('/_schema.json'));
-                for (const schemaPath of systemDbSchemas) {
+                // 3. Restore IndexedDB
+                // Identify databases by schema files
+                const dbSchemas = Object.keys(unzipped).filter(k => k.startsWith('indexedDB/') && k.endsWith('/schema.json'));
+                
+                for (const schemaPath of dbSchemas) {
                     const dbName = schemaPath.split('/')[1];
-                    logStatus(`Restoring System DB: ${dbName}...`);
+                    logStatus(`Restoring DB: ${dbName}...`);
                     
-                    const schemaInfo = JSON.parse(fflate.strFromU8(unzipped[schemaPath]));
+                    const schemaStr = fflate.strFromU8(unzipped[schemaPath]);
+                    const schemaInfo = JSON.parse(schemaStr);
+                    
+                    // Create DB & Stores
                     const request = indexedDB.open(dbName);
-                    
                     request.onupgradeneeded = (e) => {
                         const db = e.target.result;
                         schemaInfo.forEach(s => {
-                            const st = db.createObjectStore(s.name, { keyPath: s.keyPath, autoIncrement: s.autoIncrement });
-                            if (s.indexes) s.indexes.forEach(i => {
-                                try { st.createIndex(i.name, i.keyPath, { unique: i.unique }); } catch(err){}
-                            });
+                            if (!db.objectStoreNames.contains(s.name)) {
+                                const opts = {};
+                                if (s.keyPath) opts.keyPath = s.keyPath;
+                                if (s.autoIncrement) opts.autoIncrement = s.autoIncrement;
+                                const store = db.createObjectStore(s.name, opts);
+                                
+                                if (s.indexes) {
+                                    s.indexes.forEach(i => {
+                                        try { store.createIndex(i.name, i.keyPath, { unique: i.unique, multiEntry: i.multiEntry }); } catch(e){}
+                                    });
+                                }
+                            }
                         });
                     };
+                    
+                    const db = await new Promise((res, rej) => {
+                        request.onsuccess = () => res(request.result);
+                        request.onerror = () => rej(request.error);
+                    });
 
-                    const db = await new Promise(r => request.onsuccess = () => r(request.result));
+                    // Restore Data
                     const tx = db.transaction(schemaInfo.map(s => s.name), 'readwrite');
                     
                     for (const s of schemaInfo) {
+                        const dataPath = `indexedDB/${dbName}/${s.name}.json`;
+                        if (!unzipped[dataPath]) continue;
+                        
+                        const records = JSON.parse(fflate.strFromU8(unzipped[dataPath]));
                         const store = tx.objectStore(s.name);
-                        const recordFiles = Object.keys(unzipped).filter(k => 
-                            k.startsWith(`idb/${dbName}/${s.name}/`) && k.endsWith('.json')
-                        );
-
-                        for (const rFile of recordFiles) {
-                            const rec = JSON.parse(fflate.strFromU8(unzipped[rFile]));
-                            const binFile = unzipped[rFile.replace('.json', '.bin')];
+                        
+                        for (const rec of records) {
+                            let val = rec.value;
                             
-                            // Rehydrate Blobs
-                            if (binFile) {
-                                if (rec.value && rec.value._type === 'bin_ref') {
-                                    rec.value = new Blob([binFile], { type: rec.value.mime });
-                                } else if (rec.value && rec.value.blob && rec.value.blob._type === 'bin_ref') {
-                                    rec.value.blob = new Blob([binFile], { type: rec.value.blob.mime });
+                            // Reconstruct Blobs from references
+                            if (val && val.blob && val.blob._type === 'blob_ref') {
+                                const ref = val.blob;
+                                const fileData = unzipped[ref.path];
+                                if (fileData) {
+                                    val.blob = new Blob([fileData], { type: ref.mime });
+                                }
+                            } else if (val && val._type === 'blob_ref') {
+                                const fileData = unzipped[val.path];
+                                if (fileData) {
+                                    val = new Blob([fileData], { type: val.mime });
                                 }
                             }
-                            
-                            if (s.keyPath) store.put(rec.value);
-                            else store.put(rec.value, rec.key);
+
+                            if (s.keyPath) {
+                                store.put(val);
+                            } else {
+                                store.put(val, rec.key);
+                            }
                         }
                     }
-                    await new Promise(r => tx.oncomplete = r);
+                    
+                    await new Promise(r => { tx.oncomplete = r; tx.onerror = r; });
                     db.close();
                 }
 
-                // 4. Restore External Apps (Reconstruct payloads)
+                // 4. Restore Apps (Reconstruct from file-system structure)
                 const appFolders = [...new Set(Object.keys(unzipped)
                     .filter(k => k.startsWith('apps/'))
                     .map(k => k.split('/').slice(0, 2).join('/')))];
 
-                for (const folder of appFolders) {
-                    const encodedUrl = folder.split('/')[1];
-                    const url = atob(encodedUrl);
-                    logStatus(`Restoring app: ${url}...`);
+                if (appFolders.length > 0) {
+                    logStatus(`Restoring ${appFolders.length} cross-origin apps...`);
+                    for (const folder of appFolders) {
+                        const url = atob(folder.split('/')[1]);
+                        logStatus(`Restoring ${url}...`);
 
-                    const appPayload = { localStorage: {}, indexedDB: {} };
+                        const appPayload = { localStorage: {}, indexedDB: {} };
 
-                    // Restore App LocalStorage
-                    if (unzipped[`${folder}/localStorage.json`]) {
-                        appPayload.localStorage = JSON.parse(fflate.strFromU8(unzipped[`${folder}/localStorage.json`]));
-                    }
-
-                    // Reconstruct App IndexedDB Payload
-                    const appDbSchemas = Object.keys(unzipped).filter(k => 
-                        k.startsWith(`${folder}/idb/`) && k.endsWith('/_schema.json')
-                    );
-
-                    for (const schemaPath of appDbSchemas) {
-                        const dbName = schemaPath.split('/')[3];
-                        const storeInfo = JSON.parse(fflate.strFromU8(unzipped[schemaPath]));
-                        appPayload.indexedDB[dbName] = { stores: {}, storeInfo: storeInfo };
-
-                        for (const s of storeInfo) {
-                            const records = [];
-                            const recordFiles = Object.keys(unzipped).filter(k => 
-                                k.startsWith(`${folder}/idb/${dbName}/${s.name}/`) && k.endsWith('.json')
-                            );
-
-                            for (const rFile of recordFiles) {
-                                const rec = JSON.parse(fflate.strFromU8(unzipped[rFile]));
-                                const binFile = unzipped[rFile.replace('.json', '.bin')];
-                                
-                                if (binFile) {
-                                    if (rec.value && rec.value._type === 'bin_ref') {
-                                        rec.value = new Blob([binFile], { type: rec.value.mime });
-                                    } else if (rec.value && rec.value.blob && rec.value.blob._type === 'bin_ref') {
-                                        rec.value.blob = new Blob([binFile], { type: rec.value.blob.mime });
-                                    }
-                                }
-                                records.push(rec);
-                            }
-                            appPayload.indexedDB[dbName].stores[s.name] = records;
+                        // Restore LocalStorage
+                        if (unzipped[`${folder}/localStorage.json`]) {
+                            appPayload.localStorage = JSON.parse(fflate.strFromU8(unzipped[`${folder}/localStorage.json`]));
                         }
-                    }
 
-                    // Send to App Iframe
-                    await processExternalApp(url, 'admin-import', appPayload);
+                        // Identify DBs in this app
+                        const appDBs = [...new Set(Object.keys(unzipped)
+                            .filter(k => k.startsWith(`${folder}/idb/`))
+                            .map(k => k.split('/')[3]))];
+
+                        for (const dbName of appDBs) {
+                            const schemaFile = unzipped[`${folder}/idb/${dbName}/_schema.json`];
+                            if (!schemaFile) continue;
+
+                            const storeInfo = JSON.parse(fflate.strFromU8(schemaFile));
+                            appPayload.indexedDB[dbName] = { stores: {}, storeInfo: storeInfo };
+
+                            for (const s of storeInfo) {
+                                const sName = s.name;
+                                const records = [];
+                                const recordFiles = Object.keys(unzipped).filter(k => 
+                                    k.startsWith(`${folder}/idb/${dbName}/${sName}/`) && k.endsWith('.json')
+                                );
+
+                                for (const rFile of recordFiles) {
+                                    const rec = JSON.parse(fflate.strFromU8(unzipped[rFile]));
+                                    const binFile = unzipped[rFile.replace('.json', '.bin')];
+
+                                    if (binFile) {
+                                        // Case 1: The value IS the blob reference
+                                        if (rec.value && rec.value._type === 'bin_ref') {
+                                            rec.value = new Blob([binFile], { type: rec.value.mime });
+                                        } 
+                                        // Case 2: The value is an object CONTAINING a blob reference (e.g. WallpaperDB)
+                                        else if (rec.value && rec.value.blob && rec.value.blob._type === 'bin_ref') {
+                                            rec.value.blob = new Blob([binFile], { type: rec.value.blob.mime });
+                                        }
+                                    }
+                                    records.push(rec);
+                                }
+                                appPayload.indexedDB[dbName].stores[sName] = records;
+                            }
+                        }
+
+                        await processExternalApp(url, 'admin-import', appPayload);
+                    }
                 }
 
-                logStatus('Import complete! Reloading...');
+                logStatus('Import complete! Redirecting...');
                 setTimeout(() => window.location.href = '/', 1000);
 
             } catch (e) {
-                logStatus(`Import Error: ${e.message}`, true);
+                logStatus(`ZIP Import Error: ${e.message}`, true);
                 console.error(e);
             }
         }
