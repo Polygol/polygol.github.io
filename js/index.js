@@ -3174,6 +3174,24 @@ window.addEventListener('wheel', function(e) {
     }
 }, { passive: false });
 
+// Prevents back/forward navigation
+history.pushState(null, null, location.href);
+window.onpopstate = function () {
+    history.go(1);
+};
+
+// Block navigation keyboard shortcuts
+window.addEventListener('keydown', (e) => {
+    const isNavigationKey = 
+        (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) || // Alt + Left/Right
+        (e.metaKey && (e.key === '[' || e.key === ']')); // Cmd + [ / ] (Mac)
+
+    if (isNavigationKey) {
+        e.preventDefault();
+        console.log("[System] Browser navigation shortcut blocked.");
+    }
+}, { capture: true });
+
 // Helper to parse CSS color strings (rgb, rgba, hex) into {r,g,b,a}
 function parseCssColor(str) {
     if (!str) return null;
