@@ -603,20 +603,25 @@
                                 );
 
                                 for (const rFile of recordFiles) {
-                                    const rec = JSON.parse(fflate.strFromU8(unzipped[rFile]));
-                                    const binFile = unzipped[rFile.replace('.json', '.bin')];
+                                    try {
+                                        const rec = JSON.parse(fflate.strFromU8(unzipped[rFile]));
+                                        const binFile = unzipped[rFile.replace('.json', '.bin')];
 
-                                    if (binFile) {
-                                        // Case 1: The value IS the blob reference
-                                        if (rec.value && rec.value._type === 'bin_ref') {
-                                            rec.value = new Blob([binFile], { type: rec.value.mime });
-                                        } 
-                                        // Case 2: The value is an object CONTAINING a blob reference (e.g. WallpaperDB)
-                                        else if (rec.value && rec.value.blob && rec.value.blob._type === 'bin_ref') {
-                                            rec.value.blob = new Blob([binFile], { type: rec.value.blob.mime });
+                                        if (binFile) {
+                                            // Depth-first binary reconstruction
+                                            if (rec.value && typeof rec.value === 'object') {
+                                                if (rec.value._type === 'bin_ref') {
+                                                    rec.value = new Blob([binFile], { type: rec.value.mime });
+                                                } else if (rec.value.blob && rec.value.blob._type === 'bin_ref') {
+                                                    rec.value.blob = new Blob([binFile], { type: rec.value.blob.mime });
+                                                }
+                                            }
                                         }
-                                    }
-                                    records.push(rec);
+                                        // Ensure we pass an object with {key, value}
+                                        if (rec.key !== undefined) {
+                                            records.push(rec);
+                                        }
+                                    } catch (e) { console.error("Failed to parse record", rFile, e); }
                                 }
                                 appPayload.indexedDB[dbName].stores[sName] = records;
                             }
