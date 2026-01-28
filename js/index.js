@@ -6383,6 +6383,23 @@ async function createAutomaticBackup() {
             }
         }
 
+		// Cross-Origin External Apps
+        const appUrls = JSON.parse(localStorage.getItem('userInstalledApps') || '{}');
+        const crossOriginApps = Object.values(appUrls).map(a => a.url).filter(url => {
+            try {
+                return new URL(url, window.location.origin).origin !== window.location.origin;
+            } catch(e) { return false; }
+        });
+
+        if (crossOriginApps.length > 0) {
+            const extAppsData = {};
+            for (const url of crossOriginApps) {
+                const result = await processExternalApp(url, 'admin-export');
+                if (result.data) extAppsData[url] = result.data;
+            }
+            zipData['externalApps.json'] = fflate.strToU8(JSON.stringify(extAppsData));
+        }
+
         // 3. Compress
         fflate.zip(zipData, { level: 1 }, (err, data) => {
             if (err) {
