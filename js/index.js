@@ -39,25 +39,6 @@ const SoundManager = {
         if (audio) {
             // Clone to allow rapid-fire playback (overlapping sounds)
             const clone = audio.cloneNode();
-            clone.volume = 0.4; // Subtle volume
-            clone.play().catch(e => { /* Ignore autoplay blocks */ });
-        }
-    }
-};
-
-    play: function(type) {
-        // 1. Check Global Settings
-        const mode = localStorage.getItem('uiSoundMode') || 'silent_off';
-        const isSilent = localStorage.getItem('silentMode') === 'true';
-
-        if (mode === 'always_off') return;
-        if (mode === 'silent_off' && isSilent) return;
-
-        // 2. Play Sound
-        const audio = this.sounds[type];
-        if (audio) {
-            // Clone to allow rapid-fire playback (overlapping sounds)
-            const clone = audio.cloneNode();
             
             // Apply volume setting (default 40%)
             const volSetting = localStorage.getItem('sfxVolume');
