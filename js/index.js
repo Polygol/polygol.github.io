@@ -3142,7 +3142,7 @@ function calculateSmartZoom() {
 	
     // Watch
     // Unusable
-    if (width < 400) return 60;
+    if (width < 400) return 75;
 	
     // Mobile
     // Grrr
