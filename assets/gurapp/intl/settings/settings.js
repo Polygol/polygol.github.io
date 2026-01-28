@@ -202,6 +202,9 @@ function initializeSettingsApp() {
         const controls = document.querySelectorAll(`[data-key="${key}"]`);
         if (controls.length === 0) return;
         controls.forEach(control => {
+            // Prevent overwriting the value while the user is actively adjusting the slider
+            if (document.activeElement === control && control.type === 'range') return;
+
             if (control.type === 'checkbox') {
                 control.checked = (key === 'theme') ? (value === 'light') : (value === 'true');
             } else if (control.type === 'range' || control.type === 'color' || control.tagName === 'SELECT' || control.type === 'text') {
@@ -666,6 +669,7 @@ function initializeSettingsApp() {
     // Announce readiness to the parent, which will trigger the initial settings sync.
     if (window.parent) {
         window.parent.postMessage({ type: 'gurapp-ready' }, window.location.origin);
+        Gurasuraisu.getLocalStorageItem('displayScale');
     }
 }
 
