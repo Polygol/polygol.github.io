@@ -3031,7 +3031,7 @@ input[type="checkbox"]:checked::before {
             transition: transform 0.2s;
             padding-bottom: 2%;
             user-select: none;
-			gap: 2%;
+			gap: 2vh;
         }
 
         .app-icon img {
@@ -3470,6 +3470,7 @@ input[type="checkbox"]:checked::before {
     position: fixed;
     opacity: 0;
     left: 0;
+	bottom: 0;
     width: 100%;
     height: 100%;
     background-color: var(--background-color);
