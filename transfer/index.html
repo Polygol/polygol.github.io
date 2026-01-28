@@ -294,29 +294,38 @@
 
                         yield { type: 'dbSchema', db: dbName, schema: schema };
 
-                        // Stream Records using Cursor
-                        await new Promise((resolve) => {
-                            const request = store.openCursor();
-                            request.onsuccess = async (event) => {
-                                const cursor = event.target.result;
-                                if (cursor) {
-                                    // Serialize Blobs to Uint8Arrays before yielding
-                                    const safeValue = await serializeBinaryData(cursor.value);
-                                    
-                                    yield { 
-                                        type: 'dbRecord', 
-                                        db: dbName, 
-                                        store: storeName, 
-                                        key: cursor.key, 
-                                        value: safeValue 
-                                    };
-                                    cursor.continue();
-                                } else {
-                                    resolve();
-                                }
+                        // Stream Records using Promisified Cursor Pattern
+                        // We must bridge the event-based cursor to the async generator to use 'yield'
+                        const request = store.openCursor();
+                        
+                        let cursorResolve;
+                        let cursorReject;
+                        // Create the initial promise to wait for the first record
+                        let cursorPromise = new Promise((res, rej) => { cursorResolve = res; cursorReject = rej; });
+
+                        request.onsuccess = (event) => cursorResolve(event.target.result);
+                        request.onerror = (event) => cursorReject(event);
+
+                        while (true) {
+                            // Wait for the cursor to move to the next item
+                            const cursor = await cursorPromise;
+                            if (!cursor) break; // End of store
+
+                            const safeValue = await serializeBinaryData(cursor.value);
+                            
+                            // Yield allows the MessagePack encoder to stream this chunk immediately
+                            yield { 
+                                type: 'dbRecord', 
+                                db: dbName, 
+                                store: storeName, 
+                                key: cursor.key, 
+                                value: safeValue 
                             };
-                            request.onerror = () => resolve();
-                        });
+
+                            // Reset the promise for the next iteration BEFORE calling continue
+                            cursorPromise = new Promise((res, rej) => { cursorResolve = res; cursorReject = rej; });
+                            cursor.continue();
+                        }
                     }
                     db.close();
                 }
