@@ -1653,18 +1653,33 @@ document.addEventListener('DOMContentLoaded', () => {
                           });
 
                           const tx = db.transaction(Object.keys(dbInfo.stores), 'readwrite');
-                              for (const storeName in dbInfo.stores) {
-                              const store = tx.objectStore(storeName);
-                              const records = dbInfo.stores[storeName];
-                              const sInfo = dbInfo.storeInfo.find(x => x.name === storeName);
-
-                              for (const rec of records) {
-                                  let val = rec.value;
-                                  // Backward Compatibility: Only convert if it's a legacy Base64 container
-                                  if (val && val._isBlob && typeof val.data === 'string') val = base64ToBlob(val.data);
+                            for (const storeName in dbInfo.stores) {
+                                  const store = tx.objectStore(storeName);
+                                  const records = dbInfo.stores[storeName];
+                                  const sInfo = dbInfo.storeInfo.find(x => x.name === storeName);
                                   
-                                  if (sInfo && sInfo.keyPath) store.put(val);
-                                  else store.put(val, rec.key);
+                                  // Optimization: Clear store first to ensure clean overwrite
+                                  store.clear();
+    
+                                  for (const rec of records) {
+                                      let val = rec.value;
+                                      let key = rec.key;
+                                      
+                                      // Legacy Base64 check
+                                      if (val && val._isBlob && typeof val.data === 'string') val = base64ToBlob(val.data);
+    
+                                      try {
+                                          // CRITICAL: If store has keyPath, don't provide key param
+                                          // If store uses out-of-line keys, the key is required
+                                          if (sInfo && (sInfo.keyPath !== null && sInfo.keyPath !== "")) {
+                                              store.put(val);
+                                          } else {
+                                              store.put(val, key);
+                                          }
+                                      } catch (err) {
+                                          console.error(`Store ${storeName} put failed:`, err);
+                                      }
+                                  }
                               }
                           }
                           await new Promise(r => { tx.oncomplete = r; tx.onerror = r; });
