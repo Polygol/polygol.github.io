@@ -698,17 +698,25 @@ async function setupServiceWorkerUpdateListener() {
 
     // Load Version Info on startup
     updateSystemVersionUI().then(() => {
-        // Daily Auto-Check Logic
-        const lastCheck = parseInt(localStorage.getItem('last_sw_check') || '0');
-        const ONE_DAY = 24 * 60 * 60 * 1000;
-        
-        if (Date.now() - lastCheck > ONE_DAY) {
-            console.log("[System] Running scheduled daily update check...");
-            navigator.serviceWorker.getRegistration().then(reg => {
-                if (reg) reg.update();
-                localStorage.setItem('last_sw_check', Date.now().toString());
-            });
-        }
+        const checkUpdate = () => {
+            const lastCheck = parseInt(localStorage.getItem('last_sw_check') || '0');
+            const ONE_DAY = 24 * 60 * 60 * 1000;
+
+            if (Date.now() - lastCheck > ONE_DAY) {
+                console.log("[System] Running background update check...");
+                navigator.serviceWorker.getRegistration().then(reg => {
+                    // .update() downloads new assets silently without refreshing the page
+                    if (reg) reg.update();
+                    localStorage.setItem('last_sw_check', Date.now().toString());
+                });
+            }
+        };
+
+        // 1. Check immediately on boot
+        checkUpdate();
+
+        // 2. Check every 6 hours while the OS is running
+        setInterval(checkUpdate, 6 * 60 * 60 * 1000);
     });
 
     const isUpdate = navigator.serviceWorker.controller !== null;
@@ -769,8 +777,11 @@ async function setupServiceWorkerUpdateListener() {
     });
 
     let refreshing;
+    // This listener is only triggered when the user explicitly clicks 
+    // the "Restart and Install" button in the notification.
     navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!refreshing && isUpdate) {
+            console.log("[System] New Service Worker activated. Finalizing update...");
             window.location.reload();
             refreshing = true;
         }
