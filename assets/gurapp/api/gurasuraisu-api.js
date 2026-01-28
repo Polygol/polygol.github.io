@@ -1534,25 +1534,49 @@ document.addEventListener('DOMContentLoaded', () => {
           if (event.source !== window.parent) return;
           const data = event.data;
 
-          // Helper: Blob to Base64
-          const blobToBase64 = (blob) => {
-              return new Promise((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onloadend = () => resolve(reader.result);
-                  reader.onerror = reject;
-                  reader.readAsDataURL(blob);
-              });
+          // --- Binary Serialization Utilities ---
+          // Converts a Blob to a plain JS Object with a Uint8Array suitable for MsgPack
+          const blobToBuffer = async (blob) => {
+              return new Uint8Array(await blob.arrayBuffer());
           };
 
-          // Helper: Base64 to Blob
-          const base64ToBlob = (dataUrl) => {
-              const arr = dataUrl.split(',');
-              const mime = arr[0].match(/:(.*?);/)[1];
-              const bstr = atob(arr[1]);
-              let n = bstr.length;
-              const u8arr = new Uint8Array(n);
-              while (n--) u8arr[n] = bstr.charCodeAt(n);
-              return new Blob([u8arr], { type: mime });
+          // Recursively finds Blobs and converts them to the transfer format:
+          // { __dataType: 'blob', mime: 'image/png', data: Uint8Array }
+          const serializeBinaryData = async (obj) => {
+              if (obj instanceof Blob) {
+                  return {
+                      __dataType: 'blob',
+                      mime: obj.type,
+                      data: await blobToBuffer(obj)
+                  };
+              } else if (Array.isArray(obj)) {
+                  return Promise.all(obj.map(item => serializeBinaryData(item)));
+              } else if (obj !== null && typeof obj === 'object') {
+                  const newObj = {};
+                  for (const key in obj) {
+                      newObj[key] = await serializeBinaryData(obj[key]);
+                  }
+                  return newObj;
+              }
+              return obj;
+          };
+
+          // Converts the transfer format back into native Blobs
+          const deserializeBinaryData = (obj) => {
+              if (obj !== null && typeof obj === 'object') {
+                  if (obj.__dataType === 'blob') {
+                      return new Blob([obj.data], { type: obj.mime });
+                  }
+                  if (Array.isArray(obj)) {
+                      return obj.map(item => deserializeBinaryData(item));
+                  }
+                  const newObj = {};
+                  for (const key in obj) {
+                      newObj[key] = deserializeBinaryData(obj[key]);
+                  }
+                  return newObj;
+              }
+              return obj;
           };
 
           if (data.type === 'admin-export') {
@@ -1607,10 +1631,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                               const processedRecords = [];
                               for (let i = 0; i < records.length; i++) {
-                                  let val = records[i];
-                                  // Serialize Blobs
-                                  if (val instanceof Blob) val = { _isBlob: true, data: await blobToBase64(val) };
-                                  // Handle object/array structures containing blobs if necessary (simplified here)
+                                  // This recursive call handles Blobs nested in objects
+                                  let val = await serializeBinaryData(records[i]);
                                   processedRecords.push({ key: keys[i], value: val });
                               }
                               idbData[dbName].stores[storeName] = processedRecords;
@@ -1633,13 +1655,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
           if (data.type === 'admin-import') {
               try {
-                  const { localStorage: lsData, indexedDB: idbData } = data.payload;
-
+                  // data.payload now contains the Uint8Array structures from MsgPack decoding
+                  const payload = data.payload; 
+                  
                   // 1. Restore LS
+                  const lsData = payload.localStorage || {};
                   localStorage.clear();
                   for (const k in lsData) localStorage.setItem(k, lsData[k]);
 
                   // 2. Restore IDB
+                  const idbData = payload.indexedDB || {};
+                  
                   if (window.indexedDB && window.indexedDB.databases) {
                       const currentDbs = await window.indexedDB.databases();
                       for (const db of currentDbs) {
@@ -1672,8 +1698,9 @@ document.addEventListener('DOMContentLoaded', () => {
                               const sInfo = dbInfo.storeInfo.find(x => x.name === storeName);
 
                               for (const rec of records) {
-                                  let val = rec.value;
-                                  if (val && val._isBlob) val = base64ToBlob(val.data);
+                                  // Recursively restore Uint8Arrays back to Blobs
+                                  let val = deserializeBinaryData(rec.value);
+                                  
                                   if (sInfo && sInfo.keyPath) store.put(val);
                                   else store.put(val, rec.key);
                               }
