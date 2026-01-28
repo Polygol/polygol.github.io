@@ -181,40 +181,49 @@
             });
         }
 
-        // Efficiently streams records into the zipData object one-by-one
         async function streamStoreToZip(db, storeName, dbName, zipData) {
-            return new Promise((resolve, reject) => {
+            const tempRecords = [];
+            
+            // Step 1: Collect references while transaction is active
+            await new Promise((resolve, reject) => {
                 const transaction = db.transaction(storeName, 'readonly');
                 const store = transaction.objectStore(storeName);
                 const request = store.openCursor();
-                let count = 0;
                 
-                request.onsuccess = async (event) => {
+                request.onsuccess = (event) => {
                     const cursor = event.target.result;
                     if (cursor) {
-                        const key = cursor.key;
-                        let val = cursor.value;
-                        const recordPath = `idb/${dbName}/${storeName}/rec_${count}`;
-
-                        // 1. Handle Blobs
-                        if (val instanceof Blob || (val && val.blob instanceof Blob)) {
-                            const b = val.blob || val;
-                            zipData[`${recordPath}.bin`] = new Uint8Array(await b.arrayBuffer());
-                            val = { _type: 'bin_ref', mime: b.type }; 
-                        }
-
-                        // 2. Store individual record metadata/object as tiny JSON
-                        // Stringifying a single record is safe; stringifying an array of 10,000 is not.
-                        zipData[`${recordPath}.json`] = fflate.strToU8(JSON.stringify({ key, value: val }));
-                        
-                        count++;
+                        // Blobs are just references here, so this is memory-safe
+                        tempRecords.push({ key: cursor.key, value: cursor.value });
                         cursor.continue();
                     } else {
-                        resolve(count);
+                        resolve();
                     }
                 };
                 request.onerror = () => reject(request.error);
             });
+
+            // Step 2: Process binary data after transaction is closed
+            for (let i = 0; i < tempRecords.length; i++) {
+                const rec = tempRecords[i];
+                let val = rec.value;
+                const recordPath = `idb/${dbName}/${storeName}/rec_${i}`;
+
+                if (val instanceof Blob || (val && val.blob instanceof Blob)) {
+                    const b = val.blob || val;
+                    // Read actual data only when needed for the ZIP
+                    const buffer = new Uint8Array(await b.arrayBuffer());
+                    zipData[`${recordPath}.bin`] = buffer;
+                    val = { _type: 'bin_ref', mime: b.type }; 
+                }
+
+                // Individual JSON files prevent RangeError: Invalid string length
+                zipData[`${recordPath}.json`] = fflate.strToU8(JSON.stringify({ 
+                    key: rec.key, 
+                    value: val 
+                }));
+            }
+            return tempRecords.length;
         }
 
         // --- External App Utilities ---
