@@ -2648,10 +2648,12 @@ input[type="checkbox"]:checked::before {
 
     /* Night Stand Mode */
     body.night-stand-active {
-        background-color: #000000 !important;
-        /* Red filter: Grayscale -> Sepia -> Rotate Hue to Red -> Saturate */
-        filter: grayscale(100%) sepia(100%) hue-rotate(-50deg) saturate(600%) contrast(0.9) brightness(0.8) !important;
+	    background-color: #000 !important;
     }
+
+	body.night-stand-active #temperature-overlay {
+        filter: grayscale(100%) sepia(100%) hue-rotate(-50deg) saturate(600%) contrast(0.9) brightness(0.8) !important;
+	}
 
     body.night-stand-active::before,
     body.night-stand-active #background-video,
@@ -2669,7 +2671,7 @@ input[type="checkbox"]:checked::before {
     body.night-stand-active .persistent-clock {
         z-index: 10;
     }
-
+																									   
 	/* Hide all main UI elements during initial setup and post-setup onboarding */
 	body.setup-active .container,
 	body.setup-active .widget-grid,
