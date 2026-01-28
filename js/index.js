@@ -76,13 +76,11 @@ const KeyboardNavigationManager = {
     enabled: false,
     focusedIndex: -1,
     interactiveElements: [],
+    lastDirection: 'forward',
     
     init() {
         this.enabled = localStorage.getItem('keyboardNavEnabled') === 'true';
         document.addEventListener('keydown', (e) => this.handleKey(e));
-        
-        // Listen for DOM changes to refresh list? 
-        // For performance, we'll scan on Tab press instead of MutationObserver
     },
     
     scan() {
@@ -141,11 +139,13 @@ const KeyboardNavigationManager = {
                 this.scan();
                 this.focusedIndex = -1;
             }
-
+			
             if (e.shiftKey) {
+                this.lastDirection = 'backward';
                 this.focusedIndex--;
                 if (this.focusedIndex < 0) this.focusedIndex = this.interactiveElements.length - 1;
             } else {
+                this.lastDirection = 'forward';
                 this.focusedIndex++;
                 if (this.focusedIndex >= this.interactiveElements.length) this.focusedIndex = 0;
             }
@@ -169,6 +169,24 @@ const KeyboardNavigationManager = {
             }
         }
     },
+
+    resumeFromChild(childFrame, direction) {
+        this.scan();
+        // Find index of the child frame
+        const index = this.interactiveElements.indexOf(childFrame);
+        if (index === -1) {
+            this.focusedIndex = 0;
+        } else {
+            if (direction === 'forward') {
+                this.focusedIndex = index + 1;
+                if (this.focusedIndex >= this.interactiveElements.length) this.focusedIndex = 0;
+            } else {
+                this.focusedIndex = index - 1;
+                if (this.focusedIndex < 0) this.focusedIndex = this.interactiveElements.length - 1;
+            }
+        }
+        this.updateFocus();
+    },
     
     updateFocus() {
         // Remove old focus
@@ -177,9 +195,26 @@ const KeyboardNavigationManager = {
         // Apply new focus
         if (this.focusedIndex >= 0 && this.interactiveElements[this.focusedIndex]) {
             const el = this.interactiveElements[this.focusedIndex];
-            el.classList.add('a11y-focused');
             
-            // Scroll into view if needed
+            // SPECIAL HANDLING FOR IFRAMES
+            if (el.tagName === 'IFRAME') {
+                // We need to send the message.
+                // To avoid immediate exit, we don't 'focus' the iframe element itself visibly.
+                // We hand off control.
+                
+                const targetOrigin = getOriginFromUrl(el.src);
+                el.contentWindow.postMessage({ 
+                    type: 'switch-control-enter', 
+                    direction: this.lastDirection // Pass the tracked direction
+                }, targetOrigin);
+                
+                // Deselect in parent so we don't have a double-focus ring
+                this.focusedIndex = -1; 
+                el.focus(); // Give browser focus to iframe so it catches keydowns
+                return;
+            }
+
+            el.classList.add('a11y-focused');
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             
             SoundManager.play('select');
@@ -15535,6 +15570,61 @@ window.addEventListener('message', async (event) => { // Make listener async
 
             if (window.WavesHost && appName) {
                 window.WavesHost.pushAppUIUpdate(appName, updates);
+            }
+        },
+        performSystemShortcut: (action) => {
+            if (action === 'appSwitcher') {
+                if (!appSwitcherVisible) {
+                    openAppSwitcher();
+                } else {
+                    updateSwitcherSelection(appSwitcherIndex + 1);
+                }
+            } else if (action === 'home') {
+                // Shift+Space Logic (Home/Drawer)
+                if (shiftSpaceSequenceTimer) {
+                     clearTimeout(shiftSpaceSequenceTimer);
+                }
+                // Set a timer to trigger Home/Drawer action if E is not pressed soon.
+                shiftSpaceSequenceTimer = setTimeout(() => {
+                    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+                    if (openEmbed) {
+                        minimizeFullscreenEmbed();
+                    } else {
+                        const isDrawerOpen = appDrawer.classList.toggle('open');
+                        if(isDrawerOpen) createAppIcons();
+                    }
+                    shiftSpaceSequenceTimer = null;
+                }, 250);
+            } else if (action === 'actionE') {
+                // E Logic (Quick Actions)
+                 if (shiftSpaceSequenceTimer) {
+                    clearTimeout(shiftSpaceSequenceTimer);
+                    shiftSpaceSequenceTimer = null;
+        
+                    const customizeModal = document.getElementById('customizeModal');
+                    if (customizeModal.classList.contains('show')) {
+                        closeControls();
+                    } else {
+                        document.getElementById('persistent-clock').click();
+                    }
+                }
+            }
+        },
+        switchControlExit: (direction) => {
+            // 1. Identify source iframe
+            let sourceFrame = null;
+            const iframes = document.querySelectorAll('iframe');
+            for(const f of iframes) {
+                if (f.contentWindow === event.source) {
+                    sourceFrame = f;
+                    break;
+                }
+            }
+            
+            if (sourceFrame) {
+                // 2. Resume Parent Navigation
+                window.focus(); // Reclaim focus
+                KeyboardNavigationManager.resumeFromChild(sourceFrame, direction);
             }
         },
 
