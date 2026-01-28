@@ -371,30 +371,46 @@
                         const result = await processExternalApp(url, 'admin-export');
                         
                         if (result.data) {
-                            const appFolder = `apps/${btoa(url)}`; // Use base64 URL as folder name
+                            const appFolder = `apps/${btoa(url)}`;
                             
-                            // Process any binary Blobs within the app's exported data
+                            // 1. LocalStorage
+                            if (result.data.localStorage) {
+                                zipData[`${appFolder}/localStorage.json`] = fflate.strToU8(JSON.stringify(result.data.localStorage));
+                            }
+
+                            // 2. IndexedDB (Record-by-record streaming into ZIP)
                             if (result.data.indexedDB) {
                                 for (const dbName in result.data.indexedDB) {
                                     const db = result.data.indexedDB[dbName];
+                                    
+                                    // Save schemas
+                                    zipData[`${appFolder}/idb/${dbName}/_schema.json`] = fflate.strToU8(JSON.stringify(db.storeInfo));
+
                                     for (const sName in db.stores) {
                                         const records = db.stores[sName];
                                         for (let i = 0; i < records.length; i++) {
-                                            const val = records[i].value;
-                                            if (val instanceof Blob) {
-                                                const buf = new Uint8Array(await val.arrayBuffer());
-                                                const bPath = `${appFolder}/idb/${dbName}/${sName}_${i}.bin`;
-                                                zipData[bPath] = buf;
-                                                records[i].value = { _type: 'blob_ref', path: bPath, mime: val.type };
+                                            const rec = records[i];
+                                            let val = rec.value;
+                                            const recordPath = `${appFolder}/idb/${dbName}/${sName}/rec_${i}`;
+
+                                            // Process Blobs from external apps
+                                            if (val instanceof Blob || (val && val.blob instanceof Blob)) {
+                                                const b = val.blob || val;
+                                                zipData[`${recordPath}.bin`] = new Uint8Array(await b.arrayBuffer());
+                                                val = { _type: 'bin_ref', mime: b.type };
                                             }
+
+                                            // Save individual record
+                                            zipData[`${recordPath}.json`] = fflate.strToU8(JSON.stringify({
+                                                key: rec.key,
+                                                value: val
+                                            }));
                                         }
                                     }
                                 }
                             }
-                            
-                            // Store this specific app's JSON data as its own file
-                            // This prevents the giant string RangeError
-                            zipData[`${appFolder}/data.json`] = fflate.strToU8(JSON.stringify(result.data));
+                            // We no longer save a giant data.json for the app. 
+                            // The individual files above handle everything safely.
                         }
                     }
                 }
@@ -546,31 +562,56 @@
                     db.close();
                 }
 
-                // 4. Restore Apps (Iterate through app folders)
-                const appDataFiles = Object.keys(unzipped).filter(k => k.startsWith('apps/') && k.endsWith('/data.json'));
-                
-                if (appDataFiles.length > 0) {
-                    logStatus(`Restoring ${appDataFiles.length} external applications...`);
-                    for (const filePath of appDataFiles) {
-                        // Extract original URL from folder name (base64)
-                        const encodedUrl = filePath.split('/')[1];
-                        const url = atob(encodedUrl);
-                        
-                        logStatus(`Restoring ${url}...`);
-                        const appPayload = JSON.parse(fflate.strFromU8(unzipped[filePath]));
+                // 4. Restore Apps (Reconstruct from file-system structure)
+                const appFolders = [...new Set(Object.keys(unzipped)
+                    .filter(k => k.startsWith('apps/'))
+                    .map(k => k.split('/').slice(0, 2).join('/')))];
 
-                        // Reconstruct Blobs for this app
-                        if (appPayload.indexedDB) {
-                            for (const dbName in appPayload.indexedDB) {
-                                const db = appPayload.indexedDB[dbName];
-                                for (const sName in db.stores) {
-                                    for (const rec of db.stores[sName]) {
-                                        if (rec.value && rec.value._type === 'blob_ref') {
-                                            const fileData = unzipped[rec.value.path];
-                                            if (fileData) rec.value = new Blob([fileData], { type: rec.value.mime });
-                                        }
+                if (appFolders.length > 0) {
+                    logStatus(`Restoring ${appFolders.length} cross-origin apps...`);
+                    for (const folder of appFolders) {
+                        const url = atob(folder.split('/')[1]);
+                        logStatus(`Restoring ${url}...`);
+
+                        const appPayload = { localStorage: {}, indexedDB: {} };
+
+                        // Restore LocalStorage
+                        if (unzipped[`${folder}/localStorage.json`]) {
+                            appPayload.localStorage = JSON.parse(fflate.strFromU8(unzipped[`${folder}/localStorage.json`]));
+                        }
+
+                        // Identify DBs in this app
+                        const appDBs = [...new Set(Object.keys(unzipped)
+                            .filter(k => k.startsWith(`${folder}/idb/`))
+                            .map(k => k.split('/')[3]))];
+
+                        for (const dbName of appDBs) {
+                            const schemaFile = unzipped[`${folder}/idb/${dbName}/_schema.json`];
+                            if (!schemaFile) continue;
+
+                            const storeInfo = JSON.parse(fflate.strFromU8(schemaFile));
+                            appPayload.indexedDB[dbName] = { stores: {}, storeInfo: storeInfo };
+
+                            for (const s of storeInfo) {
+                                const sName = s.name;
+                                const records = [];
+                                const recordFiles = Object.keys(unzipped).filter(k => 
+                                    k.startsWith(`${folder}/idb/${dbName}/${sName}/`) && k.endsWith('.json')
+                                );
+
+                                for (const rFile of recordFiles) {
+                                    const rec = JSON.parse(fflate.strFromU8(unzipped[rFile]));
+                                    
+                                    // Reconstruct Blobs
+                                    const binFile = unzipped[rFile.replace('.json', '.bin')];
+                                    if (binFile && rec.value && rec.value._type === 'bin_ref') {
+                                        const blob = new Blob([binFile], { type: rec.value.mime });
+                                        if (rec.value.blob) rec.value.blob = blob; // Check for nested blob object
+                                        else rec.value = blob;
                                     }
+                                    records.push(rec);
                                 }
+                                appPayload.indexedDB[dbName].stores[sName] = records;
                             }
                         }
 
