@@ -4338,13 +4338,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         changed = true;
                     }
                 });
-                mutation.removedNodes.forEach(node => {
-                    if (node.nodeType === 1 &&
-                        node.classList &&
-                        node.classList.contains('fullscreen-embed')) {
-                        changed = true;
-                    }
-                });
                 if (changed) {
                     updatePersistentClock();
                 }
