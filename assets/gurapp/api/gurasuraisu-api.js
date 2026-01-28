@@ -613,6 +613,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         css += `
             html, body {
                 overscroll-behavior: none !important; /* Prevent swipe-to-back navigation */
+                backface-visibility: hidden;
             }
 
             /* Disable native focus for all elements to prevent browser interference */
