@@ -514,6 +514,21 @@ h1, h2, h3, h4, h5, h6 {
     transition: none !important;
 }
 
+/* Accessibility Focus Ring */
+.a11y-focused {
+	outline: 4px solid var(--accent) !important;
+	outline-offset: 4px !important;
+	z-index: 999999 !important;
+	transition: outline 0.1s !important;
+}
+
+/* Color Filters */
+html.filter-grayscale { filter: grayscale(100%) !important; }
+html.filter-invert { filter: invert(100%) !important; }
+html.filter-protanopia { filter: url('#a11y-protanopia') !important; }
+html.filter-deuteranopia { filter: url('#a11y-deuteranopia') !important; }
+html.filter-tritanopia { filter: url('#a11y-tritanopia') !important; }
+
 input[type="color"] {
   -webkit-appearance: none;
   appearance: none;
