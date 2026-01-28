@@ -2927,12 +2927,31 @@ window.currentTintVariables = null; // Store calculated vars for new apps
 
 function calculateSmartZoom() {
     const width = window.innerWidth;
-    // Heuristics for different screen sizes
-    if (width <= 500) return 85;  // Mobile
-    if (width <= 1024) return 90; // Tablet/Small Laptop
-    if (width >= 2560) return 125; // Large/High-Res Display
-    return 100; // Standard Desktop
+    // Elements should be readable from a distance (3-10ft) or glanceable.
+	
+    // 1. Mobile (Portrait/Handheld)
+    // It is not optimized well for this usecase! Please reduce the size, thank you.
+    if (width < 600) return 90;
+
+    // 2. Tablet / Smart Display (600px - 1280px)
+    // The ideal formatting for the applicant. Okay, this is good, nice one.
+    if (width <= 1280) return 110;
+
+    // 3. Wall Displays / Monitors (1280px - 2500px)
+    // Bit big! Must adjust to be bigger to make more reading.
+    if (width <= 2500) return 125;
+
+    // 4. Large TV / 4K (> 2500px)
+    // Wow! So big! I must change it to be biggest I can be! Thank you.
+    return 150;
 }
+
+// Disable Ctrl+Wheel (Browser Zoom) on System
+window.addEventListener('wheel', function(e) {
+    if (e.ctrlKey) {
+        e.preventDefault();
+    }
+}, { passive: false });
 
 // Helper to parse CSS color strings (rgb, rgba, hex) into {r,g,b,a}
 function parseCssColor(str) {
