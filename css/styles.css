@@ -360,7 +360,6 @@ body {
 	user-select: none;
 	overscroll-behavior: none;
 	touch-action: manipulation;
-	backface-visibility: hidden;
 	/* Set the default value on the body element */
 	--bg-transform-scale: 1.05; 
 }
