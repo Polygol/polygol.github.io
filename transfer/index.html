@@ -282,6 +282,21 @@
             });
         }
 
+        function downloadBlob(blob, fileName) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a); // Required for Firefox
+            a.click();
+            
+            // Cleanup
+            setTimeout(() => {
+                URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }, 100);
+        }
+
         // --- EXPORT LOGIC (ZIP) ---
         async function handleExport() {
             logStatus('Starting export (v2 - Binary)...');
