@@ -1554,7 +1554,7 @@ document.addEventListener('DOMContentLoaded', () => {
               while (n--) u8arr[n] = bstr.charCodeAt(n);
               return new Blob([u8arr], { type: mime });
           };
-
+          
           if (data.type === 'admin-export') {
               try {
                   const exportPayload = { 
@@ -1571,14 +1571,25 @@ document.addEventListener('DOMContentLoaded', () => {
                               req.onsuccess = () => r(req.result);
                           });
 
-                          exportPayload.indexedDB[dbName] = { stores: {} };
+                          exportPayload.indexedDB[dbName] = { stores: {}, storeInfo: [] };
                           const storeNames = Array.from(db.objectStoreNames);
 
                           for (const sName of storeNames) {
                               const tx = db.transaction(sName, 'readonly');
                               const store = tx.objectStore(sName);
                               
-                              // Use cursor to avoid RangeError on large stores
+                              // Save Schema Info
+                              exportPayload.indexedDB[dbName].storeInfo.push({
+                                  name: store.name,
+                                  keyPath: store.keyPath,
+                                  autoIncrement: store.autoIncrement,
+                                  indexes: Array.from(store.indexNames).map(n => {
+                                      const i = store.index(n);
+                                      return { name: i.name, keyPath: i.keyPath, unique: i.unique };
+                                  })
+                              });
+
+                              // Collect Records via Cursor
                               const records = [];
                               await new Promise(r => {
                                   store.openCursor().onsuccess = (e) => {
@@ -1595,10 +1606,6 @@ document.addEventListener('DOMContentLoaded', () => {
                       }
                   }
 
-                  // To avoid string length issues when sending to parent, 
-                  // we send the object directly. postMessage clones the object 
-                  // using the structured clone algorithm, which does NOT 
-                  // involve JSON.stringify and has no string length limit.
                   window.parent.postMessage({
                       type: 'admin-export-response',
                       appUrl: window.location.href,
