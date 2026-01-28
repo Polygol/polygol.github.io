@@ -1449,7 +1449,8 @@ window.handleRemoteFileUpload = function(data, peerId) {
 };
 
 function handleViewportResize() {
-    if (localStorage.getItem('smartDisplayZoom') === 'true') {
+    const smartZoomPref = localStorage.getItem('smartDisplayZoom');
+    if (smartZoomPref === 'true' || smartZoomPref === null) {
         const smartScale = calculateSmartZoom();
         document.body.style.zoom = `${smartScale}%`;
     }
@@ -6154,9 +6155,13 @@ async function firstSetup() {
         document.body.classList.add('setup-active'); // Add class to hide UI
         isDuringFirstSetup = true; // Set flag to block initial loads
         
-        // Set a purely temporary wallpaper for the setup screen
-        const randomPreset = WALLPAPER_PRESETS[Math.floor(Math.random() * WALLPAPER_PRESETS.length)];
-        document.body.style.setProperty('--bg-image', `url('${randomPreset.fullUrl}')`);
+        if (WALLPAPER_PRESETS && WALLPAPER_PRESETS.length > 0) {
+            const randomPreset = WALLPAPER_PRESETS[Math.floor(Math.random() * WALLPAPER_PRESETS.length)];
+            document.body.style.setProperty('--bg-image', `url('${randomPreset.fullUrl}')`);
+        } else {
+            // Fallback to a solid color or system default if fetch is slow
+            document.body.style.backgroundColor = "#1c1c1c";
+        }
         
         createSetupScreen(); // UI now uses the correct currentLanguage
     }
@@ -13749,7 +13754,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // Initialize display scale
-    if (localStorage.getItem('smartDisplayZoom') === 'true') {
+    const smartZoomPref = localStorage.getItem('smartDisplayZoom');
+    if (smartZoomPref === 'true' || smartZoomPref === null) {
         const smartScale = calculateSmartZoom();
         document.body.style.zoom = `${smartScale}%`;
     } else if (storedDisplayScale !== '100') {
@@ -14491,7 +14497,8 @@ function getEffectiveSettingValue(key) {
         'aiAssistantEnabled',
         'gurappSoundsEnabled',
         'glassEffectsEnabled',
-        'resourceManagerEnabled'
+        'resourceManagerEnabled',
+	    'smartDisplayZoom'
     ];
     if (defaultsTrue.includes(key)) {
         return (rawValue !== 'false').toString();
