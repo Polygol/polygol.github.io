@@ -1670,6 +1670,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
     // --- Performance Reporting ---
+    /**
+     * Scans for elements using backdrop-filters and applies hardware acceleration hints.
+     */
+    function optimizeBackdropElements(root = document.body) {
+        if (!root) return;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
+        let node;
+        while (node = walker.nextNode()) {
+            const style = window.getComputedStyle(node);
+            if (style.backdropFilter !== 'none' || style.webkitBackdropFilter !== 'none') {
+                node.style.backfaceVisibility = 'hidden';
+                node.style.webkitBackfaceVisibility = 'hidden';
+                // Promote to a compositor layer to stabilize the filter rendering
+                if (!style.willChange.includes('filter')) {
+                    node.style.willChange = (style.willChange === 'auto' ? '' : style.willChange + ', ') + 'filter';
+                }
+            }
+        }
+    }
+    
     let frameCount = 0;
     let lastTime = performance.now();
     const REPORT_INTERVAL = 2000;
@@ -1702,6 +1722,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (isInsideGurasuraisu) {
     window.parent.postMessage({ type: 'gurasuraisu-api-present' }, '*');
     window.parent.postMessage({ type: 'gurapp-ready' }, '*');
+    
+    // Initial optimization scan
+    optimizeBackdropElements();
+    // Monitor for new elements added by the app
+    const apiObserver = new MutationObserver((mutations) => {
+        mutations.forEach(m => m.addedNodes.forEach(node => {
+            if (node.nodeType === 1) optimizeBackdropElements(node);
+        }));
+    });
+    apiObserver.observe(document.body, { childList: true, subtree: true });
   }
 
   // --- System Admin Listeners (Backup/Restore/Wipe) ---
