@@ -13656,15 +13656,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.log('[System] Entering Night Stand Mode');
             // Save current brightness
             preNightStandBrightness = localStorage.getItem('page_brightness') || '100';
-            
-            // Force Night Mode
-            if (!nightMode) document.getElementById('night-mode-qc').click();
-            
-            // Apply Red Tint & Hide Wallpaper via CSS class
             document.body.classList.add('night-stand-active');
-            
-            // Set Dim Brightness
             const dimLevel = localStorage.getItem('nightStandBrightness') || '40';
+			
             // Update slider UI and overlay without saving to main LS key (preserve user pref)
             if (brightnessSlider) brightnessSlider.value = dimLevel;
             updateBrightness(dimLevel);
@@ -13672,7 +13666,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         } else {
             console.log('[System] Exiting Night Stand Mode');
             document.body.classList.remove('night-stand-active');
-            
+			
             // Restore Brightness
             if (brightnessSlider) brightnessSlider.value = preNightStandBrightness;
             updateBrightness(preNightStandBrightness);
