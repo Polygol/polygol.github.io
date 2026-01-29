@@ -2699,10 +2699,6 @@ input[type="checkbox"]:checked::before {
 	    background-color: #000 !important;
     }
 
-	body.night-stand-active #temperature-overlay {
-        filter: grayscale(100%) sepia(100%) hue-rotate(-50deg) saturate(600%) contrast(0.9) brightness(0.8) !important;
-	}
-
     body.night-stand-active::before,
     body.night-stand-active #background-video,
     body.night-stand-active #depth-layer,
