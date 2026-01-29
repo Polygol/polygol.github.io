@@ -13644,7 +13644,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     function toggleNightStand(active) {
         nightStandActive = active;
-        
+		let overlay = document.getElementById('nightstand-overlay');
+		if (!overlay) {
+			overlay = document.createElement('div');
+			overlay.id = 'nightstand-overlay';
+			document.body.appendChild(overlay);
+		}
+	
         if (active) {
             console.log('[System] Entering Night Stand Mode');
             // Save current brightness
@@ -13655,7 +13661,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Update slider UI and overlay without saving to main LS key (preserve user pref)
             if (brightnessSlider) brightnessSlider.value = dimLevel;
             updateBrightness(dimLevel);
-            
+		    overlay.style.display = 'block';
         } else {
             console.log('[System] Exiting Night Stand Mode');
             document.body.classList.remove('night-stand-active');
@@ -13663,6 +13669,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Restore Brightness
             if (brightnessSlider) brightnessSlider.value = preNightStandBrightness;
             updateBrightness(preNightStandBrightness);
+		    overlay.style.display = 'none';
         }
     }
 
