@@ -547,6 +547,20 @@ html.filter-protanopia { filter: url('#a11y-protanopia') !important; }
 html.filter-deuteranopia { filter: url('#a11y-deuteranopia') !important; }
 html.filter-tritanopia { filter: url('#a11y-tritanopia') !important; }
 
+#nightstand-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999999;
+	display: none;
+    transition: backdrop-filter 0.3s ease;
+    background: red;
+    mix-blend-mode: multiply;
+}
+
 input[type="color"] {
   -webkit-appearance: none;
   appearance: none;
