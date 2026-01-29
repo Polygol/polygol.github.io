@@ -1598,7 +1598,6 @@ function renderWidgets() {
             const iframe = document.createElement('iframe');
             iframe.src = widgetDef.url;
             iframe.setAttribute('data-gurasuraisu-iframe', 'true');
-			iframe.setAttribute('sandbox', 'allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-scripts');
             instance.appendChild(iframe);
         }
 
@@ -2070,7 +2069,6 @@ function openWidgetPicker() {
                 const iframe = document.createElement('iframe');
                 iframe.src = widgetData.url;
 				iframe.setAttribute('data-gurasuraisu-iframe', 'true');
-				iframe.setAttribute('sandbox', 'allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-scripts');
                 iframe.scrolling = 'no';
                 iframe.style.pointerEvents = 'none'; // Make the preview non-interactive
 
@@ -5734,7 +5732,6 @@ function addToNotificationShade(message, options = {}) {
         const iframe = document.createElement('iframe');
         iframe.src = options.liveActivityUrl;
         iframe.setAttribute('data-gurasuraisu-iframe', 'true');
-		iframe.setAttribute('sandbox', 'allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-scripts');
         iframe.style.width = '100%';
         iframe.style.height = options.height || '120px'; // Default height
         iframe.style.border = 'none';
@@ -11220,7 +11217,6 @@ async function createFullscreenEmbed(url, options = {}) {
     const iframe = document.createElement('iframe');
     iframe.src = url;
     iframe.setAttribute('data-gurasuraisu-iframe', 'true');
-	iframe.setAttribute('sandbox', 'allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-scripts');
     const appId = Object.keys(apps).find(k => apps[k].url === url);
     iframe.dataset.appId = appId;
     iframe.setAttribute('frameborder', '0');
@@ -11563,7 +11559,6 @@ async function createBackgroundEmbed(url) {
     const iframe = document.createElement('iframe');
     iframe.src = url;
     iframe.setAttribute('data-gurasuraisu-iframe', 'true');
-	iframe.setAttribute('sandbox', 'allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-scripts');
     if (appName) iframe.dataset.appId = appName;
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allowfullscreen', '');
