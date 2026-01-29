@@ -89,7 +89,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
 
         @font-face {
           font-family: 'Inter Numeric';
-          src: url('/assets/fonts/InterNumeric.ttf') format('truetype-variations');
+          src: url('https://polygol.github.io/assets/fonts/InterNumeric.ttf') format('truetype-variations');
           font-weight: 100 900; /* Define the supported variable weight range */
           font-style: normal;
         }
