@@ -215,13 +215,6 @@ function applyColorFilter() {
         overlay.id = 'a11y-overlay';
         document.body.appendChild(overlay);
     }
-    
-    if (mode === 'none') {
-        overlay.style.display = 'none';
-        overlay.style.backdropFilter = 'none';
-        overlay.style.webkitBackdropFilter = 'none';
-        return;
-    }
 
     overlay.style.display = 'block';
     
