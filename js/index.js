@@ -13587,7 +13587,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Night Stand Variables
     let nightStandActive = false;
     let preNightStandBrightness = '100';
-    
+    let preNightStandTheme = 'dark';
+    let preNightStandTint = 'true';
+    let nightStandTimer = null;
+	
     // Get elements using your existing IDs
     const lightModeControl = document.getElementById('light_mode_qc');
     const minimalModeControl = document.getElementById('minimal_mode_qc');
@@ -13610,6 +13613,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // --- Night Stand Logic ---
     function checkNightStand() {
+        clearTimeout(nightStandTimer);
+
         const enabled = localStorage.getItem('nightStandEnabled') === 'true';
         if (!enabled) {
             if (nightStandActive) toggleNightStand(false);
@@ -13620,26 +13625,48 @@ document.addEventListener('DOMContentLoaded', async function() {
         const end = localStorage.getItem('nightStandEnd') || '07:00';
         
         const now = new Date();
-        const currentTime = now.getHours() * 60 + now.getMinutes();
+        const currentMins = now.getHours() * 60 + now.getMinutes();
         
         const [startH, startM] = start.split(':').map(Number);
         const [endH, endM] = end.split(':').map(Number);
-        const startTime = startH * 60 + startM;
-        const endTime = endH * 60 + endM;
+        
+        const startMins = startH * 60 + startM;
+        const endMins = endH * 60 + endM;
         
         let shouldBeActive = false;
         
-        if (endTime < startTime) {
-            // Spans midnight (e.g. 22:00 to 07:00)
-            shouldBeActive = currentTime >= startTime || currentTime < endTime;
+        if (endMins < startMins) {
+            // Spans midnight
+            shouldBeActive = currentMins >= startMins || currentMins < endMins;
         } else {
-            // Same day (e.g. 01:00 to 05:00)
-            shouldBeActive = currentTime >= startTime && currentTime < endTime;
+            // Same day
+            shouldBeActive = currentMins >= startMins && currentMins < endMins;
         }
         
         if (shouldBeActive !== nightStandActive) {
             toggleNightStand(shouldBeActive);
         }
+
+        // Schedule next check
+        const nextEvent = new Date(now);
+        nextEvent.setSeconds(0, 0); // Align to minute
+        
+        if (shouldBeActive) {
+            // Active -> Wait for End
+            nextEvent.setHours(endH, endM);
+        } else {
+            // Inactive -> Wait for Start
+            nextEvent.setHours(startH, startM);
+        }
+
+        // If target time passed today, move to tomorrow
+        if (nextEvent <= now) {
+            nextEvent.setDate(nextEvent.getDate() + 1);
+        }
+
+        const delay = nextEvent - now;
+        // Buffer by 1 second to ensure we land safely in the new minute
+        nightStandTimer = setTimeout(checkNightStand, delay + 1000);
     }
 
     function toggleNightStand(active) {
@@ -13650,31 +13677,41 @@ document.addEventListener('DOMContentLoaded', async function() {
 			overlay.id = 'nightstand-overlay';
 			document.body.appendChild(overlay);
 		}
-	
+	        
         if (active) {
             console.log('[System] Entering Night Stand Mode');
-            // Save current brightness
             preNightStandBrightness = localStorage.getItem('page_brightness') || '100';
-            document.body.classList.add('night-stand-active');
-            const dimLevel = localStorage.getItem('nightStandBrightness') || '40';
+            preNightStandTheme = localStorage.getItem('theme') || 'dark';
+            preNightStandTint = localStorage.getItem('tintEnabled') || 'true';
+
+            if (preNightStandTheme === 'light') {
+                setControlValueAndDispatch('theme', 'dark');
+            }
+            if (preNightStandTint === 'true') {
+                setControlValueAndDispatch('tintEnabled', 'false');
+            }
 			
-            // Update slider UI and overlay without saving to main LS key (preserve user pref)
+            document.body.classList.add('night-stand-active');
+			overlay.style.display = 'block';
+            const dimLevel = localStorage.getItem('nightStandBrightness') || '40';
             if (brightnessSlider) brightnessSlider.value = dimLevel;
             updateBrightness(dimLevel);
-		    overlay.style.display = 'block';
         } else {
             console.log('[System] Exiting Night Stand Mode');
             document.body.classList.remove('night-stand-active');
-			
-            // Restore Brightness
-            if (brightnessSlider) brightnessSlider.value = preNightStandBrightness;
-            updateBrightness(preNightStandBrightness);
 		    overlay.style.display = 'none';
+            
+            if (brightnessSlider) brightnessSlider.value = preNightStandBrightness;
+	            updateBrightness(preNightStandBrightness);
+            if (preNightStandTheme === 'light') {
+                setControlValueAndDispatch('theme', 'light');
+            }
+            if (preNightStandTint === 'true') {
+                setControlValueAndDispatch('tintEnabled', 'true');
+            }
         }
     }
 
-    // Check every minute
-    setInterval(checkNightStand, 60000);
     // Initial check
     setTimeout(checkNightStand, 2000);
 
