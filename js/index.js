@@ -4385,8 +4385,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
 // Function to update the document title
 function updateTitle() {
+  if (isMobileDevice()) return;
+
   let titlePrefix = '';
   
   // 1. Check Live Activities
@@ -10533,6 +10539,8 @@ function createRoundedFavicon(url) {
 
 // Function to dynamically update the document's favicon
 async function updateFavicon(url, round = true) {
+    if (isMobileDevice()) return;
+	
     let link = document.querySelector("link[rel='icon']") || document.querySelector("link[rel='shortcut icon']");
 
     if (!link) {
