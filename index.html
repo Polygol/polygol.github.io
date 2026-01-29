@@ -47,6 +47,16 @@
             const bootState = urlParams.get('s');
             const hasSetup = localStorage.getItem('hasVisitedBefore') === 'true';
 
+            // Mobile Redirect Logic: Send new mobile users to Waves Lander
+            // Conditions: Is Mobile AND No URL Params AND No Previous Setup Data
+            const isMobile = /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const hasAnyParams = window.location.search.length > 0;
+
+            if (isMobile && !hasAnyParams && !hasSetup) {
+                window.location.href = 'https://kirbindustries.gitbook.io/polygol/waves-lander';
+                return;
+            }
+
             // 1. Default Redirect to Lander if not setup and no command
             if (!hasSetup && !bootState) {
                 window.location.href = 'https://kirbindustries.gitbook.io/polygol/lander';
