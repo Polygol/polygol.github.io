@@ -313,7 +313,7 @@ body.high-contrast .nav-btn-small .material-symbols-rounded {
 }
 
 *::-webkit-scrollbar-thumb {
-	background-color: var(--secondary-text-color);
+	background-color: var(--background-color);
 	border-radius: 50px;
 }
 
