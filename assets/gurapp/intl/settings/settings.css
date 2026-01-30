@@ -1,222 +1,117 @@
-        :root {
-            --edge-refraction-filter: url('#edge-refraction-only');
-            --sun-shadow: 0 0 0 0 transparent;
-            
-            /* Dark Theme (Default) Variables */
-            --background-color-dark: #1c1c1c;
-            --background-color-dark-tr: rgba(28, 28, 28, 0.7);
-            --text-color-dark: #f9f9f9;
-            --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
-            --modal-background-dark: rgba(51, 51, 51, 0.8);
-            --modal-transparent-dark: rgba(51, 51, 51, 0.7);
-            --search-background-dark: rgba(51, 51, 51, 0.5);
-            --dark-overlay: rgba(51, 51, 51, 0.2);
-            --dark-transparent: rgba(255, 255, 255, 0.1); 
-            --glass-border-dark: rgba(100, 100, 100, 0.2);
-            
-            /* Light Theme Variables */
-            --background-color-light: #f0f0f0;
-        	--background-color-light-tr: rgba(240, 240, 240, 0.7);
-            --text-color-light: #333333;
-            --secondary-text-color-light: rgba(0, 0, 0, 0.7);
-            --modal-background-light: rgba(220, 220, 220, 0.8);
-            --modal-transparent-light: rgba(240, 240, 240, 0.7);
-            --search-background-light: rgba(220, 220, 220, 0.5);
-            --light-overlay: rgba(220, 220, 220, 0.2);
-            --light-transparent: rgba(255, 255, 255, 0.1);
-            --glass-border-light: rgba(200, 200, 200, 0.2);
-            
-            /* Default to Dark Theme */
-            --background-color: var(--background-color-dark);
-            --background-color-tr: var(--background-color-dark-tr);
-            --text-color: var(--text-color-dark);
-            --secondary-text-color: var(--secondary-text-color-dark);
-            --modal-background: var(--modal-background-dark);
-            --modal-transparent: var(--modal-transparent-dark);
-            --search-background: var(--search-background-dark);
-            --overlay-color: var(--dark-overlay);
-            --transparent-color: var(--dark-transparent);
-            --glass-border: var(--glass-border-dark);
-        }
-        
-        body.light-theme {
-            --background-color: var(--background-color-light);
-            --background-color-tr: var(--background-color-light-tr);
-            --text-color: var(--text-color-light);
-            --secondary-text-color: var(--secondary-text-color-light);
-            --modal-background: var(--modal-background-light);
-            --modal-transparent: var(--modal-transparent-light);
-            --search-background: var(--search-background-light);
-            --overlay-color: var(--light-overlay);
-            --transparent-color: var(--light-transparent);
-            --glass-border: var(--glass-border-light);
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        body {
-            background-color: var(--background-color-tr);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            user-select: none;
-            transition: background-color 0.3s, color 0.3s, background-image 0.5s;
-            color: var(--text-color);
-            align-items: center;
-            padding: 20px;
-            padding-top: 80px;
-        }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        .header {
-            display: flex;
-            align-items: center;
-            position: fixed;
-            top: 22px; 
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 750px;
-            z-index: 999;
-            padding: 0 28px;
-        }
-        
-        .back-btn {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .page-title {
-            font-family: 'Open Runde', sans-serif;
-            font-weight: 700;
-            font-size: 1.8rem;
-            flex-grow: 1;
-            text-align: left;
-            margin: 0;
-            padding-left: 15px;
-        }
-        
-        .pages-container {
-            width: 100%;
-            max-width: 700px;
-            position: relative;
-            overflow-x: hidden;
-        }
-        
-        .page {
-            display: none;
-            flex-direction: column;
-            width: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            transition: all 0.3s cubic-bezier(.3,1.2,.64,1);
-            overflow: hidden;
-        }
-        
-        .page.active {
-            display: flex;
-            position: relative;
-            transform: translateX(0);
-            opacity: 1;
-        }
-        
-        .page.entering {
-            display: flex;
-            transform: translateX(25%);
-            opacity: 0;
-        }
-        
-        .page.exiting {
-            transform: translateX(-25%);
-            height: 0;
-            opacity: 0;
-        }
-        
-        .nav-item .setting-info {
-            flex-direction: row;
-            align-items: center;
-            gap: 15px;
-        }
+body {
+    background-color: var(--background-color-tr);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    transition: background-color 0.3s, color 0.3s, background-image 0.5s;
+    color: var(--text-color);
+    align-items: center;
+    padding: 20px;
+    padding-top: 80px;
+}
 
-        .nav-item .setting-info .material-symbols-rounded {
-            font-size: 24px !important;
-            opacity: 1 !important;
-        }
+.header {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    top: 22px; 
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 750px;
+    z-index: 999;
+    padding: 0 28px;
+}
 
-        .setting-item.nav-item .material-symbols-rounded {
-            font-size: 12px;
-            opacity: 0.5;
-        }
+.back-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-        .setting-item.nav-item {
-            cursor: pointer;
-        }
+.page-title {
+    font-family: 'Open Runde', sans-serif;
+    font-weight: 700;
+    font-size: 1.8rem;
+    flex-grow: 1;
+    text-align: left;
+    margin: 0;
+    padding-left: 15px;
+}
 
-        body::-webkit-scrollbar { width: 8px; }
-        body::-webkit-scrollbar-track { background: transparent; }
-        body::-webkit-scrollbar-thumb {
-            background-color: var(--search-background);
-            border-radius: 25px;
-        }
+.pages-container {
+    width: 100%;
+    max-width: 700px;
+    position: relative;
+    overflow-x: hidden;
+}
 
-        .toolbar {
-            display: flex;
-            justify-content: center;
-            align-content: center;
-            flex-direction: row;
-            gap: 12px;
-            padding: 15px 20px;
-            background-color: transparent;
-            border: none;
-            position: fixed;
-            top: 0px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            transition: top 0.3s ease;
-            width: 100%;
-            flex-wrap: wrap;
-            height: 80px;
-        }
+.page {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: all 0.3s cubic-bezier(.3,1.2,.64,1);
+    overflow: hidden;
+}
 
-        .toolbar.hidden {
-            display: none;
-        }
+.page.active {
+    display: flex;
+    position: relative;
+    transform: translateX(0);
+    opacity: 1;
+}
 
-        .toolbar::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            z-index: -1;
-        }
+.page.entering {
+    display: flex;
+    transform: translateX(25%);
+    opacity: 0;
+}
 
-        .toolbar::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            backdrop-filter: blur(2.5px);
-            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0) 100%);
-            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0) 100%);
-        }
+.page.exiting {
+    transform: translateX(-25%);
+    height: 0;
+    opacity: 0;
+}
+
+.nav-item .setting-info {
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-item .setting-info .material-symbols-rounded {
+    font-size: 24px !important;
+    opacity: 1 !important;
+}
+
+.setting-item.nav-item .material-symbols-rounded {
+    font-size: 12px;
+    opacity: 0.5;
+}
+
+.setting-item.nav-item {
+    cursor: pointer;
+}
 
 .container {
    width: 100%;
-   max-width: 700px; /* Wider for settings */
+   max-width: 800px;
 }
 
 .tab-content { display: none; }
@@ -488,44 +383,7 @@ input.form-input {
     width: 100%;
 }
 
-/* --- Interaction & Animation --- */
-button, .toggle-switch {
-   transform: scale(1);
-   transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
-}
-
-button:active, .toggle-switch:active {
-   transform: scale(0.96);
-   transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-   filter: brightness(1.5);
-}
-
-.reduce-animations * {
-   animation: none !important;
-   transition: opacity 0.3s ease !important;
-   transition-property: opacity !important;
-}
-
-.reduce-animations button,
-.reduce-animations .toggle-switch {
-   transform: scale(1) !important;
-   transition: opacity 0.3s ease !important;
-}
-
-.reduce-animations button:active,
-.reduce-animations .toggle-switch:active {
-   transform: scale(0.98) !important;
-   transition: none !important;
-   filter: brightness(1.5) !important;
-}
-
-/* --- Responsive Media Queries --- */
 @media (max-width: 500px) {
-    .toolbar {
-        justify-content: flex-start;
-        overflow-x: auto;
-    }
-    
     .setting-item {
         flex-direction: column;
         align-items: flex-start;
