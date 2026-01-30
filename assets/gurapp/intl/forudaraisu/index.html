@@ -10,90 +10,11 @@
     <script src="/assets/gurapp/api/shared-file-manager.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root {
-            --edge-refraction-filter: url('#edge-refraction-only');
-            
-            /* Dark Theme (Default) Variables */
-            --background-color-dark: #1c1c1c;
-            --background-color-dark-tr: rgba(28, 28, 28, 0.7);
-            --text-color-dark: #f9f9f9;
-            --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
-            --modal-background-dark: rgba(51, 51, 51, 0.8);
-            --modal-transparent-dark: rgba(51, 51, 51, 0.7);
-            --search-background-dark: rgba(51, 51, 51, 0.5);
-            --dark-overlay: rgba(51, 51, 51, 0.2);
-            --dark-transparent: rgba(255, 255, 255, 0.1); 
-            --glass-border-dark: rgba(100, 100, 100, 0.2);
-            
-            /* Light Theme Variables */
-            --background-color-light: #f0f0f0;
-        	--background-color-light-tr: rgba(240, 240, 240, 0.7);
-            --text-color-light: #333333;
-            --secondary-text-color-light: rgba(0, 0, 0, 0.7);
-            --modal-background-light: rgba(220, 220, 220, 0.8);
-            --modal-transparent-light: rgba(240, 240, 240, 0.7);
-            --search-background-light: rgba(220, 220, 220, 0.5);
-            --light-overlay: rgba(220, 220, 220, 0.2);
-            --light-transparent: rgba(255, 255, 255, 0.1);
-            --glass-border-light: rgba(200, 200, 200, 0.2);
-            
-            /* Default to Dark Theme */
-            --background-color: var(--background-color-dark);
-            --background-color-tr: var(--background-color-dark-tr);
-            --text-color: var(--text-color-dark);
-            --secondary-text-color: var(--secondary-text-color-dark);
-            --modal-background: var(--modal-background-dark);
-            --modal-transparent: var(--modal-transparent-dark);
-            --search-background: var(--search-background-dark);
-            --overlay-color: var(--dark-overlay);
-            --transparent-color: var(--dark-transparent);
-            --glass-border: var(--glass-border-dark);
-        }
-        
-        body.light-theme {
-            --background-color: var(--background-color-light);
-            --background-color-tr: var(--background-color-light-tr);
-            --text-color: var(--text-color-light);
-            --secondary-text-color: var(--secondary-text-color-light);
-            --modal-background: var(--modal-background-light);
-            --modal-transparent: var(--modal-transparent-light);
-            --search-background: var(--search-background-light);
-            --overlay-color: var(--light-overlay);
-            --transparent-color: var(--light-transparent);
-            --glass-border: var(--glass-border-light);
-        }
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
-        }
-
-        /* For all clickable elements */
-        [onclick], 
-        button, 
-        a, 
-        input[type="button"], 
-        input[type="submit"],
-        .clickable {
-          cursor: pointer;
-          transform: scale(1);
-          transition: all 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
-        }
-        
-        /* Active effect (when clicking down) */
-        [onclick]:active, 
-        button:active, 
-        a:active, 
-        input[type="button"]:active, 
-        input[type="submit"]:active,
-        .clickable:active {
-          transform: scale(0.96);
-          transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-          filter: brightness(1.5);
         }
         
         body {
@@ -114,75 +35,6 @@
             flex-direction: column;
         }
         
-        .tab-container {
-            display: flex;
-            justify-content: center;
-            align-content: center;
-            flex-direction: row;
-            gap: 10px;
-            padding: 15px 20px;
-            background-color: transparent;
-            border: none;
-            position: fixed;
-            top: 0px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            transition: top 0.3s ease;
-            width: 100%;
-            flex-wrap: wrap;
-            height: 80px;
-        }
-
-        .tab-container::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            backdrop-filter: blur(2.5px);
-            mask-image: linear-gradient( to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 90%, rgba(0, 0, 0, 0) 100% );
-            -webkit-mask-image: linear-gradient( to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 90%, rgba(0, 0, 0, 0) 100% );
-        }
-
-        .tab-btn {
-            background-color: var(--search-background);
-            color: transparent;
-            border: none;
-            border-radius: 25px;
-            padding: 10px 9px 10px 18px;
-            font-size: 0;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(.3,1.2,.64,1) !IMPORTANT;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
-            border: 1px solid var(--glass-border);
-        }
-
-        .tab-btn.active {
-            background-color: var(--secondary-text-color);
-            color: var(--background-color);
-            border-radius: 15px;
-            font-family: 'Open Runde';
-            font-weight: 500;
-            padding: 10px 18px 10px 16px;
-            font-size: revert;
-        }
-
-        .tab-container .tab-btn .material-symbols-rounded {
-            transition: color 0.3s;
-            color: var(--text-color);
-            font-size: 20px;
-        }
-
-        .tab-container .tab-btn.active .material-symbols-rounded {
-            color: var(--background-color) !important;
-        }
-        
         .tab-content {
             display: none;
             flex-grow: 1;
@@ -192,9 +44,6 @@
         .tab-content.active {
             display: block;
         }
-        .tab-content::-webkit-scrollbar { width: 8px; }
-        .tab-content::-webkit-scrollbar-track { background: transparent; }
-        .tab-content::-webkit-scrollbar-thumb { background-color: var(--search-background); border-radius: 50px; }
 
         .section-title {
             font-size: 1.5rem;
@@ -314,25 +163,8 @@
     </style>
 </head>
 <body data-app-name="Files">
-    <svg style="display: none">
-        <filter id="edge-refraction-only" color-interpolation-filters="linearRGB">
-            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="2" result="turbulence"></feTurbulence>
-            <feMorphology in="SourceGraphic" operator="erode" radius="4" result="eroded"></feMorphology>
-            <feComposite in="SourceGraphic" in2="eroded" operator="out" result="border_mask"></feComposite>
-            <feComposite in="turbulence" in2="border_mask" operator="in" result="edge_turbulence"></feComposite>
-            <feFlood flood-color="#808080" result="neutral_base"></feFlood>
-            <feMerge result="displacement_map">
-                <feMergeNode in="neutral_base"></feMergeNode>
-                <feMergeNode in="edge_turbulence"></feMergeNode>
-            </feMerge>
-            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="40" xChannelSelector="R" yChannelSelector="G" result="disp_positive"></feDisplacementMap>
-            <feDisplacementMap in="SourceGraphic" in2="displacement_map" scale="-40" xChannelSelector="R" yChannelSelector="G" result="disp_negative"></feDisplacementMap>
-            <feBlend in="disp_positive" in2="disp_negative" mode="lighten"></feBlend>
-        </filter>
-    </svg>
-    
     <div class="container">
-        <div class="tab-container">
+        <div class="toolbar">
             <button class="tab-btn active" data-tab="home">
                 <span class="material-symbols-rounded">home</span>Home
             </button>
@@ -362,7 +194,7 @@
              <div class="search-page-container">
                 <div class="search-bar">
                      <span class="material-symbols-rounded search-icon">search</span>
-                    <input type="text" id="search-input-page" class="search-input" placeholder="Search all files...">
+                    <input type="text" id="search-input-page" class="search-input" placeholder="Search all files">
                 </div>
                 <div id="search-results-list" class="item-list"></div>
             </div>
