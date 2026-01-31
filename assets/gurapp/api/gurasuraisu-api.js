@@ -1149,6 +1149,15 @@ const Gurasuraisu = {
   },
 
   /**
+   * Requests the system to enter or exit immersive mode.
+   * In immersive mode, system UI handles are hidden. Swipe up from bottom to exit.
+   * @param {boolean} enabled - True to enter, False to exit.
+   */
+  setImmersiveMode: function(enabled) {
+      this._call('setImmersiveMode', [enabled]);
+  },
+
+  /**
    * Closes the current application (Fullscreen Embed).
    */
   close: function() {
