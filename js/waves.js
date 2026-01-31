@@ -155,6 +155,54 @@ function initWavesHost() {
             }
         });
 
+        // Handle Incoming Screenshare Streams
+        wavesRoom.onPeerStream((stream, peerId) => {
+            console.log(`[Waves] Incoming stream from ${peerId}`);
+            
+            // 1. Launch the Cast Gurapp
+            const castAppUrl = '/assets/gurapp/intl/waves/cast.html';
+            if (typeof window.createFullscreenEmbed === 'function') {
+                window.createFullscreenEmbed(castAppUrl);
+            }
+
+            // 2. Inject Stream into the App (Retry loop until DOM is ready)
+            const injectStream = () => {
+                const iframe = document.querySelector(`iframe[src*="cast.html"]`);
+                
+                // Ensure we have the iframe and it has a contentWindow
+                if (iframe && iframe.contentWindow) {
+                    try {
+                        const videoEl = iframe.contentWindow.document.getElementById('cast-video');
+                        if (videoEl) {
+                            videoEl.srcObject = stream;
+                            videoEl.play().catch(e => console.warn("[Waves] Autoplay blocked", e));
+                            console.log("[Waves] Stream injected successfully");
+                            
+                            // 3. Cleanup: If stream ends (Sender stops), close the app
+                            stream.getVideoTracks()[0].onended = () => {
+                                console.log("[Waves] Stream ended by sender. Closing app.");
+                                if (typeof window.closeFullscreenEmbed === 'function') {
+                                    // Only close if the current app is still the cast app
+                                    const active = document.querySelector('.fullscreen-embed[style*="display: block"]');
+                                    if (active && active.dataset.embedUrl && active.dataset.embedUrl.includes('cast.html')) {
+                                        window.closeFullscreenEmbed();
+                                    }
+                                }
+                            };
+                            return; // Success
+                        }
+                    } catch (e) {
+                        console.warn("[Waves] DOM Injection error", e);
+                    }
+                }
+                
+                // Retry if not ready
+                setTimeout(injectStream, 500);
+            };
+
+            injectStream();
+        });
+
         // 3. Ping to wake up existing clients on Host Reload
         setTimeout(() => {
             if (wavesBroadcast) pushFullState(); 
