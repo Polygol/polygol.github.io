@@ -73,4 +73,4 @@ Note: Wallpaper information is seperate from this file.
 
 ---
 
-Polygol source code is licensed under the **Do What The F*ck You Want To Public License (WTFPL)** unless otherwise noted in specific submodules or third-party libraries listed above.
+Polygol source code is licensed under CC BY-NC 4.0 unless otherwise noted in specific submodules or third-party libraries listed above.
