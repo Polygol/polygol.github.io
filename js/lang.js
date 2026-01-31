@@ -2,7 +2,7 @@
 
 const LANG_EN = {
     GREETING: "Polygol loaded successfully",
-    LICENCE: "Polygol is made by kirbIndustries, and is licensed under the Do What The F*ck You Want To Public License",
+    LICENCE: "Polygol is made by kirbIndustries, and is licensed under the CC BY-NC 4.0",
     WELCOME_MESSAGE: "Hello, welcome to Polygol!",
     PLACEHOLDER_MESSAGE: "Type your message",
     SEND: "Send",
@@ -118,7 +118,7 @@ const LANG_EN = {
 
 const LANG_JP = {
     GREETING: "Polygol を正常に読み込みました。",
-    LICENCE: "Polygol は kirbIndustries によって作成され、Do What The F*ck You Want To Public License の下でライセンスされています。",
+    LICENCE: "Polygol は kirbIndustries によって作成され、CC BY-NC 4.0 の下でライセンスされています。",
     WELCOME_MESSAGE: "こんにちは、Polygolへようこそ！",
     PLACEHOLDER_MESSAGE: "メッセージを入力してください",
     SEND: "送信",
@@ -234,7 +234,7 @@ const LANG_JP = {
 
 const LANG_DE = {
     GREETING: "Polygol erfolgreich geladen",
-    LICENCE: "Polygol wird von kirbIndustries erstellt und ist unter der Do What The F*ck You Want To Public License lizenziert.",
+    LICENCE: "Polygol wird von kirbIndustries erstellt und ist unter der CC BY-NC 4.0 lizenziert.",
     WELCOME_MESSAGE: "Hallo, willkommen bei Polygol!",
     PLACEHOLDER_MESSAGE: "Geben Sie Ihre Nachricht ein",
     SEND: "Senden",
@@ -350,7 +350,7 @@ const LANG_DE = {
 
 const LANG_FR = {
     GREETING: "Polygol chargé avec succès",
-    LICENCE: "Polygol est créé par kirbIndustries, et est sous licence Do What The F*ck You Want To Public License",
+    LICENCE: "Polygol est créé par kirbIndustries, et est sous licence CC BY-NC 4.0",
     WELCOME_MESSAGE: "Bonjour, bienvenue sur Polygol!",
     PLACEHOLDER_MESSAGE: "Tapez votre message",
     SEND: "Envoyer",
@@ -582,7 +582,7 @@ const LANG_ES = {
 
 const LANG_KO = {
     GREETING: "Polygol가 성공적으로 로드되었습니다",
-    LICENCE: "Polygol는 kirbIndustries에서 제작되었으며 Do What The F*ck You Want To Public License에 따라 라이선스가 부여됩니다.",
+    LICENCE: "Polygol는 kirbIndustries에서 제작되었으며 CC BY-NC 4.0에 따라 라이선스가 부여됩니다.",
     WELCOME_MESSAGE: "안녕하세요, Polygol에 오신 것을 환영합니다!",
     PLACEHOLDER_MESSAGE: "메시지를 입력하세요",
     SEND: "보내기",
@@ -698,7 +698,7 @@ const LANG_KO = {
 
 const LANG_ZH = {
     GREETING: "Polygol加载成功",
-    LICENCE: "Polygol由kirbIndustries制作，Do What The F*ck You Want To Public License",
+    LICENCE: "Polygol由kirbIndustries制作，CC BY-NC 4.0",
     WELCOME_MESSAGE: "你好，欢迎来到Polygol！",
     PLACEHOLDER_MESSAGE: "输入您的消息",
     SEND: "发送",
