@@ -12297,6 +12297,8 @@ function setupDrawerInteractions() {
 
 	const startLongPress = (e) => {
         if (oneButtonNavEnabled) return; 
+        if (document.body.classList.contains('immersive-active')) return;
+
         if (!isDragging) {
              longPressTimer = setTimeout(() => {
                 openAppSwitcherUI();
@@ -12370,6 +12372,8 @@ function setupDrawerInteractions() {
 
         // Determine if swipe is horizontal (and not significantly vertical)
         if (Math.abs(verticalDelta) < VERTICAL_SWIPE_LIMIT && Math.abs(deltaX) > Math.abs(verticalDelta) + 20) {
+            if (document.body.classList.contains('immersive-active')) return;
+			
             // Only open the switcher if the horizontal deadzone is also passed
             if (!appSwitcherVisible && Math.abs(deltaX) > HORIZONTAL_SWIPE_DEADZONE) {
                 openAppSwitcher();
@@ -14925,7 +14929,7 @@ function _updateActiveMediaSession() {
 
     // Get the session at the top of the stack.
     const activeSession = mediaSessionStack[mediaSessionStack.length - 1];
-    const { appName, metadata, supportedActions } = activeSession;
+    const { appName, metadata, supportedActions, playbackState } = activeSession;
     
     // Update global state and localStorage.
     activeMediaSessionApp = appName;
@@ -14934,7 +14938,8 @@ function _updateActiveMediaSession() {
 
     // Update the widget's UI with the new session's data.
     showMediaWidget(metadata);
-    updateMediaWidgetState();
+    // Restore the playback state (default to paused if not set)
+    updateMediaWidgetState(playbackState || 'paused');
     restoreCorrectFavicon();
 
     const appIconEl = document.getElementById('media-widget-app-icon');
@@ -15041,10 +15046,20 @@ function clearMediaSession(appName) {
 
 // A function for the Gurapp to update the parent's state
 function updateMediaPlaybackState(appName, state) {
-    // --- FIX: Use a case-insensitive comparison to match the app name ---
+    const canonicalName = Object.keys(apps).find(key => key.toLowerCase() === appName.toLowerCase());
+    
+    // Update the state in the stack storage so it persists if we switch away and back
+    if (canonicalName) {
+        const session = mediaSessionStack.find(s => s.appName === canonicalName);
+        if (session) {
+            session.playbackState = state.playbackState;
+        }
+    }
+
+    // Update UI if this is the active app
     if (activeMediaSessionApp && activeMediaSessionApp.toLowerCase() === appName.toLowerCase()) {
         updateMediaWidgetState(state.playbackState);
-        // We could also update metadata here if it changes (e.g., new song)
+        
         if (state.metadata) {
             showMediaWidget(state.metadata);
         }
@@ -16613,6 +16628,8 @@ function setupAppCardGestures(card, url, container) {
 
 // --- App Switcher Functions ---
 function openAppSwitcher() {
+    if (document.body.classList.contains('immersive-active')) return;
+	
     // Force Close App Drawer if it's open
     const appDrawer = document.getElementById('app-drawer');
     if (appDrawer && appDrawer.classList.contains('open')) {
