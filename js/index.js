@@ -11656,6 +11656,9 @@ function closeFullscreenEmbed() {
         // FIX: Set display to none immediately so the closing app is not detected as "active"
         // This prevents history apps from pushing the closing app back onto the stack
         embedContainer.style.display = 'none';
+        
+        // FIX: Mark this embed as closing so createFullscreenEmbed won't cache it
+        embedContainer.dataset.closing = 'true';
 
         // After animation, remove the element entirely from the DOM
         setTimeout(() => {
