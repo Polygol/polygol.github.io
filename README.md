@@ -101,7 +101,7 @@ See assets/about/external.md
 
 © Copyright kirbIndustries 2024-2026
 
-You are free to do anything to the code under the Do What The F*ck You Want To Public License.
+You are free to do anything to the code under CC BY-NC 4.0.
 
 You may not use our brand in any method not authorized, including identifiable visual assets.
 
