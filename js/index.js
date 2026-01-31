@@ -10972,6 +10972,12 @@ async function createFullscreenEmbed(url, options = {}) {
         // --- Hard Reset for FULLSCREEN apps only ---
         document.querySelectorAll('.fullscreen-embed').forEach(embed => {
             if (embed.dataset.embedUrl !== url) {
+                // FIX: Skip embeds that are marked as closing (being destroyed)
+                // This prevents caching stale references to elements about to be removed
+                if (embed.dataset.closing === 'true') {
+                    return;
+                }
+                
                 // FIX: Check if this embed is part of an active split. If so, DO NOT HIDE IT.
                 // This prevents the system from "unsplitting" when restoring the pair or switching focus.
                 const isPartOfActiveSplit = splitScreenState.active && 
@@ -10996,11 +11002,21 @@ async function createFullscreenEmbed(url, options = {}) {
     // --- DUPLICATE PREVENTION FIX ---
     // Check cache first, then fall back to checking DOM for any existing container
     let embedContainer = minimizedEmbeds[url];
+    
+    // FIX: If the cached embed is marked as closing, clear it from cache and ignore it
+    if (embedContainer && embedContainer.dataset.closing === 'true') {
+        delete minimizedEmbeds[url];
+        embedContainer = null;
+    }
+    
     if (!embedContainer) {
         const inDom = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"]`);
         if (inDom) {
-            // Found in DOM but not in cache
-            if (inDom.style.display === 'none') {
+            // FIX: Skip elements that are marked as closing (being destroyed)
+            if (inDom.dataset.closing === 'true') {
+                // Don't use this element, let a new one be created
+            } else if (inDom.style.display === 'none') {
+                // Found in DOM but not in cache
                 minimizedEmbeds[url] = inDom; // Re-link cache
                 embedContainer = inDom;
             } else if (isSplitActivation) {
