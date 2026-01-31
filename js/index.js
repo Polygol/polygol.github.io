@@ -15598,8 +15598,28 @@ window.addEventListener('message', async (event) => { // Make listener async
 		showNotification, 
 		minimizeFullscreenEmbed, 
 		createFullscreenEmbed, 
-		closeFullscreenEmbed, // Allow apps to close themselves
-        launchAppSilently: createBackgroundEmbed, // Expose silent launch
+		closeFullscreenEmbed: () => {
+            // Identify which iframe sent the close request
+            let callingUrl = null;
+            const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+            for (const iframe of iframes) {
+                // 'event' is available from the parent listener scope
+                if (iframe.contentWindow === event.source) {
+                    const container = iframe.closest('.fullscreen-embed');
+                    if (container) callingUrl = container.dataset.embedUrl;
+                    break;
+                }
+            }
+
+            if (callingUrl) {
+                // Close the specific app that requested it
+                forceCloseApp(callingUrl);
+            } else {
+                // Fallback to active app if for some reason source identification fails
+                closeFullscreenEmbed();
+            }
+        },
+		launchAppSilently: createBackgroundEmbed, // Expose silent launch
 		blackoutScreen,
 		registerWidget, 
 		triggerWallpaperUpload: () => document.getElementById('wallpaperInput').click(),
