@@ -289,13 +289,21 @@ function finalizeEmojiAuth(peerId, answer, psk) {
         registerPeer(peerId, session.tempProfile);
         const state = getWavesHostState();
         wavesSend({ type: 'authorized', psk: psk, deviceName: state.deviceName }, peerId);
-        showNotification(`Paired with ${session.tempProfile?.name || 'New Device'}`, { icon: 'verified_user' });
+        showNotification('Waves will accept automatic connnections to this device.', {
+            heading: `Paired with ${session.tempProfile?.name || 'New Device'}`,
+            icon: 'verified_user',
+            system: true
+        });
         // Send initial state
         setTimeout(pushFullState, 500);
     } else {
         // Fail
         wavesSend({ type: 'auth_failed' }, peerId);
-        showNotification('Auth failed: Code invalidated.', { icon: 'gpp_bad' });
+        showNotification('Your code is now invalidated for security. Re-pair all connected devices with the new code.', {
+            heading: 'Waves authentication failed',
+            icon: 'gpp_bad',
+            system: true
+        });
         
         // SECURITY: Incorrect code entered. Nuke the current room/code and restart.
         setTimeout(() => {
@@ -774,9 +782,9 @@ function setDiscovery(enabled) {
     localStorage.setItem('waves_discovery_enabled', enabled);
     
     if (enabled) {
-        showNotification('New device pairing is now enabled', { icon: 'cell_tower' });
+        showPopup('New device pairing is now enabled');
     } else {
-        showNotification('New device pairing is now disabled', { icon: 'portable_wifi_off' });
+        showPopup('New device pairing is now disabled');
     }
 }
 
@@ -791,7 +799,7 @@ function rejectCurrentAuth() {
         
         // Hide UI
         broadcastSettingUpdate('waves_auth_challenge', null);
-        showNotification('Pairing request rejected', { icon: 'block' });
+        showPopup('Pairing request rejected');
     }
 }
 
