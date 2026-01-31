@@ -15615,8 +15615,7 @@ window.addEventListener('message', async (event) => { // Make listener async
                 // Close the specific app that requested it
                 forceCloseApp(callingUrl);
             } else {
-                // Fallback to active app if for some reason source identification fails
-                closeFullscreenEmbed();
+                showPopup('Could not close app')
             }
         },
 		launchAppSilently: createBackgroundEmbed, // Expose silent launch
