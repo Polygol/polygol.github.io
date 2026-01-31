@@ -11211,8 +11211,9 @@ async function createFullscreenEmbed(url, options = {}) {
         }
 
 		// NEW: Send sun update to the iframe once it's restored
-	    if (iframe.contentWindow) {
-	        iframe.contentWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
+        const restoredIframe = embedContainer.querySelector('iframe');
+	    if (restoredIframe && restoredIframe.contentWindow) {
+	        restoredIframe.contentWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
 	    }
 
 	    populateDock();
@@ -11651,6 +11652,10 @@ function closeFullscreenEmbed() {
         embedContainer.style.transform = 'translateY(40px) scale(0.9)';
         embedContainer.style.opacity = '0';
         embedContainer.style.pointerEvents = 'none'; // Prevent clicks during fade out
+        
+        // FIX: Set display to none immediately so the closing app is not detected as "active"
+        // This prevents history apps from pushing the closing app back onto the stack
+        embedContainer.style.display = 'none';
 
         // After animation, remove the element entirely from the DOM
         setTimeout(() => {
@@ -11664,9 +11669,7 @@ function closeFullscreenEmbed() {
         // Check if previous app is the same as the one closing (prevent loops)
         if (previousUrl !== embedContainer?.dataset?.embedUrl) {
             console.log(`[System] Restoring from history: ${previousUrl}`);
-            setTimeout(() => {
-                createFullscreenEmbed(previousUrl);
-            }, 50);
+            createFullscreenEmbed(previousUrl);
             return; // EXIT: Do not show Home Screen
         }
     }
