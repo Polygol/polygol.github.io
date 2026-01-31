@@ -2734,6 +2734,21 @@ input[type="checkbox"]:checked::before {
 	    display: none !important;
 	}
 
+    /* Immersive Mode */
+    body.immersive-active #dynamic-area,
+    body.immersive-active #split-screen-trigger {
+        opacity: 0 !important;
+		display: none !important;
+        pointer-events: none !important;
+        transition: opacity 0.3s ease !important;
+    }
+
+    body.immersive-active .drawer-handle,
+    body.immersive-active #one-button-nav-handle {
+        opacity: 0 !important;
+        transition: opacity 0.3s ease !important;
+    }
+
         .setup-screen {
             position: fixed;
             top: 0;
