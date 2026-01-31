@@ -12408,9 +12408,14 @@ function setupDrawerInteractions() {
 	    const movementPercentage = (deltaY / windowHeight) * 100;
 	
 	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-	
-	    if (openEmbed) {
-	        // LOGIC FOR DRAGGING AN OPEN APP
+
+		if (openEmbed) {
+			// Immersive Mode Check: Do not visually manipulate the window
+			if (document.body.classList.contains('immersive-active')) {
+				return; 
+			}
+			
+			// LOGIC FOR DRAGGING AN OPEN APP
 	        openEmbed.style.transition = 'none !important'; // No transitions during drag for instant response
 	
 	        // Start effect after a small deadzone
@@ -12531,6 +12536,17 @@ function setupDrawerInteractions() {
 	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
 	    
 	    if (openEmbed) {
+            // Immersive Mode Exit Logic
+            if (document.body.classList.contains('immersive-active')) {
+                // If swiped up sufficiently, exit immersive mode
+                if (movementPercentage > 5 || isFlickUp) {
+                    setImmersiveMode(false);
+                }
+                // Always reset drag state without closing the app
+                isDragging = false;
+                return;
+            }
+
 	        // LOGIC FOR FINISHING AN APP DRAG
 	        // Add transitions for the snap-back or close animation
 	        openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
@@ -14816,6 +14832,14 @@ async function rebootGurasuraisu() { // Removed sourceWindow
     }
 }
 
+function setImmersiveMode(enabled) {
+    if (enabled) {
+        document.body.classList.add('immersive-active');
+    } else {
+        document.body.classList.remove('immersive-active');
+    }
+}
+
 function promptPWAInstall() { // Removed sourceWindow
     promptToInstallPWA();
     return 'PWA installation prompt initiated.';
@@ -15649,6 +15673,7 @@ window.addEventListener('message', async (event) => { // Make listener async
                 window.WavesHost.pushAppUIUpdate(appName, updates);
             }
         },
+        setImmersiveMode: (enabled) => setImmersiveMode(enabled),
         performSystemShortcut: (action) => {
             if (action === 'appSwitcher') {
                 if (!appSwitcherVisible) {
