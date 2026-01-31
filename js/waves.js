@@ -108,20 +108,25 @@ function initWavesHost() {
                     wavesSend({ type: 'auth_failed', reason: 'profile_missing' }, peerId);
                     return;
                 }
-
+                
                 // Check Auth Token
                 if (payload.auth === state.psk) {
                     // TRUSTED DEVICE: Add to active list immediately
                     registerPeer(peerId, payload.profile);
                     wavesSend({ type: 'welcome', deviceName: state.deviceName }, peerId);
                     
-                    // UNICAST state push immediately to this peer
-                    console.log(`[Waves] Authorized ${payload.profile.name} (${peerId}). Pushing initial state...`);
+                    // UNICAST state push immediately to this peer (Critical for background recovery)
+                    console.log(`[Waves] Trusted peer ${payload.profile.name} reconnected. Refreshing state...`);
+                    
+                    // Priority push
+                    pushFullState(peerId);
+                    
+                    // Secondary data
                     setTimeout(() => {
-                        pushFullState(peerId);
                         pushWallpaperUpdate(peerId);
                         pushWidgetUpdate(null, peerId); 
-                    }, 300);
+                        getApps(peerId); // Ensure app list is synced
+                    }, 100);
                 } else if (isDiscoveryActive) {
                     // NEW DEVICE: Start Emoji Auth
                     startEmojiAuth(peerId, payload.profile);
