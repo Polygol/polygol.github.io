@@ -1407,11 +1407,6 @@ const FileUploadManager = {
             // It's a Gurapp request
             const req = this.pendingRequests[contextId];
             
-            // Prepare files for transfer (convert to data objects if needed, 
-            // but postMessage handles Files fairly well in modern browsers, 
-            // or we convert to base64 if cross-origin issues arise).
-            // Here we send simple objects or Read them.
-            
             const filePromises = fileArray.map(async (f) => {
                 // Read to Data URL to ensure safe transfer across iframe boundary
                 const reader = new FileReader();
@@ -1429,8 +1424,6 @@ const FileUploadManager = {
             const processedFiles = await Promise.all(filePromises);
             req.callback(processedFiles);
             
-            // Cleanup request? Usually yes, unless we expect stream. 
-            // Assuming one-shot upload per request.
             delete this.pendingRequests[contextId];
         }
     }
@@ -1451,8 +1444,8 @@ window.handleRemoteFileUpload = function(data, peerId) {
     
     // Route it
     FileUploadManager.handleFiles([file], requestId);
-    
-    showNotification(`Received ${name} from remote`, { icon: 'download' });
+
+    showPopup(`Received ${name}`);
 };
 
 function handleViewportResize() {
@@ -1960,17 +1953,9 @@ function renderWidgets() {
             let newHeight = initialWidgetH + (clientY - initialResizeMouseY);
 
 			if (widgetData.type === 'sticker') {
-                // --- FREE RESIZING FOR STICKERS ---
-                
-                // 1. Maintain aspect ratio? (Optional, but usually expected for stickers)
-                // For "freely", we assume no aspect lock unless Shift is held, 
-                // but for simple UX, let's just let it stretch.
-                
-                // 2. Constraints (15px min, Viewport max)
                 newWidth = Math.max(15, Math.min(window.innerWidth - initialResizeWidgetX, newWidth));
                 newHeight = Math.max(15, Math.min(window.innerHeight - initialResizeWidgetY, newHeight));
 
-                // 3. No Grid Calculation
                 instance.style.width = `${newWidth}px`;
                 instance.style.height = `${newHeight}px`;
             } else {
