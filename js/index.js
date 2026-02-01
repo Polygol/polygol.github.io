@@ -3757,24 +3757,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clockColorItem && clockColorPopup) {
         clockColorItem.addEventListener('click', (e) => {
             e.stopPropagation();
-            const currentStyles = (recentWallpapers[currentWallpaperPosition]?.clockStyles) || {};
-            const target = document.getElementById('color-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-            const cp = document.getElementById('clock-color-picker'), cs = document.getElementById('clock-color-switch');
-            const gp = document.getElementById('clock-gradient-color-picker'), gs = document.getElementById('clock-gradient-switch');
-            const gls = document.getElementById('clock-glass-switch');
-            if (target === 'date') {
-                if (cp) cp.value = currentStyles.dateColor || currentStyles.color || '#ffffff';
-                if (cs) cs.checked = currentStyles.dateColorEnabled ?? false;
-                if (gp) gp.value = currentStyles.dateGradientColor || currentStyles.gradientColor || '#ffffff';
-                if (gs) gs.checked = currentStyles.dateGradientEnabled ?? currentStyles.gradientEnabled ?? false;
-                if (gls) gls.checked = currentStyles.dateGlassEnabled ?? currentStyles.glassEnabled ?? false;
-            } else {
-                if (cp) cp.value = currentStyles.color || '#ffffff';
-                if (cs) cs.checked = currentStyles.colorEnabled ?? false;
-                if (gp) gp.value = currentStyles.gradientColor || '#ffffff';
-                if (gs) gs.checked = currentStyles.gradientEnabled ?? false;
-                if (gls) gls.checked = currentStyles.glassEnabled ?? false;
-            }
             showControlPopup(clockColorItem, clockColorPopup);
         });
     }
@@ -3785,18 +3767,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clockShadowItem && shadowControlsPopup) {
         clockShadowItem.addEventListener('click', (e) => {
             e.stopPropagation();
-            const currentStyles = (recentWallpapers[currentWallpaperPosition]?.clockStyles) || {};
-            const target = document.getElementById('shadow-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-            const ss = document.getElementById('clock-shadow-switch'), sb = document.getElementById('clock-shadow-blur-slider'), sc = document.getElementById('clock-shadow-color-picker');
-            if (target === 'date') {
-                if (ss) ss.checked = currentStyles.dateShadowEnabled ?? false;
-                if (sb) sb.value = currentStyles.dateShadowBlur || '10';
-                if (sc) sc.value = currentStyles.dateShadowColor || '#000000';
-            } else {
-                if (ss) ss.checked = currentStyles.shadowEnabled ?? false;
-                if (sb) sb.value = currentStyles.shadowBlur || '10';
-                if (sc) sc.value = currentStyles.shadowColor || '#000000';
-            }
             showControlPopup(clockShadowItem, shadowControlsPopup);
         });
     }
@@ -3822,42 +3792,14 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-animation', 'animation-switch');
     connectGridItem('setting-contrast', 'contrast-switch');
     connectGridItem('setting-hour-format', 'hour-switch');
-    // --- Special handler for Style Popup (with Clock/Date switcher) ---
-    const styleItem = document.getElementById('setting-style');
-    const stylePopup = document.getElementById('style-controls-popup');
-    if (styleItem && stylePopup) {
-        styleItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const popupFont = document.getElementById('popup-font-select');
-            const fontSelect = document.getElementById('font-select');
-            const currentStyles = (recentWallpapers[currentWallpaperPosition]?.clockStyles) || {};
-            const target = document.getElementById('style-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-            if (popupFont) popupFont.value = target === 'date' ? (currentStyles.dateFont || currentStyles.font || 'Inter') : (fontSelect?.value || 'Inter');
-            showControlPopup(styleItem, stylePopup);
-        });
-    }
-
-    // --- Special handler for Weight Popup (with Clock/Date switcher) ---
-    const weightItem = document.getElementById('setting-weight');
-    const weightPopup = document.getElementById('weight-controls-popup');
-    if (weightItem && weightPopup) {
-        weightItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const popupWeight = document.getElementById('popup-weight-slider');
-            const weightSlider = document.getElementById('weight-slider');
-            const currentStyles = (recentWallpapers[currentWallpaperPosition]?.clockStyles) || {};
-            const target = document.getElementById('weight-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-            if (popupWeight) popupWeight.value = target === 'date' ? (parseInt(currentStyles.dateWeight || '700', 10) / 10).toString() : (weightSlider?.value || '70');
-            showControlPopup(weightItem, weightPopup);
-        });
-    }
+    connectGridItem('setting-style', 'font-select');
+    connectGridItem('setting-weight', 'weight-slider');
     connectGridItem('setting-roundness', 'roundness-slider');
     connectGridItem('setting-size', 'clock-size-slider');
     connectGridItem('setting-clock-spacing', 'clock-spacing-slider');
     connectGridItem('setting-text-case', 'text-case-select');
     connectGridItem('setting-date-size', 'date-size-slider');
-    connectGridItem('setting-gap', 'clock-gap-slider');
-    connectGridItem('setting-offset', 'offset-slider');
+    connectGridItem('setting-date-offset', 'date-offset-slider');
     connectGridItem('setting-alignment', 'alignment-select');
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
@@ -3871,88 +3813,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showControlPopup(formatItem, formatPopup);
         });
     }
-
-    // --- Setup Popup Target Switchers (Clock/Date) ---
-    function setupPopupTargetSwitcher(switcherId, getTarget, onTargetChange) {
-        const switcher = document.getElementById(switcherId);
-        if (!switcher) return;
-        switcher.querySelectorAll('.popup-target-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                switcher.querySelectorAll('.popup-target-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const target = btn.getAttribute('data-target');
-                onTargetChange(target);
-            });
-        });
-    }
-    function getStyleTarget() {
-        const styleSwitch = document.getElementById('style-target-switch');
-        return styleSwitch?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-    }
-    function getWeightTarget() {
-        const w = document.getElementById('weight-target-switch');
-        return w?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-    }
-    function getColorTarget() {
-        const c = document.getElementById('color-target-switch');
-        return c?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-    }
-    function getShadowTarget() {
-        const s = document.getElementById('shadow-target-switch');
-        return s?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-    }
-    setupPopupTargetSwitcher('style-target-switch', getStyleTarget, () => {
-        const currentStyles = (recentWallpapers[currentWallpaperPosition]?.clockStyles) || {};
-        const popupFont = document.getElementById('popup-font-select');
-        const fontSelect = document.getElementById('font-select');
-        const target = document.getElementById('style-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-        if (popupFont) popupFont.value = target === 'date' ? (currentStyles.dateFont || currentStyles.font || 'Inter') : (fontSelect?.value || 'Inter');
-        applyClockStyles(); syncUiStates();
-    });
-    setupPopupTargetSwitcher('weight-target-switch', getWeightTarget, () => {
-        const currentStyles = (recentWallpapers[currentWallpaperPosition]?.clockStyles) || {};
-        const popupWeight = document.getElementById('popup-weight-slider');
-        const weightSlider = document.getElementById('weight-slider');
-        const target = document.getElementById('weight-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-        if (popupWeight) popupWeight.value = target === 'date' ? (parseInt(currentStyles.dateWeight || '700', 10) / 10).toString() : (weightSlider?.value || '70');
-        applyClockStyles(); syncUiStates();
-    });
-    setupPopupTargetSwitcher('color-target-switch', getColorTarget, () => {
-        const currentStyles = (recentWallpapers[currentWallpaperPosition]?.clockStyles) || {};
-        const target = document.getElementById('color-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-        const cp = document.getElementById('clock-color-picker'), cs = document.getElementById('clock-color-switch');
-        const gp = document.getElementById('clock-gradient-color-picker'), gs = document.getElementById('clock-gradient-switch');
-        const gls = document.getElementById('clock-glass-switch');
-        if (target === 'date') {
-            if (cp) cp.value = currentStyles.dateColor || currentStyles.color || '#ffffff';
-            if (cs) cs.checked = currentStyles.dateColorEnabled ?? false;
-            if (gp) gp.value = currentStyles.dateGradientColor || currentStyles.gradientColor || '#ffffff';
-            if (gs) gs.checked = currentStyles.dateGradientEnabled ?? currentStyles.gradientEnabled ?? false;
-            if (gls) gls.checked = currentStyles.dateGlassEnabled ?? currentStyles.glassEnabled ?? false;
-        } else {
-            if (cp) cp.value = currentStyles.color || '#ffffff';
-            if (cs) cs.checked = currentStyles.colorEnabled ?? false;
-            if (gp) gp.value = currentStyles.gradientColor || '#ffffff';
-            if (gs) gs.checked = currentStyles.gradientEnabled ?? false;
-            if (gls) gls.checked = currentStyles.glassEnabled ?? false;
-        }
-        applyClockStyles(); syncUiStates();
-    });
-    setupPopupTargetSwitcher('shadow-target-switch', getShadowTarget, () => {
-        const currentStyles = (recentWallpapers[currentWallpaperPosition]?.clockStyles) || {};
-        const target = document.getElementById('shadow-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-        const ss = document.getElementById('clock-shadow-switch'), sb = document.getElementById('clock-shadow-blur-slider'), sc = document.getElementById('clock-shadow-color-picker');
-        if (target === 'date') {
-            if (ss) ss.checked = currentStyles.dateShadowEnabled ?? false;
-            if (sb) sb.value = currentStyles.dateShadowBlur || '10';
-            if (sc) sc.value = currentStyles.dateShadowColor || '#000000';
-        } else {
-            if (ss) ss.checked = currentStyles.shadowEnabled ?? false;
-            if (sb) sb.value = currentStyles.shadowBlur || '10';
-            if (sc) sc.value = currentStyles.shadowColor || '#000000';
-        }
-        applyClockStyles(); syncUiStates();
-    });
 
     // --- NEW: Special Handler for Widget Picker ---
     const widgetPickerItem = document.getElementById('setting-widgets');
@@ -4969,14 +4829,13 @@ function updateClockAndDate() {
     if (clockFormat) clockFormat = clockFormat.replace(/```(.*?)```/g, '[$1]');
     if (dateFormat) dateFormat = dateFormat.replace(/```(.*?)```/g, '[$1]');
 
-    let timeString = now.format(clockFormat);
-    let formattedDate = now.format(dateFormat);
-    timeString = resolveFormatVariables(timeString, false); // Clock: plain text (wrapDigits splits by char)
-    formattedDate = resolveFormatVariables(formattedDate, true); // Date: allow HTML for icon/symbol
+    const timeString = now.format(clockFormat);
+    const formattedDate = now.format(dateFormat);
     
-    // Condition for special AM/PM font - Do NOT apply Open Runde when clock has roundness status
-    const roundnessVal = roundnessSlider ? parseInt(roundnessSlider.value, 10) : 0;
-    const useOpenRundeForAmPm = hourSwitch.checked && fontSelect && fontSelect.value === 'Inter' && roundnessVal === 0;
+    // Condition for special AM/PM font
+    const useOpenRundeForAmPm = hourSwitch.checked && 
+                                fontSelect && fontSelect.value === 'Inter' && 
+                                roundnessSlider && parseInt(roundnessSlider.value, 10) > 0;
     
     function wrapDigits(timeString) {
         return timeString.split('').map(char => {
@@ -5039,8 +4898,8 @@ function updateClockAndDate() {
         clockElement.innerHTML = wrapTime(timeString);
     }
         
-    dateElement.innerHTML = formattedDate;
-    if (modalTitle) modalTitle.innerHTML = formattedDate;
+    dateElement.textContent = formattedDate;
+    if (modalTitle) modalTitle.textContent = formattedDate;
 
     // --- FIX to force mask repaint ---
     if (clockElement.classList.contains('glass-effect')) {
@@ -6961,53 +6820,6 @@ function setupThemeSwitcher() {
     document.body.classList.toggle('light-theme', currentTheme === 'light');
 }
 
-function resolveFormatVariables(str, allowHtml) {
-    if (!str || typeof str !== 'string') return str;
-    const tempEl = document.getElementById('temperature');
-    const weatherIconEl = document.getElementById('weather-icon');
-    const weatherCode = parseInt(weatherIconEl?.dataset?.weatherCode || '0', 10);
-    const temp = tempEl?.textContent?.trim() || '';
-    const iconName = (typeof weatherConditions !== 'undefined' && weatherConditions[weatherCode]?.icon) ? weatherConditions[weatherCode].icon() : 'wb_sunny';
-    const icon = allowHtml ? `<span class="material-symbols-rounded" style="font-size: 1em; vertical-align: middle;">${iconName}</span>` : iconName;
-    const batteryEl = document.getElementById('battery-status-indicator');
-    const battery = batteryEl?.querySelector('.material-symbols-rounded')?.textContent || '';
-    const mediaTitle = document.getElementById('media-widget-title')?.textContent?.trim() || '';
-    const mediaArtist = document.getElementById('media-widget-artist')?.textContent?.trim() || '';
-    const mediaStatus = typeof activeMediaSessionApp !== 'undefined' && activeMediaSessionApp ? 'playing' : '';
-    const mediaCurrentTime = document.getElementById('media-widget-current-time')?.textContent?.trim() || '0:00';
-    const mediaDuration = document.getElementById('media-widget-duration')?.textContent?.trim() || '0:00';
-    const liveCount = typeof activeLiveActivities === 'object' ? Object.keys(activeLiveActivities).length : 0;
-    const liveActivityStatus = liveCount > 0 ? 'active' : '';
-    const liveActivitySymbol = liveCount > 0 ? (allowHtml ? '<span class="material-symbols-rounded" style="font-size: 1em;">notifications_active</span>' : 'notifications_active') : '';
-    return str
-        .replace(/\{temp\}/g, temp)
-        .replace(/\{icon\}/g, icon)
-        .replace(/\{battery\}/g, battery)
-        .replace(/\{mediaTitle\}/g, mediaTitle)
-        .replace(/\{mediaArtist\}/g, mediaArtist)
-        .replace(/\{mediaStatus\}/g, mediaStatus)
-        .replace(/\{duration\}/g, mediaDuration)
-        .replace(/\{timeElapsed\}/g, mediaCurrentTime)
-        .replace(/\{liveActivityStatus\}/g, liveActivityStatus)
-        .replace(/\{liveActivitySymbol\}/g, liveActivitySymbol)
-        .replace(/\{weather\}/g, temp ? (allowHtml ? `${temp} ${icon}`.trim() : `${temp} ${iconName}`.trim()) : '');
-}
-
-window.insertFormatVar = function(varStr) {
-    const clockInput = document.getElementById('clock-format-input');
-    const dateInput = document.getElementById('date-format-input');
-    const active = document.activeElement;
-    const target = (active === clockInput || (active && clockInput?.contains?.(active))) ? clockInput : dateInput;
-    if (target) {
-        const start = target.selectionStart ?? target.value.length;
-        const end = target.selectionEnd ?? start;
-        const val = target.value;
-        target.value = val.slice(0, start) + varStr + val.slice(end);
-        target.selectionStart = target.selectionEnd = start + varStr.length;
-        target.dispatchEvent(new Event('input'));
-    }
-};
-
 function setupFormatControls() {
     const clockFormatInput = document.getElementById('clock-format-input');
     const dateFormatInput = document.getElementById('date-format-input');
@@ -8816,12 +8628,8 @@ function loadRecentWallpapers() {
             wallpaper.clockStyles.textCase = 'none';
             wallpaper.clockStyles.dateSize = '100';
             wallpaper.clockStyles.dateOffset = '0';
-            wallpaper.clockStyles.offset = wallpaper.clockStyles.dateOffset || '0';
-            wallpaper.clockStyles.clockGap = '0';
             updated = true;
         }
-        if (wallpaper.clockStyles.offset === undefined) wallpaper.clockStyles.offset = wallpaper.clockStyles.dateOffset || '0';
-        if (wallpaper.clockStyles.clockGap === undefined) wallpaper.clockStyles.clockGap = '0';
     });
     
     if (updated) {
@@ -9721,10 +9529,7 @@ async function jumpToWallpaper(index) {
         if (document.getElementById('clock-spacing-slider')) document.getElementById('clock-spacing-slider').value = wallpaper.clockStyles.letterSpacing || '0';
         if (document.getElementById('text-case-select')) document.getElementById('text-case-select').value = wallpaper.clockStyles.textCase || 'none';
         if (document.getElementById('date-size-slider')) document.getElementById('date-size-slider').value = wallpaper.clockStyles.dateSize || '100';
-        const offsetSl = document.getElementById('offset-slider') || document.getElementById('date-offset-slider');
-        if (offsetSl) offsetSl.value = wallpaper.clockStyles.offset || wallpaper.clockStyles.dateOffset || '0';
-        const gapSl = document.getElementById('clock-gap-slider');
-        if (gapSl) gapSl.value = wallpaper.clockStyles.clockGap || '0';
+        if (document.getElementById('date-offset-slider')) document.getElementById('date-offset-slider').value = wallpaper.clockStyles.dateOffset || '0';
 	    if (sizeSlider) sizeSlider.value = wallpaper.clockStyles.clockSize || '0';
 	    if (posXSlider) posXSlider.value = wallpaper.clockStyles.clockPosX || '50';
 	    if (posYSlider) posYSlider.value = wallpaper.clockStyles.clockPosY || '50';
@@ -9930,10 +9735,7 @@ function switchWallpaper(direction, skipSave = false) {
         if (document.getElementById('clock-spacing-slider')) document.getElementById('clock-spacing-slider').value = wallpaper.clockStyles.letterSpacing || '0';
         if (document.getElementById('text-case-select')) document.getElementById('text-case-select').value = wallpaper.clockStyles.textCase || 'none';
         if (document.getElementById('date-size-slider')) document.getElementById('date-size-slider').value = wallpaper.clockStyles.dateSize || '100';
-        const offsetSl = document.getElementById('offset-slider') || document.getElementById('date-offset-slider');
-        if (offsetSl) offsetSl.value = wallpaper.clockStyles.offset || wallpaper.clockStyles.dateOffset || '0';
-        const gapSl = document.getElementById('clock-gap-slider');
-        if (gapSl) gapSl.value = wallpaper.clockStyles.clockGap || '0';
+        if (document.getElementById('date-offset-slider')) document.getElementById('date-offset-slider').value = wallpaper.clockStyles.dateOffset || '0';
         
         // Apply the styles
 		applyClockLayout();
@@ -10089,7 +9891,8 @@ async function initializeAndApplyWallpaper() {
 function syncUiStates() {
     // Sync all checkbox-based toggles
     document.querySelectorAll('.setting-item').forEach(item => {
-        if (item.id === 'setting-alignment' || item.id === 'setting-clock-color' || item.id === 'setting-clock-shadow' || item.id === 'setting-style' || item.id === 'setting-weight') return;
+        // Exclude alignment from this generic check since it's a select
+        if (item.id === 'setting-alignment' || item.id === 'setting-clock-color' || item.id === 'setting-clock-shadow') return;
         
         // Construct potential IDs for different control types
         const controlId = item.id.replace('setting-', '');
@@ -10104,21 +9907,13 @@ function syncUiStates() {
     });
 
     // Sync items with non-boolean active states
-    const weightSlider = document.getElementById('weight-slider');
-    const popupWeightSlider = document.getElementById('popup-weight-slider');
-    const effectiveWeightSlider = popupWeightSlider || weightSlider;
-    document.getElementById('setting-weight').classList.toggle('active', effectiveWeightSlider && parseInt(effectiveWeightSlider.value, 10) !== 70);
-    const fontSelect = document.getElementById('font-select');
-    const popupFontSelect = document.getElementById('popup-font-select');
-    const effectiveFontSelect = popupFontSelect || fontSelect;
-    document.getElementById('setting-style').classList.toggle('active', effectiveFontSelect && effectiveFontSelect.value !== 'Inter');
+    document.getElementById('setting-weight').classList.toggle('active', document.getElementById('weight-slider').value !== '70');
+    document.getElementById('setting-style').classList.toggle('active', document.getElementById('font-select').value !== 'Inter');
     document.getElementById('setting-wallpaper').classList.toggle('active', recentWallpapers.length > 0);
     document.getElementById('setting-clock-spacing').classList.toggle('active', parseInt(document.getElementById('clock-spacing-slider').value) !== 0);
     document.getElementById('setting-text-case').classList.toggle('active', document.getElementById('text-case-select').value !== 'none');
     document.getElementById('setting-date-size').classList.toggle('active', parseInt(document.getElementById('date-size-slider').value) !== 100);
-    const offsetSlider = document.getElementById('offset-slider') || document.getElementById('date-offset-slider');
-    document.getElementById('setting-offset')?.classList?.toggle('active', offsetSlider && parseInt(offsetSlider.value) !== 0);
-    document.getElementById('setting-gap')?.classList?.toggle('active', parseInt(document.getElementById('clock-gap-slider')?.value || '0') !== 0);
+    document.getElementById('setting-date-offset').classList.toggle('active', parseInt(document.getElementById('date-offset-slider').value) !== 0);
     
     // Update to use the new 'setting-position' ID and check all relevant sliders
     const posX = document.getElementById('clock-pos-x-slider').value;
@@ -10180,8 +9975,7 @@ function setupFontSelection() {
 	const spacingSlider = document.getElementById('clock-spacing-slider');
     const textCaseSelect = document.getElementById('text-case-select');
     const dateSizeSlider = document.getElementById('date-size-slider');
-    const dateOffsetSlider = document.getElementById('offset-slider') || document.getElementById('date-offset-slider');
-    const clockGapSlider = document.getElementById('clock-gap-slider');
+    const dateOffsetSlider = document.getElementById('date-offset-slider');
 
     // --- Function to save all settings (triggered by user interaction) ---
     async function saveCurrentWallpaperSettings() {
@@ -10191,18 +9985,10 @@ function setupFontSelection() {
 		// Get the current wallpaper's styles to check for a custom font
         const currentWallpaper = recentWallpapers.length > 0 ? recentWallpapers[currentWallpaperPosition] : null;
         const currentStyles = (currentWallpaper && currentWallpaper.clockStyles) ? currentWallpaper.clockStyles : {};
-        const popupFontSelect = document.getElementById('popup-font-select');
-        const popupWeightSlider = document.getElementById('popup-weight-slider');
-        const styleTarget = document.getElementById('style-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-        const weightTarget = document.getElementById('weight-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-        const colorTarget = document.getElementById('color-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-        const shadowTarget = document.getElementById('shadow-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-        const fontVal = (styleTarget === 'clock' && popupFontSelect) ? popupFontSelect.value : fontSelect.value;
-        const weightVal = (weightTarget === 'clock' && popupWeightSlider) ? (parseInt(popupWeightSlider.value, 10) * 10) : (parseInt(weightSlider.value, 10) * 10);
             
         const settingsFromUI = {
-            font: currentStyles.customFontName || fontVal, // Prioritize custom font
-            weight: weightVal.toString(),
+            font: currentStyles.customFontName || fontSelect.value, // Prioritize custom font
+            weight: (parseInt(weightSlider.value, 10) * 10).toString(),
             color: colorPicker.value,
             colorEnabled: colorSwitch.checked,
             stackEnabled: stackSwitch.checked,
@@ -10223,20 +10009,8 @@ function setupFontSelection() {
             textCase: textCaseSelect ? textCaseSelect.value : 'none',
             dateSize: dateSizeSlider ? dateSizeSlider.value : '100',
             dateOffset: dateOffsetSlider ? dateOffsetSlider.value : '0',
-            offset: dateOffsetSlider ? dateOffsetSlider.value : '0',
-            clockGap: clockGapSlider ? clockGapSlider.value : '0',
-            dateFormat: document.getElementById('date-format-input').value,
-            clockFormat: document.getElementById('clock-format-input').value,
-            dateFont: (styleTarget === 'date' && popupFontSelect) ? popupFontSelect.value : (currentStyles.dateFont || fontVal),
-            dateWeight: (weightTarget === 'date' && popupWeightSlider) ? (parseInt(popupWeightSlider.value, 10) * 10).toString() : (currentStyles.dateWeight || weightVal.toString()),
-            dateColor: (colorTarget === 'date') ? colorPicker.value : (currentStyles.dateColor || colorPicker.value),
-            dateColorEnabled: (colorTarget === 'date') ? colorSwitch.checked : (currentStyles.dateColorEnabled ?? colorSwitch.checked),
-            dateGradientEnabled: (colorTarget === 'date') ? gradientSwitch.checked : (currentStyles.dateGradientEnabled ?? gradientSwitch.checked),
-            dateGradientColor: (colorTarget === 'date') ? gradientColorPicker.value : (currentStyles.dateGradientColor || gradientColorPicker.value),
-            dateGlassEnabled: (colorTarget === 'date') ? glassSwitch.checked : (currentStyles.dateGlassEnabled ?? glassSwitch.checked),
-            dateShadowEnabled: (shadowTarget === 'date') ? shadowSwitch.checked : (currentStyles.dateShadowEnabled ?? shadowSwitch.checked),
-            dateShadowBlur: (shadowTarget === 'date') ? shadowBlurSlider.value : (currentStyles.dateShadowBlur || shadowBlurSlider.value),
-            dateShadowColor: (shadowTarget === 'date') ? shadowColorPicker.value : (currentStyles.dateShadowColor || shadowColorPicker.value)
+			dateFormat: document.getElementById('date-format-input').value,
+            clockFormat: document.getElementById('clock-format-input').value
         };
 
 	    // Save to localStorage and broadcast each change to the settings app
@@ -10303,8 +10077,7 @@ function setupFontSelection() {
 	spacingSlider.value = localStorage.getItem('letterSpacing') || '0';
 	textCaseSelect.value = localStorage.getItem('textCase') || 'none';
 	dateSizeSlider.value = localStorage.getItem('dateSize') || '100';
-	if (dateOffsetSlider) dateOffsetSlider.value = localStorage.getItem('offset') || localStorage.getItem('dateOffset') || '0';
-	if (clockGapSlider) clockGapSlider.value = localStorage.getItem('clockGap') || '0';
+	dateOffsetSlider.value = localStorage.getItem('dateOffset') || '0';
     // Note: Blur, brightness, and contrast sliders are handled by their own setup logic, but it's safe to include here too.
     const isLightModeOnLoad = document.body.classList.contains('light-theme');
     const initialTheme = isLightModeOnLoad ? 'light' : 'dark';
@@ -10341,8 +10114,8 @@ function setupFontSelection() {
         blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
         shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch, roundnessSlider,
         sizeSlider, posXSlider, posYSlider, alignmentSelect, clockFormatInput, dateFormatInput,
-        spacingSlider, textCaseSelect, dateSizeSlider, dateOffsetSlider, clockGapSlider
-    ].filter(Boolean);
+        spacingSlider, textCaseSelect, dateSizeSlider, dateOffsetSlider
+    ];
 
     allControls.forEach(control => {
         // Use a Set to avoid duplicate event listeners for alignmentSelect
@@ -10393,28 +10166,6 @@ function setupFontSelection() {
             syncUiStates();
         }
     });
-
-    // --- Popup controls (Style/Weight) - sync with main controls when target is clock ---
-    const popupFontSelect = document.getElementById('popup-font-select');
-    const popupWeightSlider = document.getElementById('popup-weight-slider');
-    if (popupFontSelect) {
-        popupFontSelect.addEventListener('change', async () => {
-            const styleTarget = document.getElementById('style-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-            if (styleTarget === 'clock' && fontSelect) fontSelect.value = popupFontSelect.value;
-            applyClockStyles();
-            await saveCurrentWallpaperSettings();
-            syncUiStates();
-        });
-    }
-    if (popupWeightSlider) {
-        popupWeightSlider.addEventListener('input', async () => {
-            const weightTarget = document.getElementById('weight-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-            if (weightTarget === 'clock' && weightSlider) weightSlider.value = popupWeightSlider.value;
-            applyClockStyles();
-            await saveCurrentWallpaperSettings();
-            syncUiStates();
-        });
-    }
 }
 
 // Handle layout (size and position)
@@ -10462,8 +10213,7 @@ function applyClockStyles() {
     const spacingSlider = document.getElementById('clock-spacing-slider');
     const textCaseSelect = document.getElementById('text-case-select');
     const dateSizeSlider = document.getElementById('date-size-slider');
-    const dateOffsetSlider = document.getElementById('offset-slider') || document.getElementById('date-offset-slider');
-    const clockGapSlider = document.getElementById('clock-gap-slider');
+    const dateOffsetSlider = document.getElementById('date-offset-slider');
     
     if (!clockElement || !infoElement) return;
     
@@ -10486,32 +10236,17 @@ function applyClockStyles() {
         infoElement.style.fontSize = `${dateSizeSlider.value}%`;
     }
     if (dateOffsetSlider) {
-        const container = document.querySelector('.container');
-        if (container) container.style.setProperty('--container-gap', `${dateOffsetSlider.value}px`);
-    }
-    if (clockGapSlider) {
-        document.body.style.setProperty('--clock-gap', `${clockGapSlider.value}px`);
+        infoElement.style.marginBottom = `${dateOffsetSlider.value}px`;
     }
     
     // Use custom font if available, otherwise use font from dropdown
-    const popupFontSelect = document.getElementById('popup-font-select');
-    const popupWeightSlider = document.getElementById('popup-weight-slider');
-    const styleTarget = document.getElementById('style-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-    const weightTarget = document.getElementById('weight-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-    const colorTarget = document.getElementById('color-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-    const shadowTarget = document.getElementById('shadow-target-switch')?.querySelector('.popup-target-btn.active')?.getAttribute('data-target') || 'clock';
-    const clockFontVal = (styleTarget === 'clock' && popupFontSelect) ? popupFontSelect.value : fontSelect.value;
-    const dateFontVal = (styleTarget === 'date' && popupFontSelect) ? popupFontSelect.value : (currentStyles.dateFont || fontSelect.value);
-    const clockWeightVal = (weightTarget === 'clock' && popupWeightSlider) ? (parseInt(popupWeightSlider.value, 10) * 10) : (parseInt(weightSlider.value, 10) * 10);
-    const dateWeightVal = (weightTarget === 'date' && popupWeightSlider) ? (parseInt(popupWeightSlider.value, 10) * 10) : (parseInt(currentStyles.dateWeight || '700', 10));
-    const fontWeight = clockWeightVal;
+    const fontWeight = parseInt(weightSlider.value, 10) * 10;
     const roundnessValue = parseInt(roundnessSlider.value, 10);
-	const selectedFont = clockFontVal;
+	const selectedFont = fontSelect.value;
     const effectiveFont = currentStyles.customFontName || selectedFont;
-    const effectiveDateFont = currentStyles.customFontName || currentStyles.dateFont || dateFontVal;
     
     let clockFontFamily = `'${effectiveFont}', sans-serif`;
-    let infoFontFamily = `'${effectiveDateFont}', sans-serif`;
+    let infoFontFamily = `'${effectiveFont}', sans-serif`;
     let roundnessAxis = 'ROND';
 
     // Reset variation settings for all elements
@@ -10520,11 +10255,10 @@ function applyClockStyles() {
     
     // --- Special Font Logic ---
     // Only apply special logic if NOT using a custom font.
-    // Update: Do NOT apply Open Runde when clock has roundness status (per design)
     if (!currentStyles.customFontName && selectedFont === 'Inter' && roundnessValue > 0) {
         roundnessAxis = 'RDNS';
         clockFontFamily = "'Inter Numeric', sans-serif";
-        infoFontFamily = "'Inter Numeric', sans-serif"; // Use Inter Numeric for both; no Open Runde when roundness active
+        infoFontFamily = "'Open Runde', sans-serif";
     }
 
     // --- Apply font variation settings if roundness is active ---
@@ -10539,7 +10273,6 @@ function applyClockStyles() {
     clockElement.style.fontFamily = clockFontFamily;
     clockElement.style.fontWeight = fontWeight;
     infoElement.style.fontFamily = infoFontFamily;
-    infoElement.style.fontWeight = dateWeightVal;
 	
     // Reset all color/background/effect styles first
     clockElement.style.backgroundImage = 'none';
@@ -10553,48 +10286,29 @@ function applyClockStyles() {
     infoElement.style.textShadow = 'none';
 	
     // --- Apply styles based on priority: Glass > Gradient > Solid Color ---
-    const dateColorEnabled = (colorTarget === 'date') ? colorSwitch.checked : (currentStyles.dateColorEnabled ?? colorSwitch.checked);
-    const dateGlassEnabled = (colorTarget === 'date') ? glassSwitch.checked : (currentStyles.dateGlassEnabled ?? glassSwitch.checked);
-    const dateGradientEnabled = (colorTarget === 'date') ? gradientSwitch.checked : (currentStyles.dateGradientEnabled ?? gradientSwitch.checked);
-    const dateColorVal = (colorTarget === 'date') ? colorPicker.value : (currentStyles.dateColor || colorPicker.value);
-    const dateGradientVal = (colorTarget === 'date') ? gradientColorPicker.value : (currentStyles.dateGradientColor || gradientColorPicker.value);
-    // Clock styles
     if (glassSwitch && glassSwitch.checked) {
         clockElement.classList.add('glass-effect');
+        infoElement.classList.add('glass-effect'); // Apply to date as well
     } else if (gradientSwitch && gradientSwitch.checked) {
         const color1 = colorPicker.value;
         const color2 = gradientColorPicker.value;
         clockElement.style.setProperty('--gradient-color-1', color1);
         clockElement.style.setProperty('--gradient-color-2', color2);
         clockElement.classList.add('gradient-effect');
+        infoElement.style.color = color1; // Use the primary color for the date
     } else if (colorSwitch && colorSwitch.checked) {
         clockElement.style.color = colorPicker.value;
-    }
-    // Date styles (independent from clock)
-    if (dateGlassEnabled) {
-        infoElement.classList.add('glass-effect');
-    } else if (dateGradientEnabled) {
-        infoElement.style.color = dateGradientVal;
-    } else if (dateColorEnabled) {
-        infoElement.style.color = dateColorVal;
-    } else if (glassSwitch && glassSwitch.checked) {
-        infoElement.classList.add('glass-effect');
-    } else if (gradientSwitch && gradientSwitch.checked) {
-        infoElement.style.color = colorPicker.value;
-    } else if (colorSwitch && colorSwitch.checked) {
         infoElement.style.color = colorPicker.value;
     }
 	
     // Apply Text Shadow (can be combined with other effects)
-    const dateShadowEnabled = (shadowTarget === 'date') ? shadowSwitch.checked : (currentStyles.dateShadowEnabled ?? shadowSwitch.checked);
-    const dateShadowBlur = (shadowTarget === 'date') ? shadowBlurSlider.value : (currentStyles.dateShadowBlur || shadowBlurSlider.value);
-    const dateShadowColor = (shadowTarget === 'date') ? shadowColorPicker.value : (currentStyles.dateShadowColor || shadowColorPicker.value);
     if (shadowSwitch && shadowSwitch.checked) {
         const shadowBlur = shadowBlurSlider.value;
         const shadowColor = shadowColorPicker.value;
-        clockElement.style.textShadow = `0 0 ${shadowBlur}px ${shadowColor}`;
+        const shadowString = `0 0 ${shadowBlur}px ${shadowColor}`;
+        clockElement.style.textShadow = shadowString;
+        infoElement.style.textShadow = shadowString;
     }
-    infoElement.style.textShadow = dateShadowEnabled ? `0 0 ${dateShadowBlur}px ${dateShadowColor}` : (shadowSwitch && shadowSwitch.checked ? `0 0 ${shadowBlurSlider.value}px ${shadowColorPicker.value}` : 'none');
     
     // Apply Stacked Layout OR Custom Line Height
     const customLineHeight = currentStyles.customLineHeight;
@@ -10640,8 +10354,6 @@ function resetAndApplyDefaultClockStyles() {
         textCase: 'none',
         dateSize: '100',
         dateOffset: '0',
-        offset: '0',
-        clockGap: '0',
 		customFontName: null,
         customFontUrl: null,
         customLineHeight: null,
@@ -10674,10 +10386,7 @@ function resetAndApplyDefaultClockStyles() {
 	document.getElementById('clock-spacing-slider').value = defaultStyles.letterSpacing;
 	document.getElementById('text-case-select').value = defaultStyles.textCase;
 	document.getElementById('date-size-slider').value = defaultStyles.dateSize;
-	const offsetEl = document.getElementById('offset-slider') || document.getElementById('date-offset-slider');
-	if (offsetEl) offsetEl.value = defaultStyles.offset || defaultStyles.dateOffset || '0';
-	const gapEl = document.getElementById('clock-gap-slider');
-	if (gapEl) gapEl.value = defaultStyles.clockGap || '0';
+	document.getElementById('date-offset-slider').value = defaultStyles.dateOffset;
 	document.getElementById('clock-size-slider').value = defaultStyles.clockSize;
 	document.getElementById('clock-pos-x-slider').value = defaultStyles.clockPosX;
 	document.getElementById('clock-pos-y-slider').value = defaultStyles.clockPosY;
@@ -15619,9 +15328,7 @@ const controlIdMap = {
     'letterSpacing': 'clock-spacing-slider',
     'textCase': 'text-case-select',
     'dateSize': 'date-size-slider',
-    'dateOffset': 'offset-slider',
-    'offset': 'offset-slider',
-    'clockGap': 'clock-gap-slider',
+    'dateOffset': 'date-offset-slider',
     'nightStandEnabled': 'nightStandEnabled',
     'nightStandStart': 'nightStandStart',
     'nightStandEnd': 'nightStandEnd',
@@ -16558,9 +16265,7 @@ function broadcastAllWallpaperSettings(wallpaper) {
         'letterSpacing': val(styles.letterSpacing, '0'),
         'textCase': val(styles.textCase, 'none'),
         'dateSize': val(styles.dateSize, '100'),
-        'dateOffset': val(styles.offset || styles.dateOffset, '0'),
-        'offset': val(styles.offset || styles.dateOffset, '0'),
-        'clockGap': val(styles.clockGap, '0')
+        'dateOffset': val(styles.dateOffset, '0')
     };
     
     // Clock format might default based on 12hr setting
