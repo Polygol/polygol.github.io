@@ -490,7 +490,7 @@
             
                     <div class="setting-item active" id="setting-clock-color">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">colorize</span></div>
-                        <span class="setting-label">Color</span>
+                        <span class="setting-label" data-lang-key="CLOCK_COLOR">Color</span>
                     </div>
             
                     <div class="setting-item" id="setting-clock-shadow">
@@ -525,11 +525,6 @@
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">space_bar</span></div>
                         <span class="setting-label">Spacing</span>
                     </div>
-                    
-                    <div class="setting-item" id="setting-gap">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">linear_scale</span></div>
-                        <span class="setting-label">Gap</span>
-                    </div>
             
                     <div class="setting-item" id="setting-text-case">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">text_fields</span></div>
@@ -549,11 +544,11 @@
                         <span class="setting-label">Date Size</span>
                     </div>
             
-                    <div class="setting-item" id="setting-offset">
+                    <div class="setting-item" id="setting-date-offset">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">vertical_align_center</span></div>
-                        <span class="setting-label">Offset</span>
+                        <span class="setting-label">Date Offset</span>
                     </div>
-                    
+            
                     <div class="setting-item" id="setting-format">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">edit_calendar</span></div>
                         <span class="setting-label" data-lang-key="FORMAT">Format</span>
@@ -768,7 +763,6 @@
         <input type="range" min="0" max="100" value="0" class="roundness-slider" id="roundness-slider">
         <input type="range" min="-50" max="50" value="0" id="clock-size-slider">
         <input type="range" min="-5" max="20" value="0" id="clock-spacing-slider">
-        <input type="range" min="-20" max="100" value="0" id="clock-gap-slider">
         <select id="text-case-select">
             <option value="none">Normal</option>
             <option value="uppercase">UPPERCASE</option>
@@ -776,7 +770,7 @@
             <option value="capitalize">Capitalize</option>
         </select>
         <input type="range" min="50" max="200" value="100" id="date-size-slider">
-        <input type="range" min="0" max="100" value="0" id="offset-slider">
+        <input type="range" min="-50" max="50" value="0" id="date-offset-slider">
         <div id="position-controls-popup" class="control-popup-content">
             <div class="popup-control-row">
                 <label for="clock-pos-x-slider">X</label>
@@ -795,42 +789,7 @@
                 </select>
             </div>
         </div>
-        <div id="style-controls-popup" class="control-popup-content">
-            <div class="popup-target-switcher" id="style-target-switch">
-                <div class="popup-target-btn active" data-target="clock">Clock</div>
-                <div class="popup-target-btn" data-target="date">Date</div>
-            </div>
-            <div class="popup-control-row">
-                <select id="popup-font-select" style="width: 100%;">
-                    <option value="Inter" data-lang="Default">LANG_DEFAULT</option>
-                    <option value="Bricolage Grotesque" data-lang="Work">LANG_WORK</option>
-                    <option value="DynaPuff" data-lang="Puffy">LANG_PUFFY</option>
-                    <option value="Domine" data-lang="Classic">LANG_CLASSIC</option>
-                    <option value="Climate Crisis" data-lang="Strokes">LANG_STROKES</option>
-                    <option value="JetBrains Mono" data-lang="Mono">LANG_MONO</option>
-                    <option value="DotGothic16" data-lang="Pixel">LANG_PIXEL</option>
-                    <option value="Playpen Sans" data-lang="Written">LANG_WRITTEN</option>
-                    <option value="Jaro" data-lang="Raised">LANG_RAISED</option>
-                    <option value="Doto" data-lang="Dot">LANG_DOT</option>
-                    <option value="Nunito" data-lang="Round">LANG_ROUND</option>
-                </select>
-            </div>
-        </div>
-        <div id="weight-controls-popup" class="control-popup-content">
-             <div class="popup-target-switcher" id="weight-target-switch">
-                <div class="popup-target-btn active" data-target="clock">Clock</div>
-                <div class="popup-target-btn" data-target="date">Date</div>
-            </div>
-            <div class="popup-control-row">
-                <label>Weight</label>
-                <input type="range" min="20" max="100" value="100" id="popup-weight-slider">
-            </div>
-        </div>
         <div id="clock-color-popup" class="control-popup-content">
-            <div class="popup-target-switcher" id="color-target-switch">
-                <div class="popup-target-btn active" data-target="clock">Clock</div>
-                <div class="popup-target-btn" data-target="date">Date</div>
-            </div>
             <div class="popup-control-row">
                 <label for="clock-color-switch">Solid Color</label>
                 <input type="checkbox" id="clock-color-switch">
@@ -847,10 +806,6 @@
             </div>
         </div>
         <div id="shadow-controls-popup" class="control-popup-content">
-            <div class="popup-target-switcher" id="shadow-target-switch">
-                <div class="popup-target-btn active" data-target="clock">Clock</div>
-                <div class="popup-target-btn" data-target="date">Date</div>
-            </div>
             <div class="popup-control-row">
                 <label for="clock-shadow-switch">Shadow</label>
                 <input type="checkbox" id="clock-shadow-switch">
@@ -873,23 +828,24 @@
                 <label for="clock-format-input" data-lang-key="CLOCK_FORMAT">Clock Format</label>
                 <input type="text" id="clock-format-input" placeholder="e.g., HH:mm:ss" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 12px; background: var(--transparent-color); border: 1px solid var(--glass-border); color: var(--text-color);">
             </div>
-            <!-- Variables Cheat Sheet -->
-            <div style="margin-top: 10px;">
-                <div style="display: flex; flex-wrap: wrap;">
-                    <span class="var-chip" onclick="insertFormatVar('{temp}')">{temp}</span>
-                    <span class="var-chip" onclick="insertFormatVar('{icon}')">{icon}</span>
-                    <span class="var-chip" onclick="insertFormatVar('{battery}')">{battery}</span>
-                    <span class="var-chip" onclick="insertFormatVar('{mediaTitle}')">{mediaTitle}</span>
-                    <span class="var-chip" onclick="insertFormatVar('{mediaArtist}')">{mediaArtist}</span>
-                </div>
-            </div>
         </div>
         <input type="checkbox" id="seconds-switch" checked>
         <input type="checkbox" id="clock-stack-switch">
         <input type="checkbox" id="depth-effect-switch">
         <input type="checkbox" id="live-environment-switch">
-        <select id="font-select" style="display:none;"></select>
-        <input type="range" id="weight-slider" style="display:none;">
+        <select id="font-select">
+            <option value="Inter" data-lang="Default">LANG_DEFAULT</option>
+            <option value="Bricolage Grotesque" data-lang="Work">LANG_WORK</option>
+            <option value="DynaPuff" data-lang="Puffy">LANG_PUFFY</option>
+            <option value="Domine" data-lang="Classic">LANG_CLASSIC</option>
+            <option value="Climate Crisis" data-lang="Strokes">LANG_STROKES</option>
+            <option value="JetBrains Mono" data-lang="Mono">LANG_MONO</option>
+            <option value="DotGothic16" data-lang="Pixel">LANG_PIXEL</option>
+            <option value="Playpen Sans" data-lang="Written">LANG_WRITTEN</option>
+            <option value="Jaro" data-lang="Raised">LANG_RAISED</option>
+            <option value="Doto" data-lang="Dot">LANG_DOT</option>
+            <option value="Nunito" data-lang="Round">LANG_ROUND</option>
+        </select>
         <input type="checkbox" id="weather-switch" checked>
         <input type="checkbox" id="gurapps-switch" checked>
         <input type="checkbox" id="tint-colors-switch" checked>
