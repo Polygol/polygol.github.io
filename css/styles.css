@@ -127,6 +127,9 @@
 }
 
 :root {
+    --edge-refraction-filter: url('#edge-refraction-only');
+    --sun-shadow: 0 0 0 0 transparent;
+    
     /* Dark Theme (Default) Variables */
 	--background-mono-dark: #1c1c1c;
 	--background-pure-dark: #000000;
@@ -186,11 +189,7 @@
     --light-transparent-highcontrast: #ffffff;
     
     /* Base Variables */
-    --edge-refraction-filter: url('#edge-refraction-only');
-    --sun-shadow: 0 0 0 0 transparent;
     --base-font-size: clamp(16px, 2% + 1rem, 24px);
-    --clock-gap: 0px;
-    --container-gap: 10px;
     
     /* Default to Dark Theme */
 	--background-mono: var(--background-mono-dark);
@@ -961,7 +960,6 @@ body.one-button-nav-active .dock.show {
     align-items: center;
     width: max-content;
 	z-index: 1;
-    gap: var(--container-gap);
 }
 
 .container.align-left {
@@ -1022,7 +1020,6 @@ body.one-button-nav-active .dock.show {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--clock-gap);
 }
 
 .clock .digit, .clock .colon {
@@ -1074,6 +1071,7 @@ body.one-button-nav-active .dock.show {
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-bottom: 10px;
             user-select: none;
             gap: clamp(0.5rem, 2%, 1rem);
 			font-size: clamp(1.5rem, 3%, 2rem);
@@ -1390,6 +1388,7 @@ body.one-button-nav-active .dock.show {
     align-items: center;
     gap: clamp(0.5rem, 2%, 1rem);
     width: 100%;
+    margin-top: 10px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -1604,50 +1603,6 @@ body.one-button-nav-active .dock.show {
     position: fixed;
     z-index: 10001; /* Above the modal */
     min-width: 155px;
-}
-
-.popup-target-switcher {
-	display: flex;
-	margin-bottom: 10px;
-	width: 100%;
-	box-sizing: border-box;
-}
-
-.popup-target-btn {
-	flex: 1;
-	text-align: center;
-    background-color: var(--search-background);
-    color: var(--text-color);
-    border: 1px solid var(--glass-border);
-    border-radius: 10px;
-    padding: 8px 15px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
-    box-shadow: var(--sun-shadow);
-}
-
-.popup-target-btn:active {
-	transform: scale(1);
-	padding: 8px 19px;
-	filter: brightness(1.5);
-}
-
-.popup-target-btn.active {
-    background-color: var(--accent);
-    color: var(--background-color);
-    border-radius: 25px !important;
-}
-
-.var-chip {
-	display: inline-block;
-	background: var(--search-background);
-	border: 1px solid var(--glass-border);
-	padding: 4px 8px;
-	border-radius: 8px;
-	font-size: 10px;
-	margin: 2px;
-	cursor: pointer;
 }
 
 .control-popup select, .control-popup input {
