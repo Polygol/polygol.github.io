@@ -2224,6 +2224,31 @@ input[type="checkbox"]:checked::before {
     flex-grow: 1;
 }
 
+.popup-switcher {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.popup-switcher-option {
+    flex: 1;
+    text-align: center;
+    background-color: var(--search-background);
+    color: var(--text-color);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 8px 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    box-shadow: var(--sun-shadow);
+}
+
+.popup-switcher-option.active {
+    background-color: var(--accent);
+    color: var(--background-color);
+    border-radius: 25px !important;
+}
+
 #sticker-settings-popup {
     width: 200px;
 }
