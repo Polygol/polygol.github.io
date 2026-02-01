@@ -1390,7 +1390,6 @@ body.one-button-nav-active .dock.show {
     align-items: center;
     gap: clamp(0.5rem, 2%, 1rem);
     width: 100%;
-    margin-top: 10px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
