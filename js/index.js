@@ -10471,7 +10471,7 @@ var apps = {
         icon: "appstore.png"
 	},
     "Files": {
-        url: "/assets/gurapp/intl/settings/forudaraisu/index.html",
+        url: "/assets/gurapp/intl/forudaraisu/index.html",
         icon: "files.png"
 	},
     "Assistant": {
