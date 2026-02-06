@@ -6766,7 +6766,6 @@ let currentWallpaperIndex = 0;
 let minimalMode = localStorage.getItem('minimalMode') === 'true';
 let nightMode = localStorage.getItem('nightMode') === 'true';
 let oneButtonNavEnabled = localStorage.getItem('oneButtonNavEnabled') === 'true';
-let isAiAssistantEnabled = localStorage.getItem('aiAssistantEnabled') === 'true';
 let glassEffectsEnabled = localStorage.getItem('glassEffectsEnabled') !== 'false'; // Default to true
 let minimizeCleanupTimeout = null; 
 const minimizeTimeouts = {}; // Track timeouts per app URL
@@ -7074,7 +7073,7 @@ function createCompositeScreenshot() {
         const iframe = activeEmbed ? activeEmbed.querySelector('iframe') : null;
 
         if (!iframe) {
-            const canvas = await html2canvas(document.body, { useCORS: true, logging: false, ignoreElements: (el) => el.id === 'ai-assistant-overlay' });
+            const canvas = await html2canvas(document.body, { useCORS: true, logging: false });
             resolve(canvas.toDataURL('image/jpeg', 0.5));
             return;
         }
@@ -7082,7 +7081,7 @@ function createCompositeScreenshot() {
         const parentCanvas = await html2canvas(document.body, {
             useCORS: true,
             logging: false,
-            ignoreElements: (el) => el.id === 'ai-assistant-overlay' || el.tagName === 'IFRAME'
+            ignoreElements: (el) => el.tagName === 'IFRAME'
         });
 
         const iframeListener = (event) => {
@@ -10474,6 +10473,14 @@ var apps = {
     "Assistant": {
         url: "https://kirbindustries.gitbook.io/polygol/assistant-for-polygol",
         icon: "assistant.png"
+	},
+    "Tips": {
+        url: "https://kirbindustries.gitbook.io/polygol",
+        icon: "tips.png"
+	},
+    "Feedback": {
+        url: "https://docs.google.com/forms/d/e/1FAIpQLSeSYSJalaX0HCZe0helcK5NCuc0U47tQc6KaO1OAsBs5HxK1A/viewform?embedded=true",
+        icon: "feedback.png"
 	},
     "Settings": {
         url: "/assets/gurapp/intl/settings/index.html",
