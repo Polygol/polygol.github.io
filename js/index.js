@@ -10470,6 +10470,10 @@ var apps = {
         url: "/kirbstore/index.html",
         icon: "appstore.png"
 	},
+    "Files": {
+        url: "/assets/gurapp/intl/settings/forudaraisu/index.html",
+        icon: "files.png"
+	},
     "Assistant": {
         url: "https://kirbindustries.gitbook.io/polygol/assistant-for-polygol",
         icon: "assistant.png"
@@ -13310,10 +13314,8 @@ function setupOneButtonNav() {
     };
 
     const handleLongPress = () => {
-        if (isAiAssistantEnabled) {
-            isLongPress = true;
-            showAiAssistant();
-        }
+		isLongPress = true;
+		openAppSwitcherUI();
     };
 
     const onPointerDown = (e) => {
@@ -14303,11 +14305,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     // --- 5. Final checks and ongoing processes ---
     preventLeaving();
     window.addEventListener('resize', handleViewportResize);
-
-    // Initialize AI if it was already enabled on page load
-    if (isAiAssistantEnabled) {
-        initializeAiAssistant();
-    }
 
     // Call to check for automatic backup on page load
     checkForAutomaticBackup();
