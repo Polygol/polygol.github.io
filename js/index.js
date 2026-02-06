@@ -688,10 +688,17 @@ let updateNotificationInterval = null;
 
 async function setupServiceWorkerUpdateListener() {
     if (!('serviceWorker' in navigator)) return;
-
+	
     // Load Version Info on startup
     updateSystemVersionUI().then(() => {
         const checkUpdate = () => {
+            // Check user preference
+            const updatesEnabled = localStorage.getItem('updatesEnabled') !== 'false';
+            if (!updatesEnabled) {
+                console.log("[System] Automatic updates disabled. Skipping background check.");
+                return;
+            }
+
             const lastCheck = parseInt(localStorage.getItem('last_sw_check') || '0');
             const ONE_DAY = 24 * 60 * 60 * 1000;
 
