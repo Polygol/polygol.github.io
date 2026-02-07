@@ -346,46 +346,6 @@
 
     <div id="widget-grid" class="widget-grid"></div>
 
-    <!-- Live Activity on Home Screen (hidden with .container when in app) -->
-    <div id="live-activity-home" class="live-activity-home live-activity-pos-br" style="display: none;">
-        <div class="live-activity-inner">
-            <!-- Activity 0: Media (copy of media-session-widget) -->
-            <div id="live-activity-media" class="live-activity-media-widget" style="display: none;">
-                <div class="live-activity-media-bg"></div>
-                <img id="live-activity-media-art" src="" alt="Album Art">
-                <div class="live-activity-app-icon-img">
-                    <img id="live-activity-media-app-icon" src="" class="live-activity-media-app-icon" style="display: none;">
-                </div>
-                <div class="live-activity-media-device">
-                    <span class="material-symbols-rounded">volume_up</span>
-                    <span>This device</span>
-                </div>
-                <div class="live-activity-media-info">
-                    <div id="live-activity-media-title" class="live-activity-title"></div>
-                    <div id="live-activity-media-artist" class="live-activity-artist"></div>
-                </div>
-                <button id="live-activity-media-play-pause" type="button"><span class="material-symbols-rounded" style="font-size: 28px; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;">play_arrow</span></button>
-                <div class="live-activity-media-progress-container">
-                    <span id="live-activity-media-current-time" class="live-activity-media-time">0:00</span>
-                    <span id="live-activity-media-duration" class="live-activity-media-time">0:00</span>
-                </div>
-                <div class="live-activity-media-controls">
-                    <button id="live-activity-media-prev" type="button"><span class="material-symbols-rounded">skip_previous</span></button>
-                    <div id="live-activity-media-progress-bar">
-                        <div style="display: flex; flex-direction: row; height: 16px; align-items: center;">
-                            <div id="live-activity-media-progress"></div>
-                            <div style="z-index: 4; width: 6px; background-color: var(--text-color); border-radius: 16px; margin-right: 4px; flex-shrink: 0; height: 16px; margin-left: -6px;"></div>
-                            <div style="background: var(--overlay-color); width: 100%; height: 6px; border-radius: 10px; backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px); box-shadow: var(--sun-shadow); border: 1px solid var(--glass-border);"></div>
-                        </div>
-                    </div>
-                    <button id="live-activity-media-next" type="button"><span class="material-symbols-rounded">skip_next</span></button>
-                </div>
-            </div>
-            <!-- Activity 1: Placeholder for IFRAME / future -->
-            <div id="live-activity-iframe-slot" class="live-activity-iframe-slot" style="display: none;"></div>
-        </div>
-    </div>
-
     <div id="customizeModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="controls-container">
@@ -506,10 +466,6 @@
                     <div class="setting-item" id="setting-one-button-nav">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">arrow_selector_tool</span></div>
                         <span class="setting-label" data-lang-key="ONE_BUTTON_NAV">Buttons</span>
-                    </div>
-                    <div class="setting-item" id="setting-live-activity">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">live_activity</span></div>
-                        <span class="setting-label">Live Activity</span>
                     </div>
                 </div>
                 <!-- Add -->
@@ -904,7 +860,6 @@
         <input type="checkbox" id="hour-switch">
         <input type="checkbox" id="ai-switch">
         <input type="checkbox" id="one-button-nav-switch">
-        <input type="checkbox" id="live-activity-switch">
         <input type="checkbox" id="persistent-indicator-switch">
         <input type="checkbox" id="dock-pinned-switch">
         <select id="wake-lock-mode-select">
