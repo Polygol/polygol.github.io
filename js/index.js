@@ -3811,7 +3811,6 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
     connectGridItem('setting-one-button-nav', 'one-button-nav-switch');
-    connectGridItem('setting-live-activity', 'live-activity-switch');
 
     const formatItem = document.getElementById('setting-format');
     const formatPopup = document.getElementById('format-popup');
@@ -6767,9 +6766,6 @@ let currentWallpaperIndex = 0;
 let minimalMode = localStorage.getItem('minimalMode') === 'true';
 let nightMode = localStorage.getItem('nightMode') === 'true';
 let oneButtonNavEnabled = localStorage.getItem('oneButtonNavEnabled') === 'true';
-let liveActivityEnabled = localStorage.getItem('liveActivityEnabled') === 'true';
-let liveActivityPosition = localStorage.getItem('liveActivityPosition') || 'br'; // tl, tr, bl, br
-let liveActivityIndex = 0; // 0 = media, 1 = iframe (future)
 let glassEffectsEnabled = localStorage.getItem('glassEffectsEnabled') !== 'false'; // Default to true
 let minimizeCleanupTimeout = null; 
 const minimizeTimeouts = {}; // Track timeouts per app URL
@@ -11197,7 +11193,7 @@ async function createFullscreenEmbed(url, options = {}) {
 	    }, 10);
         
         // Hide all main UI elements
-        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
             if (!el.dataset.originalDisplay) {
                 el.dataset.originalDisplay = window.getComputedStyle(el).display;
             }
@@ -11353,7 +11349,7 @@ async function createFullscreenEmbed(url, options = {}) {
 	});
     
     // Hide all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
         if (!el.dataset.originalDisplay) {
             el.dataset.originalDisplay = window.getComputedStyle(el).display;
         }
@@ -11703,7 +11699,7 @@ function closeFullscreenEmbed() {
     // --- STANDARD HOME RESTORATION (Only if history is empty) ---
     
     // Restore all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 	    el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay || ''; // Restore original display property
         el.style.removeProperty('content-visibility'); // OPTIMIZATION: Enable rendering
@@ -11814,7 +11810,7 @@ function forceCloseApp(url) {
         }
 
         // Restore Home Screen UI
-        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
             el.classList.remove('force-hide');
             el.style.display = el.dataset.originalDisplay || ''; 
             el.style.removeProperty('content-visibility'); 
@@ -11938,7 +11934,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         if (interactionBlocker) interactionBlocker.style.pointerEvents = 'auto';
 		
         // Unhide all main UI elements
-        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
             el.classList.remove('force-hide');
             el.style.display = el.dataset.originalDisplay || '';
             el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -12001,7 +11997,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         }
     }
     
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 	    el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay;
         el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -12512,7 +12508,7 @@ function setupDrawerInteractions() {
 	            drawerPill.style.opacity = '0';
 
 				// Restore all main UI elements
-			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 				    el.classList.remove('force-hide');
 			        el.style.display = el.dataset.originalDisplay;
                     el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -12666,7 +12662,7 @@ function setupDrawerInteractions() {
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');				
 			    // Restore all main UI elements
-			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 				    el.classList.remove('force-hide');
 			        el.style.display = el.dataset.originalDisplay;
                     el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -12692,7 +12688,7 @@ function setupDrawerInteractions() {
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
 				SoundManager.play('delay');
 				// Hide UI elements
-				document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+				document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 			        if (!el.dataset.originalDisplay) {
 			            el.dataset.originalDisplay = window.getComputedStyle(el).display;
 			        }
@@ -12718,7 +12714,7 @@ function setupDrawerInteractions() {
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
 				// Restore all main UI elements
-			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 				    el.classList.remove('force-hide');
 			        el.style.display = el.dataset.originalDisplay;
                     el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -13081,7 +13077,7 @@ function setupDrawerInteractions() {
             applyWallpaperEffects();
             document.body.style.setProperty('--bg-transform-scale', '1.05');			
 			// Restore all main UI elements
-		    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+		    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 			    el.classList.remove('force-hide');
 		        el.style.display = el.dataset.originalDisplay;
                 el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -13252,7 +13248,7 @@ function setupOneButtonNav() {
         } else if (isDrawerOpen()) {
             // Close app drawer by removing the class
             appDrawer.classList.remove('open');
-            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
                 el.style.display = el.dataset.originalDisplay || '';
                 el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -13284,7 +13280,7 @@ function setupOneButtonNav() {
         if (isDrawerOpen()) {
             // Close app drawer
             appDrawer.classList.remove('open');
-            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
                 el.style.removeProperty('content-visibility'); // OPTIMIZATION
                 el.style.opacity = '1';
@@ -13303,7 +13299,7 @@ function setupOneButtonNav() {
             
             appDrawer.classList.add('open'); // Now the CSS class will take effect
             
-            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 if (!el.dataset.originalDisplay) {
                     el.dataset.originalDisplay = window.getComputedStyle(el).display;
                 }
@@ -13569,23 +13565,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Initial check
     updateDockVisibility();
-
-    // --- Live Activity on Home Screen ---
-    const liveActivitySwitch = document.getElementById('live-activity-switch');
-    const liveActivityHome = document.getElementById('live-activity-home');
-    if (liveActivitySwitch && liveActivityHome) {
-        liveActivitySwitch.checked = liveActivityEnabled;
-        liveActivityHome.classList.remove('live-activity-pos-tl', 'live-activity-pos-tr', 'live-activity-pos-bl', 'live-activity-pos-br');
-        liveActivityHome.classList.add('live-activity-pos-' + liveActivityPosition);
-        liveActivitySwitch.addEventListener('change', function() {
-            liveActivityEnabled = this.checked;
-            localStorage.setItem('liveActivityEnabled', liveActivityEnabled);
-            updateLiveActivityVisibility();
-        });
-        updateLiveActivityVisibility();
-        setupLiveActivityDragAndSwipe();
-        setupLiveActivityMediaButtons();
-    }
 
     const wakeLockSelect = document.getElementById('wake-lock-mode-select');
     if (wakeLockSelect) {
@@ -14913,10 +14892,6 @@ function showMediaWidget(metadata) {
         widget.style.height = '';
         widget.style.transform = 'scale(1)';
     }, 10);
-    if (typeof liveActivityEnabled !== 'undefined' && liveActivityEnabled) {
-        showLiveActivityMedia(metadata);
-        syncLiveActivityCurrentView();
-    }
 }
 
 function hideMediaWidget() {
@@ -14949,10 +14924,6 @@ function hideMediaWidget() {
 		
         // RESTORE FAVICON when media widget hides
         restoreCorrectFavicon();
-        if (typeof liveActivityEnabled !== 'undefined' && liveActivityEnabled) {
-            hideLiveActivityMedia();
-            syncLiveActivityCurrentView();
-        }
     }, 300);
 }
 
@@ -14988,16 +14959,6 @@ function _updateActiveMediaSession() {
     // Restore the playback state (default to paused if not set)
     updateMediaWidgetState(playbackState || 'paused');
     restoreCorrectFavicon();
-    if (typeof liveActivityEnabled !== 'undefined' && liveActivityEnabled) {
-        updateLiveActivityMediaState(playbackState || 'paused');
-        const laAppIcon = document.getElementById('live-activity-media-app-icon');
-        if (laAppIcon && apps[appName] && apps[appName].icon) {
-            let iconUrl = apps[appName].icon;
-            if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) iconUrl = `/assets/appicon/${iconUrl}`;
-            laAppIcon.src = iconUrl;
-            laAppIcon.style.display = 'block';
-        } else if (laAppIcon) laAppIcon.style.display = 'none';
-    }
 
     const appIconEl = document.getElementById('media-widget-app-icon');
     if (appIconEl && apps[appName] && apps[appName].icon) {
@@ -15056,9 +15017,6 @@ function updateMediaWidgetState(playbackState) {
             playPauseIcon.textContent = 'play_arrow';
 			playPauseButton.style.cornerShape = 'round'
         }
-    }
-    if (typeof liveActivityEnabled !== 'undefined' && liveActivityEnabled) {
-        updateLiveActivityMediaState(playbackState);
     }
 }
 
@@ -15169,171 +15127,7 @@ function updateMediaProgress(appName, progressState) {
             currentTimeEl.textContent = formatTime(progressState.currentTime);
             durationEl.textContent = formatTime(progressState.duration);
         }
-        // Mirror to live activity media widget
-        if (typeof liveActivityEnabled !== 'undefined' && liveActivityEnabled) {
-            const laProgress = document.getElementById('live-activity-media-progress');
-            const laCurrent = document.getElementById('live-activity-media-current-time');
-            const laDuration = document.getElementById('live-activity-media-duration');
-            if (laProgress && laCurrent && laDuration && progressState.duration > 0) {
-                const pct = (progressState.currentTime / progressState.duration) * 100;
-                laProgress.style.width = `${pct}%`;
-                const fmt = (s) => { if (isNaN(s)) return '0:00'; const m = Math.floor(s / 60); const sec = Math.floor(s % 60).toString().padStart(2, '0'); return `${m}:${sec}`; };
-                laCurrent.textContent = fmt(progressState.currentTime);
-                laDuration.textContent = fmt(progressState.duration);
-            }
-        }
     }
-}
-
-// --- Live Activity on Home Screen ---
-function updateLiveActivityVisibility() {
-    const el = document.getElementById('live-activity-home');
-    if (!el) return;
-    if (liveActivityEnabled) {
-        el.style.display = '';
-        el.classList.remove('live-activity-pos-tl', 'live-activity-pos-tr', 'live-activity-pos-bl', 'live-activity-pos-br');
-        el.classList.add('live-activity-pos-' + liveActivityPosition);
-        syncLiveActivityCurrentView();
-        if (mediaSessionStack.length > 0) {
-            const session = mediaSessionStack[mediaSessionStack.length - 1];
-            showLiveActivityMedia(session.metadata);
-            updateLiveActivityMediaState(session.playbackState || 'paused');
-        } else {
-            hideLiveActivityMedia();
-        }
-    } else {
-        el.style.display = 'none';
-    }
-}
-
-function showLiveActivityMedia(metadata) {
-    const widget = document.getElementById('live-activity-media');
-    if (!widget || !liveActivityEnabled) return;
-    const fallbackArt = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAIAAgADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcBBAf/xAAfEAACAQQDAQEAAAAAAAAAAAABAgMABAURIQYSEzFBUWH/xAAVAQEBAAAAAAAAAAAAAAAAAAAABf/EABkRAAIDAQAAAAAAAAAAAAAAAAECAAMRIf/aAAwDAQACEQMRAD8A3eiiigD/2Q==';
-    document.getElementById('live-activity-media-art').src = metadata.artwork && metadata.artwork[0] ? metadata.artwork[0].src : fallbackArt;
-    document.getElementById('live-activity-media-title').textContent = metadata.title || 'Unknown Title';
-    document.getElementById('live-activity-media-artist').textContent = metadata.artist || 'Unknown Artist';
-    widget.style.display = 'flex';
-}
-
-function hideLiveActivityMedia() {
-    const widget = document.getElementById('live-activity-media');
-    if (!widget) return;
-    widget.style.display = 'none';
-}
-
-function updateLiveActivityMediaState(playbackState) {
-    const btn = document.querySelector('#live-activity-media-play-pause .material-symbols-rounded');
-    if (btn) btn.textContent = playbackState === 'playing' ? 'pause' : 'play_arrow';
-}
-
-function syncLiveActivityCurrentView() {
-    const home = document.getElementById('live-activity-home');
-    const mediaEl = document.getElementById('live-activity-media');
-    const iframeEl = document.getElementById('live-activity-iframe-slot');
-    if (!home) return;
-    if (liveActivityIndex === 0) {
-        if (mediaEl) mediaEl.style.display = mediaSessionStack.length > 0 ? 'flex' : 'none';
-        if (iframeEl) iframeEl.style.display = 'none';
-    } else {
-        if (mediaEl) mediaEl.style.display = 'none';
-        if (iframeEl) iframeEl.style.display = 'block';
-    }
-}
-
-function setupLiveActivityDragAndSwipe() {
-    const el = document.getElementById('live-activity-home');
-    if (!el) return;
-    const LONG_PRESS_MS = 400;
-    const SWIPE_THRESHOLD = 40;
-    let longPressTimer = null;
-    let dragStart = null;
-    let touchStart = null;
-    let isDragging = false;
-
-    function getCorner(x, y) {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        const midX = w / 2;
-        const midY = h / 2;
-        const left = x < midX;
-        const top = y < midY;
-        if (top && left) return 'tl';
-        if (top && !left) return 'tr';
-        if (!top && left) return 'bl';
-        return 'br';
-    }
-
-    function applyPosition(pos) {
-        liveActivityPosition = pos;
-        localStorage.setItem('liveActivityPosition', pos);
-        el.classList.remove('live-activity-pos-tl', 'live-activity-pos-tr', 'live-activity-pos-bl', 'live-activity-pos-br');
-        el.classList.add('live-activity-pos-' + pos);
-    }
-
-    el.addEventListener('pointerdown', function(e) {
-        if (e.button !== 0) return;
-        touchStart = { x: e.clientX, y: e.clientY, t: Date.now() };
-        dragStart = null;
-        isDragging = false;
-        longPressTimer = setTimeout(() => {
-            longPressTimer = null;
-            isDragging = true;
-            dragStart = { x: e.clientX, y: e.clientY };
-            el.setPointerCapture(e.pointerId);
-        }, LONG_PRESS_MS);
-    });
-    el.addEventListener('pointermove', function(e) {
-        if (longPressTimer && touchStart) {
-            const dx = e.clientX - touchStart.x;
-            const dy = e.clientY - touchStart.y;
-            if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-                clearTimeout(longPressTimer);
-                longPressTimer = null;
-            }
-        }
-        if (isDragging && dragStart) {
-            const corner = getCorner(e.clientX, e.clientY);
-            applyPosition(corner);
-        }
-    });
-    el.addEventListener('pointerup', function(e) {
-        if (longPressTimer) clearTimeout(longPressTimer);
-        longPressTimer = null;
-        if (isDragging && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
-        if (isDragging) {
-            isDragging = false;
-            dragStart = null;
-            return;
-        }
-        if (!touchStart) return;
-        const dx = e.clientX - touchStart.x;
-        const dy = e.clientY - touchStart.y;
-        const dt = Date.now() - touchStart.t;
-        if (dt < 300 && (Math.abs(dx) > SWIPE_THRESHOLD || Math.abs(dy) > SWIPE_THRESHOLD)) {
-            const vertical = Math.abs(dy) >= Math.abs(dx);
-            const next = vertical ? (dy < 0 ? 1 : -1) : (dx > 0 ? 1 : -1);
-            liveActivityIndex = (liveActivityIndex + next + 2) % 2;
-            syncLiveActivityCurrentView();
-        }
-        touchStart = null;
-    });
-    el.addEventListener('pointercancel', function() {
-        if (longPressTimer) clearTimeout(longPressTimer);
-        longPressTimer = null;
-        isDragging = false;
-        dragStart = null;
-        touchStart = null;
-    });
-}
-
-function setupLiveActivityMediaButtons() {
-    const play = document.getElementById('live-activity-media-play-pause');
-    const prev = document.getElementById('live-activity-media-prev');
-    const next = document.getElementById('live-activity-media-next');
-    if (play) play.addEventListener('click', (e) => { e.stopPropagation(); if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'playPause'); });
-    if (prev) prev.addEventListener('click', (e) => { e.stopPropagation(); if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'prev'); });
-    if (next) next.addEventListener('click', (e) => { e.stopPropagation(); if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'next'); });
 }
 
 /**
@@ -15497,7 +15291,6 @@ const controlIdMap = {
     'gurappsEnabled': 'gurapps-switch',
     'aiAssistantEnabled': 'ai-switch',
     'oneButtonNavEnabled': 'one-button-nav-switch',
-    'liveActivityEnabled': 'live-activity-switch',
     'font': 'font-select',
     'weight': 'weight-slider',
     'roundness': 'roundness-slider',
@@ -16882,7 +16675,7 @@ function openAppSwitcher() {
         appDrawer.style.opacity = '0';
         
         // Restore Main UI visibility
-        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
             el.classList.remove('force-hide');
             el.style.display = el.dataset.originalDisplay || '';
             el.style.opacity = '1';
@@ -17104,7 +16897,7 @@ function selectAndCloseAppSwitcher() {
         // 3. Only restore background UI if NO app is open (Optimization)
         const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
         if (!openEmbed) {
-            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, #live-activity-home').forEach(el => {
+            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
                 el.style.display = el.dataset.originalDisplay || '';
                 el.style.opacity = '1';
