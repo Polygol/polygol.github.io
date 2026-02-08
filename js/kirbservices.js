@@ -238,6 +238,10 @@ function renderCurrentAd() {
             
             newBtn.onclick = (e) => {
                 e.stopPropagation();
+                window.Analytics?.trackEvent('ad-click', { 
+                    path: `/ads/click/${ad.id}`, 
+                    title: `Ad Click: ${ad.name}` 
+                });
                 if (ad.url) window.open(ad.url, '_blank');
             };
         }
@@ -250,6 +254,11 @@ function renderCurrentAd() {
 
 function nextAd() {
     if (adQueue.length <= 1) return; // No rotation needed if 1 or 0 items
+
+    window.Analytics?.trackEvent('ad-next', { 
+        path: `/ads/next/${currentAd.id}`, 
+        title: `Ad Swipe Next: ${currentAd.name}` 
+    });
     
     // Rotate queue: Move first item to end
     const current = adQueue.shift();
@@ -283,6 +292,11 @@ function blockAd() {
     if (adQueue.length === 0) return;
 
     const adToBlock = adQueue[0];
+
+    window.Analytics?.trackEvent('ad-block', { 
+        path: `/ads/block/${adToBlock.id}`, 
+        title: `Ad Blocked: ${adToBlock.name}` 
+    });
     
     // Save to LocalStorage
     const blockedAds = JSON.parse(localStorage.getItem('blocked_ads') || '[]');
