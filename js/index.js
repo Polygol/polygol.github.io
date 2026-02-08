@@ -6105,7 +6105,7 @@ function blackoutScreen() {
     blockingOverlay.id = 'blackout-event-overlay';
     blockingOverlay.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        z-index: 999999999999999; cursor: pointer; pointer-events: all;
+        z-index: 48; cursor: pointer; pointer-events: all;
         background-color: transparent; transition: background-color 0.2s;
     `;
     document.body.appendChild(blockingOverlay);
@@ -15272,7 +15272,7 @@ function _updateActiveMediaSession() {
 }
 
 function updateMediaWidgetState(playbackState) {
-    // Update Control Panel Widget
+    // --- Update Icons ---
     const cPanelBtn = document.querySelector('#media-widget-play-pause');
     const cPanelIcon = cPanelBtn?.querySelector('.material-symbols-rounded');
 
@@ -15287,10 +15287,8 @@ function updateMediaWidgetState(playbackState) {
         }
     }
     
-    // Update Home Screen Widget
     const homeBtn = document.querySelector('#home-media-play-pause');
     const homeIcon = homeBtn?.querySelector('.material-symbols-rounded');
-    
     if (homeIcon) {
         if (playbackState === 'playing') {
             homeIcon.textContent = 'pause';
@@ -15301,6 +15299,27 @@ function updateMediaWidgetState(playbackState) {
 			homeBtn.style.cornerShape = 'round';
         }
 	}
+
+    // --- Update Progress Bar Visuals (Wave/Straight) ---
+    const bars = [
+        document.getElementById('media-widget-progress'),
+        document.getElementById('home-media-progress')
+    ];
+
+    const WAVE_SVG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0,5 Q5,10 10,5 T20,5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' /%3E%3C/svg%3E\")";
+    const LINE_SVG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0,5 L20,5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' /%3E%3C/svg%3E\")";
+
+    bars.forEach(bar => {
+        if (!bar) return;
+        
+        if (playbackState === 'playing') {
+            bar.style.setProperty('--wave', WAVE_SVG);
+            bar.style.animation = 'wave-move 1s linear infinite';
+        } else {
+            bar.style.setProperty('--wave', LINE_SVG);
+            bar.style.animation = 'none';
+        }
+    });
 }
 
 // This is the new function that Gurapps will call
