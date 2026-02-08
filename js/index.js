@@ -5755,7 +5755,7 @@ function createOnScreenPopup(message, options = {}, onClosed) {
 function createHomeNotificationElement(message, options, notifId) {
     const div = document.createElement('div');
     div.className = 'home-media-widget home-activity-item';
-    div.style.cssText = 'padding: 12px 18px 12px 12px; flex-direction: row; align-items: center; height: auto; min-height: 80px;';
+    div.style.cssText = 'padding: 12px 18px 12px 12px; flex-direction: row; align-items: center; height: 100%;';
     
     let iconUrl = '/assets/appicon/system.png';
     if (options.appName && apps[options.appName]) {
