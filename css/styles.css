@@ -1007,7 +1007,7 @@ body.one-button-nav-active .dock.show {
     cursor: pointer;
 	opacity: 0.5;
     transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
-	mix-blend-mode: color;
+	mix-blend-mode: soft-light;
     border-radius: inherit;
     corner-shape: inherit;
 }
