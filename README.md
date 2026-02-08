@@ -106,3 +106,7 @@ You are free to do anything to the code under CC BY-NC 4.0.
 You may not use our brand in any method not authorized, including identifiable visual assets.
 
 AI Notice: Some sections of code are generated with various AI models. However, AI is not used at all for visual assets, such as Gurapp Icons.
+
+---
+
+Please contact us at kirbind.manatee415@passinbox.com for removal/addition/modification requests
