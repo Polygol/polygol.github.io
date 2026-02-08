@@ -46,13 +46,28 @@ let currentAuthPeerId = null; // Track who is currently attempting to pair
 let connectedPeers = {}; // Track connected peers and their profiles { peerId: { profile: {}, lastSeen: ts } }
 let isDiscoveryActive = localStorage.getItem('waves_discovery_enabled') !== 'false'; // Default true
 
+function generateNonsenseName() {
+    const pre = ["Zork", "Bli", "Phro", "Kran", "Velt", "Spli", "Grom", "Twi", "Quar", "Mox", "Jub", "Vax", "Zym", "Plo", "Ska", "Tro", "Flu", "Bly", "Dwa", "Glo", "Snu", "Kri", "Vle", "Shu", "Pra", "Zon", "Cli", "Fro", "Ste", "Yol"];
+    const mid = ["a", "o", "u", "e", "i", "ee", "oo", "ou", "y", "ia"];
+    const post = ["nix", "zap", "loid", "tron", "vax", "mutt", "gle", "dax", "kin", "th", "rk", "zz", "nk", "st", "sh", "mp", "rt", "lk", "gn", "pl", "sk", "ch", "ff", "wn", "ly", "xy", "qu", "zt", "rd", "nz"];
+    
+    const getWord = () => {
+        const p = pre[Math.floor(Math.random() * pre.length)];
+        const m = mid[Math.floor(Math.random() * mid.length)];
+        const s = post[Math.floor(Math.random() * post.length)];
+        return p + m + s;
+    };
+
+    return `${getWord()} ${getWord()}`;
+}
+
 // 1. State Management
 function getWavesHostState() {
     let state = localStorage.getItem('waves_host_config');
     state = state ? JSON.parse(state) : null;
     
     if (state) {
-        state.deviceName = localStorage.getItem('system_device_name') || "Polygol Device";
+        state.deviceName = localStorage.getItem('system_device_name') || generateNonsenseName();
     }
     return state;
 }
