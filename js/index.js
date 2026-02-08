@@ -5854,24 +5854,27 @@ function addToNotificationShade(message, options = {}) {
 	notification.style.gap = '12px';
     notification.style.border = '1px solid var(--glass-border)';
     notification.style.pointerEvents = 'auto';
-
+	
 	function closeNotification(notif) {
 	    // Animate out
 	    notification.style.opacity = '0';
 	    notification.style.transform = 'translateX(50px)';
 	    notification.style.height = '0px';
 
-	    if (!options.liveActivityUrl) {
+	    if (options.liveActivityUrl && options.activityId) {
+            stopLiveActivity(options.activityId);
+        } else if (!options.liveActivityUrl) {
+            // Standard Notification dismissal
             unreadNotifications = Math.max(0, unreadNotifications - 1);
             updateStatusIndicator();
+            // Remove from Home Screen Activity
+            HomeActivityManager.unregister(`home-notif-${notif.dataset.notifId}`);
+            // Remove from global list
+            window.activeNotificationsList = window.activeNotificationsList.filter(n => n.id !== notif.dataset.notifId);
+            updateRemoteNotifications();
         }
-        
-        // Remove from global list
-        window.activeNotificationsList = window.activeNotificationsList.filter(n => n.id !== notif.dataset.notifId);
-        updateRemoteNotifications();
-		HomeActivityManager.unregister(`home-notif-${notif.dataset.notifId}`);
 	        
-	    // Remove after animation completes
+	    // Remove from shade after animation completes
 	    setTimeout(() => {
 	        if (shade.contains(notification)) {
 	            notification.remove();
