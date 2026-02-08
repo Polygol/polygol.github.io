@@ -15812,7 +15812,7 @@ function startLiveActivity(appName, options) {
         const iframe = document.createElement('iframe');
         iframe.src = options.url;
         iframe.setAttribute('data-gurasuraisu-iframe', 'true');
-        iframe.style.cssText = "width: 100%; border: none; overflow: hidden;";
+        iframe.style.cssText = "width: 100%; padding: 20px 25px; overflow: hidden;";
         iframe.className = 'home-activity-item';
         
         HomeActivityManager.register(options.activityId, 'iframe', iframe);
