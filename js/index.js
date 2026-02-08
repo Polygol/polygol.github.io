@@ -5731,9 +5731,9 @@ function addToNotificationShade(message, options = {}) {
         iframe.src = options.liveActivityUrl;
         iframe.setAttribute('data-gurasuraisu-iframe', 'true');
         iframe.style.width = '100%';
-        iframe.style.height = options.height || '120px'; // Default height
+        iframe.style.height = options.height || '60px'; // Default height
         iframe.style.border = 'none';
-        iframe.style.borderRadius = '25px'; // Match inner radius
+        iframe.style.padding = '20px 25px';
 
         notification.style.padding = '0'; // Remove padding for iframe to fit
         notification.appendChild(iframe);
@@ -15779,7 +15779,8 @@ function setControlValueAndDispatch(key, value) {
  * @param {string} options.activityId - A unique ID from the calling app for this activity.
  * @param {string} options.url - The URL for the iframe content.
  * @param {boolean} [options.homescreen=false] - If true, this activity can show a summary on the homescreen.
- * @param {string} [options.height='120px'] - The height of the activity in the notification shade.
+ * @param {string} [options.height='60px']
+ '] - The height of the activity in the notification shade.
  */
 function startLiveActivity(appName, options) {
     if (!appName || !options || !options.activityId || !options.url) {
