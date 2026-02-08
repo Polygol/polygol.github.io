@@ -2119,6 +2119,7 @@ function closeWidgetPicker() {
 }
 
 async function applyPresetWallpaper(preset) {
+    window.Analytics?.trackWallpaperPreset(preset.name);
     closeWallpaperPicker();
     showPopup(currentLanguage.APPLYING_WALLPAPER || 'Applying new wallpaper');
 
