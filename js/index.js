@@ -9830,10 +9830,19 @@ const HomeActivityManager = {
         this.enabled = state === 'true' || state === true;
         this.updateVisibility();
     },
-
+	
     register(id, type, element) {
-        // Prevent duplicates
-        if (this.items.find(i => i.id === id)) return;
+        // Prevent duplicates and unnecessary focus switches on updates
+        const existingIdx = this.items.findIndex(i => i.id === id);
+        if (existingIdx !== -1) {
+            // Update reference if needed, but don't switch focus
+            this.items[existingIdx].element = element;
+            // Ensure it's in DOM
+            if (element.parentElement !== this.container) {
+                this.container.appendChild(element);
+            }
+            return;
+        }
         
         this.items.push({ id, type, element });
         
@@ -9842,7 +9851,7 @@ const HomeActivityManager = {
             this.container.appendChild(element);
         }
         
-        // Switch to new item automatically
+        // Switch to new item automatically (Most recently added priority)
         this.currentIndex = this.items.length - 1;
         this.render();
         this.updateVisibility();
@@ -9889,13 +9898,11 @@ const HomeActivityManager = {
     },
     
     updateMediaUI(metadata, playbackState, progressState) {
-        // Check if media widget is registered, if not register it
-        let mediaItem = this.items.find(i => i.type === 'media');
         const widget = document.getElementById('home-media-widget');
-        
-        if (!mediaItem && widget) {
-            this.register('sys-media', 'media', widget);
-        }
+        if (!widget) return;
+
+        // Ensure registered (safe to call repeatedly due to new check in register)
+        this.register('sys-media', 'media', widget);
         
         if (metadata) {
             const titleEl = document.getElementById('home-media-title');
@@ -10009,12 +10016,13 @@ const HomeActivityManager = {
                 const left = cx < w / 2;
                 const top = cy < h / 2;
                 
-                // Safely remove old position classes
+                // Safely remove old position classes without wiping visibility classes
                 this.container.classList.remove('pos-tl', 'pos-tr', 'pos-bl', 'pos-br');
-
+                
                 if (top && left) this.position = 'tl';
                 else if (top && !left) this.position = 'tr';
                 else if (!top && left) this.position = 'bl';
+                else this.position = 'br';
                 
                 this.container.classList.add(`pos-${this.position}`);
                 this.container.style.left = '';
