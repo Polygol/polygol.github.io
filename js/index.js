@@ -9784,6 +9784,245 @@ function switchWallpaper(direction, skipSave = false) {
     syncUiStates();
 }
 
+// --- Home Screen Activity Manager ---
+const HomeActivityManager = {
+    enabled: true,
+    position: 'bl', // tl, tr, bl, br
+    items: [], // { id, type, element }
+    currentIndex: 0,
+    container: null,
+    
+    init() {
+        this.container = document.getElementById('home-activity-container');
+        if (!this.container) return;
+        
+        // Load Settings
+        this.enabled = localStorage.getItem('homeActivitiesEnabled') !== 'false';
+        this.position = localStorage.getItem('homeActivityPos') || 'bl';
+        
+        this.container.classList.add(`pos-${this.position}`);
+        
+        this.setupInteractions();
+        this.updateVisibility();
+        
+        // Bind media buttons
+        document.getElementById('home-media-prev')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'prev');
+        });
+        document.getElementById('home-media-play-pause')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'playPause');
+        });
+        document.getElementById('home-media-next')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'next');
+        });
+    },
+    
+    setEnabled(state) {
+        this.enabled = state === 'true' || state === true;
+        this.updateVisibility();
+    },
+
+    register(id, type, element) {
+        // Prevent duplicates
+        if (this.items.find(i => i.id === id)) return;
+        
+        this.items.push({ id, type, element });
+        
+        // If element is not already in container (e.g. Media widget is pre-baked), append it
+        if (element.parentElement !== this.container) {
+            this.container.appendChild(element);
+        }
+        
+        // Switch to new item automatically
+        this.currentIndex = this.items.length - 1;
+        this.render();
+        this.updateVisibility();
+    },
+    
+    unregister(id) {
+        const idx = this.items.findIndex(i => i.id === id);
+        if (idx === -1) return;
+        
+        const item = this.items[idx];
+        // If it's a dynamic iframe, remove it from DOM. 
+        // If it's the static media widget, hide it but keep in DOM.
+        if (item.type !== 'media') {
+            item.element.remove();
+        } else {
+            item.element.classList.remove('active');
+        }
+        
+        this.items.splice(idx, 1);
+        if (this.currentIndex >= this.items.length) {
+            this.currentIndex = Math.max(0, this.items.length - 1);
+        }
+        this.render();
+        this.updateVisibility();
+    },
+    
+    render() {
+        // Hide all
+        this.items.forEach(i => i.element.classList.remove('active'));
+        
+        // Show current
+        if (this.items.length > 0) {
+            this.items[this.currentIndex].element.classList.add('active');
+        }
+    },
+    
+    updateMediaUI(metadata, playbackState, progressState) {
+        // Check if media widget is registered, if not register it
+        let mediaItem = this.items.find(i => i.type === 'media');
+        const widget = document.getElementById('home-media-widget');
+        
+        if (!mediaItem) {
+            this.register('sys-media', 'media', widget);
+        }
+        
+        if (metadata) {
+            document.getElementById('home-media-title').textContent = metadata.title || 'Unknown';
+            document.getElementById('home-media-artist').textContent = metadata.artist || 'Unknown';
+            document.getElementById('home-media-art').src = metadata.artwork?.[0]?.src || '';
+            
+            // App Icon
+            const appIconEl = document.getElementById('home-media-app-icon');
+            if (activeMediaSessionApp && apps[activeMediaSessionApp]?.icon) {
+                 appIconEl.src = apps[activeMediaSessionApp].icon.startsWith('http') ? apps[activeMediaSessionApp].icon : `/assets/appicon/${apps[activeMediaSessionApp].icon}`;
+                 appIconEl.style.display = 'block';
+            }
+        }
+        
+        if (playbackState) {
+            const icon = document.querySelector('#home-media-play-pause span');
+            if(icon) icon.textContent = playbackState === 'playing' ? 'pause' : 'play_arrow';
+        }
+
+        if (progressState && progressState.duration > 0) {
+            const percent = (progressState.currentTime / progressState.duration) * 100;
+            document.getElementById('home-media-progress').style.width = `${percent}%`;
+            
+            const fmt = (s) => {
+                const m = Math.floor(s/60);
+                const sec = Math.floor(s%60).toString().padStart(2,'0');
+                return `${m}:${sec}`;
+            };
+            document.getElementById('home-media-current-time').textContent = fmt(progressState.currentTime);
+            document.getElementById('home-media-duration').textContent = fmt(progressState.duration);
+        }
+    },
+
+    updateVisibility() {
+        const hasItems = this.items.length > 0;
+        const appOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+        const drawerOpen = document.getElementById('app-drawer').classList.contains('open');
+        
+        if (this.enabled && hasItems && !appOpen && !drawerOpen && !document.body.classList.contains('blackout-active')) {
+            this.container.style.display = 'flex';
+            // Slight delay to allow display:flex to apply before opacity transition
+            requestAnimationFrame(() => this.container.style.opacity = '1');
+        } else {
+            this.container.style.opacity = '0';
+            setTimeout(() => {
+                if (this.container.style.opacity === '0') this.container.style.display = 'none';
+            }, 300);
+        }
+    },
+
+    setupInteractions() {
+        let longPressTimer;
+        let isDragging = false;
+        let startX, startY;
+        
+        // Long Press to Drag
+        const start = (e) => {
+            if (e.target.closest('button')) return; // Ignore buttons
+            
+            startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            
+            longPressTimer = setTimeout(() => {
+                isDragging = true;
+                this.container.classList.add('dragging');
+                if (navigator.vibrate) navigator.vibrate(50);
+            }, 500);
+        };
+        
+        const move = (e) => {
+            // Swipe Detection (if not dragging)
+            if (!isDragging) {
+                const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const cy = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                const dx = cx - startX;
+                
+                // Horizontal Swipe threshold
+                if (Math.abs(dx) > 50) {
+                    clearTimeout(longPressTimer);
+                    // Debounce swipe
+                    if (!this.swiped) {
+                        this.swiped = true;
+                        if (dx > 0) this.currentIndex = (this.currentIndex > 0) ? this.currentIndex - 1 : this.items.length - 1;
+                        else this.currentIndex = (this.currentIndex < this.items.length - 1) ? this.currentIndex + 1 : 0;
+                        this.render();
+                        setTimeout(() => this.swiped = false, 300);
+                    }
+                }
+                return;
+            }
+
+            e.preventDefault();
+            clearTimeout(longPressTimer);
+            const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const cy = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            
+            this.container.style.left = `${cx - 160}px`; // Center anchor (width 320)
+            this.container.style.top = `${cy - 75}px`;
+            this.container.style.bottom = 'auto';
+            this.container.style.right = 'auto';
+        };
+        
+        const end = (e) => {
+            clearTimeout(longPressTimer);
+            if (isDragging) {
+                isDragging = false;
+                this.container.classList.remove('dragging');
+                
+                // Snap to corner
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                const cx = e.type.includes('mouse') ? e.clientX : (e.changedTouches ? e.changedTouches[0].clientX : startX);
+                const cy = e.type.includes('mouse') ? e.clientY : (e.changedTouches ? e.changedTouches[0].clientY : startY);
+                
+                const left = cx < w / 2;
+                const top = cy < h / 2;
+                
+                this.container.className = ''; // Reset classes
+                if (top && left) this.position = 'tl';
+                else if (top && !left) this.position = 'tr';
+                else if (!top && left) this.position = 'bl';
+                else this.position = 'br';
+                
+                this.container.classList.add(`pos-${this.position}`);
+                this.container.style.left = '';
+                this.container.style.top = '';
+                this.container.style.bottom = '';
+                this.container.style.right = '';
+                
+                localStorage.setItem('homeActivityPos', this.position);
+            }
+        };
+
+        this.container.addEventListener('mousedown', start);
+        this.container.addEventListener('touchstart', start, {passive:true});
+        window.addEventListener('mousemove', move);
+        window.addEventListener('touchmove', move, {passive:false});
+        window.addEventListener('mouseup', end);
+        window.addEventListener('touchend', end);
+    }
+};
+
 // Update handleSwipe to show indicator even if no swipe is detected
 function handleSwipe() {
   const swipeDistance = touchEndX - touchStartX;
@@ -11204,6 +11443,9 @@ async function createFullscreenEmbed(url, options = {}) {
                 el.style.contentVisibility = 'hidden'; // OPTIMIZATION
             }, 300);
         });
+        
+        // Hide Home Activities
+        HomeActivityManager.updateVisibility();
 
         // Restore app management
         document.querySelectorAll('#app-management-info').forEach(el => {
@@ -11792,6 +12034,9 @@ function forceCloseApp(url) {
         
         if (typeof SoundManager !== 'undefined') SoundManager.play('close');
         if (window.speechSynthesis) window.speechSynthesis.cancel();
+        
+        // Show Home Activity
+        HomeActivityManager.updateVisibility();
 
         // Check History Stack
         if (window.appHistoryStack && window.appHistoryStack.length > 0) {
@@ -11991,6 +12236,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 
 				resetIndicatorTimeout();
 				updateDockVisibility();
+                HomeActivityManager.updateVisibility();
                 
                 delete minimizeTimeouts[url]; // Clean up map entry
             }, cleanupDelay);
@@ -13309,6 +13555,10 @@ function setupOneButtonNav() {
                     el.style.contentVisibility = 'hidden'; // OPTIMIZATION
                 }, 300);
             });
+            
+            // Hide Home Activities
+            HomeActivityManager.updateVisibility();
+
 			resetIndicatorTimeout();
         }
     };
@@ -13495,6 +13745,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 	setupStickerControls();
     initializeWallpaperTracking();
     ResourceManager.init();
+    HomeActivityManager.init(); // Initialize Home Activity Manager
     setTimeout(migrateWallpapersColor, 2000); 
 
     // --- Perform initial setup that depends on the loaded data ---
@@ -14960,6 +15211,9 @@ function _updateActiveMediaSession() {
     updateMediaWidgetState(playbackState || 'paused');
     restoreCorrectFavicon();
 
+    // Update Home Screen Activity
+    HomeActivityManager.updateMediaUI(metadata, playbackState || 'paused');
+
     const appIconEl = document.getElementById('media-widget-app-icon');
     if (appIconEl && apps[appName] && apps[appName].icon) {
         let iconUrl = apps[appName].icon;
@@ -15108,6 +15362,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function updateMediaProgress(appName, progressState) {
     // --- FIX: Use a case-insensitive comparison to match the app name ---
     if (activeMediaSessionApp && activeMediaSessionApp.toLowerCase() === appName.toLowerCase()) {
+        // Update Home Activity as well
+        HomeActivityManager.updateMediaUI(null, null, progressState);
+
         const progressEl = document.getElementById('media-widget-progress');
         const currentTimeEl = document.getElementById('media-widget-current-time');
         const durationEl = document.getElementById('media-widget-duration');
@@ -15330,6 +15587,7 @@ const controlIdMap = {
     'autoSleepScope': 'autoSleepScope',
     'persistentPageIndicator': 'persistent-indicator-switch',
     'dockPinned': 'dock-pinned-switch',
+    'homeActivitiesEnabled': 'homeActivitiesEnabled',
     'wakeLockMode': 'wake-lock-mode-select',
 	'depthEffectEnabled': 'depth-effect-switch',
 	'liveEnvironmentEnabled': 'live-environment-switch',
@@ -15372,7 +15630,7 @@ function setControlValueAndDispatch(key, value) {
         'autoSleepEnabled', 'autoSleepDuration', 'autoSleepScope',
 		'resourceManagerEnabled', 'displayScale', 'smartDisplayZoom',
         'nightStandEnabled', 'nightStandStart', 'nightStandEnd', 'nightStandBrightness',
-	    'colorFilter', 'keyboardNavEnabled', 'sfxVolume'
+	    'colorFilter', 'keyboardNavEnabled', 'sfxVolume', 'homeActivitiesEnabled'
     ];
     if (settingsWithoutDirectControl.includes(key)) {
         localStorage.setItem(key, value);
@@ -15403,17 +15661,20 @@ function setControlValueAndDispatch(key, value) {
                 document.body.style.zoom = `${manualScale}%`;
             }
         }
-        return;
         if (key.startsWith('nightStand')) {
             checkNightStand();
         }
-        return;
         if (key === 'colorFilter') {
             applyColorFilter();
         }
         if (key === 'keyboardNavEnabled') {
             KeyboardNavigationManager.enabled = (value === 'true');
         }
+        if (key === 'homeActivitiesEnabled') {
+            HomeActivityManager.setEnabled(value);
+        }
+        // sfxVolume is read directly from localStorage by SoundManager
+        return;
     }
 	
 	const controlId = controlIdMap[key];
@@ -15490,10 +15751,15 @@ function startLiveActivity(appName, options) {
 
     // If it's a homescreen activity, show the container.
     if (options.homescreen) {
-        const homescreenWidget = document.getElementById('live-activity-homescreen');
-        if (homescreenWidget) {
-            homescreenWidget.style.display = 'flex';
-        }
+        // Create Iframe for Home Activity
+        const iframe = document.createElement('iframe');
+        iframe.src = options.url;
+        iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+        iframe.setAttribute('sandbox', 'allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-same-origin allow-scripts');
+        iframe.style.cssText = "width: 100%; height: 120px; border: none; border-radius: 25px; overflow: hidden;";
+        iframe.className = 'home-activity-item';
+        
+        HomeActivityManager.register(options.activityId, 'iframe', iframe);
     }
 	
     IslandManager.update(options.activityId, 'live-activity', {
@@ -15561,15 +15827,7 @@ function stopLiveActivity(activityId) {
 
         // If this was the active homescreen activity, hide the widget and clear it.
         if (activity.options.homescreen) {
-            const homescreenWidget = document.getElementById('live-activity-homescreen');
-            if (homescreenWidget) {
-                // FIX: Hide the container and clear its inner content completely.
-                homescreenWidget.style.display = 'none';
-                homescreenWidget.innerHTML = `
-                    <span class="material-symbols-rounded"></span>
-                    <span></span>
-                `;
-            }
+            HomeActivityManager.unregister(activityId);
         }
 
         delete activeLiveActivities[activityId];
