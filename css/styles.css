@@ -1024,7 +1024,7 @@ body.one-button-nav-active .dock.show {
     display: flex;
     gap: 6px;
     flex-direction: column;
-    margin: 8px 60px 8px 2px;
+    margin: 6px 70px 6px 0;
     z-index: 1;
     pointer-events: none;
 }
@@ -1104,14 +1104,14 @@ body.one-button-nav-active .dock.show {
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
     box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
-    width: 42px;
-    height: 42px;
+    width: 50px;
+    height: 50px;
     border-radius: 25px;
     corner-shape: superellipse(1.5);
     color: var(--text-color);
     position: absolute;
-    right: 20px;
-    top: 20px;
+    right: 18px;
+    top: 16px;
 }
 
 .container {
