@@ -1,6 +1,82 @@
 // kirbIndustries Services
-// Handles fetching, queueing, blocking, and gestures for ads
+// Ad system, Analytics, Content Delivery
 
+// --- Analytics ---
+window.Analytics = {
+    initialized: false,
+    appStartTimes: {},
+
+    init() {
+        if (this.initialized) return;
+        
+        const enabled = localStorage.getItem('telemetryEnabled') !== 'false';
+        if (!enabled) return;
+
+        if (!document.getElementById('goatcounter-script')) {
+            const script = document.createElement('script');
+            script.id = 'goatcounter-script';
+            script.dataset.goatcounter = "https://kirbindust.goatcounter.com/count";
+            script.async = true;
+            script.src = "//gc.zgo.at/count.js";
+            document.head.appendChild(script);
+        }
+        
+        this.initialized = true;
+        
+        window.addEventListener('error', (event) => {
+            this.trackEvent('error', { 
+                title: `JS Error: ${event.message}`, 
+                path: `/error/${event.filename}` 
+            });
+        });
+
+        console.log("[Analytics] Service Started");
+    },
+
+    disable() {
+        this.initialized = false;
+        const script = document.getElementById('goatcounter-script');
+        if (script) script.remove();
+        if (window.goatcounter) window.goatcounter.no_onload = true;
+        console.log("[Analytics] Service Disabled");
+    },
+
+    trackEvent(name, options = {}) {
+        if (!this.initialized || !window.goatcounter) return;
+        let path = options.path || `/event/${name}`;
+        if (!path.startsWith('/')) path = '/' + path;
+
+        window.goatcounter.count({
+            path: path,
+            title: options.title || name,
+            event: true
+        });
+    },
+
+    trackAppOpen(appName) {
+        if (!this.initialized) return;
+        this.appStartTimes[appName] = Date.now();
+        this.trackEvent('app-open', { path: `/app/${appName}`, title: `Open: ${appName}` });
+    },
+
+    trackAppClose(appName) {
+        if (!this.initialized) return;
+        const startTime = this.appStartTimes[appName];
+        if (startTime) {
+            const durationSeconds = Math.round((Date.now() - startTime) / 1000);
+            delete this.appStartTimes[appName];
+            this.trackEvent('app-duration', { 
+                path: `/app/${appName}/duration`, 
+                title: `${appName}: ${durationSeconds}s` 
+            });
+        }
+    }
+};
+
+// Initialize immediately upon script load
+window.Analytics.init();
+
+// --- Ads ---
 const AD_SOURCE_URL = 'https://raw.githubusercontent.com/kirbIndustries/assets/refs/heads/main/kirbindustries-ads-service/octagon/small.json';
 const ROTATION_INTERVAL = 600000; // 10 Minutes in ms
 
