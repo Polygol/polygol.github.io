@@ -353,11 +353,14 @@ function setupAdGestures(element) {
         const threshold = 80; // px to trigger action
 
         if (diff < -threshold) {
-            window.Analytics?.trackEvent('ad-next', { 
-                path: `/ads/next/${currentAd.id}`, 
-                title: `Ad Swipe Next: ${currentAd.name}` 
-            });
             // Swipe LEFT -> Next Ad
+            const activeAd = adQueue[0];
+            if (activeAd) {
+                window.Analytics?.trackEvent('ad-next', { 
+                    path: `/ads/next/${activeAd.id}`, 
+                    title: `Ad Swipe Next: ${activeAd.name}` 
+                });
+            }
             element.style.transform = 'translateX(-120%)';
             element.style.opacity = '0';
             setTimeout(nextAd, 300);
