@@ -15198,6 +15198,7 @@ function _updateActiveMediaSession() {
         window.activeMediaSessionApp = null;
         hideMediaWidget();
         IslandManager.remove('system-media');
+        HomeActivityManager.unregister('sys-media'); // Hide Home Activity
         // localStorage.removeItem('lastMediaMetadata');
         // localStorage.removeItem('lastMediaSessionApp');
         restoreCorrectFavicon();
