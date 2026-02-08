@@ -53,21 +53,43 @@ window.Analytics = {
         });
     },
 
-    trackAppOpen(appName) {
-        if (!this.initialized) return;
-        this.appStartTimes[appName] = Date.now();
-        this.trackEvent('app-open', { path: `/app/${appName}`, title: `Open: ${appName}` });
+    isUrlValid(url) {
+        if (!url || typeof url !== 'string' || url.startsWith('internal://')) return false;
+        try {
+            new URL(url, window.location.origin);
+            return true;
+        } catch (e) {
+            return false;
+        }
     },
 
-    trackAppClose(appName) {
-        if (!this.initialized) return;
-        const startTime = this.appStartTimes[appName];
+    getSanitizedPath(url) {
+        try {
+            const urlObj = new URL(url, window.location.origin);
+            // Return only the pathname (e.g., /music/index.html) to strip query params/hashes
+            return urlObj.pathname;
+        } catch (e) {
+            return url;
+        }
+    },
+
+    trackAppOpen(appUrl) {
+        if (!this.initialized || !this.isUrlValid(appUrl)) return;
+        const cleanPath = this.getSanitizedPath(appUrl);
+        this.appStartTimes[appUrl] = Date.now();
+        this.trackEvent('app-open', { path: `/app${cleanPath}`, title: `Open: ${cleanPath}` });
+    },
+
+    trackAppClose(appUrl) {
+        if (!this.initialized || !this.isUrlValid(appUrl)) return;
+        const startTime = this.appStartTimes[appUrl];
         if (startTime) {
             const durationSeconds = Math.round((Date.now() - startTime) / 1000);
-            delete this.appStartTimes[appName];
+            const cleanPath = this.getSanitizedPath(appUrl);
+            delete this.appStartTimes[appUrl];
             this.trackEvent('app-duration', { 
-                path: `/app/${appName}/duration`, 
-                title: `${appName}: ${durationSeconds}s` 
+                path: `/app${cleanPath}/duration`, 
+                title: `${cleanPath}: ${durationSeconds}s` 
             });
         }
     }
