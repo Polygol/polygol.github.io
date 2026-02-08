@@ -1024,7 +1024,7 @@ body.one-button-nav-active .dock.show {
     display: flex;
     gap: 6px;
     flex-direction: column;
-    margin: 6px 70px 6px 0;
+    margin: 6px 64px 6px 64px;
     z-index: 1;
     pointer-events: none;
 }
