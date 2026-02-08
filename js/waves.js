@@ -111,6 +111,7 @@ function initWavesHost() {
                 
                 // Check Auth Token
                 if (payload.auth === state.psk) {
+                    window.Analytics?.trackWavesConnect(peerId);
                     // TRUSTED DEVICE: Add to active list immediately
                     registerPeer(peerId, payload.profile);
                     wavesSend({ type: 'welcome', deviceName: state.deviceName }, peerId);
@@ -154,6 +155,7 @@ function initWavesHost() {
 
         wavesRoom.onPeerLeave(peerId => {
             if (connectedPeers[peerId]) {
+                window.Analytics?.trackWavesDisconnect(peerId);
                 console.log(`[Waves] Peer disconnected: ${peerId}`);
                 delete connectedPeers[peerId];
                 notifySystemUI();
