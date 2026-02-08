@@ -744,7 +744,7 @@ body.one-button-nav-active .dock.show {
 #activity-island {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
 }
 
 .activity-capsule {
