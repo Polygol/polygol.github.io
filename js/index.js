@@ -5133,9 +5133,106 @@ async function updateSmallWeather() {
     updateTitle();
 }
 
+const WeatherAlertManager = {
+    activityId: 'sys-weather-alert',
+    activeCondition: null, // 'rain', 'storm', 'clouds'
+
+    check(weatherData) {
+        if (!weatherData || !weatherData.hourlyForecast) return;
+
+        const hourly = weatherData.hourlyForecast;
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentIndex = hourly.time.findIndex(t => new Date(t).getHours() === currentHour);
+
+        if (currentIndex === -1) return;
+
+        // Look ahead 5 hours
+        const forecastSlice = hourly.weathercode.slice(currentIndex, currentIndex + 6);
+        const currentCode = forecastSlice[0];
+        
+        const isBad = (c) => (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95;
+        const isCloudy = (c) => (c >= 1 && c <= 3);
+        const isStorm = (c) => (c >= 95);
+
+        let event = null;
+        let icon = '';
+        let title = '';
+        let text = '';
+
+        // 1. Check for incoming events
+        const nextBadIndex = forecastSlice.findIndex((c, i) => i > 0 && isBad(c));
+        const nextCloudIndex = forecastSlice.findIndex((c, i) => i > 0 && isCloudy(c));
+
+        if (!isBad(currentCode)) {
+            if (nextBadIndex !== -1) {
+                const code = forecastSlice[nextBadIndex];
+                event = 'incoming';
+                icon = isStorm(code) ? 'thunderstorm' : 'umbrella';
+                title = isStorm(code) ? 'Storm coming' : 'Rain coming';
+                text = `Expected in ${nextBadIndex}h`;
+            } else if (!isCloudy(currentCode) && nextCloudIndex !== -1) {
+                event = 'incoming';
+                icon = 'cloud';
+                title = 'Clouds coming';
+                text = `Skies changing in ${nextCloudIndex}h`;
+            }
+        } 
+        // 2. Check for clearing events
+        else if (isBad(currentCode)) {
+            const nextClearIndex = forecastSlice.findIndex((c, i) => i > 0 && !isBad(c));
+            if (nextClearIndex !== -1) {
+                event = 'clearing';
+                icon = 'wb_sunny';
+                title = 'Clearing soon';
+                text = `Conditions improving in ${nextClearIndex}h`;
+            }
+        }
+
+        if (event) {
+            this.updateActivity(icon, title, text);
+        } else {
+            this.stop();
+        }
+    },
+
+    updateActivity(icon, title, text) {
+        const options = {
+            activityId: this.activityId,
+            url: '/assets/gurapp/intl/liveactivity/weather-alert.html',
+            homescreen: true,
+            icon: icon,
+            height: '60px'
+        };
+
+        const data = { icon, title, text };
+
+        if (!activeLiveActivities[this.activityId]) {
+            startLiveActivity('System', options);
+            // Slight delay to allow iframe to load before first data push
+            setTimeout(() => updateLiveActivity(this.activityId, data), 1000);
+        } else {
+            updateLiveActivity(this.activityId, data);
+        }
+    },
+
+    stop() {
+        if (activeLiveActivities[this.activityId]) {
+            stopLiveActivity(this.activityId);
+        }
+    }
+};
+
 const originalUpdateSmallWeather = updateSmallWeather;
 updateSmallWeather = async function() {
     await originalUpdateSmallWeather(); // Run original
+    
+    // Check for alerts using the fresh data
+    const saved = localStorage.getItem('lastWeatherData');
+    if (saved) {
+        WeatherAlertManager.check(JSON.parse(saved));
+    }
+
     // Add our update hook
     EnvironmentManager.updateWeatherEffect();
 };
