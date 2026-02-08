@@ -1,4 +1,4 @@
-const CORE_CACHE_VERSION = '16.6-r3.2.1';
+const CORE_CACHE_VERSION = '16.6-r4';
 const CORE_CACHE_NAME = `polygol-core-${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polygol-apps';
 
