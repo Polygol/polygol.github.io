@@ -6315,7 +6315,7 @@ function createSetupScreen() {
 
         const title = document.createElement('h1');
         title.className = 'setup-title';
-        title.textContent = currentLanguage[pageData.title];
+        title.textContent = currentLanguage[pageData.title] || pageData.title;
 
         titleContainer.appendChild(icon);
         titleContainer.appendChild(title);
@@ -6324,7 +6324,7 @@ function createSetupScreen() {
         // Add description
         const description = document.createElement('p');
         description.className = 'setup-description';
-        description.textContent = currentLanguage[pageData.description] || "";
+        description.textContent = currentLanguage[pageData.description] || pageData.description;
         page.appendChild(description);
         
         // Add options
@@ -6339,7 +6339,7 @@ function createSetupScreen() {
             input.value = localStorage.getItem(pageData.configKey) || pageData.default;
             input.placeholder = pageData.inputPlaceholder;
             input.className = 'setup-input-field'; // We'll add css for this
-            input.style.cssText = "background: transparent; border: none; color: var(--text-color); font-size: 1.2rem; width: 100%; outline: none; border-bottom: 2px solid var(--glass-border); padding: 10px;";
+            input.style.cssText = "background: transparent; border: none; color: var(--text-color); font-size: 1.2rem; width: 100%; outline: none; border-bottom: 2px solid var(--accent); padding: 10px;";
             
             input.addEventListener('input', (e) => {
                 localStorage.setItem(pageData.configKey, e.target.value);
