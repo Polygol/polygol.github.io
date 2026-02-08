@@ -3182,7 +3182,7 @@ input[type="checkbox"]:checked::before {
 		}
 
 		.drawer-top-btn {
-		    background-color: var(--accent);
+		    background-color: var(--tonal);
 			color: var(--background-color);
 		    border: 1px solid var(--glass-border);
 		    box-shadow: var(--sun-shadow), 0 0 15px rgba(0, 0, 0, 0.05);
