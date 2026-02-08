@@ -3517,7 +3517,8 @@ render() {
 	        // Update Click Action
 	        el.onclick = (e) => {
 	            e.stopPropagation();
-	            if (appDef) createFullscreenEmbed(appDef.url);
+                if (item.data.openUrl) createFullscreenEmbed(item.data.openUrl);
+	            else if (appDef) createFullscreenEmbed(appDef.url);
 	            else if (item.data.url) createFullscreenEmbed(item.data.url);
 	        };
 	    });
@@ -5206,7 +5207,7 @@ const WeatherAlertManager = {
             openUrl: '/weather/index.html',
             homescreen: true,
             icon: icon,
-            height: '80px'
+            height: '50px'
         };
 
         const data = { icon, title, text: conciseText };
@@ -16003,6 +16004,7 @@ function startLiveActivity(appName, options) {
     IslandManager.update(options.activityId, 'live-activity', {
         appName: canonicalName, 
         url: options.url,
+        openUrl: options.openUrl,
         iconString: options.icon || null
     });
 }
