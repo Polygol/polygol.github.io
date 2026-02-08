@@ -9818,6 +9818,12 @@ const HomeActivityManager = {
             e.stopPropagation();
             if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'next');
         });
+        document.getElementById('home-media-art')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (activeMediaSessionApp && apps[activeMediaSessionApp]) {
+                createFullscreenEmbed(apps[activeMediaSessionApp].url);
+            }
+        });
     },
     
     setEnabled(state) {
@@ -10003,11 +10009,12 @@ const HomeActivityManager = {
                 const left = cx < w / 2;
                 const top = cy < h / 2;
                 
-                this.container.className = ''; // Reset classes
+                // Safely remove old position classes
+                this.container.classList.remove('pos-tl', 'pos-tr', 'pos-bl', 'pos-br');
+
                 if (top && left) this.position = 'tl';
                 else if (top && !left) this.position = 'tr';
                 else if (!top && left) this.position = 'bl';
-                else this.position = 'br';
                 
                 this.container.classList.add(`pos-${this.position}`);
                 this.container.style.left = '';
