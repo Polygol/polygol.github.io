@@ -6,13 +6,14 @@ window.Analytics = {
     initialized: false,
     appStartTimes: {},
     wavesStartTimes: {},
+    heartbeatTimer: null,
 
     init() {
         if (this.initialized) return;
         
         const enabled = localStorage.getItem('telemetryEnabled') !== 'false';
         if (!enabled) return;
-
+        
         if (!document.getElementById('goatcounter-script')) {
             const script = document.createElement('script');
             script.id = 'goatcounter-script';
@@ -36,10 +37,19 @@ window.Analytics = {
 
     disable() {
         this.initialized = false;
+        clearInterval(this.heartbeatTimer);
         const script = document.getElementById('goatcounter-script');
         if (script) script.remove();
         if (window.goatcounter) window.goatcounter.no_onload = true;
         console.log("[Analytics] Service Disabled");
+    },
+
+    startHeartbeat() {
+        if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+        // Track uptime every 30 minutes
+        this.heartbeatTimer = setInterval(() => {
+            this.trackEvent('heartbeat', { path: '/system/heartbeat', title: 'System Active' });
+        }, 1800000);
     },
 
     trackEvent(name, options = {}) {
