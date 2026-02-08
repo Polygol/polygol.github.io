@@ -9887,21 +9887,18 @@ const HomeActivityManager = {
         let mediaItem = this.items.find(i => i.type === 'media');
         const widget = document.getElementById('home-media-widget');
         
-        if (!mediaItem) {
+        if (!mediaItem && widget) {
             this.register('sys-media', 'media', widget);
         }
         
         if (metadata) {
-            document.getElementById('home-media-title').textContent = metadata.title || 'Unknown';
-            document.getElementById('home-media-artist').textContent = metadata.artist || 'Unknown';
-            document.getElementById('home-media-art').src = metadata.artwork?.[0]?.src || '';
+            const titleEl = document.getElementById('home-media-title');
+            const artistEl = document.getElementById('home-media-artist');
+            const artEl = document.getElementById('home-media-art');
             
-            // App Icon
-            const appIconEl = document.getElementById('home-media-app-icon');
-            if (activeMediaSessionApp && apps[activeMediaSessionApp]?.icon) {
-                 appIconEl.src = apps[activeMediaSessionApp].icon.startsWith('http') ? apps[activeMediaSessionApp].icon : `/assets/appicon/${apps[activeMediaSessionApp].icon}`;
-                 appIconEl.style.display = 'block';
-            }
+            if (titleEl) titleEl.textContent = metadata.title || 'Unknown';
+            if (artistEl) artistEl.textContent = metadata.artist || 'Unknown';
+            if (artEl) artEl.src = metadata.artwork?.[0]?.src || '';
         }
         
         if (playbackState) {
@@ -9911,15 +9908,8 @@ const HomeActivityManager = {
 
         if (progressState && progressState.duration > 0) {
             const percent = (progressState.currentTime / progressState.duration) * 100;
-            document.getElementById('home-media-progress').style.width = `${percent}%`;
-            
-            const fmt = (s) => {
-                const m = Math.floor(s/60);
-                const sec = Math.floor(s%60).toString().padStart(2,'0');
-                return `${m}:${sec}`;
-            };
-            document.getElementById('home-media-current-time').textContent = fmt(progressState.currentTime);
-            document.getElementById('home-media-duration').textContent = fmt(progressState.duration);
+            const bar = document.getElementById('home-media-progress');
+            if (bar) bar.style.width = `${percent}%`;
         }
     },
 
@@ -11705,6 +11695,9 @@ async function createFullscreenEmbed(url, options = {}) {
         interactionBlocker.style.pointerEvents = 'none';
         interactionBlocker.style.display = 'none';
     }
+
+    // Explicitly update visibility to hide Home Activities on cold launch
+    HomeActivityManager.updateVisibility();
 
     populateDock();
     resetIndicatorTimeout();
@@ -15226,7 +15219,7 @@ function _updateActiveMediaSession() {
     // Update Home Screen Activity
     HomeActivityManager.updateMediaUI(metadata, playbackState || 'paused');
 
-    // Restore the playback state (default to paused if not set) 
+    // Restore the playback state (default to paused if not set)
     updateMediaWidgetState(playbackState || 'paused');
     
     restoreCorrectFavicon();
@@ -15239,8 +15232,11 @@ function _updateActiveMediaSession() {
         }
         appIconEl.src = iconUrl;
         appIconEl.style.display = 'block';
+        // Ensure parent container is visible if handled via CSS
+        if(appIconEl.parentElement) appIconEl.parentElement.style.display = 'block';
     } else if (appIconEl) {
         appIconEl.style.display = 'none';
+        if(appIconEl.parentElement) appIconEl.parentElement.style.display = 'none';
     }
 
     // Update control button visibility and state.
@@ -15393,18 +15389,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function updateMediaProgress(appName, progressState) {
-    // --- FIX: Use a case-insensitive comparison to match the app name ---
     if (activeMediaSessionApp && activeMediaSessionApp.toLowerCase() === appName.toLowerCase()) {
         const progressEl = document.getElementById('media-widget-progress');
         const currentTimeEl = document.getElementById('media-widget-current-time');
         const durationEl = document.getElementById('media-widget-duration');
         
-        // Update Home Activity as well
+        // Update Home Activity as well (Pass progressState)
         HomeActivityManager.updateMediaUI(null, null, progressState);
 
-        if (progressEl && currentTimeEl && durationEl && progressState.duration > 0) {
+        // Update Controls Widget
+        if (progressState.duration > 0) {
             const percentage = (progressState.currentTime / progressState.duration) * 100;
-            progressEl.style.width = `${percentage}%`;
+            
+            if (progressEl) progressEl.style.width = `${percentage}%`;
             
             // Helper to format seconds into MM:SS
             const formatTime = (seconds) => {
@@ -15414,8 +15411,8 @@ function updateMediaProgress(appName, progressState) {
                 return `${min}:${sec}`;
             };
             
-            currentTimeEl.textContent = formatTime(progressState.currentTime);
-            durationEl.textContent = formatTime(progressState.duration);
+            if (currentTimeEl) currentTimeEl.textContent = formatTime(progressState.currentTime);
+            if (durationEl) durationEl.textContent = formatTime(progressState.duration);
         }
     }
 }
