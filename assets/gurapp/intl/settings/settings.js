@@ -12,6 +12,7 @@ function initializeSettingsApp() {
         'page-display': 'Display',
         'page-sound': 'Sound & Haptics',
         'page-homescreen': 'Home Screen',
+        'page-live-activities': 'Live Activities',
         'page-clock': 'Clock',
         'page-wallpaper': 'Wallpaper',
         'page-system': 'System',
@@ -288,6 +289,47 @@ function initializeSettingsApp() {
             console.error(e);
             container.innerHTML = '<div style="padding: 20px; text-align: center; color: #ff5252;">Failed to load license information.</div>';
         }
+    }
+
+    function refreshLiveActivitiesPage() {
+        const container = document.getElementById('live-activity-list-container');
+        const senders = JSON.parse(window.parent.localStorage.getItem('appsWithActivities') || '[]');
+        const blocked = JSON.parse(window.parent.localStorage.getItem('blockedActivities') || '[]');
+        
+        container.innerHTML = '';
+        if (senders.length === 0) {
+            container.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">No activities recorded.</p>';
+            return;
+        }
+
+        senders.forEach(name => {
+            const item = document.createElement('div');
+            item.className = 'setting-item';
+            const isBlocked = blocked.includes(name);
+            
+            item.innerHTML = `
+                <div class="setting-info">
+                    <span class="setting-label">${name}</span>
+                </div>
+                <input type="checkbox" class="toggle-switch" ${!isBlocked ? 'checked' : ''}>
+            `;
+
+            const toggle = item.querySelector('input');
+            toggle.onchange = () => {
+                let currentBlocked = JSON.parse(window.parent.localStorage.getItem('blockedActivities') || '[]');
+                if (!toggle.checked) {
+                    if (!currentBlocked.includes(name)) currentBlocked.push(name);
+                } else {
+                    currentBlocked = currentBlocked.filter(n => n !== name);
+                }
+                window.parent.localStorage.setItem('blockedActivities', JSON.stringify(currentBlocked));
+                // Notify parent to stop current activities if blocked
+                if (!toggle.checked) {
+                    window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'stopActivitiesForApp', args: [name] }, '*');
+                }
+            };
+            container.appendChild(item);
+        });
     }
 
     function bindEventListeners() {
