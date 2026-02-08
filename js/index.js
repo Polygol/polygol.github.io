@@ -6189,9 +6189,17 @@ async function firstSetup() {
 
 function createSetupScreen() {
     const generateNonsenseName = () => {
-        const pre = ["Glub", "Zorp", "Flim", "Blerp", "Quib", "Jom", "Vex", "Snar", "Plonk", "Wob"];
-        const post = ["nix", "pod", "ule", "onk", "ify", "azz", "omatic", "it", "sy", "le"];
-        const getWord = () => pre[Math.floor(Math.random() * pre.length)] + post[Math.floor(Math.random() * post.length)];
+        const pre = ["Zork", "Bli", "Phro", "Kran", "Velt", "Spli", "Grom", "Twi", "Quar", "Mox", "Jub", "Vax", "Zym", "Plo", "Ska", "Tro", "Flu", "Bly", "Dwa", "Glo", "Snu", "Kri", "Vle", "Shu", "Pra", "Zon", "Cli", "Fro", "Ste", "Yol"];
+        const mid = ["a", "o", "u", "e", "i", "ee", "oo", "ou", "y", "ia"];
+        const post = ["nix", "zap", "loid", "tron", "vax", "mutt", "gle", "dax", "kin", "th", "rk", "zz", "nk", "st", "sh", "mp", "rt", "lk", "gn", "pl", "sk", "ch", "ff", "wn", "ly", "xy", "qu", "zt", "rd", "nz"];
+        
+        const getWord = () => {
+            const p = pre[Math.floor(Math.random() * pre.length)];
+            const m = mid[Math.floor(Math.random() * mid.length)];
+            const s = post[Math.floor(Math.random() * post.length)];
+            return p + m + s;
+        };
+
         return `${getWord()} ${getWord()}`;
     };
 	
@@ -6302,11 +6310,16 @@ function createSetupScreen() {
 		    icon: "grid_view", // Add icon
             options: []
         },
-
         {
             title: "SETUP_CONFIGURE_OPTIONS",
             description: "SETUP_CONFIGURE_OPTIONS_DESC",
-		    image: "https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy3.png?raw=true", // Add icon
+		    icon: "page_info", // Add icon
+            options: []
+        },
+        {
+            title: "Goodbye (for now)",
+            description: "Let's talk sometime later! I'm in the App Drawer at any time.",
+		    image: "https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy3.png?raw=true",
             options: []
         },
     ];
@@ -6328,7 +6341,7 @@ function createSetupScreen() {
         if (pageData.image) {
             headerVisual = document.createElement('img');
             headerVisual.src = pageData.image;
-            headerVisual.style.cssText = "width: 80px; height: 80px; object-fit: contain; margin-bottom: 8px;";
+            headerVisual.style.cssText = "width: 200px; height: 200px; object-fit: contain; margin-bottom: 8px;";
         } else {
             headerVisual = document.createElement('span');
             headerVisual.className = 'material-symbols-rounded';
