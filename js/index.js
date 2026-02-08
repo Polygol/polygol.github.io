@@ -6188,6 +6188,13 @@ async function firstSetup() {
 }
 
 function createSetupScreen() {
+    const generateNonsenseName = () => {
+        const pre = ["Glub", "Zorp", "Flim", "Blerp", "Quib", "Jom", "Vex", "Snar", "Plonk", "Wob"];
+        const post = ["nix", "pod", "ule", "onk", "ify", "azz", "omatic", "it", "sy", "le"];
+        const getWord = () => pre[Math.floor(Math.random() * pre.length)] + post[Math.floor(Math.random() * post.length)];
+        return `${getWord()} ${getWord()}`;
+    };
+	
     const setupContainer = document.createElement('div');
     setupContainer.className = 'setup-screen';
 
@@ -6209,7 +6216,7 @@ function createSetupScreen() {
         {
             title: "Hi! Welcome to Polygol",
             description: "Let's get set up! Don't worry, it won't take too long...",
-            image: "/assets/img/regular-expressive-onload.webp",
+            image: "https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy.png?raw=true",
             options: []
         },
         {
@@ -6245,18 +6252,18 @@ function createSetupScreen() {
         },
         {
             title: "Name this Device",
-            description: "Choose a name to identify this device.",
-            icon: "devices",
-            isInput: true, // Custom flag for input handling
+            description: "I have a name, it's Screwy! I wonder what this thing's name is...",
+            image: "https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy2.png?raw=true",
+            isInput: true,
             inputType: "text",
             inputPlaceholder: "Name",
             configKey: "system_device_name",
-            default: "Polygol Device"
+            default: generateNonsenseName()
         },
         {
             title: "SETUP_CANNIBALIZE",
             description: "",
-	    icon: "palette", // Add icon
+		    icon: "palette",
             options: [
                 { name: "SETUP_LIGHT", value: "light" },
                 { name: "SETUP_DARK", value: "dark", default: true }
@@ -6265,28 +6272,22 @@ function createSetupScreen() {
         {
             title: "SETUP_CLOCK_FORMAT",
             description: "",
-	    icon: "schedule", // Add icon
+            icon: "schedule",
             options: [
-                { name: "SETUP_SHOW_SECONDS", value: true, default: true },
-                { name: "SETUP_HIDE_SECONDS", value: false }
+                { name: "24-hour", value: false, default: true },
+                { name: "12-hour", value: true }
             ]
         },
         {
             title: "SETUP_SHOW_WEATHER",
             description: "",
-	    icon: "partly_cloudy_day", // Add icon
+		    icon: "partly_cloudy_day",
             options: [
                 { name: "SETUP_SHOW_WEATHER_TRUE", value: true, default: true },
                 { name: "SETUP_SHOW_WEATHER_FALSE", value: false }
             ]
         },
-        {
-            title: "SETUP_GURAPPS_USAGE",
-            description: "SETUP_GURAPPS_USAGE_DESC",
-	    icon: "grid_view", // Add icon
-            options: []
-        },
-        {
+		{
             title: "Back Up your Data",
             description: "Automatically back up and save your data. A notification will be sent when your data backup is ready.",
             icon: "settings_backup_restore",
@@ -6296,9 +6297,16 @@ function createSetupScreen() {
             ]
         },
         {
+            title: "SETUP_GURAPPS_USAGE",
+            description: "SETUP_GURAPPS_USAGE_DESC",
+		    icon: "grid_view", // Add icon
+            options: []
+        },
+
+        {
             title: "SETUP_CONFIGURE_OPTIONS",
             description: "SETUP_CONFIGURE_OPTIONS_DESC",
-	    icon: "page_info", // Add icon
+		    image: "https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy3.png?raw=true", // Add icon
             options: []
         },
     ];
@@ -6437,8 +6445,10 @@ function createSetupScreen() {
                                 document.body.classList.toggle('light-theme', option.value === 'light');
                                 break;
                             case "SETUP_CLOCK_FORMAT":
-                                localStorage.setItem('showSeconds', option.value);
-                                showSeconds = option.value;
+                                localStorage.setItem('use12HourFormat', option.value);
+                                use12HourFormat = option.value;
+                                const hrSwitch = document.getElementById('hour-switch');
+                                if (hrSwitch) hrSwitch.checked = use12HourFormat;
                                 updateClockAndDate();
                                 break;
                             case "SETUP_SHOW_WEATHER":
