@@ -6207,15 +6207,24 @@ function createSetupScreen() {
 
     const setupPages = [
         {
-            title: "SETUP_HI_THERE",
-            description: "SETUP_OPEN_PRIVATE_DESC",
-	    icon: "waving_hand",
+            title: "Hi! Welcome to Polygol",
+            description: "Let's get set up! Don't worry, it won't take too long...",
+            image: "/assets/img/regular-expressive-onload.webp",
             options: []
         },
         {
+            title: "Privacy & Data",
+            description: "To improve Polygol, we collect anonymous usage data and error reports. This is fully compliant with GDPR and no personal data is ever stored.",
+            icon: "encrypted",
+            options: [
+                { name: "Allow collection and sending of data", value: 'true', default: true },
+                { name: "Don't collect or send", value: 'false' }
+            ]
+        },
+        {
             title: "SETUP_ALLOW_PERMISSIONS",
-            description: "",
-	    icon: "enable", // Add icon
+            description: "Permissons are required to access certain functionality. Data may be sent to service providers, regardless of privacy settings.",
+		    icon: "enable", // Add icon
             options: [
                 { 
                     name: "SETUP_BASIC_ACCESS",
@@ -6307,17 +6316,24 @@ function createSetupScreen() {
         titleContainer.style.flexDirection = 'column'; // Stack icon and title vertically
         titleContainer.style.alignItems = 'center'; // Center horizontally
 
-        const icon = document.createElement('span');
-        icon.className = 'material-symbols-rounded';
-        icon.textContent = pageData.icon;
-        icon.style.fontSize = '48px'; // Set icon size to 48px
-        icon.style.marginBottom = '8px'; // Add some spacing between icon and title
+        let headerVisual;
+        if (pageData.image) {
+            headerVisual = document.createElement('img');
+            headerVisual.src = pageData.image;
+            headerVisual.style.cssText = "width: 80px; height: 80px; object-fit: contain; margin-bottom: 8px;";
+        } else {
+            headerVisual = document.createElement('span');
+            headerVisual.className = 'material-symbols-rounded';
+            headerVisual.textContent = pageData.icon;
+            headerVisual.style.fontSize = '48px';
+            headerVisual.style.marginBottom = '8px';
+        }
 
         const title = document.createElement('h1');
         title.className = 'setup-title';
         title.textContent = currentLanguage[pageData.title] || pageData.title;
 
-        titleContainer.appendChild(icon);
+        titleContainer.appendChild(headerVisual);
         titleContainer.appendChild(title);
         page.appendChild(titleContainer);
         
@@ -6413,6 +6429,9 @@ function createSetupScreen() {
         
                         // Save the selection
                         switch (pageData.title) {
+                            case "Privacy & Data":
+                                localStorage.setItem('telemetryEnabled', option.value);
+                                break;
                             case "SETUP_CANNIBALIZE":
                                 localStorage.setItem('theme', option.value);
                                 document.body.classList.toggle('light-theme', option.value === 'light');
@@ -6478,6 +6497,8 @@ function createSetupScreen() {
             if (currentPage === setupPages.length - 1) {
                 // --- ONBOARDING FLOW ---
                 localStorage.setItem('hasVisitedBefore', 'true');
+
+                window.Analytics?.init();
 
                 // Music continues playing until the final reload.
 
