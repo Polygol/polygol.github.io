@@ -3095,24 +3095,24 @@ input[type="checkbox"]:checked::before {
     bottom: -100%;
     left: 0;
     width: 100%;
-    height: calc(100% - 80px);
-    background-color: var(--search-background); 
+    height: 100%;
+    background-color: transparent;
     transition: bottom 0.3s ease;
     z-index: 1001;
     overflow: hidden;
     touch-action: none;
     user-select: none;
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(5px);
-	box-shadow: var(--sun-shadow);
+    backdrop-filter: var(--edge-refraction-filter) blur(5px);
     touch-action: none;
     user-select: none;
     opacity: 0;
     border-top: 1px solid var(--glass-border);
-    border-radius: 50px 50px 0 0;
-	corner-shape: superellipse(1.5);
-	filter: blur(5px);
-	content-visibility: hidden;
-	pointer-events: none;
+    border-radius: 50px;
+    corner-shape: superellipse(1.5);
+    content-visibility: hidden;
+    pointer-events: none;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow-strong), 0 0 50px rgba(0, 0, 0, 0.2);
 }
 
 #app-drawer {
@@ -3139,12 +3139,16 @@ input[type="checkbox"]:checked::before {
 }
 
         .app-drawer.open {
-            bottom: 0;
+			bottom: 0;
 		    opacity: 1;
 		    transform: none;
 		    filter: none;
-			content-visibility: auto;
-			pointer-events: auto;
+		    content-visibility: auto;
+		    pointer-events: auto;
+		    background-color: var(--background-color-tr);
+		    border-radius: 0;
+		    border: none;
+		    box-shadow: none;
         }
 
         .app-drawer-handle {
@@ -3178,7 +3182,8 @@ input[type="checkbox"]:checked::before {
 		}
 
 		.drawer-top-btn {
-		    background-color: var(--search-background);
+		    background-color: var(--accent);
+			color: var(--background-color);
 		    border: 1px solid var(--glass-border);
 		    box-shadow: var(--sun-shadow), 0 0 15px rgba(0, 0, 0, 0.05);
 		    display: flex;
@@ -3201,7 +3206,8 @@ input[type="checkbox"]:checked::before {
         .app-search-container {
             display: flex;
             align-items: center;
-            background-color: var(--search-background);
+            background-color: var(--accent);
+			color: var(--background-color);
             border: 1px solid var(--glass-border);
 		    box-shadow: var(--sun-shadow), 0 0 15px rgba(0, 0, 0, 0.05);
             border-radius: 50px;
@@ -3219,7 +3225,7 @@ input[type="checkbox"]:checked::before {
             border: none;
             background: none;
             outline: none;
-            color: var(--text-color);
+            color: var(--background-color);
             padding: 12px 14px;
             font-size: 16px;
 			font-family: 'Inter', 'sans-serif';
@@ -3227,7 +3233,7 @@ input[type="checkbox"]:checked::before {
         }
 
 		#app-search-input::placeholder {
-			color: var(--text-color);
+			color: var(--background-color);
 			font-weight: 500;
 		}
 
@@ -4103,71 +4109,59 @@ input[type="checkbox"]:checked::before {
     box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
-		@media (min-width: 1500px) {
-			.app-drawer-grid {
-                grid-template-columns: repeat(8, 1fr);
-            }
-        }
+@media (min-width: 1500px) {
+	.app-drawer-grid {
+		grid-template-columns: repeat(8, 1fr);
+	}
+	
+	.app-drawer-content {
+	    padding: 80px 5% 0 5%;
+	}
+}
+	
+@media (max-width: 970px) {
+	.app-drawer-grid {
+		grid-template-columns: repeat(4, 1fr);
+	}
+}
 
-        @media (min-width: 800px) {
-            .app-drawer {
-                left: 5%;
-                width: 90%;
-                border: 1px solid var(--glass-border);
-				border-radius: 50px;
-				corner-shape: superellipse(1.5);
-		        box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
-				height: calc(100% - 160px);
-				margin-bottom: 80px;
-				transform: scale(0.9);
-            }
-        }
+@media (min-width: 800px) {
+    .app-drawer {
+        transform: scale(0.9);
+    }
+}
 
-		@media (max-height: 700px) {
-            .app-drawer {
-				border-radius: 50px 50px 0 0 !important;
-				height: calc(100% - 80px) !important;
-				margin-bottom: 0 !important;
-            }
-        }
-            
-        @media (max-width: 970px) {
-            .app-drawer-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
+@media (max-width: 520px) {
+	.app-drawer-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
 
-        @media (max-width: 520px) {
-            .app-drawer-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
+@media (max-width: 500px) {
+	.legacy-nav-controls {
+		border-right: none;
+		padding-right: 0;
+	}
+	
+	.legacy-app-header span {
+		font-weight: 500;
+		color: var(--text-color);
+		display: none;
+	}
 
-		@media (max-width: 500px) {
-			.legacy-nav-controls {
-				border-right: none;
-				padding-right: 0;
-			}
-			
-			.legacy-app-header span {
-			    font-weight: 500;
-			    color: var(--text-color);
-				display: none;
-			}
+	.legacy-app-header span.material-symbols-rounded {
+		display: block;
+	}
+}
 
-			.legacy-app-header span.material-symbols-rounded {
-				display: block;
-			}
-		}
+@media (max-width: 400px) {
+	.app-drawer-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
 
-        @media (max-width: 400px) {
-            .app-drawer-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 280px) {
-            .app-drawer-grid {
-                grid-template-columns: repeat(1, 1fr);
-            }
-        }
+@media (max-width: 280px) {
+	.app-drawer-grid {
+		grid-template-columns: repeat(1, 1fr);
+	}
+}
