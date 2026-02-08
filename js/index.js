@@ -15296,8 +15296,15 @@ function updateMediaWidgetState(playbackState) {
     const homeIcon = homeBtn?.querySelector('.material-symbols-rounded');
     
     if (homeIcon) {
-        homeIcon.textContent = playbackState === 'playing' ? 'pause' : 'play_arrow';
-    }
+        if (playbackState === 'playing') {
+            homeIcon.textContent = 'pause';
+            homeBtn.style.borderRadius = '25px';
+			homeBtn.style.cornerShape = 'superellipse(1.5)';
+        } else {
+            homeIcon.textContent = 'play_arrow';
+			homeBtn.style.cornerShape = 'round';
+        }
+	}
 }
 
 // This is the new function that Gurapps will call
@@ -15781,8 +15788,7 @@ function startLiveActivity(appName, options) {
         const iframe = document.createElement('iframe');
         iframe.src = options.url;
         iframe.setAttribute('data-gurasuraisu-iframe', 'true');
-        iframe.setAttribute('sandbox', 'allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-same-origin allow-scripts');
-        iframe.style.cssText = "width: 100%; height: 120px; border: none; border-radius: 25px; overflow: hidden;";
+        iframe.style.cssText = "width: 100%; border: none; overflow: hidden;";
         iframe.className = 'home-activity-item';
         
         HomeActivityManager.register(options.activityId, 'iframe', iframe);
