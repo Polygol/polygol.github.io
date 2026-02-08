@@ -5202,7 +5202,7 @@ const WeatherAlertManager = {
 
         const options = {
             activityId: this.activityId,
-            url: '/assets/system-widgets/weather-alert.html',
+            url: '/assets/gurapp/intl/liveactivity/weather-alert.html',
             openUrl: '/weather/index.html',
             homescreen: true,
             icon: icon,
