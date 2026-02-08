@@ -5168,7 +5168,7 @@ const WeatherAlertManager = {
             if (nextBadIndex !== -1) {
                 const code = forecastSlice[nextBadIndex];
                 event = 'incoming';
-                icon = isStorm(code) ? 'thunderstorm' : 'umbrella';
+                icon = isStorm(code) ? 'thunderstorm' : 'rainy';
                 title = isStorm(code) ? 'Storm coming' : 'Rain coming';
                 text = `Expected in ${nextBadIndex}h`;
             } else if (!isCloudy(currentCode) && nextCloudIndex !== -1) {
@@ -5202,7 +5202,7 @@ const WeatherAlertManager = {
             url: '/assets/gurapp/intl/liveactivity/weather-alert.html',
             homescreen: true,
             icon: icon,
-            height: '60px'
+            height: '50px'
         };
 
         const data = { icon, title, text };
