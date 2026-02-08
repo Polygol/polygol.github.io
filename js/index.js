@@ -5148,8 +5148,8 @@ const WeatherAlertManager = {
 
         if (currentIndex === -1) return;
 
-        // Look ahead 5 hours
-        const forecastSlice = hourly.weathercode.slice(currentIndex, currentIndex + 6);
+        // Look ahead
+        const forecastSlice = hourly.weathercode.slice(currentIndex, currentIndex + 3);
         const currentCode = forecastSlice[0];
         
         const isBad = (c) => (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95;
