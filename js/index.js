@@ -11545,10 +11545,8 @@ async function createFullscreenEmbed(url, options = {}) {
     // Store the URL as a data attribute
     embedContainer.dataset.embedUrl = url;
 
-    if (appName) {
-        window.Analytics?.trackAppOpen(appName);
-    }
-    
+    window.Analytics?.trackAppOpen(url);
+	
     // Flag to track embedding status
     let embedFailed = false;
     
@@ -11899,6 +11897,7 @@ function closeFullscreenEmbed() {
     
     if (embedContainer) {
         const url = embedContainer.dataset.embedUrl;
+        window.Analytics?.trackAppClose(url);
         
         // Clean up Switcher Data Immediately
         // Remove from minimized cache to prevent ghosting in App Switcher
@@ -11918,7 +11917,6 @@ function closeFullscreenEmbed() {
         const appName = Object.keys(apps).find(name => apps[name].url === url);
 
         if (appName) {
-            window.Analytics?.trackAppClose(appName);
             // Clear media session for the closing app
             clearMediaSession(appName);
             // Stop all live activities started by this app
@@ -12015,6 +12013,8 @@ function closeFullscreenEmbed() {
 function forceCloseApp(url) {
     if (!url) return;
 
+    window.Analytics?.trackAppClose(url);
+
     // 1. Identify if we are closing the currently focused/visible app
     const activeElement = document.querySelector('.fullscreen-embed[style*="display: block"]');
     const isActiveApp = activeElement && activeElement.dataset.embedUrl === url;
@@ -12041,7 +12041,6 @@ function forceCloseApp(url) {
     // App-Specific Resources (Media, Activities, Waves)
     const appName = Object.keys(apps).find(name => apps[name].url === url);
     if (appName) {
-        window.Analytics?.trackAppClose(appName);
         if (typeof clearMediaSession === 'function') clearMediaSession(appName);
         
         if (typeof activeLiveActivities !== 'undefined') {
