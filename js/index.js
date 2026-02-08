@@ -25,7 +25,7 @@ const Analytics = {
         if (!document.getElementById('goatcounter-script')) {
             const script = document.createElement('script');
             script.id = 'goatcounter-script';
-            script.dataset.goatcounter = "https://polygol.goatcounter.com/count";
+            script.dataset.goatcounter = "https://kirbindust.goatcounter.com/count";
             script.async = true;
             script.src = "//gc.zgo.at/count.js";
             document.head.appendChild(script);
