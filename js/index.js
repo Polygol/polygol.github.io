@@ -6110,24 +6110,10 @@ function addToNotificationShade(message, options = {}) {
 	notification.addEventListener('touchend', () => {
         const diff = currentX - startX;
         if (diff > 100) {
-            // Swipe threshold reached
-            notification.style.transform = 'translateX(400px)';
-            notification.style.opacity = '0';
-            
-            // Update Data
-            if (!options.liveActivityUrl) {
-                unreadNotifications = Math.max(0, unreadNotifications - 1);
-                updateStatusIndicator();
-            }
-            window.activeNotificationsList = window.activeNotificationsList.filter(n => n.id !== notification.dataset.notifId);
-            updateRemoteNotifications();
-
-            // Cleanup DOM
-            setTimeout(() => {
-                notification.remove();
-                checkShadeState(); // Check if we need to remove button/shade
-            }, 300);
+            // Swipe threshold reached: Call the centralized closure function
+            closeNotification(notification);
         } else {
+            // Snap back
             notification.style.transform = 'translateX(0)';
             notification.style.opacity = '1';
         }
