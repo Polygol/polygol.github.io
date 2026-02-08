@@ -9873,6 +9873,15 @@ const HomeActivityManager = {
         }
     },
     
+    // Forward data to iframes (for Live Activities)
+    forwardMessage(id, data) {
+        const item = this.items.find(i => i.id === id);
+        if (item && item.type === 'iframe' && item.element.contentWindow) {
+             const targetOrigin = getOriginFromUrl(item.element.src);
+             item.element.contentWindow.postMessage({ type: 'live-activity-update', ...data }, targetOrigin);
+        }
+    },
+    
     updateMediaUI(metadata, playbackState, progressState) {
         // Check if media widget is registered, if not register it
         let mediaItem = this.items.find(i => i.type === 'media');
@@ -9921,10 +9930,12 @@ const HomeActivityManager = {
         
         if (this.enabled && hasItems && !appOpen && !drawerOpen && !document.body.classList.contains('blackout-active')) {
             this.container.style.display = 'flex';
+            document.body.classList.add('home-activities-visible');
             // Slight delay to allow display:flex to apply before opacity transition
             requestAnimationFrame(() => this.container.style.opacity = '1');
         } else {
             this.container.style.opacity = '0';
+            document.body.classList.remove('home-activities-visible');
             setTimeout(() => {
                 if (this.container.style.opacity === '0') this.container.style.display = 'none';
             }, 300);
@@ -9956,15 +9967,19 @@ const HomeActivityManager = {
                 const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
                 const cy = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
                 const dx = cx - startX;
+                const dy = cy - startY;
                 
-                // Horizontal Swipe threshold
-                if (Math.abs(dx) > 50) {
+                // Vertical Swipe threshold (Up/Down to switch items)
+                if (Math.abs(dy) > 40 && Math.abs(dy) > Math.abs(dx)) {
                     clearTimeout(longPressTimer);
                     // Debounce swipe
-                    if (!this.swiped) {
+                    if (!this.swiped && this.items.length > 1) {
                         this.swiped = true;
-                        if (dx > 0) this.currentIndex = (this.currentIndex > 0) ? this.currentIndex - 1 : this.items.length - 1;
-                        else this.currentIndex = (this.currentIndex < this.items.length - 1) ? this.currentIndex + 1 : 0;
+                        if (dy > 0) { // Down
+                             this.currentIndex = (this.currentIndex > 0) ? this.currentIndex - 1 : this.items.length - 1;
+                        } else { // Up
+                             this.currentIndex = (this.currentIndex < this.items.length - 1) ? this.currentIndex + 1 : 0;
+                        }
                         this.render();
                         setTimeout(() => this.swiped = false, 300);
                     }
@@ -15207,12 +15222,14 @@ function _updateActiveMediaSession() {
 
     // Update the widget's UI with the new session's data.
     showMediaWidget(metadata);
-    // Restore the playback state (default to paused if not set)
-    updateMediaWidgetState(playbackState || 'paused');
-    restoreCorrectFavicon();
-
+    
     // Update Home Screen Activity
     HomeActivityManager.updateMediaUI(metadata, playbackState || 'paused');
+
+    // Restore the playback state (default to paused if not set) 
+    updateMediaWidgetState(playbackState || 'paused');
+    
+    restoreCorrectFavicon();
 
     const appIconEl = document.getElementById('media-widget-app-icon');
     if (appIconEl && apps[appName] && apps[appName].icon) {
@@ -15259,18 +15276,27 @@ function _updateActiveMediaSession() {
 }
 
 function updateMediaWidgetState(playbackState) {
-    const playPauseButton = document.querySelector('#media-widget-play-pause');
-    const playPauseIcon = playPauseButton?.querySelector('.material-symbols-rounded');
+    // Update Control Panel Widget
+    const cPanelBtn = document.querySelector('#media-widget-play-pause');
+    const cPanelIcon = cPanelBtn?.querySelector('.material-symbols-rounded');
 
-    if (playPauseIcon && playPauseButton) {
+    if (cPanelIcon && cPanelBtn) {
         if (playbackState === 'playing') {
-            playPauseIcon.textContent = 'pause';
-            playPauseButton.style.borderRadius = '25px';
-			playPauseButton.style.cornerShape = 'superellipse(1.5)'
+            cPanelIcon.textContent = 'pause';
+            cPanelBtn.style.borderRadius = '25px';
+			cPanelBtn.style.cornerShape = 'superellipse(1.5)';
         } else {
-            playPauseIcon.textContent = 'play_arrow';
-			playPauseButton.style.cornerShape = 'round'
+            cPanelIcon.textContent = 'play_arrow';
+			cPanelBtn.style.cornerShape = 'round';
         }
+    }
+    
+    // Update Home Screen Widget
+    const homeBtn = document.querySelector('#home-media-play-pause');
+    const homeIcon = homeBtn?.querySelector('.material-symbols-rounded');
+    
+    if (homeIcon) {
+        homeIcon.textContent = playbackState === 'playing' ? 'pause' : 'play_arrow';
     }
 }
 
@@ -15362,12 +15388,12 @@ document.addEventListener('DOMContentLoaded', () => {
 function updateMediaProgress(appName, progressState) {
     // --- FIX: Use a case-insensitive comparison to match the app name ---
     if (activeMediaSessionApp && activeMediaSessionApp.toLowerCase() === appName.toLowerCase()) {
-        // Update Home Activity as well
-        HomeActivityManager.updateMediaUI(null, null, progressState);
-
         const progressEl = document.getElementById('media-widget-progress');
         const currentTimeEl = document.getElementById('media-widget-current-time');
         const durationEl = document.getElementById('media-widget-duration');
+        
+        // Update Home Activity as well
+        HomeActivityManager.updateMediaUI(null, null, progressState);
 
         if (progressEl && currentTimeEl && durationEl && progressState.duration > 0) {
             const percentage = (progressState.currentTime / progressState.duration) * 100;
@@ -15785,6 +15811,9 @@ function updateLiveActivity(activityId, data) {
                 iframe.contentWindow.postMessage({ type: 'live-activity-update', ...data }, targetOrigin);
             }
         }
+        
+        // Forward to Home Screen Activity (if exists)
+        HomeActivityManager.forwardMessage(activityId, data);
 		
         // Prepare data for the Activity Island
         const islandUpdate = {
