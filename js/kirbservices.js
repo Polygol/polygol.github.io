@@ -258,11 +258,6 @@ function renderCurrentAd() {
 
 function nextAd() {
     if (adQueue.length <= 1) return; // No rotation needed if 1 or 0 items
-
-    window.Analytics?.trackEvent('ad-next', { 
-        path: `/ads/next/${currentAd.id}`, 
-        title: `Ad Swipe Next: ${currentAd.name}` 
-    });
     
     // Rotate queue: Move first item to end
     const current = adQueue.shift();
@@ -358,6 +353,10 @@ function setupAdGestures(element) {
         const threshold = 80; // px to trigger action
 
         if (diff < -threshold) {
+            window.Analytics?.trackEvent('ad-next', { 
+                path: `/ads/next/${currentAd.id}`, 
+                title: `Ad Swipe Next: ${currentAd.name}` 
+            });
             // Swipe LEFT -> Next Ad
             element.style.transform = 'translateX(-120%)';
             element.style.opacity = '0';
