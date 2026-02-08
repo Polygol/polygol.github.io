@@ -5197,15 +5197,19 @@ const WeatherAlertManager = {
     },
 
     updateActivity(icon, title, text) {
+        // Concise formatting for clockwidget
+        const conciseText = text.match(/\d+h/)?.[0] || text;
+
         const options = {
             activityId: this.activityId,
-            url: '/assets/gurapp/intl/liveactivity/weather-alert.html',
+            url: '/assets/system-widgets/weather-alert.html',
+            openUrl: '/weather/index.html',
             homescreen: true,
             icon: icon,
-            height: '50px'
+            height: '80px'
         };
 
-        const data = { icon, title, text };
+        const data = { icon, title, text: conciseText };
 
         if (!activeLiveActivities[this.activityId]) {
             startLiveActivity('System', options);
@@ -5225,13 +5229,13 @@ const WeatherAlertManager = {
 
 const originalUpdateSmallWeather = updateSmallWeather;
 updateSmallWeather = async function() {
-    await originalUpdateSmallWeather(); // Run original
+    // Run original (respects showWeather toggle)
+    await originalUpdateSmallWeather(); 
     
-    // Check for alerts using the fresh data
-    const saved = localStorage.getItem('lastWeatherData');
-    if (saved) {
-        WeatherAlertManager.check(JSON.parse(saved));
-    }
+    // Check for alerts independently of showWeather setting
+    fetchLocationAndWeather().then(data => {
+        WeatherAlertManager.check(data);
+    }).catch(() => {});
 
     // Add our update hook
     EnvironmentManager.updateWeatherEffect();
@@ -15954,6 +15958,17 @@ function startLiveActivity(appName, options) {
         return;
     }
 
+    // 1. Check Blocking
+    const blocked = JSON.parse(localStorage.getItem('blockedActivities') || '[]');
+    if (blocked.includes(appName)) return;
+
+    // 2. Track Sender
+    let senders = JSON.parse(localStorage.getItem('appsWithActivities') || '[]');
+    if (!senders.includes(appName)) {
+        senders.push(appName);
+        localStorage.setItem('appsWithActivities', JSON.stringify(senders));
+    }
+
     const canonicalName = Object.keys(apps).find(k => k.toLowerCase() === appName.toLowerCase()) || appName;
 
     // If an activity with this ID already exists, stop it first.
@@ -16268,6 +16283,11 @@ window.addEventListener('message', async (event) => { // Make listener async
 
 		// Privileged Functions (already checked above)
 		clearAllNotifications,
+        stopActivitiesForApp: (appName) => {
+            Object.keys(activeLiveActivities).forEach(id => {
+                if (activeLiveActivities[id].appName === appName) stopLiveActivity(id);
+            });
+        },
 		installApp, 
 		deleteApp,
 		requestInstalledApps, 
