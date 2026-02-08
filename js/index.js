@@ -4258,6 +4258,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // "Read" logic: Clear Home Screen notification activities when panel is opened
+        HomeActivityManager.items.forEach(item => {
+            if (item.id.startsWith('home-notif-')) {
+                // We unregister them from Home Screen only; they stay in the Shade
+                HomeActivityManager.unregister(item.id);
+            }
+        });
+
 		dynamicArea.style.opacity = '0';
 		customizeModal.style.display = 'block';
         customizeModal.style.pointerEvents = 'none'; 
@@ -5744,6 +5752,51 @@ function createOnScreenPopup(message, options = {}, onClosed) {
     };
 }
 
+function createHomeNotificationElement(message, options, notifId) {
+    const div = document.createElement('div');
+    div.className = 'home-media-widget home-activity-item';
+    div.style.cssText = 'padding: 12px 18px 12px 12px; flex-direction: row; align-items: center; height: auto; min-height: 80px;';
+    
+    let iconUrl = '/assets/appicon/system.png';
+    if (options.appName && apps[options.appName]) {
+        iconUrl = apps[options.appName].icon;
+        if (!iconUrl.startsWith('http') && !iconUrl.startsWith('/') && !iconUrl.startsWith('data:')) {
+            iconUrl = `/assets/appicon/${iconUrl}`;
+        }
+    }
+    
+    const headerTitle = options.header || options.heading || 'Notification';
+    const iconType = options.icon || 'notifications';
+
+    div.innerHTML = `
+        <div class="app-icon-img" style="width: 42px; flex-shrink: 0; margin-right: 12px;">
+            <img src="${iconUrl}" style="display: block; width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: 12px; width: 100%;">
+            <div style="width: -webkit-fill-available; display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">${iconType}</span>
+                    <span style="font-weight: 500; font-family: 'Open Runde', Inter;">${headerTitle}</span>
+                </div>
+                <span style="word-break: break-word;">${message}</span>
+            </div>
+            <span class="material-symbols-rounded close-home-notif" style="cursor: pointer; font-size: 16px; opacity: 0.5; margin-left: auto; align-self: flex-start; transition: opacity 0.2s;">cancel</span>
+        </div>
+    `;
+
+    div.querySelector('.close-home-notif').onclick = (e) => {
+        e.stopPropagation();
+        const shadeNotif = document.querySelector(`.shade-notification[data-notif-id="${notifId}"]`);
+        if (shadeNotif) {
+            const closeBtn = Array.from(shadeNotif.querySelectorAll('.material-symbols-rounded')).find(el => el.textContent === 'cancel');
+            closeBtn?.click();
+        }
+        HomeActivityManager.unregister(`home-notif-${notifId}`);
+    };
+
+    return div;
+}
+
 // Adds a notification to the notification shade
 function addToNotificationShade(message, options = {}) {
     let shade = document.querySelector('.notification-shade');
@@ -5816,6 +5869,7 @@ function addToNotificationShade(message, options = {}) {
         // Remove from global list
         window.activeNotificationsList = window.activeNotificationsList.filter(n => n.id !== notif.dataset.notifId);
         updateRemoteNotifications();
+		HomeActivityManager.unregister(`home-notif-${notif.dataset.notifId}`);
 	        
 	    // Remove after animation completes
 	    setTimeout(() => {
@@ -5851,6 +5905,13 @@ function addToNotificationShade(message, options = {}) {
             icon: options.icon || 'notifications'
         });
         updateRemoteNotifications();
+
+        // Register as Home Screen Live Activity (Max 2)
+        const currentHomeNotifs = HomeActivityManager.items.filter(i => i.id.startsWith('home-notif-'));
+        if (currentHomeNotifs.length < 2) {
+            const homeEl = createHomeNotificationElement(message, options, notification.dataset.notifId);
+            HomeActivityManager.register(`home-notif-${notification.dataset.notifId}`, 'notification', homeEl);
+        }
 		
 		// Add app icon and title if appName is provided and not a system notification
 		const showAppInfo = options.appName && !options.system && apps[options.appName];
