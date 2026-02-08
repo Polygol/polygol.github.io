@@ -9931,6 +9931,16 @@ function switchWallpaper(direction, skipSave = false) {
     syncUiStates();
 }
 
+function trackActivitySender(appName) {
+    try {
+        let senders = JSON.parse(localStorage.getItem('appsWithActivities') || '[]');
+        if (!senders.includes(appName)) {
+            senders.push(appName);
+            localStorage.setItem('appsWithActivities', JSON.stringify(senders));
+        }
+    } catch(e) { console.error("Failed to track activity sender", e); }
+}
+
 // --- Home Screen Activity Manager ---
 const HomeActivityManager = {
     enabled: true,
@@ -15377,7 +15387,16 @@ function _updateActiveMediaSession() {
     // Get the session at the top of the stack.
     const activeSession = mediaSessionStack[mediaSessionStack.length - 1];
     const { appName, metadata, supportedActions, playbackState } = activeSession;
-    
+
+    // Check Blocking
+    const blocked = JSON.parse(localStorage.getItem('blockedActivities') || '[]');
+    if (blocked.includes(appName)) {
+        hideMediaWidget();
+        IslandManager.remove('system-media');
+        HomeActivityManager.unregister('sys-media');
+        return;
+    }
+	
     // Update global state and localStorage.
     activeMediaSessionApp = appName;
  	window.activeMediaSessionApp = appName;
@@ -15504,6 +15523,9 @@ function registerMediaSession(appName, metadata, supportedActions = []) {
         return;
     } 
 	
+    // Track sender for permissions
+    trackActivitySender(canonicalAppName);
+
 	// Remove any previous session from the same app to prevent duplicates
     mediaSessionStack = mediaSessionStack.filter(session => session.appName !== canonicalAppName);
 
@@ -15950,8 +15972,7 @@ function setControlValueAndDispatch(key, value) {
  * @param {string} options.activityId - A unique ID from the calling app for this activity.
  * @param {string} options.url - The URL for the iframe content.
  * @param {boolean} [options.homescreen=false] - If true, this activity can show a summary on the homescreen.
- * @param {string} [options.height='60px']
- '] - The height of the activity in the notification shade.
+ * @param {string} [options.height='60px'] - The height of the activity in the notification shade.
  */
 function startLiveActivity(appName, options) {
     if (!appName || !options || !options.activityId || !options.url) {
@@ -15964,11 +15985,7 @@ function startLiveActivity(appName, options) {
     if (blocked.includes(appName)) return;
 
     // 2. Track Sender
-    let senders = JSON.parse(localStorage.getItem('appsWithActivities') || '[]');
-    if (!senders.includes(appName)) {
-        senders.push(appName);
-        localStorage.setItem('appsWithActivities', JSON.stringify(senders));
-    }
+    trackActivitySender(appName);
 
     const canonicalName = Object.keys(apps).find(k => k.toLowerCase() === appName.toLowerCase()) || appName;
 
@@ -16289,6 +16306,10 @@ window.addEventListener('message', async (event) => { // Make listener async
             Object.keys(activeLiveActivities).forEach(id => {
                 if (activeLiveActivities[id].appName === appName) stopLiveActivity(id);
             });
+            // Also force update media session to respect new block
+            if (activeMediaSessionApp === appName) {
+                _updateActiveMediaSession();
+            }
         },
 		installApp, 
 		deleteApp,
