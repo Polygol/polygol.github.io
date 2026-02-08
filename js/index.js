@@ -10,87 +10,6 @@ const DB_SCHEMAS = {
 	}
 };
 
-// --- Analytics ---
-const Analytics = {
-    initialized: false,
-    appStartTimes: {},
-
-    init() {
-        if (this.initialized) return;
-        
-        const enabled = localStorage.getItem('telemetryEnabled') !== 'false';
-        if (!enabled) return;
-
-        // Inject GoatCounter
-        if (!document.getElementById('goatcounter-script')) {
-            const script = document.createElement('script');
-            script.id = 'goatcounter-script';
-            script.dataset.goatcounter = "https://kirbindust.goatcounter.com/count";
-            script.async = true;
-            script.src = "//gc.zgo.at/count.js";
-            document.head.appendChild(script);
-        }
-        
-        this.initialized = true;
-        
-        // Track Errors
-        window.addEventListener('error', (event) => {
-            this.trackEvent('error', { 
-                title: `JS Error: ${event.message}`, 
-                path: `/error/${event.filename}` 
-            });
-        });
-
-        console.log("[Analytics] Initialized");
-    },
-
-    disable() {
-        this.initialized = false;
-        const script = document.getElementById('goatcounter-script');
-        if (script) script.remove();
-        
-        if (window.goatcounter) window.goatcounter.no_onload = true;
-        console.log("[Analytics] Disabled");
-    },
-
-    trackEvent(name, options = {}) {
-        if (!this.initialized || !window.goatcounter) return;
-        
-        let path = options.path || `/event/${name}`;
-        if (!path.startsWith('/')) path = '/' + path;
-
-        window.goatcounter.count({
-            path: path,
-            title: options.title || name,
-            event: true
-        });
-    },
-
-    trackAppOpen(appName) {
-        if (!this.initialized) return;
-        this.appStartTimes[appName] = Date.now();
-        this.trackEvent('app-open', { path: `/app/${appName}`, title: `Open: ${appName}` });
-    },
-
-    trackAppClose(appName) {
-        if (!this.initialized) return;
-        
-        const startTime = this.appStartTimes[appName];
-        if (startTime) {
-            const durationSeconds = Math.round((Date.now() - startTime) / 1000);
-            delete this.appStartTimes[appName];
-            
-            this.trackEvent('app-duration', { 
-                path: `/app/${appName}/duration`, 
-                title: `${appName}: ${durationSeconds}s` 
-            });
-        }
-    }
-};
-
-// Initialize on load
-Analytics.init();
-
 const SoundManager = {
     sounds: {
         'select': new Audio('/assets/sound/ui/select.mp3'),    // Standard Button
@@ -11627,7 +11546,7 @@ async function createFullscreenEmbed(url, options = {}) {
     embedContainer.dataset.embedUrl = url;
 
     if (appName) {
-        Analytics.trackAppOpen(appName);
+        window.Analytics?.trackAppOpen(appName);
     }
     
     // Flag to track embedding status
@@ -11999,7 +11918,7 @@ function closeFullscreenEmbed() {
         const appName = Object.keys(apps).find(name => apps[name].url === url);
 
         if (appName) {
-            Analytics.trackAppClose(appName);
+            window.Analytics?.trackAppClose(appName);
             // Clear media session for the closing app
             clearMediaSession(appName);
             // Stop all live activities started by this app
@@ -12122,7 +12041,7 @@ function forceCloseApp(url) {
     // App-Specific Resources (Media, Activities, Waves)
     const appName = Object.keys(apps).find(name => apps[name].url === url);
     if (appName) {
-        Analytics.trackAppClose(appName);
+        window.Analytics?.trackAppClose(appName);
         if (typeof clearMediaSession === 'function') clearMediaSession(appName);
         
         if (typeof activeLiveActivities !== 'undefined') {
@@ -15794,9 +15713,9 @@ function setControlValueAndDispatch(key, value) {
 
         if (key === 'telemetryEnabled') {
             if (value === 'true') {
-                Analytics.init();
+                window.Analytics?.init();
             } else {
-                Analytics.disable();
+                window.Analytics?.disable();
             }
         }
         if (key === 'slideshowInterval') {
