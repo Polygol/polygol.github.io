@@ -5,6 +5,7 @@
 window.Analytics = {
     initialized: false,
     appStartTimes: {},
+    wavesStartTimes: {},
 
     init() {
         if (this.initialized) return;
@@ -92,6 +93,32 @@ window.Analytics = {
                 title: `${cleanPath}: ${durationSeconds}s` 
             });
         }
+    },
+
+    trackWavesConnect(peerId) {
+        if (!this.initialized) return;
+        this.wavesStartTimes[peerId] = Date.now();
+    },
+
+    trackWavesDisconnect(peerId) {
+        if (!this.initialized) return;
+        const startTime = this.wavesStartTimes[peerId];
+        if (startTime) {
+            const durationSeconds = Math.round((Date.now() - startTime) / 1000);
+            delete this.wavesStartTimes[peerId];
+            this.trackEvent('waves-session', { 
+                path: '/waves/duration', 
+                title: `Remote Session: ${durationSeconds}s` 
+            });
+        }
+    },
+
+    trackWallpaperPreset(presetName) {
+        if (!this.initialized) return;
+        this.trackEvent('wallpaper-preset', { 
+            path: `/wallpaper/preset/${presetName.replace(/\s+/g, '-').toLowerCase()}`, 
+            title: `Preset: ${presetName}` 
+        });
     }
 };
 
