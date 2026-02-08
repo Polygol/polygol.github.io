@@ -3849,6 +3849,91 @@ input[type="checkbox"]:checked::before {
     margin: -10px;
 }
 
+/* --- Home Screen Activities --- */
+#home-activity-container {
+    position: fixed;
+    z-index: 50; /* Below Dock (9996) but above icons */
+    width: 320px; /* Fixed width for consistency */
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#home-activity-container.pos-tl { top: 60px; left: 20px; }
+#home-activity-container.pos-tr { top: 60px; right: 20px; }
+#home-activity-container.pos-bl { bottom: 120px; left: 20px; }
+#home-activity-container.pos-br { bottom: 120px; right: 20px; }
+
+#home-activity-container.dragging {
+    transition: none;
+    cursor: grabbing;
+    transform: scale(1.05);
+    z-index: 10000;
+}
+
+.home-activity-item {
+    width: 100%;
+    animation: fadeScaleIn 0.3s ease;
+    display: none; /* Hidden by default, manager shows active */
+}
+
+.home-activity-item.active {
+    display: flex; /* Or block */
+}
+
+/* Clone Media Widget Styles for Home Context */
+.home-media-widget {
+    display: flex;
+    align-items: stretch;
+	flex-direction: column;
+    padding: 12px 18px 12px 16px;
+    background-color: var(--search-background);
+    border-radius: 35px;
+	corner-shape: superellipse(1.5);
+    border: 1px solid var(--glass-border);
+	box-shadow: var(--sun-shadow);
+    overflow: hidden;
+    transition: all 0.3s ease;
+	height: 149px;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.home-media-widget .app-icon-img {
+	position: absolute;
+    top: 18px;
+    left: 20px;
+    width: 28px;
+    height: 28px;
+    border-radius: 35%;
+    z-index: 2;
+    mix-blend-mode: luminosity;
+    pointer-events: none;
+    box-shadow: none;
+    corner-shape: superellipse(1.25);
+}
+
+.home-media-widget .media-widget-device {
+	background: var(--overlay-color);
+    z-index: 1;
+    width: fit-content;
+    padding: 4px 10px 4px 8px;
+    border-radius: 20px;
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    font-size: 0.7em;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+}
+
 /* Visual state when picking the second app */
 .fullscreen-embed.split-selecting {
     transform: scale(0.95) !important;
