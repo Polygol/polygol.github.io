@@ -3237,13 +3237,15 @@ input[type="checkbox"]:checked::before {
 			font-weight: 500;
 		}
 
-		#app-search-input:not(:focus) {
+		#app-search-input:placeholder-shown:not(:focus) {
 		    text-align: center;
 		}
 
 		#app-search-input:not(:placeholder-shown),
 		#app-search-input:focus {
 			width: 200px;
+            background-color: var(--search-background);
+			color: var(--text-color);
 		}
 
 		.app-drawer-handle:has(#app-search-input:not(:placeholder-shown)) {
