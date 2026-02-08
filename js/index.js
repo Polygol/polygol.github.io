@@ -5860,9 +5860,11 @@ function addToNotificationShade(message, options = {}) {
 	    notification.style.opacity = '0';
 	    notification.style.transform = 'translateX(50px)';
 	    notification.style.height = '0px';
-
+		
 	    if (options.liveActivityUrl && options.activityId) {
-            stopLiveActivity(options.activityId);
+            if (activeLiveActivities[options.activityId]) {
+                stopLiveActivity(options.activityId, true);
+            }
         } else if (!options.liveActivityUrl) {
             // Standard Notification dismissal
             unreadNotifications = Math.max(0, unreadNotifications - 1);
@@ -16143,20 +16145,26 @@ function updateLiveActivity(activityId, data) {
  * Stops an active Live Activity.
  * @param {string} activityId - The ID of the activity to stop.
  */
-function stopLiveActivity(activityId) {
+function stopLiveActivity(activityId, fromNotification = false) {
     const activity = activeLiveActivities[activityId];
     if (activity) {
-        // This will now correctly call the scoped close function from the refactored addToNotificationShade
-        activity.notificationControl.close(); 
-
-        // If this was the active homescreen activity, hide the widget and clear it.
+        // 1. Remove from Home Screen Activity
         if (activity.options.homescreen) {
             HomeActivityManager.unregister(activityId);
         }
 
+        // 2. Remove from Dynamic Area (Island)
+        IslandManager.remove(activityId);
+
+        // 3. Remove from Registry
+        // We delete it before closing the notification to ensure any side-effects don't see it as active
         delete activeLiveActivities[activityId];
 
-        IslandManager.remove(activityId);
+        // 4. Close the notification shade item
+        // Only do this if the stop command didn't come FROM the notification itself (e.g. swipe dismiss)
+        if (!fromNotification && activity.notificationControl) {
+            activity.notificationControl.close(); 
+        }
     }
 }
 
