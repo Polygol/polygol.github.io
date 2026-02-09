@@ -115,12 +115,7 @@
             const bootHelp = document.getElementById('boot-help');
             if (loadingScreen && bootHelp) { // Check if loading is still happening
                 bootHelp.innerHTML = `
-                    Polygol is loading. Do not close this tab.<br>
-                    Polygolは読み込み中です。このタブを閉じないでください。<br>
-                    Polygol wird geladen. Schließen Sie diesen Tab nicht.<br>
-                    Polygol se está cargando. No cierre esta pestaña.<br>
-                    Polygol을 로드하는 중입니다. 이 탭을 닫지 마십시오.<br>
-                    Polygol 正在加载。请勿关闭此选项卡。
+                    Please wait...
                 `;
             }
         }, 5000); // 5 seconds
@@ -168,8 +163,8 @@
                 continueButton.style.marginTop = '20px';
                 continueButton.style.padding = '10px 20px';
                 continueButton.style.fontSize = '16px';
-                continueButton.style.backgroundColor = '#4CAF50';
-                continueButton.style.color = 'white';
+                continueButton.style.backgroundColor = 'var(--accent)';
+                continueButton.style.color = 'var(--background-color)';
                 continueButton.style.border = 'none';
                 continueButton.style.borderRadius = '50px';
                 continueButton.style.cursor = 'pointer';
@@ -212,14 +207,7 @@
 </head>
 <body>
     <div id="loading-screen" class="loading-overlay">
-        <div id="boot-help" class="boot-help">
-            Press 'F12' to open Recovery<br>
-            「F12」キーを押してリカバリを開きます<br>
-            Drücken Sie „F12“, um die Wiederherstellung zu öffnen<br>
-            Presiona 'F12' para abrir la recuperación<br>
-            'F12' 키를 눌러 복구를 엽니다<br>
-            按“F12”打开恢复功能
-        </div>
+        <div id="boot-help" class="boot-help">F12 • Recovery</div>
         <img src="/assets/img/icon.svg" alt="Polygol Logo" class="loading-logo">
         <div class="loading-spinner">
             <svg width="24" height="24" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--text-color);">
