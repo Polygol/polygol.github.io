@@ -1,4 +1,4 @@
-<img width="1200" height="630" alt="Polygol" src="https://github.com/user-attachments/assets/80472d9e-976b-45e9-8988-2cf2ea18d2f0" />
+<img width="1200" height="630" alt="hero2" src="https://github.com/user-attachments/assets/690d2c6d-5288-4ae4-afdc-9a6aede4f1ea" />
 
 # Polygol
 ⏰ Ambient OS-like dashboard with clock, weather and advanced features without displaying ads.
