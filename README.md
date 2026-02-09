@@ -1,4 +1,4 @@
-<img width="1200" height="630" alt="Polygol • Really good universial dashboard, made by kirbIndustries" src="https://github.com/user-attachments/assets/690d2c6d-5288-4ae4-afdc-9a6aede4f1ea" />
+<img width="1200" height="630" alt="Polygol • Really good universial dashboard, made by kirbIndustries" src="https://github.com/user-attachments/assets/727d905f-48c4-4b27-ae0e-068b04059d56" />
 
 # Polygol
 ⏰ Ambient OS-like dashboard with clock, weather and advanced features without displaying ads.
