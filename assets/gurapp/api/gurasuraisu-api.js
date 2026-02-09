@@ -107,7 +107,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         }
         
         *::-webkit-scrollbar-thumb {
-        	background-color: var(--background-color);
+        	background-color: var(--tonal);
         	border-radius: 50px;
         }
 
