@@ -311,7 +311,7 @@ function finalizeEmojiAuth(peerId, answer, psk) {
         registerPeer(peerId, session.tempProfile);
         const state = getWavesHostState();
         wavesSend({ type: 'authorized', psk: psk, deviceName: state.deviceName }, peerId);
-        showNotification('Waves will accept automatic connnections to this device.', {
+        showNotification('Waves will accept automatic connections to this device.', {
             heading: `Paired with ${session.tempProfile?.name || 'New Device'}`,
             icon: 'verified_user',
             system: true
