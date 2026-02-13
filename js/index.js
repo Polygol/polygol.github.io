@@ -2635,8 +2635,8 @@ function updateSunEffect() {
 	}
 	
 	// Apply to the main page by setting the CSS variables and broadcast to iframes
-	document.body.style.setProperty('--sun-shadow', currentSunShadow);
-	document.body.style.setProperty('--sun-shadow-strong', currentSunShadowStrong);
+	document.body.style.setProperty('--sun-shadow', `${currentSunShadow}, 0 0 20px -5px rgba(0, 0, 0, 0.2)`);
+	document.body.style.setProperty('--sun-shadow-strong', `${currentSunShadowStrong}, 0 0 20px -5px rgba(0, 0, 0, 0.2)`);
 	broadcastSunUpdate();
 }
 
