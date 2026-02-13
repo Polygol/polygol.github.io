@@ -2594,12 +2594,12 @@ function updateSunEffect() {
 		// Sharp specular highlight on the edge facing the light
 		const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
 		const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
-		currentSunShadow = `${specularHighlight}, ${reflectedSpecular}`;
+		currentSunShadow = `${specularHighlight}, ${reflectedSpecular}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
 		
 		// B: Strong Shadow (Same geometry, higher opacity)
 		const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.25px rgba(255, 255, 255, 1)`;
 		const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.25px rgba(255, 255, 255, 1)`;
-		currentSunShadowStrong = `${strongSpecular}, ${strongReflectedSpecular}`;
+		currentSunShadowStrong = `${strongSpecular}, ${strongReflectedSpecular}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
 
 	} else {
 		// --- NIGHT LOGIC (MOONLIGHT OR STARLIGHT) ---
@@ -2608,12 +2608,12 @@ function updateSunEffect() {
 		// A: Regular Starlight
 		const starlightSpecular = `inset 0px 1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
 		const starlightReflected = `inset 0px -1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
-		currentSunShadow = `${starlightSpecular}, ${starlightReflected}`;
+		currentSunShadow = `${starlightSpecular}, ${starlightReflected}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
 
 		// B: Strong Starlight (Same geometry, higher opacity)
 		const strongStarlightSpecular = `inset 0px 1px 1px -0.25px rgba(255, 255, 255, 1)`;
 		const strongStarlightReflected = `inset 0px -1px 1px -0.25px rgba(255, 255, 255, 1)`;
-		currentSunShadowStrong = `${strongStarlightSpecular}, ${strongStarlightReflected}`;
+		currentSunShadowStrong = `${strongStarlightSpecular}, ${strongStarlightReflected}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
 		
 		// If the moon is up, override starlight with brighter, directional moonlight.
 		if (moonPosition.altitude > 0) {
@@ -2624,19 +2624,19 @@ function updateSunEffect() {
 			const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
 			
 			// A: Regular Moonlight
-			currentSunShadow = `${specularHighlight}, ${reflectedSpecular}`;
+			currentSunShadow = `${specularHighlight}, ${reflectedSpecular}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
 
 			// B: Strong Moonlight (Same geometry, higher opacity)
 			const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, 1)`;
 			const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, 1)`;
 							
-			currentSunShadowStrong = `${strongSpecular}, ${strongReflectedSpecular}`;
+			currentSunShadowStrong = `${strongSpecular}, ${strongReflectedSpecular}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
 		}
 	}
 	
 	// Apply to the main page by setting the CSS variables and broadcast to iframes
-	document.body.style.setProperty('--sun-shadow', `${currentSunShadow}, 0 0 20px -5px rgba(0, 0, 0, 0.2)`);
-	document.body.style.setProperty('--sun-shadow-strong', `${currentSunShadowStrong}, 0 0 20px -5px rgba(0, 0, 0, 0.2)`);
+	document.body.style.setProperty('--sun-shadow', currentSunShadow);
+	document.body.style.setProperty('--sun-shadow-strong', currentSunShadowStrong);
 	broadcastSunUpdate();
 }
 
