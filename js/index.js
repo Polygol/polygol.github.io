@@ -2593,15 +2593,12 @@ function updateSunEffect() {
 		// A: Regular Shadow
 		// Sharp specular highlight on the edge facing the light
 		const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
-		// Reflected rim on opposite side
 		const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
-
 		currentSunShadow = `${specularHighlight}, ${reflectedSpecular}`;
 		
 		// B: Strong Shadow (Same geometry, higher opacity)
-		const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, 1)`;
-		const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, 1)`;
-		
+		const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.25px rgba(255, 255, 255, 1)`;
+		const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.25px rgba(255, 255, 255, 1)`;
 		currentSunShadowStrong = `${strongSpecular}, ${strongReflectedSpecular}`;
 
 	} else {
@@ -2614,8 +2611,8 @@ function updateSunEffect() {
 		currentSunShadow = `${starlightSpecular}, ${starlightReflected}`;
 
 		// B: Strong Starlight (Same geometry, higher opacity)
-		const strongStarlightSpecular = `inset 0px 1px 1px -0.5px rgba(255, 255, 255, 1)`;
-		const strongStarlightReflected = `inset 0px -1px 1px -0.5px rgba(255, 255, 255, 1)`;
+		const strongStarlightSpecular = `inset 0px 1px 1px -0.25px rgba(255, 255, 255, 1)`;
+		const strongStarlightReflected = `inset 0px -1px 1px -0.25px rgba(255, 255, 255, 1)`;
 		currentSunShadowStrong = `${strongStarlightSpecular}, ${strongStarlightReflected}`;
 		
 		// If the moon is up, override starlight with brighter, directional moonlight.
