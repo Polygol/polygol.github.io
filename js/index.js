@@ -15674,16 +15674,18 @@ function animatePlaybackRate(video, startRate, endRate, duration) {
             const elapsedTime = currentTime - startTime;
             const progress = Math.min(elapsedTime / duration, 1);
 
-            // Apply an ease-out function to make the transition smooth
-            const easedProgress = 1 - Math.pow(1 - progress, 3); // Ease-out cubic
+            // Ease-in-out Sine
+            const easedProgress = -(Math.cos(Math.PI * progress) - 1) / 2;
 
             const currentRate = startRate + (endRate - startRate) * easedProgress;
-            video.playbackRate = currentRate;
+            
+            // Browser safety: playbackRate cannot be negative
+            video.playbackRate = Math.max(0, currentRate);
 
             if (progress < 1) {
                 requestAnimationFrame(step);
             } else {
-                video.playbackRate = endRate; // Ensure it ends exactly on the target rate
+                video.playbackRate = endRate;
                 resolve();
             }
         }
