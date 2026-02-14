@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js"></script>
+    <style>
+        body {
+            margin: 0;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 100vh; width: 100vw; box-sizing: border-box;
+            overflow: hidden;
+        }
+        .info {
+            display: flex; flex-direction: column;
+        }
+        .label { font-size: 12px; font-weight: 500; }
+        .counter { font-size: 16px; font-weight: 700; }
+        
+        .controls {
+            display: flex; gap: 8px; align-items: center;
+        }
+        button {
+            background: var(--accent);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            color: var(--text-color);
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .play-btn { width: 42px; height: 42px; background: var(--accent); color: var(--background-color); }
+    </style>
+</head>
+<body>
+    <div class="info">
+        <span class="label">Slideshow</span>
+        <span class="counter" id="counter">-- / --</span>
+    </div>
+    <div class="controls">
+        <button onclick="send('prev')"><span class="material-symbols-rounded">skip_previous</span></button>
+        <button class="play-btn" onclick="send('toggle')">
+            <span id="play-icon" class="material-symbols-rounded">pause</span>
+        </button>
+        <button onclick="send('next')"><span class="material-symbols-rounded">skip_next</span></button>
+    </div>
+    <script>
+        function send(action) {
+            window.parent.postMessage({ type: 'slideshow-control', action }, '*');
+        }
+
+        window.addEventListener('message', (e) => {
+            if (e.data.type === 'update') {
+                document.getElementById('counter').textContent = `${e.data.current} / ${e.data.total}`;
+                document.getElementById('play-icon').textContent = e.data.paused ? 'play_arrow' : 'pause';
+            }
+        });
+    </script>
+</body>
+</html>
