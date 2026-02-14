@@ -1069,7 +1069,7 @@ const secondsSwitch = document.getElementById('seconds-switch');
 let appUsage = {};
 window.appHistoryStack = []; // Track app navigation history
 const weatherSwitch = document.getElementById('weather-switch');
-const MAX_RECENT_WALLPAPERS = 20;
+const MAX_RECENT_WALLPAPERS = 50;
 
 let showSeconds = localStorage.getItem('showSeconds') !== 'false'; // defaults to true
 let showWeather = localStorage.getItem('showWeather') !== 'false'; // defaults to true
