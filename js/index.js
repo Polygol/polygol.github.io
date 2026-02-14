@@ -15666,31 +15666,39 @@ function updateMediaProgress(appName, progressState) {
  * @returns {Promise<void>} A promise that resolves when the animation is complete.
  */
 function animatePlaybackRate(video, startRate, endRate, duration) {
+    // Clear any previous animation interval on this video to prevent conflicts
+    if (video.dataset.playbackAnim) clearInterval(Number(video.dataset.playbackAnim));
+
     return new Promise(resolve => {
-        let startTime = null;
+        const startTime = performance.now();
+		
+        const interval = setInterval(() => {
+            const now = performance.now();
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
 
-        function step(currentTime) {
-            if (!startTime) startTime = currentTime;
-            const elapsedTime = currentTime - startTime;
-            const progress = Math.min(elapsedTime / duration, 1);
+            // Cubic Ease Out
+            const ease = 1 - Math.pow(1 - progress, 3);
+            const currentRate = startRate + (endRate - startRate) * ease;
 
-            // Ease-in-out Sine
-            const easedProgress = -(Math.cos(Math.PI * progress) - 1) / 2;
+            try {
+                video.playbackRate = currentRate;
+            } catch (e) {
+                // Handle case where video is removed from DOM mid-animation
+                clearInterval(interval);
+                resolve();
+                return;
+            }
 
-            const currentRate = startRate + (endRate - startRate) * easedProgress;
-            
-            // Browser safety: playbackRate cannot be negative
-            video.playbackRate = Math.max(0, currentRate);
-
-            if (progress < 1) {
-                requestAnimationFrame(step);
-            } else {
+            if (progress >= 1) {
                 video.playbackRate = endRate;
+                clearInterval(interval);
+                delete video.dataset.playbackAnim;
                 resolve();
             }
-        }
+        }, 16); // Target ~60 updates per second independent of render cycle
 
-        requestAnimationFrame(step);
+        video.dataset.playbackAnim = interval.toString();
     });
 }
 
