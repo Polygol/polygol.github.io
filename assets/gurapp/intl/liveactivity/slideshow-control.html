@@ -16,16 +16,21 @@
             display: flex; flex-direction: column;
         }
         .label { font-size: 12px; font-weight: 500; }
-        .counter { font-size: 16px; font-weight: 700; }
+        .counter {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'Inter Numeric', 'Inter', sans-serif;
+            font-variation-settings: "RDNS" 1;
+        }
         
         .controls {
-            display: flex; gap: 8px; align-items: center;
+            display: flex; gap: 20px; align-items: center;
         }
         button {
             background: transparent;
             border: none;
             color: var(--text-color);
-            width: 42px; height: 42px;
+            width: 40px; height: 40px;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer;
