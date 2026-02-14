@@ -2582,6 +2582,7 @@ input[type="checkbox"]:checked::before {
     margin-top: -6px; /* Center vertically (half of height) */
     height: 20px;
     background: var(--accent);
+	box-shadow: var(--sun-shadow);
     border-radius: 20px;
     position: absolute;
     top: 0;
