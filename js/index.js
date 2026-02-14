@@ -7524,8 +7524,9 @@ async function processWallpaperFiles(files) {
     closeWallpaperPicker();
     if (!files || files.length === 0) return;
 
-    // Check limit again if adding multiple files
-    if (recentWallpapers.length + files.length > MAX_RECENT_WALLPAPERS) {
+    // Check limit: Grouped slideshow counts as 1, otherwise count individual files
+    const slotsNeeded = files.length > 1 ? 1 : files.length;
+    if (recentWallpapers.length + slotsNeeded > MAX_RECENT_WALLPAPERS) {
 		showDialog({ 
 			type: 'alert', 
 			title: 'Wallpaper storage full', 
@@ -7535,9 +7536,11 @@ async function processWallpaperFiles(files) {
     }
 
     try {
-        let processedCount = 0;
+        const newItems = [];
 
         for (let file of files) {
+            let wallpaperObject = null;
+
             // --- Handle .guraatmos files ---
             if (file.name.endsWith('.guraatmos')) {
                 const text = await file.text();
@@ -7557,23 +7560,20 @@ async function processWallpaperFiles(files) {
                 
                 // Convert Base64 back to Blob
                 const imageBlob = dataURLtoBlob(data.imageData);
-                const isVideo = data.isVideo || file.type.startsWith('video'); // Fallback logic
+                const isVideo = data.isVideo || file.type.startsWith('video');
 
 				let dominantColor = null;
                 let firstFrame = null;
                 
                 if (data.wallpaperType.startsWith('image/gif') || data.wallpaperType.startsWith('image/webp')) {
-                     // Try to regenerate first frame for animated types
                      try { firstFrame = await extractFirstFrame(imageBlob); } catch(e){}
                 }
 
                 try {
-                    // Try to extract from the blob (image/video)
                     if (data.wallpaperType.startsWith('video/')) {
                         firstFrame = await extractVideoFrame(imageBlob);
                         dominantColor = await extractWallpaperColor(firstFrame);
                     } else {
-                         // Standard image or GIF
                          if (data.wallpaperType.startsWith('image/gif')) {
                              firstFrame = await extractFirstFrame(imageBlob);
                              dominantColor = await extractWallpaperColor(firstFrame);
@@ -7597,7 +7597,7 @@ async function processWallpaperFiles(files) {
 
                 await storeWallpaper(wallpaperId, dbData);
 
-                recentWallpapers.unshift({
+                wallpaperObject = {
                     id: wallpaperId,
                     type: data.wallpaperType,
                     isVideo: data.isVideo,
@@ -7606,9 +7606,7 @@ async function processWallpaperFiles(files) {
                     widgetLayout: data.widgetLayout,
                     depthEnabled: data.depthEnabled,
 					dominantColor: dominantColor
-                });
-                
-                processedCount++;
+                };
             } 
             // --- Existing Logic for Standard Images/Videos ---
             else if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
@@ -7644,40 +7642,68 @@ async function processWallpaperFiles(files) {
 
                 await storeWallpaper(wallpaperId, dbData);
                 
-                recentWallpapers.unshift({
+                wallpaperObject = {
                     id: wallpaperId,
                     type: file.type,
                     isVideo: isVideo,
                     timestamp: Date.now(),
                     clockStyles: dbData.clockStyles,
                     widgetLayout: [],
-                    dominantColor: dominantColor // Add to memory object
-                });
-                processedCount++;
+                    dominantColor: dominantColor 
+                };
+            }
+
+            if (wallpaperObject) {
+                newItems.push(wallpaperObject);
             }
         }
 
-        if (processedCount > 0) {
-            // 1. Clean up old wallpapers
-            while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
-                let removedWallpaper = recentWallpapers.pop();
-                if (removedWallpaper.id) await deleteWallpaper(removedWallpaper.id);
-            }
-
-            // 2. CHECK: If user uploaded multiple, create a slideshow automatically
-            if (files.length > 1) {
-                // Take the IDs of the newly processed wallpapers
-                const newIds = recentWallpapers.slice(0, processedCount);
-                localStorage.setItem("wallpapers", JSON.stringify(newIds));
+        if (newItems.length > 0) {
+            // Logic: Multiple items = Slideshow, Single item = Wallpaper
+            if (newItems.length > 1) {
+                const slideshowEntry = {
+                    id: `slideshow_${Date.now()}`,
+                    isSlideshow: true,
+                    timestamp: Date.now(),
+                    items: newItems,
+                    // Inherit properties from first item for preview
+                    dominantColor: newItems[0].dominantColor,
+                    clockStyles: newItems[0].clockStyles,
+                    widgetLayout: []
+                };
+                
+                recentWallpapers.unshift(slideshowEntry);
+                localStorage.setItem("wallpapers", JSON.stringify(newItems));
                 isSlideshow = true;
-                showPopup(currentLanguage.SLIDESHOW_WALLPAPER || "Slideshow started");
+                showPopup(currentLanguage.SLIDESHOW_WALLPAPER || "Slideshow created");
             } else {
+                recentWallpapers.unshift(newItems[0]);
                 localStorage.removeItem("wallpapers");
                 isSlideshow = false;
+                showPopup(currentLanguage.WALLPAPER_UPDATED);
             }
+
+            // Cleanup old entries
+            while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
+                let removedWallpaper = recentWallpapers.pop();
+                
+                if (removedWallpaper.isSlideshow && removedWallpaper.items) {
+                    // Cleanup slideshow children
+                    for (const item of removedWallpaper.items) {
+                        if (item.id) await deleteWallpaper(item.id);
+                    }
+                } else if (removedWallpaper.id) {
+                    // Cleanup single wallpaper
+                    await deleteWallpaper(removedWallpaper.id);
+                }
+            }
+
+            clearInterval(slideshowInterval);
+            slideshowInterval = null;
 
             saveRecentWallpapers();
             currentWallpaperPosition = 0;
+            loadWidgets();
             applyWallpaper();
             syncUiStates();
         } else {
@@ -9083,13 +9109,21 @@ function renderSwitcherCards(container, isInitialOpen = false) {
         card.className = `switcher-card ${index === currentWallpaperPosition ? 'active' : ''}`;
         
         // Background preview
-        if (wp.id) {
+        let previewId = wp.id;
+        let isVid = wp.isVideo;
+
+        if (wp.isSlideshow && wp.items && wp.items.length > 0) {
+            previewId = wp.items[0].id;
+            isVid = wp.items[0].isVideo;
+        }
+
+        if (previewId) {
             // Async fetch for images/video thumbs
-            getWallpaper(wp.id).then(data => {
+            getWallpaper(previewId).then(data => {
                 if (data) {
                     const src = data.dataUrl || (data.blob ? URL.createObjectURL(data.blob) : '');
                     // Ideally use firstFrameDataUrl for video
-                    const bgSrc = (wp.isVideo && data.firstFrameDataUrl) ? data.firstFrameDataUrl : src;
+                    const bgSrc = (isVid && data.firstFrameDataUrl) ? data.firstFrameDataUrl : src;
                     card.style.backgroundImage = `url('${bgSrc}')`;
                 }
             });
@@ -9461,7 +9495,12 @@ async function removeWallpaper(index) {
     let wallpaperToRemove = recentWallpapers[index];
     
     // Clean up from IndexedDB
-    if (wallpaperToRemove.id) {
+    if (wallpaperToRemove.isSlideshow && wallpaperToRemove.items) {
+        // Cleanup slideshow children
+        for (const item of wallpaperToRemove.items) {
+            if (item.id) await deleteWallpaper(item.id);
+        }
+    } else if (wallpaperToRemove.id) {
         await deleteWallpaper(wallpaperToRemove.id);
     }
     
@@ -9772,9 +9811,12 @@ async function jumpToWallpaper(index) {
     
     if (wallpaper.isSlideshow) {
         isSlideshow = true;
-        // The applyWallpaper function itself will handle starting the interval
+        // Restore the slideshow items to localStorage so applyWallpaper finds them
+        if (wallpaper.items && wallpaper.items.length > 0) {
+            localStorage.setItem("wallpapers", JSON.stringify(wallpaper.items));
+            currentWallpaperIndex = 0; // Reset index
+        }
         applyWallpaper();
-        showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
     } else {
         isSlideshow = false;
         localStorage.removeItem("wallpapers");
@@ -9942,9 +9984,9 @@ function switchWallpaper(direction, skipSave = false) {
     
     if (wallpaper.isSlideshow) {
         isSlideshow = true;
-        const wallpapers = JSON.parse(localStorage.getItem('wallpapers'));
-        if (wallpapers && wallpapers.length > 0) {
-            localStorage.setItem('wallpapers', JSON.stringify(wallpapers));
+        // Correctly restore items from the history object
+        if (wallpaper.items && wallpaper.items.length > 0) {
+            localStorage.setItem("wallpapers", JSON.stringify(wallpaper.items));
             currentWallpaperIndex = 0;
             applyWallpaper();
             showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
