@@ -2306,7 +2306,6 @@ const SlideshowManager = {
         saveRecentWallpapers();
         this.startTimer();
         this.pushState();
-        showPopup(`Slideshow speed: ${this.labels[nextIdx]}`);
     },
 	
     next() {
