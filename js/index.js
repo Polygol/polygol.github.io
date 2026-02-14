@@ -2265,6 +2265,7 @@ const SlideshowManager = {
             activityId: 'sys-slideshow',
             url: '/assets/gurapp/intl/liveactivity/slideshow-control.html',
             homescreen: false,
+			showInIsland: false,
             height: '40px'
         });
         
@@ -16043,7 +16044,8 @@ function setControlValueAndDispatch(key, value) {
  * @param {string} options.activityId - A unique ID from the calling app for this activity.
  * @param {string} options.url - The URL for the iframe content.
  * @param {boolean} [options.homescreen=false] - If true, this activity can show a summary on the homescreen.
- * @param {string} [options.height='60px'] - The height of the activity in the notification shade.
+ * @param {boolean} [options.showInIsland=true] - Set to false to hide this from the Dynamic Area (Activity Island).
+ * @param {string} [options.height='120px'] - The height of the activity in the notification shade.
  */
 function startLiveActivity(appName, options) {
     if (!appName || !options || !options.activityId || !options.url) {
@@ -16086,15 +16088,19 @@ function startLiveActivity(appName, options) {
         iframe.style.cssText = "width: 100%; padding: 20px 25px; overflow: hidden;";
         iframe.className = 'home-activity-item';
         
-        HomeActivityManager.register(options.activityId, 'iframe', iframe);
+	    HomeActivityManager.register(options.activityId, 'iframe', iframe);
     }
 	
-    IslandManager.update(options.activityId, 'live-activity', {
-        appName: canonicalName, 
-        url: options.url,
-        openUrl: options.openUrl,
-        iconString: options.icon || null
-    });
+    if (options.showInIsland !== false) {
+        IslandManager.update(options.activityId, 'live-activity', {
+            appName: canonicalName, 
+            url: options.url,
+            openUrl: options.openUrl,
+            iconString: options.icon || null
+        });
+    } else {
+        IslandManager.remove(options.activityId);
+    }
 }
 
 /**
@@ -16117,31 +16123,29 @@ function updateLiveActivity(activityId, data) {
         // Forward to Home Screen Activity (if exists)
         HomeActivityManager.forwardMessage(activityId, data);
 		
-        // Prepare data for the Activity Island
-        const islandUpdate = {
-            appName: activity.appName,
-            url: activity.options.url
-        };
+        // Only update the island if allowed by initial start options
+        if (activity.options.showInIsland !== false) {
+            const islandUpdate = {
+                appName: activity.appName,
+                url: activity.options.url
+            };
 
-        let hasUpdates = false;
+            let hasUpdates = false;
 
-        // Map 'icon' from app update to 'iconString' for IslandManager
-        if (data.icon) {
-            islandUpdate.iconString = data.icon;
-            hasUpdates = true;
-        }
-        
-        // Map 'text' from app update
-        if (data.text) {
-            islandUpdate.text = data.text;
-            hasUpdates = true;
-        }
+            if (data.icon) {
+                islandUpdate.iconString = data.icon;
+                hasUpdates = true;
+            }
+            
+            if (data.text) {
+                islandUpdate.text = data.text;
+                hasUpdates = true;
+            }
 
-        // Only update the island if visual data was provided
-        if (hasUpdates) {
-             IslandManager.update(activityId, 'live-activity', islandUpdate);
-             // Trigger UI sync (status indicator usually hides if island is active)
-             updateStatusIndicator();
+            if (hasUpdates) {
+                 IslandManager.update(activityId, 'live-activity', islandUpdate);
+                 updateStatusIndicator();
+            }
         }
     }
 }
