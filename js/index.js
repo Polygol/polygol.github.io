@@ -7797,7 +7797,7 @@ async function pauseAllAnimations() {
     const bgVideo = document.getElementById('background-video');
     if (bgVideo && !bgVideo.paused) {
         // Slow down and pause video asynchronously
-        animatePlaybackRate(bgVideo, 1.0, 0.1, 300).then(() => {
+        animatePlaybackRate(bgVideo, 1.0, 0.1, 1000).then(() => {
             if (isAppOpen) bgVideo.pause();
         });
     }
@@ -7810,7 +7810,7 @@ function resumeAllAnimations() {
     const bgVideo = document.getElementById('background-video');
     if (bgVideo) {
         bgVideo.play().then(() => {
-            animatePlaybackRate(bgVideo, bgVideo.playbackRate || 0, 1.0, 300);
+            animatePlaybackRate(bgVideo, bgVideo.playbackRate || 0, 1.0, 1000);
         }).catch(e => console.error("Video play failed on resume:", e));
     }
 }
