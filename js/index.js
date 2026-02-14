@@ -2229,6 +2229,109 @@ function openWallpaperPicker() {
     }, 10);
 }
 
+const SlideshowManager = {
+    active: false,
+    paused: false,
+    wallpapers: [],
+    currentIndex: 0,
+    timer: null,
+
+    init() {
+        window.addEventListener('message', (e) => {
+            if (e.data.type === 'slideshow-control') {
+                const action = e.data.action;
+                if (action === 'next') this.next();
+                if (action === 'prev') this.prev();
+                if (action === 'toggle') this.toggle();
+            }
+        });
+    },
+
+    start() {
+        const data = JSON.parse(localStorage.getItem("wallpapers"));
+        if (!data || data.length === 0) return;
+
+        this.wallpapers = data;
+        this.active = true;
+        // Keep index within bounds
+        if (this.currentIndex >= this.wallpapers.length) this.currentIndex = 0;
+
+        // Render first frame
+        this.render();
+        this.startTimer();
+
+        // Show Control Widget
+        startLiveActivity('System', {
+            activityId: 'sys-slideshow',
+            url: '/assets/system-widgets/slideshow-control.html',
+            homescreen: false, // Only in Controls
+            height: '60px'
+        });
+        
+        // Sync UI state
+        setTimeout(() => this.pushState(), 500);
+    },
+
+    stop() {
+        this.active = false;
+        clearInterval(this.timer);
+        stopLiveActivity('sys-slideshow');
+    },
+
+    startTimer() {
+        clearInterval(this.timer);
+        if (this.paused) return;
+        
+        const duration = parseInt(localStorage.getItem('slideshowInterval') || '600000', 10);
+        this.timer = setInterval(() => this.next(), duration);
+    },
+
+    next() {
+        this.currentIndex = (this.currentIndex + 1) % this.wallpapers.length;
+        this.render();
+        this.startTimer(); // Reset timer on interaction
+    },
+
+    prev() {
+        this.currentIndex = (this.currentIndex - 1 + this.wallpapers.length) % this.wallpapers.length;
+        this.render();
+        this.startTimer();
+    },
+
+    toggle() {
+        this.paused = !this.paused;
+        this.startTimer();
+        this.pushState();
+    },
+
+    pushState() {
+        // Update Widget UI
+        const notificationElem = document.querySelector(`.live-activity-notification[data-activity-id="sys-slideshow"]`);
+        if (notificationElem) {
+            const iframe = notificationElem.querySelector('iframe');
+            if (iframe && iframe.contentWindow) {
+                const targetOrigin = getOriginFromUrl(iframe.src);
+                 iframe.contentWindow.postMessage({
+                    type: 'update',
+                    current: this.currentIndex + 1,
+                    total: this.wallpapers.length,
+                    paused: this.paused
+                }, targetOrigin);
+            }
+        }
+    },
+
+    async render() {
+        const wallpaper = this.wallpapers[this.currentIndex];
+        if (wallpaper) {
+            await renderWallpaperToDOM(wallpaper);
+            this.pushState();
+        }
+    }
+};
+
+SlideshowManager.init();
+
 function closeWallpaperPicker() {
     const drawer = document.getElementById('wallpaper-picker-drawer');
     if (!drawer) return;
@@ -8151,259 +8254,146 @@ async function saveWallpaper(file, customStyles = null) {
     }
 }
 
+async function renderWallpaperToDOM(wallpaper) {
+    if (!wallpaper) return;
+
+    // 1. Color Tinting
+    let color = wallpaper.dominantColor;
+    if (!color && wallpaper.id) {
+        try {
+            const data = await getWallpaper(wallpaper.id);
+            if (data && data.dominantColor) {
+                color = data.dominantColor;
+                wallpaper.dominantColor = color;
+            }
+        } catch(e) {}
+    }
+    if (color) {
+        window.activeWallpaperColor = color;
+        applySystemTint();
+        if (window.WavesHost) window.WavesHost.pushFullState();
+    }
+
+    // 2. Render Media
+    try {
+        if (wallpaper.isVideo) {
+            const videoData = await getWallpaper(wallpaper.id);
+            if (videoData && videoData.blob) {
+                let existingVideo = document.querySelector("#background-video");
+                if (existingVideo) {
+                    URL.revokeObjectURL(existingVideo.src);
+                    existingVideo.remove();
+                }
+
+                const video = document.createElement("video");
+                video.id = "background-video";
+                video.autoplay = true;
+                video.loop = true;
+                video.muted = true;
+                video.playsInline = true;
+                
+                const videoUrl = URL.createObjectURL(videoData.blob);
+                video.src = videoUrl;
+                video.onloadeddata = () => {
+                    document.body.insertBefore(video, document.body.firstChild);
+                    document.body.style.backgroundImage = "none";
+                };
+                video.load();
+            }
+        } else {
+            const imageData = await getWallpaper(wallpaper.id);
+            if (imageData) {
+                let imageUrl;
+                if (imageData.blob) imageUrl = URL.createObjectURL(imageData.blob);
+                else if (imageData.dataUrl) imageUrl = imageData.dataUrl;
+
+                if (imageUrl) {
+                    let existingVideo = document.querySelector("#background-video");
+                    if (existingVideo) {
+                        URL.revokeObjectURL(existingVideo.src);
+                        existingVideo.remove();
+                    }
+                    document.body.style.setProperty('--bg-image', `url('${imageUrl}')`);
+                    document.body.style.backgroundSize = "cover";
+                    document.body.style.backgroundPosition = "center";
+                    document.body.style.backgroundRepeat = "no-repeat";
+
+                    if (imageData.type.includes('gif') || imageData.type.includes('webp')) {
+                        document.body.dataset.wallpaperType = imageData.type.split('/')[1];
+                        document.body.dataset.wallpaperId = wallpaper.id;
+                    }
+                    
+                    // Depth Effect
+                    const depthLayer = document.getElementById('depth-layer');
+                    if (depthLayer) {
+                        if (wallpaper.depthEnabled) {
+                            if (imageData.depthDataUrl) {
+                                applyDepthLayer(imageData.depthDataUrl);
+                            } else {
+                                depthLayer.style.opacity = '0';
+                                // Try to generate if enabled but missing
+                                setTimeout(processCurrentWallpaperDepth, 100);
+                            }
+                        } else {
+                            depthLayer.style.opacity = '0';
+                            setTimeout(() => {
+                                 if(depthLayer.style.opacity === '0') depthLayer.style.backgroundImage = '';
+                            }, 500);
+                        }
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Error rendering wallpaper:", e);
+    }
+}
+
 async function applyWallpaper() {
     applyCustomWallpaperStyles(); 
-    resetAutoSleepTimer(); // Changing wallpaper is user activity
+    resetAutoSleepTimer(); 
 
-    // Clean up any previously stored animated GIF URL to prevent memory leaks
+    // 1. Cleanup Old Media
     if (document.body.dataset.animatedGifUrl) {
         const oldUrl = document.body.dataset.animatedGifUrl.replace(/url\(['"]?|['"]?\)/g, '');
         URL.revokeObjectURL(oldUrl);
     }
-    
-    // Revoke the ObjectURL of the previous background if it was a blob (GIF or Video)
     const oldBg = document.body.style.getPropertyValue('--bg-image');
     if (oldBg.includes('blob:')) {
         URL.revokeObjectURL(oldBg.replace(/url\(['"]?|['"]?\)/g, ''));
     }
-	
-    // Clear any existing wallpaper type data attributes
     delete document.body.dataset.wallpaperType;
     delete document.body.dataset.wallpaperId;
     delete document.body.dataset.animatedImageUrl;
 
-    let slideshowWallpapers = JSON.parse(localStorage.getItem("wallpapers"));
-    if (slideshowWallpapers && slideshowWallpapers.length > 0) {
-        async function displaySlideshow() {
-            let wallpaper = slideshowWallpapers[currentWallpaperIndex];
-			
-            // Dynamic Color Tinting for Slideshow
-            let color = wallpaper.dominantColor;
-            // If missing in LS object, try fetch from DB on the fly
-            if (!color && wallpaper.id) {
-                try {
-                    const data = await getWallpaper(wallpaper.id);
-                    if (data && data.dominantColor) {
-                        color = data.dominantColor;
-                        // Update local cache so next loop is faster
-                        wallpaper.dominantColor = color; 
-                    }
-                } catch(e){}
-            }
-            if (color) {
-                window.activeWallpaperColor = color;
-                applySystemTint();
-                if (window.WavesHost) window.WavesHost.pushFullState();
-            }
-			
-            try {
-                if (wallpaper.isVideo) {
-                    let videoData = await getWallpaper(wallpaper.id);
-                    if (videoData && videoData.blob) {
-                        let existingVideo = document.querySelector("#background-video");
-                        if (existingVideo) {
-                            URL.revokeObjectURL(existingVideo.src);
-                            existingVideo.remove();
-                        }
-                        
-                        let video = document.createElement("video");
-                        video.id = "background-video";
-                        video.autoplay = true;
-                        video.loop = true;
-                        video.muted = true;
-                        video.playsInline = true;
-                        
-                        let videoUrl = URL.createObjectURL(videoData.blob);
-                        video.src = videoUrl;
-                        video.onerror = error => {
-                            console.error("Video loading error:", error);
-                        };
-                        video.onloadeddata = () => {
-                            document.body.insertBefore(video, document.body.firstChild);
-                            document.body.style.backgroundImage = "none";
-                        };
-                        video.load();
-                    }
-                } else {
-                    let imageData = await getWallpaper(wallpaper.id);
-                    if (imageData) {
-                        let imageUrl;
-                        if (imageData.blob) { // This will now handle GIFs
-                            imageUrl = URL.createObjectURL(imageData.blob);
-                        } else if (imageData.dataUrl) {
-                            imageUrl = imageData.dataUrl;
-                        }
-
-                        if (imageUrl) {
-                            let existingVideo = document.querySelector("#background-video");
-                            if (existingVideo) {
-                                URL.revokeObjectURL(existingVideo.src);
-                                existingVideo.remove();
-                            }
-                            document.body.style.setProperty('--bg-image', `url('${imageUrl}')`);
-                            document.body.style.backgroundSize = "cover";
-                            document.body.style.backgroundPosition = "center";
-                            document.body.style.backgroundRepeat = "no-repeat";
-							
-                            if (imageData.type === 'image/gif' || imageData.type === 'image/webp') {
-                                document.body.dataset.wallpaperType = imageData.type.split('/')[1]; // Sets 'gif' or 'webp'
-                                document.body.dataset.wallpaperId = wallpaper.id;
-                            }
-							
-                            // --- NEW DEPTH LOGIC ---
-                            const depthLayer = document.getElementById('depth-layer');
-                            if (depthLayer) {
-                                if (wallpaper.depthEnabled) {
-                                    // Check for depthDataUrl (Base64/WebP)
-                                    if (imageData && imageData.depthDataUrl) {
-                                        // FAST PATH: Apply string directly
-                                        applyDepthLayer(imageData.depthDataUrl);
-                                    } else {
-                                        // SLOW PATH: Generate
-                                        depthLayer.style.opacity = '0';
-                                        setTimeout(processCurrentWallpaperDepth, 100);
-                                    }
-                                } else {
-                                    depthLayer.style.opacity = '0';
-                                    setTimeout(() => {
-                                         if(depthLayer.style.opacity === '0') depthLayer.style.backgroundImage = '';
-                                    }, 500);
-                                }
-                            }
-                        }
-                    }
-                }
-                currentWallpaperIndex = (currentWallpaperIndex + 1) % slideshowWallpapers.length;
-            } catch (error) {
-                console.error("Error applying wallpaper:", error);
-            }
-        }
-        
-        clearInterval(slideshowInterval);
-        const intervalDuration = parseInt(localStorage.getItem('slideshowInterval') || '600000', 10);
-        await displaySlideshow();
-        slideshowInterval = setInterval(displaySlideshow, intervalDuration);
+    // 2. Check Mode
+    const slideshowData = JSON.parse(localStorage.getItem("wallpapers"));
+    if (slideshowData && slideshowData.length > 0) {
+        // Slideshow Mode
+        isSlideshow = true;
+        SlideshowManager.start();
     } else {
-        // Apply single wallpaper from recent wallpapers
+        // Single Mode
+        isSlideshow = false;
+        SlideshowManager.stop();
+
         if (recentWallpapers.length > 0 && currentWallpaperPosition < recentWallpapers.length) {
-            let currentWallpaper = recentWallpapers[currentWallpaperPosition];
+            const currentWallpaper = recentWallpapers[currentWallpaperPosition];
             if (currentWallpaper.clockStyles) {
                 applyCustomWallpaperStyles(currentWallpaper.clockStyles);
             }
-			
-            try {
-				if (currentWallpaper.isVideo) {
-                    let videoData = await getWallpaper(currentWallpaper.id);
-                    if (videoData && videoData.blob) {
-                        let existingVideo = document.querySelector("#background-video");
-                        if (existingVideo) {
-                            URL.revokeObjectURL(existingVideo.src);
-                            existingVideo.remove();
-                        }
-                        
-                        let video = document.createElement("video");
-                        video.id = "background-video";
-                        video.autoplay = true;
-                        video.loop = true;
-                        video.muted = true;
-                        video.playsInline = true;
-                        
-                        let videoUrl = URL.createObjectURL(videoData.blob);
-                        video.src = videoUrl;
-                        video.onerror = error => {
-                            console.error("Video loading error:", error);
-                        };
-                        video.onloadeddata = () => {
-                            document.body.insertBefore(video, document.body.firstChild);
-                            document.body.style.backgroundImage = "none";
-                        };
-                        video.load();
-                    }
-                } else {
-                    let imageData = await getWallpaper(currentWallpaper.id);
-                    if (imageData) {
-                        let imageUrl;
-                        if (imageData.blob) { // This now handles GIFs
-                             imageUrl = URL.createObjectURL(imageData.blob);
-                        } else if (imageData.dataUrl) {
-                             imageUrl = imageData.dataUrl;
-                        }
-                        
-                        if (imageUrl) {
-                            let existingVideo = document.querySelector("#background-video");
-                            if (existingVideo) {
-                                URL.revokeObjectURL(existingVideo.src);
-                                existingVideo.remove();
-                            }
-                            document.body.style.setProperty('--bg-image', `url('${imageUrl}')`);
-                            document.body.style.backgroundSize = "cover";
-                            document.body.style.backgroundPosition = "center";
-                            document.body.style.backgroundRepeat = "no-repeat";
-    
-                            if (imageData.type === 'image/gif' || imageData.type === 'image/webp') {
-                                document.body.dataset.wallpaperType = imageData.type.split('/')[1]; // Sets 'gif' or 'webp'
-                                document.body.dataset.wallpaperId = currentWallpaper.id;
-                            }
-
-                            // --- NEW DEPTH LOGIC ---
-                            const depthLayer = document.getElementById('depth-layer');
-                            if (depthLayer) {
-                                if (currentWallpaper.depthEnabled) {
-                                    // Check for depthDataUrl (Base64/WebP)
-                                    if (imageData && imageData.depthDataUrl) {
-                                        // FAST PATH: Apply string directly
-                                        applyDepthLayer(imageData.depthDataUrl);
-                                    } else {
-                                        // SLOW PATH: Generate
-                                        depthLayer.style.opacity = '0';
-                                        setTimeout(processCurrentWallpaperDepth, 100);
-                                    }
-                                } else {
-                                    depthLayer.style.opacity = '0';
-                                    setTimeout(() => {
-                                         if(depthLayer.style.opacity === '0') depthLayer.style.backgroundImage = '';
-                                    }, 500);
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error("Error applying wallpaper:", error);
+            await renderWallpaperToDOM(currentWallpaper);
+            
+            // Sync Waves
+            if (window.WavesHost) {
+                window.WavesHost.pushFullState();
+                window.WavesHost.pushWallpaperUpdate();
             }
         }
     }
-
-    // Single Wallpaper Color Logic
-    const current = recentWallpapers[currentWallpaperPosition];
-    if (current && current.dominantColor) {
-        window.activeWallpaperColor = current.dominantColor;
-    } else if (current && current.id) {
-        // Fallback fetch
-        getWallpaper(current.id).then(data => {
-            if (data && data.dominantColor) {
-                window.activeWallpaperColor = data.dominantColor;
-                // Tint needs to be re-applied if color was fetched late
-                setTimeout(() => {
-                    applySystemTint();
-                    if (window.WavesHost) window.WavesHost.pushFullState();
-                }, 50);
-            }
-        });
-        window.activeWallpaperColor = null; 
-    } else {
-        window.activeWallpaperColor = null;
-    }
     
-    // Apply tint (will use null/default if no color yet, then update via async fetch above)
-    // Delay slightly to allow async fetch to potentially complete if it's fast
+    // Apply tint (delayed to allow extraction if needed)
     setTimeout(applySystemTint, 100);
-    
-    // Update Waves immediately
-    if (window.WavesHost) {
-        window.WavesHost.pushFullState();
-        if (window.WavesHost.pushWallpaperUpdate) window.WavesHost.pushWallpaperUpdate();
-    }
 }
 
 function ensureVideoLoaded() {
