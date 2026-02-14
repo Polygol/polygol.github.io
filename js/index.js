@@ -2564,41 +2564,48 @@ async function exportCurrentWallpaper() {
     }
 
     const current = recentWallpapers[currentWallpaperPosition];
-    
-    // Cannot export default/slideshow containers easily in this format logic
-    if (current.isSlideshow || !current.id) {
-        showPopup("Cannot export slideshows");
-        return;
-    }
+    if (!current.id) return;
 
-	showNotification('Preparing export', {
-		icon: 'ios_share',
-	});
+    showNotification('Preparing export', { icon: 'ios_share' });
 
     try {
-        const dbRecord = await getWallpaper(current.id);
-        if (!dbRecord) throw new Error("Wallpaper data not found.");
-
-        // Convert Blob to Base64 for JSON storage
-        const base64Data = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(dbRecord.blob || dataURLtoBlob(dbRecord.dataUrl));
-        });
-
         const exportObject = {
-            version: "1.0",
+            version: "1.1",
             type: "guraatmos",
-            wallpaperType: current.type,
-            isVideo: current.isVideo,
+            isSlideshow: !!current.isSlideshow,
             clockStyles: current.clockStyles,
             widgetLayout: current.widgetLayout,
-            depthEnabled: current.depthEnabled,
-            depthDataUrl: dbRecord.depthDataUrl, // Already a base64 string if present
-            imageData: base64Data
+            items: []
         };
 
+        const itemsToProcess = current.isSlideshow ? current.items : [current];
+
+        for (const item of itemsToProcess) {
+            const dbRecord = await getWallpaper(item.id);
+            if (!dbRecord) continue;
+
+            const base64Data = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(dbRecord.blob || dataURLtoBlob(dbRecord.dataUrl));
+            });
+
+            exportObject.items.push({
+                wallpaperType: item.type,
+                isVideo: item.isVideo,
+                depthEnabled: item.depthEnabled,
+                depthDataUrl: dbRecord.depthDataUrl,
+                imageData: base64Data
+            });
+        }
+
+        // Backward compatibility for older importers
+        if (!current.isSlideshow && exportObject.items.length > 0) {
+            exportObject.imageData = exportObject.items[0].imageData;
+            exportObject.wallpaperType = exportObject.items[0].wallpaperType;
+            exportObject.isVideo = exportObject.items[0].isVideo;
+        }
+		
         const blob = new Blob([JSON.stringify(exportObject)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -9164,73 +9171,89 @@ function renderSwitcherCards(container, isInitialOpen = false) {
 
 // --- Edit Menu (Replace Image) ---
 async function openWallpaperEditMenu(index) {
-    // We want to keep clock styles/widgets but replace the file.
-    // 1. Trigger file picker
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*,video/*';
+    input.multiple = true;
     
     input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
 
-        // 2. Process File
-        // Similar to saveWallpaper but we UPDATE instead of INSERT NEW
+        showLoading("Updating wallpaper...");
+
         try {
             const wp = recentWallpapers[index];
-            const isVideo = file.type.startsWith('video/');
-            
-            let dbData = {
-                ...wp, // Keep existing metadata
-                type: file.type,
-                timestamp: Date.now()
-            };
-            
-            // Reset depth/colors as image changed
-            dbData.depthEnabled = false; 
-            dbData.depthDataUrl = null;
-            
-            // Extract new data
-            if (isVideo) {
-                 const frame = await extractVideoFrame(file);
-                 dbData.firstFrameDataUrl = frame;
-                 dbData.dominantColor = await extractWallpaperColor(frame);
-                 dbData.blob = file;
-            } else {
-                 // Image
-                 dbData.dominantColor = await extractWallpaperColor(file);
-                 const compressed = await compressMedia(file);
-                 dbData.dataUrl = compressed;
-                 delete dbData.blob; // Clean up old blob if switching formats
+            const processedItems = [];
+
+            // If it was a slideshow, clean up old children first
+            if (wp.isSlideshow && wp.items) {
+                for (const item of wp.items) await deleteWallpaper(item.id);
+            } else if (wp.id) {
+                await deleteWallpaper(wp.id);
             }
 
-            // Update DB
-            await storeWallpaper(wp.id, dbData);
-            
-            // Update Memory
-            recentWallpapers[index] = {
-                ...wp,
-                type: file.type,
-                isVideo: isVideo,
-                dominantColor: dbData.dominantColor,
-                depthEnabled: false
-            };
+            for (const file of files) {
+                const wallpaperId = `wallpaper_${Date.now()}_${Math.random()}`;
+                const isVideo = file.type.startsWith("video/");
+                let dbData = { blob: file, type: file.type, clockStyles: wp.clockStyles, widgetLayout: [] };
+                
+                let dominantColor = null;
+                let firstFrame = null;
+                
+                if (isVideo) {
+                    firstFrame = await extractVideoFrame(file);
+                    dbData.firstFrameDataUrl = firstFrame;
+                    dominantColor = await extractWallpaperColor(firstFrame);
+                } else {
+                    if (file.type === 'image/gif' || file.type === 'image/webp') {
+                        firstFrame = await extractFirstFrame(file);
+                        dbData.firstFrameDataUrl = firstFrame;
+                        dominantColor = await extractWallpaperColor(firstFrame);
+                    } else {
+                        dominantColor = await extractWallpaperColor(file);
+                        dbData.dataUrl = await compressMedia(file);
+                        delete dbData.blob;
+                    }
+                }
+                dbData.dominantColor = dominantColor;
+                await storeWallpaper(wallpaperId, dbData);
+                
+                processedItems.push({
+                    id: wallpaperId,
+                    type: file.type,
+                    isVideo: isVideo,
+                    dominantColor: dominantColor,
+                    clockStyles: wp.clockStyles,
+                    widgetLayout: wp.widgetLayout,
+                    depthEnabled: false
+                });
+            }
+
+            if (processedItems.length > 1) {
+                recentWallpapers[index] = {
+                    ...wp,
+                    isSlideshow: true,
+                    items: processedItems,
+                    dominantColor: processedItems[0].dominantColor
+                };
+            } else {
+                recentWallpapers[index] = processedItems[0];
+            }
             
             saveRecentWallpapers();
+            if (index === currentWallpaperPosition) applyWallpaper();
             
-            // Refresh
-            if (index === currentWallpaperPosition) {
-                applyWallpaper();
-            }
+            hideLoading();
             renderSwitcherCards(document.getElementById('wallpaper-cards-container'), false);
-            showPopup("Wallpaper image updated");
+            showPopup(processedItems.length > 1 ? "Slideshow updated" : "Wallpaper updated");
 
-        } catch (e) {
-            console.error("Failed to replace wallpaper", e);
+        } catch (error) {
+            console.error(error);
+            hideLoading();
             showDialog({type:'alert', title:'Update Failed'});
         }
     };
-    
     input.click();
 }
 
