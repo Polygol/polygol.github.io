@@ -8253,7 +8253,7 @@ async function applyWallpaper() {
                             // --- NEW DEPTH LOGIC ---
                             const depthLayer = document.getElementById('depth-layer');
                             if (depthLayer) {
-                                if (currentWallpaper.depthEnabled) {
+                                if (wallpaper.depthEnabled) {
                                     // Check for depthDataUrl (Base64/WebP)
                                     if (imageData && imageData.depthDataUrl) {
                                         // FAST PATH: Apply string directly
