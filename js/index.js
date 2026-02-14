@@ -7792,11 +7792,14 @@ function resumeAnimatedStickers() {
 // Helper to pause EVERYTHING (Video, Wallpaper, Stickers)
 async function pauseAllAnimations() {
     pauseAnimatedStickers();
-    await pauseAnimatedBackground();
+    pauseAnimatedBackground(); // Runs in background
+    
     const bgVideo = document.getElementById('background-video');
     if (bgVideo && !bgVideo.paused) {
-        await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
-        bgVideo.pause();
+        // Slow down and pause video asynchronously
+        animatePlaybackRate(bgVideo, 1.0, 0.1, 300).then(() => {
+            if (isAppOpen) bgVideo.pause();
+        });
     }
 }
 
@@ -11621,12 +11624,7 @@ async function createFullscreenEmbed(url, options = {}) {
 		embedContainer.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
 
         // Pause background animations (Video and Animated Images)
-        await pauseAnimatedBackground();
-        const bgVideo = document.getElementById('background-video');
-        if (bgVideo && !bgVideo.paused) {
-            await animatePlaybackRate(bgVideo, 1.0, 0.1, 300);
-            bgVideo.pause();
-        }
+        pauseAllAnimations();
 		
 	    // Clear background blur and trigger the animation
 	    setTimeout(() => {
@@ -11824,6 +11822,8 @@ async function createFullscreenEmbed(url, options = {}) {
 	
     // Append the container to the DOM
     document.body.appendChild(embedContainer);
+	
+    pauseAllAnimations();
 
 	// Set a timeout to apply legacy mode if the app doesn't announce its API
     setTimeout(() => {
