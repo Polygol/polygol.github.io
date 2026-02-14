@@ -9244,13 +9244,11 @@ async function openWallpaperEditMenu(index) {
             saveRecentWallpapers();
             if (index === currentWallpaperPosition) applyWallpaper();
             
-            hideLoading();
             renderSwitcherCards(document.getElementById('wallpaper-cards-container'), false);
             showPopup(processedItems.length > 1 ? "Slideshow updated" : "Wallpaper updated");
 
         } catch (error) {
             console.error(error);
-            hideLoading();
             showDialog({type:'alert', title:'Update Failed'});
         }
     };
