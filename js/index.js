@@ -7658,23 +7658,27 @@ async function processWallpaperFiles(files) {
         }
 
         if (processedCount > 0) {
-            // Clean up old wallpapers if we somehow exceeded limit
+            // 1. Clean up old wallpapers
             while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
                 let removedWallpaper = recentWallpapers.pop();
                 if (removedWallpaper.id) await deleteWallpaper(removedWallpaper.id);
             }
 
-            // Reset Slideshow mode
-            localStorage.removeItem("wallpapers");
-            clearInterval(slideshowInterval);
-            slideshowInterval = null;
-            isSlideshow = false;
+            // 2. CHECK: If user uploaded multiple, create a slideshow automatically
+            if (files.length > 1) {
+                // Take the IDs of the newly processed wallpapers
+                const newIds = recentWallpapers.slice(0, processedCount);
+                localStorage.setItem("wallpapers", JSON.stringify(newIds));
+                isSlideshow = true;
+                showPopup(currentLanguage.SLIDESHOW_WALLPAPER || "Slideshow started");
+            } else {
+                localStorage.removeItem("wallpapers");
+                isSlideshow = false;
+            }
 
             saveRecentWallpapers();
             currentWallpaperPosition = 0;
-            loadWidgets();
             applyWallpaper();
-            showPopup(currentLanguage.WALLPAPER_UPDATED);
             syncUiStates();
         } else {
             showDialog({ type: 'alert', title: "No valid wallpapers imported." });
