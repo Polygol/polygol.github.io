@@ -9180,7 +9180,7 @@ async function openWallpaperEditMenu(index) {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
-        showLoading("Updating wallpaper...");
+        showPopup("Updating wallpaper");
 
         try {
             const wp = recentWallpapers[index];
