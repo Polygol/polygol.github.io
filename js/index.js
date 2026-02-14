@@ -10219,8 +10219,6 @@ const HomeActivityManager = {
 			
             e.preventDefault();
             clearTimeout(longPressTimer);
-            const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-            const cy = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
             
             this.container.style.left = `${cx - 160}px`; // Center anchor (width 320)
             this.container.style.top = `${cy - 75}px`;
