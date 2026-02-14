@@ -1069,6 +1069,7 @@ const Gurasuraisu = {
      * @param {string} options.activityId - A unique ID for this activity within your app.
      * @param {string} options.url - The URL of the HTML page for the activity's iframe.
      * @param {boolean} [options.homescreen=false] - Set to true if this activity should appear on the homescreen.
+     * @param {boolean} [options.showInIsland=true] - Set to false to hide this from the Dynamic Area (Activity Island).
      * @param {string} [options.height='120px'] - The desired height of the activity in the notification shade.
      */
     start: function(options) {
