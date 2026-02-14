@@ -2235,6 +2235,8 @@ const SlideshowManager = {
     wallpapers: [],
     currentIndex: 0,
     timer: null,
+    intervals: [60000, 300000, 600000, 1800000, 3600000],
+    labels: ['1m', '5m', '10m', '30m', '1h'],
 
     init() {
         window.addEventListener('message', (e) => {
@@ -2243,6 +2245,7 @@ const SlideshowManager = {
                 if (action === 'next') this.next();
                 if (action === 'prev') this.prev();
                 if (action === 'toggle') this.toggle();
+                if (action === 'cycleSpeed') this.cycleSpeed();
             }
         });
     },
@@ -2283,10 +2286,29 @@ const SlideshowManager = {
         clearInterval(this.timer);
         if (this.paused) return;
         
-        const duration = parseInt(localStorage.getItem('slideshowInterval') || '600000', 10);
+        // Use per-slideshow interval, fallback to global setting, fallback to 10m
+        const currentGroup = recentWallpapers[currentWallpaperPosition];
+        const duration = currentGroup?.slideshowInterval || parseInt(localStorage.getItem('slideshowInterval') || '600000', 10);
         this.timer = setInterval(() => this.next(), duration);
     },
 
+    cycleSpeed() {
+        const currentGroup = recentWallpapers[currentWallpaperPosition];
+        if (!currentGroup || !currentGroup.isSlideshow) return;
+
+        const currentInt = currentGroup.slideshowInterval || parseInt(localStorage.getItem('slideshowInterval') || '600000', 10);
+        let idx = this.intervals.indexOf(currentInt);
+        if (idx === -1) idx = 2; // Default to 10m if weird value
+
+        const nextIdx = (idx + 1) % this.intervals.length;
+        currentGroup.slideshowInterval = this.intervals[nextIdx];
+        
+        saveRecentWallpapers();
+        this.startTimer();
+        this.pushState();
+        showPopup(`Slideshow speed: ${this.labels[nextIdx]}`);
+    },
+	
     next() {
         this.currentIndex = (this.currentIndex + 1) % this.wallpapers.length;
         this.render();
@@ -2306,6 +2328,11 @@ const SlideshowManager = {
     },
 
     pushState() {
+        const currentGroup = recentWallpapers[currentWallpaperPosition];
+        const currentInt = currentGroup?.slideshowInterval || parseInt(localStorage.getItem('slideshowInterval') || '600000', 10);
+        const labelIdx = this.intervals.indexOf(currentInt);
+        const speedLabel = labelIdx !== -1 ? this.labels[labelIdx] : '--';
+
         // Update Widget UI
         const notificationElem = document.querySelector(`.live-activity-notification[data-activity-id="sys-slideshow"]`);
         if (notificationElem) {
@@ -2316,7 +2343,8 @@ const SlideshowManager = {
                     type: 'update',
                     current: this.currentIndex + 1,
                     total: this.wallpapers.length,
-                    paused: this.paused
+                    paused: this.paused,
+                    speedLabel: speedLabel
                 }, targetOrigin);
             }
         }
