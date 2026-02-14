@@ -3101,12 +3101,12 @@ input[type="checkbox"]:checked::before {
     overflow: hidden;
     touch-action: none;
     user-select: none;
-    backdrop-filter: var(--edge-refraction-filter) blur(5px);
+    backdrop-filter: var(--edge-refraction-filter) blur(2.5px);
     touch-action: none;
     user-select: none;
     opacity: 0;
     border-top: 1px solid var(--glass-border);
-    border-radius: 50px;
+    border-radius: 50px 50px 0 0;
     corner-shape: superellipse(1.5);
     content-visibility: hidden;
     pointer-events: none;
@@ -3145,6 +3145,7 @@ input[type="checkbox"]:checked::before {
 		    content-visibility: auto;
 		    pointer-events: auto;
 		    background-color: var(--background-color-tr);
+			backdrop-filter: blur(5px);
 		    border-radius: 0;
 		    border: none;
 		    box-shadow: none;
