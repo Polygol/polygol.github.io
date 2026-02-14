@@ -51,6 +51,7 @@
         <span class="counter" id="counter">-- / --</span>
     </div>
     <div class="controls">
+        <button onclick="send('cycleSpeed')" id="speed-btn" style="font-size: 11px; font-weight: 700;">--</button>
         <button onclick="send('prev')"><span class="material-symbols-rounded">chevron_backward</span></button>
         <button onclick="send('next')"><span class="material-symbols-rounded">chevron_forward</span></button>
         <button class="play-btn" onclick="send('toggle')">
@@ -66,6 +67,7 @@
             if (e.data.type === 'update') {
                 document.getElementById('counter').textContent = `${e.data.current} / ${e.data.total}`;
                 document.getElementById('play-icon').textContent = e.data.paused ? 'play_arrow' : 'stop';
+                document.getElementById('speed-btn').textContent = e.data.speedLabel || '--';
             }
         });
     </script>
