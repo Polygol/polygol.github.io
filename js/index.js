@@ -10172,12 +10172,12 @@ const HomeActivityManager = {
         let isDragging = false;
         let startX, startY;
         
-        // Long Press to Drag
         const start = (e) => {
-            if (e.target.closest('button')) return; // Ignore buttons
+            if (e.target.closest('button')) return; 
             
             startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
             startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            this.swiped = false; // Reset swipe state on new interaction
             
             longPressTimer = setTimeout(() => {
                 isDragging = true;
@@ -10192,26 +10192,24 @@ const HomeActivityManager = {
             const dx = cx - startX;
             const dy = cy - startY;
 
-            // 5px Deadzone: Ignore jitter or micro-movements
+            // 5px Deadzone: Ignore jitter/micro-movements
             if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
 
-            // Swipe Detection (if not dragging)
             if (!isDragging) {
-                // Vertical Swipe threshold (Up/Down to switch items)
-                // Requires 40px movement and must be primarily vertical
+                // If we've already swiped during this touch/click, don't react again
+                if (this.swiped) return;
+
+                // Vertical Swipe logic
                 if (Math.abs(dy) > 40 && Math.abs(dy) > Math.abs(dx)) {
                     clearTimeout(longPressTimer);
-                    // Debounce swipe to prevent multi-firing in one gesture
-                    if (!this.swiped && this.items.length > 1) {
-                        this.swiped = true;
+                    if (this.items.length > 1) {
+                        this.swiped = true; // Consume the gesture
                         if (dy > 0) { // Down (Previous)
                              this.currentIndex = (this.currentIndex > 0) ? this.currentIndex - 1 : this.items.length - 1;
                         } else { // Up (Next)
                              this.currentIndex = (this.currentIndex < this.items.length - 1) ? this.currentIndex + 1 : 0;
                         }
                         this.render();
-                        // Reset swipe flag after a delay to allow the next gesture
-                        setTimeout(() => this.swiped = false, 500);
                     }
                 }
                 return;
