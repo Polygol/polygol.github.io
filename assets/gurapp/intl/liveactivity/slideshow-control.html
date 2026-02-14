@@ -22,17 +22,21 @@
             display: flex; gap: 8px; align-items: center;
         }
         button {
-            background: var(--accent);
-            border: 1px solid var(--glass-border);
-            box-shadow: var(--sun-shadow);
+            background: transparent;
+            border: none;
             color: var(--text-color);
-            width: 36px; height: 36px;
+            width: 42px; height: 42px;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer;
             transition: background 0.2s;
         }
-        .play-btn { width: 42px; height: 42px; background: var(--accent); color: var(--background-color); }
+        .play-btn {
+            background: var(--accent);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            color: var(--background-color);
+        }
     </style>
 </head>
 <body>
@@ -42,10 +46,10 @@
     </div>
     <div class="controls">
         <button onclick="send('prev')"><span class="material-symbols-rounded">skip_previous</span></button>
-        <button class="play-btn" onclick="send('toggle')">
-            <span id="play-icon" class="material-symbols-rounded">pause</span>
-        </button>
         <button onclick="send('next')"><span class="material-symbols-rounded">skip_next</span></button>
+        <button class="play-btn" onclick="send('toggle')">
+            <span id="play-icon" class="material-symbols-rounded">stop</span>
+        </button>
     </div>
     <script>
         function send(action) {
@@ -55,7 +59,7 @@
         window.addEventListener('message', (e) => {
             if (e.data.type === 'update') {
                 document.getElementById('counter').textContent = `${e.data.current} / ${e.data.total}`;
-                document.getElementById('play-icon').textContent = e.data.paused ? 'play_arrow' : 'pause';
+                document.getElementById('play-icon').textContent = e.data.paused ? 'play_arrow' : 'stop';
             }
         });
     </script>
