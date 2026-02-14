@@ -7524,17 +7524,18 @@ async function processWallpaperFiles(files) {
     closeWallpaperPicker();
     if (!files || files.length === 0) return;
 
-    if (recentWallpapers.length + 1 > MAX_RECENT_WALLPAPERS) {
+    // Check limit again if adding multiple files
+    if (recentWallpapers.length + files.length > MAX_RECENT_WALLPAPERS) {
 		showDialog({ 
 			type: 'alert', 
 			title: 'Wallpaper storage full', 
 			message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers.` 
 		});
-        return;
+		return;
     }
 
     try {
-        let processedItems = [];
+        let processedCount = 0;
 
         for (let file of files) {
             // --- Handle .guraatmos files ---
@@ -7643,42 +7644,34 @@ async function processWallpaperFiles(files) {
 
                 await storeWallpaper(wallpaperId, dbData);
                 
-                processedItems.push({
+                recentWallpapers.unshift({
                     id: wallpaperId,
                     type: file.type,
                     isVideo: isVideo,
-                    dominantColor: dominantColor
+                    timestamp: Date.now(),
+                    clockStyles: dbData.clockStyles,
+                    widgetLayout: [],
+                    dominantColor: dominantColor // Add to memory object
                 });
+                processedCount++;
             }
         }
 
-        if (processedItems.length > 0) {
-            if (processedItems.length > 1) {
-                // Create single Slideshow Entry
-                const slideshowEntry = {
-                    id: `show_${Date.now()}`,
-                    isSlideshow: true,
-                    items: processedItems, // Store sub-items inside history object
-                    timestamp: Date.now(),
-                    clockStyles: resetAndApplyDefaultClockStyles(),
-                    widgetLayout: []
-                };
-                recentWallpapers.unshift(slideshowEntry);
-                // Standard slideshow key for applyWallpaper() to start immediate loop
-                localStorage.setItem("wallpapers", JSON.stringify(processedItems));
+        if (processedCount > 0) {
+            // 1. Clean up old wallpapers
+            while (recentWallpapers.length > MAX_RECENT_WALLPAPERS) {
+                let removedWallpaper = recentWallpapers.pop();
+                if (removedWallpaper.id) await deleteWallpaper(removedWallpaper.id);
+            }
+
+            // 2. CHECK: If user uploaded multiple, create a slideshow automatically
+            if (files.length > 1) {
+                // Take the IDs of the newly processed wallpapers
+                const newIds = recentWallpapers.slice(0, processedCount);
+                localStorage.setItem("wallpapers", JSON.stringify(newIds));
                 isSlideshow = true;
+                showPopup(currentLanguage.SLIDESHOW_WALLPAPER || "Slideshow started");
             } else {
-                // Standard Single Entry
-                const wp = processedItems[0];
-                recentWallpapers.unshift({
-                    id: wp.id,
-                    type: wp.type,
-                    isVideo: wp.isVideo,
-                    timestamp: Date.now(),
-                    clockStyles: resetAndApplyDefaultClockStyles(),
-                    widgetLayout: [],
-                    dominantColor: wp.dominantColor
-                });
                 localStorage.removeItem("wallpapers");
                 isSlideshow = false;
             }
@@ -7687,7 +7680,6 @@ async function processWallpaperFiles(files) {
             currentWallpaperPosition = 0;
             applyWallpaper();
             syncUiStates();
-            showPopup(processedItems.length > 1 ? currentLanguage.SLIDESHOW_WALLPAPER : currentLanguage.WALLPAPER_UPDATED);
         } else {
             showDialog({ type: 'alert', title: "No valid wallpapers imported." });
         }
@@ -9469,12 +9461,7 @@ async function removeWallpaper(index) {
     let wallpaperToRemove = recentWallpapers[index];
     
     // Clean up from IndexedDB
-    if (wallpaperToRemove.isSlideshow && wallpaperToRemove.items) {
-        // Delete all constituent images in the slideshow
-        for (const item of wallpaperToRemove.items) {
-            await deleteWallpaper(item.id);
-        }
-    } else if (wallpaperToRemove.id) {
+    if (wallpaperToRemove.id) {
         await deleteWallpaper(wallpaperToRemove.id);
     }
     
@@ -9783,10 +9770,9 @@ async function jumpToWallpaper(index) {
     clearInterval(slideshowInterval);
     slideshowInterval = null;
     
-    if (wallpaper.isSlideshow && wallpaper.items) {
+    if (wallpaper.isSlideshow) {
         isSlideshow = true;
-        // Sync the global slideshow key with this specific entry's items
-        localStorage.setItem("wallpapers", JSON.stringify(wallpaper.items));
+        // The applyWallpaper function itself will handle starting the interval
         applyWallpaper();
         showPopup(currentLanguage.SLIDESHOW_WALLPAPER);
     } else {
