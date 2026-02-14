@@ -10187,31 +10187,36 @@ const HomeActivityManager = {
         };
         
         const move = (e) => {
+            const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const cy = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+            const dx = cx - startX;
+            const dy = cy - startY;
+
+            // 5px Deadzone: Ignore jitter or micro-movements
+            if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+
             // Swipe Detection (if not dragging)
             if (!isDragging) {
-                const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-                const cy = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-                const dx = cx - startX;
-                const dy = cy - startY;
-                
                 // Vertical Swipe threshold (Up/Down to switch items)
+                // Requires 40px movement and must be primarily vertical
                 if (Math.abs(dy) > 40 && Math.abs(dy) > Math.abs(dx)) {
                     clearTimeout(longPressTimer);
-                    // Debounce swipe
+                    // Debounce swipe to prevent multi-firing in one gesture
                     if (!this.swiped && this.items.length > 1) {
                         this.swiped = true;
-                        if (dy > 0) { // Down
+                        if (dy > 0) { // Down (Previous)
                              this.currentIndex = (this.currentIndex > 0) ? this.currentIndex - 1 : this.items.length - 1;
-                        } else { // Up
+                        } else { // Up (Next)
                              this.currentIndex = (this.currentIndex < this.items.length - 1) ? this.currentIndex + 1 : 0;
                         }
                         this.render();
-                        setTimeout(() => this.swiped = false, 300);
+                        // Reset swipe flag after a delay to allow the next gesture
+                        setTimeout(() => this.swiped = false, 500);
                     }
                 }
                 return;
             }
-
+			
             e.preventDefault();
             clearTimeout(longPressTimer);
             const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
