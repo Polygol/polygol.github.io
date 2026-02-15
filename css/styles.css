@@ -1784,7 +1784,6 @@ body.one-button-nav-active .dock.show {
     border-radius: 35px;
 	corner-shape: superellipse(1.5);
     border: 1px solid var(--glass-border);
-	box-shadow: var(--sun-shadow);
     overflow: hidden;
     transition: all 0.3s ease;
 	height: 149px;
