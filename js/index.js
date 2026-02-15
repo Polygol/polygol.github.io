@@ -2363,7 +2363,8 @@ const SlideshowManager = {
                     current: this.currentIndex + 1,
                     total: this.wallpapers.length,
                     paused: this.paused,
-                    speedLabel: speedLabel
+                    speedLabel: speedLabel,
+                    shuffle: !!currentGroup?.shuffle
                 }, targetOrigin);
             }
         }
