@@ -3681,22 +3681,17 @@ function updateStatusIndicator() {
     el.innerHTML = '';
 
     // Priority Logic: Modes override Notifications
-    // 1. Focus Mode
-    if (typeof minimalMode !== 'undefined' && minimalMode) {
-        el.innerHTML = '<span class="material-symbols-rounded">screen_record</span>';
-        return;
-    }
-    // 2. Night Mode
+    // 1. Night Mode
     if (typeof nightMode !== 'undefined' && nightMode) {
         el.innerHTML = '<span class="material-symbols-rounded">bedtime</span>';
         return;
     }
-    // 3. Silent Mode
+    // 2. Silent Mode
     if (typeof isSilentMode !== 'undefined' && isSilentMode) {
         el.innerHTML = '<span class="material-symbols-rounded">notifications_off</span>';
         return;
     }
-    // 4. Notifications
+    // 3. Notifications
     if (unreadNotifications > 0) {
         const dot = document.createElement('div');
         dot.className = 'status-dot';
