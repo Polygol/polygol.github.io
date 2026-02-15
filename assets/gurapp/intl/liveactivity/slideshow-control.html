@@ -72,8 +72,8 @@
                 document.getElementById('speed-btn').textContent = e.data.speedLabel || '--';
                 
                 const sBtn = document.getElementById('shuffle-btn');
-                sBtn.style.background = e.data.shuffle ? 'var(--accent)' : 'transparent';
-                sBtn.style.color = e.data.shuffle ? 'var(--background-color)' : 'var(--text-color)';
+                sBtn.style.background = e.data.shuffle ? 'var(--search-background)' : 'transparent';
+                sBtn.style.boxShadow = e.data.shuffle ? 'var(--sun-shadow)' : 'none';
             }
         });
     </script>
