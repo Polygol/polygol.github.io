@@ -2246,6 +2246,7 @@ const SlideshowManager = {
                 if (action === 'prev') this.prev();
                 if (action === 'toggle') this.toggle();
                 if (action === 'cycleSpeed') this.cycleSpeed();
+                if (action === 'toggleShuffle') this.toggleShuffle();
             }
         });
     },
@@ -2309,9 +2310,18 @@ const SlideshowManager = {
     },
 	
     next() {
-        this.currentIndex = (this.currentIndex + 1) % this.wallpapers.length;
+        const currentGroup = recentWallpapers[currentWallpaperPosition];
+        if (currentGroup?.shuffle && this.wallpapers.length > 1) {
+            let nextIdx;
+            do {
+                nextIdx = Math.floor(Math.random() * this.wallpapers.length);
+            } while (nextIdx === this.currentIndex);
+            this.currentIndex = nextIdx;
+        } else {
+            this.currentIndex = (this.currentIndex + 1) % this.wallpapers.length;
+        }
         this.render();
-        this.startTimer(); // Reset timer on interaction
+        this.startTimer(); 
     },
 
     prev() {
@@ -2326,6 +2336,16 @@ const SlideshowManager = {
         this.pushState();
     },
 
+    toggleShuffle() {
+        const currentGroup = recentWallpapers[currentWallpaperPosition];
+        if (!currentGroup || !currentGroup.isSlideshow) return;
+
+        currentGroup.shuffle = !currentGroup.shuffle;
+        saveRecentWallpapers();
+        this.pushState();
+        showPopup(currentGroup.shuffle ? "Shuffle enabled" : "Shuffle disabled");
+    },
+	
     pushState() {
         const currentGroup = recentWallpapers[currentWallpaperPosition];
         const currentInt = currentGroup?.slideshowInterval || parseInt(localStorage.getItem('slideshowInterval') || '600000', 10);
