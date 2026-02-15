@@ -52,6 +52,7 @@
     </div>
     <div class="controls">
         <button onclick="send('cycleSpeed')" id="speed-btn" style="font-weight: 800; font-family: 'Open Runde';">--</button>
+        <button onclick="send('toggleShuffle')" id="shuffle-btn"><span class="material-symbols-rounded">shuffle</span></button>
         <button onclick="send('prev')"><span class="material-symbols-rounded">chevron_backward</span></button>
         <button onclick="send('next')"><span class="material-symbols-rounded">chevron_forward</span></button>
         <button class="play-btn" onclick="send('toggle')">
@@ -68,6 +69,10 @@
                 document.getElementById('counter').textContent = `${e.data.current} / ${e.data.total}`;
                 document.getElementById('play-icon').textContent = e.data.paused ? 'play_arrow' : 'stop';
                 document.getElementById('speed-btn').textContent = e.data.speedLabel || '--';
+                
+                const sBtn = document.getElementById('shuffle-btn');
+                sBtn.style.background = e.data.shuffle ? 'var(--accent)' : 'transparent';
+                sBtn.style.color = e.data.shuffle ? 'var(--background-color)' : 'var(--text-color)';
             }
         });
     </script>
