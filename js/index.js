@@ -12879,6 +12879,7 @@ function setupDrawerInteractions() {
     const drawerHandle = document.querySelector('.drawer-handle');
 	const appDrawerHandle = document.querySelector('.app-drawer-handle');
     const oneButtonNavHandle = document.getElementById('one-button-nav-handle');
+    let dragSource = 'screen'; // 'screen' or 'handle'
 
 	const startLongPress = (e) => {
         if (oneButtonNavEnabled) return; 
@@ -12922,23 +12923,29 @@ function setupDrawerInteractions() {
     swipeOverlay.style.pointerEvents = 'none'; // Start with no interaction
     document.body.appendChild(swipeOverlay);
 
-	function startDrag(xPosition, yPosition) {
+	function startDrag(xPosition, yPosition, source = 'screen') {
         startX = xPosition;
         startY = yPosition;
         lastY = yPosition;
         currentX = xPosition;
         currentY = yPosition;
-        dragStartIndex = -1; // Reset on new drag
+        dragStartIndex = -1; 
+        dragSource = source; // Track where the drag started
         isDragging = true;
         isDrawerInMotion = true;
         dragStartTime = Date.now();
         velocities = [];
         appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
+        
+        // Also prepare system overlay transition
+        const sysOverlay = document.getElementById('system-overlay-container');
+        if (sysOverlay) sysOverlay.style.transition = 'none';
+
 		document.querySelectorAll('.fullscreen-embed iframe').forEach(frame => {
             frame.style.pointerEvents = 'none';
         });
     }
-
+	
 	function moveDrawer(xPosition, yPosition) {
 	    if (!isDragging) return;
 
@@ -13053,8 +13060,36 @@ function setupDrawerInteractions() {
 	        interactionBlocker.style.pointerEvents = 'none';
 	
 	    } else {
-	        // LOGIC FOR DRAGGING THE DRAWER (NO APP OPEN)
-	        if (movementPercentage > 2.5 && movementPercentage < 25) {
+	        // LOGIC FOR DRAGGING THE DRAWER OR SYSTEM OVERLAY (NO APP OPEN)
+            
+            // Check for Swipe Down (System Overlay)
+            if (movementPercentage < 0) {
+                const overlay = document.getElementById('system-overlay-container');
+                if (overlay) {
+                    // Logic: top goes from -100% to 0%. movementPercentage is negative (e.g. -20).
+                    // top = -100 - movementPercentage. (e.g. -100 - (-20) = -80)
+                    const topVal = Math.max(-100, Math.min(0, -100 - movementPercentage));
+                    overlay.style.top = `${topVal}%`;
+                    
+                    // Background effect
+                    const progress = Math.min(1, Math.abs(movementPercentage) / 50);
+                    const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
+                    const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
+                    const blurVal = progress * 10;
+                    const scaleVal = 1.05 + (progress * 0.2);
+                    
+                    document.body.style.setProperty('--wallpaper-filter', `blur(${blurVal}px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`);
+                    document.body.style.setProperty('--bg-transform-scale', scaleVal);
+
+                    cancelLongPress();
+                    dynamicArea.style.opacity = (1 - progress).toString();
+                }
+                return;
+            }
+
+            // Swipe Up (Drawer/Dock)
+            // Dock Logic: Only if drag started from handle
+	        if (movementPercentage > 2.5 && movementPercentage < 25 && dragSource === 'handle') {
 	            if (dock.style.display === 'none' || dock.style.display === '') {
 	                dock.style.display = 'flex';
 	                requestAnimationFrame(() => {
@@ -13067,13 +13102,12 @@ function setupDrawerInteractions() {
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
 	            drawerPill.style.opacity = '0';
 
-				// Restore all main UI elements
+				// Restore all main UI elements if they were hidden
 			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 				    el.classList.remove('force-hide');
 			        el.style.display = el.dataset.originalDisplay;
-                    el.style.removeProperty('content-visibility'); // OPTIMIZATION
+                    el.style.removeProperty('content-visibility');
 			        el.style.transition = 'opacity 0.3s ease';
-			
 			        requestAnimationFrame(() => {
 			            el.style.opacity = '1';
 			        });
@@ -13097,12 +13131,11 @@ function setupDrawerInteractions() {
 	        
 	        const opacity = (newPosition + 100) / 100;
 	        appDrawer.style.opacity = opacity;
-	        
 	        appDrawer.style.bottom = `${newPosition}%`;
 	        
 	        if (newPosition > -100 && newPosition < 0) {
 	            interactionBlocker.style.display = 'block';
-	            interactionBlocker.style.pointerEvents = openEmbed ? 'none' : 'auto';
+	            interactionBlocker.style.pointerEvents = 'auto';
 	        } else {
 	            interactionBlocker.style.display = 'none';
 	        }
@@ -13512,26 +13545,33 @@ function setupDrawerInteractions() {
         const appDrawerContent = document.querySelector('.app-drawer-content');
 
         let shouldStart = false;
+        let source = 'screen';
 
         if (isAppOpen) {
             // Only handles when app is open
-            if (drawerHandle.contains(element)) shouldStart = true;
+            if (drawerHandle.contains(element)) {
+                shouldStart = true;
+                source = 'handle';
+            }
         } else {
             if (isDrawerOpen) {
                 // Handle OR (Content Top & !Interactive Element)
                 if (appDrawerHandle.contains(element)) {
                     shouldStart = true;
+                    source = 'handle';
                 } else if (appDrawer.contains(element) && appDrawerContent && appDrawerContent.scrollTop === 0) {
                     shouldStart = true;
+                    source = 'screen';
                 }
             } else {
                 // Home Screen: Anywhere
                 shouldStart = true;
+                if (drawerHandle.contains(element)) source = 'handle';
             }
         }
 
         if (shouldStart) {
-            startDrag(clientX, clientY);
+            startDrag(clientX, clientY, source);
         }
 	}, { passive: false });
 
@@ -13572,24 +13612,31 @@ function setupDrawerInteractions() {
         const appDrawerContent = document.querySelector('.app-drawer-content');
 
         let shouldStart = false;
+        let source = 'screen';
 
         if (isAppOpen) {
-            if (drawerHandle.contains(element)) shouldStart = true;
+            if (drawerHandle.contains(element)) {
+                shouldStart = true;
+                source = 'handle';
+            }
         } else {
             if (isDrawerOpen) {
                 if (appDrawerHandle.contains(element)) {
                     shouldStart = true;
+                    source = 'handle';
                 } else if (appDrawer.contains(element) && appDrawerContent && appDrawerContent.scrollTop === 0) {
                     shouldStart = true;
+                    source = 'screen';
                 }
             } else {
                 // Home Screen: Anywhere
                 shouldStart = true;
+                if (drawerHandle.contains(element)) source = 'handle';
             }
         }
 
         if (shouldStart) {
-            startDrag(clientX, clientY);
+            startDrag(clientX, clientY, source);
         }
     });
 
@@ -13996,6 +14043,21 @@ function setupOneButtonNav() {
     }
 }
 
+function createSystemOverlay() {
+    if (document.getElementById('system-overlay-container')) return;
+    
+    const container = document.createElement('div');
+    container.id = 'system-overlay-container';
+    
+    const iframe = document.createElement('iframe');
+    iframe.src = '/assets/gurapp/intl/dasalor/index.html'; 
+    iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+    iframe.id = 'system-overlay-iframe';
+    
+    container.appendChild(iframe);
+    document.body.appendChild(container);
+}
+
 window.makeAnnouncement = function(text, forceTTS = null, profile = null) {
     if (!text) return;
     
@@ -14121,6 +14183,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     initializeWallpaperTracking();
     ResourceManager.init();
     HomeActivityManager.init(); // Initialize Home Activity Manager
+    createSystemOverlay(); // Initialize System Overlay
     setTimeout(migrateWallpapersColor, 2000); 
 
     // --- Perform initial setup that depends on the loaded data ---
@@ -16339,6 +16402,21 @@ window.addEventListener('message', async (event) => { // Make listener async
                 forceCloseApp(callingUrl);
             } else {
                 showPopup('Could not close app')
+            }
+        },
+        closeSystemOverlay: () => {
+            const overlay = document.getElementById('system-overlay-container');
+            if (overlay) {
+                overlay.classList.remove('open');
+                overlay.style.top = '-100%';
+                
+                // Restore background
+                applyWallpaperEffects();
+                document.body.style.setProperty('--bg-transform-scale', '1.05');
+                
+                // Unblock interactions
+                const interactionBlocker = document.getElementById('interaction-blocker');
+                if (interactionBlocker) interactionBlocker.style.display = 'none';
             }
         },
 		launchAppSilently: createBackgroundEmbed, // Expose silent launch
