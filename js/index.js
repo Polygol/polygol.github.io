@@ -13061,9 +13061,10 @@ function setupDrawerInteractions() {
 	
 	    } else {
 	        // LOGIC FOR DRAGGING THE DRAWER OR SYSTEM OVERLAY (NO APP OPEN)
+            const isDrawerOpen = appDrawer.classList.contains('open');
             
-            // Check for Swipe Down (System Overlay)
-            if (movementPercentage < 0) {
+            // Check for Swipe Down (System Overlay) - Only if Drawer is NOT open
+            if (movementPercentage < 0 && !isDrawerOpen) {
                 const overlay = document.getElementById('system-overlay-container');
                 if (overlay) {
                     // Logic: top goes from -100% to 0%. movementPercentage is negative (e.g. -20).
