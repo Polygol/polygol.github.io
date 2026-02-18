@@ -1163,7 +1163,8 @@ body.one-button-nav-active .dock.show {
 .clock.gradient-effect {
     color: transparent;
 }
-.clock.gradient-effect > span {
+.clock.gradient-effect > span,
+.clock.gradient-effect > div {
     background-image: linear-gradient(45deg, var(--gradient-color-1, #fff), var(--gradient-color-2, #000));
     -webkit-background-clip: text;
     background-clip: text;
