@@ -13276,7 +13276,7 @@ function setupDrawerInteractions() {
                 const smallOpen = !startedOpen && (movementPercentage > 2.5 && movementPercentage <= 25 && !isFlickUp);
                 const isFromPill = dragSource === 'handle';
                 
-                if (isSmallSwipe && !isFlickUp && isFromPill) {
+                if (smallOpen && isFromPill) {
                     dock.style.display = 'flex';
                     requestAnimationFrame(() => {
                         dock.classList.add('show');
