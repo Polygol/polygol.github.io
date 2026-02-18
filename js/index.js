@@ -10752,6 +10752,7 @@ function applyClockStyles() {
     const weightSlider = document.getElementById('weight-slider');
     const clockElement = document.getElementById('clock');
     const infoElement = document.querySelector('.info');
+	const clockWidget = document.querySeletor('.clockwidgets');
     const colorPicker = document.getElementById('clock-color-picker');
     const colorSwitch = document.getElementById('clock-color-switch');
     const stackSwitch = document.getElementById('clock-stack-switch');
@@ -10789,6 +10790,7 @@ function applyClockStyles() {
     }
     if (dateOffsetSlider) {
         infoElement.style.marginBottom = `${dateOffsetSlider.value}px`;
+        clockWidget.style.marginTop = `${dateOffsetSlider.value}px`;
     }
     
     // Use custom font if available, otherwise use font from dropdown
