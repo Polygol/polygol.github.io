@@ -13238,11 +13238,6 @@ function setupDrawerInteractions() {
 		    }, 350); // Delay should be slightly longer than your CSS animation
 	
 	    } else {
-	        // LOGIC FOR FINISHING A DRAWER DRAG (NO APP OPEN)
-			dynamicArea.style.opacity = '1';
-	        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-	
-	    } else {
 	        // LOGIC FOR FINISHING A DRAWER DRAG OR SYSTEM OVERLAY (NO APP OPEN)
             const isDrawerOpen = appDrawer.classList.contains('open');
 
