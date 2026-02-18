@@ -1145,7 +1145,8 @@ body.one-button-nav-active .dock.show {
 }
 
 .info.glass-effect .date,
-.clock.glass-effect > * {
+.clock.glass-effect div,
+.clock.glass-effect span {
     color: var(--accent) !important;
     background: none !important; /* Ensure no other backgrounds interfere */
 
@@ -1161,12 +1162,10 @@ body.one-button-nav-active .dock.show {
 }
 
 .clock.gradient-effect {
-    color: transparent;
-}
-.clock.gradient-effect > span {
     background-image: linear-gradient(45deg, var(--gradient-color-1, #fff), var(--gradient-color-2, #000));
     -webkit-background-clip: text;
     background-clip: text;
+    color: transparent !important;
 }
 
 .clock {
