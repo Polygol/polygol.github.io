@@ -10752,7 +10752,7 @@ function applyClockStyles() {
     const weightSlider = document.getElementById('weight-slider');
     const clockElement = document.getElementById('clock');
     const infoElement = document.querySelector('.info');
-	const clockWidget = document.querySeletor('.clockwidgets');
+	const clockWidget = document.querySelector('.clockwidgets');
     const colorPicker = document.getElementById('clock-color-picker');
     const colorSwitch = document.getElementById('clock-color-switch');
     const stackSwitch = document.getElementById('clock-stack-switch');
