@@ -12965,10 +12965,9 @@ function setupDrawerInteractions() {
         // Determine if swipe is horizontal (and not significantly vertical)
         if (Math.abs(verticalDelta) < VERTICAL_SWIPE_LIMIT && Math.abs(deltaX) > Math.abs(verticalDelta) + 20) {
             if (document.body.classList.contains('immersive-active')) return;
-			
-            // If on home screen and not app switcher, treat as wallpaper swipe (ignore drawer move)
-            const isAppOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-            if (!appSwitcherVisible && !isAppOpen) return;
+            
+            // RESTRICTION: Horizontal app switching is ONLY allowed when dragging from the handle/pill
+            if (dragSource !== 'handle') return;
 
             // Only open the switcher if the horizontal deadzone is also passed
             if (!appSwitcherVisible && Math.abs(deltaX) > HORIZONTAL_SWIPE_DEADZONE) {
