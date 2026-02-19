@@ -12781,7 +12781,7 @@ function openDonburi() {
 	}, 400);
 
 	// Hide Home UI and system handles
-	document.querySelectorAll('.container, #home-activity-container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #activity-island, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
+	document.querySelectorAll('.container, #home-activity-container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #dynamic-area, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
 		el.style.opacity = '0';
 		el.style.pointerEvents = 'none';
 		setTimeout(() => el.classList.add('force-hide'), 300);
@@ -12797,7 +12797,7 @@ window.closeDonburi = function() {
 	donburi.style.opacity = '0';
 
 	// Restore Home UI and system handles
-	document.querySelectorAll('.container, #home-activity-container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #activity-island, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
+	document.querySelectorAll('.container, #home-activity-container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #dynamic-area, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
 		el.classList.remove('force-hide');
 		el.style.display = el.dataset.originalDisplay || '';
 		el.style.pointerEvents = ''; // Restore pointer events
