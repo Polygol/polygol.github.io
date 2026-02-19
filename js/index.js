@@ -13120,7 +13120,8 @@ function setupDrawerInteractions() {
             if (movementPercentage < -5) {
                 setImmersiveMode(true);
                 isDragging = false;
-                return;
+				openEmbed.style.pointerEvents = 'auto';
+				return;
             }
 	    
 	        // LOGIC FOR FINISHING AN APP DRAG
