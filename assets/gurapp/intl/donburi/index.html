@@ -594,8 +594,8 @@
     <div class="tab-content bento-grid" id="tab-media">
         <div class="bento-item span-2x2" style="padding: 0;">
             <div id="media-session-widget" class="media-widget">
-                <div style="background: linear-gradient(0deg,var(--background-color-tr) 25%, transparent 100%);border-radius: inherit;corner-shape: inherit;width: 100%;height: 100%;position: fixed;left: 0;top: 0;"> </div>
                 <img id="media-widget-art" src="" alt="Album Art">
+                <div style="background: linear-gradient(0deg,var(--background-color-tr) 25%, transparent 100%);border-radius: inherit;corner-shape: inherit;width: 100%;height: 100%;position: fixed;left: 0;top: 0;"></div>
                 <div class="app-icon-img">
                     <img id="media-widget-app-icon" src="" class="media-widget-app-icon" style="display: none;" />
                 </div>
@@ -851,7 +851,6 @@
                 const artEl = document.getElementById('media-widget-art');
                 if (metadata.artwork && metadata.artwork.length > 0) {
                     artEl.src = metadata.artwork[0].src;
-                    artEl.style.opacity = '0.4';
                 }
 
                 const appIconEl = document.getElementById('media-widget-app-icon');
