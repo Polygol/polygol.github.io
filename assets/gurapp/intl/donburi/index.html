@@ -107,6 +107,11 @@
             padding-bottom: 20px;
             width: 100%;
         }
+
+        /* Auto-Resizing Classes controlled by JS */
+        .bento-item.flex-fill-v { grid-row: span 3 !important; }
+        .bento-item.flex-fill-v-half { grid-row: span 2 !important; }
+        
         .bento-grid::-webkit-scrollbar {
             display: none;
         }
@@ -487,6 +492,8 @@
                 
                 btn.classList.add('active');
                 document.getElementById(btn.dataset.tab).classList.add('active');
+
+                setTimeout(rebalanceBento, 50);
             });
         });
 
@@ -736,8 +743,65 @@
             }
         });
 
+        /**
+         * Bento Smart Layout Engine
+         * Calculates total row-span requirements and adjusts specific items 
+         * to prevent empty vertical gaps in the horizontal scroll.
+         */
+        function rebalanceBento() {
+            const tabs = ['tab-day', 'tab-upcoming', 'tab-home', 'tab-media'];
+            
+            tabs.forEach(tabId => {
+                const container = document.getElementById(tabId);
+                if (!container) return;
+
+                const items = Array.from(container.children);
+                // Reset dynamic classes
+                items.forEach(el => el.classList.remove('flex-fill-v', 'flex-fill-v-half'));
+
+                let totalRowSpan = 0;
+                items.forEach(item => {
+                    if (item.classList.contains('span-2x2')) totalRowSpan += 4; // 2 cols * 2 rows
+                    else if (item.classList.contains('span-1x2')) totalRowSpan += 2;
+                    else if (item.classList.contains('span-2x1')) totalRowSpan += 2; // 2 cols * 1 row
+                    else totalRowSpan += 1;
+                });
+
+                // In a 3-row grid, we want totalRowSpan to be a multiple of 3
+                const gap = 3 - (totalRowSpan % 3);
+                
+                if (gap !== 3) {
+                    // Find a suitable "stretchy" item to fill the gap
+                    // Usually the last item or the most content-heavy item
+                    const target = items.find(i => i.id === 'next-event-content')?.parentElement || items[items.length - 1];
+                    
+                    if (target) {
+                        if (gap === 1) target.classList.add('flex-fill-v-half');
+                        if (gap === 2) target.classList.add('flex-fill-v');
+                    }
+                }
+            });
+        }
+
+        /**
+         * Synchronized Clock Utility
+         * Updates immediately, then syncs to fire exactly at the turn of every minute.
+         */
+        function startMinuteSyncClock() {
+            updateTimeAndGreeting(); // Initial immediate update
+
+            const now = new Date();
+            // Calculate ms until the next 00-second mark
+            const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+            setTimeout(() => {
+                updateTimeAndGreeting(); // First sync update
+                setInterval(updateTimeAndGreeting, 60000); // Recurring 1m update
+            }, msUntilNextMinute);
+        }
+
         // Initial Populations
-        setInterval(updateTimeAndGreeting, 1000); // 1s clock update
+        startMinuteSyncClock();
         updateTimeAndGreeting();
         updateWeather();
         updateUpcoming();
@@ -750,7 +814,7 @@
             updateWeather();
         });
         // Or manual polling as fallback
-        setInterval(updateUpcoming, 5000);
+        setInterval(updateUpcoming, 50000);
 
     </script>
 </body>
