@@ -97,6 +97,7 @@
         .bento-grid {
             grid-template-rows: repeat(3, minmax(130px, 1fr));
             grid-auto-columns: minmax(150px, 1fr);
+            grid-auto-flow: column;
             gap: 20px;
             height: calc(100vh - 80px);
             overflow-x: auto;
@@ -106,11 +107,6 @@
             padding-bottom: 20px;
             width: 100%;
         }
-
-        /* Auto-Resizing Classes controlled by JS */
-        .bento-item.flex-fill-v { grid-row: span 3 !important; }
-        .bento-item.flex-fill-v-half { grid-row: span 2 !important; }
-        
         .bento-grid::-webkit-scrollbar {
             display: none;
         }
@@ -491,8 +487,6 @@
                 
                 btn.classList.add('active');
                 document.getElementById(btn.dataset.tab).classList.add('active');
-
-                setTimeout(rebalanceBento, 50);
             });
         });
 
@@ -743,73 +737,6 @@
         });
 
         /**
-         * 6-Column Bento Smart Layout Engine
-         * Automatically resizes and packs items to fill every gap in a 6-column grid perfectly.
-         */
-        function rebalanceBento() {
-            const tabs =;
-            const MAX_COLS = 6;
-            
-            tabs.forEach(tabId => {
-                const container = document.getElementById(tabId);
-                if (!container) return;
-
-                const items = Array.from(container.children);
-                let currentRow =[];
-                let currentRowSpan = 0;
-
-                items.forEach((item, index) => {
-                    let prefSpan = parseInt(item.getAttribute('data-span')) || 3;
-                    let prefRowSpan = parseInt(item.getAttribute('data-row-span')) || 1;
-                    
-                    // Cap max span to prevent breaking layout
-                    prefSpan = Math.min(prefSpan, MAX_COLS);
-                    
-                    // If adding this item exceeds the max columns, we must close out the current row
-                    if (currentRowSpan + prefSpan > MAX_COLS && currentRow.length > 0) {
-                        // Distribute the gap among the items currently in the row
-                        let gap = MAX_COLS - currentRowSpan;
-                        let i = 0;
-                        while (gap > 0) {
-                            currentRow.span += 1;
-                            gap--;
-                            i++;
-                        }
-                        
-                        // Apply the calculated spans to the DOM elements
-                        currentRow.forEach(rowItem => {
-                            rowItem.el.style.gridColumn = `span ${rowItem.span}`;
-                            rowItem.el.style.gridRow = `span ${rowItem.rowSpan}`;
-                        });
-                        
-                        // Reset for the new row
-                        currentRow =[];
-                        currentRowSpan = 0;
-                    }
-                    
-                    // Add the current item to the new/current row
-                    currentRow.push({ el: item, span: prefSpan, rowSpan: prefRowSpan });
-                    currentRowSpan += prefSpan;
-                    
-                    // If it's the very last item, we MUST close out the row
-                    if (index === items.length - 1) {
-                        let gap = MAX_COLS - currentRowSpan;
-                        let i = 0;
-                        while (gap > 0 && currentRow.length > 0) {
-                            currentRow.span += 1;
-                            gap--;
-                            i++;
-                        }
-                        currentRow.forEach(rowItem => {
-                            rowItem.el.style.gridColumn = `span ${rowItem.span}`;
-                            rowItem.el.style.gridRow = `span ${rowItem.rowSpan}`;
-                        });
-                    }
-                });
-            });
-        }
-
-        /**
          * Synchronized Clock Utility
          * Updates immediately, then syncs to fire exactly at the turn of every minute.
          */
@@ -828,7 +755,6 @@
 
         // Initial Populations
         startMinuteSyncClock();
-        updateTimeAndGreeting();
         updateWeather();
         updateUpcoming();
         updateMedia();
@@ -840,7 +766,7 @@
             updateWeather();
         });
         // Or manual polling as fallback
-        setInterval(updateUpcoming, 50000);
+        setInterval(updateUpcoming, 5000);
 
     </script>
 </body>
