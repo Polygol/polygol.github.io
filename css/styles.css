@@ -2899,6 +2899,9 @@ input[type="checkbox"]:checked::before {
     body.immersive-active .drawer-handle,
     body.immersive-active #one-button-nav-handle {
         opacity: 0 !important;
+	    width: 150px;
+	    left: 50%;
+	    transform: translateX(-50%);
         transition: opacity 0.3s ease !important;
     }
 
