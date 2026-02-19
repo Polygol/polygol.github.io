@@ -275,28 +275,27 @@
     </style>
 </head>
 <body data-app-name="DONBURI">
-    
     <div class="toolbar" id="donburi-tabs">
         <button class="don-nav-btn active" data-tab="tab-day" id="greeting-tab">
-            <span class="material-symbols-rounded">wb_sunny</span>Your Day
+            Your day
         </button>
         <button class="don-nav-btn" data-tab="tab-upcoming">
-            <span class="material-symbols-rounded">event_upcoming</span>Upcoming
+            Upcoming
         </button>
         <button class="don-nav-btn" data-tab="tab-home">
-            <span class="material-symbols-rounded">home_iot_device</span>Home Control
+            Home control
         </button>
         <button class="don-nav-btn" data-tab="tab-media">
-            <span class="material-symbols-rounded">play_circle</span>Media
+            Media
         </button>
         <button class="don-nav-btn" data-tab="tab-communicate">
-            <span class="material-symbols-rounded">forum</span>Communicate
+            Communicate
         </button>
         <button class="don-nav-btn" data-tab="tab-around">
-            <span class="material-symbols-rounded">location_on</span>Around You
+            Around you
         </button>
         <button class="don-nav-btn" data-tab="tab-discover">
-            <span class="material-symbols-rounded">explore</span>Discover
+            Discover
         </button>
     </div>
 
@@ -479,12 +478,12 @@
             let greeting = 'Evening';
             let icon = 'bedtime';
 
-            if (hour >= 5 && hour < 12) { greeting = 'Morning'; icon = 'wb_sunny'; }
-            else if (hour >= 12 && hour < 18) { greeting = 'Afternoon'; icon = 'sunny'; }
-            else if (hour >= 18 && hour < 22) { greeting = 'Evening'; icon = 'clear_night'; }
+            if (hour >= 5 && hour < 12) { greeting = 'morning'; icon = 'wb_sunny'; }
+            else if (hour >= 12 && hour < 18) { greeting = 'afternoon'; icon = 'sunny'; }
+            else if (hour >= 18 && hour < 22) { greeting = 'evening'; icon = 'clear_night'; }
 
             const greetingTab = document.getElementById('greeting-tab');
-            if (greetingTab) greetingTab.innerHTML = `<span class="material-symbols-rounded">${icon}</span>Your ${greeting}`;
+            if (greetingTab) greetingTab.innerHTML = `Your ${greeting}`;
             
             const greetingText = document.getElementById('greeting-text');
             if (greetingText) greetingText.textContent = `Good ${greeting}`;
