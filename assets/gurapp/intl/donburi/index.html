@@ -743,107 +743,54 @@
         });
 
         /**
-         * Bento Layout Engine (Bin Packing)
-         * Iterates through grid slots [r, c] and places the next available widget.
-         * Resizes widgets dynamically if they hit boundaries or existing items.
+         * Revamped Bento Packing Engine
+         * Analyzes vertical space in a 3-row horizontal grid.
+         * Resizes items dynamically to ensure 100% vertical occupancy (no gaps).
          */
         function rebalanceBento() {
-            const tabs = document.querySelectorAll('.tab-content');
+            const tabs = ['tab-day', 'tab-upcoming', 'tab-home', 'tab-media', 'tab-communicate', 'tab-around', 'tab-discover'];
             
-            tabs.forEach(container => {
-                const items = Array.from(container.children);
-                if (items.length === 0) return;
+            tabs.forEach(tabId => {
+                const container = document.getElementById(tabId);
+                if (!container || container.children.length === 0) return;
 
-                // Clear previous manual positions
-                items.forEach(el => el.style.gridArea = '');
+                const items = Array.from(container.children).filter(el => getComputedStyle(el).display !== 'none');
+                
+                let currentColumnRows = 0;
+                let lastItemInColumn = null;
 
-                // Virtual Grid: 3 rows, dynamic columns. 
-                // grid[row][col] = true (occupied) or undefined (free)
-                const grid = [[], [], []]; 
-
-                const isFree = (r, c) => !grid[r] || !grid[r][c];
-
-                const markOccupied = (r, c, w, h) => {
-                    for(let i=0; i<h; i++) {
-                        for(let j=0; j<w; j++) {
-                            if(!grid[r+i]) grid[r+i] = [];
-                            grid[r+i][c+j] = true;
-                        }
-                    }
-                };
-
-                // Calculate dimensions that fit in the hole starting at (r, c)
-                // respecting the item's preferred size (prefW, prefH)
-                const getFittingDimensions = (r, c, prefW, prefH) => {
-                    let w = prefW;
-                    let h = prefH;
+                items.forEach((item, index) => {
+                    // 1. Reset Spans
+                    item.style.gridRow = "";
                     
-                    // 1. Clamp to Grid Bottom
-                    if (r + h > 3) h = 3 - r;
-                    
-                    // 2. Check collisions
-                    // Try to fit preferred WxH. If fail, shrink W or H until it fits.
-                    let fits = false;
-                    
-                    // Simple loop: if conflict, degrade to 1x1 (which always fits a free slot)
-                    // Or smarter: degrade just enough.
-                    while (!fits && w >= 1 && h >= 1) {
-                        let collision = false;
-                        for(let i=0; i<h; i++) {
-                            for(let j=0; j<w; j++) {
-                                if (!isFree(r+i, c+j)) {
-                                    collision = true;
-                                    break;
-                                }
-                            }
-                            if(collision) break;
-                        }
-                        
-                        if (collision) {
-                            // If collision, shrink largest dimension first or fallback to 1x1
-                            if (w > 1) w--;
-                            else if (h > 1) h--;
-                            else break; // Fallback to 1x1, which must fit because we checked isFree(r,c) before call
-                        } else {
-                            fits = true;
-                        }
+                    // 2. Determine preferred span
+                    let preferredSpan = 1;
+                    if (item.classList.contains('span-2x2') || item.classList.contains('span-1x2')) {
+                        preferredSpan = 2;
                     }
-                    return { w, h };
-                };
 
-                let itemIndex = 0;
-                let col = 0;
-
-                // Fill the grid column by column
-                while (itemIndex < items.length) {
-                    for (let row = 0; row < 3; row++) {
-                        if (itemIndex >= items.length) break;
-
-                        // Found a hole
-                        if (isFree(row, col)) {
-                            const item = items[itemIndex];
-                            
-                            // Determine Preference
-                            let prefW = 1, prefH = 1;
-                            if (item.classList.contains('span-2x2')) { prefW=2; prefH=2; }
-                            else if (item.classList.contains('span-2x1')) { prefW=2; prefH=1; }
-                            else if (item.classList.contains('span-1x2')) { prefW=1; prefH=2; }
-
-                            // Calculate actual fitting size
-                            const { w, h } = getFittingDimensions(row, col, prefW, prefH);
-
-                            // Place Item (Grid lines are 1-based)
-                            item.style.gridRowStart = row + 1;
-                            item.style.gridColumnStart = col + 1;
-                            item.style.gridRowEnd = `span ${h}`;
-                            item.style.gridColumnEnd = `span ${w}`;
-
-                            markOccupied(row, col, w, h);
-                            itemIndex++;
+                    // 3. Check if item fits in current column
+                    if (currentColumnRows + preferredSpan > 3) {
+                        // Column Overflow: Stretch the previous item to fill the gap
+                        if (lastItemInColumn) {
+                            const currentSpan = parseInt(lastItemInColumn.style.gridRow.split(' ')[1]) || 1;
+                            const gap = 3 - currentColumnRows;
+                            lastItemInColumn.style.gridRow = `span ${currentSpan + gap}`;
                         }
+                        // Start new column
+                        currentColumnRows = 0;
                     }
-                    col++;
-                }
+
+                    // 4. Place item
+                    item.style.gridRow = `span ${preferredSpan}`;
+                    currentColumnRows += preferredSpan;
+                    lastItemInColumn = item;
+
+                    // 5. Final Item Handling: Ensure the very last column is filled
+                    if (index === items.length - 1 && currentColumnRows < 3) {
+                        item.style.gridRow = `span ${preferredSpan + (3 - currentColumnRows)}`;
+                    }
+                });
             });
         }
 
