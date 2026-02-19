@@ -12778,6 +12778,7 @@ function openDonburi() {
 		donburi.classList.add('open');
 		donburi.style.transform = 'translateY(0)';
 		donburi.style.opacity = '1';
+		donburi.style.contentVisibility = 'auto';
 	});
 
 	// Enable interaction only after the gesture is fully complete
@@ -12810,7 +12811,10 @@ window.closeDonburi = function() {
 	});
 
 	setTimeout(() => {
-		if (!donburi.classList.contains('open')) donburi.style.display = 'none';
+		if (!donburi.classList.contains('open')) {
+		    donburi.style.contentVisibility = 'none';
+		    donburi.style.display = 'none';
+		}
 	}, 400);
 };
 
