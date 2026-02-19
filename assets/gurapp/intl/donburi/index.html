@@ -230,47 +230,206 @@
         }
 
         /* Media Player Specifics */
-        .media-art {
+        .media-widget {
+            display: flex;
+            align-items: stretch;
+        	flex-direction: column;
+            padding: 12px 18px 12px 16px;
+            margin: 10px 0;
+            background-color: var(--search-background);
+            border-radius: 35px;
+        	corner-shape: superellipse(1.5);
+            border: 1px solid var(--glass-border);
+        	box-shadow: var(--sun-shadow-strong);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        	height: 149px;
+        }
+        
+        .media-widget[style*="display: none"] {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        	height: 0;
+        }
+        
+        .media-widget .app-icon-img {
+        	position: absolute;
+            top: 18px;
+            left: 20px;
+            width: 28px;
+            height: 28px;
+            border-radius: 35%;
+            z-index: 2;
+            mix-blend-mode: luminosity;
+            pointer-events: none;
+            box-shadow: none;
+            corner-shape: superellipse(1.25);
+        }
+        
+        .media-widget-device {
+        	background: var(--overlay-color);
+            z-index: 1;
+            width: fit-content;
+            padding: 4px 10px 4px 8px;
+            border-radius: 20px;
+            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            position: absolute;
+            top: 18px;
+            right: 20px;
+            font-size: 0.7em;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+        }
+        
+        .media-widget-device .material-symbols-rounded {
+        	font-size: 16px;
+        }
+        
+        #media-widget-art {
             width: 100%;
             height: 100%;
-            position: absolute;
-            top: 0; left: 0;
+            position: fixed;
+        	left: 0;
+            top: 0;
             object-fit: cover;
-            opacity: 0.3;
-            z-index: 0;
-            border-radius: 35px;
-            corner-shape: superellipse(1.5);
-        }
-        .media-content {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            justify-content: space-between;
-        }
-        .media-controls {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            margin-top: auto;
-        }
-        .media-btn {
-            background: var(--search-background);
-            border: 1px solid var(--glass-border);
-            color: var(--text-color);
-            border-radius: 50%;
-            width: 40px; height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-shrink: 0;
             cursor: pointer;
+            transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
+        	mix-blend-mode: overlay;
+            border-radius: inherit;
+            corner-shape: inherit;
         }
-        .media-btn.play {
-            width: 50px; height: 50px;
-            background: var(--accent);
-            color: var(--background-color);
+        
+        #media-widget-art:active {
+            transform: scale(1.04);
+            transition: transform 0.1s cubic-bezier(.2, 1.3, .64, 1);
+            filter: brightness(1.5);
+        }
+        
+        .media-widget-info {
+            flex-grow: 1;
+            min-width: 0;
+            display: flex;
+            gap: 6px;
+            flex-direction: column;
+            margin: 55px 60px 8px 2px;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .media-widget-info .title {
+            font-weight: bold;
+        	font-family: 'Open Runde';
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        	padding-left: 4px;
+        	line-height: 1.25;
+        }
+        
+        .media-widget-info .artist {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        	padding-left: 4px;
+        	line-height: 1.25;
+        }
+        
+        .media-widget-progress-container {
+            display: flex;
+            align-items: center;
+            padding: 0 68px;
+            z-index: 1;
+            box-sizing: border-box;
+            position: fixed;
+            bottom: 8px;
+            pointer-events: none;
+            justify-content: space-between;
+            width: 100%;
+            left: 0;
+        }
+        
+        .media-widget-time {
+            font-size: 10px;
+            font-variant-numeric: tabular-nums;
+            color: var(--secondary-text-color);
+        }
+        
+        #media-widget-progress-bar {
+            border-radius: 0;
+            overflow: visible;
+            margin: 0;
+            box-shadow: none;
+            border: none;
+            flex-grow: 1;
+        	z-index: 1;
+        }
+        
+        #media-widget-progress {
+            width: 0%;
+            height: 100%;
+            background-color: var(--text-color);
+            border-radius: 0;
+            transition: width 0.2s ease;
+            --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0,5 Q5,10 10,5 T20,5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' /%3E%3C/svg%3E");
+            -webkit-mask-image: var(--wave);
+            mask-image: var(--wave);
+            -webkit-mask-size: 15px 100%;
+            mask-size: 15px 100%;
+            -webkit-mask-repeat: repeat-x;
+            mask-repeat: repeat-x;
+            -webkit-mask-position: 0 center;
+            mask-position: 0 center;
+            animation: wave-move 1s linear infinite;
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0;
+        }
+        
+        @keyframes wave-move {
+            0% { -webkit-mask-position: 0 center; mask-position: 0 center; }
+            100% { -webkit-mask-position: -15px center; mask-position: -15px center; }
+        }
+        
+        .media-widget-controls {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        	justify-content: space-between;
+        }
+        
+        .media-widget-controls button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        
+        #media-widget-play-pause {
+            background: var(--overlay-color);
+            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
+            box-shadow: var(--sun-shadow);
+            border: 1px solid var(--glass-border);
+            width: 48px;
+            height: 48px;
+            border-radius: 25px;
+            corner-shape: superellipse(1.5);
+            color: var(--text-color);
+            position: fixed;
+            right: 22px;
+            top: 64px;
         }
 
         .list-item {
@@ -403,17 +562,35 @@
     <!-- Media Tab -->
     <div class="tab-content bento-grid" id="tab-media">
         <div class="bento-item span-2x2" style="padding: 0;">
-            <img id="media-art" class="media-art" src="" style="display: none;">
-            <div class="media-content" style="padding: 20px;">
-                <div>
-                    <div class="item-card-title"><span class="material-symbols-rounded">music_note</span>Now Playing</div>
-                    <div id="media-title" class="item-card-big-text" style="font-size: 1.8rem; margin-top: 15px;">Not Playing</div>
-                    <div id="media-artist" class="item-card-subtitle" style="font-size: 1.1rem;">---</div>
+            <div id="media-session-widget" class="media-widget" style="display: none;">
+                <div style="background: var(--background-color-tr);box-shadow: var(--sun-shadow);border-radius: inherit;corner-shape: inherit;width: 100%;height: 100%;position: fixed;left: 0;top: 0;"> </div>
+                <img id="media-widget-art" src="" alt="Album Art">
+                <div class="app-icon-img">
+                    <img id="media-widget-app-icon" src="" class="media-widget-app-icon" style="display: none;" />
                 </div>
-                <div class="media-controls">
-                    <button class="media-btn" id="media-prev"><span class="material-symbols-rounded">skip_previous</span></button>
-                    <button class="media-btn play" id="media-play"><span class="material-symbols-rounded">play_arrow</span></button>
-                    <button class="media-btn" id="media-next"><span class="material-symbols-rounded">skip_next</span></button>
+                <div class="media-widget-device">
+                    <span class="material-symbols-rounded">volume_up</span>
+                    <span>This device</span>
+                </div>
+                <div class="media-widget-info">
+                    <div id="media-widget-title" class="title"></div>
+                    <div id="media-widget-artist" class="artist"></div>
+                </div>
+                <button id="media-widget-play-pause"><span class="material-symbols-rounded" style="font-size: 28px; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;">play_arrow</span></button>
+                <div class="media-widget-progress-container">
+                    <span id="media-widget-current-time" class="media-widget-time">0:00</span>
+                    <span id="media-widget-duration" class="media-widget-time">0:00</span>
+                </div>
+                <div class="media-widget-controls">
+                    <button id="media-widget-prev"><span class="material-symbols-rounded">skip_previous</span></button>
+                    <div id="media-widget-progress-bar">
+                        <div style="display: flex;flex-direction: row;height: 16px;align-items: center;">
+                            <div id="media-widget-progress"></div>
+                            <div style="z-index: 4;width: 6px;background-color: var(--text-color);border-radius: 16px;margin-right: 4px;flex-shrink: 0;height: 16px;margin-left: -6px;"></div>
+                            <div style="background: var(--overlay-color);width: 100%;height: 6px;border-radius: 10px;backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);box-shadow: var(--sun-shadow);border: 1px solid var(--glass-border);"></div>
+                        </div>
+                    </div>
+                    <button id="media-widget-next"><span class="material-symbols-rounded">skip_next</span></button>
                 </div>
             </div>
         </div>
@@ -637,10 +814,10 @@
             if (mediaStr && appName) {
                 try {
                     const media = JSON.parse(mediaStr);
-                    document.getElementById('media-title').textContent = media.title || 'Unknown Title';
-                    document.getElementById('media-artist').textContent = media.artist || 'Unknown Artist';
+                    document.getElementById('media-widget-title').textContent = media.title || 'Unknown Title';
+                    document.getElementById('media-widget-artist').textContent = media.artist || 'Unknown Artist';
                     
-                    const artEl = document.getElementById('media-art');
+                    const artEl = document.getElementById('media-widget-art');
                     if (media.artwork && media.artwork.length > 0) {
                         artEl.src = media.artwork.src;
                         artEl.style.display = 'block';
@@ -697,15 +874,15 @@
 
         // Media Controls
         const mediaApp = () => localStorage.getItem('lastMediaSessionApp');
-        document.getElementById('media-play').addEventListener('click', (e) => {
+        document.getElementById('media-widget-play-pause').addEventListener('click', (e) => {
             e.stopPropagation();
             if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'playPause', type: 'media-control'}, '*');
         });
-        document.getElementById('media-prev').addEventListener('click', (e) => {
+        document.getElementById('media-widget-prev').addEventListener('click', (e) => {
             e.stopPropagation();
             if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'prev', type: 'media-control'}, '*');
         });
-        document.getElementById('media-next').addEventListener('click', (e) => {
+        document.getElementById('media-widget-next').addEventListener('click', (e) => {
             e.stopPropagation();
             if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'next', type: 'media-control'}, '*');
         });
