@@ -743,54 +743,42 @@
         });
 
         /**
-         * Revamped Bento Packing Engine
-         * Analyzes vertical space in a 3-row horizontal grid.
-         * Resizes items dynamically to ensure 100% vertical occupancy (no gaps).
+         * Bento Smart Layout Engine
+         * Calculates total row-span requirements and adjusts specific items 
+         * to prevent empty vertical gaps in the horizontal scroll.
          */
         function rebalanceBento() {
-            const tabs = ['tab-day', 'tab-upcoming', 'tab-home', 'tab-media', 'tab-communicate', 'tab-around', 'tab-discover'];
+            const tabs = ['tab-day', 'tab-upcoming', 'tab-home', 'tab-media'];
             
             tabs.forEach(tabId => {
                 const container = document.getElementById(tabId);
-                if (!container || container.children.length === 0) return;
+                if (!container) return;
 
-                const items = Array.from(container.children).filter(el => getComputedStyle(el).display !== 'none');
-                
-                let currentColumnRows = 0;
-                let lastItemInColumn = null;
+                const items = Array.from(container.children);
+                // Reset dynamic classes
+                items.forEach(el => el.classList.remove('flex-fill-v', 'flex-fill-v-half'));
 
-                items.forEach((item, index) => {
-                    // 1. Reset Spans
-                    item.style.gridRow = "";
-                    
-                    // 2. Determine preferred span
-                    let preferredSpan = 1;
-                    if (item.classList.contains('span-2x2') || item.classList.contains('span-1x2')) {
-                        preferredSpan = 2;
-                    }
-
-                    // 3. Check if item fits in current column
-                    if (currentColumnRows + preferredSpan > 3) {
-                        // Column Overflow: Stretch the previous item to fill the gap
-                        if (lastItemInColumn) {
-                            const currentSpan = parseInt(lastItemInColumn.style.gridRow.split(' ')[1]) || 1;
-                            const gap = 3 - currentColumnRows;
-                            lastItemInColumn.style.gridRow = `span ${currentSpan + gap}`;
-                        }
-                        // Start new column
-                        currentColumnRows = 0;
-                    }
-
-                    // 4. Place item
-                    item.style.gridRow = `span ${preferredSpan}`;
-                    currentColumnRows += preferredSpan;
-                    lastItemInColumn = item;
-
-                    // 5. Final Item Handling: Ensure the very last column is filled
-                    if (index === items.length - 1 && currentColumnRows < 3) {
-                        item.style.gridRow = `span ${preferredSpan + (3 - currentColumnRows)}`;
-                    }
+                let totalRowSpan = 0;
+                items.forEach(item => {
+                    if (item.classList.contains('span-2x2')) totalRowSpan += 4; // 2 cols * 2 rows
+                    else if (item.classList.contains('span-1x2')) totalRowSpan += 2;
+                    else if (item.classList.contains('span-2x1')) totalRowSpan += 2; // 2 cols * 1 row
+                    else totalRowSpan += 1;
                 });
+
+                // In a 3-row grid, we want totalRowSpan to be a multiple of 3
+                const gap = 3 - (totalRowSpan % 3);
+                
+                if (gap !== 3) {
+                    // Find a suitable "stretchy" item to fill the gap
+                    // Usually the last item or the most content-heavy item
+                    const target = items.find(i => i.id === 'next-event-content')?.parentElement || items[items.length - 1];
+                    
+                    if (target) {
+                        if (gap === 1) target.classList.add('flex-fill-v-half');
+                        if (gap === 2) target.classList.add('flex-fill-v');
+                    }
+                }
             });
         }
 
