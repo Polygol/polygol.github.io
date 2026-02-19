@@ -470,6 +470,7 @@
             position: fixed;
             right: 32px;
             bottom: 68px;
+            z-index: 1;
         }
 
         .list-item {
@@ -946,9 +947,38 @@
             }
 
             // Play/Pause Toggle
-            if (data.type === 'playbackState') {
-                const icon = document.querySelector('#media-widget-play-pause .material-symbols-rounded');
-                if (icon) icon.textContent = data.state === 'playing' ? 'pause' : 'play_arrow';
+            if (data.type === 'playback-state' || data.type === 'mediaUpdate') {
+                const playbackState = data.type === 'playback-state' ? data.state : data.playbackState;
+                const cPanelBtn = document.getElementById('media-widget-play-pause');
+                const cPanelIcon = cPanelBtn?.querySelector('.material-symbols-rounded');
+
+                // --- Update Button & Icon ---
+                if (cPanelIcon && cPanelBtn) {
+                    if (playbackState === 'playing') {
+                        cPanelIcon.textContent = 'pause';
+                        cPanelBtn.style.borderRadius = '25px';
+                        cPanelBtn.style.cornerShape = 'superellipse(1.5)';
+                    } else {
+                        cPanelIcon.textContent = 'play_arrow';
+                        cPanelBtn.style.borderRadius = '50%'; // Round
+                        cPanelBtn.style.cornerShape = 'round';
+                    }
+                }
+                
+                // --- Update Progress Bar Visuals (Wave/Straight) ---
+                const bar = document.getElementById('media-widget-progress');
+                if (bar) {
+                    const WAVE_SVG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0,5 Q5,10 10,5 T20,5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' /%3E%3C/svg%3E\")";
+                    const LINE_SVG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0,5 L20,5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' /%3E%3C/svg%3E\")";
+
+                    if (playbackState === 'playing') {
+                        bar.style.setProperty('--wave', WAVE_SVG);
+                        bar.style.animation = 'wave-move 1s linear infinite';
+                    } else {
+                        bar.style.setProperty('--wave', LINE_SVG);
+                        bar.style.animation = 'none';
+                    }
+                }
             }
 
             // Progress & Timers
