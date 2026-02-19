@@ -15798,7 +15798,7 @@ function updateMediaWidgetState(playbackState) {
     if (donburiFrame && donburiFrame.contentWindow) {
         const targetOrigin = getOriginFromUrl(donburiFrame.src);
         donburiFrame.contentWindow.postMessage({
-            type: 'playbackState',
+            type: 'playback-state',
             state: playbackState
         }, targetOrigin);
     }
