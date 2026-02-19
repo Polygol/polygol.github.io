@@ -11716,6 +11716,7 @@ async function createFullscreenEmbed(url, options = {}) {
 	    if (restoredIframe && restoredIframe.contentWindow) {
 	        restoredIframe.contentWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow }, window.location.origin);
 	    }
+		restoredIframe.style.pointerEvents = 'auto';
 
 	    populateDock();
         
