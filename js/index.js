@@ -10358,6 +10358,7 @@ const MIN_SWIPE_DISTANCE = 50;
 
 // Update the touch event listeners to specifically check if we're touching the body or background
 document.addEventListener('touchstart', (e) => {
+  if (isDragging) return;
   // Only track touch start if touching the body or background video directly
   if ((e.target === document.body || e.target.id === 'background-video') && 
       !e.target.classList.contains('indicator-dot')) {
@@ -10366,6 +10367,7 @@ document.addEventListener('touchstart', (e) => {
 }, false);
 
 document.addEventListener('touchend', (e) => {
+  if (isDragging) return;
   // Only process the swipe if the touch started on body or background video
   if ((e.target === document.body || e.target.id === 'background-video') && 
       !e.target.classList.contains('indicator-dot')) {
@@ -10379,6 +10381,7 @@ let mouseDown = false;
 let mouseStartX = 0;
 
 document.addEventListener('mousedown', (e) => {
+  if (isDragging) return;
   // Detect swipes regardless of wallpaper count
   if ((e.target === document.body || e.target.id === 'background-video') &&
       !e.target.classList.contains('indicator-dot')) {
@@ -10388,6 +10391,7 @@ document.addEventListener('mousedown', (e) => {
 }, false);
 
 document.addEventListener('mouseup', (e) => {
+  if (isDragging) return;
   if (mouseDown) {
     mouseDown = false;
     touchEndX = e.clientX;
@@ -13565,6 +13569,8 @@ function setupDrawerInteractions() {
         }
 
         if (shouldStart) {
+            // Ensure logic knows we are starting from open/closed state
+            initialDrawerPosition = isDrawerOpen ? 0 : -100;
             startDrag(clientX, clientY);
         }
 	}, { passive: false });
@@ -13637,6 +13643,7 @@ function setupDrawerInteractions() {
         }
 
         if (shouldStart) {
+            initialDrawerPosition = isDrawerOpen ? 0 : -100;
             startDrag(clientX, clientY);
         }
     });
