@@ -12764,6 +12764,45 @@ function saveUsageData() {
     localStorage.setItem('appUsage', JSON.stringify(appUsage));
 }
 
+function openDonburi() {
+	const donburi = document.getElementById('donburi-container');
+	if (!donburi) return;
+	
+	donburi.style.display = 'block';
+	
+	requestAnimationFrame(() => {
+		donburi.classList.add('open');
+		donburi.style.transform = 'translateY(0)';
+		donburi.style.opacity = '1';
+	});
+
+	// Hide Home UI
+	document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+		el.style.opacity = '0';
+		setTimeout(() => el.classList.add('force-hide'), 300);
+	});
+}
+
+window.closeDonburi = function() {
+	const donburi = document.getElementById('donburi-container');
+	if (!donburi) return;
+
+	donburi.classList.remove('open');
+	donburi.style.transform = 'translateY(-100%)';
+	donburi.style.opacity = '0';
+
+	// Restore Home UI
+	document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+		el.classList.remove('force-hide');
+		el.style.display = el.dataset.originalDisplay || '';
+		requestAnimationFrame(() => el.style.opacity = '1');
+	});
+
+	setTimeout(() => {
+		if (!donburi.classList.contains('open')) donburi.style.display = 'none';
+	}, 400);
+};
+
 function setupDrawerInteractions() {
     let startY = 0, startX = 0;
     let currentY = 0, currentX = 0;
@@ -12974,6 +13013,18 @@ function setupDrawerInteractions() {
 	        interactionBlocker.style.pointerEvents = 'none';
 	
 	    } else {
+	        // LOGIC FOR DRAGGING THE DRAWER (NO APP OPEN)
+            // --- Donburi Swipe Down ---
+            if (dragSource === 'body' && movementPercentage < -5) {
+                const donburi = document.getElementById('donburi-container');
+                if (donburi) {
+                    donburi.style.display = 'block';
+                    const progress = Math.min(1, Math.abs(movementPercentage) / 30);
+                    donburi.style.transform = `translateY(${-100 + (progress * 100)}%)`;
+                    donburi.style.opacity = progress;
+                }
+            }
+			
             // Only show Dock if dragging from Handle. If dragging from Body, keep it hidden.
 	        if (dragSource === 'handle' && movementPercentage > 2.5 && movementPercentage < 25) {
 	            if (dock.style.display === 'none' || dock.style.display === '') {
@@ -13139,6 +13190,20 @@ function setupDrawerInteractions() {
             const opening = !startedOpen && (movementPercentage > 25 || isFlickUp);
             const significant = closing || opening;
             const smallOpen = !startedOpen && (movementPercentage > 2.5 && movementPercentage <= 25 && !isFlickUp);
+
+            // Donburi Swipe Down Check
+            if (dragSource === 'body' && !startedOpen && movementPercentage < -15) {
+                openDonburi();
+                isDragging = false;
+                return;
+            } else if (dragSource === 'body' && !startedOpen) {
+                // Cancel Donburi drag if not enough
+                const donburi = document.getElementById('donburi-container');
+                if(donburi) {
+                    donburi.style.transform = 'translateY(-100%)';
+                    donburi.style.opacity = '0';
+                }
+            }
 			
 	        if (smallOpen && dragSource === 'handle') {
                 // Show Dock (Only from Handle)
@@ -13482,20 +13547,13 @@ function setupDrawerInteractions() {
                 }
             } else {
                 // Home Screen
+                const isClockContainer = target.closest('.container');
                 if (drawerHandle.contains(target) || appDrawerHandle.contains(target)) {
                     shouldStart = true;
                     dragSource = 'handle';
-                } else {
-                    // Body/Background check (Fixes "cannot tap items")
-                    // Checks if we are touching the base layers directly
-                    if (target === document.body || 
-                        target.id === 'background-video' || 
-                        target.id === 'depth-layer' || 
-                        target.id === 'environment-layer' ||
-                        target.id === 'time-of-day-overlay') {
-                        shouldStart = true;
-                        dragSource = 'body';
-                    }
+                } else if (isClockContainer || target === document.body || target.id === 'background-video' || target.id === 'depth-layer' || target.id === 'environment-layer' || target.id === 'time-of-day-overlay') {
+                    shouldStart = true;
+                    dragSource = 'body';
                 }
             }
         }
@@ -16815,6 +16873,12 @@ window.addEventListener('message', async (event) => { // Make listener async
             updateStatusIndicator(); 
         }
         
+        return;
+    }
+
+    // Donburi specialized communication
+    if (data.type === 'donburi-close') {
+        window.closeDonburi();
         return;
     }
 
