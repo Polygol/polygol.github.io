@@ -47,7 +47,7 @@
             display: none;
         }
 
-        .tab-btn {
+        .don-nav-btn {
             background-color: var(--search-background);
             color: var(--text-color);
             border-radius: 35px;
@@ -66,12 +66,12 @@
             gap: 8px;
         }
 
-        .tab-btn.active {
+        .don-nav-btn.active {
             background-color: var(--accent);
             color: var(--background-color);
         }
 
-        .tab-btn:active {
+        .don-nav-btn:active {
             transform: scale(1.05);
             filter: brightness(1.2);
         }
@@ -277,25 +277,25 @@
 <body data-app-name="DONBURI">
     
     <div class="toolbar" id="donburi-tabs">
-        <button class="tab-btn active" data-tab="tab-day" id="greeting-tab">
+        <button class="don-nav-btn active" data-tab="tab-day" id="greeting-tab">
             <span class="material-symbols-rounded">wb_sunny</span>Your Day
         </button>
-        <button class="tab-btn" data-tab="tab-upcoming">
+        <button class="don-nav-btn" data-tab="tab-upcoming">
             <span class="material-symbols-rounded">event_upcoming</span>Upcoming
         </button>
-        <button class="tab-btn" data-tab="tab-home">
+        <button class="don-nav-btn" data-tab="tab-home">
             <span class="material-symbols-rounded">home_iot_device</span>Home Control
         </button>
-        <button class="tab-btn" data-tab="tab-media">
+        <button class="don-nav-btn" data-tab="tab-media">
             <span class="material-symbols-rounded">play_circle</span>Media
         </button>
-        <button class="tab-btn" data-tab="tab-communicate">
+        <button class="don-nav-btn" data-tab="tab-communicate">
             <span class="material-symbols-rounded">forum</span>Communicate
         </button>
-        <button class="tab-btn" data-tab="tab-around">
+        <button class="don-nav-btn" data-tab="tab-around">
             <span class="material-symbols-rounded">location_on</span>Around You
         </button>
-        <button class="tab-btn" data-tab="tab-discover">
+        <button class="don-nav-btn" data-tab="tab-discover">
             <span class="material-symbols-rounded">explore</span>Discover
         </button>
     </div>
@@ -459,7 +459,7 @@
         });
 
         // --- Tabs Logic ---
-        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabBtns = document.querySelectorAll('.don-nav-btn');
         const tabContents = document.querySelectorAll('.tab-content');
 
         tabBtns.forEach(btn => {
