@@ -13033,6 +13033,7 @@ function setupDrawerInteractions() {
                 const donburi = document.getElementById('donburi-container');
                 if (donburi) {
                     donburi.style.display = 'block';
+                    donburi.style.contentVisibility = 'auto';
 	                donburi.style.pointerEvents = 'none';
                     const progress = Math.min(1, Math.abs(movementPercentage) / 30);
                     donburi.style.transform = `translateY(${-100 + (progress * 100)}%)`;
@@ -13224,8 +13225,13 @@ function setupDrawerInteractions() {
                 const donburi = document.getElementById('donburi-container');
                 if(donburi) {
                     donburi.style.transform = 'translateY(-100%)';
-                    donburi.style.opacity = '0';
                 }
+				setTimeout(() => {
+	                if(donburi) {
+	                    donburi.style.display = 'none';
+		                donburi.style.contentVisibility = 'none';
+					}
+				}, 300);
             }
 			
 	        if (smallOpen && dragSource === 'handle') {
