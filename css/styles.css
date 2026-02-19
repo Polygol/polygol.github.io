@@ -4067,7 +4067,7 @@ input[type="checkbox"]:checked::before {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	z-index: 51;
+	z-index: 47;
 	overflow: clip; /* Add this to ensure border-radius works properly */
 	border: none;
 	transition: transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, filter 0.3s ease;
