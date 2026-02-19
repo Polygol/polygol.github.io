@@ -437,16 +437,16 @@
     </div>
 
     <script>
-        // --- Swipe up to close Donburi ---
+// --- Swipe up to close Donburi ---
         let touchStartY = 0;
         let isDragging = false;
 
         document.body.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches.clientY;
+            touchStartY = e.touches[0].clientY;
         }, { passive: true });
 
         document.body.addEventListener('touchend', (e) => {
-            let endY = e.changedTouches.clientY;
+            let endY = e.changedTouches[0].clientY;
             if (touchStartY - endY > 50) { // Swipe up
                 window.parent.postMessage({ type: 'donburi-close' }, '*');
             }
