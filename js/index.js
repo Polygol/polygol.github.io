@@ -11915,6 +11915,11 @@ createFullscreenEmbed = async function(url, options = {}) {
     // Default options to empty object if undefined
     const { isSplitActivation = false } = options || {};
 
+    // Close Donburi dynamically when an app is opened
+    if (typeof window.closeDonburi === 'function') {
+        window.closeDonburi();
+    }
+
     // Bypass for internal calls
     if (isSplitActivation) {
         return originalCreateFullscreenEmbed(url, options);
@@ -16005,6 +16010,7 @@ window.Gurasuraisu = Gurasuraisu; // FIX: Explicitly expose to window
 const TRUSTED_APP_PERMISSIONS = {
     'Settings': ['system-admin'], // Full access to everything, needs permissions to change settings
     'Terminal': ['system-admin'], // Full access to everything
+    'Donburi': ['system-admin'], // Full access to everything
     'kirbStore': ['app-management']  // Can only manage apps
 };
 
@@ -16764,9 +16770,9 @@ window.addEventListener('message', async (event) => { // Make listener async
         console.log(`[Polygol] Received 'gurapp-ready' from: ${sourceAppId || 'Unknown App'}`);
 
         // --- Core Logic ---
-        // If the ready message is from the Settings app, send ALL settings.
+        // If the ready message is from apps, send ALL settings.
 	    // When sending messages back, use the correct targetOrigin
-	    if (sourceAppId === 'Settings') {
+	    if (sourceAppId === 'Settings' || sourceAppId === 'DONBURI') {
 	        Object.keys(controlIdMap).forEach(key => {
 	            const effectiveValue = getEffectiveSettingValue(key);
 	            sourceWindow.postMessage({ 
