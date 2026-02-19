@@ -323,7 +323,7 @@
             <div class="item-card-title"><span class="material-symbols-rounded">cloud</span>Weather</div>
             <div style="display: flex; justify-content: space-between; align-items: center; height: 100%;">
                 <div class="item-card-big-text" id="weather-temp">--°</div>
-                <div style="text-align: right;">
+                <div style="text-align: right; display: flex; flex-direction: column; gap: 10px;">
                     <div id="weather-city" style="font-weight: 600;">Location</div>
                     <div id="weather-desc" class="item-card-subtitle">Loading...</div>
                 </div>
@@ -331,14 +331,14 @@
         </div>
 
         <div class="bento-item span-2x1" onclick="Gurasuraisu.openApp('/fantaskical/index.html')">
-            <div class="item-card-title"><span class="material-symbols-rounded">event</span>Agenda</div>
+            <div class="item-card-title"><span class="material-symbols-rounded">event</span>Calendar</div>
             <div id="next-event-content" style="margin: auto 0; gap: 10px; display: flex; flex-direction: column;">
                 <div style="font-weight: 600; font-size: 1.1rem;">No upcoming events</div>
             </div>
         </div>
 
         <div class="bento-item span-1x1" onclick="Gurasuraisu.openApp('/settings/index.html')">
-            <div class="item-card-title"><span class="material-symbols-rounded">battery_full</span>Battery</div>
+            <div class="item-card-title"><span class="material-symbols-rounded">battery_android_0</span>Battery</div>
             <div class="item-card-big-text" id="battery-level">--%</div>
             <div class="item-card-subtitle" id="battery-status">Checking...</div>
         </div>
