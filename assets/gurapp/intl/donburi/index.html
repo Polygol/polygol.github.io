@@ -18,57 +18,52 @@
         }
 
         body {
-            background-color: transparent; /* Parent handles the overlay background */
-            color: var(--text-color);
-            height: 100vh;
+            background-color: transparent; /* Donburi overlay logic from parent will provide the backdrop */
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            padding: 20px;
+            padding-top: 60px;
             user-select: none;
+            color: var(--text-color);
+            overflow: hidden;
         }
 
-        /* Top Header */
-        .header {
-            padding: 40px 20px 20px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+        .material-symbols-rounded {
+            vertical-align: middle;
         }
 
-        .greeting-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            font-family: 'Open Runde', 'Inter', sans-serif;
-            letter-spacing: -0.5px;
-        }
-
-        /* Tabs */
-        .tabs-container {
+        /* Toolbar / Tabs */
+        .toolbar {
             display: flex;
             gap: 10px;
             overflow-x: auto;
-            padding-bottom: 10px;
+            padding-bottom: 15px;
             scrollbar-width: none; /* Firefox */
+            margin-bottom: 10px;
+            flex-shrink: 0;
         }
-
-        .tabs-container::-webkit-scrollbar {
+        .toolbar::-webkit-scrollbar {
             display: none;
         }
 
         .tab-btn {
             background-color: var(--search-background);
             color: var(--text-color);
-            border: 1px solid var(--glass-border);
             border-radius: 35px;
             corner-shape: superellipse(1.5);
             padding: 12px 20px;
+            font-size: 0.95rem;
             font-weight: 500;
-            font-size: 1rem;
-            white-space: nowrap;
             cursor: pointer;
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+            border: 1px solid var(--glass-border);
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
             box-shadow: var(--sun-shadow);
-            transition: all 0.3s cubic-bezier(.3,1.2,.64,1);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .tab-btn.active {
@@ -77,643 +72,661 @@
         }
 
         .tab-btn:active {
-            transform: scale(0.95);
+            transform: scale(1.05);
             filter: brightness(1.2);
-        }
-
-        /* Content Area */
-        .content-area {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 0 20px 40px 20px;
-            scrollbar-width: none;
-        }
-
-        .content-area::-webkit-scrollbar {
-            display: none;
         }
 
         /* Bento Grid */
-        .bento-grid {
+        .tab-content {
+            display: none;
+            flex-grow: 1;
+            height: 100%;
+        }
+        .tab-content.active {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-auto-rows: minmax(100px, auto);
-            gap: 15px;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
         }
 
-        /* Bento Cards */
-        .bento-card {
+        .bento-grid {
+            grid-template-rows: repeat(3, minmax(130px, 1fr));
+            grid-auto-columns: minmax(150px, 1fr);
+            grid-auto-flow: column;
+            gap: 15px;
+            width: 100%;
+            height: calc(100vh - 140px);
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            padding-bottom: 20px;
+        }
+        .bento-grid::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Bento Items */
+        .bento-item {
             background-color: var(--search-background);
-            border: 1px solid var(--glass-border);
             border-radius: 35px;
             corner-shape: superellipse(1.5);
+            border: 1px solid var(--glass-border);
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(5px);
             box-shadow: var(--sun-shadow);
             padding: 20px;
-            color: var(--text-color);
-            position: relative;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
-            transition: transform 0.2s cubic-bezier(.3,1.2,.64,1), filter 0.2s;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1), filter 0.3s ease;
             cursor: pointer;
         }
 
-        .bento-card:active {
-            transform: scale(0.96);
+        .bento-item:active {
+            transform: scale(1.05);
             filter: brightness(1.2);
         }
 
-        .span-1 { grid-column: span 1; }
-        .span-2 { grid-column: span 2; }
-        .span-3 { grid-column: span 3; }
-        .span-4 { grid-column: span 4; }
-        .row-1 { grid-row: span 1; }
-        .row-2 { grid-row: span 2; }
-
-        /* Specific Card Styles */
-        .card-title {
-            font-size: 0.9rem;
-            color: var(--secondary-text-color);
-            margin-bottom: 5px;
-            font-weight: 500;
+        .reduce-animations .bento-item:active {
+            transform: scale(1) !important;
         }
 
-        .card-value {
-            font-size: 1.2rem;
+        /* Grid Spans */
+        .span-2x2 { grid-row: span 2; grid-column: span 2; min-width: 315px; }
+        .span-2x1 { grid-row: span 1; grid-column: span 2; min-width: 315px; }
+        .span-1x2 { grid-row: span 2; grid-column: span 1; min-width: 150px; }
+        .span-1x1 { grid-row: span 1; grid-column: span 1; min-width: 150px; }
+
+        /* Typography inside cards */
+        .item-card-title {
             font-weight: 600;
+            font-size: 1.1rem;
+            font-family: 'Open Runde', sans-serif;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .card-huge-value {
-            font-size: 3rem;
+        .item-card-subtitle {
+            font-size: 0.9rem;
+            color: var(--secondary-text-color);
+        }
+
+        .item-card-big-text {
+            font-size: 2.5rem;
             font-weight: 700;
             font-family: 'Open Runde', sans-serif;
-            line-height: 1;
+            margin: auto 0;
         }
 
-        .media-controls {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            justify-content: center;
-            margin-top: 15px;
-        }
-
-        .icon-btn {
-            background: transparent;
-            border: none;
-            color: inherit;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-        }
-
-        .icon-btn:active {
-            transform: scale(1.2);
-        }
-
-        .icon-btn .material-symbols-rounded {
-            font-size: 32px;
-        }
-
-        /* Controls / Inputs */
+        /* UI Controls inside Bento */
         input {
             -webkit-appearance: none;
             width: 100%;
-            height: 24px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            outline: none;
-            overflow: hidden;
+            height: 34px;
+            background: var(--search-background);
+            border-radius: 20px;
+            padding: 0 8px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            margin-top: auto;
         }
-
         input::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 24px;
-            height: 24px;
+            appearance: none;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
-            background: var(--text-color);
-            box-shadow: -100vw 0 0 100vw var(--accent);
+            background: var(--accent);
             cursor: pointer;
+            box-shadow: var(--sun-shadow);
         }
 
-        input {
-            appearance: none;
-            width: 50px;
-            height: 28px;
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 14px;
+        .toggle-switch {
+            width: 56px;
+            height: 32px;
+            background-color: var(--search-background);
+            border-radius: 16px;
             position: relative;
             cursor: pointer;
-            transition: background-color 0.3s;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            appearance: none;
+            transition: all 0.3s;
+            margin-top: auto;
         }
-
-        input:checked {
-            background-color: var(--accent);
-        }
-
-        input::before {
+        .toggle-switch::before {
             content: '';
             position: absolute;
-            width: 22px;
-            height: 22px;
-            background-color: var(--text-color);
+            width: 20px;
+            height: 20px;
+            background-color: var(--accent);
             border-radius: 50%;
-            top: 3px;
-            left: 3px;
-            transition: transform 0.3s;
+            top: 50%;
+            left: 6.5px;
+            transform: translateY(-50%);
+            transition: all 0.3s;
+        }
+        .toggle-switch:checked {
+            background-color: var(--accent);
+        }
+        .toggle-switch:checked::before {
+            background-color: var(--tonal);
+            left: 28px;
         }
 
-        input:checked::before {
-            transform: translateX(22px);
+        /* Media Player Specifics */
+        .media-art {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            object-fit: cover;
+            opacity: 0.3;
+            z-index: 0;
+            border-radius: 35px;
+            corner-shape: superellipse(1.5);
+        }
+        .media-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: space-between;
+        }
+        .media-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: auto;
+        }
+        .media-btn {
+            background: var(--search-background);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .media-btn.play {
+            width: 50px; height: 50px;
+            background: var(--accent);
+            color: var(--background-color);
         }
 
         .list-item {
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--glass-border);
+            gap: 10px;
+            margin-top: 5px;
+            font-size: 0.9rem;
         }
-
-        .list-item:last-child {
-            border-bottom: none;
-        }
-        
-        .reduce-animations * {
-            transition: none !important;
-            animation: none !important;
+        .list-item span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 </head>
-<body data-app-name="Donburi">
+<body data-app-name="DONBURI">
+    
+    <div class="toolbar" id="donburi-tabs">
+        <button class="tab-btn active" data-tab="tab-day" id="greeting-tab">
+            <span class="material-symbols-rounded">wb_sunny</span>Your Day
+        </button>
+        <button class="tab-btn" data-tab="tab-upcoming">
+            <span class="material-symbols-rounded">event_upcoming</span>Upcoming
+        </button>
+        <button class="tab-btn" data-tab="tab-home">
+            <span class="material-symbols-rounded">home_iot_device</span>Home Control
+        </button>
+        <button class="tab-btn" data-tab="tab-media">
+            <span class="material-symbols-rounded">play_circle</span>Media
+        </button>
+        <button class="tab-btn" data-tab="tab-communicate">
+            <span class="material-symbols-rounded">forum</span>Communicate
+        </button>
+        <button class="tab-btn" data-tab="tab-around">
+            <span class="material-symbols-rounded">location_on</span>Around You
+        </button>
+        <button class="tab-btn" data-tab="tab-discover">
+            <span class="material-symbols-rounded">explore</span>Discover
+        </button>
+    </div>
 
-    <div class="header">
-        <div class="greeting-title" id="greeting-title">Your morning</div>
-        
-        <div class="tabs-container" id="tabs">
-            <button class="tab-btn active" data-tab="greeting">Overview</button>
-            <button class="tab-btn" data-tab="upcoming">Upcoming</button>
-            <button class="tab-btn" data-tab="home">Home control</button>
-            <button class="tab-btn" data-tab="media">Media</button>
-            <button class="tab-btn" data-tab="communicate">Communicate</button>
-            <button class="tab-btn" data-tab="around">Around you</button>
-            <button class="tab-btn" data-tab="discover">Discover</button>
+    <!-- Your Day Tab -->
+    <div class="tab-content bento-grid active" id="tab-day">
+        <div class="bento-item span-2x2">
+            <div class="item-card-title"><span class="material-symbols-rounded">schedule</span>Time & Date</div>
+            <div class="item-card-big-text" id="bento-time">00:00</div>
+            <div class="item-card-subtitle" id="bento-date">Monday, Jan 1</div>
+            <div style="margin-top: auto; font-weight: 500;" id="greeting-text">Good Morning</div>
+        </div>
+
+        <div class="bento-item span-2x1" onclick="Gurasuraisu.openApp('/weather/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">cloud</span>Weather</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; height: 100%;">
+                <div class="item-card-big-text" id="weather-temp">--°</div>
+                <div style="text-align: right;">
+                    <div id="weather-city" style="font-weight: 600;">Location</div>
+                    <div id="weather-desc" class="item-card-subtitle">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bento-item span-2x1" onclick="Gurasuraisu.openApp('/fantaskical/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">event</span>Next Event</div>
+            <div id="next-event-content" style="margin: auto 0;">
+                <div style="font-weight: 600; font-size: 1.1rem;">No upcoming events</div>
+                <div class="item-card-subtitle">Enjoy your free time</div>
+            </div>
+        </div>
+
+        <div class="bento-item span-1x1" onclick="Gurasuraisu.openApp('/settings/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">battery_full</span>Battery</div>
+            <div class="item-card-big-text" id="battery-level">--%</div>
+            <div class="item-card-subtitle" id="battery-status">Checking...</div>
         </div>
     </div>
 
-    <div class="content-area">
-        <div class="bento-grid" id="bento-grid">
-            <!-- Grid populated by JS -->
+    <!-- Upcoming Tab -->
+    <div class="tab-content bento-grid" id="tab-upcoming">
+        <div class="bento-item span-2x2" onclick="Gurasuraisu.openApp('/fantaskical/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">calendar_month</span>Agenda</div>
+            <div id="agenda-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; overflow-y: auto;">
+                <div class="item-card-subtitle">No events today</div>
+            </div>
+        </div>
+
+        <div class="bento-item span-2x2" onclick="Gurasuraisu.openApp('/fantaskical/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">task_alt</span>Active Tasks</div>
+            <div id="task-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; overflow-y: auto;">
+                <div class="item-card-subtitle">All caught up!</div>
+            </div>
+        </div>
+
+        <div class="bento-item span-2x1" onclick="Gurasuraisu.openApp('/chronos/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">alarm</span>Alarms</div>
+            <div id="alarm-list" style="margin: auto 0; font-size: 1.5rem; font-weight: 600;">
+                No alarms set
+            </div>
+        </div>
+    </div>
+
+    <!-- Home Control Tab -->
+    <div class="tab-content bento-grid" id="tab-home">
+        <div class="bento-item span-2x1">
+            <div class="item-card-title"><span class="material-symbols-rounded">light_mode</span>Brightness</div>
+            <input type="range" id="brightness-slider" min="10" max="100" value="100">
+        </div>
+
+        <div class="bento-item span-1x1">
+            <div class="item-card-title"><span class="material-symbols-rounded">dark_mode</span>Dark Mode</div>
+            <input type="checkbox" class="toggle-switch" id="theme-toggle">
+        </div>
+
+        <div class="bento-item span-1x1">
+            <div class="item-card-title"><span class="material-symbols-rounded">notifications_off</span>Silent</div>
+            <input type="checkbox" class="toggle-switch" id="silent-toggle">
+        </div>
+
+        <div class="bento-item span-2x1">
+            <div class="item-card-title"><span class="material-symbols-rounded">thermostat</span>Color Tone</div>
+            <input type="range" id="temp-slider" min="-10" max="10" value="0">
+        </div>
+    </div>
+
+    <!-- Media Tab -->
+    <div class="tab-content bento-grid" id="tab-media">
+        <div class="bento-item span-2x2" style="padding: 0;">
+            <img id="media-art" class="media-art" src="" style="display: none;">
+            <div class="media-content" style="padding: 20px;">
+                <div>
+                    <div class="item-card-title"><span class="material-symbols-rounded">music_note</span>Now Playing</div>
+                    <div id="media-title" class="item-card-big-text" style="font-size: 1.8rem; margin-top: 15px;">Not Playing</div>
+                    <div id="media-artist" class="item-card-subtitle" style="font-size: 1.1rem;">---</div>
+                </div>
+                <div class="media-controls">
+                    <button class="media-btn" id="media-prev"><span class="material-symbols-rounded">skip_previous</span></button>
+                    <button class="media-btn play" id="media-play"><span class="material-symbols-rounded">play_arrow</span></button>
+                    <button class="media-btn" id="media-next"><span class="material-symbols-rounded">skip_next</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Placeholders -->
+    <div class="tab-content bento-grid" id="tab-communicate">
+        <div class="bento-item span-2x2">
+            <div class="item-card-title"><span class="material-symbols-rounded">forum</span>Communicate</div>
+            <div style="margin: auto; text-align: center; color: var(--secondary-text-color);">
+                No active communication widgets
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-content bento-grid" id="tab-around">
+        <div class="bento-item span-2x2">
+            <div class="item-card-title"><span class="material-symbols-rounded">location_on</span>Around You</div>
+            <div style="margin: auto; text-align: center; color: var(--secondary-text-color);">
+                Discover nearby places and devices
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content bento-grid" id="tab-discover">
+        <div class="bento-item span-2x2">
+            <div class="item-card-title"><span class="material-symbols-rounded">explore</span>Discover</div>
+            <div style="margin: auto; text-align: center; color: var(--secondary-text-color);">
+                Explore new Gurapps and integrations
+            </div>
         </div>
     </div>
 
     <script>
-        // --- Core Swipe Logic ---
+        // --- Swipe up to close Donburi ---
         let touchStartY = 0;
-        document.addEventListener('touchstart', e => {
+        let isDragging = false;
+
+        document.body.addEventListener('touchstart', (e) => {
             touchStartY = e.touches.clientY;
         }, { passive: true });
 
-        document.addEventListener('touchend', e => {
-            let touchEndY = e.changedTouches.clientY;
-            // Swipe Up threshold
-            if (touchStartY - touchEndY > 60) {
+        document.body.addEventListener('touchend', (e) => {
+            let endY = e.changedTouches.clientY;
+            if (touchStartY - endY > 50) { // Swipe up
                 window.parent.postMessage({ type: 'donburi-close' }, '*');
             }
-        }, { passive: true });
-
-        // --- Data Loaders (Reading from System) ---
-        function getWeatherData() {
-            try {
-                const data = localStorage.getItem('lastWeatherData');
-                if (data) return JSON.parse(data);
-            } catch (e) {}
-            return null;
-        }
-
-        function getWeatherIcon(code) {
-            const map = {
-                0: 'clear_day', 1: 'partly_cloudy_day', 2: 'partly_cloudy_day', 3: 'cloudy',
-                45: 'foggy', 48: 'foggy', 51: 'rainy_light', 53: 'rainy', 55: 'rainy',
-                56: 'cloudy_snowing', 57: 'cloudy_snowing', 61: 'rainy_light', 63: 'rainy',
-                65: 'rainy', 71: 'cloudy_snowing', 73: 'cloudy_snowing', 75: 'cloudy_snowing',
-                80: 'rainy_light', 81: 'rainy', 82: 'thunderstorm', 95: 'thunderstorm'
-            };
-            return map || 'cloud';
-        }
-
-        function getMediaData() {
-            try {
-                const meta = JSON.parse(localStorage.getItem('lastMediaMetadata'));
-                const app = localStorage.getItem('lastMediaSessionApp');
-                return { meta, app };
-            } catch (e) {}
-            return { meta: null, app: null };
-        }
-
-        function getEventsData() {
-            try {
-                return JSON.parse(localStorage.getItem('events') || '[]');
-            } catch (e) { return[]; }
-        }
-
-        function getTasksData() {
-            try {
-                return JSON.parse(localStorage.getItem('tasks') || '[]');
-            } catch (e) { return[]; }
-        }
-        
-        function getSystemSettings() {
-            return {
-                brightness: localStorage.getItem('page_brightness') || '100',
-                theme: localStorage.getItem('theme') || 'dark',
-                silent: localStorage.getItem('silentMode') === 'true',
-                minimal: localStorage.getItem('minimalMode') === 'true'
-            };
-        }
-
-        // --- Interacting with System ---
-        function setSetting(key, value) {
-            // Using Gurasuraisu API if loaded, or raw postMessage
-            if (window.Gurasuraisu && window.Gurasuraisu.setSettingValue) {
-                window.Gurasuraisu.setSettingValue(key, value);
-            } else {
-                window.parent.postMessage({
-                    action: 'callGurasuraisuFunc',
-                    functionName: 'setSettingValue',
-                    args:
-                }, '*');
-            }
-        }
-
-        function controlMedia(action) {
-            const mediaApp = localStorage.getItem('lastMediaSessionApp');
-            if (mediaApp) {
-                if (window.parent && window.parent.Gurasuraisu) {
-                    window.parent.Gurasuraisu.callApp(mediaApp, action);
-                }
-            }
-        }
-
-        function launchApp(url) {
-            window.parent.postMessage({
-                action: 'callGurasuraisuFunc',
-                functionName: 'createFullscreenEmbed',
-                args:
-            }, '*');
-            // Close donburi after launching
-            window.parent.postMessage({ type: 'donburi-close' }, '*');
-        }
-
-        // --- Renderers ---
-        const grid = document.getElementById('bento-grid');
-
-        function renderGreetingTab() {
-            grid.innerHTML = '';
-            
-            // 1. Weather (Large)
-            const weather = getWeatherData();
-            if (weather) {
-                const temp = Math.round(weather.current.temperature);
-                const unit = weather.temperatureUnit === 'fahrenheit' ? '°F' : '°C';
-                const icon = getWeatherIcon(weather.current.weathercode);
-                
-                grid.innerHTML += `
-                    <div class="bento-card span-2 row-2" style="background: var(--accent); color: var(--background-color); justify-content: space-between;" onclick="launchApp('/weather/index.html')">
-                        <div class="card-huge-value">${temp}${unit}</div>
-                        <div style="display:flex; justify-content:flex-end;">
-                            <span class="material-symbols-rounded" style="font-size: 5rem;">${icon}</span>
-                        </div>
-                        <div style="font-weight: 600; font-size: 1.1rem; margin-top: auto;">${weather.city}</div>
-                    </div>
-                `;
-            }
-
-            // 2. Media (Rectangle)
-            const { meta, app } = getMediaData();
-            if (meta) {
-                const art = meta.artwork?.?.src || '';
-                grid.innerHTML += `
-                    <div class="bento-card span-2 row-1" style="flex-direction: row; align-items: center; gap: 15px; padding: 15px;" onclick="launchApp('${window.parent?.apps?.?.url || '/music/index.html'}')">
-                        ${art ? `<img src="${art}" style="width: 50px; height: 50px; border-radius: 12px; object-fit: cover;">` : `<div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center"><span class="material-symbols-rounded">music_note</span></div>`}
-                        <div style="flex-grow: 1; overflow: hidden;">
-                            <div class="card-value" style="font-size: 1rem;">${meta.title || 'Unknown'}</div>
-                            <div class="card-title" style="margin:0; font-size: 0.8rem;">${meta.artist || ''}</div>
-                        </div>
-                        <button class="icon-btn" onclick="event.stopPropagation(); controlMedia('playPause')"><span class="material-symbols-rounded">play_arrow</span></button>
-                    </div>
-                `;
-            } else {
-                grid.innerHTML += `
-                    <div class="bento-card span-2 row-1" style="justify-content: center; align-items: center; opacity: 0.6">
-                        <span class="material-symbols-rounded" style="font-size: 2rem;">music_off</span>
-                        <div class="card-title" style="margin-top: 5px;">No Media Playing</div>
-                    </div>
-                `;
-            }
-
-            // 3. Upcoming Event (Rectangle)
-            const events = getEventsData();
-            const now = moment();
-            const upcoming = events.filter(e => moment(`${e.date} ${e.startTime||'00:00'}`).isSameOrAfter(now));
-            upcoming.sort((a,b) => moment(`${a.date} ${a.startTime||'00:00'}`).diff(moment(`${b.date} ${b.startTime||'00:00'}`)));
-            
-            if (upcoming.length > 0) {
-                const ev = upcoming;
-                grid.innerHTML += `
-                    <div class="bento-card span-2 row-1" style="justify-content: center;" onclick="launchApp('/fantaskical/index.html')">
-                        <div class="card-title">Next Event</div>
-                        <div class="card-value" style="font-size: 1.1rem;">${ev.title}</div>
-                        <div style="font-size: 0.85rem; color: var(--accent); font-weight: 500;">
-                            ${moment(ev.date).format('MMM D')} ${ev.startTime ? 'at ' + ev.startTime : 'All Day'}
-                        </div>
-                    </div>
-                `;
-            } else {
-                grid.innerHTML += `
-                    <div class="bento-card span-2 row-1" style="justify-content: center; align-items: center; opacity: 0.6" onclick="launchApp('/fantaskical/index.html')">
-                        <span class="material-symbols-rounded" style="font-size: 2rem;">event_available</span>
-                        <div class="card-title" style="margin-top: 5px;">Your day is clear</div>
-                    </div>
-                `;
-            }
-        }
-
-        function renderUpcomingTab() {
-            grid.innerHTML = '';
-            const events = getEventsData();
-            const tasks = getTasksData();
-            
-            grid.innerHTML += `<div class="span-4" style="font-weight: 600; padding: 10px 0 0 10px;">Events</div>`;
-            if (events.length === 0) {
-                grid.innerHTML += `<div class="bento-card span-4 row-1" style="align-items: center; justify-content: center; opacity: 0.6;">No events</div>`;
-            }
-            events.slice(0, 4).forEach(ev => {
-                grid.innerHTML += `
-                    <div class="bento-card span-4 row-1" style="flex-direction: row; align-items: center; justify-content: space-between;" onclick="launchApp('/fantaskical/index.html')">
-                        <div>
-                            <div class="card-value" style="font-size: 1.1rem;">${ev.title}</div>
-                            <div class="card-title" style="margin:0">${moment(ev.date).format('MMM D')} ${ev.startTime ? '- ' + ev.startTime : ''}</div>
-                        </div>
-                        <span class="material-symbols-rounded" style="color: var(--accent)">event</span>
-                    </div>
-                `;
-            });
-
-            grid.innerHTML += `<div class="span-4" style="font-weight: 600; padding: 10px 0 0 10px; margin-top: 10px;">Active Tasks</div>`;
-            const activeTasks = tasks.filter(t => !t.completed);
-            if (activeTasks.length === 0) {
-                grid.innerHTML += `<div class="bento-card span-4 row-1" style="align-items: center; justify-content: center; opacity: 0.6;">No pending tasks</div>`;
-            }
-            activeTasks.slice(0, 4).forEach(t => {
-                grid.innerHTML += `
-                    <div class="bento-card span-4 row-1" style="flex-direction: row; align-items: center; gap: 15px;" onclick="launchApp('/fantaskical/index.html')">
-                        <span class="material-symbols-rounded" style="opacity: 0.5">radio_button_unchecked</span>
-                        <div class="card-value" style="font-size: 1rem; font-weight: 500;">${t.text}</div>
-                    </div>
-                `;
-            });
-        }
-
-        function renderHomeControlTab() {
-            grid.innerHTML = '';
-            const settings = getSystemSettings();
-
-            // Brightness
-            grid.innerHTML += `
-                <div class="bento-card span-4 row-1" style="justify-content: center; gap: 10px;">
-                    <div class="card-title" style="margin:0">Brightness</div>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <span class="material-symbols-rounded">light_mode</span>
-                        <input type="range" id="db-bright" min="0" max="100" value="${settings.brightness}">
-                    </div>
-                </div>
-            `;
-
-            // Theme Toggle
-            grid.innerHTML += `
-                <div class="bento-card span-2 row-1" style="justify-content: center; align-items: center; gap: 10px;">
-                    <span class="material-symbols-rounded" style="font-size: 2rem;">${settings.theme === 'dark' ? 'dark_mode' : 'light_mode'}</span>
-                    <div class="card-title" style="margin:0">Dark Mode</div>
-                    <input type="checkbox" id="db-theme" ${settings.theme === 'dark' ? 'checked' : ''}>
-                </div>
-            `;
-
-            // Silent Toggle
-            grid.innerHTML += `
-                <div class="bento-card span-2 row-1" style="justify-content: center; align-items: center; gap: 10px;">
-                    <span class="material-symbols-rounded" style="font-size: 2rem;">${settings.silent ? 'notifications_off' : 'notifications'}</span>
-                    <div class="card-title" style="margin:0">Silent</div>
-                    <input type="checkbox" id="db-silent" ${settings.silent ? 'checked' : ''}>
-                </div>
-            `;
-
-            // Minimal Toggle
-            grid.innerHTML += `
-                <div class="bento-card span-4 row-1" style="flex-direction: row; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <span class="material-symbols-rounded">filter_tilt_shift</span>
-                        <div class="card-value" style="font-size: 1.1rem;">Minimal Mode</div>
-                    </div>
-                    <input type="checkbox" id="db-minimal" ${settings.minimal ? 'checked' : ''}>
-                </div>
-            `;
-
-            // Attach Listeners
-            setTimeout(() => {
-                document.getElementById('db-bright').addEventListener('input', e => setSetting('page_brightness', e.target.value));
-                document.getElementById('db-theme').addEventListener('change', e => setSetting('theme', e.target.checked ? 'dark' : 'light'));
-                document.getElementById('db-silent').addEventListener('change', e => setSetting('silentMode', e.target.checked.toString()));
-                document.getElementById('db-minimal').addEventListener('change', e => setSetting('minimalMode', e.target.checked.toString()));
-            }, 50);
-        }
-
-        function renderMediaTab() {
-            grid.innerHTML = '';
-            const { meta, app } = getMediaData();
-
-            if (meta) {
-                const art = meta.artwork?.?.src || '';
-                grid.innerHTML += `
-                    <div class="bento-card span-4 row-2" style="align-items: center; justify-content: center; position: relative;">
-                        ${art ? `<img src="${art}" style="position:absolute; width:100%; height:100%; object-fit:cover; opacity:0.2; z-index:0; filter:blur(10px)">` : ''}
-                        
-                        <div style="z-index: 1; display:flex; flex-direction:column; align-items:center; text-align:center; gap: 10px;">
-                            ${art ? `<img src="${art}" style="width:120px; height:120px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); object-fit:cover;">` : `<div style="width: 120px; height: 120px; border-radius: 20px; background: rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center"><span class="material-symbols-rounded" style="font-size: 3rem">music_note</span></div>`}
-                            <div class="card-value" style="font-size: 1.3rem; margin-top: 10px;">${meta.title || 'Unknown'}</div>
-                            <div class="card-title">${meta.artist || ''}</div>
-                            
-                            <div class="media-controls">
-                                <button class="icon-btn" onclick="controlMedia('prev')"><span class="material-symbols-rounded">skip_previous</span></button>
-                                <button class="icon-btn" onclick="controlMedia('playPause')" style="background: var(--text-color); color: var(--background-color); border-radius: 50%; width: 50px; height: 50px;"><span class="material-symbols-rounded">play_arrow</span></button>
-                                <button class="icon-btn" onclick="controlMedia('next')"><span class="material-symbols-rounded">skip_next</span></button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                grid.innerHTML += `
-                    <div class="bento-card span-4 row-2" style="align-items: center; justify-content: center; opacity: 0.6">
-                        <span class="material-symbols-rounded" style="font-size: 4rem;">music_off</span>
-                        <div class="card-value" style="margin-top: 10px;">Nothing Playing</div>
-                    </div>
-                `;
-            }
-        }
-
-        function renderCommunicateTab() {
-            grid.innerHTML = `
-                <div class="bento-card span-4 row-2" style="align-items: center; justify-content: center; opacity: 0.6">
-                    <span class="material-symbols-rounded" style="font-size: 3rem;">chat_bubble_outline</span>
-                    <div class="card-value" style="margin-top: 15px;">You're all caught up</div>
-                    <div class="card-title">No new messages</div>
-                </div>
-            `;
-        }
-
-        function renderAroundYouTab() {
-            grid.innerHTML = '';
-            const weather = getWeatherData();
-
-            if (weather && weather.dailyForecast) {
-                grid.innerHTML += `
-                    <div class="bento-card span-4 row-1" style="flex-direction: row; justify-content: space-between; align-items: center;" onclick="launchApp('/weather/index.html')">
-                        <div>
-                            <div class="card-title">Current Location</div>
-                            <div class="card-value" style="font-size: 1.3rem;">${weather.city}</div>
-                        </div>
-                        <span class="material-symbols-rounded" style="font-size: 2rem; color: var(--accent)">location_on</span>
-                    </div>
-                `;
-
-                // Render next 3 days
-                const daily = weather.dailyForecast;
-                for(let i=1; i<=3; i++) {
-                    if (daily.time) {
-                        const dayName = moment(daily.time).format('dddd');
-                        const temp = Math.round(daily.temperature_2m_max);
-                        const icon = getWeatherIcon(daily.weathercode);
-                        grid.innerHTML += `
-                            <div class="bento-card span-4 row-1" style="flex-direction: row; justify-content: space-between; align-items: center; padding: 15px 25px;">
-                                <div style="font-weight: 500; width: 100px;">${dayName}</div>
-                                <span class="material-symbols-rounded">${icon}</span>
-                                <div style="font-weight: 600; width: 50px; text-align: right;">${temp}°</div>
-                            </div>
-                        `;
-                    }
-                }
-            } else {
-                grid.innerHTML += `
-                    <div class="bento-card span-4 row-1" style="align-items: center; justify-content: center; opacity: 0.6">
-                        Location data unavailable
-                    </div>
-                `;
-            }
-        }
-
-        function renderDiscoverTab() {
-            grid.innerHTML = '';
-            
-            try {
-                // Try to access parent apps object if same origin
-                if (window.parent && window.parent.apps) {
-                    const sysApps = window.parent.apps;
-                    const appKeys = Object.keys(sysApps).filter(k => k !== 'Apps' && k !== 'Settings');
-                    
-                    // Shuffle and pick 4
-                    const shuffled = appKeys.sort(() => 0.5 - Math.random()).slice(0, 4);
-
-                    shuffled.forEach(appName => {
-                        const app = sysApps;
-                        let iconSrc = app.icon;
-                        if (iconSrc && !iconSrc.startsWith('http') && !iconSrc.startsWith('data:') && !iconSrc.startsWith('/')) {
-                            iconSrc = `/assets/appicon/${iconSrc}`;
-                        }
-
-                        grid.innerHTML += `
-                            <div class="bento-card span-2 row-1" style="align-items: center; justify-content: center; gap: 10px;" onclick="launchApp('${app.url}')">
-                                <img src="${iconSrc || '/assets/appicon/system.png'}" style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover;">
-                                <div class="card-value" style="font-size: 1rem;">${appName}</div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    grid.innerHTML += `<div class="bento-card span-4 row-1" style="align-items: center;">App library unavailable</div>`;
-                }
-            } catch(e) {
-                grid.innerHTML += `<div class="bento-card span-4 row-1" style="align-items: center;">App library unavailable</div>`;
-            }
-        }
-
-        // --- Initialization & Tab Switching ---
-        const tabs = document.querySelectorAll('.tab-btn');
-        const greetingTitle = document.getElementById('greeting-title');
-
-        function updateGreeting() {
-            const hour = new Date().getHours();
-            let greeting = "Your evening";
-            if (hour >= 5 && hour < 12) greeting = "Your morning";
-            else if (hour >= 12 && hour < 17) greeting = "Your afternoon";
-            
-            greetingTitle.textContent = greeting;
-            
-            // Also update the button text
-            const greetBtn = document.querySelector('');
-            if (greetBtn) greetBtn.textContent = 'Overview'; // Keep tab text short
-        }
-
-        function switchTab(tabId) {
-            tabs.forEach(btn => btn.classList.remove('active'));
-            document.querySelector(``).classList.add('active');
-
-            // Add exit animation class to grid
-            grid.style.opacity = '0';
-            grid.style.transform = 'translateY(10px)';
-            
-            setTimeout(() => {
-                switch(tabId) {
-                    case 'greeting': renderGreetingTab(); break;
-                    case 'upcoming': renderUpcomingTab(); break;
-                    case 'home': renderHomeControlTab(); break;
-                    case 'media': renderMediaTab(); break;
-                    case 'communicate': renderCommunicateTab(); break;
-                    case 'around': renderAroundYouTab(); break;
-                    case 'discover': renderDiscoverTab(); break;
-                }
-                
-                // Enter animation
-                requestAnimationFrame(() => {
-                    grid.style.transition = 'opacity 0.3s, transform 0.3s cubic-bezier(.3,1.2,.64,1)';
-                    grid.style.opacity = '1';
-                    grid.style.transform = 'translateY(0)';
-                });
-            }, 150);
-        }
-
-        tabs.forEach(btn => {
-            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
         });
 
-        // Init
-        updateGreeting();
-        switchTab('greeting');
+        document.body.addEventListener('mousedown', (e) => {
+            touchStartY = e.clientY;
+            isDragging = true;
+        });
 
-        // Periodically update UI elements that might change
-        setInterval(() => {
-            if (document.querySelector('').classList.contains('active')) {
-                // Lightweight refresh without full redraw if possible, or just redraw
-                updateGreeting();
+        document.body.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            if (touchStartY - e.clientY > 50) {
+                window.parent.postMessage({ type: 'donburi-close' }, '*');
             }
-        }, 60000);
+        });
+
+        // --- Tabs Logic ---
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // --- Dynamic Content Population ---
+        function updateTimeAndGreeting() {
+            const now = new Date();
+            const hour = now.getHours();
+            let greeting = 'Evening';
+            let icon = 'bedtime';
+
+            if (hour >= 5 && hour < 12) { greeting = 'Morning'; icon = 'wb_sunny'; }
+            else if (hour >= 12 && hour < 18) { greeting = 'Afternoon'; icon = 'sunny'; }
+            else if (hour >= 18 && hour < 22) { greeting = 'Evening'; icon = 'clear_night'; }
+
+            const greetingTab = document.getElementById('greeting-tab');
+            if (greetingTab) greetingTab.innerHTML = `<span class="material-symbols-rounded">${icon}</span>Your ${greeting}`;
+            
+            const greetingText = document.getElementById('greeting-text');
+            if (greetingText) greetingText.textContent = `Good ${greeting}`;
+
+            // Time & Date
+            const timeEl = document.getElementById('bento-time');
+            const dateEl = document.getElementById('bento-date');
+            
+            const use12Hour = localStorage.getItem('use12HourFormat') === 'true';
+            let hours = now.getHours();
+            let ampm = '';
+            if (use12Hour) {
+                ampm = hours >= 12 ? ' PM' : ' AM';
+                hours = hours % 12 || 12;
+            }
+            hours = String(hours).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            if (timeEl) timeEl.textContent = `${hours}:${minutes}${ampm}`;
+            if (dateEl) dateEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+        }
+
+        function updateWeather() {
+            const weatherStr = localStorage.getItem('lastWeatherData');
+            if (weatherStr) {
+                try {
+                    const data = JSON.parse(weatherStr);
+                    const temp = Math.round(data.current.temperature);
+                    const unit = data.temperatureUnit === 'fahrenheit' ? '°F' : '°C';
+                    
+                    document.getElementById('weather-temp').textContent = `${temp}${unit}`;
+                    document.getElementById('weather-city').textContent = data.city;
+                    
+                    // Simple map for description
+                    const code = data.current.weathercode;
+                    let desc = 'Clear';
+                    if (code >= 1 && code <= 3) desc = 'Cloudy';
+                    if (code >= 45 && code <= 48) desc = 'Fog';
+                    if (code >= 51 && code <= 67) desc = 'Rain';
+                    if (code >= 71 && code <= 86) desc = 'Snow';
+                    if (code >= 95) desc = 'Storm';
+                    document.getElementById('weather-desc').textContent = desc;
+                } catch(e) {}
+            }
+        }
+
+        function updateUpcoming() {
+            // Events
+            const eventsStr = localStorage.getItem('events');
+            const agendaList = document.getElementById('agenda-list');
+            const nextEventContent = document.getElementById('next-event-content');
+
+            if (eventsStr) {
+                try {
+                    const events = JSON.parse(eventsStr);
+                    const todayStr = new Date().toISOString().split('T');
+                    
+                    // Filter upcoming
+                    const upcoming = events.filter(e => e.date >= todayStr).sort((a,b) => {
+                        if (a.date !== b.date) return a.date.localeCompare(b.date);
+                        if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
+                        return 0;
+                    });
+
+                    if (upcoming.length > 0) {
+                        // Next Event Card
+                        const next = upcoming;
+                        const dateObj = new Date(next.date);
+                        const isToday = next.date === todayStr;
+                        const dayStr = isToday ? 'Today' : dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const timeStr = next.startTime ? next.startTime : 'All day';
+
+                        if (nextEventContent) {
+                            nextEventContent.innerHTML = `
+                                <div style="font-weight: 600; font-size: 1.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${next.title}</div>
+                                <div class="item-card-subtitle">${dayStr} • ${timeStr}</div>
+                            `;
+                        }
+
+                        // Agenda List
+                        if (agendaList) {
+                            agendaList.innerHTML = upcoming.slice(0, 4).map(e => `
+                                <div class="list-item">
+                                    <span class="material-symbols-rounded" style="font-size: 18px; color: var(--accent);">event</span>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <span style="font-weight: 500;">${e.title}</span>
+                                        <span style="font-size: 0.8rem; color: var(--secondary-text-color);">${e.date === todayStr ? 'Today' : e.date} ${e.startTime ? e.startTime : ''}</span>
+                                    </div>
+                                </div>
+                            `).join('');
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // Tasks
+            const tasksStr = localStorage.getItem('tasks');
+            const taskList = document.getElementById('task-list');
+            if (tasksStr && taskList) {
+                try {
+                    const tasks = JSON.parse(tasksStr).filter(t => !t.completed);
+                    if (tasks.length > 0) {
+                        taskList.innerHTML = tasks.slice(0, 4).map(t => `
+                            <div class="list-item">
+                                <span class="material-symbols-rounded" style="font-size: 18px;">radio_button_unchecked</span>
+                                <span>${t.text}</span>
+                            </div>
+                        `).join('');
+                    }
+                } catch(e) {}
+            }
+
+            // Alarms
+            const alarmsStr = localStorage.getItem('alarms');
+            const alarmList = document.getElementById('alarm-list');
+            if (alarmsStr && alarmList) {
+                try {
+                    const alarms = JSON.parse(alarmsStr);
+                    if (alarms.length > 0) {
+                        alarmList.innerHTML = alarms.map(a => `<div>${a.time}</div>`).join('');
+                    } else {
+                        alarmList.innerHTML = 'No alarms set';
+                    }
+                } catch(e) {}
+            }
+        }
+
+        function updateMedia() {
+            const mediaStr = localStorage.getItem('lastMediaMetadata');
+            const appName = localStorage.getItem('lastMediaSessionApp');
+            
+            if (mediaStr && appName) {
+                try {
+                    const media = JSON.parse(mediaStr);
+                    document.getElementById('media-title').textContent = media.title || 'Unknown Title';
+                    document.getElementById('media-artist').textContent = media.artist || 'Unknown Artist';
+                    
+                    const artEl = document.getElementById('media-art');
+                    if (media.artwork && media.artwork.length > 0) {
+                        artEl.src = media.artwork.src;
+                        artEl.style.display = 'block';
+                    } else {
+                        artEl.style.display = 'none';
+                    }
+                } catch(e) {}
+            }
+        }
+
+        function updateHomeControls() {
+            const brightness = localStorage.getItem('page_brightness') || '100';
+            const temp = localStorage.getItem('display_temperature') || '0';
+            const theme = localStorage.getItem('theme') || 'dark';
+            const silent = localStorage.getItem('silentMode') === 'true';
+
+            document.getElementById('brightness-slider').value = brightness;
+            document.getElementById('temp-slider').value = temp;
+            document.getElementById('theme-toggle').checked = theme === 'light';
+            document.getElementById('silent-toggle').checked = silent;
+        }
+
+        // --- Controls Listeners ---
+        document.getElementById('brightness-slider').addEventListener('input', (e) => {
+            if (window.Gurasuraisu) {
+                Gurasuraisu.setSettingValue('page_brightness', e.target.value);
+            }
+        });
+
+        document.getElementById('temp-slider').addEventListener('input', (e) => {
+            if (window.Gurasuraisu) {
+                Gurasuraisu.setSettingValue('display_temperature', e.target.value);
+            }
+        });
+
+        document.getElementById('theme-toggle').addEventListener('change', (e) => {
+            if (window.Gurasuraisu) {
+                const theme = e.target.checked ? 'light' : 'dark';
+                Gurasuraisu.setSettingValue('theme', theme);
+            }
+        });
+
+        document.getElementById('silent-toggle').addEventListener('change', (e) => {
+            if (window.Gurasuraisu) {
+                Gurasuraisu.setSettingValue('silentMode', e.target.checked.toString());
+            }
+        });
+
+        // Media Controls
+        const mediaApp = () => localStorage.getItem('lastMediaSessionApp');
+        document.getElementById('media-play').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'playPause', type: 'media-control'}, '*');
+        });
+        document.getElementById('media-prev').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'prev', type: 'media-control'}, '*');
+        });
+        document.getElementById('media-next').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'next', type: 'media-control'}, '*');
+        });
+
+        // Battery Check
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(battery => {
+                const updateBattery = () => {
+                    document.getElementById('battery-level').textContent = `${Math.round(battery.level * 100)}%`;
+                    document.getElementById('battery-status').textContent = battery.charging ? 'Charging' : 'Discharging';
+                };
+                updateBattery();
+                battery.addEventListener('levelchange', updateBattery);
+                battery.addEventListener('chargingchange', updateBattery);
+            });
+        }
+
+        // Real-time synchronization for changes pushed from parent
+        window.addEventListener('message', (event) => {
+            const data = event.data;
+            if (data.type === 'themeUpdate') {
+                document.getElementById('theme-toggle').checked = data.theme === 'light';
+            }
+            // Media Sync
+            if (data.type === 'mediaUpdate' || data.type === 'settingUpdate') {
+                updateMedia();
+                updateHomeControls();
+            }
+        });
+
+        // Initial Populations
+        setInterval(updateTimeAndGreeting, 1000); // 1s clock update
+        updateTimeAndGreeting();
+        updateWeather();
+        updateUpcoming();
+        updateMedia();
+        updateHomeControls();
+
+        // Check local storage periodically for generic app updates (like task completions)
+        window.addEventListener('storage', () => {
+            updateUpcoming();
+            updateWeather();
+        });
+        // Or manual polling as fallback
+        setInterval(updateUpcoming, 5000);
 
     </script>
 </body>
