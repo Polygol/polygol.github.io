@@ -12777,7 +12777,6 @@ function openDonburi() {
 	requestAnimationFrame(() => {
 		donburi.classList.add('open');
 		donburi.style.transform = 'translateY(0)';
-		donburi.style.opacity = '1';
 		donburi.style.contentVisibility = 'auto';
 	});
 
@@ -12800,7 +12799,6 @@ window.closeDonburi = function() {
 
 	donburi.classList.remove('open');
 	donburi.style.transform = 'translateY(-100%)';
-	donburi.style.opacity = '0';
 
 	// Restore Home UI and system handles
 	document.querySelectorAll('.container, #home-activity-container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #dynamic-area, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
@@ -13034,9 +13032,9 @@ function setupDrawerInteractions() {
                 const donburi = document.getElementById('donburi-container');
                 if (donburi) {
                     donburi.style.display = 'block';
+	                donburi.style.pointerEvents = 'none';
                     const progress = Math.min(1, Math.abs(movementPercentage) / 30);
                     donburi.style.transform = `translateY(${-100 + (progress * 100)}%)`;
-                    donburi.style.opacity = progress;
                 }
             }
 			
