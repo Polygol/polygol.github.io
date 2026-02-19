@@ -13120,7 +13120,15 @@ function setupDrawerInteractions() {
             if (movementPercentage < -5) {
                 setImmersiveMode(true);
                 isDragging = false;
-				openEmbed.style.pointerEvents = 'auto';
+				setTimeout(() => {
+			        const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+			        if (activeEmbed) {
+			            const activeIframe = activeEmbed.querySelector('iframe');
+			            if (activeIframe) {
+			                activeIframe.style.pointerEvents = 'auto';
+			            }
+			        }
+			    }, 350); // Delay should be slightly longer than your CSS animation
 				return;
             }
 	    
