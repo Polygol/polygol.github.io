@@ -264,7 +264,40 @@
             box-shadow: none;
             corner-shape: superellipse(1.25);
         }
+
+        .app-icon-img {
+            border: 1px solid var(--glass-border);
+            aspect-ratio: 1 / 1;
+            corner-shape: superellipse(1.25);
+            border-radius: 35%;
+            overflow: hidden;
+        	position: relative;
+        	box-shadow: var(--sun-shadow), 0px 2px 10px 0px rgb(90 90 90 / 25%);
+        }
         
+        .app-icon-img img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        	corner-shape: inherit;
+            border-radius: inherit;
+            transform: scale(1.15);
+        }
+        
+        .app-icon-img::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            right: 0; bottom: 0;
+            box-shadow: var(--sun-shadow-strong);
+            pointer-events: none; /* so clicks pass through */
+        	corner-shape: inherit;
+            border-radius: inherit;
+            z-index: 1;
+            border: 1px solid var(--glass-border);
+        }
+
         .media-widget-device {
         	background: var(--overlay-color);
             z-index: 1;
