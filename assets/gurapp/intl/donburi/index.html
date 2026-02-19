@@ -23,7 +23,7 @@
             display: flex;
             flex-direction: column;
             padding: 20px;
-            padding-top: 60px;
+            padding-top: 80px;
             user-select: none;
             color: var(--text-color);
             overflow: hidden;
@@ -36,40 +36,43 @@
         /* don-navbar / Tabs */
         .don-navbar {
             display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding-bottom: 15px;
-            scrollbar-width: none; /* Firefox */
-            margin-bottom: 10px;
-            flex-shrink: 0;
-        }
-        .don-navbar::-webkit-scrollbar {
-            display: none;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+            padding: 15px 20px;
+            background-color: transparent;
+            border: none;
+            position: fixed;
+            top: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            transition: top 0.3s ease;
+            width: 100%;
+            flex-wrap: wrap;
+            height: 80px;
         }
 
         .don-nav-btn {
-            background-color: var(--search-background);
             color: var(--text-color);
             border-radius: 35px;
             corner-shape: round;
             padding: 12px 20px;
-            font-size: 0.95rem;
-            font-weight: 500;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
-            box-shadow: var(--sun-shadow);
             white-space: nowrap;
             display: flex;
             align-items: center;
-            gap: 8px;
         }
 
         .don-nav-btn.active {
             background-color: var(--accent);
             color: var(--background-color);
             corner-shape: superellipse(1.5);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+            box-shadow: var(--sun-shadow);
+            font-weight: 500;
         }
 
         .don-nav-btn:active {
