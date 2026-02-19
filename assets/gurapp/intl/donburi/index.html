@@ -314,10 +314,9 @@
     <!-- Your Day Tab -->
     <div class="tab-content bento-grid active" id="tab-day">
         <div class="bento-item span-2x2">
-            <div class="item-card-title"><span class="material-symbols-rounded">schedule</span>Time & Date</div>
-            <div class="item-card-big-text" id="bento-time">00:00</div>
+            <div class="item-card-title" id="greeting-text"><span class="material-symbols-rounded">schedule</span>Good morning</div>
             <div class="item-card-subtitle" id="bento-date">Monday, Jan 1</div>
-            <div style="margin-top: auto; font-weight: 500;" id="greeting-text">Good Morning</div>
+            <div class="item-card-big-text" id="bento-time">00:00</div>
         </div>
 
         <div class="bento-item span-2x1" onclick="Gurasuraisu.openApp('/weather/index.html')">
@@ -332,10 +331,9 @@
         </div>
 
         <div class="bento-item span-2x1" onclick="Gurasuraisu.openApp('/fantaskical/index.html')">
-            <div class="item-card-title"><span class="material-symbols-rounded">event</span>Next Event</div>
+            <div class="item-card-title"><span class="material-symbols-rounded">event</span>Agenda</div>
             <div id="next-event-content" style="margin: auto 0; gap: 10px; display: flex; flex-direction: column;">
                 <div style="font-weight: 600; font-size: 1.1rem;">No upcoming events</div>
-                <div class="item-card-subtitle">Enjoy your free time</div>
             </div>
         </div>
 
