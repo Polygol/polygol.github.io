@@ -4077,7 +4077,6 @@ input[type="checkbox"]:checked::before {
 #donburi-container.open {
     transform: translateY(0);
     opacity: 1;
-    background-color: var(--background-color);
     pointer-events: auto;
 }
 
