@@ -651,41 +651,47 @@
             }
         }
 
-        function updateHomeControls() {
-            const brightness = localStorage.getItem('page_brightness') || '100';
-            const temp = localStorage.getItem('display_temperature') || '0';
-            const theme = localStorage.getItem('theme') || 'dark';
-            const silent = localStorage.getItem('silentMode') === 'true';
+        function updateHomeControls(data = {}) {
+            // Priority: provided data (from message), then current UI value
+            const brightness = data.page_brightness || document.getElementById('brightness-slider').value;
+            const temp = data.display_temperature || document.getElementById('temp-slider').value;
+            const theme = data.theme || (document.getElementById('theme-toggle').checked ? 'light' : 'dark');
+            const silent = data.silentMode || document.getElementById('silent-toggle').checked.toString();
 
-            document.getElementById('brightness-slider').value = brightness;
-            document.getElementById('temp-slider').value = temp;
-            document.getElementById('theme-toggle').checked = theme === 'light';
-            document.getElementById('silent-toggle').checked = silent;
+            if (data.page_brightness) document.getElementById('brightness-slider').value = brightness;
+            if (data.display_temperature) document.getElementById('temp-slider').value = temp;
+            if (data.theme) document.getElementById('theme-toggle').checked = theme === 'light';
+            if (data.silentMode) document.getElementById('silent-toggle').checked = silent === 'true';
         }
 
-        // --- Controls Listeners ---
+        // --- Controls Listeners using GurappAPI ---
         document.getElementById('brightness-slider').addEventListener('input', (e) => {
-            if (window.Gurasuraisu) {
-                Gurasuraisu.setSettingValue('page_brightness', e.target.value);
-            }
+            Gurasuraisu.setSettingValue('page_brightness', e.target.value);
         });
 
         document.getElementById('temp-slider').addEventListener('input', (e) => {
-            if (window.Gurasuraisu) {
-                Gurasuraisu.setSettingValue('display_temperature', e.target.value);
-            }
+            Gurasuraisu.setSettingValue('display_temperature', e.target.value);
         });
 
         document.getElementById('theme-toggle').addEventListener('change', (e) => {
-            if (window.Gurasuraisu) {
-                const theme = e.target.checked ? 'light' : 'dark';
-                Gurasuraisu.setSettingValue('theme', theme);
-            }
+            const theme = e.target.checked ? 'light' : 'dark';
+            Gurasuraisu.setSettingValue('theme', theme);
         });
 
         document.getElementById('silent-toggle').addEventListener('change', (e) => {
-            if (window.Gurasuraisu) {
-                Gurasuraisu.setSettingValue('silentMode', e.target.checked.toString());
+            Gurasuraisu.setSettingValue('silentMode', e.target.checked.toString());
+        });
+
+        // Handle settings values pushed from parent
+        window.addEventListener('message', (event) => {
+            const data = event.data;
+            if (data.type === 'localStorageItemValue' || data.type === 'settingUpdate') {
+                const update = {};
+                update[data.key] = data.value;
+                updateHomeControls(update);
+            }
+            if (data.type === 'themeUpdate') {
+                updateHomeControls({ theme: data.theme });
             }
         });
 
