@@ -12773,6 +12773,7 @@ function openDonburi() {
 	
 	donburi.style.display = 'block';
 	donburi.style.pointerEvents = 'none'; // Disable during transition
+	donburi.style.opacity = '1';
 	
 	requestAnimationFrame(() => {
 		donburi.classList.add('open');
