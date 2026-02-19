@@ -11457,7 +11457,7 @@ async function createFullscreenEmbed(url, options = {}) {
         }
 
         // --- Hard Reset for FULLSCREEN apps only ---
-        document.querySelectorAll('.fullscreen-embed').forEach(embed => {
+        document.querySelectorAll('.fullscreen-embed:not(.system-overlay)').forEach(embed => {
             if (embed.dataset.embedUrl !== url) {
                 // FIX: Skip embeds that are marked as closing (being destroyed)
                 // This prevents caching stale references to elements about to be removed
@@ -12078,7 +12078,7 @@ function closeFullscreenEmbed() {
 
     window.speechSynthesis.cancel();
 
-    const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
+    const embedContainer = document.querySelector('.fullscreen-embed:not(.system-overlay)[style*="display: block"]');
     
     if (embedContainer) {
         const url = embedContainer.dataset.embedUrl;
@@ -12198,7 +12198,7 @@ function closeFullscreenEmbed() {
 }
 
 function forceCloseApp(url) {
-    if (!url) return;
+    if (!url || url.includes('donburi')) return;
 
     window.Analytics?.trackAppClose(url);
 
@@ -12416,7 +12416,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 	
 	const embedContainer = urlToMinimize 
 	    ? getEmbedContainer(urlToMinimize)
-	    : document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    : document.querySelector('.fullscreen-embed:not(.system-overlay)[style*="display: block"]');
 	
     if (embedContainer) {
         const url = embedContainer.dataset.embedUrl;
@@ -12769,12 +12769,18 @@ function openDonburi() {
 	if (!donburi) return;
 	
 	donburi.style.display = 'block';
+	donburi.style.pointerEvents = 'none'; // Disable during transition
 	
 	requestAnimationFrame(() => {
 		donburi.classList.add('open');
 		donburi.style.transform = 'translateY(0)';
 		donburi.style.opacity = '1';
 	});
+
+	// Enable interaction only after the gesture is fully complete
+	setTimeout(() => {
+		if (donburi.classList.contains('open')) donburi.style.pointerEvents = 'auto';
+	}, 400);
 
 	// Hide Home UI
 	document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
