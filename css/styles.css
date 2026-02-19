@@ -2472,6 +2472,11 @@ input[type="checkbox"]:checked::before {
       filter: none;
     }
 
+    /* Hide indicator when app is open */
+    body.app-active .page-indicator {
+        display: none !important;
+    }
+
     .page-indicator.persistent-mode {
         opacity: 1 !important;
         pointer-events: auto; /* Ensure clickable */
@@ -2756,30 +2761,6 @@ input[type="checkbox"]:checked::before {
 
 .app-switcher-title {
 	display: none;
-}
-
-#system-overlay-container {
-    position: fixed;
-    top: -100%;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 9998; /* High z-index, below alerts but above drawer */
-    background-color: transparent;
-    transition: top 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    will-change: top;
-    display: block;
-}
-
-#system-overlay-container iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    display: block;
-}
-
-#system-overlay-container.open {
-    top: 0 !important;
 }
 
     body.minimal-active #blurOverlayControls {
