@@ -113,12 +113,12 @@
         /* Bento Items */
         .bento-item {
             background-color: var(--search-background);
-            border-radius: 35px;
+            border-radius: 50px;
             corner-shape: superellipse(1.5);
             border: 1px solid var(--glass-border);
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(5px);
             box-shadow: var(--sun-shadow);
-            padding: 20px;
+            padding: 18px 20px;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -145,20 +145,24 @@
 
         /* Typography inside cards */
         .item-card-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            font-family: 'Open Runde', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--secondary-text-color);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             display: flex;
             align-items: center;
             gap: 8px;
+            margin-left: 4px;
+        }
+
+        .item-card-title .material-symbols-rounded {
+            font-size: 18px; 
         }
 
         .item-card-subtitle {
             font-size: 0.9rem;
-            color: var(--secondary-text-color);
         }
 
         .item-card-big-text {
@@ -329,7 +333,7 @@
 
         <div class="bento-item span-2x1" onclick="Gurasuraisu.openApp('/fantaskical/index.html')">
             <div class="item-card-title"><span class="material-symbols-rounded">event</span>Next Event</div>
-            <div id="next-event-content" style="margin: auto 0;">
+            <div id="next-event-content" style="margin: auto 0; gap: 10px; display: flex; flex-direction: column;">
                 <div style="font-weight: 600; font-size: 1.1rem;">No upcoming events</div>
                 <div class="item-card-subtitle">Enjoy your free time</div>
             </div>
