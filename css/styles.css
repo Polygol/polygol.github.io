@@ -2785,6 +2785,11 @@ input[type="checkbox"]:checked::before {
 		corner-shape: square;
 	}
 
+	body.immersive-active .fullscreen-embed.split-left.legacy iframe, .fullscreen-embed.split-right.legacy iframe {
+	    width: 100%;
+	    padding: 0;
+	}
+
 	/* Common styles for ALL blackout modes */
 	body.blackout-active .persistent-clock,
 	body.blackout-active .drawer-handle,
