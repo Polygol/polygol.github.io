@@ -11457,7 +11457,7 @@ async function createFullscreenEmbed(url, options = {}) {
         }
 
         // --- Hard Reset for FULLSCREEN apps only ---
-        document.querySelectorAll('.fullscreen-embed:not(.system-overlay)').forEach(embed => {
+        document.querySelectorAll('.fullscreen-embed').forEach(embed => {
             if (embed.dataset.embedUrl !== url) {
                 // FIX: Skip embeds that are marked as closing (being destroyed)
                 // This prevents caching stale references to elements about to be removed
@@ -12078,7 +12078,7 @@ function closeFullscreenEmbed() {
 
     window.speechSynthesis.cancel();
 
-    const embedContainer = document.querySelector('.fullscreen-embed:not(.system-overlay)[style*="display: block"]');
+    const embedContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
     
     if (embedContainer) {
         const url = embedContainer.dataset.embedUrl;
@@ -12416,7 +12416,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 	
 	const embedContainer = urlToMinimize 
 	    ? getEmbedContainer(urlToMinimize)
-	    : document.querySelector('.fullscreen-embed:not(.system-overlay)[style*="display: block"]');
+	    : document.querySelector('.fullscreen-embed[style*="display: block"]');
 	
     if (embedContainer) {
         const url = embedContainer.dataset.embedUrl;
