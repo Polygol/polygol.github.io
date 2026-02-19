@@ -253,8 +253,8 @@
         
         .media-widget .app-icon-img {
         	position: absolute;
-            top: 18px;
-            left: 20px;
+            top: 28px;
+            left: 28px;
             width: 28px;
             height: 28px;
             border-radius: 35%;
@@ -308,8 +308,8 @@
             border: 1px solid var(--glass-border);
             box-shadow: var(--sun-shadow);
             position: absolute;
-            top: 18px;
-            right: 20px;
+            top: 28px;
+            right: 28px;
             font-size: 0.7em;
             display: flex;
             align-items: center;
@@ -331,7 +331,6 @@
             flex-shrink: 0;
             cursor: pointer;
             transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
-        	mix-blend-mode: overlay;
             border-radius: inherit;
             corner-shape: inherit;
         }
@@ -375,11 +374,11 @@
         .media-widget-progress-container {
             display: flex;
             align-items: center;
-            padding: 0 68px;
+            padding: 0 80px;
             z-index: 1;
             box-sizing: border-box;
             position: fixed;
-            bottom: 8px;
+            bottom: 18px;
             pointer-events: none;
             justify-content: space-between;
             width: 100%;
@@ -460,8 +459,8 @@
             corner-shape: superellipse(1.5);
             color: var(--text-color);
             position: fixed;
-            right: 22px;
-            bottom: 64px;
+            right: 32px;
+            bottom: 68px;
         }
 
         .list-item {
@@ -595,7 +594,7 @@
     <div class="tab-content bento-grid" id="tab-media">
         <div class="bento-item span-2x2" style="padding: 0;">
             <div id="media-session-widget" class="media-widget">
-                <div style="background: var(--background-color-tr);box-shadow: var(--sun-shadow);border-radius: inherit;corner-shape: inherit;width: 100%;height: 100%;position: fixed;left: 0;top: 0;"> </div>
+                <div style="background: linear-gradient(0deg,var(--background-color-tr) 25%, transparent 100%);border-radius: inherit;corner-shape: inherit;width: 100%;height: 100%;position: fixed;left: 0;top: 0;"> </div>
                 <img id="media-widget-art" src="" alt="Album Art">
                 <div class="app-icon-img">
                     <img id="media-widget-app-icon" src="" class="media-widget-app-icon" style="display: none;" />
@@ -619,7 +618,7 @@
                         <div style="display: flex;flex-direction: row;height: 16px;align-items: center;">
                             <div id="media-widget-progress"></div>
                             <div style="z-index: 4;width: 6px;background-color: var(--text-color);border-radius: 16px;margin-right: 4px;flex-shrink: 0;height: 16px;margin-left: -6px;"></div>
-                            <div style="background: var(--overlay-color);width: 100%;height: 6px;border-radius: 10px;backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);box-shadow: var(--sun-shadow);border: 1px solid var(--glass-border);"></div>
+                            <div style="background: var(--overlay-color);width: 100%;height: 8px;border-radius: 10px;backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);box-shadow: var(--sun-shadow);border: 1px solid var(--glass-border);"></div>
                         </div>
                     </div>
                     <button id="media-widget-next"><span class="material-symbols-rounded">skip_next</span></button>
