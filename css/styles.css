@@ -2774,11 +2774,11 @@ input[type="checkbox"]:checked::before {
         backdrop-filter: brightness(0.8) contrast(2) saturate(2) grayscale(0.8);
     }
 
-	body.minimal-active .fullscreen-embed.legacy .legacy-app-header {
+	body.immersive-active .fullscreen-embed.legacy .legacy-app-header {
 		display: none !important;
 	}
 
-	body.minimal-active .fullscreen-embed.legacy iframe {
+	body.immersive-active .fullscreen-embed.legacy iframe {
 		height: 100%;
 		margin-top: 0;
 		border-radius: 0;
