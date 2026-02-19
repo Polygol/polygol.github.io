@@ -840,62 +840,37 @@
         }
 
         function updateMedia(data = null) {
-            const metadataStr = localStorage.getItem('lastMediaMetadata');
-            const appName = localStorage.getItem('lastMediaSessionApp');
+            // If data is provided via message, use it; otherwise, fall back to storage
+            const metadata = data ? data.metadata : JSON.parse(localStorage.getItem('lastMediaMetadata'));
+            const appName = data ? data.appName : localStorage.getItem('lastMediaSessionApp');
+            const state = data ? data.playbackState : 'paused';
             
-            if (metadataStr && appName) {
-                try {
-                    const metadata = JSON.parse(metadataStr);
-                    document.getElementById('media-widget-title').textContent = metadata.title || 'Unknown Title';
-                    document.getElementById('media-widget-artist').textContent = metadata.artist || 'Unknown Artist';
-                    
-                    const artEl = document.getElementById('media-widget-art');
-                    if (metadata.artwork && metadata.artwork.length > 0) {
-                        artEl.src = metadata.artwork[0].src;
-                        artEl.style.opacity = '0.5';
-                    }
+            if (metadata && appName) {
+                document.getElementById('media-widget-title').textContent = metadata.title || 'Not Playing';
+                document.getElementById('media-widget-artist').textContent = metadata.artist || '---';
+                
+                const artEl = document.getElementById('media-widget-art');
+                if (metadata.artwork && metadata.artwork.length > 0) {
+                    artEl.src = metadata.artwork[0].src;
+                    artEl.style.opacity = '0.4';
+                }
 
-                    // Update App Icon
-                    const appIconEl = document.getElementById('media-widget-app-icon');
-                    const userApps = JSON.parse(localStorage.getItem('userInstalledApps') || '{}');
-                    if (userApps[appName] && userApps[appName].icon) {
-                        let iconUrl = userApps[appName].icon;
-                        if (!iconUrl.startsWith('http') && !iconUrl.startsWith('/') && !iconUrl.startsWith('data:')) {
-                            iconUrl = `/assets/appicon/${iconUrl}`;
-                        }
-                        appIconEl.src = iconUrl;
-                        appIconEl.style.display = 'block';
+                const appIconEl = document.getElementById('media-widget-app-icon');
+                const userApps = JSON.parse(localStorage.getItem('userInstalledApps') || '{}');
+                if (userApps[appName] && userApps[appName].icon) {
+                    let iconUrl = userApps[appName].icon;
+                    if (!iconUrl.startsWith('http') && !iconUrl.startsWith('/') && !iconUrl.startsWith('data:')) {
+                        iconUrl = `/assets/appicon/${iconUrl}`;
                     }
-                } catch(e) {}
+                    appIconEl.src = iconUrl;
+                    appIconEl.style.display = 'block';
+                }
+                
+                // Update play/pause icon
+                const icon = document.querySelector('#media-widget-play-pause .material-symbols-rounded');
+                if (icon) icon.textContent = state === 'playing' ? 'pause' : 'play_arrow';
             }
         }
-
-        // Add Progress Listener to the window message handler
-        window.addEventListener('message', (event) => {
-            const data = event.data;
-            if (data.type === 'media-progress') {
-                const progressEl = document.getElementById('media-widget-progress');
-                const currentEl = document.getElementById('media-widget-current-time');
-                const durationEl = document.getElementById('media-widget-duration');
-                
-                if (data.duration > 0) {
-                    const percent = (data.currentTime / data.duration) * 100;
-                    progressEl.style.width = `${percent}%`;
-                    
-                    const formatTime = (s) => {
-                        const m = Math.floor(s / 60);
-                        const sec = Math.floor(s % 60).toString().padStart(2, '0');
-                        return `${m}:${sec}`;
-                    };
-                    currentEl.textContent = formatTime(data.currentTime);
-                    durationEl.textContent = formatTime(data.duration);
-                }
-            }
-            if (data.type === 'playback-state') {
-                const icon = document.querySelector('#media-widget-play-pause .material-symbols-rounded');
-                icon.textContent = data.state === 'playing' ? 'pause' : 'play_arrow';
-            }
-        });
 
         function updateHomeControls(data = {}) {
             // Priority: provided data (from message), then current UI value
@@ -926,19 +901,6 @@
 
         document.getElementById('silent-toggle').addEventListener('change', (e) => {
             Gurasuraisu.setSettingValue('silentMode', e.target.checked.toString());
-        });
-
-        // Handle settings values pushed from parent
-        window.addEventListener('message', (event) => {
-            const data = event.data;
-            if (data.type === 'localStorageItemValue' || data.type === 'settingUpdate') {
-                const update = {};
-                update[data.key] = data.value;
-                updateHomeControls(update);
-            }
-            if (data.type === 'themeUpdate') {
-                updateHomeControls({ theme: data.theme });
-            }
         });
 
         // Media Controls
@@ -972,13 +934,46 @@
         // Real-time synchronization for changes pushed from parent
         window.addEventListener('message', (event) => {
             const data = event.data;
-            if (data.type === 'themeUpdate') {
-                document.getElementById('theme-toggle').checked = data.theme === 'light';
+
+            // Metadata / Active Session Change
+            if (data.type === 'mediaUpdate') {
+                updateMedia(data);
             }
-            // Media Sync
-            if (data.type === 'mediaUpdate' || data.type === 'settingUpdate') {
-                updateMedia();
-                updateHomeControls();
+
+            // Play/Pause Toggle
+            if (data.type === 'playbackState') {
+                const icon = document.querySelector('#media-widget-play-pause .material-symbols-rounded');
+                if (icon) icon.textContent = data.state === 'playing' ? 'pause' : 'play_arrow';
+            }
+
+            // Progress & Timers
+            if (data.type === 'mediaProgress') {
+                const progressEl = document.getElementById('media-widget-progress');
+                const currentEl = document.getElementById('media-widget-current-time');
+                const durationEl = document.getElementById('media-widget-duration');
+                
+                if (data.duration > 0) {
+                    const percent = (data.currentTime / data.duration) * 100;
+                    if (progressEl) progressEl.style.width = `${percent}%`;
+                    
+                    const formatTime = (s) => {
+                        const m = Math.floor(s / 60);
+                        const sec = Math.floor(s % 60).toString().padStart(2, '0');
+                        return `${m}:${sec}`;
+                    };
+                    if (currentEl) currentEl.textContent = formatTime(data.currentTime);
+                    if (durationEl) durationEl.textContent = formatTime(data.duration);
+                }
+            }
+            
+            if (data.type === 'themeUpdate') {
+                updateHomeControls({ theme: data.theme });
+            }
+
+            if (data.type === 'localStorageItemValue' || data.type === 'settingUpdate') {
+                const update = {};
+                update[data.key] = data.value;
+                updateHomeControls(update);
             }
         });
 
