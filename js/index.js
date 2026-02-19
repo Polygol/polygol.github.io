@@ -12198,8 +12198,6 @@ function closeFullscreenEmbed() {
 }
 
 function forceCloseApp(url) {
-    if (!url || url.includes('donburi')) return;
-
     window.Analytics?.trackAppClose(url);
 
 	document.body.classList.remove('app-active');
@@ -12782,9 +12780,10 @@ function openDonburi() {
 		if (donburi.classList.contains('open')) donburi.style.pointerEvents = 'auto';
 	}, 400);
 
-	// Hide Home UI
-	document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+	// Hide Home UI and system handles
+	document.querySelectorAll('.container, #home-activity-container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #activity-island, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
 		el.style.opacity = '0';
+		el.style.pointerEvents = 'none';
 		setTimeout(() => el.classList.add('force-hide'), 300);
 	});
 }
@@ -12797,10 +12796,11 @@ window.closeDonburi = function() {
 	donburi.style.transform = 'translateY(-100%)';
 	donburi.style.opacity = '0';
 
-	// Restore Home UI
-	document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+	// Restore Home UI and system handles
+	document.querySelectorAll('.container, #home-activity-container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #activity-island, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
 		el.classList.remove('force-hide');
 		el.style.display = el.dataset.originalDisplay || '';
+		el.style.pointerEvents = ''; // Restore pointer events
 		requestAnimationFrame(() => el.style.opacity = '1');
 	});
 
