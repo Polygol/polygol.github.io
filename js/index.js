@@ -10330,105 +10330,6 @@ const HomeActivityManager = {
     }
 };
 
-// Update handleSwipe to show indicator even if no swipe is detected
-function handleSwipe() {
-  const swipeDistance = touchEndX - touchStartX;
-  
-  // Always show the indicator when swiping, regardless of wallpaper count
-  updatePageIndicator();
-  
-  // Only process wallpaper changes if we have at least 2 wallpapers
-  if (recentWallpapers.length >= 2) {
-    if (Math.abs(swipeDistance) > MIN_SWIPE_DISTANCE) {
-      if (swipeDistance > 0) {
-        // Swipe right - previous wallpaper
-        switchWallpaper('left');
-      } else {
-        // Swipe left - next wallpaper
-        switchWallpaper('right');
-      }
-    }
-  }
-}
-
-// Add swipe detection for wallpaper switching
-let touchStartX = 0;
-let touchStartY = 0; // Added vertical tracking
-let touchEndX = 0;
-let touchEndY = 0;   // Added vertical tracking
-const MIN_SWIPE_DISTANCE = 50;
-
-// Update handleSwipe to check direction
-function handleSwipe() {
-  const swipeDistanceX = touchEndX - touchStartX;
-  const swipeDistanceY = touchEndY - touchStartY;
-
-  // 1. Vertical Check: If movement is primarily vertical (like opening drawer), ignore it.
-  if (Math.abs(swipeDistanceY) > Math.abs(swipeDistanceX)) return;
-  
-  // Always show the indicator when swiping, regardless of wallpaper count
-  updatePageIndicator();
-  
-  // Only process wallpaper changes if we have at least 2 wallpapers
-  if (recentWallpapers.length >= 2) {
-    if (Math.abs(swipeDistanceX) > MIN_SWIPE_DISTANCE) {
-      if (swipeDistanceX > 0) {
-        // Swipe right - previous wallpaper
-        switchWallpaper('left');
-      } else {
-        // Swipe left - next wallpaper
-        switchWallpaper('right');
-      }
-    }
-  }
-}
-
-// Update the touch event listeners to specifically check if we're touching the body or background
-document.addEventListener('touchstart', (e) => {  
-  // Only track touch start if touching the body or background video directly
-  if ((e.target === document.body || e.target.id === 'background-video') && 
-      !e.target.classList.contains('indicator-dot')) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY; // Track Y
-  }
-}, false);
-
-document.addEventListener('touchend', (e) => {
-  // Only process the swipe if the touch started on body or background video
-  if ((e.target === document.body || e.target.id === 'background-video') && 
-      !e.target.classList.contains('indicator-dot')) {
-    touchEndX = e.changedTouches[0].clientX;
-    touchEndY = e.changedTouches[0].clientY; // Track Y
-    handleSwipe();
-  }
-}, false);
-
-// Handle mouse swipes too for desktop testing
-let mouseDown = false;
-let mouseStartX = 0;
-let mouseStartY = 0;
-
-document.addEventListener('mousedown', (e) => {
-  // Detect swipes regardless of wallpaper count
-  if ((e.target === document.body || e.target.id === 'background-video') &&
-      !e.target.classList.contains('indicator-dot')) {
-    mouseDown = true;
-    mouseStartX = e.clientX;
-    mouseStartY = e.clientY;
-  }
-}, false);
-
-document.addEventListener('mouseup', (e) => {
-  if (mouseDown) {
-    mouseDown = false;
-    touchEndX = e.clientX;
-    touchEndY = e.clientY;
-    touchStartX = mouseStartX;
-    touchStartY = mouseStartY;
-    handleSwipe();
-  }
-}, false);
-
 async function initializeAndApplyWallpaper() {
     loadSavedPosition();
     
@@ -12945,6 +12846,8 @@ function setupDrawerInteractions() {
 	function moveDrawer(xPosition, yPosition) {
 	    if (!isDragging) return;
 
+        touchEndX = xPosition;
+        touchEndY = yPosition;
         currentX = xPosition;
         const deltaX = currentX - startX;
         const verticalDelta = startY - yPosition; // Use a different name to avoid conflict
@@ -13069,8 +12972,8 @@ function setupDrawerInteractions() {
 	        interactionBlocker.style.pointerEvents = 'none';
 	
 	    } else {
-	        // LOGIC FOR DRAGGING THE DRAWER (NO APP OPEN)
-	        if (movementPercentage > 2.5 && movementPercentage < 25) {
+            // Only show Dock if dragging from Handle. If dragging from Body, keep it hidden.
+	        if (dragSource === 'handle' && movementPercentage > 2.5 && movementPercentage < 25) {
 	            if (dock.style.display === 'none' || dock.style.display === '') {
 	                dock.style.display = 'flex';
 	                requestAnimationFrame(() => {
@@ -13328,10 +13231,31 @@ function setupDrawerInteractions() {
         document.querySelectorAll('iframe').forEach(f => f.style.pointerEvents = 'auto');
 	
 	    isDragging = false;
+        
+        // --- Wallpaper Switch Integration ---
+        // Only trigger wallpaper swipe if we didn't initiate a vertical drawer move
+        const swipeDistanceX = touchEndX - touchStartX;
+        const swipeDistanceY = touchEndY - touchStartY;
+        if (Math.abs(swipeDistanceX) > 50 && Math.abs(swipeDistanceX) > Math.abs(swipeDistanceY)) {
+             handleSwipe();
+        }
+
 	    setTimeout(() => {
 	        isDrawerInMotion = false;
 	    }, 300);
 	}
+
+    // --- Wallpaper ---
+    let touchStartX = 0, touchStartY = 0;
+    let touchEndX = 0, touchEndY = 0;
+
+    function handleSwipe() {
+        const swipeDistanceX = touchEndX - touchStartX;
+        updatePageIndicator();
+        if (recentWallpapers.length >= 2 && Math.abs(swipeDistanceX) > 50) {
+            switchWallpaper(swipeDistanceX > 0 ? 'left' : 'right');
+        }
+    }
 
     // Add initial swipe detection in app
     function setupAppSwipeDetection() {
@@ -13573,8 +13497,14 @@ function setupDrawerInteractions() {
                 }
             }
         }
-
+		
         if (shouldStart) {
+            // Set wallpaper start coordinates
+            touchStartX = clientX;
+            touchStartY = clientY;
+            touchEndX = clientX;
+            touchEndY = clientY;
+
             // Ensure logic knows we are starting from open/closed state
             initialDrawerPosition = isDrawerOpen ? 0 : -100;
             startDrag(clientX, clientY);
