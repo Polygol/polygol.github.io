@@ -11839,44 +11839,6 @@ async function createFullscreenEmbed(url, options = {}) {
     let embedFailed = false;
     
 	iframe.addEventListener('load', () => {
-	    /* Don't try to detect if embedding is blocked
-		
-		let embedBlocked = false;
-	
-	    let urlDomain = '';
-	    try {
-	        const absoluteUrl = new URL(url, window.location.origin); // Fix for relative URLs
-	        urlDomain = absoluteUrl.hostname;
-	    } catch (e) {
-	        console.warn('Invalid URL in iframe load handler:', url);
-	        embedFailed = true;
-	        return;
-	    }
-	
-	    try {
-	        const iframeContent = iframe.contentWindow.document;
-	
-	        // Look for typical anti-embed messages
-	        const bodyText = iframeContent.body?.textContent?.toLowerCase() || '';
-	        if (bodyText.includes('x-frame-options') || bodyText.includes('frame denied')) {
-	            embedBlocked = true;
-	        }
-	    } catch (error) {
-	        // Cross-origin access failed. Likely blocked
-	        embedBlocked = true;
-	    }
-	
-	    if (embedBlocked) {
-	        embedFailed = true;
-	
-	        const allowlistDomains = ['kirbindustries.gitbook.io'];
-	        if (!allowlistDomains.includes(urlDomain)) {
-	            window.open(url, '_blank');
-	        }
-	
-	        return;
-	    } */
-	
 	    // If iframe loaded successfully, send language to iframe
 	    const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
 	    if (iframe.contentWindow) {
@@ -11926,6 +11888,7 @@ async function createFullscreenEmbed(url, options = {}) {
 	
     // Append the container to the DOM
     document.body.appendChild(embedContainer);
+    document.body.classList.add('app-active');
 	
     pauseAllAnimations();
 
@@ -12188,6 +12151,8 @@ function closeFullscreenEmbed() {
     if (embedContainer) {
         const url = embedContainer.dataset.embedUrl;
         window.Analytics?.trackAppClose(url);
+
+		document.body.classList.remove('app-active');
         
         // Clean up Switcher Data Immediately
         // Remove from minimized cache to prevent ghosting in App Switcher
@@ -12305,6 +12270,8 @@ function forceCloseApp(url) {
 
     window.Analytics?.trackAppClose(url);
 
+	document.body.classList.remove('app-active');
+	
     // 1. Identify if we are closing the currently focused/visible app
     const activeElement = document.querySelector('.fullscreen-embed[style*="display: block"]');
     const isActiveApp = activeElement && activeElement.dataset.embedUrl === url;
@@ -12439,6 +12406,8 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         // Fire and forget, don't await to keep UI snappy
         captureAppScreenshot(targetUrl);
     }
+
+	document.body.classList.remove('app-active');
 	
     // --- Split Screen Support: Handle split screen minimization ---
     if (splitScreenState.active) {
@@ -13155,6 +13124,14 @@ function setupDrawerInteractions() {
                 return;
             }
 
+	        // Immersive Mode Trigger
+            // movementPercentage is negative for down swipes.
+            if (movementPercentage < -5) {
+                setImmersiveMode(true);
+                isDragging = false;
+                return;
+            }
+	    
 	        // LOGIC FOR FINISHING AN APP DRAG
 	        // Add transitions for the snap-back or close animation
 	        openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
@@ -13228,7 +13205,7 @@ function setupDrawerInteractions() {
             const opening = !startedOpen && (movementPercentage > 25 || isFlickUp);
             const significant = closing || opening;
             const smallOpen = !startedOpen && (movementPercentage > 2.5 && movementPercentage <= 25 && !isFlickUp);
-	        
+			
 	        if (smallOpen && dragSource === 'handle') {
                 // Show Dock (Only from Handle)
 	            dock.style.display = 'flex';
