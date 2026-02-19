@@ -7689,6 +7689,8 @@ async function processWallpaperFiles(files) {
 		return;
     }
 
+	showPopup('Adding wallpaper');
+
     try {
         const newItems = [];
 
