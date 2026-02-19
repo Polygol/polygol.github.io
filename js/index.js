@@ -10353,25 +10353,52 @@ function handleSwipe() {
 
 // Add swipe detection for wallpaper switching
 let touchStartX = 0;
+let touchStartY = 0; // Added vertical tracking
 let touchEndX = 0;
+let touchEndY = 0;   // Added vertical tracking
 const MIN_SWIPE_DISTANCE = 50;
 
+// Update handleSwipe to check direction
+function handleSwipe() {
+  const swipeDistanceX = touchEndX - touchStartX;
+  const swipeDistanceY = touchEndY - touchStartY;
+
+  // 1. Vertical Check: If movement is primarily vertical (like opening drawer), ignore it.
+  if (Math.abs(swipeDistanceY) > Math.abs(swipeDistanceX)) return;
+  
+  // Always show the indicator when swiping, regardless of wallpaper count
+  updatePageIndicator();
+  
+  // Only process wallpaper changes if we have at least 2 wallpapers
+  if (recentWallpapers.length >= 2) {
+    if (Math.abs(swipeDistanceX) > MIN_SWIPE_DISTANCE) {
+      if (swipeDistanceX > 0) {
+        // Swipe right - previous wallpaper
+        switchWallpaper('left');
+      } else {
+        // Swipe left - next wallpaper
+        switchWallpaper('right');
+      }
+    }
+  }
+}
+
 // Update the touch event listeners to specifically check if we're touching the body or background
-document.addEventListener('touchstart', (e) => {
-  if (isDragging) return;
+document.addEventListener('touchstart', (e) => {  
   // Only track touch start if touching the body or background video directly
   if ((e.target === document.body || e.target.id === 'background-video') && 
       !e.target.classList.contains('indicator-dot')) {
     touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY; // Track Y
   }
 }, false);
 
 document.addEventListener('touchend', (e) => {
-  if (isDragging) return;
   // Only process the swipe if the touch started on body or background video
   if ((e.target === document.body || e.target.id === 'background-video') && 
       !e.target.classList.contains('indicator-dot')) {
     touchEndX = e.changedTouches[0].clientX;
+    touchEndY = e.changedTouches[0].clientY; // Track Y
     handleSwipe();
   }
 }, false);
@@ -10379,23 +10406,25 @@ document.addEventListener('touchend', (e) => {
 // Handle mouse swipes too for desktop testing
 let mouseDown = false;
 let mouseStartX = 0;
+let mouseStartY = 0;
 
 document.addEventListener('mousedown', (e) => {
-  if (isDragging) return;
   // Detect swipes regardless of wallpaper count
   if ((e.target === document.body || e.target.id === 'background-video') &&
       !e.target.classList.contains('indicator-dot')) {
     mouseDown = true;
     mouseStartX = e.clientX;
+    mouseStartY = e.clientY;
   }
 }, false);
 
 document.addEventListener('mouseup', (e) => {
-  if (isDragging) return;
   if (mouseDown) {
     mouseDown = false;
     touchEndX = e.clientX;
+    touchEndY = e.clientY;
     touchStartX = mouseStartX;
+    touchStartY = mouseStartY;
     handleSwipe();
   }
 }, false);
