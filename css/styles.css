@@ -4059,6 +4059,18 @@ input[type="checkbox"]:checked::before {
     pointer-events: none !important;
 }
 
+/* Donburi */
+#donburi-container {
+    background-color: var(--background-color);
+    pointer-events: none;
+}
+
+#donburi-container.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
 /* The draggable divider */
 #split-divider {
     position: fixed;
