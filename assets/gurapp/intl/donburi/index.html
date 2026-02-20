@@ -1227,12 +1227,15 @@
                 }
 
                 const list = document.getElementById('rss-feed-list');
-                list.innerHTML = data.items.slice(0, 10).map(item => `
-                    <div class="list-item" style="flex-direction:column;align-items:flex-start;cursor:pointer;background: var(--search-background);padding: 10px 14px;border: 1px solid var(--glass-border);border-radius: 20px;corner-shape: superellipse(1.5);box-shadow: var(--sun-shadow);margin: 0;" onclick="window.open('${item.link}', '_blank')">
+                list.innerHTML = data.items.slice(0, 10).map(item => {
+                    const query = encodeURIComponent(item.title);
+                    const googleUrl = `https://www.google.com/search?q=${query}&igu=1&udm=50`;
+                    return `
+                    <div class="list-item" style="flex-direction:column;align-items:flex-start;cursor:pointer;background: var(--search-background);padding: 10px 14px;border: 1px solid var(--glass-border);border-radius: 20px;corner-shape: superellipse(1.5);box-shadow: var(--sun-shadow);margin: 0;" onclick="Gurasuraisu.openApp('${googleUrl}')">
                         <span style="font-weight:600; white-space:normal; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; width: 100%;">${item.title}</span>
                         <span style="font-size:0.8rem; color:var(--secondary-text-color); opacity: 0.5;">${new Date(item.pubDate).toLocaleDateString()}</span>
                     </div>
-                `).join('');
+                `}).join('');
             } catch(e) {
                 document.getElementById('rss-feed-list').innerHTML = `<div style="padding:10px;">Cannot load feed</div>`;
             }
