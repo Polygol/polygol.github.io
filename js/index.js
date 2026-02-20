@@ -736,9 +736,9 @@ async function setupServiceWorkerUpdateListener() {
             // Define newV by fetching the latest version from the script
             const newV = await fetchSystemVersion();
 
-            const showUpdateNotification = () => {
+			const showUpdateNotification = () => {
                 showNotification(`System update is available to install.`, {
-					header: 'Polygol ${newV}',
+					header: `Polygol ${newV}`,
                     icon: 'update',
                     system: true,
                     buttonText: 'Restart and Install',
