@@ -10236,12 +10236,13 @@ const HomeActivityManager = {
         }
     },
 
-    updateVisibility() {
+	updateVisibility() {
         const hasItems = this.items.length > 0;
         const appOpen = document.body.classList.contains('app-active');
         const drawerOpen = document.getElementById('app-drawer').classList.contains('open');
+        const donburiOpen = document.getElementById('donburi-container')?.classList.contains('open');
         
-        if (this.enabled && hasItems && !appOpen && !drawerOpen && !document.body.classList.contains('blackout-active')) {
+        if (this.enabled && hasItems && !appOpen && !drawerOpen && !donburiOpen && !document.body.classList.contains('blackout-active')) {
             this.container.style.display = 'flex';
             document.body.classList.add('home-activities-visible');
             // Slight delay to allow display:flex to apply before opacity transition
@@ -12841,7 +12842,7 @@ function openDonburi() {
 	}, 400);
 
 	// Hide Home UI and system handles
-	document.querySelectorAll('.container, #home-activity-container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #dynamic-area, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
+	document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #dynamic-area, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
 		el.style.opacity = '0';
 		el.style.pointerEvents = 'none';
 		setTimeout(() => el.classList.add('force-hide'), 300);
@@ -12856,7 +12857,7 @@ window.closeDonburi = function() {
 	donburi.style.transform = 'translateY(-100%)';
 
 	// Restore Home UI and system handles
-	document.querySelectorAll('.container, #home-activity-container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #dynamic-area, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
+	document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #dynamic-area, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
 		el.classList.remove('force-hide');
 		el.style.display = el.dataset.originalDisplay || '';
 		el.style.pointerEvents = ''; // Restore pointer events
@@ -13389,7 +13390,8 @@ function setupDrawerInteractions() {
         // AND we started the gesture on the background (not the drawer handle).
         const swipeDistanceX = touchEndX - touchStartX;
         const swipeDistanceY = touchEndY - touchStartY;
-        if (dragSource === 'body' && Math.abs(swipeDistanceX) > 50 && Math.abs(swipeDistanceX) > Math.abs(swipeDistanceY)) {
+        // Added strict check: vertical movement must be < 40px to prevent diagonal Donburi swipes from switching wallpaper
+        if (dragSource === 'body' && Math.abs(swipeDistanceX) > 50 && Math.abs(swipeDistanceY) < 40) {
              handleSwipe();
         }
 
