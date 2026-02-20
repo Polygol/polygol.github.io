@@ -1727,7 +1727,8 @@ function renderWidgets() {
             document.removeEventListener('touchend', onRotateEnd);
 
             // Save final rotation
-            const finalRotation = parseFloat(instance.dataset.tempRotation) || initialRotation;
+            const tempRot = parseFloat(instance.dataset.tempRotation);
+            const finalRotation = isNaN(tempRot) ? initialRotation : tempRot;
             const widgetToUpdate = activeWidgets[index];
             if (widgetToUpdate) {
                 widgetToUpdate.rotation = finalRotation;
