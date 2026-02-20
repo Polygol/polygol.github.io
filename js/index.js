@@ -10638,7 +10638,14 @@ function setupFontSelection() {
     });
 
     // Special logic: uncheck gradient if solid color is checked, and vice-versa
-	document.querySelectorAll('input[name="wallpaperType"]').forEach(radio => {
+	const radioSwitchColor = [
+	    document.getElementById('colorSwitch'),
+	    document.getElementById('gradientSwitch'),
+	    document.getElementById('glassSwitch'),
+	    document.getElementById('dynamicFillSwitch')
+	];
+	
+	radioSwitchColor.forEach(radio => {
 	    radio.addEventListener('change', () => {
 	        saveCurrentWallpaperSettings();
 	        syncUiStates();
