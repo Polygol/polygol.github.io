@@ -271,7 +271,7 @@ body.high-contrast.light-theme {
 }
 
 /* Universal backdrop-filter removal for high contrast */
-body.high-contrast *:not(#brightness-overlay):not(#temperature-overlay) {
+body.high-contrast *:not(#brightness-overlay):not(#temperature-overlay):not(.info):not(.clock) {
 	backdrop-filter: none !important;
 }
 
@@ -1142,7 +1142,7 @@ body.one-button-nav-active .dock.show {
 
 .info.dynamic-fill-effect .date,
 .clock.dynamic-fill-effect > * {
-    color: var(--transparent-color) !important;
+    color: transparent !important;
     background: none !important; /* Ensure no other backgrounds interfere */
 
     -webkit-mask-image: linear-gradient(black, black);
