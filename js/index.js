@@ -554,6 +554,31 @@ const ResourceManager = {
     },
 
     async checkMemory() {
+        // --- Unknown Background Cleanup Logic ---
+        const now = Date.now();
+        const UNKNOWN_TIMEOUT = 5 * 60 * 1000; // 5 Minutes
+        const backgroundUrls = Object.keys(minimizedEmbeds);
+
+        backgroundUrls.forEach(url => {
+            // 1. Identify if the app is "Officially Installed"
+            const isInstalled = Object.values(apps).some(app => app.url === url);
+            
+            if (!isInstalled) {
+                const lastActive = this.appActivity[url] || 0;
+                
+                // 2. If it hasn't been focused for > 5 minutes, kill it
+                if (now - lastActive > UNKNOWN_TIMEOUT) {
+                    console.log(`[ResourceManager] Closing inactive unknown app: ${url}`);
+                    
+                    // 3. Safety check: Don't kill it if it's the current Media App
+                    const appName = Object.keys(apps).find(name => apps[name].url === url);
+                    if (appName !== activeMediaSessionApp) {
+                        forceCloseApp(url);
+                    }
+                }
+            }
+        });
+		
         if (!performance.measureUserAgentSpecificMemory) return;
         if (!window.crossOriginIsolated) {
             // Heuristic Fallback
