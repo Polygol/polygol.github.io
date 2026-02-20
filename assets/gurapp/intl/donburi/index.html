@@ -1275,7 +1275,8 @@
                     row.className = 'settings-row';
                     
                     // Size Select
-                    const sizeSelect = document.createElement('select');.forEach(sz => {
+                    const sizeSelect = document.createElement('select');
+                    ['span-1x1', 'span-2x1', 'span-1x2', 'span-2x2', 'span-3x2'].forEach(sz => {
                         const opt = document.createElement('option');
                         opt.value = sz;
                         opt.textContent = sz;
