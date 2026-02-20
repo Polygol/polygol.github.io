@@ -5050,11 +5050,14 @@ function updateClockAndDate() {
     if (modalTitle) modalTitle.textContent = formattedDate;
 
     // --- FIX to force mask repaint ---
-    if (clockElement.classList.contains('glass-effect')) {
-        clockElement.classList.remove('glass-effect');
+    if (clockElement.classList.contains('glass-effect') || clockElement.classList.contains('dynamic-fill-effect')) {
+        const hasGlass = clockElement.classList.contains('glass-effect');
+        const hasDynamicFill = clockElement.classList.contains('dynamic-fill-effect');
+        clockElement.classList.remove('glass-effect', 'dynamic-fill-effect');
         // Reading offsetHeight is a trick to force the browser to reflow
         void clockElement.offsetHeight; 
-        clockElement.classList.add('glass-effect');
+        if (hasGlass) clockElement.classList.add('glass-effect');
+        if (hasDynamicFill) clockElement.classList.add('dynamic-fill-effect');
     }
 }
 
@@ -8809,6 +8812,7 @@ function loadRecentWallpapers() {
         gradientEnabled: false,
         gradientColor: '#ffffff',
         glassEnabled: false,
+        clockDynamicFillEnabled: false,
         roundness: '0',
         letterSpacing: '0',
         textCase: 'none',
@@ -8864,6 +8868,10 @@ function loadRecentWallpapers() {
             wallpaper.clockStyles.glassEnabled = false;
             updated = true;
         }
+        if (wallpaper.clockStyles.clockDynamicFillEnabled === undefined) {
+            wallpaper.clockStyles.clockDynamicFillEnabled = false;
+            updated = true;
+		}
         if (wallpaper.clockStyles.roundness === undefined) {
             wallpaper.clockStyles.roundness = '0';
             updated = true;
@@ -10779,7 +10787,7 @@ function applyClockStyles() {
 	// Reset previous effects and custom colors
 	clockElement.classList.remove('glass-effect', 'gradient-effect', 'dynamic-fill-effect');
 	clockElement.style.color = '';
-	infoElement.classList.remove('glass-effect');
+	infoElement.classList.remove('glass-effect', 'dynamic-fill-effect');
 	infoElement.style.color = '';
 	
 	if (document.getElementById('clock-off-switch').checked) {
@@ -10799,6 +10807,7 @@ function applyClockStyles() {
 	} 
 	else if (document.getElementById('clock-dynamicfill-switch').checked) {
 	    clockElement.classList.add('dynamic-fill-effect');
+	    infoElement.classList.add('dynamic-fill-effect');
 	} 
 	else if (document.getElementById('clock-color-switch').checked) {
 	    const color = document.getElementById('clock-color-picker').value;
@@ -10854,6 +10863,7 @@ function resetAndApplyDefaultClockStyles() {
         gradientEnabled: false,
         gradientColor: '#ffffff',
         glassEnabled: false,
+        clockDynamicFillEnabled: false,
         roundness: '0',
         letterSpacing: '0',
         textCase: 'none',
@@ -17174,6 +17184,7 @@ function broadcastAllWallpaperSettings(wallpaper) {
         'gradientEnabled': val(styles.gradientEnabled, 'false'),
         'gradientColor': val(styles.gradientColor, '#ffffff'),
         'glassEnabled': val(styles.glassEnabled, 'false'),
+        'clockDynamicFillEnabled': val(styles.clockDynamicFillEnabled, 'false'),
         'roundness': val(styles.roundness, '0'),
         'dateFormat': val(styles.dateFormat, 'dddd, MMMM D'),
         'depthEffectEnabled': val(wallpaper.depthEnabled, 'false'),
