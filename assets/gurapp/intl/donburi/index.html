@@ -991,9 +991,18 @@
                 // Update play/pause icon
                 const icon = document.querySelector('#media-widget-play-pause .material-symbols-rounded');
                 if (icon) icon.textContent = state === 'playing' ? 'pause' : 'play_arrow';
+
+                // Update Mini Media Player
+                const miniTitle = document.getElementById('mini-media-title');
+                const miniArtist = document.getElementById('mini-media-artist');
+                const miniIcon = document.querySelector('#mini-media-play-pause .material-symbols-rounded');
+
+                if (miniTitle) miniTitle.textContent = metadata.title || 'Not Playing';
+                if (miniArtist) miniArtist.textContent = metadata.artist || '---';
+                if (miniIcon) miniIcon.textContent = state === 'playing' ? 'pause' : 'play_arrow';
             }
         }
-
+        
         function updateHomeControls(data = {}) {
             // Priority: provided data (from message), then current UI value
             const brightness = data.page_brightness || document.getElementById('brightness-slider').value;
@@ -1027,7 +1036,19 @@
 
         // Media Controls
         const mediaApp = () => localStorage.getItem('lastMediaSessionApp');
-        document.getElementById('media-widget-play-pause').addEventListener('click', (e) => {
+        
+        const togglePlay = (e) => {
+            e.stopPropagation();
+            if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'playPause', type: 'media-control'}, '*');
+        };
+
+        document.getElementById('media-widget-play-pause').addEventListener('click', togglePlay);
+        
+        // Mini media button
+        const miniPlayBtn = document.getElementById('mini-media-play-pause');
+        if (miniPlayBtn) miniPlayBtn.addEventListener('click', togglePlay);
+
+        document.getElementById('media-widget-prev').addEventListener('click', (e) => {
             e.stopPropagation();
             if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'playPause', type: 'media-control'}, '*');
         });
@@ -1364,6 +1385,8 @@
         updateUpcoming();
         updateMedia();
         updateHomeControls();
+        fetchQuote();
+        fetchRSS();
 
         // Check local storage periodically for generic app updates (like task completions)
         window.addEventListener('storage', () => {
