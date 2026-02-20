@@ -11607,6 +11607,26 @@ async function createFullscreenEmbed(url, options = {}) {
 	const isInternalTool = internalToolUrls.includes(url);
 	const isGoogleForm = url.startsWith('https://docs.google.com/forms/');
     const isSystemApp = url.startsWith('/assets/gurapp/intl');
+
+    // --- Fuzzy Matching for Unknown URLs ---
+    let isFuzzyMatch = false;
+    if (!appName) {
+        try {
+            const targetUrl = new URL(url, window.location.origin);
+            const targetDomain = targetUrl.hostname;
+            const targetParams = targetUrl.search;
+
+            isFuzzyMatch = Object.values(apps).some(app => {
+                try {
+                    const appUrl = new URL(app.url, window.location.origin);
+                    // Match if same domain AND (contains "search" or "q=" or "query=")
+                    const sameDomain = appUrl.hostname === targetDomain;
+                    const isQuery = targetParams.includes('search') || targetParams.includes('q=') || targetParams.includes('query=');
+                    return sameDomain && isQuery;
+                } catch(e) { return false; }
+            });
+        } catch(e) { isFuzzyMatch = false; }
+    }
 	
 	// If the URL is not for an installed app, an internal tool, or a Google Form, block it.
 	if (!appName && !isInternalTool && !isGoogleForm && !isSystemApp) {
