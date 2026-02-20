@@ -3,6 +3,7 @@ const CORE_CACHE_NAME = `polygol-core-${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polygol-apps';
 
 const ASSETS_TO_CACHE = [
+  '/',
   '/assets/img/icon.svg',
   '/recovery/index.html',
   '/index.html',
@@ -27,7 +28,11 @@ const ASSETS_TO_CACHE = [
   '/assets/gurapp/intl/settings/index.html',
   '/assets/gurapp/intl/settings/settings.css',
   '/assets/gurapp/intl/settings/settings.js',
+  '/assets/gurapp/intl/forudaraisu/index.html',
+  '/assets/gurapp/intl/donburi/index.html',
   '/assets/gurapp/intl/liveactivity/weather-alert.html',
+  '/assets/gurapp/intl/liveactivity/slideshow-control.html',
+  '/assets/gurapp/intl/system-widgets/media-widget.html',
   '/assets/gurapp/intl/waves/announce.html',
   '/assets/gurapp/intl/waves/cast.html',
   '/waves/index.html',
@@ -176,9 +181,13 @@ self.addEventListener('fetch', event => {
 
                         // 3. Network Fallback
                         return fetch(request).then(networkResponse => {
-                             // Optional: Cache new requests to apps cache if they seem like app resources? 
-                             // For now, we only cache what is explicitly requested via 'cache-app' or 'install'.
                              return networkResponse;
+                        }).catch(() => {
+                             // Offline Fallback for Navigation (Reloading page while offline)
+                             // This fixes the "No Internet" error when loading the OS shell
+                             if (request.mode === 'navigate') {
+                                 return caches.match('/index.html');
+                             }
                         });
                     });
                 });
