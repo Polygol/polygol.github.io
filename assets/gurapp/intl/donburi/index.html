@@ -738,8 +738,8 @@
     <!-- Discover -->
     <div class="tab-content bento-grid" id="tab-discover">
         <div class="bento-item span-3x2" id="bento-rss" style="overflow-y: auto;">
-            <div class="item-card-title" id="rss-widget-title" style="position: sticky; top: 0; background: var(--search-background); z-index: 10; padding-bottom: 5px;"><span class="material-symbols-rounded">rss_feed</span>News Feed</div>
-            <div id="rss-feed-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+            <div class="item-card-title" id="rss-widget-title" style="position: sticky;top: 0;z-index: 10;flex-shrink: 0;background: var(--modal-background);border: 1px solid var(--glass-border);box-shadow: var(--sun-shadow);width: max-content;padding: 4px 10px;border-radius: 50px;"><span class="material-symbols-rounded" style="font-size: 14px;">rss_feed</span>News Feed</div>
+            <div id="rss-feed-list" style="display: grid;grid-auto-columns: auto;gap: 12px;grid-template-rows: repeat(2, 1fr);grid-template-columns: repeat(4, 1fr);">
                 <svg width="24" height="24" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--text-color);">
                     <style>.spinner_V8m1{transform-origin:center;animation:spinner_zKoa 2s linear infinite}.spinner_V8m1 circle{stroke-linecap:round;animation:spinner_YpZS 1.5s ease-in-out infinite}@keyframes spinner_zKoa{100%{transform:rotate(360deg)}}@keyframes spinner_YpZS{0%{stroke-dasharray:0 150;stroke-dashoffset:0}47.5%{stroke-dasharray:42 150;stroke-dashoffset:-16}95%,100%{stroke-dasharray:42 150;stroke-dashoffset:-59}}</style>
                     <g class="spinner_V8m1"><circle cx="12" cy="12" r="9.5" fill="none" stroke-width="3"></circle></g>
@@ -1161,13 +1161,13 @@
 
                 const list = document.getElementById('rss-feed-list');
                 list.innerHTML = data.items.slice(0, 10).map(item => `
-                    <div class="list-item" style="flex-direction:column; align-items:flex-start; cursor:pointer; background: var(--overlay-color); padding: 10px; border-radius: 15px; border: 1px solid var(--glass-border);" onclick="window.open('${item.link}', '_blank')">
-                        <span style="font-weight:600; white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; width: 100%;">${item.title}</span>
-                        <span style="font-size:0.8rem; color:var(--secondary-text-color);">${new Date(item.pubDate).toLocaleDateString()}</span>
+                    <div class="list-item" style="flex-direction:column;align-items:flex-start;cursor:pointer;background: var(--search-background);padding: 10px 14px;border: 1px solid var(--glass-border);border-radius: 20px;corner-shape: superellipse(1.5);box-shadow: var(--sun-shadow);margin: 0;" onclick="window.open('${item.link}', '_blank')">
+                        <span style="font-weight:600; white-space:normal; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; width: 100%;">${item.title}</span>
+                        <span style="font-size:0.8rem; color:var(--secondary-text-color); opacity: 0.5;">${new Date(item.pubDate).toLocaleDateString()}</span>
                     </div>
                 `).join('');
             } catch(e) {
-                document.getElementById('rss-feed-list').innerHTML = `<div style="padding:10px; opacity:0.7;">Failed to load feed. Check URL in settings.</div>`;
+                document.getElementById('rss-feed-list').innerHTML = `<div style="padding:10px;">Cannot load feed</div>`;
             }
         }
 
