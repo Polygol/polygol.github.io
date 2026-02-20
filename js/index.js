@@ -10424,7 +10424,7 @@ function syncUiStates() {
     document.getElementById('setting-size').classList.toggle('active', document.getElementById('clock-size-slider').value !== '0');
 	
     // Sync special items
-    const isColorActive = document.getElementById('clock-color-switch').checked || document.getElementById('clock-gradient-switch').checked || document.getElementById('clock-glass-switch').checked || document.getElementById('clock-dynamicfill-switch').checked;
+	const isColorActive = !document.getElementById('clock-off-switch').checked;
     document.getElementById('setting-clock-color').classList.toggle('active', isColorActive);
     document.getElementById('setting-clock-shadow').classList.toggle('active', document.getElementById('clock-shadow-switch').checked);
 }
@@ -10639,6 +10639,7 @@ function setupFontSelection() {
 
     // Special logic: uncheck gradient if solid color is checked, and vice-versa
 	const radioSwitchColor = [
+	    document.getElementById('clock-off-switch'),
 	    document.getElementById('clock-color-switch'),
 	    document.getElementById('clock-gradient-switch'),
 	    document.getElementById('clock-glass-switch'),
@@ -10775,12 +10776,18 @@ function applyClockStyles() {
     clockElement.style.textShadow = 'none';
     infoElement.style.textShadow = 'none';
 	
-	// Reset previous effects
+	// Reset previous effects and custom colors
 	clockElement.classList.remove('glass-effect', 'gradient-effect', 'dynamic-fill-effect');
 	clockElement.style.color = '';
+	infoElement.classList.remove('glass-effect');
+	infoElement.style.color = '';
 	
-	if (document.getElementById('clock-glass-switch').checked) {
+	if (document.getElementById('clock-off-switch').checked) {
+	    // Do nothing else - clock reverts to default CSS color
+	} 
+	else if (document.getElementById('clock-glass-switch').checked) {
 	    clockElement.classList.add('glass-effect');
+	    infoElement.classList.add('glass-effect');
 	} 
 	else if (document.getElementById('clock-gradient-switch').checked) {
 	    clockElement.classList.add('gradient-effect');
@@ -10788,12 +10795,15 @@ function applyClockStyles() {
 	    const color2 = document.getElementById('clock-gradient-color-picker').value;
 	    clockElement.style.setProperty('--gradient-color-1', color1);
 	    clockElement.style.setProperty('--gradient-color-2', color2);
+	    infoElement.style.color = color1;
 	} 
 	else if (document.getElementById('clock-dynamicfill-switch').checked) {
 	    clockElement.classList.add('dynamic-fill-effect');
 	} 
 	else if (document.getElementById('clock-color-switch').checked) {
-	    clockElement.style.color = document.getElementById('clock-color-picker').value;
+	    const color = document.getElementById('clock-color-picker').value;
+	    clockElement.style.color = color;
+	    infoElement.style.color = color;
 	}
 	
     // Apply Text Shadow (can be combined with other effects)
@@ -10860,8 +10870,9 @@ function resetAndApplyDefaultClockStyles() {
     // Update UI controls to their default values
     document.getElementById('font-select').value = defaultStyles.font;
     document.getElementById('weight-slider').value = parseInt(defaultStyles.weight) / 10;
-    document.getElementById('clock-color-picker').value = defaultStyles.color;
-    document.getElementById('clock-color-switch').checked = defaultStyles.colorEnabled;
+	document.getElementById('clock-color-picker').value = defaultStyles.color;
+    document.getElementById('clock-off-switch').checked = true;
+    document.getElementById('clock-color-switch').checked = false;
     document.getElementById('clock-stack-switch').checked = defaultStyles.stackEnabled;
     document.getElementById('seconds-switch').checked = defaultStyles.showSeconds;
     document.getElementById('weather-switch').checked = defaultStyles.showWeather;
