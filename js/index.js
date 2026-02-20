@@ -8351,11 +8351,18 @@ async function renderWallpaperToDOM(wallpaper) {
                 
                 const videoUrl = URL.createObjectURL(videoData.blob);
                 video.src = videoUrl;
-                video.onloadeddata = () => {
+				video.onloadeddata = () => {
                     document.body.insertBefore(video, document.body.firstChild);
                     document.body.style.backgroundImage = "none";
                 };
                 video.load();
+
+                // Ensure depth layer is cleared for video
+                const depthLayer = document.getElementById('depth-layer');
+                if (depthLayer) {
+                    depthLayer.style.opacity = '0';
+                    depthLayer.style.backgroundImage = '';
+                }
             }
         } else {
             const imageData = await getWallpaper(wallpaper.id);
@@ -8388,14 +8395,13 @@ async function renderWallpaperToDOM(wallpaper) {
                                 applyDepthLayer(imageData.depthDataUrl);
                             } else {
                                 depthLayer.style.opacity = '0';
+                                depthLayer.style.backgroundImage = ''; // Clear stale data immediately
                                 // Try to generate if enabled but missing
                                 setTimeout(processCurrentWallpaperDepth, 100);
                             }
                         } else {
                             depthLayer.style.opacity = '0';
-                            setTimeout(() => {
-                                 if(depthLayer.style.opacity === '0') depthLayer.style.backgroundImage = '';
-                            }, 500);
+                            depthLayer.style.backgroundImage = '';
                         }
                     }
                 }
