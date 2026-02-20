@@ -616,14 +616,15 @@
             </div>
         </div>
 
-        <div class="bento-item span-2x1" id="bento-mini-media" onclick="document.querySelector('#tab-media').click()">
+        <div class="bento-item span-2x1" id="bento-mini-media">
             <div class="item-card-title"><span class="material-symbols-rounded">play_circle</span>Media</div>
-            <div style="display: flex; justify-content: space-between; align-items: center; height: 100%; gap: 15px;">
-                <div style="overflow: hidden; white-space: nowrap; flex-grow: 1;">
-                    <div id="mini-media-title" style="font-weight: 600; font-size: 1.1rem; text-overflow: ellipsis; overflow: hidden;">Not playing</div>
-                    <div id="mini-media-artist" class="item-card-subtitle" style="text-overflow: ellipsis; overflow: hidden;"></div>
+            <div style="display: flex; align-items: center; height: 100%; gap: 12px; margin-top: 5px;">
+                <img id="mini-media-art" src="" style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover; background: var(--glass-border); display: none; flex-shrink: 0;">
+                <div style="overflow: hidden; white-space: nowrap; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="mini-media-title" style="font-weight: 600; font-size: 1rem; text-overflow: ellipsis; overflow: hidden;">Not playing</div>
+                    <div id="mini-media-artist" class="item-card-subtitle" style="text-overflow: ellipsis; overflow: hidden; font-size: 1rem;"></div>
                 </div>
-                <button id="mini-media-play-pause" class="media-btn" style="width:40px; height:40px; flex-shrink:0;"><span class="material-symbols-rounded">play_arrow</span></button>
+                <button id="mini-media-play-pause" style="width:42px; height:42px; flex-shrink:0; border-radius: 50%; background: var(--overlay-color); border: 1px solid var(--glass-border); color: var(--text-color); cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-rounded">play_arrow</span></button>
             </div>
         </div>
 
@@ -782,8 +783,11 @@
         document.body.addEventListener('touchstart', (e) => {
             touchStartY = e.touches[0].clientY;
         }, { passive: true });
-
+        
         document.body.addEventListener('touchend', (e) => {
+            // Do not close if settings overlay is open
+            if (document.getElementById('donburi-settings').classList.contains('show')) return;
+
             let endY = e.changedTouches[0].clientY;
             if (touchStartY - endY > 50) { // Swipe up
                 window.parent.postMessage({ type: 'donburi-close' }, '*');
@@ -791,6 +795,9 @@
         });
 
         document.body.addEventListener('mousedown', (e) => {
+            // FIX: Do not start drag logic if settings overlay is open
+            if (document.getElementById('donburi-settings').classList.contains('show')) return;
+            
             touchStartY = e.clientY;
             isDragging = true;
         });
@@ -996,10 +1003,20 @@
                 const miniTitle = document.getElementById('mini-media-title');
                 const miniArtist = document.getElementById('mini-media-artist');
                 const miniIcon = document.querySelector('#mini-media-play-pause .material-symbols-rounded');
+                const miniArt = document.getElementById('mini-media-art');
 
                 if (miniTitle) miniTitle.textContent = metadata.title || 'Not Playing';
                 if (miniArtist) miniArtist.textContent = metadata.artist || '---';
                 if (miniIcon) miniIcon.textContent = state === 'playing' ? 'pause' : 'play_arrow';
+
+                if (miniArt) {
+                    if (metadata.artwork && metadata.artwork.length > 0) {
+                        miniArt.src = metadata.artwork[0].src;
+                        miniArt.style.display = 'block';
+                    } else {
+                        miniArt.style.display = 'none';
+                    }
+                }
             }
         }
         
@@ -1044,9 +1061,18 @@
 
         document.getElementById('media-widget-play-pause').addEventListener('click', togglePlay);
         
-        // Mini media button
+        // Mini media widget interactions
         const miniPlayBtn = document.getElementById('mini-media-play-pause');
         if (miniPlayBtn) miniPlayBtn.addEventListener('click', togglePlay);
+
+        const miniWidget = document.getElementById('bento-mini-media');
+        if (miniWidget) {
+            miniWidget.addEventListener('click', () => {
+                // Switch to the main Media tab
+                const mediaTabBtn = document.querySelector('.don-nav-btn[data-tab="tab-media"]');
+                if (mediaTabBtn) mediaTabBtn.click();
+            });
+        }
 
         document.getElementById('media-widget-prev').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1242,7 +1268,8 @@
         function saveBentoLayout() {
             const layout = {};
             document.querySelectorAll('.tab-content').forEach(tab => {
-                layout = Array.from(tab.children).map((item, index) => {
+                // Assign array to specific key (tab.id) instead of overwriting the const variable
+                layout[tab.id] = Array.from(tab.children).map((item, index) => {
                     if (!item.id) return null;
                     const sizeClass = Array.from(item.classList).find(c => c.startsWith('span-'));
                     return {
