@@ -202,6 +202,7 @@
             width: 100%;
             height: 34px;
             background: var(--search-background);
+            color: var(--text-color)
             border-radius: 20px;
             padding: 0 8px;
             border: 1px solid var(--glass-border);
@@ -215,7 +216,6 @@
             height: 18px;
             border-radius: 50%;
             background: var(--accent);
-            color: var(--text-color)
             cursor: pointer;
             box-shadow: var(--sun-shadow);
         }
@@ -765,7 +765,7 @@
             <h3 style="margin: 0 0 15px;">Data Sources</h3>
             <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 8px;">
                 <label style="font-size: 0.85rem; font-weight: 500;">RSS Feed</label>
-                <input type="text" id="setting-rss-url" placeholder="http://feeds.bbci.co.uk/news/world/rss.xml" onchange="saveDataSources()">
+                <input type="text" id="setting-rss-url" placeholder="Enter an URL" onchange="saveDataSources()">
             </div>
             <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 8px;">
                 <label style="font-size: 0.85rem; font-weight: 500;">Quotes API</label>
