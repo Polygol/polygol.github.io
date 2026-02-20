@@ -161,11 +161,12 @@
         }
 
         /* Grid Spans */
+        .span-3x2 { grid-row: span 2; grid-column: span 3; min-width: 480px; }
         .span-2x2 { grid-row: span 2; grid-column: span 2; min-width: 315px; }
         .span-2x1 { grid-row: span 1; grid-column: span 2; min-width: 315px; }
         .span-1x2 { grid-row: span 2; grid-column: span 1; min-width: 150px; }
         .span-1x1 { grid-row: span 1; grid-column: span 1; min-width: 150px; }
-
+        
         /* Typography inside cards */
         .item-card-title {
             font-size: 0.8rem;
@@ -515,10 +516,55 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
+        /* Settings */
+        .settings-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--background-color-tr);
+            backdrop-filter: blur(50px);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            padding: 40px;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            overflow-y: auto;
+        }
+        .settings-overlay.show {
+            display: fles;
+        }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .settings-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: var(--search-background);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 10px;
+        }
+        .settings-row select { width: auto; margin: 0; }
+        .settings-row button {
+            background: var(--search-background);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            border-radius: 50%;
+            width: 36px; height: 36px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .settings-row button:active { filter: brightness(1.5); }
     </style>
 </head>
 <body data-app-name="Donburi">
-    <div id="don-persistent-clock">--:--</div>
+    <div id="don-persistent-clock" onclick="openSettings()" style="cursor: pointer;" title="Customize Layout">--:--</div>
     
     <div class="don-navbar" id="donburi-tabs">
         <button class="don-nav-btn active" data-tab="tab-day" id="greeting-tab">
@@ -543,13 +589,13 @@
 
     <!-- Your Day Tab -->
     <div class="tab-content bento-grid active" id="tab-day">
-        <div class="bento-item span-2x2">
+        <div class="bento-item span-2x2" id="bento-clock">
             <div class="item-card-title"><span class="material-symbols-rounded">schedule</span><span id="greeting-text">Good morning</span></div>
             <div class="item-card-subtitle" id="bento-date" style="font-weight: 600; font-size: 1.1rem;">Monday, Jan 1</div>
             <div class="item-card-big-text" id="bento-time" style="font-family: 'Inter Numeric', sans-serif; font-size: clamp(6rem, 12%, 12rem); text-align: center; font-variation-settings: 'RDNS' 1; font-variant-numeric: tabular-nums;">00:00</div>
         </div>
 
-        <div class="bento-item span-2x1" onclick="Gurasuraisu.openApp('/weather/index.html')">
+        <div class="bento-item span-2x1" id="bento-weather" onclick="Gurasuraisu.openApp('/weather/index.html')">
             <div class="item-card-title"><span class="material-symbols-rounded">cloud</span>Weather</div>
             <div style="display: flex; justify-content: space-between; align-items: center; height: 100%;">
                 <div class="item-card-big-text" id="weather-temp">--°</div>
@@ -560,45 +606,61 @@
             </div>
         </div>
 
-        <div class="bento-item span-2x1" onclick="Gurasuraisu.openApp('/fantaskical/index.html')">
+        <div class="bento-item span-2x1" id="bento-next-event" onclick="Gurasuraisu.openApp('/fantaskical/index.html')">
             <div class="item-card-title"><span class="material-symbols-rounded">event</span>Calendar</div>
             <div id="next-event-content" style="margin: auto 0; gap: 10px; display: flex; flex-direction: column;">
                 <div style="font-weight: 600; font-size: 1.1rem;">No upcoming events</div>
             </div>
         </div>
 
-        <div class="bento-item span-1x1" onclick="Gurasuraisu.openApp('/assets/gurapp/intl/settings/index.html')">
-            <div class="item-card-title"><span class="material-symbols-rounded">battery_android_0</span>Battery</div>
-            <div class="item-card-big-text" id="battery-level">--%</div>
-            <div class="item-card-subtitle" id="battery-status">Checking...</div>
+        <div class="bento-item span-2x1" id="bento-mini-media" onclick="document.querySelector('#tab-media').click()">
+            <div class="item-card-title"><span class="material-symbols-rounded">music_note</span>Now Playing</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; height: 100%; gap: 15px;">
+                <div style="overflow: hidden; white-space: nowrap; flex-grow: 1;">
+                    <div id="mini-media-title" style="font-weight: 600; font-size: 1.1rem; text-overflow: ellipsis; overflow: hidden;">Not Playing</div>
+                    <div id="mini-media-artist" class="item-card-subtitle" style="text-overflow: ellipsis; overflow: hidden;">---</div>
+                </div>
+                <button id="mini-media-play-pause" class="media-btn" style="width:40px; height:40px; flex-shrink:0;"><span class="material-symbols-rounded">play_arrow</span></button>
+            </div>
         </div>
 
-        <div class="bento-item span-1x1" onclick="onclick="window.open('https://github.com/Polygol/polygol.github.io/issues/new', '_blank');">
+        <div class="bento-item span-2x1" id="bento-quote">
+            <div class="item-card-title"><span class="material-symbols-rounded">format_quote</span>Quote of the Day</div>
+            <div style="margin: auto 0; font-style: italic; font-weight: 500;" id="quote-text">Loading...</div>
+            <div style="text-align: right; font-size: 0.8rem; color: var(--secondary-text-color);" id="quote-author"></div>
+        </div>
+
+        <div class="bento-item span-1x1" id="bento-battery" onclick="Gurasuraisu.openApp('/assets/gurapp/intl/settings/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">battery_android_0</span>Battery</div>
+            <div class="item-card-big-text" id="battery-level">--%</div>
+            <div class="item-card-subtitle" id="battery-status"></div>
+        </div>
+
+        <div class="bento-item span-1x1" id="bento-beta" onclick="window.open('https://github.com/Polygol/polygol.github.io/issues/new', '_blank');">
             <div class="item-card-title"><span class="material-symbols-rounded">error</span>Beta</div>
             <div style="margin: auto 0; gap: 10px; display: flex; flex-direction: column;">
                 <div style="font-weight: 600; font-size: 1.1rem;">Donburi is in beta</div>
-                <div class="item-card-subtitle">Report bugs on our GitHub</div>
             </div>
         </div>
     </div>
 
     <!-- Upcoming Tab -->
     <div class="tab-content bento-grid" id="tab-upcoming">
-        <div class="bento-item span-2x2" onclick="Gurasuraisu.openApp('/fantaskical/index.html')">
+        <div class="bento-item span-2x2" id="bento-agenda" onclick="Gurasuraisu.openApp('/fantaskical/index.html')">
             <div class="item-card-title"><span class="material-symbols-rounded">calendar_month</span>Agenda</div>
             <div id="agenda-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; overflow-y: auto;">
                 <div class="item-card-subtitle">No events today</div>
             </div>
         </div>
 
-        <div class="bento-item span-2x2" onclick="Gurasuraisu.openApp('/fantaskical/index.html')">
+        <div class="bento-item span-2x2" id="bento-tasks" onclick="Gurasuraisu.openApp('/fantaskical/index.html')">
             <div class="item-card-title"><span class="material-symbols-rounded">task_alt</span>Active Tasks</div>
             <div id="task-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; overflow-y: auto;">
                 <div class="item-card-subtitle">All caught up!</div>
             </div>
         </div>
 
-        <div class="bento-item span-2x1" onclick="Gurasuraisu.openApp('/chronos/index.html')">
+        <div class="bento-item span-2x1" id="bento-alarms" onclick="Gurasuraisu.openApp('/chronos/index.html')">
             <div class="item-card-title"><span class="material-symbols-rounded">alarm</span>Alarms</div>
             <div id="alarm-list" style="margin: auto 0; font-size: 1.5rem; font-weight: 600;">
                 No alarms set
@@ -608,23 +670,23 @@
 
     <!-- Home Control Tab -->
     <div class="tab-content bento-grid" id="tab-home">
-        <div class="bento-item span-2x1">
+        <div class="bento-item span-2x1" id="bento-brightness">
             <div class="item-card-title"><span class="material-symbols-rounded">light_mode</span>Brightness</div>
             <input type="range" id="brightness-slider" min="10" max="100" value="100">
         </div>
 
-        <div class="bento-item span-1x1">
+        <div class="bento-item span-1x1" id="bento-darkmode">
             <div class="item-card-title"><span class="material-symbols-rounded">dark_mode</span>Dark Mode</div>
             <input type="checkbox" class="toggle-switch" id="theme-toggle">
         </div>
 
-        <div class="bento-item span-1x1">
+        <div class="bento-item span-1x1" id="bento-silent">
             <div class="item-card-title"><span class="material-symbols-rounded">notifications_off</span>Silent</div>
             <input type="checkbox" class="toggle-switch" id="silent-toggle">
         </div>
 
-        <div class="bento-item span-2x1">
-            <div class="item-card-title"><span class="material-symbols-rounded">thermostat</span>Color Tone</div>
+        <div class="bento-item span-2x1" id="bento-tone">
+            <div class="item-card-title"><span class="material-symbols-rounded">thermostat</span>Tone</div>
             <input type="range" id="temp-slider" min="-10" max="10" value="0">
         </div>
     </div>
@@ -664,9 +726,9 @@
         </div>
     </div>
 
-    <!-- Placeholders -->
+    <!-- Social -->
     <div class="tab-content bento-grid" id="tab-social">
-        <div class="bento-item span-2x2">
+        <div class="bento-item span-2x2" id="bento-social">
             <div class="item-card-title"><span class="material-symbols-rounded">forum</span>Communicate</div>
             <div style="margin: auto; text-align: center; color: var(--secondary-text-color);">
                 No active communication widgets
@@ -674,13 +736,39 @@
         </div>
     </div>
 
+    <!-- Discover -->
     <div class="tab-content bento-grid" id="tab-discover">
-        <div class="bento-item span-2x2">
-            <div class="item-card-title"><span class="material-symbols-rounded">explore</span>Discover</div>
-            <div style="margin: auto; text-align: center; color: var(--secondary-text-color);">
-                Explore new Gurapps and integrations
+        <div class="bento-item span-3x2" id="bento-rss" style="overflow-y: auto;">
+            <div class="item-card-title" id="rss-widget-title" style="position: sticky; top: 0; background: var(--search-background); z-index: 10; padding-bottom: 5px;"><span class="material-symbols-rounded">rss_feed</span>News Feed</div>
+            <div id="rss-feed-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                <svg width="24" height="24" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--text-color);">
+                    <style>.spinner_V8m1{transform-origin:center;animation:spinner_zKoa 2s linear infinite}.spinner_V8m1 circle{stroke-linecap:round;animation:spinner_YpZS 1.5s ease-in-out infinite}@keyframes spinner_zKoa{100%{transform:rotate(360deg)}}@keyframes spinner_YpZS{0%{stroke-dasharray:0 150;stroke-dashoffset:0}47.5%{stroke-dasharray:42 150;stroke-dashoffset:-16}95%,100%{stroke-dasharray:42 150;stroke-dashoffset:-59}}</style>
+                    <g class="spinner_V8m1"><circle cx="12" cy="12" r="9.5" fill="none" stroke-width="3"></circle></g>
+                </svg>
             </div>
         </div>
+    </div>
+
+    <!-- Settings Overlay -->
+    <div id="donburi-settings" class="settings-overlay">
+        <div class="settings-header">
+            <h2>Donburi Layout Settings</h2>
+            <button onclick="closeSettings()" style="background:transparent;border:none;color:var(--text-color);cursor:pointer;"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        
+        <div class="settings-section" style="margin-bottom: 30px;">
+            <h3 style="margin: 0 0 15px; color: var(--accent);">Data Sources</h3>
+            <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                <label style="font-size: 0.85rem; font-weight: 500;">RSS Feed URL</label>
+                <input type="text" id="setting-rss-url" placeholder="http://feeds.bbci.co.uk/news/world/rss.xml" onchange="saveDataSources()">
+            </div>
+            <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                <label style="font-size: 0.85rem; font-weight: 500;">Quotes API URL (JSON)</label>
+                <input type="text" id="setting-quote-url" placeholder="https://dummyjson.com/quotes/random" onchange="saveDataSources()">
+            </div>
+        </div>
+
+        <div id="settings-items-list"></div>
     </div>
 
     <script>
@@ -1036,6 +1124,210 @@
                 updateHomeControls(update);
             }
         });
+
+        // --- Custom Feeds (Quotes & RSS) ---
+        async function fetchQuote() {
+            const url = localStorage.getItem('donburi_quote_url') || 'https://dummyjson.com/quotes/random';
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                // Handle different API structures (Array vs Object, different key names)
+                const item = Array.isArray(data) ? data[0] : data;
+                const text = item.quote || item.content || item.text || "No quote text found";
+                const author = item.author || item.from || "Unknown";
+
+                document.getElementById('quote-text').textContent = `"${text}"`;
+                document.getElementById('quote-author').textContent = `- ${author}`;
+            } catch (e) {
+                console.error(e);
+                document.getElementById('quote-text').textContent = "Could not fetch quote.";
+                document.getElementById('quote-author').textContent = "";
+            }
+        }
+
+        async function fetchRSS() {
+            const url = localStorage.getItem('donburi_rss_url') || 'http://feeds.bbci.co.uk/news/world/rss.xml';
+            try {
+                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`);
+                const data = await res.json();
+                
+                if (data.status !== 'ok') throw new Error('RSS Error');
+
+                // Update Widget Title
+                if (data.feed && data.feed.title) {
+                    const titleEl = document.getElementById('rss-widget-title');
+                    if (titleEl) titleEl.innerHTML = `<span class="material-symbols-rounded">rss_feed</span>${data.feed.title}`;
+                }
+
+                const list = document.getElementById('rss-feed-list');
+                list.innerHTML = data.items.slice(0, 10).map(item => `
+                    <div class="list-item" style="flex-direction:column; align-items:flex-start; cursor:pointer; background: var(--overlay-color); padding: 10px; border-radius: 15px; border: 1px solid var(--glass-border);" onclick="window.open('${item.link}', '_blank')">
+                        <span style="font-weight:600; white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; width: 100%;">${item.title}</span>
+                        <span style="font-size:0.8rem; color:var(--secondary-text-color);">${new Date(item.pubDate).toLocaleDateString()}</span>
+                    </div>
+                `).join('');
+            } catch(e) {
+                document.getElementById('rss-feed-list').innerHTML = `<div style="padding:10px; opacity:0.7;">Failed to load feed. Check URL in settings.</div>`;
+            }
+        }
+
+        function saveDataSources() {
+            const rss = document.getElementById('setting-rss-url').value;
+            const quote = document.getElementById('setting-quote-url').value;
+            
+            if (rss) localStorage.setItem('donburi_rss_url', rss);
+            if (quote) localStorage.setItem('donburi_quote_url', quote);
+            
+            // Refresh content immediately
+            fetchRSS();
+            fetchQuote();
+        }
+
+        function loadDataSources() {
+            document.getElementById('setting-rss-url').value = localStorage.getItem('donburi_rss_url') || '';
+            document.getElementById('setting-quote-url').value = localStorage.getItem('donburi_quote_url') || '';
+        }
+
+        // --- Settings / Layout Manager ---
+        function loadBentoLayout() {
+            const layoutStr = localStorage.getItem('donburi_bento_layout');
+            if (!layoutStr) return;
+            try {
+                const layout = JSON.parse(layoutStr);
+                Object.keys(layout).forEach(tabId => {
+                    const tab = document.getElementById(tabId);
+                    if (!tab) return;
+                    
+                    const itemsData = layout;
+                    itemsData.sort((a, b) => a.order - b.order); // Ensure correct order
+                    
+                    itemsData.forEach(data => {
+                        const item = document.getElementById(data.id);
+                        if (item) {
+                            tab.appendChild(item); // Reorders DOM nodes
+                            item.classList.remove('span-1x1', 'span-2x1', 'span-1x2', 'span-2x2', 'span-3x2');
+                            if (data.size) item.classList.add(data.size);
+                            item.style.display = data.visible ? '' : 'none';
+                        }
+                    });
+                });
+            } catch(e) { console.error("Failed to load layout", e); }
+        }
+
+        function saveBentoLayout() {
+            const layout = {};
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                layout = Array.from(tab.children).map((item, index) => {
+                    if (!item.id) return null;
+                    const sizeClass = Array.from(item.classList).find(c => c.startsWith('span-'));
+                    return {
+                        id: item.id,
+                        order: index,
+                        size: sizeClass,
+                        visible: item.style.display !== 'none'
+                    };
+                }).filter(Boolean);
+            });
+            localStorage.setItem('donburi_bento_layout', JSON.stringify(layout));
+        }
+
+        function openSettings() {
+            document.getElementById('donburi-settings').classList.add('show');
+            loadDataSources(); // Pre-fill inputs
+            renderSettingsList();
+        }
+
+        function closeSettings() {
+            document.getElementById('donburi-settings').classList.remove('show');
+        }
+
+        function renderSettingsList() {
+            const list = document.getElementById('settings-items-list');
+            list.innerHTML = '';
+            
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                const navBtn = document.querySelector(`.don-nav-btn`);
+                if (!navBtn) return;
+                
+                const tabTitle = navBtn.textContent.trim();
+                const group = document.createElement('div');
+                group.innerHTML = `<h3 style="margin: 20px 0 10px; color: var(--accent);">${tabTitle}</h3>`;
+                
+                const itemsContainer = document.createElement('div');
+                itemsContainer.style.display = 'flex';
+                itemsContainer.style.flexDirection = 'column';
+
+                Array.from(tab.children).forEach((item) => {
+                    if (!item.classList.contains('bento-item') || !item.id) return;
+                    
+                    let title = item.querySelector('.item-card-title')?.textContent.trim().replace(/^+/i, '') || 'Widget'; // Strip icon text
+                    
+                    const row = document.createElement('div');
+                    row.className = 'settings-row';
+                    
+                    // Size Select
+                    const sizeSelect = document.createElement('select');.forEach(sz => {
+                        const opt = document.createElement('option');
+                        opt.value = sz;
+                        opt.textContent = sz;
+                        if(item.classList.contains(sz)) opt.selected = true;
+                        sizeSelect.appendChild(opt);
+                    });
+                    sizeSelect.onchange = (e) => {
+                        item.classList.remove('span-1x1', 'span-2x1', 'span-1x2', 'span-2x2', 'span-3x2');
+                        item.classList.add(e.target.value);
+                        saveBentoLayout();
+                    };
+
+                    // Move Up
+                    const moveUp = document.createElement('button');
+                    moveUp.innerHTML = '<span class="material-symbols-rounded">arrow_upward</span>';
+                    moveUp.onclick = () => {
+                        if (item.previousElementSibling) {
+                            tab.insertBefore(item, item.previousElementSibling);
+                            renderSettingsList();
+                            saveBentoLayout();
+                        }
+                    };
+
+                    // Move Down
+                    const moveDown = document.createElement('button');
+                    moveDown.innerHTML = '<span class="material-symbols-rounded">arrow_downward</span>';
+                    moveDown.onclick = () => {
+                        if (item.nextElementSibling) {
+                            tab.insertBefore(item.nextElementSibling, item);
+                            renderSettingsList();
+                            saveBentoLayout();
+                        }
+                    };
+
+                    // Visibility
+                    const visToggle = document.createElement('input');
+                    visToggle.type = 'checkbox';
+                    visToggle.className = 'toggle-switch';
+                    visToggle.checked = item.style.display !== 'none';
+                    visToggle.onchange = (e) => {
+                        item.style.display = e.target.checked ? '' : 'none';
+                        saveBentoLayout();
+                    };
+
+                    row.innerHTML = `<div style="flex-grow:1; font-weight:500;">${title}</div>`;
+                    row.appendChild(sizeSelect);
+                    row.appendChild(moveUp);
+                    row.appendChild(moveDown);
+                    row.appendChild(visToggle);
+                    
+                    itemsContainer.appendChild(row);
+                });
+                
+                group.appendChild(itemsContainer);
+                list.appendChild(group);
+            });
+        }
+
+        // Apply Layout immediately on boot
+        loadBentoLayout();
 
         /**
          * Synchronized Clock Utility
