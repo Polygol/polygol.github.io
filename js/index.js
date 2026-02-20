@@ -9963,6 +9963,7 @@ function switchWallpaper(direction, skipSave = false) {
         const gradientSwitch = document.getElementById('clock-gradient-switch');
         const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
 	    const glassSwitch = document.getElementById('clock-glass-switch');
+	    const dynamicFillSwitch = document.getElementById('clock-dynamicfill-switch');
 	    const roundnessSlider = document.getElementById('roundness-slider');
 	    const sizeSlider = document.getElementById('clock-size-slider');
 	    const posXSlider = document.getElementById('clock-pos-x-slider');
@@ -9981,6 +9982,7 @@ function switchWallpaper(direction, skipSave = false) {
 	    if (posYSlider) posYSlider.value = wallpaper.clockStyles.clockPosY || '50';
 	    if (alignmentSelect) alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
 	    if (glassSwitch) glassSwitch.checked = wallpaper.clockStyles.glassEnabled || false;
+		if (dynamicFillSwitch) dynamicFillSwitch.checked = wallpaper.clockStyles.clockDynamicFillEnabled || false;
         if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
         if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'dddd, MMMM D';
         if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
@@ -10019,6 +10021,7 @@ function switchWallpaper(direction, skipSave = false) {
         if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
         if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
         if (glassSwitch) glassSwitch.checked = wallpaper.clockStyles.glassEnabled || false;
+        if (dynamicFillSwitch) dynamicFillSwitch.checked = wallpaper.clockStyles.clockDynamicFillEnabled || false;
         if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
         if (document.getElementById('clock-spacing-slider')) document.getElementById('clock-spacing-slider').value = wallpaper.clockStyles.letterSpacing || '0';
         if (document.getElementById('text-case-select')) document.getElementById('text-case-select').value = wallpaper.clockStyles.textCase || 'none';
@@ -10421,7 +10424,7 @@ function syncUiStates() {
     document.getElementById('setting-size').classList.toggle('active', document.getElementById('clock-size-slider').value !== '0');
 	
     // Sync special items
-    const isColorActive = document.getElementById('clock-color-switch').checked || document.getElementById('clock-gradient-switch').checked || document.getElementById('clock-glass-switch').checked;
+    const isColorActive = document.getElementById('clock-color-switch').checked || document.getElementById('clock-gradient-switch').checked || document.getElementById('clock-glass-switch').checked || document.getElementById('clock-dynamicfill-switch').checked;
     document.getElementById('setting-clock-color').classList.toggle('active', isColorActive);
     document.getElementById('setting-clock-shadow').classList.toggle('active', document.getElementById('clock-shadow-switch').checked);
 }
@@ -10457,6 +10460,7 @@ function setupFontSelection() {
     const gradientSwitch = document.getElementById('clock-gradient-switch');
     const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
     const glassSwitch = document.getElementById('clock-glass-switch');
+	const dynamicFillSwitch = document.getElementById('clock-dynamicfill-switch');
     const roundnessSlider = document.getElementById('roundness-slider');
     const sizeSlider = document.getElementById('clock-size-slider');
     const posXSlider = document.getElementById('clock-pos-x-slider');
@@ -10496,6 +10500,7 @@ function setupFontSelection() {
             gradientEnabled: gradientSwitch.checked,
             gradientColor: gradientColorPicker.value,
             glassEnabled: glassSwitch.checked,
+            clockDynamicFillEnabled: dynamicFillSwitch.checked,
             roundness: roundnessSlider.value,
             letterSpacing: spacingSlider ? spacingSlider.value : '0',
             textCase: textCaseSelect ? textCaseSelect.value : 'none',
@@ -10565,6 +10570,7 @@ function setupFontSelection() {
     gradientSwitch.checked = localStorage.getItem('gradientEnabled') === 'true';
     gradientColorPicker.value = localStorage.getItem('gradientColor') || '#ffffff';
     glassSwitch.checked = localStorage.getItem('glassEnabled') === 'true';
+    dynamicFillSwitch.checked = localStorage.getItem('clockDynamicFillEnabled') === 'true';
     roundnessSlider.value = localStorage.getItem('roundness') || '0';
 	spacingSlider.value = localStorage.getItem('letterSpacing') || '0';
 	textCaseSelect.value = localStorage.getItem('textCase') || 'none';
@@ -10604,7 +10610,7 @@ function setupFontSelection() {
     const allControls = [
         weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
         blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
-        shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch, roundnessSlider,
+        shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch, dynamicFillSwitch, roundnessSlider,
         sizeSlider, posXSlider, posYSlider, alignmentSelect, clockFormatInput, dateFormatInput,
         spacingSlider, textCaseSelect, dateSizeSlider, dateOffsetSlider
     ];
@@ -10658,6 +10664,16 @@ function setupFontSelection() {
             syncUiStates();
         }
     });
+	
+	dynamicFillSwitch.addEventListener('change', () => {
+	    if (dynamicFillSwitch.checked) {
+	        colorSwitch.checked = false;
+	        gradientSwitch.checked = false;
+	        glassSwitch.checked = false;
+	        saveCurrentWallpaperSettings();
+	        syncUiStates();
+	    }
+	});
 }
 
 // Handle layout (size and position)
@@ -10702,6 +10718,7 @@ function applyClockStyles() {
     const gradientSwitch = document.getElementById('clock-gradient-switch');
     const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
     const glassSwitch = document.getElementById('clock-glass-switch');
+	const dynamicFillSwitch = document.getElementById('clock-dynamicfill-switch');
     const roundnessSlider = document.getElementById('roundness-slider');
     const spacingSlider = document.getElementById('clock-spacing-slider');
     const textCaseSelect = document.getElementById('text-case-select');
@@ -10783,6 +10800,9 @@ function applyClockStyles() {
     if (glassSwitch && glassSwitch.checked) {
         clockElement.classList.add('glass-effect');
         infoElement.classList.add('glass-effect'); // Apply to date as well
+    } else if (dynamicFillSwitch && dynamicFillSwitch.checked) {
+        clockElement.classList.add('dynamic-effect');
+        infoElement.classList.add('dynamic-effect'); // Apply to date as well
     } else if (gradientSwitch && gradientSwitch.checked) {
         const color1 = colorPicker.value;
         const color2 = gradientColorPicker.value;
@@ -10876,6 +10896,7 @@ function resetAndApplyDefaultClockStyles() {
     document.getElementById('clock-gradient-switch').checked = defaultStyles.gradientEnabled;
     document.getElementById('clock-gradient-color-picker').value = defaultStyles.gradientColor;
     document.getElementById('clock-glass-switch').checked = defaultStyles.glassEnabled;
+    document.getElementById('clock-dynamicfill-switch').checked = defaultStyles.clockDynamicFillEnabled;
     document.getElementById('roundness-slider').value = defaultStyles.roundness;
 	document.getElementById('clock-spacing-slider').value = defaultStyles.letterSpacing;
 	document.getElementById('text-case-select').value = defaultStyles.textCase;
@@ -16121,6 +16142,7 @@ const controlIdMap = {
     'colorEnabled': 'clock-color-switch',
     'gradientEnabled': 'clock-gradient-switch',
     'glassEnabled': 'clock-glass-switch',
+    'clockDynamicFillEnabled': 'clock-dynamicfill-switch',
     'color': 'clock-color-picker',
     'gradientColor': 'clock-gradient-color-picker',
     'shadowEnabled': 'clock-shadow-switch',
