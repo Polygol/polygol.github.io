@@ -2626,11 +2626,10 @@ input[type="radio"]:checked::before {
 .switcher-scroll-track {
     width: 200px;
     height: 8px;
-    background: var(--transparent-color);
+    background: rgba(255, 255, 255, 0.5);
     border-radius: 8px;
-    margin-top: 30px;
+    margin: 30px 0 20px 0;
     position: relative;
-    cursor: pointer;
 }
 
 .switcher-scroll-thumb {
@@ -2649,12 +2648,14 @@ input[type="radio"]:checked::before {
 
 .switcher-scroll-thumb:active {
     background: var(--accent);
+	scale: 1.1;
+	filter: brightness(1.5);
     cursor: grabbing;
 }
 
 .wallpaper-cards-container {
-	display: flex;
-    gap: 30px;
+    display: grid;
+    gap: 25px;
     overflow-x: auto;
     padding: 0 10%;
     width: calc(100% - 10%);
@@ -2662,6 +2663,9 @@ input[type="radio"]:checked::before {
     scrollbar-width: none;
     align-items: center;
     height: 100%;
+    grid-template-rows: repeat(2, minmax(150px, 1fr));
+    grid-auto-columns: minmax(250px, 1fr);
+    grid-auto-flow: column;
 }
 
 .wallpaper-cards-container::-webkit-scrollbar {
@@ -2669,11 +2673,11 @@ input[type="radio"]:checked::before {
 }
 
 .switcher-card {
-    flex: 0 0 auto;
-    width: 90%;
-    height: 90%;
+	flex: 0 0 auto;
+    width: 100%;
+    height: 100%;
     border-radius: 50px;
-	corner-shape: superellipse(1.5);
+    corner-shape: superellipse(1.5);
     position: relative;
     scroll-snap-align: center;
     background-size: cover;
@@ -2681,7 +2685,7 @@ input[type="radio"]:checked::before {
     cursor: pointer;
     overflow: hidden;
     border: 1px solid var(--glass-border);
-    box-shadow: var(--sun-shadow);
+    box-shadow: var(--sun-shadow-strong);
 }
 
 .switcher-card.is-dragging {
@@ -2734,7 +2738,7 @@ input[type="radio"]:checked::before {
 }
 
 .switcher-add-btn {
-    margin-bottom: 30px;
+    margin: 10px 0 30px 0;
 	color: var(--text-color);
     border: 1px solid var(--glass-border);
     font-family: 'Inter';
@@ -2782,10 +2786,14 @@ input[type="radio"]:checked::before {
 }
 
 /* App Switcher Specifics */
+#app-cards-container {
+    padding: 3% 10%;
+}
+
 .app-switcher-card {
     flex: 0 0 auto;
-    width: 90%;
-    height: 90%;
+    width: 100%;
+    height: 100%;
     border-radius: 50px;
 	corner-shape: superellipse(1.5);
     position: relative;
@@ -2795,7 +2803,7 @@ input[type="radio"]:checked::before {
     cursor: pointer;
     overflow: hidden;
     border: 1px solid var(--glass-border);
-    box-shadow: var(--sun-shadow);
+    box-shadow: var(--sun-shadow-strong);
 }
 
 .app-switcher-card .app-icon-img {
