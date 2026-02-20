@@ -12839,6 +12839,7 @@ function openDonburi() {
 	// Enable interaction only after the gesture is fully complete
 	setTimeout(() => {
 		if (donburi.classList.contains('open')) donburi.style.pointerEvents = 'auto';
+		HomeActivityManager.updateVisibility();
 	}, 400);
 
 	// Hide Home UI and system handles
@@ -12847,8 +12848,6 @@ function openDonburi() {
 		el.style.pointerEvents = 'none';
 		setTimeout(() => el.classList.add('force-hide'), 300);
 	});
-
-	HomeActivityManager.updateVisibility();
 }
 
 window.closeDonburi = function() {
@@ -12870,10 +12869,10 @@ window.closeDonburi = function() {
 		if (!donburi.classList.contains('open')) {
 		    donburi.style.contentVisibility = 'none';
 		    donburi.style.display = 'none';
+			HomeActivityManager.updateVisibility();
 		}
 	}, 400);
 	
-	HomeActivityManager.updateVisibility();
 };
 
 function setupDrawerInteractions() {
