@@ -271,7 +271,7 @@ body.high-contrast.light-theme {
 }
 
 /* Universal backdrop-filter removal for high contrast */
-body.high-contrast *:not(#brightness-overlay):not(#temperature-overlay):not(.info):not(.clock) {
+body.high-contrast *:not(#brightness-overlay):not(#temperature-overlay) {
 	backdrop-filter: none !important;
 }
 
@@ -297,6 +297,20 @@ body.high-contrast .nav-pill {
 
 body.high-contrast .nav-btn-small .material-symbols-rounded {
 	color: var(--text-color);
+}
+
+body.high-contrast .info.glass-effect .date,
+body.high-contrast .clock.glass-effect > *,
+body.high-contrast .info.dynamic-fill-effect .date,
+body.high-contrast .clock.dynamic-fill-effect > * {
+    color: var(--accent) !important;
+    background: none !important; /* Ensure no other backgrounds interfere */
+    -webkit-mask-image: none;
+    -webkit-mask-clip: none;
+    -webkit-mask-composite: none;
+    mask-image: none;
+    mask-composite: none;
+    backdrop-filter: none;
 }
 
 * {
