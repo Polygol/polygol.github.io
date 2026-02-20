@@ -3267,23 +3267,27 @@ function calculateSmartZoom() {
 	
     // Watch
     // Unusable
-    if (width < 400) return 75;
+    if (width < 400) return 50;
 	
-    // Mobile
+    // Small mobile
     // Grrr
     if (width <= 600) return 90;
+	
+    // Mobile
+    // No
+    if (width <= 800) return 100;
 
     // Tablet / smart display
     // Yoy
-    if (width <= 1280) return 110;
+    if (width <= 1080) return 125;
 
     // Monitors / wall display
     // Wow
-    if (width <= 2500) return 125;
+    if (width <= 2048) return 150;
 
     // 4k
     // Uh
-    return 150;
+    return 200;
 }
 
 // Disable Ctrl+Wheel (Browser Zoom) on System
