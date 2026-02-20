@@ -7475,12 +7475,12 @@ function updateGurappsVisibility() {
         // Add class to body for CSS targeting
         document.body.classList.add("gurapps-disabled");
         
-        // Close app drawer if open
+		// Close app drawer if open
         if (appDrawer.classList.contains("open")) {
             appDrawer.style.transition = "bottom 0.3s ease";
             appDrawer.style.bottom = "-100%";
-            appDrawer.style.opacity = "0";
             appDrawer.classList.remove("open");
+            setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
             initialDrawerPosition = -100;
         }
     }
@@ -11230,13 +11230,16 @@ function initiateSplitScreen(sideForNewApp) {
     // Open App Drawer to pick the second app
     const appDrawer = document.getElementById('app-drawer');
 
+    appDrawer.style.display = 'flex';
     // Clear inline styles that might block the class-based opening
     appDrawer.style.bottom = '';
     appDrawer.style.opacity = '';
 
-    appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-    appDrawer.classList.add('open');
-    appDrawer.style.zIndex = '1005'; // FIX: Ensure drawer is on top of the splitting app
+    requestAnimationFrame(() => {
+        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+        appDrawer.classList.add('open');
+        appDrawer.style.zIndex = '1005'; // FIX: Ensure drawer is on top of the splitting app
+    });
     createAppIcons();
     
     showPopup("Select an app for the other side");
@@ -11306,6 +11309,7 @@ async function finalizeSplitScreen(secondAppUrl) {
     });
 
     appDrawer.classList.remove('open');
+    setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
     
     // Ensure final layout is correct
     updateSplitLayout(50);
@@ -11407,7 +11411,10 @@ async function createFullscreenEmbed(url, options = {}) {
         if (isSplitActivation) {
             closeControls();
             const drawer = document.getElementById('app-drawer');
-            if(drawer) drawer.classList.remove('open');
+            if(drawer) {
+                drawer.classList.remove('open');
+                setTimeout(() => { if (!drawer.classList.contains('open')) drawer.style.display = 'none'; }, 300);
+            }
 
             const divider = document.getElementById('split-divider');
             if (divider) {
@@ -11977,8 +11984,11 @@ createFullscreenEmbed = async function(url, options = {}) {
             // 3. Close Home UI Elements
             closeControls();
             const drawer = document.getElementById('app-drawer');
-            if(drawer) drawer.classList.remove('open');
-
+            if(drawer) {
+                drawer.classList.remove('open');
+                setTimeout(() => { if (!drawer.classList.contains('open')) drawer.style.display = 'none'; }, 300);
+            }
+			
             // 4. Call original for the requested URL (this brings it to front/focus)
             return originalCreateFullscreenEmbed(url, { 
                 isSplitActivation: true, 
@@ -11993,23 +12003,26 @@ createFullscreenEmbed = async function(url, options = {}) {
     }
     
     // Case 3: Restore a previous split session from history (if getting completely fresh)
-    if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
-        const { left, right } = splitScreenState.lastSplitPair;
-        
-        splitScreenState.active = true;
-        splitScreenState.leftAppUrl = left;
-        splitScreenState.rightAppUrl = right;
-        
-        await createFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
-        await createFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
-        
-        document.getElementById('split-divider').style.display = 'flex';
-        updateSplitLayout(50);
-        closeControls();
-        const drawer = document.getElementById('app-drawer');
-        if(drawer) drawer.classList.remove('open');
-        return;
-    }
+	if (!splitScreenState.active && splitScreenState.lastSplitPair && (url === splitScreenState.lastSplitPair.left || url === splitScreenState.lastSplitPair.right)) {
+		const { left, right } = splitScreenState.lastSplitPair;
+		
+		splitScreenState.active = true;
+		splitScreenState.leftAppUrl = left;
+		splitScreenState.rightAppUrl = right;
+		
+		await createFullscreenEmbed(left, { isSplitActivation: true, splitSide: 'left' });
+		await createFullscreenEmbed(right, { isSplitActivation: true, splitSide: 'right' });
+		
+		document.getElementById('split-divider').style.display = 'flex';
+		updateSplitLayout(50);
+		closeControls();
+		const drawer = document.getElementById('app-drawer');
+		if(drawer) {
+			drawer.classList.remove('open');
+			setTimeout(() => { if (!drawer.classList.contains('open')) drawer.style.display = 'none'; }, 300);
+		}
+		return;
+	}
 
     // Case 4: Manual App Open (Clearing History)
     // If we reach here, we are opening a single app normally via interaction.
@@ -13098,11 +13111,12 @@ function setupDrawerInteractions() {
 			cancelLongPress();
 			dynamicArea.style.opacity = '0';
 	
-	        const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
+			const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
 	        
-	        const opacity = (newPosition + 100) / 100;
-	        appDrawer.style.opacity = opacity;
-	        
+	        if (appDrawer.style.display === 'none' && newPosition > -100) {
+	            appDrawer.style.display = 'flex';
+	        }
+
 	        appDrawer.style.bottom = `${newPosition}%`;
 	        
 	        if (newPosition > -100 && newPosition < 0) {
@@ -13275,12 +13289,13 @@ function setupDrawerInteractions() {
 			    });
 	        } else if (significant) {
                 // Execute Action (Open or Close based on direction)
-                if (opening) {
+				if (opening) {
                     // Open
                     dock.classList.remove('show');
                     dock.style.boxShadow = 'none';
                     if (dockHideTimeout) clearTimeout(dockHideTimeout);
                     dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
+                    appDrawer.style.display = 'flex';
                     appDrawer.style.bottom = '0%';
                     appDrawer.style.opacity = '1';
                     appDrawer.classList.add('open');
@@ -13299,15 +13314,15 @@ function setupDrawerInteractions() {
                             el.style.contentVisibility = 'hidden'; 
                         }, 300);
                     });
-                } else {
+				} else {
                     // Close
                     dock.classList.remove('show');
                     dock.style.boxShadow = 'none';
                     if (dockHideTimeout) clearTimeout(dockHideTimeout);
                     dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
                     appDrawer.style.bottom = '-100%';
-                    appDrawer.style.opacity = '0';
                     appDrawer.classList.remove('open');
+                    setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
                     initialDrawerPosition = -100;
                     interactionBlocker.style.display = 'none';
                     updateDockVisibility();
@@ -13321,14 +13336,14 @@ function setupDrawerInteractions() {
                         requestAnimationFrame(() => { el.style.opacity = '1'; });
                     });
                 }
-	        } else {
+			} else {
                 // Snap Back
 	            if (startedOpen) {
                     appDrawer.style.bottom = '0%';
                     appDrawer.style.opacity = '1';
                 } else {
                     appDrawer.style.bottom = '-100%';
-                    appDrawer.style.opacity = '0';
+                    setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
                     dock.classList.remove('show');
                     if (dockHideTimeout) clearTimeout(dockHideTimeout);
                     dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
@@ -13346,11 +13361,12 @@ function setupDrawerInteractions() {
 	
 	    isDragging = false;
         
-        // --- Wallpaper Switch Integration ---
+		// --- Wallpaper Switch Integration ---
         // Only trigger wallpaper swipe if we didn't initiate a vertical drawer move
+        // AND we started the gesture on the background (not the drawer handle).
         const swipeDistanceX = touchEndX - touchStartX;
         const swipeDistanceY = touchEndY - touchStartY;
-        if (Math.abs(swipeDistanceX) > 50 && Math.abs(swipeDistanceX) > Math.abs(swipeDistanceY)) {
+        if (dragSource === 'body' && Math.abs(swipeDistanceX) > 50 && Math.abs(swipeDistanceX) > Math.abs(swipeDistanceY)) {
              handleSwipe();
         }
 
@@ -13785,12 +13801,12 @@ function setupDrawerInteractions() {
         const isDrawerOpen = appDrawer.classList.contains('open');
         const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
 
-        // Close the drawer when clicking outside (on the body)
+		// Close the drawer when clicking outside (on the body)
         if (isDrawerOpen && !openEmbed && !appDrawer.contains(e.target) && !drawerHandle.contains(e.target) && !oneButtonNavHandle.contains(e.target)) {
             appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
             appDrawer.style.bottom = '-100%';
-            appDrawer.style.opacity = '0';
             appDrawer.classList.remove('open');
+            setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
             initialDrawerPosition = -100;
             interactionBlocker.style.display = 'none';
             applyWallpaperEffects();
@@ -13926,12 +13942,12 @@ function setupDrawerInteractions() {
     // Ensure box shadow is disabled initially
     dock.style.boxShadow = 'none';
     
-    // Add interaction blocker click handler to close drawer on click outside
+	// Add interaction blocker click handler to close drawer on click outside
     interactionBlocker.addEventListener('click', () => {
         appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
         appDrawer.style.bottom = '-100%';
-        appDrawer.style.opacity = '0';
         appDrawer.classList.remove('open');
+        setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
         initialDrawerPosition = -100;
         interactionBlocker.style.display = 'none';
     });
@@ -13962,11 +13978,12 @@ function setupOneButtonNav() {
     const isDrawerOpen = () => appDrawer.classList.contains('open');
 
     const handleClick = () => {
-        if (isAppOpen()) {
+		if (isAppOpen()) {
             minimizeFullscreenEmbed();
         } else if (isDrawerOpen()) {
             // Close app drawer by removing the class
             appDrawer.classList.remove('open');
+            setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
                 el.style.display = el.dataset.originalDisplay || '';
@@ -13999,6 +14016,7 @@ function setupOneButtonNav() {
         if (isDrawerOpen()) {
             // Close app drawer
             appDrawer.classList.remove('open');
+            setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
                 el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -14013,10 +14031,13 @@ function setupOneButtonNav() {
             }
             
             // **FIX:** Clear inline styles that might be left over from gesture interactions
+            appDrawer.style.display = 'flex';
             appDrawer.style.bottom = '';
             appDrawer.style.opacity = '';
             
-            appDrawer.classList.add('open'); // Now the CSS class will take effect
+            requestAnimationFrame(() => {
+                appDrawer.classList.add('open'); // Now the CSS class will take effect
+            });
             
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 if (!el.dataset.originalDisplay) {
@@ -16600,12 +16621,20 @@ window.addEventListener('message', async (event) => { // Make listener async
                 }
                 // Set a timer to trigger Home/Drawer action if E is not pressed soon.
                 shiftSpaceSequenceTimer = setTimeout(() => {
-                    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+                    const openEmbed = document.querySelector('.fullscreen-embed');
                     if (openEmbed) {
                         minimizeFullscreenEmbed();
                     } else {
-                        const isDrawerOpen = appDrawer.classList.toggle('open');
-                        if(isDrawerOpen) createAppIcons();
+                        if (!appDrawer.classList.contains('open')) {
+                            appDrawer.style.display = 'flex';
+                            requestAnimationFrame(() => {
+                                appDrawer.classList.add('open');
+                                createAppIcons();
+                            });
+                        } else {
+                            appDrawer.classList.remove('open');
+                            setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
+                        }
                     }
                     shiftSpaceSequenceTimer = null;
                 }, 250);
@@ -17547,7 +17576,7 @@ function openAppSwitcher() {
     if (appDrawer && appDrawer.classList.contains('open')) {
         appDrawer.classList.remove('open');
         appDrawer.style.bottom = '-100%';
-        appDrawer.style.opacity = '0';
+        setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
         
         // Restore Main UI visibility
         document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
@@ -17763,10 +17792,14 @@ function selectAndCloseAppSwitcher() {
         }
 
         // 2. Open Drawer (Ensure Z-Index is above current app)
-        appDrawer.classList.add('open');
-        appDrawer.style.zIndex = '1005';
-        appDrawer.style.bottom = '0%';
-        appDrawer.style.opacity = '1';
+        appDrawer.style.display = 'flex';
+        requestAnimationFrame(() => {
+            appDrawer.classList.add('open');
+            appDrawer.style.zIndex = '1005';
+            appDrawer.style.bottom = '0%';
+            appDrawer.style.opacity = '1';
+            createAppIcons(); 
+        });
         createAppIcons(); 
         
         // 3. Only restore background UI if NO app is open (Optimization)
