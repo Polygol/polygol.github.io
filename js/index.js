@@ -10238,7 +10238,7 @@ const HomeActivityManager = {
 
     updateVisibility() {
         const hasItems = this.items.length > 0;
-        const appOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+        const appOpen = document.body.classList.contains('app-active');
         const drawerOpen = document.getElementById('app-drawer').classList.contains('open');
         
         if (this.enabled && hasItems && !appOpen && !drawerOpen && !document.body.classList.contains('blackout-active')) {
@@ -11635,6 +11635,7 @@ async function createFullscreenEmbed(url, options = {}) {
     dynamicArea.style.opacity = '1';
 
     isAppOpen = true;
+    document.body.classList.add('app-active'); // Ensure active state is set immediately
 
 	SoundManager.play('open');
 	
@@ -11867,7 +11868,6 @@ async function createFullscreenEmbed(url, options = {}) {
 	
     // Append the container to the DOM
     document.body.appendChild(embedContainer);
-    document.body.classList.add('app-active');
 	
     pauseAllAnimations();
 
@@ -12253,6 +12253,7 @@ function closeFullscreenEmbed() {
     resetAutoSleepTimer(); // Reset timer when returning to home screen
     resetIndicatorTimeout();
 	updateDockVisibility();
+    HomeActivityManager.updateVisibility();
 }
 
 function forceCloseApp(url) {
