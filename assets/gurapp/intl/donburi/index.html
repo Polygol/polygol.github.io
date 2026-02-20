@@ -1265,18 +1265,21 @@
                     const tab = document.getElementById(tabId);
                     if (!tab) return;
                     
-                    const itemsData = layout;
-                    itemsData.sort((a, b) => a.order - b.order); // Ensure correct order
+                    const itemsData = layout[tabId];
                     
-                    itemsData.forEach(data => {
-                        const item = document.getElementById(data.id);
-                        if (item) {
-                            tab.appendChild(item); // Reorders DOM nodes
-                            item.classList.remove('span-1x1', 'span-2x1', 'span-1x2', 'span-2x2', 'span-3x2');
-                            if (data.size) item.classList.add(data.size);
-                            item.style.display = data.visible ? '' : 'none';
-                        }
-                    });
+                    if (Array.isArray(itemsData)) {
+                        itemsData.sort((a, b) => a.order - b.order); // Ensure correct order
+                        
+                        itemsData.forEach(data => {
+                            const item = document.getElementById(data.id);
+                            if (item) {
+                                tab.appendChild(item); // Reorders DOM nodes
+                                item.classList.remove('span-1x1', 'span-2x1', 'span-1x2', 'span-2x2', 'span-3x2');
+                                if (data.size) item.classList.add(data.size);
+                                item.style.display = data.visible ? '' : 'none';
+                            }
+                        });
+                    }
                 });
             } catch(e) { console.error("Failed to load layout", e); }
         }
