@@ -10639,10 +10639,10 @@ function setupFontSelection() {
 
     // Special logic: uncheck gradient if solid color is checked, and vice-versa
 	const radioSwitchColor = [
-	    document.getElementById('colorSwitch'),
-	    document.getElementById('gradientSwitch'),
-	    document.getElementById('glassSwitch'),
-	    document.getElementById('dynamicFillSwitch')
+	    document.getElementById('clock-color-switch'),
+	    document.getElementById('clock-gradient-switch'),
+	    document.getElementById('clock-glass-switch'),
+	    document.getElementById('clock-dynamicfill-switch')
 	];
 	
 	radioSwitchColor.forEach(radio => {
@@ -10775,24 +10775,26 @@ function applyClockStyles() {
     clockElement.style.textShadow = 'none';
     infoElement.style.textShadow = 'none';
 	
-    // --- Apply styles based on priority: Glass > Gradient > Solid Color ---
-    if (glassSwitch && glassSwitch.checked) {
-        clockElement.classList.add('glass-effect');
-        infoElement.classList.add('glass-effect'); // Apply to date as well
-    } else if (dynamicFillSwitch && dynamicFillSwitch.checked) {
-        clockElement.classList.add('dynamic-effect');
-        infoElement.classList.add('dynamic-effect'); // Apply to date as well
-    } else if (gradientSwitch && gradientSwitch.checked) {
-        const color1 = colorPicker.value;
-        const color2 = gradientColorPicker.value;
-        clockElement.style.setProperty('--gradient-color-1', color1);
-        clockElement.style.setProperty('--gradient-color-2', color2);
-        clockElement.classList.add('gradient-effect');
-        infoElement.style.color = color1; // Use the primary color for the date
-    } else if (colorSwitch && colorSwitch.checked) {
-        clockElement.style.color = colorPicker.value;
-        infoElement.style.color = colorPicker.value;
-    }
+	// Reset previous effects
+	clockElement.classList.remove('glass-effect', 'gradient-effect', 'dynamic-fill-effect');
+	clockElement.style.color = '';
+	
+	if (document.getElementById('clock-glass-switch').checked) {
+	    clockElement.classList.add('glass-effect');
+	} 
+	else if (document.getElementById('clock-gradient-switch').checked) {
+	    clockElement.classList.add('gradient-effect');
+	    const color1 = document.getElementById('clock-color-picker').value;
+	    const color2 = document.getElementById('clock-gradient-color-picker').value;
+	    clockElement.style.setProperty('--gradient-color-1', color1);
+	    clockElement.style.setProperty('--gradient-color-2', color2);
+	} 
+	else if (document.getElementById('clock-dynamicfill-switch').checked) {
+	    clockElement.classList.add('dynamic-fill-effect');
+	} 
+	else if (document.getElementById('clock-color-switch').checked) {
+	    clockElement.style.color = document.getElementById('clock-color-picker').value;
+	}
 	
     // Apply Text Shadow (can be combined with other effects)
     if (shadowSwitch && shadowSwitch.checked) {
