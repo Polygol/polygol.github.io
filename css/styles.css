@@ -1140,6 +1140,23 @@ body.one-button-nav-active .dock.show {
 	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1), font-size 0.3s cubic-bezier(.3,1.2,.64,1) !important;
 }
 
+
+.info.dynamic-effect .date,
+.clock.dynamic-effect > * {
+    color: var(--transparent-color) !important;
+    background: none !important; /* Ensure no other backgrounds interfere */
+
+    -webkit-mask-image: linear-gradient(black, black);
+    -webkit-mask-clip: text;
+    -webkit-mask-composite: source-in;
+
+    mask-image: linear-gradient(black, black);
+    mask-composite: source-in;
+
+    backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) var(--edge-refraction-filter) blur(2.5px);
+	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1), font-size 0.3s cubic-bezier(.3,1.2,.64,1) !important;
+}
+
 .clock.gradient-effect {
     color: transparent;
 }
