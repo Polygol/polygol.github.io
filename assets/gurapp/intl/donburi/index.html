@@ -355,7 +355,7 @@
             display: flex;
             gap: 6px;
             flex-direction: column;
-            margin: 55px 60px 8px 2px;
+            margin: 0 90px 8px 8px;
             z-index: 1;
             pointer-events: none;
             justify-content: flex-end;
@@ -372,6 +372,9 @@
         }
         
         .media-widget-info .artist {
+            font-family: 'Inter';
+            font-weight: 500;
+            color: var(--secondary-text-color);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -448,13 +451,17 @@
             border: none;
             color: var(--text-color);
             cursor: pointer;
-            width: 36px;
-            height: 36px;
+            width: 50px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
             transition: background-color 0.2s;
+        }
+
+        .media-widget-controls button .material-symbols-rounded {
+            font-size: 28px;
         }
         
         #media-widget-play-pause {
@@ -462,15 +469,16 @@
             backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
             box-shadow: var(--sun-shadow);
             border: 1px solid var(--glass-border);
-            width: 48px;
-            height: 48px;
-            border-radius: 25px;
+            width: 50px;
+            height: 50px;
+            border-radius: 35px;
             corner-shape: superellipse(1.5);
             color: var(--text-color);
             position: fixed;
             right: 32px;
-            bottom: 68px;
+            bottom: 80px;
             z-index: 1;
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
         }
 
         .list-item {
@@ -613,10 +621,10 @@
                 <span>This device</span>
             </div>
             <div class="media-widget-info">
-                <div id="media-widget-title" class="title"></div>
-                <div id="media-widget-artist" class="artist"></div>
+                <h2 id="media-widget-title" class="title"></h2>
+                <h2 id="media-widget-artist" class="artist"></h2>
             </div>
-            <button id="media-widget-play-pause"><span class="material-symbols-rounded" style="font-size: 28px; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;">play_arrow</span></button>
+            <button id="media-widget-play-pause"><span class="material-symbols-rounded" style="font-size: 36px; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;">play_arrow</span></button>
             <div class="media-widget-progress-container">
                 <span id="media-widget-current-time" class="media-widget-time">0:00</span>
                 <span id="media-widget-duration" class="media-widget-time">0:00</span>
@@ -956,7 +964,7 @@
                 if (cPanelIcon && cPanelBtn) {
                     if (playbackState === 'playing') {
                         cPanelIcon.textContent = 'pause';
-                        cPanelBtn.style.borderRadius = '25px';
+                        cPanelBtn.style.borderRadius = '35px';
                         cPanelBtn.style.cornerShape = 'superellipse(1.5)';
                     } else {
                         cPanelIcon.textContent = 'play_arrow';
