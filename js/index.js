@@ -4480,24 +4480,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     bodyObserver.observe(document.body, { childList: true, subtree: true });
 
-	// Update clock to be precise to the minute, saving power
+	// Update clock to be precise to the minute, saving power.
+	// Uses a recursive setTimeout to prevent browser timer drift.
 	function synchronizePersistentClock() {
+	    updatePersistentClock();
+	    
 	    const now = new Date();
-	    // Calculate milliseconds until the next minute starts
+	    // Calculate exact milliseconds until the start of the next minute
 	    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
 	
-	    // Set a timeout to run precisely at the start of the next minute
-	    setTimeout(() => {
-	        updatePersistentClock();
-	        // Now that we're synchronized, update every 60 seconds
-	        setInterval(updatePersistentClock, 60000);
-	    }, msUntilNextMinute);
+	    // Schedule the next update to happen exactly at XX:XX:00
+	    setTimeout(synchronizePersistentClock, msUntilNextMinute);
 	}
 	
-	// Initial call to display the clock immediately
-	updatePersistentClock();
-	
-	// Start the synchronized interval
+	// Start the synchronized loop
 	synchronizePersistentClock();
 	
     // --- NEW: Autorun Script ---
@@ -9861,8 +9857,19 @@ async function jumpToWallpaper(index) {
         if (shadowSwitch) shadowSwitch.checked = wallpaper.clockStyles.shadowEnabled || false;
         if (shadowBlurSlider) shadowBlurSlider.value = wallpaper.clockStyles.shadowBlur || '10';
         if (shadowColorPicker) shadowColorPicker.value = wallpaper.clockStyles.shadowColor || '#000000';
-        if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
+		if (gradientSwitch) gradientSwitch.checked = wallpaper.clockStyles.gradientEnabled || false;
         if (gradientColorPicker) gradientColorPicker.value = wallpaper.clockStyles.gradientColor || '#ffffff';
+        
+        const glassSwitch = document.getElementById('clock-glass-switch');
+        if (glassSwitch) glassSwitch.checked = wallpaper.clockStyles.glassEnabled || false;
+        
+        const dynamicFillSwitch = document.getElementById('clock-dynamicfill-switch');
+        if (dynamicFillSwitch) dynamicFillSwitch.checked = wallpaper.clockStyles.dynamicFillEnabled || false;
+        
+        const offSwitch = document.getElementById('clock-off-switch');
+        if (offSwitch) {
+            offSwitch.checked = !(wallpaper.clockStyles.colorEnabled) && !(wallpaper.clockStyles.gradientEnabled) && !(wallpaper.clockStyles.glassEnabled) && !(wallpaper.clockStyles.dynamicFillEnabled);
+        }
 
 
         // Apply the styles
@@ -10563,6 +10570,10 @@ function setupFontSelection() {
 
     // --- 1. Load saved preferences and set the state of the UI controls ---
     const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
+    const offSwitch = document.getElementById('clock-off-switch');
+    if (offSwitch) {
+        offSwitch.checked = !colorSwitch.checked && !gradientSwitch.checked && !glassSwitch.checked && (!dynamicFillSwitch || !dynamicFillSwitch.checked);
+    }
     fontSelect.value = localStorage.getItem('font') || 'Inter'; // FIX: Use 'font'
     weightSlider.value = parseInt(localStorage.getItem('weight') || '700', 10) / 10; // FIX: Use 'weight'
     colorPicker.value = localStorage.getItem('color') || defaultColor; // FIX: Use 'color'
@@ -10654,14 +10665,15 @@ function setupFontSelection() {
 	    document.getElementById('clock-dynamicfill-switch')
 	];
 	
-	radioSwitchColor.forEach(radio => {
-	    if (radio) {
-	        radio.addEventListener('change', () => {
-	            saveCurrentWallpaperSettings();
-	            syncUiStates();
-	        });
-	    }
-	});
+    radioSwitchColor.forEach(radio => {
+        if (radio) {
+            radio.addEventListener('change', async () => {
+                applyClockStyles();
+                await saveCurrentWallpaperSettings();
+                syncUiStates();
+            });
+        }
+    });
 }
 
 // Handle layout (size and position)
