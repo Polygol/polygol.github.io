@@ -42,8 +42,7 @@
             padding: 4px;
             position: fixed;
             top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 20px;
             z-index: 1000;
             transition: top 0.3s ease;
             width: max-content;
@@ -82,6 +81,26 @@
         .don-nav-btn:active {
             transform: scale(1.1);
             filter: brightness(1.5);
+        }
+
+        #don-persistent-clock {
+            position: absolute;
+            padding: 8px;
+            top: 25px;
+            right: 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            font-family: 'Inter Numeric', sans-serif;
+            font-variation-settings: 'RDNS' 1;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-color);
+            z-index: 1000;
+            background-color: var(--search-background);
+            border-radius: 35px;
+            corner-shape: round;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+            box-shadow: var(--sun-shadow);
         }
 
         /* Bento Grid */
@@ -251,10 +270,10 @@
         
         .media-widget .app-icon-img {
         	position: absolute;
-            top: 28px;
-            left: 28px;
-            width: 28px;
-            height: 28px;
+            bottom: 164px;
+            left: 40px;
+            width: 32px;
+            height: 32px;
             border-radius: 35%;
             z-index: 2;
             mix-blend-mode: luminosity;
@@ -306,8 +325,8 @@
             border: 1px solid var(--glass-border);
             box-shadow: var(--sun-shadow);
             position: absolute;
-            top: 28px;
-            right: 28px;
+            bottom: 168px;
+            right: 32px;
             font-size: 0.7em;
             display: flex;
             align-items: center;
@@ -338,9 +357,9 @@
             position: absolute;
             inset: 0;
             background: inherit;
-            backdrop-filter: blur(5px);
-            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 1) 100%);
-            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 1) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 1) 100%);
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 1) 100%);
         }
         
         #media-widget-art:active {
@@ -496,6 +515,8 @@
     </style>
 </head>
 <body data-app-name="Donburi">
+    <div id="don-persistent-clock">--:--</div>
+    
     <div class="don-navbar" id="donburi-tabs">
         <button class="don-nav-btn active" data-tab="tab-day" id="greeting-tab">
             Your day
@@ -745,8 +766,13 @@
             hours = String(hours).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             
-            if (timeEl) timeEl.textContent = `${hours}:${minutes}${ampm}`;
+            const timeString = `${hours}:${minutes}${ampm}`;
+            
+            if (timeEl) timeEl.textContent = timeString;
             if (dateEl) dateEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+            
+            const persistClock = document.getElementById('don-persistent-clock');
+            if (persistClock) persistClock.textContent = timeString;
         }
 
         function updateWeather() {
