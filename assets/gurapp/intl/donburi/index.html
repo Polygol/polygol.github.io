@@ -1261,7 +1261,15 @@
                 Array.from(tab.children).forEach((item) => {
                     if (!item.classList.contains('bento-item') || !item.id) return;
                     
-                    let title = item.querySelector('.item-card-title')?.textContent.trim().replace(/^+/i, '') || 'Widget'; // Strip icon text
+                    // Extract title correctly by ignoring the icon span text
+                    const titleEl = item.querySelector('.item-card-title');
+                    let title = 'Widget';
+                    if (titleEl) {
+                        const clone = titleEl.cloneNode(true);
+                        const icon = clone.querySelector('.material-symbols-rounded');
+                        if (icon) icon.remove();
+                        title = clone.textContent.trim();
+                    }
                     
                     const row = document.createElement('div');
                     row.className = 'settings-row';
