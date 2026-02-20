@@ -2415,8 +2415,9 @@ input[type="radio"]:checked::before {
 }
 
 .popup-control-row label {
-    font-size: 14px;
-    opacity: 0.8;
+	font-size: 14px;
+    width: -webkit-fill-available;
+    flex-shrink: 100;
 }
 
 .popup-control-row input[type="range"] {
