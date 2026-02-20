@@ -11628,8 +11628,8 @@ async function createFullscreenEmbed(url, options = {}) {
         } catch(e) { isFuzzyMatch = false; }
     }
 	
-	// If the URL is not for an installed app, an internal tool, or a Google Form, block it.
-	if (!appName && !isInternalTool && !isGoogleForm && !isSystemApp) {
+	// If the URL is not for an installed app, tool, system app, or a fuzzy match, block it.
+	if (!appName && !isInternalTool && !isGoogleForm && !isSystemApp && !isFuzzyMatch) {
 	    console.warn(`Attempted to open an unknown app or non-allowlisted URL: ${url}`);
 		showDialog({ 
 		    type: 'alert', 
