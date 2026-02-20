@@ -10638,41 +10638,11 @@ function setupFontSelection() {
     });
 
     // Special logic: uncheck gradient if solid color is checked, and vice-versa
-    colorSwitch.addEventListener('change', () => {
-        if (colorSwitch.checked) {
-            gradientSwitch.checked = false;
-            glassSwitch.checked = false;
-            saveCurrentWallpaperSettings();
-            syncUiStates();
-        }
-    });
-
-    gradientSwitch.addEventListener('change', () => {
-        if (gradientSwitch.checked) {
-            colorSwitch.checked = false;
-            glassSwitch.checked = false;
-            saveCurrentWallpaperSettings();
-            syncUiStates();
-        }
-    });
-
-    glassSwitch.addEventListener('change', () => {
-        if (glassSwitch.checked) {
-            colorSwitch.checked = false;
-            gradientSwitch.checked = false;
-            saveCurrentWallpaperSettings();
-            syncUiStates();
-        }
-    });
-	
-	dynamicFillSwitch.addEventListener('change', () => {
-	    if (dynamicFillSwitch.checked) {
-	        colorSwitch.checked = false;
-	        gradientSwitch.checked = false;
-	        glassSwitch.checked = false;
+	document.querySelectorAll('input[name="wallpaperType"]').forEach(radio => {
+	    radio.addEventListener('change', () => {
 	        saveCurrentWallpaperSettings();
 	        syncUiStates();
-	    }
+	    });
 	});
 }
 
