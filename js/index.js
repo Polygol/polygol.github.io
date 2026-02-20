@@ -8354,6 +8354,7 @@ async function renderWallpaperToDOM(wallpaper) {
 				video.onloadeddata = () => {
                     document.body.insertBefore(video, document.body.firstChild);
                     document.body.style.backgroundImage = "none";
+                    document.body.style.removeProperty('--bg-image');
                 };
                 video.load();
 
