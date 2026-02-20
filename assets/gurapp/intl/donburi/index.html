@@ -1115,7 +1115,7 @@
                 const cPanelBtn = document.getElementById('media-widget-play-pause');
                 const cPanelIcon = cPanelBtn?.querySelector('.material-symbols-rounded');
 
-                // --- Update Button & Icon ---
+                // --- Update Main Button & Icon ---
                 if (cPanelIcon && cPanelBtn) {
                     if (playbackState === 'playing') {
                         cPanelIcon.textContent = 'pause';
@@ -1123,8 +1123,24 @@
                         cPanelBtn.style.cornerShape = 'superellipse(1.5)';
                     } else {
                         cPanelIcon.textContent = 'play_arrow';
-                        cPanelBtn.style.borderRadius = '50%'; // Round
+                        cPanelBtn.style.borderRadius = '50%';
                         cPanelBtn.style.cornerShape = 'round';
+                    }
+                }
+
+                // --- Update Mini Button & Icon ---
+                const miniBtn = document.getElementById('mini-media-play-pause');
+                const miniIcon = miniBtn?.querySelector('.material-symbols-rounded');
+
+                if (miniBtn && miniIcon) {
+                    if (playbackState === 'playing') {
+                        miniIcon.textContent = 'pause';
+                        miniBtn.style.borderRadius = '25px';
+                        miniBtn.style.cornerShape = 'superellipse(1.5)';
+                    } else {
+                        miniIcon.textContent = 'play_arrow';
+                        miniBtn.style.borderRadius = '50%';
+                        miniBtn.style.cornerShape = 'round';
                     }
                 }
                 
