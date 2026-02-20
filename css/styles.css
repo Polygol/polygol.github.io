@@ -1140,7 +1140,6 @@ body.one-button-nav-active .dock.show {
 	transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1), font-size 0.3s cubic-bezier(.3,1.2,.64,1) !important;
 }
 
-
 .info.dynamic-effect .date,
 .clock.dynamic-effect > * {
     color: var(--transparent-color) !important;
