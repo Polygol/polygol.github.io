@@ -12847,6 +12847,8 @@ function openDonburi() {
 		el.style.pointerEvents = 'none';
 		setTimeout(() => el.classList.add('force-hide'), 300);
 	});
+
+	HomeActivityManager.updateVisibility();
 }
 
 window.closeDonburi = function() {
@@ -12870,6 +12872,8 @@ window.closeDonburi = function() {
 		    donburi.style.display = 'none';
 		}
 	}, 400);
+	
+	HomeActivityManager.updateVisibility();
 };
 
 function setupDrawerInteractions() {
