@@ -10646,10 +10646,12 @@ function setupFontSelection() {
 	];
 	
 	radioSwitchColor.forEach(radio => {
-	    radio.addEventListener('change', () => {
-	        saveCurrentWallpaperSettings();
-	        syncUiStates();
-	    });
+	    if (radio) {
+	        radio.addEventListener('change', () => {
+	            saveCurrentWallpaperSettings();
+	            syncUiStates();
+	        });
+	    }
 	});
 }
 
