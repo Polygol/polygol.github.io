@@ -35,6 +35,7 @@
 
         /* don-navbar / Tabs */
         .don-navbar {
+            height: 42px;
             display: flex;
             justify-content: center;
             align-content: center;
@@ -84,18 +85,21 @@
         }
 
         #don-persistent-clock {
+            height: 42px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
             position: absolute;
-            padding: 8px;
-            top: 25px;
-            right: 30px;
+            top: 20px;
+            right: 20px;
             font-size: 1.2rem;
             font-weight: 600;
             font-family: 'Inter Numeric', sans-serif;
             font-variation-settings: 'RDNS' 1;
             font-variant-numeric: tabular-nums;
-            color: var(--text-color);
+            color: var(--accent);
             z-index: 1000;
-            background-color: var(--search-background);
+            background-color: var(--background-color);
             border-radius: 35px;
             corner-shape: round;
             border: 1px solid var(--glass-border);
