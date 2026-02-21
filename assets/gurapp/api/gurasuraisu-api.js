@@ -516,84 +516,65 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         }
 
         .toolbar {
+            height: 45px;
             display: flex;
             justify-content: center;
             align-content: center;
             flex-direction: row;
-            gap: 14px;
-            padding: 15px 20px;
-            background-color: transparent;
-            border: none;
+            padding: 4px;
             position: fixed;
-            top: 0px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 18px;
+            left: 20px;
             z-index: 1000;
             transition: top 0.3s ease;
-            width: 100%;
+            width: max-content;
             flex-wrap: wrap;
-            height: 80px;
+            background-color: var(--search-background);
+            border-radius: 35px;
+            corner-shape: round;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+            box-shadow: var(--sun-shadow);
         }
 
         .toolbar.hidden {
             display: none;
         }
 
-        .toolbar::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            z-index: -1;
-        }
-
-        .toolbar::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            backdrop-filter: blur(2.5px);
-            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0) 100%);
-            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0) 100%);
-        }
-
         .tab-btn {
-            background-color: var(--search-background);
-            color: transparent;
-            border-radius: 50%;
-            padding: 14px 14px;
-            font-size: 0;
+            border: 1px solid transparent;
+            background-color: transparent;
+            color: var(--secondary-text-color);
+            border-radius: 35px;
+            corner-shape: round;
+            padding: 8px 14px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1) ! IMPORTANT;
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+            white-space: nowrap;
             display: flex;
             align-items: center;
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
-            box-shadow: var(--sun-shadow);
-            border: 1px solid var(--glass-border);
+            gap: 0;
         }
 
         .tab-btn.active {
-            background-color: var(--accent);
-            color: var(--background-color);
-            border-radius: 35px;
-            corner-shape: superellipse(1.5);
-            font-family: 'Open Runde';
-            font-weight: 500;
-            padding: 14px 22px 14px 18px;
-            font-size: revert;
-            gap: 12px;
+            background-color: var(--transparent-color);
+            color: var(--text-color);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            font-weight: bold;
+            font-family: 'Open Runde', sans-serif;
+            gap: 8px;
         }
 
         .toolbar .tab-btn .material-symbols-rounded {
-            transition: color 0.3s;
-            color: var(--text-color);
-            font-size: 20px;
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+            color: transparent;
+            font-size: 0;
         }
 
         .toolbar .tab-btn.active .material-symbols-rounded {
-            color: var(--background-color) !important;
+            color: var(--text-color) !important;
+            font-size: 18px;
         }
 
         .modal-content {
@@ -601,51 +582,28 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             overflow: auto;
         }
 
-        @media (max-width: 800px) {
+        @media (min-width: 800px) {
             .toolbar {
-                justify-content: flex-start;
-            }
-
-            .tab-btn {
-                font-size: 0;
-                gap: 0 !important;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-            }
-        
-            .tab-btn.active {
-                font-size: 12px;
-                padding: 5px 14px;
-            }
-
-            .toolbar .tab-btn.active .material-symbols-rounded {
-                font-size: 18px !important;
+                left: 50%;
+                transform: translateX(-50%);
             }
         }
 
         @media (max-width: 500px) {
-            .toolbar {
-                justify-content: flex-start;
-                gap: 10px;
-            }
-
             .tab-btn {
                 font-size: 0;
-                gap: 0 !important;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                padding: 10px;
-            }
-        
-            .tab-btn.active {
-                font-size: 0;
-                padding: 10px;
+                color: transparent;
             }
 
-            .toolbar .tab-btn.active .material-symbols-rounded {
-                font-size: 20px !important;
+            .tab-btn.active {
+                font-size: 0;
+                color: transparent;
+                gap: 0;
+            }
+
+            .toolbar .tab-btn .material-symbols-rounded {
+                font-size: 18px;
+                color: var(--text-color);
             }
         }
     `;
