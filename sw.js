@@ -162,8 +162,16 @@ self.addEventListener('message', event => {
 self.addEventListener('fetch', event => {
     const { request } = event;
     const url = new URL(request.url);
+  
+    // Ensure API requests for live data never serve stale cached versions
+    const apiHosts = [
+        'api.open-meteo.com',
+        'nominatim.openstreetmap.org',
+        'dummyjson.com',
+        'api.rss2json.com'
+    ];
 
-    if (url.hostname === 'api.open-meteo.com' || url.hostname === 'nominatim.openstreetmap.org') {
+    if (apiHosts.includes(url.hostname)) {
         event.respondWith(fetch(request));
         return;
     }
