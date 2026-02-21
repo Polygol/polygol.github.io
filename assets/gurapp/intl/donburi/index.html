@@ -1015,34 +1015,23 @@
             }
         };
 
-        async function updateWeather() {
-            const data = await SwapManager.get('lastWeatherData');
-            if (data) {
-                try {
-                    const temp = Math.round(data.current.temperature);
-                    const unit = data.temperatureUnit === 'fahrenheit' ? '°F' : '°C';
-                    
-                    document.getElementById('weather-temp').textContent = `${temp}${unit}`;
-                    document.getElementById('weather-city').textContent = data.city;
-                    
-                    // Map weather code to Material Symbols
-                    const code = data.current.weathercode;
-                    let icon = 'sunny'; // Default (0)
-                    
-                    const isNight = new Date().getHours() >= 18 || new Date().getHours() <= 5;
-                    if (code === 0 && isNight) icon = 'clear_night';
-                    else if (code >= 1 && code <= 3) icon = 'cloud';
-                    else if (code >= 45 && code <= 48) icon = 'foggy';
-                    else if (code >= 51 && code <= 67) icon = 'rainy';
-                    else if (code >= 71 && code <= 86) icon = 'cloudy_snowing';
-                    else if (code >= 95) icon = 'thunderstorm';
-                    
-                    const iconEl = document.getElementById('weather-desc-icon');
-                    if (iconEl) iconEl.textContent = icon;
-                } catch(e) {}
-            }
+        function updateWeather() {
+            // Request data from parent
+            window.parent.postMessage({ type: 'get-system-weather' }, '*');
         }
 
+        function renderWeatherData(data) {
+            if (!data) return;
+            
+            const tempEl = document.getElementById('weather-temp');
+            const cityEl = document.getElementById('weather-city');
+            const iconEl = document.getElementById('weather-desc-icon');
+
+            if (tempEl) tempEl.textContent = `${data.temp}${data.unit}`;
+            if (cityEl) cityEl.textContent = data.city;
+            if (iconEl) iconEl.textContent = data.icon;
+        }
+        
         function updateUpcoming() {
             // Events
             const eventsStr = localStorage.getItem('events');
@@ -1346,6 +1335,27 @@
                 const update = {};
                 update[data.key] = data.value;
                 updateHomeControls(update);
+            }
+            if (data.type === 'system-weather-response') {
+                renderWeatherData(data);
+            }
+            if (data.type === 'system-live-activity-start') {
+                SmartManager.addLiveActivity(data.options.activityId, data.appName, data.options);
+            }
+            if (data.type === 'system-live-activity-update') {
+                SmartManager.updateLiveActivity(data.activityId, data.data);
+            }
+            if (data.type === 'system-live-activity-stop') {
+                SmartManager.removeLiveActivity(data.activityId);
+            }
+            
+            // Detect if message is coming from one of our internal smart activity iframes
+            const activityIds = Object.keys(SmartManager.liveActivities);
+            const isFromChild = activityIds.some(id => SmartManager.liveActivities[id].iframe.contentWindow === event.source);
+
+            if (isFromChild) {
+                // Relay everything to parent system exactly as received
+                window.parent.postMessage(data, '*');
             }
         });
 
