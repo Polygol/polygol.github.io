@@ -523,7 +523,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             flex-direction: row;
             padding: 4px;
             position: fixed;
-            top: 18px;
+            top: 17.5px;
             left: 20px;
             z-index: 1000;
             transition: top 0.3s ease;
