@@ -626,7 +626,7 @@ function pushFullState(targetPeerId = null) {
         temperature: localStorage.getItem('display_temperature') || 0,
         media: null,
         mediaState: 'paused',
-        appUI: window.activeAppUI || null,
+        appUI: null, // Will be populated async
         notifications: [],
         accentColor: accentColor, 
         systemStatus: window.getSystemStatus ? window.getSystemStatus() : {}
@@ -642,11 +642,16 @@ function pushFullState(targetPeerId = null) {
         if (playBtn && playBtn.textContent === 'pause') state.mediaState = 'playing';
     }
     
-    if (targetPeerId) {
-        wavesBroadcast({ type: 'state', data: state }, targetPeerId);
-    } else {
-        wavesBroadcast({ type: 'state', data: state });
-    }
+    // Fetch async data from Swap before broadcasting
+    SwapManager.get('activeAppUI').then(appUI => {
+        state.appUI = appUI || null;
+        
+        if (targetPeerId) {
+            wavesBroadcast({ type: 'state', data: state }, targetPeerId);
+        } else {
+            wavesBroadcast({ type: 'state', data: state });
+        }
+    });
 }
 
 function pushMediaUpdate(metadata, appName, playbackState = 'paused') {
@@ -658,13 +663,14 @@ function pushMediaUpdate(metadata, appName, playbackState = 'paused') {
 }
 
 function pushAppUI(appName, components) {
-    // Store in global window scope so it persists for new connections
-    window.activeAppUI = { appName, components };
+    // Offload heavy UI component arrays to Swap
+    const uiData = { appName, components };
+    SwapManager.set('activeAppUI', uiData);
     
     if(!wavesBroadcast) return;
     wavesBroadcast({ 
         type: 'appUI', 
-        data: window.activeAppUI 
+        data: uiData 
     });
 }
 
@@ -784,7 +790,7 @@ function requestRemoteUpload(accept = '*/*', multiple = false, requestId = null)
 }
 
 function clearAppUI() {
-    window.activeAppUI = null; // Clear stored state
+    SwapManager.remove('activeAppUI'); // Clear from Swap
     if(!wavesBroadcast) return;
     wavesBroadcast({ type: 'appUI', data: null }); // Null tells remote to show default
 }
