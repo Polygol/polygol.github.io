@@ -160,6 +160,20 @@
             transform: scale(1) !important;
         }
 
+        #bento-smart {
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+        }
+        
+        .smart-activity-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .smart-event-urgent {
+            color: #ff8a80;
+        }
+
         /* Grid Spans */
         .span-3x2 { grid-row: span 2; grid-column: span 3; min-width: 480px; }
         .span-2x2 { grid-row: span 2; grid-column: span 2; min-width: 315px; }
@@ -593,10 +607,15 @@
 
     <!-- Your Day Tab -->
     <div class="tab-content bento-grid active" id="tab-day">
-        <div class="bento-item span-2x2" id="bento-clock">
-            <div class="item-card-title"><span class="material-symbols-rounded">schedule</span><span id="greeting-text">Good morning</span></div>
-            <div class="item-card-subtitle" id="bento-date" style="font-weight: 600; font-size: 1.1rem;">Monday, Jan 1</div>
-            <div class="item-card-big-text" id="bento-time" style="font-family: 'Inter Numeric', sans-serif; font-size: clamp(6rem, 12%, 12rem); text-align: center; font-variation-settings: 'RDNS' 1; font-variant-numeric: tabular-nums;">00:00</div>
+        <div class="bento-item span-2x2" id="bento-smart">
+            <!-- Content dynamically managed by SmartManager -->
+            <div id="smart-fallback-clock" style="height: 100%; display: flex; flex-direction: column;">
+                <div class="item-card-title"><span class="material-symbols-rounded">schedule</span><span id="greeting-text">Good morning</span></div>
+                <div class="item-card-subtitle" id="bento-date" style="font-weight: 600; font-size: 1.1rem;">Monday, Jan 1</div>
+                <div class="item-card-big-text" id="bento-time" style="font-family: 'Inter Numeric', sans-serif; font-size: clamp(6rem, 12%, 12rem); text-align: center; font-variation-settings: 'RDNS' 1; font-variant-numeric: tabular-nums;">00:00</div>
+            </div>
+            <div id="smart-activity-container" style="display: none; height: 100%; width: 100%;"></div>
+            <div id="smart-event-container" style="display: none; margin: auto 0;"></div>
         </div>
 
         <div class="bento-item span-2x1" id="bento-weather" onclick="Gurasuraisu.openApp('/weather/index.html')">
@@ -605,7 +624,7 @@
                 <div class="item-card-big-text" id="weather-temp"><svg width="24" height="24" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--text-color);"><style>.spinner_V8m1{transform-origin:center;animation:spinner_zKoa 2s linear infinite}.spinner_V8m1 circle{stroke-linecap:round;animation:spinner_YpZS 1.5s ease-in-out infinite}@keyframes spinner_zKoa{100%{transform:rotate(360deg)}}@keyframes spinner_YpZS{0%{stroke-dasharray:0 150;stroke-dashoffset:0}47.5%{stroke-dasharray:42 150;stroke-dashoffset:-16}95%,100%{stroke-dasharray:42 150;stroke-dashoffset:-59}}</style><g class="spinner_V8m1"><circle cx="12" cy="12" r="9.5" fill="none" stroke-width="3"></circle></g></svg></div>
                 <div style="text-align: right; display: flex; flex-direction: column; gap: 10px;">
                     <div id="weather-city" style="font-weight: 600;"></div>
-                    <div id="weather-desc" class="item-card-subtitle"></div>
+                    <span id="weather-desc-icon" class="material-symbols-rounded" style="font-size: 24px;"></span>
                 </div>
             </div>
         </div>
