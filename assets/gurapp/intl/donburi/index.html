@@ -844,6 +844,62 @@
             });
         });
 
+        /**
+         * Smart Manager
+         * Prioritizes content in the bento-smart area.
+         */
+        const SmartManager = {
+            activeActivity: null,
+            urgentEvent: null,
+
+            update() {
+                const clock = document.getElementById('smart-fallback-clock');
+                const activity = document.getElementById('smart-activity-container');
+                const event = document.getElementById('smart-event-container');
+
+                // Reset visibility
+                [clock, activity, event].forEach(el => el.classList.remove('active'));
+
+                if (this.activeActivity) {
+                    activity.classList.add('active');
+                } else if (this.urgentEvent) {
+                    event.classList.add('active');
+                } else {
+                    clock.classList.add('active');
+                }
+            },
+
+            setActivity(id, url) {
+                const container = document.getElementById('smart-activity-container');
+                container.innerHTML = `<iframe src="${url}" class="smart-activity-frame" data-activity-id="${id}"></iframe>`;
+                this.activeActivity = id;
+                this.update();
+            },
+
+            stopActivity(id) {
+                if (this.activeActivity === id) {
+                    document.getElementById('smart-activity-container').innerHTML = '';
+                    this.activeActivity = null;
+                    this.update();
+                }
+            },
+
+            setUrgentEvent(eventData) {
+                const container = document.getElementById('smart-event-container');
+                this.urgentEvent = eventData;
+                if (eventData) {
+                    container.innerHTML = `
+                        <div class="smart-event-urgent">
+                            <div class="item-card-title"><span class="material-symbols-rounded">priority_high</span>Upcoming Now</div>
+                            <div style="font-weight: 700; font-size: 1.5rem; margin-top: 10px;">${eventData.title}</div>
+                            <div class="item-card-subtitle">Starting in ${eventData.mins} mins</div>
+                        </div>
+                    `;
+                }
+                this.update();
+            }
+        };
+
         // --- Dynamic Content Population ---
         function updateTimeAndGreeting() {
             const now = new Date();
@@ -942,6 +998,19 @@
                                 <div style="font-weight: 600; font-size: 1.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${next.title}</div>
                                 <div class="item-card-subtitle" style="color: var(--secondary-text-color);">${dayStr} • ${timeStr}</div>
                             `;
+                        }
+
+                        // Urgent Event Check for Smart Bento
+                        if (isToday && next.startTime) {
+                            const start = moment(`${next.date} ${next.startTime}`);
+                            const diff = start.diff(moment(), 'minutes');
+                            if (diff > 0 && diff <= 30) {
+                                SmartManager.setUrgentEvent({ title: next.title, mins: diff });
+                            } else {
+                                SmartManager.setUrgentEvent(null);
+                            }
+                        } else {
+                            SmartManager.setUrgentEvent(null);
                         }
 
                         // Agenda List
@@ -1211,6 +1280,22 @@
                 const update = {};
                 update[data.key] = data.value;
                 updateHomeControls(update);
+            }
+            
+            // --- System Live Activity Bridge ---
+            if (data.type === 'system-live-activity-start') {
+                SmartManager.setActivity(data.options.activityId, data.options.url);
+            }
+
+            if (data.type === 'system-live-activity-update') {
+                const frame = document.querySelector(`.smart-activity-frame[data-activity-id="${data.activityId}"]`);
+                if (frame && frame.contentWindow) {
+                    frame.contentWindow.postMessage({ type: 'live-activity-update', ...data.data }, '*');
+                }
+            }
+
+            if (data.type === 'system-live-activity-stop') {
+                SmartManager.stopActivity(data.activityId);
             }
         });
 
