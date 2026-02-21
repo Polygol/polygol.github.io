@@ -1738,6 +1738,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const REPORT_INTERVAL = 2000;
 
     function reportPerformance() {
+        // Suspend 60fps performance tracking when hidden
+        if (document.hidden) {
+            lastTime = performance.now(); // Prevent large delta spike on resume
+            frameCount = 0;
+            // Throttle to 1 check per second instead of 60
+            setTimeout(() => requestAnimationFrame(reportPerformance), 1000);
+            return;
+        }
+
         const now = performance.now();
         frameCount++;
 
