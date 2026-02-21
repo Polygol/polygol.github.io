@@ -3208,10 +3208,14 @@ const EnvironmentManager = {
         this.app.renderer.setSize(window.innerWidth, window.innerHeight);
     },
 
-    startLoop() {
+	startLoop() {
         const loop = () => {
             if (!this.active || !this.app) return;
             requestAnimationFrame(loop);
+
+            // Suspend 3D rendering and physics math when obscured by an app, when in blackout (sleep) mode, or when the browser tab is hidden.
+            const isObscured = document.hidden || window.isAppOpen || document.body.classList.contains('blackout-active');
+            if (isObscured) return;
 
             const { renderer, scene, camera, cloudMaterial, precipSystem, clouds } = this.app;
             
@@ -7151,7 +7155,7 @@ async function captureAppScreenshot(url) {
     const iframe = container.querySelector('iframe');
     if (!iframe) return;
 
-    try {
+	try {
         // Try to get screenshot via API (if app supports it)
         const ssData = await new Promise((resolve) => {
             const timeout = setTimeout(() => resolve(null), 500); // 500ms timeout
@@ -7172,6 +7176,13 @@ async function captureAppScreenshot(url) {
 
         if (ssData) {
             appSnapshots[url] = ssData;
+            
+            // Prevent infinite RAM bloat by capping snapshots to the 8 most recent
+            const snapshotKeys = Object.keys(appSnapshots);
+            if (snapshotKeys.length > 8) {
+                // Delete the oldest snapshot (first key in object)
+                delete appSnapshots[snapshotKeys[0]];
+            }
         } else {
             // Fallback removed to save resources. 
             // If the app doesn't support the screenshot API, we simply don't show a preview.
