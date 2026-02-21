@@ -559,6 +559,14 @@ const ResourceManager = {
         const UNKNOWN_TIMEOUT = 5 * 60 * 1000; // 5 Minutes
         const backgroundUrls = Object.keys(minimizedEmbeds);
 
+        // --- Strict App Limit ---
+        // Safely restrict max background apps to prevent DOM/Memory bloat over long uptimes
+        const maxApps = (navigator.deviceMemory || 4) + 16; 
+        if (backgroundUrls.length > maxApps) {
+            console.warn(`[ResourceManager] Strict App Count Limit Reached (${backgroundUrls.length}/${maxApps}).`);
+            this.killLeastUsedApp(); 
+        }
+
         backgroundUrls.forEach(url => {
             // 1. Identify if the app is "Officially Installed"
             const isInstalled = Object.values(apps).some(app => app.url === url);
@@ -1559,6 +1567,12 @@ function addWidget(widgetData, isTransparent = false) {
 async function removeWidget(index) {
     if (await showCustomConfirm('Remove this widget?')) {
         activeWidgets.splice(index, 1);
+        
+        // CLEANUP: Free base64 string from memory cache
+        if (window.widgetSnapshotCache && window.widgetSnapshotCache[index]) {
+            delete window.widgetSnapshotCache[index];
+        }
+        
         renderWidgets();
         saveWidgets();
     }
@@ -5084,30 +5098,24 @@ function updateClockAndDate() {
 }
 
 function startSynchronizedClockAndDate() {
-  function scheduleNextUpdate() {
+    updateClockAndDate(); 
+    
     const now = new Date();
     const msUntilNextSecond = 1000 - now.getMilliseconds();
     
-    setTimeout(() => {
-      updateClockAndDate();
-      
-      setInterval(updateClockAndDate, 1000);
-    }, msUntilNextSecond);
-  }
-  
-  updateClockAndDate(); // Initial update
-  scheduleNextUpdate();
+    // Recursive setTimeout recalculates the exact offset every second, eliminating drift
+    setTimeout(startSynchronizedClockAndDate, msUntilNextSecond);
 }
 
-        async function getTimezoneFromCoords(latitude, longitude) {
-            try {
-                // Use browser's timezone as the primary method
-                return Intl.DateTimeFormat().resolvedOptions().timeZone;
-            } catch (error) {
-                console.warn('Failed to get timezone, using UTC:', error);
-                return 'UTC';
-            }
-        }
+async function getTimezoneFromCoords(latitude, longitude) {
+	try {
+		// Use browser's timezone as the primary method
+		return Intl.DateTimeFormat().resolvedOptions().timeZone;
+	} catch (error) {
+		console.warn('Failed to get timezone, using UTC:', error);
+		return 'UTC';
+	}
+}
 
 // Helper to calculate distance between two coordinates
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
@@ -11552,6 +11560,11 @@ async function createFullscreenEmbed(url, options = {}) {
         if (currentActive && currentActive.dataset.embedUrl !== url) {
             // Push the URL to the stack
             window.appHistoryStack.push(currentActive.dataset.embedUrl);
+            
+            // Limit history stack size to prevent infinite memory growth
+            if (window.appHistoryStack.length > 15) {
+                window.appHistoryStack.shift();
+            }
             console.log(`[System] Pushed to history: ${currentActive.dataset.embedUrl}`);
         }
 
@@ -15303,7 +15316,7 @@ function closeControls() {
     }, 300);
 }
 
-setInterval(ensureVideoLoaded, 1000);
+setInterval(ensureVideoLoaded, 60000);
 
 function preventLeaving() {
     window.addEventListener('beforeunload', function (e) {
