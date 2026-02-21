@@ -465,12 +465,17 @@ const ResourceManager = {
     pressureState: 'nominal',
     maxObservedFps: 0, // Baseline for relative drop detection
     
+    // Predictive History Arrays
+    fpsHistory: [],
+    memoryHistory: [],
+    penaltyMultiplier: 1, // Makes it harder to recover if we keep failing
+    
     // IDs for cancellation
     rafId: null,
     intervalId: null,
     
     // Limits (bytes)
-    softMemoryLimit: (navigator.deviceMemory || 4) * 1024 * 1024 * 1024 * 0.7,
+    softMemoryLimit: (navigator.deviceMemory || 4) * 1024 * 1024 * 1024 * 0.5,
     
     init() {
         if (localStorage.getItem('resourceManagerEnabled') === 'false') {
@@ -573,40 +578,50 @@ const ResourceManager = {
             }
 
             const hasWindows = document.querySelector('.fullscreen-embed') || Object.keys(minimizedEmbeds).length > 0;
-            const isInteracting = (Date.now() - window.lastUserInteraction) < 5000; // User active in last 5s
+			const isInteracting = (Date.now() - window.lastUserInteraction) < 5000;
             const isPressureHigh = this.pressureState === 'critical' || this.pressureState === 'serious';
 
             if (!document.hidden && hasWindows) {
-                // Calculate Dynamic Threshold (e.g. 70% of Max observed, but at least 25)
-                // If 144Hz screen, drop to 100Hz is fine. Drop to 40Hz is bad.
-                // If 60Hz screen, drop to 40Hz is bad.
+                this.fpsHistory.push(fps);
+                if (this.fpsHistory.length > 5) this.fpsHistory.shift();
+
                 const relativeThreshold = averageFps * 0.7;
                 const threshold = Math.max(this.MIN_ABSOLUTE_FPS, relativeThreshold);
-
-                // Detect Lag
-                // 1. Must be below dynamic threshold
-                // 2. Must be above "Idle/Throttled" threshold (browser stops rendering when nothing changes)
                 const isLaggy = fps < threshold && fps > this.THROTTLE_FPS_THRESHOLD;
 
-                // Decision: Only complain about lag if the user is actually doing something 
-                // OR if the hardware is explicitly reporting pressure.
-                // This ignores "idle decay" where browsers lower FPS to save battery during static content.
-                if ((isLaggy && (isInteracting || isPressureHigh)) || (this.pressureState === 'critical')) {
-                    if (isLaggy) console.warn(`[System] Visual Lag Detected (${fps.toFixed(1)} / ${averageFps.toFixed(0)} FPS).`);
+                // Predictive CPU Trend Analysis
+                // If FPS drops consistently over 4 checks, preemptively adapt before it gets worse
+                const isDegrading = this.fpsHistory.length === 5 && 
+                                    this.fpsHistory[4] < this.fpsHistory[3] && 
+                                    this.fpsHistory[3] < this.fpsHistory[2] &&
+                                    this.fpsHistory[4] < (threshold * 1.1);
+
+                if ((isLaggy && (isInteracting || isPressureHigh)) || this.pressureState === 'critical' || isDegrading) {
+                    if (isDegrading && !isLaggy) console.warn(`[System] Predictive adaptation: FPS steadily degrading.`);
+                    else if (isLaggy) console.warn(`[System] Visual Lag Detected (${fps.toFixed(1)} / ${averageFps.toFixed(0)} FPS).`);
+                    
                     this.handleHighLoad();
                     this.recoveryCounter = 0;
+                    
+                    // Increase penalty if we keep struggling
+                    if (isDegrading || this.pressureState === 'critical') {
+                        this.penaltyMultiplier = Math.min(this.penaltyMultiplier + 0.5, 3);
+                    }
                 } 
-                // Recovery Logic
                 else if (fps >= threshold) {
                     if (this.isStruggling) {
-                        if (this.pressureState !== 'critical' && this.pressureState !== 'serious') {
+                        if (!isPressureHigh) {
                             this.recoveryCounter++;
-                            if (this.recoveryCounter >= this.RECOVERY_THRESHOLD) {
+                            // Require more stable frames if we've repeatedly failed
+                            if (this.recoveryCounter >= (this.RECOVERY_THRESHOLD * this.penaltyMultiplier)) {
                                 this.attemptRecovery();
                             }
                         } else {
                             this.recoveryCounter = 0; 
                         }
+                    } else {
+                        // Slowly forgive penalty over long stable periods
+                        this.penaltyMultiplier = Math.max(this.penaltyMultiplier - 0.1, 1);
                     }
                 }
             }
@@ -665,13 +680,29 @@ const ResourceManager = {
             return;
         }
 
-        try {
+		try {
             const result = await performance.measureUserAgentSpecificMemory();
             const used = result.bytes;
-            if (used > this.softMemoryLimit) {
-                console.warn(`[System] Memory Critical: ${(used / 1024 / 1024).toFixed(0)}MB used.`);
-                this.handleHighLoad(); // Trigger visual downgrade
-                this.killLeastUsedApp(); // Trigger memory release
+            
+            this.memoryHistory.push(used);
+            if (this.memoryHistory.length > 5) this.memoryHistory.shift();
+
+            // Predictive Memory Analysis
+            let isSpiking = false;
+            if (this.memoryHistory.length === 5) {
+                const growth = this.memoryHistory[4] - this.memoryHistory[0];
+                const growthRate = growth / 4; // Bytes grown per check
+                // If growing faster than 25MB per check and we're over 60% of limit
+                if (growthRate > 25 * 1024 * 1024 && used > this.softMemoryLimit * 0.6) {
+                    console.warn(`[System] Predictive Memory Warning: Growing at ${(growthRate/1024/1024).toFixed(1)}MB/tick.`);
+                    isSpiking = true;
+                }
+            }
+
+            if (used > this.softMemoryLimit || isSpiking) {
+                console.warn(`[System] Memory Critical/Spiking: ${(used / 1024 / 1024).toFixed(0)}MB used.`);
+                this.handleHighLoad(); 
+                this.killLeastUsedApp(); 
             }
         } catch (error) {}
     },
@@ -3239,12 +3270,12 @@ const EnvironmentManager = {
         }
     },
 
-    updateWeatherEffect() {
+	async updateWeatherEffect() {
         if (!this.app || !this.app.precipSystem) return;
         
-        const saved = localStorage.getItem('lastWeatherData');
+        const saved = await SwapManager.get('lastWeatherData');
         let code = 0;
-        if(saved) try{code=JSON.parse(saved).current.weathercode}catch(e){}
+        if(saved) try{code=saved.current.weathercode}catch(e){}
 
         // Map Codes
         const isRain = (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
@@ -5230,7 +5261,7 @@ async function fetchLocationAndWeather() {
                 let country = '';
                 
                 // Retrieve cached geocoding data
-                const cachedGeo = JSON.parse(localStorage.getItem('cached_geo_data') || '{}');
+                const cachedGeo = (await SwapManager.get('cached_geo_data')) || {};
                 const CACHE_RADIUS_KM = 2.0; // Reuse address if within 2km
                 
                 let useCachedAddress = false;
@@ -5262,14 +5293,14 @@ async function fetchLocationAndWeather() {
                             'Unknown Location';
                         country = geocodingData.address.country || '';
                         
-                        // Update cache
-                        localStorage.setItem('cached_geo_data', JSON.stringify({
+						// Update cache
+                        SwapManager.set('cached_geo_data', {
                             latitude,
                             longitude,
                             city,
                             country,
                             timestamp: Date.now()
-                        }));
+                        });
                     } catch (geocodingError) {
                         console.warn('Geocoding failed:', geocodingError);
                         // Fallback to cache if available
@@ -5309,7 +5340,7 @@ async function fetchLocationAndWeather() {
                     attribution: "Weather data by Open-Meteo.com, Geocoding by OpenStreetMap"
                 };
  
-                localStorage.setItem('lastWeatherData', JSON.stringify(weatherData));
+				SwapManager.set('lastWeatherData', weatherData);
                 resolve(weatherData);
                 
             } catch (error) {
@@ -5318,9 +5349,9 @@ async function fetchLocationAndWeather() {
                     showPopup(currentLanguage.OFFLINE);
                 }
                 // Return cached data if available
-                const cachedData = localStorage.getItem('lastWeatherData');
+                const cachedData = await SwapManager.get('lastWeatherData');
                 if (cachedData) {
-                    resolve(JSON.parse(cachedData));
+                    resolve(cachedData);
                     return;
                 }
                 reject(error);
@@ -7209,7 +7240,6 @@ const minimizeTimeouts = {}; // Track timeouts per app URL
 let appSwitcherVisible = false;
 let appSwitcherApps = [];
 let appSwitcherIndex = 0;
-let appSnapshots = {};
 let isAppSwitcherOpen = false;
 let appSwitcherScrollInitialized = false;
 let isTabKeyDown = false;
@@ -12438,9 +12468,6 @@ function forceCloseApp(url) {
         delete minimizedEmbeds[url];
     }
 	// Switcher Snapshots
-    if (typeof appSnapshots !== 'undefined' && appSnapshots[url]) {
-        delete appSnapshots[url];
-    }
     if (typeof SwapManager !== 'undefined') {
         SwapManager.remove('app_snap_' + url);
     }
@@ -17547,14 +17574,20 @@ async function openAppSwitcherUI() {
     if (isAppSwitcherOpen) return;
     
     // 1. If an app is currently open, snapshot it dynamically
-    const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+	const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
     if (activeEmbed) {
         const url = activeEmbed.dataset.embedUrl;
         // Fire and forget - update UI when ready
-        captureAppScreenshot(url).then(() => {
-            if (isAppSwitcherOpen && appSnapshots[url]) {
+        captureAppScreenshot(url).then(async () => {
+            const ssData = await SwapManager.get('app_snap_' + url);
+            if (isAppSwitcherOpen && ssData) {
                 const card = document.querySelector(`.app-switcher-card[data-app-url="${url}"]`);
-                if (card) card.style.backgroundImage = `url('${appSnapshots[url]}')`;
+                if (card) {
+                    card.style.backgroundImage = `url('${ssData}')`;
+                    // Remove fallback background if it exists
+                    const fallback = card.querySelector('.app-switcher-fallback-bg');
+                    if (fallback) fallback.remove();
+                }
             }
         });
     }
@@ -17644,6 +17677,7 @@ function renderAppCards(container) {
         // Background Image (Screenshot)
         // Render fast fallback immediately
         const fallbackBg = document.createElement('div');
+        fallbackBg.className = 'app-switcher-fallback-bg'; // Assign class for easy removal
         fallbackBg.style.position = 'absolute';
         fallbackBg.style.width = '100%';
         fallbackBg.style.height = '100%';
