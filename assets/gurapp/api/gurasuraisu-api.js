@@ -1563,7 +1563,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const promoHtml = `
                   <div id="polygol-promo-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2147483647; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); font-family: 'Inter', sans-serif;">
                       <div style="background: var(--modal-background); border: 1px solid var(--glass-border); padding: 30px; border-radius: 50px; corner-shape: superellipse(1.5); max-width: 380px; width: 90%; text-align: center; box-shadow: var(--sun-shadow), 0 20px 50px rgba(0,0,0,0.3); backdrop-filter: var(--edge-refraction-only) saturate(2) blur(5px);">
-                          <img src="https://polygol.github.io/assets/img/regular-expressive-onload.webp" style="width: 72px; height: 72px; margin-bottom: 20px;">
+                          <img src="https://polygol.github.io/assets/img/icon.svg" style="width: 72px; height: 72px; margin-bottom: 20px;">
                           <h2 style="margin: 0 0 10px 0; font-size: 1.6rem; color: var(--text-color); font-family: 'Open Runde', sans-serif; font-weight: 600;">Open in Polygol</h2>
                           <p style="margin: 0 0 25px 0; color: var(--secondary-text-color); font-size: 0.95rem; line-height: 1.5;">
                               This app is part of the Polygol ecosystem. Experience the full environment, with smart AI across your apps, multitasking tools and extensive customization options.
