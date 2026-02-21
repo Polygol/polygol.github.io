@@ -9669,8 +9669,11 @@ function resetIndicatorTimeout() {
   // 2. Check if the app drawer is open
   const isDrawerOpen = document.getElementById('app-drawer')?.classList.contains('open');
 
+  // 3. Check if Donburi is open
+  const isDonburiOpen = document.getElementById('donburi-container')?.classList.contains('open');
+
   // 3. If either is true, force hide the indicator immediately
-  if (isAppOpen || isDrawerOpen) {
+  if (isAppOpen || isDrawerOpen || isDonburiOpen) {
       pageIndicator.classList.remove('persistent-mode');
       pageIndicator.classList.add('fade-out');
       return;
@@ -13074,7 +13077,7 @@ function openDonburi() {
 	}, 400);
 
 	// Hide Home UI and system handles
-	document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, .page-indicator, #dynamic-area, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
+	document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #dynamic-area, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
 		el.style.opacity = '0';
 		el.style.pointerEvents = 'none';
 		setTimeout(() => el.classList.add('force-hide'), 300);
@@ -13089,7 +13092,7 @@ window.closeDonburi = function() {
 	donburi.style.transform = 'translateY(-100%)';
 
 	// Restore Home UI and system handles
-	document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, .page-indicator, #dynamic-area, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
+	document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid, .drawer-handle, #dynamic-area, #split-screen-trigger, #one-button-nav-handle').forEach(el => {
 		el.classList.remove('force-hide');
 		el.style.display = el.dataset.originalDisplay || '';
 		el.style.pointerEvents = ''; // Restore pointer events
