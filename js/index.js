@@ -12409,8 +12409,15 @@ function closeFullscreenEmbed() {
         // FIX: Mark this embed as closing so createFullscreenEmbed won't cache it
         embedContainer.dataset.closing = 'true';
 
-        // After animation, remove the element entirely from the DOM
+		// After animation, remove the element entirely from the DOM
         setTimeout(() => {
+            // OPTIMIZATION: Force browser Garbage Collection by navigating to about:blank
+            // This destroys the app's JS context immediately instead of waiting for the GC daemon
+            const iframe = embedContainer.querySelector('iframe');
+            if (iframe) {
+                iframe.src = 'about:blank';
+                iframe.remove();
+            }
             embedContainer.remove();
         }, 300);
     }
@@ -12587,10 +12594,18 @@ function forceCloseApp(url) {
         }, 50);
     }
 
-    // 4. Final DOM Removal
+	// 4. Final DOM Removal
     // This removes the iframe container for the specified URL, effectively killing the app.
     const embeds = document.querySelectorAll(`.fullscreen-embed[data-embed-url="${url}"]`);
-    embeds.forEach(el => el.remove());
+    embeds.forEach(el => {
+        // OPTIMIZATION: Force immediate Garbage Collection of the inner app context
+        const iframe = el.querySelector('iframe');
+        if (iframe) {
+            iframe.src = 'about:blank';
+            iframe.remove();
+        }
+        el.remove();
+    });
     
     console.log(`[System] Force closed app: ${url}`);
 }
