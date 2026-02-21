@@ -1443,22 +1443,64 @@
             }, msUntilNextMinute);
         }
 
-        // Initial Populations
-        startMinuteSyncClock();
-        updateWeather();
-        updateUpcoming();
-        updateMedia();
-        updateHomeControls();
-        fetchQuote();
-        fetchRSS();
+        /**
+         * Donburi Live Refresh Engine
+         * Handles staggered updates for long-term persistence.
+         */
+        const RefreshEngine = {
+            intervals: {
+                fast: 30000,      // 30s (Tasks, Events, Alarms)
+                medium: 600000,   // 10m (Weather, Data Sources Sync)
+                slow: 3600000,    // 1h  (RSS, Quotes)
+            },
+            
+            init() {
+                // 1. Initial Load
+                startMinuteSyncClock();
+                this.refreshAll();
 
-        // Check local storage periodically for generic app updates (like task completions)
-        window.addEventListener('storage', () => {
-            updateUpcoming();
-            updateWeather();
-        });
-        // Or manual polling as fallback
-        setInterval(updateUpcoming, 5000);
+                // 2. Setup Staggered Intervals
+                setInterval(() => updateUpcoming(), this.intervals.fast);
+                setInterval(() => {
+                    updateWeather();
+                    updateHomeControls();
+                    loadBentoLayout(); // Check if layout was changed in another instance
+                }, this.intervals.medium);
+                setInterval(() => {
+                    fetchRSS();
+                    fetchQuote();
+                }, this.intervals.slow);
+
+                // 3. Page Visibility Logic: Catch up when Donburi is shown
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) {
+                        console.log('[Donburi] Resumed. Syncing live elements...');
+                        this.refreshAll();
+                    }
+                });
+
+                // 4. Real-time Storage Sync (Cross-app updates)
+                window.addEventListener('storage', (e) => {
+                    if (['tasks', 'events', 'alarms'].includes(e.key)) updateUpcoming();
+                    if (e.key === 'lastWeatherData') updateWeather();
+                    if (e.key.startsWith('donburi_')) this.refreshAll(); // Source URL changes
+                });
+            },
+
+            refreshAll() {
+                updateTimeAndGreeting();
+                updateWeather();
+                updateUpcoming();
+                updateMedia();
+                updateHomeControls();
+                fetchQuote();
+                fetchRSS();
+                loadBentoLayout();
+            }
+        };
+
+        // Initialize the engine
+        RefreshEngine.init();
 
     </script>
 </body>
