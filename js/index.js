@@ -17282,10 +17282,23 @@ window.addEventListener('message', async (event) => { // Make listener async
         return;
     }
 
-    // Donburi specialized communication
-    if (data.type === 'donburi-close') {
-        window.closeDonburi();
-        return;
+	// Donburi specialized communication
+    const donburiIframe = document.querySelector('#donburi-container iframe');
+    const isDonburiSender = donburiIframe && event.source === donburiIframe.contentWindow;
+
+    if (isDonburiSender) {
+        if (data.type === 'get-system-weather') {
+            const weatherData = JSON.parse(localStorage.getItem('lastWeatherData'));
+            event.source.postMessage({
+                type: 'system-weather-response',
+                data: weatherData
+            }, event.origin);
+            return;
+        }
+        if (data.type === 'donburi-close') {
+            window.closeDonburi();
+            return;
+        }
     }
 
     // Check if this is an API call from a Gurapp
