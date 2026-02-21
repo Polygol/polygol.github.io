@@ -17256,7 +17256,7 @@ window.addEventListener('message', async (event) => { // Make listener async
             }
         }
         
-        if (sourceAppId) {
+        if (sourceAppId && sourceAppId !== 'Donburi') {
             let targetActivityId = specificActivityId;
             
             // If we didn't find the ID from the container, look it up by app name
