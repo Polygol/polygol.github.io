@@ -3100,8 +3100,24 @@ const EnvironmentManager = {
         }
     },
 
-    destroy() {
+	destroy() {
         if (this.app) {
+            // Deep dispose WebGL Resources to prevent massive VRAM memory leak
+            this.app.scene.traverse((child) => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => {
+                            if (mat.map) mat.map.dispose();
+                            mat.dispose();
+                        });
+                    } else {
+                        if (child.material.map) child.material.map.dispose();
+                        child.material.dispose();
+                    }
+                }
+            });
+
             // Cleanup WebGL context
             this.app.renderer.dispose();
             this.app.renderer.domElement.remove();
@@ -7256,8 +7272,6 @@ async function captureAppScreenshot(url) {
 	try {
         // Try to get screenshot via API (if app supports it)
         const ssData = await new Promise((resolve) => {
-            const timeout = setTimeout(() => resolve(null), 500); // 500ms timeout
-            
             const handler = (e) => {
                 if (e.source === iframe.contentWindow && e.data.type === 'screenshot-response') {
                     clearTimeout(timeout);
@@ -7265,6 +7279,12 @@ async function captureAppScreenshot(url) {
                     resolve(e.data.screenshotDataUrl);
                 }
             };
+            
+            const timeout = setTimeout(() => {
+                window.removeEventListener('message', handler); // OPTIMIZATION: Prevent event listener memory leak
+                resolve(null);
+            }, 5000); // 5s timeout
+            
             window.addEventListener('message', handler);
             
             // Request
