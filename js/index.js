@@ -14362,26 +14362,6 @@ function setupOneButtonNav() {
 window.makeAnnouncement = function(text, forceTTS = null, profile = null) {
     if (!text) return;
     
-    // --- Save to History for Donburi ---
-    try {
-        let history = JSON.parse(localStorage.getItem('announcement_history') || '[]');
-        history.unshift({
-            text: text,
-            sender: profile && profile.name ? profile.name : 'System',
-            avatar: profile && profile.avatar && profile.avatar.length < 8000 ? profile.avatar : '/assets/appicon/system.png',
-            timestamp: Date.now()
-        });
-        if (history.length > 10) history.pop();
-        localStorage.setItem('announcement_history', JSON.stringify(history));
-
-		// Notify Donburi to refresh
-        const donburiFrame = document.querySelector('#donburi-container iframe');
-        if (donburiFrame && donburiFrame.contentWindow) {
-            const targetOrigin = getOriginFromUrl(donburiFrame.src);
-            donburiFrame.contentWindow.postMessage({ type: 'announcement_history_update' }, targetOrigin);
-        }
-    } catch(e) { console.warn("Could not save announcement history", e); }
-
     let url = `/assets/gurapp/intl/waves/announce.html?text=${encodeURIComponent(text)}`;
     
     if (forceTTS !== null) {
