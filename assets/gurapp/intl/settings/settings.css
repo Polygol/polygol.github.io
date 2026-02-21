@@ -23,33 +23,40 @@ body {
     display: flex;
     align-items: center;
     position: fixed;
-    top: 22px; 
+    top: 18px;
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    max-width: 750px;
+    max-width: 700px;
     z-index: 999;
-    padding: 0 28px;
+    height: 48px;
 }
 
 .back-btn {
-    background: none;
-    border: none;
-    color: var(--text-color);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: var(--transparent-color);
+    color: var(--text-color);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+    font-weight: bold;
+    font-family: 'Open Runde', sans-serif;
+    gap: 8px;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
 }
 
 .page-title {
     font-family: 'Open Runde', sans-serif;
     font-weight: 700;
-    font-size: 1.8rem;
+    font-size: 1.2rem;
     flex-grow: 1;
     text-align: left;
     margin: 0;
-    padding-left: 15px;
+    padding-left: 10px;
 }
 
 .pages-container {
