@@ -17289,10 +17289,19 @@ window.addEventListener('message', async (event) => { // Make listener async
     if (isDonburiSender) {
         if (data.type === 'get-system-weather') {
             const weatherData = JSON.parse(localStorage.getItem('lastWeatherData'));
-            event.source.postMessage({
-                type: 'system-weather-response',
-                data: weatherData
-            }, event.origin);
+            if (weatherData) {
+                const code = weatherData.current.weathercode;
+                const unit = weatherData.temperatureUnit === 'fahrenheit' ? '°F' : '°C';
+                const info = weatherConditions[code] || { icon: () => 'question_mark' };
+                const iconString = info.icon();
+                event.source.postMessage({
+                    type: 'system-weather-response',
+                    temp: Math.round(weatherData.current.temperature),
+                    unit: unit,
+                    icon: iconString,
+                    city: weatherData.city
+                }, event.origin);
+            }
             return;
         }
         if (data.type === 'donburi-close') {
