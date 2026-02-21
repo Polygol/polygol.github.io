@@ -11287,6 +11287,12 @@ async function deleteApp(appName) {
         delete appIconColors[appName];
         localStorage.setItem('appIconColors', JSON.stringify(appIconColors));
 
+        // Clean up orphaned tracking data to prevent localStorage bloat
+        delete appUsage[appName];
+        delete appLastOpened[appName];
+        saveUsageData();
+        saveLastOpenedData();
+
         // Refresh the app drawer and dock
         createAppIcons();
         populateDock();
