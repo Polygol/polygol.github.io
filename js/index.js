@@ -251,6 +251,71 @@ document.addEventListener('DOMContentLoaded', () => {
     applyColorFilter();
 });
 
+// --- Virtual Memory ---
+// Offloads large objects (Base64 images, heavy arrays) from RAM to Disk
+const SwapManager = {
+    dbName: 'PolygolSwapDB',
+    storeName: 'swap',
+    version: 1,
+    db: null,
+
+    init() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open(this.dbName, this.version);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(this.storeName)) {
+                    db.createObjectStore(this.storeName);
+                }
+            };
+            req.onsuccess = (e) => {
+                this.db = e.target.result;
+                resolve();
+            };
+            req.onerror = () => reject(req.error);
+        });
+    },
+
+    async set(key, value) {
+        if (!this.db) await this.init();
+        return new Promise((resolve) => {
+            const tx = this.db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            store.put(value, key).onsuccess = () => resolve();
+        });
+    },
+
+    async get(key) {
+        if (!this.db) await this.init();
+        return new Promise((resolve) => {
+            const tx = this.db.transaction(this.storeName, 'readonly');
+            const store = tx.objectStore(this.storeName);
+            const req = store.get(key);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => resolve(null);
+        });
+    },
+
+    async remove(key) {
+        if (!this.db) await this.init();
+        return new Promise((resolve) => {
+            const tx = this.db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            store.delete(key).onsuccess = () => resolve();
+        });
+    },
+    
+    async clear() {
+        if (!this.db) await this.init();
+        return new Promise((resolve) => {
+            const tx = this.db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            store.clear().onsuccess = () => resolve();
+        });
+    }
+};
+window.SwapManager = SwapManager;
+
 // --- Performance Auto-Detection ---
 function detectPerformanceProfile() {
     if (localStorage.getItem('performanceConfigured') === 'true') return;
@@ -1568,9 +1633,12 @@ async function removeWidget(index) {
     if (await showCustomConfirm('Remove this widget?')) {
         activeWidgets.splice(index, 1);
         
-        // CLEANUP: Free base64 string from memory cache
+		// CLEANUP: Free base64 string from memory and Swap cache
         if (window.widgetSnapshotCache && window.widgetSnapshotCache[index]) {
             delete window.widgetSnapshotCache[index];
+        }
+        if (typeof SwapManager !== 'undefined') {
+            SwapManager.remove('widget_snap_' + index);
         }
         
         renderWidgets();
@@ -7174,15 +7242,9 @@ async function captureAppScreenshot(url) {
             iframe.contentWindow.postMessage({ type: 'request-screenshot' }, targetOrigin);
         });
 
-        if (ssData) {
-            appSnapshots[url] = ssData;
-            
-            // Prevent infinite RAM bloat by capping snapshots to the 8 most recent
-            const snapshotKeys = Object.keys(appSnapshots);
-            if (snapshotKeys.length > 8) {
-                // Delete the oldest snapshot (first key in object)
-                delete appSnapshots[snapshotKeys[0]];
-            }
+		if (ssData) {
+            // Save to IndexedDB swap
+            SwapManager.set('app_snap_' + url, ssData);
         } else {
             // Fallback removed to save resources. 
             // If the app doesn't support the screenshot API, we simply don't show a preview.
@@ -7342,7 +7404,8 @@ window.addEventListener('message', (event) => {
                 const widgetInstance = iframe.closest('.widget-instance');
                 if (widgetInstance) {
                     const index = widgetInstance.dataset.widgetIndex;
-                    window.widgetSnapshotCache[index] = event.data.screenshotDataUrl;
+                    // Write to Swap
+                    SwapManager.set('widget_snap_' + index, event.data.screenshotDataUrl);
                 }
                 break;
             }
@@ -7385,10 +7448,11 @@ async function broadcastWidgetSnapshots() {
             } catch(e) {}
 
             // 2. Use cached image if available, otherwise placeholder or container capture
-            if (window.widgetSnapshotCache[index]) {
+            const cachedImg = await SwapManager.get('widget_snap_' + index);
+            if (cachedImg) {
                 snapshots.push({
                     id: index,
-                    img: window.widgetSnapshotCache[index]
+                    img: cachedImg
                 });
             } else {
                 // Fallback: Capture container (might be white, but better than error)
@@ -12373,9 +12437,12 @@ function forceCloseApp(url) {
     if (minimizedEmbeds[url]) {
         delete minimizedEmbeds[url];
     }
-    // Switcher Snapshots
+	// Switcher Snapshots
     if (typeof appSnapshots !== 'undefined' && appSnapshots[url]) {
         delete appSnapshots[url];
+    }
+    if (typeof SwapManager !== 'undefined') {
+        SwapManager.remove('app_snap_' + url);
     }
     // Split Screen State
     if (typeof splitScreenState !== 'undefined' && splitScreenState.active) {
@@ -14360,6 +14427,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('DOMContentLoaded', async function() {
+    // Initialize Swap Partition and clear stale data from previous sessions
+    await SwapManager.init();
+    await SwapManager.clear();
+	
     // --- Load ALL data and settings first ---
     requestPersistentStorage();
     loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
@@ -17571,26 +17642,29 @@ function renderAppCards(container) {
         card.dataset.appUrl = url;
         
         // Background Image (Screenshot)
-        if (appSnapshots[url]) {
-            card.style.backgroundImage = `url('${appSnapshots[url]}')`;
-        } else {
-            // Fallback: Blurred App Icon taking up 100%
-            const fallbackBg = document.createElement('div');
-            fallbackBg.style.position = 'absolute';
-            fallbackBg.style.width = '100%';
-            fallbackBg.style.height = '100%';
-            fallbackBg.style.top = '0';
-            fallbackBg.style.left = '0';
-            fallbackBg.style.backgroundImage = `url('${iconSrc}')`;
-            fallbackBg.style.backgroundSize = 'cover';
-            fallbackBg.style.backgroundPosition = 'center';
-            fallbackBg.style.filter = 'blur(10px)';
-            fallbackBg.style.transform = 'scale(1.1)'; 
-            
-            card.appendChild(fallbackBg);
-            card.style.backgroundColor = 'var(--background-color)';
-            card.style.overflow = 'hidden';
-        }
+        // Render fast fallback immediately
+        const fallbackBg = document.createElement('div');
+        fallbackBg.style.position = 'absolute';
+        fallbackBg.style.width = '100%';
+        fallbackBg.style.height = '100%';
+        fallbackBg.style.top = '0';
+        fallbackBg.style.left = '0';
+        fallbackBg.style.backgroundImage = `url('${iconSrc}')`;
+        fallbackBg.style.backgroundSize = 'cover';
+        fallbackBg.style.backgroundPosition = 'center';
+        fallbackBg.style.filter = 'blur(10px)';
+        fallbackBg.style.transform = 'scale(1.1)'; 
+        card.appendChild(fallbackBg);
+        card.style.backgroundColor = 'var(--background-color)';
+        card.style.overflow = 'hidden';
+
+        // Async load high-res image from Swap Disk
+        SwapManager.get('app_snap_' + url).then(ssData => {
+            if (ssData) {
+                card.style.backgroundImage = `url('${ssData}')`;
+                fallbackBg.remove(); // Remove blur once loaded
+            }
+        });
 
 		// Icon 
         const iconDiv = document.createElement('div');
