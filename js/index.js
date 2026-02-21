@@ -8998,12 +8998,10 @@ const WALLPAPER_PRESS_DURATION = 500;
 let isWallpaperSwitcherOpen = false;
 
 function setupWallpaperInteraction() {
+    let startX, startY;
+
     const startPress = (e) => {
-        // Strict check: Only allow if clicking directly on background elements
         const t = e.target;
-        
-        // Check if the target is the Body, HTML, specific background layers, 
-        // or the layout container (but NOT its children like clock text)
         const isWallpaper = 
             t === document.body ||
             t === document.documentElement ||
@@ -9016,21 +9014,42 @@ function setupWallpaperInteraction() {
 
         if (!isWallpaper) return;
 
+        // Store start positions to calculate movement jitter
+        startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
         wallpaperPressTimer = setTimeout(() => {
             openWallpaperSwitcher();
         }, WALLPAPER_PRESS_DURATION);
     };
 
+    const handleMove = (e) => {
+        if (!wallpaperPressTimer) return;
+        
+        const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const cy = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        
+        // Calculate distance from start
+        const dist = Math.sqrt(Math.pow(cx - startX, 2) + Math.pow(cy - startY, 2));
+
+        // FIX: Only cancel if user moves more than 10px (Deadzone for jitters)
+        if (dist > 10) {
+            clearTimeout(wallpaperPressTimer);
+            wallpaperPressTimer = null;
+        }
+    };
+
     const cancelPress = () => {
         clearTimeout(wallpaperPressTimer);
+        wallpaperPressTimer = null;
     };
 
     window.addEventListener('mousedown', startPress);
     window.addEventListener('touchstart', startPress, { passive: true });
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('touchmove', handleMove, { passive: true });
     window.addEventListener('mouseup', cancelPress);
     window.addEventListener('touchend', cancelPress);
-    window.addEventListener('mousemove', cancelPress); 
-    window.addEventListener('touchmove', cancelPress);
 }
 
 // Run this on load
