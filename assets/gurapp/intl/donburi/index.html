@@ -1431,16 +1431,13 @@
          * Updates immediately, then syncs to fire exactly at the turn of every minute.
          */
         function startMinuteSyncClock() {
-            updateTimeAndGreeting(); // Initial immediate update
+            updateTimeAndGreeting(); 
 
             const now = new Date();
-            // Calculate ms until the next 00-second mark
             const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
 
-            setTimeout(() => {
-                updateTimeAndGreeting(); // First sync update
-                setInterval(updateTimeAndGreeting, 60000); // Recurring 1m update
-            }, msUntilNextMinute);
+            // Use recursive setTimeout to prevent long-term browser timer drift
+            setTimeout(startMinuteSyncClock, msUntilNextMinute);
         }
 
         /**
