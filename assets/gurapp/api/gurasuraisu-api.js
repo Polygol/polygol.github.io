@@ -596,6 +596,11 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             color: var(--background-color) !important;
         }
 
+        .modal-content {
+            max-height: 100%;
+            overflow: auto;
+        }
+
         @media (max-width: 800px) {
             .toolbar {
                 justify-content: flex-start;
