@@ -909,16 +909,19 @@
 
                     if (upcoming.length > 0) {
                         // Next Event Card
-                        const next = upcoming;
-                        const dateObj = new Date(next.date);
-                        const isToday = next.date === todayStr;
-                        const dayStr = isToday ? 'Today' : dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        // FIX: Access the first element of the sorted array [0]
+                        const next = upcoming[0];
+                        
+                        // FIX: Use moment for robust date parsing and comparison
+                        const eventMoment = moment(next.date);
+                        const isToday = next.date === moment().format('YYYY-MM-DD');
+                        const dayStr = isToday ? 'Today' : eventMoment.format('MMM D');
                         const timeStr = next.startTime ? next.startTime : 'All day';
 
                         if (nextEventContent) {
                             nextEventContent.innerHTML = `
                                 <div style="font-weight: 600; font-size: 1.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${next.title}</div>
-                                <div class="item-card-subtitle">${dayStr} • ${timeStr}</div>
+                                <div class="item-card-subtitle" style="color: var(--secondary-text-color);">${dayStr} • ${timeStr}</div>
                             `;
                         }
 
