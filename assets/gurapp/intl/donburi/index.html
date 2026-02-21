@@ -696,7 +696,7 @@
     <div class="tab-content bento-grid" id="tab-home">
         <div class="bento-item span-2x1" id="bento-brightness">
             <div class="item-card-title"><span class="material-symbols-rounded">light_mode</span>Brightness</div>
-            <input type="range" id="brightness-slider" min="10" max="100" value="100">
+            <input type="range" id="brightness-slider" min="20" max="100" value="100">
         </div>
 
         <div class="bento-item span-1x1" id="bento-darkmode">
@@ -906,7 +906,7 @@
             },
 
             addLiveActivity(id, appName, options) {
-                if (!id || this.liveActivities[id]) return;
+                if (!id || appName === 'Donburi' || this.liveActivities[id]) return;
                 
                 // Create iframe to host the Live Activity widget
                 const iframe = document.createElement('iframe');
