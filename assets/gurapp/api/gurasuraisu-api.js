@@ -610,7 +610,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             .tab-btn {
                 font-size: 0;
                 color: transparent;
-                padding: 0 12px;
+                padding: 8px 12px;
             }
 
             .tab-btn.active {
@@ -621,6 +621,12 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
 
             .toolbar .tab-btn .material-symbols-rounded {
                 font-size: 18px;
+                opacity: 0.5;
+                color: var(--secondary-text-color);
+            }
+
+            .toolbar .tab-btn.active .material-symbols-rounded {
+                opacity: 1;
                 color: var(--text-color);
             }
         }
