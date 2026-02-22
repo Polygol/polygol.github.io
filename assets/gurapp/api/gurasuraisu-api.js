@@ -566,6 +566,12 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             gap: 8px;
         }
 
+        .tab-btn.active:active {
+            padding: 14px 18px;
+            margin: 0 -4px;
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+        }
+
         .toolbar .tab-btn .material-symbols-rounded {
             transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
             color: transparent;
