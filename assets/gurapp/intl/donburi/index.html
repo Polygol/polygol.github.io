@@ -932,7 +932,7 @@
                     this.liveActivities[id].lastUpdated = Date.now();
                     const iframe = this.liveActivities[id].iframe;
                     if (iframe && iframe.contentWindow) {
-                        iframe.contentWindow.postMessage({ type: 'live-activity-update', ...data }, '*');
+                        iframe.contentWindow.postMessage({ type: 'update', ...data }, '*');
                     }
                     this.evaluate();
                 }
