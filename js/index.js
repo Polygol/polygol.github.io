@@ -2491,22 +2491,14 @@ const SlideshowManager = {
         const labelIdx = this.intervals.indexOf(currentInt);
         const speedLabel = labelIdx !== -1 ? this.labels[labelIdx] : '--';
 
-        // Update Widget UI
-        const notificationElem = document.querySelector(`.live-activity-notification[data-activity-id="sys-slideshow"]`);
-        if (notificationElem) {
-            const iframe = notificationElem.querySelector('iframe');
-            if (iframe && iframe.contentWindow) {
-                const targetOrigin = getOriginFromUrl(iframe.src);
-                 iframe.contentWindow.postMessage({
-                    type: 'update',
-                    current: this.currentIndex + 1,
-                    total: this.wallpapers.length,
-                    paused: this.paused,
-                    speedLabel: speedLabel,
-                    shuffle: !!currentGroup?.shuffle
-                }, targetOrigin);
-            }
-        }
+		// Update Widget UI via System API
+        updateLiveActivity('sys-slideshow', {
+            current: this.currentIndex + 1,
+            total: this.wallpapers.length,
+            paused: this.paused,
+            speedLabel: speedLabel,
+            shuffle: !!currentGroup?.shuffle
+        });
     },
 
     async render() {
@@ -10391,7 +10383,7 @@ const HomeActivityManager = {
         const item = this.items.find(i => i.id === id);
         if (item && item.type === 'iframe' && item.element.contentWindow) {
              const targetOrigin = getOriginFromUrl(item.element.src);
-             item.element.contentWindow.postMessage({ type: 'live-activity-update', ...data }, targetOrigin);
+             item.element.contentWindow.postMessage({ type: 'update', ...data }, targetOrigin);
         }
     },
     
@@ -16671,10 +16663,10 @@ function updateLiveActivity(activityId, data) {
     if (activity) {
         const notificationElem = document.querySelector(`.live-activity-notification[data-activity-id="${activityId}"]`);
         if (notificationElem) {
-            const iframe = notificationElem.querySelector('iframe');
+			const iframe = notificationElem.querySelector('iframe');
             if (iframe && iframe.contentWindow) {
                 const targetOrigin = getOriginFromUrl(iframe.src);
-                iframe.contentWindow.postMessage({ type: 'live-activity-update', ...data }, targetOrigin);
+                iframe.contentWindow.postMessage({ type: 'update', ...data }, targetOrigin);
             }
         }
         
