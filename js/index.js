@@ -13020,6 +13020,14 @@ function createAppIcons(filterQuery = '') {
 		        try {      
 		            createFullscreenEmbed(app.details.url);
 		            appDrawer.classList.remove('open');
+                    setTimeout(() => {
+                        if (!appDrawer.classList.contains('open')) {
+                            appDrawer.style.display = 'none';
+                            appDrawer.style.bottom = '';
+                            appDrawer.style.opacity = '';
+                            appDrawer.style.zIndex = '';
+                        }
+                    }, 300);
 		        } catch (error) {
 		            showDialog({ 
 		                type: 'alert', 
@@ -13453,14 +13461,20 @@ function setupDrawerInteractions() {
 	                openEmbed.style.border = 'none'; // Clean up border after animation
 	            }, 300);
 	
-	            // Reset drawer & dock state
+				// Reset drawer & dock state
 	            dock.classList.remove('show');
 	            dock.style.boxShadow = 'none';
 	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
 	            dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
-	            appDrawer.style.bottom = '-100%';
-	            appDrawer.style.opacity = '0';
 	            appDrawer.classList.remove('open');
+                setTimeout(() => {
+                    if (!appDrawer.classList.contains('open')) {
+                        appDrawer.style.display = 'none';
+                        appDrawer.style.bottom = '';
+                        appDrawer.style.opacity = '';
+                        appDrawer.style.zIndex = '';
+                    }
+                }, 300);
 	            initialDrawerPosition = -100;
 	            interactionBlocker.style.display = 'none';
 	        } else {
@@ -14249,10 +14263,17 @@ function setupOneButtonNav() {
     const handleClick = () => {
 		if (isAppOpen()) {
             minimizeFullscreenEmbed();
-        } else if (isDrawerOpen()) {
+		} else if (isDrawerOpen()) {
             // Close app drawer by removing the class
             appDrawer.classList.remove('open');
-            setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
+            setTimeout(() => {
+                if (!appDrawer.classList.contains('open')) {
+                    appDrawer.style.display = 'none';
+                    appDrawer.style.bottom = '';
+                    appDrawer.style.opacity = '';
+                    appDrawer.style.zIndex = '';
+                }
+            }, 300);
             document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
                 el.style.display = el.dataset.originalDisplay || '';
@@ -17908,9 +17929,11 @@ function openAppSwitcher() {
 	
     // Force Close App Drawer if it's open
     const appDrawer = document.getElementById('app-drawer');
-    if (appDrawer && appDrawer.classList.contains('open')) {
+	if (appDrawer && appDrawer.classList.contains('open')) {
         appDrawer.classList.remove('open');
-        appDrawer.style.bottom = '-100%';
+        appDrawer.style.bottom = '';
+        appDrawer.style.opacity = '';
+        appDrawer.style.zIndex = '';
         setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
         
         // Restore Main UI visibility
