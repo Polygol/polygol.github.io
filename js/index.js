@@ -10383,7 +10383,7 @@ const HomeActivityManager = {
         const item = this.items.find(i => i.id === id);
         if (item && item.type === 'iframe' && item.element.contentWindow) {
              const targetOrigin = getOriginFromUrl(item.element.src);
-             item.element.contentWindow.postMessage({ type: 'update', ...data }, targetOrigin);
+             item.element.contentWindow.postMessage({ type: 'live-activity-update', ...data }, targetOrigin);
         }
     },
     
@@ -16666,7 +16666,7 @@ function updateLiveActivity(activityId, data) {
 			const iframe = notificationElem.querySelector('iframe');
             if (iframe && iframe.contentWindow) {
                 const targetOrigin = getOriginFromUrl(iframe.src);
-                iframe.contentWindow.postMessage({ type: 'update', ...data }, targetOrigin);
+                iframe.contentWindow.postMessage({ type: 'live-activity-update', ...data }, targetOrigin);
             }
         }
         
