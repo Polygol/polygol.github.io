@@ -583,6 +583,17 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             font-size: 18px;
         }
 
+        .toolbar:not(:has(.tab-btn.active)) .tab-btn {
+            font-size: 0;
+            color: transparent;
+            padding: 0 12px;
+        }
+        
+        .toolbar:not(:has(.tab-btn.active)) .tab-btn .material-symbols-rounded {
+            font-size: 18px;
+            color: var(--text-color);
+        }
+
         .modal-content {
             max-height: 100%;
             overflow: auto;
