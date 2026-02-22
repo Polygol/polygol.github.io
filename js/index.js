@@ -1369,20 +1369,22 @@ function _displayDialog(options) {
     // Prepare elements (Hidden but block)
     blurOverlay.style.display = 'block';
     dialog.style.display = 'block';
+	
+    // Force reflow to ensure display change is registered before adding animation classes
+    void dialog.offsetWidth;
     
     // Trigger Animation
     dialogOpenTimeout = setTimeout(() => {
         blurOverlay.classList.add('show');
         dialog.classList.add('show');
         
-        // Release interaction blocker after animation stabilizes (300ms)
-        // This prevents double-clicking buttons during fade-in
+		// Release interaction blocker after animation stabilizes (300ms)
         setTimeout(() => {
-            if (interactionBlocker) interactionBlocker.style.display = 'none';
+            if (interactionBlocker && activeDialog) interactionBlocker.style.display = 'none';
         }, 300);
         
         dialogOpenTimeout = null;
-    }, 10);
+    }, 20);
 }
 
 function closeDialog(value) {
@@ -13955,19 +13957,28 @@ function setupDrawerInteractions() {
             }
         }
 
-        if (shouldStart) {
+		if (shouldStart) {
+            // Set coordinate tracking for mouse-based wallpaper swipes
+            touchStartX = clientX;
+            touchStartY = clientY;
+            touchEndX = clientX;
+            touchEndY = clientY;
+
             initialDrawerPosition = isDrawerOpen ? 0 : -100;
             startDrag(clientX, clientY);
         }
     });
 
-    document.addEventListener('mousemove', (e) => {
+	document.addEventListener('mousemove', (e) => {
         // Check split gesture move
         if (e.buttons === 1 && handleSplitGestureMove(e.clientX, e.clientY)) {
             return;
         }
 
         if (isDragging) {
+            // Update coordinates for wallpaper swipe calculation
+            touchEndX = e.clientX;
+            touchEndY = e.clientY;
             moveDrawer(e.clientX, e.clientY);
         }
     });
@@ -14037,15 +14048,19 @@ function setupDrawerInteractions() {
         }
     });
 
-	document.addEventListener('mouseup', () => {
+	document.addEventListener('mouseup', (e) => {
 		if (oneButtonNavEnabled) return;
-        if (isDragging) { // Only act if a drag was in progress
+        if (isDragging) { 
+            // Finalize coordinates for mouse swipe
+            touchEndX = e.clientX;
+            touchEndY = e.clientY;
+
             if (appSwitcherVisible) {
                 selectAndCloseAppSwitcher();
             } else {
                 endDrag();
             }
-            isDragging = false; // Explicitly reset dragging state here.
+            isDragging = false;
         }
     });
 
