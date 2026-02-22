@@ -27,7 +27,7 @@
     </div>
     <script>
         window.addEventListener('message', (e) => {
-            if (e.data.type === 'live-activity-update') {
+            if (e.data.type === 'update') {
                 if (e.data.icon) document.getElementById('icon').textContent = e.data.icon;
                 if (e.data.title) document.getElementById('title').textContent = e.data.title;
                 if (e.data.text) document.getElementById('desc').textContent = e.data.text;
