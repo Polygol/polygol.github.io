@@ -599,17 +599,18 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             overflow: auto;
         }
 
-        @media (min-width: 800px) {
+        @media (min-width: 1000px) {
             .toolbar {
                 left: 50%;
                 transform: translateX(-50%);
             }
         }
 
-        @media (max-width: 500px) {
+        @media (max-width: 800px) {
             .tab-btn {
                 font-size: 0;
                 color: transparent;
+                padding: 0 12px;
             }
 
             .tab-btn.active {
