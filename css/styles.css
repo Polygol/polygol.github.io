@@ -753,6 +753,7 @@ body.one-button-nav-active .dock.show {
     pointer-events: auto;
     cursor: pointer;
 	overflow: hidden;
+    border: 1px solid var(--glass-border);
 }
 
 .activity-capsule.has-text {
