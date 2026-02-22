@@ -946,6 +946,14 @@
                 }
             },
 
+            broadcastToActivities(message) {
+                Object.values(this.liveActivities).forEach(act => {
+                    if (act.iframe && act.iframe.contentWindow) {
+                        act.iframe.contentWindow.postMessage(message, '*');
+                    }
+                });
+            },
+
             checkUrgentEvents() {
                 const eventsStr = localStorage.getItem('events');
                 if (!eventsStr) return null;
@@ -1353,6 +1361,9 @@
             }
             if (data.type === 'system-live-activity-stop') {
                 SmartManager.removeLiveActivity(data.activityId);
+            }
+            if (['themeUpdate', 'animationsUpdate', 'contrastUpdate', 'glassEffectsUpdate', 'themeVariablesUpdate', 'sunUpdate'].includes(data.type)) {
+                SmartManager.broadcastToActivities(data);
             }
             
             // Detect if message is coming from one of our internal smart activity iframes
