@@ -1348,6 +1348,7 @@ body.one-button-nav-active .dock.show {
 		    font-size: 1rem;
 		    outline: none;
 		    width: 100%;
+			min-width: 500px;
 		    box-sizing: border-box;
 		}
 		
