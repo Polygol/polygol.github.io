@@ -5742,7 +5742,7 @@ function processNotificationQueue() {
         setTimeout(processNotificationQueue, 300); // Delay before next
     });
     
-    window.SoundManager.play('popup');
+    window.SoundManager.play('success');
     resolve(popupControls);
 }
 
