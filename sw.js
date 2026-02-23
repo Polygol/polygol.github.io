@@ -166,7 +166,6 @@ self.addEventListener('fetch', event => {
     // Ensure API requests for live data never serve stale cached versions
     const apiHosts = [
         'api.open-meteo.com',
-        'nominatim.openstreetmap.org',
         'dummyjson.com',
         'api.rss2json.com'
     ];
