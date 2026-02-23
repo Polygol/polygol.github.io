@@ -5307,22 +5307,23 @@ async function fetchLocationAndWeather() {
                             country = cachedGeo.country || '';
                         } else if (!geocodingResponse.ok) {
                             throw new Error("Geocoding API error");
-                        } else {
+						} else {
                             const geocodingData = await geocodingResponse.json();
-                        city = geocodingData.address.city ||
-                            geocodingData.address.town ||
-                            geocodingData.address.village ||
-                            'Unknown Location';
-                        country = geocodingData.address.country || '';
-                        
-						// Update cache
-                        SwapManager.set('cached_geo_data', {
-                            latitude,
-                            longitude,
-                            city,
-                            country,
-                            timestamp: Date.now()
-                        });
+                            city = geocodingData.address.city ||
+                                geocodingData.address.town ||
+                                geocodingData.address.village ||
+                                'Unknown Location';
+                            country = geocodingData.address.country || '';
+
+                            // Update cache
+                            SwapManager.set('cached_geo_data', {
+                                latitude,
+                                longitude,
+                                city,
+                                country,
+                                timestamp: Date.now()
+                            });
+                        }
                     } catch (geocodingError) {
                         console.warn('Geocoding failed:', geocodingError);
                         // Fallback to cache if available
