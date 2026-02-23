@@ -5252,8 +5252,13 @@ function getTemperatureUnit(country) {
     ) ? 'fahrenheit' : 'celsius';
 }
 
+let _activeWeatherPromise = null;
 async function fetchLocationAndWeather() {
-    return new Promise((resolve, reject) => {
+    // DEDUPLICATION: If a request is already in flight, return that promise.
+    // This prevents hammering the API during boot or multi-widget refreshes.
+    if (_activeWeatherPromise) return _activeWeatherPromise;
+
+    _activeWeatherPromise = new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(async (position) => {
             try {
                 const { latitude, longitude } = position.coords;
@@ -5294,9 +5299,16 @@ async function fetchLocationAndWeather() {
                     
                     try {
                         const geocodingResponse = await fetch(geocodingUrl);
-                        if (!geocodingResponse.ok) throw new Error("Geocoding API error");
                         
-                        const geocodingData = await geocodingResponse.json();
+                        // Handle 425 (Too Early) or 429 (Too Many Requests) gracefully
+                        if (geocodingResponse.status === 425 || geocodingResponse.status === 429) {
+                            console.warn("[Weather] Geocoding throttled. Using fallback data.");
+                            city = cachedGeo.city || 'Unknown Location';
+                            country = cachedGeo.country || '';
+                        } else if (!geocodingResponse.ok) {
+                            throw new Error("Geocoding API error");
+                        } else {
+                            const geocodingData = await geocodingResponse.json();
                         city = geocodingData.address.city ||
                             geocodingData.address.town ||
                             geocodingData.address.village ||
@@ -5368,13 +5380,16 @@ async function fetchLocationAndWeather() {
             }
         }, (error) => {
             console.error('Geolocation error:', error);
-            reject(error);
+			reject(error);
         }, {
             enableHighAccuracy: true,
             timeout: 30000,
-            maximumAge: 0
+            maximumAge: 300000 // Use hardware-cached location for 5 minutes to reduce re-firing
         });
+    }).finally(() => {
+        _activeWeatherPromise = null;
     });
+    return _activeWeatherPromise;
 }
 
 function getDayOfWeek(dateString) {
