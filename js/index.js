@@ -221,7 +221,7 @@ function applyColorFilter() {
     let filterVal = '';
     switch (mode) {
         case 'grayscale': filterVal = 'grayscale(1)'; break;
-        case 'invert': filterVal = 'invert(1)'; break;
+        case 'invert': filterVal = 'invert(1) hue-rotate(180deg)'; break;
         case 'protanopia': filterVal = 'url("#a11y-protanopia")'; break;
         case 'deuteranopia': filterVal = 'url("#a11y-deuteranopia")'; break;
         case 'tritanopia': filterVal = 'url("#a11y-tritanopia")'; break;
