@@ -1253,7 +1253,7 @@
             navigator.getBattery().then(battery => {
                 const updateBattery = () => {
                     document.getElementById('battery-level').textContent = `${Math.round(battery.level * 100)}%`;
-                    document.getElementById('battery-status').textContent = battery.charging ? 'Charging' : 'Discharging';
+                    document.getElementById('battery-status').textContent = battery.charging ? 'Charging' : '';
                 };
                 updateBattery();
                 battery.addEventListener('levelchange', updateBattery);
