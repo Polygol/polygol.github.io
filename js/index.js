@@ -4493,7 +4493,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  
                  const closeBtn = document.createElement('button');
                  closeBtn.className = 'btn-qc';
-                 closeBtn.innerHTML = '<span class="material-symbols-rounded" style="font-size: 18px;">pan_zoom</span>';
+                 closeBtn.innerHTML = '<span class="material-symbols-rounded" style="font-size: 18px;">cancel</span>';
                  closeBtn.onclick = (e) => {
                      e.stopPropagation();
                      closeControls();
