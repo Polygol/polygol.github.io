@@ -1,4 +1,4 @@
-const CORE_CACHE_VERSION = '16.6-r4.1.7';
+const CORE_CACHE_VERSION = '16.6-r4.1.8';
 const CORE_CACHE_NAME = `polygol-core-${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polygol-apps';
 
@@ -157,12 +157,16 @@ self.addEventListener('install', event => {
                     const res = await fetch(req);
                     
                     // 1. Store in Cache API (For Speed)
-                    await cache.put(req, res.clone());
+                    // FIX: Create isolated clones immediately to prevent locking conflicts
+                    const resForCache = res.clone();
+                    const resForVault = res.clone();
+                    
+                    await cache.put(req, resForCache);
                     
                     // 2. Store in IndexedDB Vault (For Permanence)
                     const absoluteUrl = new URL(url, self.location.origin).href;
-                    await stashInVault(absoluteUrl, res.clone());
-                } catch(e) { 
+                    await stashInVault(absoluteUrl, resForVault);
+                } catch(e) {
                     console.error('[SW] Asset caching failed for:', url, e); 
                 }
             }
@@ -252,7 +256,8 @@ self.addEventListener('fetch', event => {
             if (vaultRes) {
                 console.warn(`[SW] Cache API evicted ${request.url}. Recovered from IDB Vault.`);
                 // Heal the Cache API for next time
-                caches.open(CORE_CACHE_NAME).then(c => c.put(request, vaultRes.clone()));
+                const resToCache = vaultRes.clone();
+                caches.open(CORE_CACHE_NAME).then(c => c.put(request, resToCache));
                 return vaultRes;
             }
 
