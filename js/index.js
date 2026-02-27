@@ -11296,6 +11296,16 @@ async function updateFavicon(url, round = true) {
 }
 
 async function installApp(appData) {
+    // Prevent overwriting core system apps
+    const reservedNames = ['settings', 'terminal', 'kirbstore', 'donburi', 'system', 'files', 'assistant', 'tips', 'feedback', 'apps'];
+    const normalizedName = appData.name ? appData.name.trim().toLowerCase() : '';
+    
+    if (reservedNames.includes(normalizedName)) {
+        console.error(`[Security] Blocked installation of protected system app: ${appData.name}`);
+        showDialog({ type: 'alert', title: 'App installation blocked', message: `Cannot install or overwrite protected system app ${appData.name}` });
+        return;
+    }
+	
     const userInstalledAppsInfo = JSON.parse(localStorage.getItem('userInstalledAppsInfo') || '{}');
     const isUpdate = userInstalledAppsInfo[appData.name];
 
@@ -11831,7 +11841,8 @@ async function createFullscreenEmbed(url, options = {}) {
 	    console.warn(`Attempted to open an unknown app or non-allowlisted URL: ${url}`);
 		showDialog({ 
 		    type: 'alert', 
-		    title: currentLanguage.GURAPP_NOT_INSTALLED
+		    title: `${appData.name}`,
+			message: currentLanguage.GURAPP_NOT_INSTALLED
 		});
 	    return;
 	}
@@ -17384,19 +17395,38 @@ window.addEventListener('message', async (event) => { // Make listener async
                 return; // Stop processing immediately.
             }
 
-            let sourceAppId = null;
+			let sourceAppId = null;
+            let sourceIframeUrl = null;
             const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
             for (const iframe of iframes) {
                 if (iframe.contentWindow === sourceWindow) {
                     sourceAppId = iframe.dataset.appId;
+                    sourceIframeUrl = iframe.src;
                     break;
                 }
             }
 
-            const appPermissions = TRUSTED_APP_PERMISSIONS[sourceAppId] || [];
+            const appPermissions = TRUSTED_APP_PERMISSIONS[sourceAppId] ||[];
             
+            // Strict Origin verification for trusted apps
+            // Even if an app manages to spoof the data-app-id, it cannot spoof the iframe's actual src origin
+            let hasPermission = false;
+            if (appPermissions.length > 0) {
+                try {
+                    const srcUrl = new URL(sourceIframeUrl, window.location.origin);
+                    // Ensure trusted apps requesting high privileges are running from the system's own secure origin
+                    if (srcUrl.origin === window.location.origin) {
+                        hasPermission = appPermissions.includes(requiredPermission) || appPermissions.includes('system-admin');
+                    } else {
+                        console.error(`[Security] App '${sourceAppId}' requested elevated permissions but is running from an untrusted origin: ${srcUrl.origin}`);
+                    }
+                } catch(e) {
+                    hasPermission = false;
+                }
+            }
+
             // Check if the app has the specific permission OR the admin permission
-            if (!appPermissions.includes(requiredPermission) && !appPermissions.includes('system-admin')) {
+            if (!hasPermission) {
                 const errorMessage = `SECURITY VIOLATION: App '${sourceAppId || 'Unknown'}' attempted to call function '${funcName}' without required permission '${requiredPermission}'. Access denied.`;
                 console.error(errorMessage);
                 if(sourceWindow) {
@@ -17409,29 +17439,58 @@ window.addEventListener('message', async (event) => { // Make listener async
         const funcToCall = allowedFunctions[funcName];
 
         if (typeof funcToCall === 'function') {
-            try {
-                // Track app origin for showNotification
+			try {
+                // Identity Enforcement & Hijacking Protection
                 let sourceAppId = null;
-                if (funcName === 'showNotification') {
-                    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
-                    for (const iframe of iframes) {
-                        if (iframe.contentWindow === sourceWindow) {
-                            sourceAppId = iframe.dataset.appId;
-                            break;
-                        }
+                const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+                for (const iframe of iframes) {
+                    if (iframe.contentWindow === sourceWindow) {
+                        sourceAppId = iframe.dataset.appId;
+                        break;
                     }
-                    // Add appName to options if not already set and not a system notification
-                    // Security: Prevent apps from marking notifications as system notifications
-                    if (sourceAppId && args[1] && typeof args[1] === 'object') {
-                        // Remove system flag if set by an app (security measure)
-                        if (args[1].system === true) {
-                            console.warn(`[Polygol Security] App '${sourceAppId}' attempted to mark notification as system. Flag removed.`);
-                            delete args[1].system;
-                        }
-                        // Add appName to options if not already set
-                        if (!args[1].appName) {
-                            args[1].appName = sourceAppId;
-                        }
+                }
+
+                // If the message comes from an untraceable source (nested iframe, worker, or popup),
+                // we assign it a hostile identity so it cannot bypass the enforcement block.
+                if (!sourceAppId) {
+                    sourceAppId = 'Untrusted Source';
+                }
+
+                // 1. Notification Spoofing Protection
+                if (funcName === 'showNotification' && args[1] && typeof args[1] === 'object') {
+                    if (args[1].system === true) {
+                        console.warn(`[Security] App '${sourceAppId}' attempted to mark notification as system. Flag removed.`);
+                        delete args[1].system;
+                    }
+                    if (args[1].appName && args[1].appName !== sourceAppId) {
+                        console.warn(`[Security] App '${sourceAppId}' attempted to spoof notification as '${args[1].appName}'. Enforcing true identity.`);
+                    }
+                    args[1].appName = sourceAppId; // Force strict identity
+                }
+
+                // 2. Media & Live Activity Spoofing Protection (String Arg)
+                const identityBoundFunctions =['registerMediaSession', 'clearMediaSession', 'updateMediaPlaybackState', 'updateMediaProgress', 'startLiveActivity'];
+                if (identityBoundFunctions.includes(funcName)) {
+                    if (args[0] && args[0] !== sourceAppId) {
+                        console.warn(`[Security] App '${sourceAppId}' attempted to spoof API call '${funcName}' as '${args[0]}'. Enforcing true identity.`);
+                    }
+                    args[0] = sourceAppId; // Force strict identity
+                }
+
+                // 3. Widget Registration Spoofing Protection (Object Arg)
+                if (funcName === 'registerWidget' && args[0] && typeof args[0] === 'object') {
+                    if (args[0].appName && args[0].appName !== sourceAppId) {
+                        console.warn(`[Security] App '${sourceAppId}' attempted to spoof widget registration as '${args[0].appName}'.`);
+                    }
+                    args[0].appName = sourceAppId; // Force strict identity
+                }
+
+                // 4. Live Activity Hijack Protection
+                if (funcName === 'updateLiveActivity' || funcName === 'stopLiveActivity') {
+                    const targetActivityId = args[0];
+                    if (activeLiveActivities[targetActivityId] && activeLiveActivities[targetActivityId].appName !== sourceAppId) {
+                        console.error(`[Security] CRITICAL: App '${sourceAppId}' attempted to hijack/stop Live Activity '${targetActivityId}' owned by '${activeLiveActivities[targetActivityId].appName}'. Blocked.`);
+                        return; // Terminate execution immediately
                     }
                 }
                 
