@@ -1,13 +1,22 @@
 {
   "name": "Polygol",
   "short_name": "Polygol",
-  "categories": ["productivity", "utilities", "lifestyle", "entertainment", "business", "personalization"],
+  "categories": [
+    "productivity",
+    "utilities",
+    "lifestyle",
+    "entertainment",
+    "business",
+    "personalization"
+  ],
   "scope": "/",
   "start_url": "/",
-  "id": "index.html",
+  "id": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay"],
-  "launch_handler": "navigate-existing",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "background_color": "#1c1c1c",
   "icons": [
     {
