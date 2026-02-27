@@ -17456,39 +17456,41 @@ window.addEventListener('message', async (event) => { // Make listener async
                     sourceAppId = 'Untrusted Source';
                 }
 
+				const normalizedSourceId = sourceAppId.toLowerCase();
+
                 // 1. Notification Spoofing Protection
                 if (funcName === 'showNotification' && args[1] && typeof args[1] === 'object') {
                     if (args[1].system === true) {
                         console.warn(`[Security] App '${sourceAppId}' attempted to mark notification as system. Flag removed.`);
                         delete args[1].system;
                     }
-                    if (args[1].appName && args[1].appName !== sourceAppId) {
+                    if (args[1].appName && args[1].appName.toLowerCase() !== normalizedSourceId) {
                         console.warn(`[Security] App '${sourceAppId}' attempted to spoof notification as '${args[1].appName}'. Enforcing true identity.`);
                     }
-                    args[1].appName = sourceAppId; // Force strict identity
+                    args[1].appName = sourceAppId; // Force strict canonical identity
                 }
 
                 // 2. Media & Live Activity Spoofing Protection (String Arg)
                 const identityBoundFunctions =['registerMediaSession', 'clearMediaSession', 'updateMediaPlaybackState', 'updateMediaProgress', 'startLiveActivity'];
                 if (identityBoundFunctions.includes(funcName)) {
-                    if (args[0] && args[0] !== sourceAppId) {
+                    if (args[0] && typeof args[0] === 'string' && args[0].toLowerCase() !== normalizedSourceId) {
                         console.warn(`[Security] App '${sourceAppId}' attempted to spoof API call '${funcName}' as '${args[0]}'. Enforcing true identity.`);
                     }
-                    args[0] = sourceAppId; // Force strict identity
+                    args[0] = sourceAppId; // Force strict canonical identity
                 }
 
                 // 3. Widget Registration Spoofing Protection (Object Arg)
                 if (funcName === 'registerWidget' && args[0] && typeof args[0] === 'object') {
-                    if (args[0].appName && args[0].appName !== sourceAppId) {
+                    if (args[0].appName && typeof args[0].appName === 'string' && args[0].appName.toLowerCase() !== normalizedSourceId) {
                         console.warn(`[Security] App '${sourceAppId}' attempted to spoof widget registration as '${args[0].appName}'.`);
                     }
-                    args[0].appName = sourceAppId; // Force strict identity
+                    args[0].appName = sourceAppId; // Force strict canonical identity
                 }
 
                 // 4. Live Activity Hijack Protection
                 if (funcName === 'updateLiveActivity' || funcName === 'stopLiveActivity') {
                     const targetActivityId = args[0];
-                    if (activeLiveActivities[targetActivityId] && activeLiveActivities[targetActivityId].appName !== sourceAppId) {
+                    if (activeLiveActivities[targetActivityId] && activeLiveActivities[targetActivityId].appName.toLowerCase() !== normalizedSourceId) {
                         console.error(`[Security] CRITICAL: App '${sourceAppId}' attempted to hijack/stop Live Activity '${targetActivityId}' owned by '${activeLiveActivities[targetActivityId].appName}'. Blocked.`);
                         return; // Terminate execution immediately
                     }
