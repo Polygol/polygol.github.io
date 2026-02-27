@@ -717,13 +717,10 @@ const ResourceManager = {
             this.originalGlassMode = currentMode;
         }
         
-        if (currentMode === 'on') {
+        if (currentMode === 'on' || currentMode === 'frosted') {
             console.log("[System] Downgrading Glass to Focused.");
             this.applyDowngrade('focused');
-        } else if (currentMode === 'focused' || currentMode === 'frosted') {
-		    console.log("[System] Downgrading Glass to Off.");
-		    this.applyDowngrade('off');
-		}
+        }
     },
 
     attemptRecovery() {
