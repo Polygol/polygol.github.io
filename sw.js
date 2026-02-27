@@ -1,6 +1,10 @@
-const CORE_CACHE_VERSION = '16.6-r4.1.6';
+const CORE_CACHE_VERSION = '16.6-r4.1.7';
 const CORE_CACHE_NAME = `polygol-core-${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polygol-apps';
+
+// --- IndexedDB Vault Configuration ---
+const VAULT_DB = 'PolygolSystemVaultDB';
+const VAULT_STORE = 'core_assets';
 
 const ASSETS_TO_CACHE = [
   '/',
@@ -89,18 +93,81 @@ const ASSETS_TO_CACHE = [
   'https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap'
 ];
 
-// INSTALL: Cache system assets into the versioned core cache
+// --- IndexedDB Helper Functions ---
+function openVault() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(VAULT_DB, 1);
+        req.onupgradeneeded = e => e.target.result.createObjectStore(VAULT_STORE);
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror = e => reject(e);
+    });
+}
+
+async function stashInVault(requestUrl, response) {
+    try {
+        const db = await openVault();
+        const blob = await response.clone().blob();
+        const headers = {};
+        response.headers.forEach((val, key) => headers[key] = val);
+        
+        return new Promise((resolve) => {
+            const tx = db.transaction(VAULT_STORE, 'readwrite');
+            tx.objectStore(VAULT_STORE).put({
+                blob: blob,
+                headers: headers,
+                status: response.status,
+                statusText: response.statusText
+            }, requestUrl);
+            tx.oncomplete = resolve;
+        });
+    } catch (e) { console.warn('[SW] Failed to stash in Vault:', e); }
+}
+
+async function getFromVault(requestUrl) {
+    try {
+        const db = await openVault();
+        return new Promise((resolve) => {
+            const tx = db.transaction(VAULT_STORE, 'readonly');
+            const req = tx.objectStore(VAULT_STORE).get(requestUrl);
+            req.onsuccess = () => {
+                const data = req.result;
+                if (data) {
+                    resolve(new Response(data.blob, {
+                        status: data.status,
+                        statusText: data.statusText,
+                        headers: data.headers
+                    }));
+                } else {
+                    resolve(null);
+                }
+            };
+            req.onerror = () => resolve(null);
+        });
+    } catch (e) { return null; }
+}
+
+// INSTALL: Cache system assets into both Cache API AND IndexedDB Vault
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CORE_CACHE_NAME)
-      .then(cache => {
-        console.log(`[SW] Caching core assets for ${CORE_CACHE_VERSION}`);
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
-      .catch(err => {
-        console.error('[SW] Core asset caching failed:', err);
-      })
-  );
+    event.waitUntil(
+        caches.open(CORE_CACHE_NAME).then(async cache => {
+            console.log(`[SW] Caching core assets for ${CORE_CACHE_VERSION}`);
+            for (const url of ASSETS_TO_CACHE) {
+                try {
+                    const req = new Request(url, {cache: 'reload'});
+                    const res = await fetch(req);
+                    
+                    // 1. Store in Cache API (For Speed)
+                    await cache.put(req, res.clone());
+                    
+                    // 2. Store in IndexedDB Vault (For Permanence)
+                    const absoluteUrl = new URL(url, self.location.origin).href;
+                    await stashInVault(absoluteUrl, res.clone());
+                } catch(e) { 
+                    console.error('[SW] Asset caching failed for:', url, e); 
+                }
+            }
+        })
+    );
 });
 
 // ACTIVATE: Clean up OLD core caches, but KEEP the apps cache
@@ -176,28 +243,29 @@ self.addEventListener('fetch', event => {
     }
 
     event.respondWith(
-        // 1. Check Versioned Core Cache
-        caches.open(CORE_CACHE_NAME).then(coreCache => {
-            return coreCache.match(request).then(response => {
-                if (response) return response;
+        // 1. Try Cache API (Fastest)
+        caches.match(request).then(async cacheRes => {
+            if (cacheRes) return cacheRes;
 
-                // 2. Check Persistent Apps Cache
-                return caches.open(APPS_CACHE_NAME).then(appsCache => {
-                    return appsCache.match(request).then(appResponse => {
-                        if (appResponse) return appResponse;
+            // 2. Cache API Miss/Eviction! Try IndexedDB Vault (Safety Net)
+            const vaultRes = await getFromVault(request.url);
+            if (vaultRes) {
+                console.warn(`[SW] Cache API evicted ${request.url}. Recovered from IDB Vault.`);
+                // Heal the Cache API for next time
+                caches.open(CORE_CACHE_NAME).then(c => c.put(request, vaultRes.clone()));
+                return vaultRes;
+            }
 
-                        // 3. Network Fallback
-                        return fetch(request).then(networkResponse => {
-                             return networkResponse;
-                        }).catch(() => {
-                             // Offline Fallback for Navigation (Reloading page while offline)
-                             // This fixes the "No Internet" error when loading the OS shell
-                             if (request.mode === 'navigate') {
-                                 return caches.match('/index.html');
-                             }
-                        });
-                    });
-                });
+            // 3. Fallback to Network
+            return fetch(request).then(netRes => {
+                 return netRes;
+            }).catch(async () => {
+                 // Offline Fallback for Navigation
+                 if (request.mode === 'navigate') {
+                     // Try to rescue the root index from Cache, then Vault
+                     const indexUrl = new URL('/index.html', self.location.origin).href;
+                     return (await caches.match('/index.html')) || (await getFromVault(indexUrl));
+                 }
             });
         })
     );
