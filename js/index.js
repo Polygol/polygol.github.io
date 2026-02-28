@@ -11297,7 +11297,7 @@ async function updateFavicon(url, round = true) {
 
 async function installApp(appData) {
     // Prevent overwriting core system apps
-    const reservedNames = ['settings', 'terminal', 'kirbstore', 'donburi', 'system', 'files', 'assistant', 'tips', 'feedback', 'apps'];
+    const reservedNames = ['settings', 'kirbstore', 'donburi', 'system', 'files', 'assistant', 'tips', 'feedback', 'apps'];
     const normalizedName = appData.name ? appData.name.trim().toLowerCase() : '';
     
     if (reservedNames.includes(normalizedName)) {
