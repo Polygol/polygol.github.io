@@ -14054,19 +14054,51 @@ function setupDrawerInteractions() {
 	        moveDrawer(e.touches[0].clientX, e.touches[0].clientY);
 	    }
 	}, { passive: false });
+
+	// Helper to pass click coordinates down into the active iframe
+    function forwardClickToApp(x, y) {
+        let activeContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (!activeContainer) {
+            const donburi = document.getElementById('donburi-container');
+            if (donburi && donburi.classList.contains('open')) activeContainer = donburi;
+        }
+
+        if (activeContainer) {
+            const iframe = activeContainer.querySelector('iframe');
+            if (iframe && iframe.contentWindow) {
+                const rect = iframe.getBoundingClientRect();
+                iframe.contentWindow.postMessage({
+                    type: 'forward-click',
+                    x: x - rect.left,
+                    y: y - rect.top
+                }, '*');
+            }
+        }
+    }
 	
-	document.addEventListener('touchend', () => {
+	document.addEventListener('touchend', (e) => {
 		if (oneButtonNavEnabled) return;
-        if (isDragging) { // Only act if a drag was in progress
+        if (isDragging) { 
+            // 1. Identify if gesture was a quick tap (short duration, minimal movement)
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                const touch = e.changedTouches[0];
+                const deltaX = Math.abs(touch.clientX - startX);
+                const deltaY = Math.abs(touch.clientY - startY);
+                if (!appSwitcherVisible && deltaX < 10 && deltaY < 10 && (Date.now() - dragStartTime) < 250) {
+                    forwardClickToApp(touch.clientX, touch.clientY);
+                }
+            }
+
+            // 2. Resolve standard gesture
             if (appSwitcherVisible) {
                 selectAndCloseAppSwitcher();
             } else {
                 endDrag();
             }
-            isDragging = false; // Explicitly reset dragging state here.
+            isDragging = false;
         }
     });
-
+	
     // Mouse Events for regular drawer interaction
     document.addEventListener('mousedown', (e) => {
 		if (oneButtonNavEnabled) return;
@@ -14092,6 +14124,13 @@ function setupDrawerInteractions() {
             // Finalize coordinates for mouse swipe
             touchEndX = e.clientX;
             touchEndY = e.clientY;
+
+            // Identify if gesture was a quick tap
+            const deltaX = Math.abs(e.clientX - startX);
+            const deltaY = Math.abs(e.clientY - startY);
+            if (!appSwitcherVisible && deltaX < 10 && deltaY < 10 && (Date.now() - dragStartTime) < 250) {
+                forwardClickToApp(e.clientX, e.clientY);
+            }
 
             if (appSwitcherVisible) {
                 selectAndCloseAppSwitcher();
