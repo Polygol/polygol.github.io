@@ -14055,47 +14055,78 @@ function setupDrawerInteractions() {
 	    }
 	}, { passive: false });
 
-	// Helper to pass click coordinates down into the active iframe
-    function forwardClickToApp(x, y) {
-        let activeContainer = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (!activeContainer) {
-            const donburi = document.getElementById('donburi-container');
-            if (donburi && donburi.classList.contains('open')) activeContainer = donburi;
+    function forwardClickThroughHandle(x, y) {
+        const drawerHandle = document.querySelector('.drawer-handle');
+        const appDrawerHandle = document.querySelector('.app-drawer-handle');
+        const swipeOverlay = document.getElementById('swipe-overlay'); // Bypass this if it's blocking
+
+        // Save original states
+        const origDH = drawerHandle ? drawerHandle.style.pointerEvents : '';
+        const origADH = appDrawerHandle ? appDrawerHandle.style.pointerEvents : '';
+        const origSO = swipeOverlay ? swipeOverlay.style.pointerEvents : '';
+
+        // Temporarily disable pointer events to "look" through the UI
+        if (drawerHandle) drawerHandle.style.pointerEvents = 'none';
+        if (appDrawerHandle) appDrawerHandle.style.pointerEvents = 'none';
+        if (swipeOverlay) swipeOverlay.style.pointerEvents = 'none';
+
+        const el = document.elementFromPoint(x, y);
+
+        // Find the iframe (either direct hit, or inside the wrapper)
+        let targetIframe = null;
+        if (el && el.tagName === 'IFRAME') {
+            targetIframe = el;
+        } else if (el && el.querySelector('iframe')) {
+            targetIframe = el.querySelector('iframe');
         }
 
-        if (activeContainer) {
-            const iframe = activeContainer.querySelector('iframe');
-            if (iframe && iframe.contentWindow) {
-                const rect = iframe.getBoundingClientRect();
-                iframe.contentWindow.postMessage({
-                    type: 'forward-click',
-                    x: x - rect.left,
-                    y: y - rect.top
-                }, '*');
-            }
+        // Send the relative coordinates to the iframe
+        if (targetIframe && targetIframe.contentWindow) {
+            const rect = targetIframe.getBoundingClientRect();
+            targetIframe.contentWindow.postMessage({
+                type: 'forward-click',
+                x: x - rect.left,
+                y: y - rect.top
+            }, '*');
         }
+
+        // Restore original states instantly
+        if (drawerHandle) drawerHandle.style.pointerEvents = origDH;
+        if (appDrawerHandle) appDrawerHandle.style.pointerEvents = origADH;
+        if (swipeOverlay) swipeOverlay.style.pointerEvents = origSO;
     }
 	
 	document.addEventListener('touchend', (e) => {
 		if (oneButtonNavEnabled) return;
         if (isDragging) { 
-            // 1. Identify if gesture was a quick tap (short duration, minimal movement)
+            let isTap = false;
+            let tapX = 0, tapY = 0;
+
             if (e.changedTouches && e.changedTouches.length > 0) {
                 const touch = e.changedTouches[0];
                 const deltaX = Math.abs(touch.clientX - startX);
                 const deltaY = Math.abs(touch.clientY - startY);
-                if (!appSwitcherVisible && deltaX < 10 && deltaY < 10 && (Date.now() - dragStartTime) < 250) {
-                    forwardClickToApp(touch.clientX, touch.clientY);
+                const deltaTime = Date.now() - dragStartTime;
+                
+                // Identify if gesture was a quick tap
+                if (deltaX < 15 && deltaY < 15 && deltaTime < 300) {
+                    isTap = true;
+                    tapX = touch.clientX;
+                    tapY = touch.clientY;
                 }
             }
 
-            // 2. Resolve standard gesture
             if (appSwitcherVisible) {
                 selectAndCloseAppSwitcher();
             } else {
                 endDrag();
             }
-            isDragging = false;
+            isDragging = false; 
+
+            // Forward the click if it was a fast tap on the handle
+            if (isTap && dragSource === 'handle') {
+                forwardClickThroughHandle(tapX, tapY);
+            }
         }
     });
 	
@@ -14121,15 +14152,14 @@ function setupDrawerInteractions() {
 	document.addEventListener('mouseup', (e) => {
 		if (oneButtonNavEnabled) return;
         if (isDragging) { 
-            // Finalize coordinates for mouse swipe
-            touchEndX = e.clientX;
-            touchEndY = e.clientY;
-
-            // Identify if gesture was a quick tap
+            let isTap = false;
             const deltaX = Math.abs(e.clientX - startX);
             const deltaY = Math.abs(e.clientY - startY);
-            if (!appSwitcherVisible && deltaX < 10 && deltaY < 10 && (Date.now() - dragStartTime) < 250) {
-                forwardClickToApp(e.clientX, e.clientY);
+            const deltaTime = Date.now() - dragStartTime;
+            
+            // Identify if gesture was a quick tap
+            if (deltaX < 15 && deltaY < 15 && deltaTime < 300) {
+                isTap = true;
             }
 
             if (appSwitcherVisible) {
@@ -14137,7 +14167,12 @@ function setupDrawerInteractions() {
             } else {
                 endDrag();
             }
-            isDragging = false;
+            isDragging = false; 
+
+            // Forward the click if it was a fast tap on the handle
+            if (isTap && dragSource === 'handle') {
+                forwardClickThroughHandle(e.clientX, e.clientY);
+            }
         }
     });
 
