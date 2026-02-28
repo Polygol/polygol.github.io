@@ -14053,9 +14053,11 @@ function setupDrawerInteractions() {
         }
 
 	    if (isDragging) {
+            const x = e.touches[0].clientX;
             const y = e.touches[0].clientY;
             const isDrawerOpen = appDrawer.classList.contains('open');
-            const deltaY = startY - y; // Positive = Up, Negative = Down
+            const deltaX = x - startX;
+            const deltaY = startY - y; 
 	
 	        // Check for a clear DIAGONAL-UP movement
 	        if (deltaY < -40 && Math.abs(deltaX) > 40) { 
@@ -14102,7 +14104,7 @@ function setupDrawerInteractions() {
             el.style.pointerEvents = 'auto';
         });
 
-        const el = document.elementFromPoint(x / zoom, y / zoom);
+        const el = document.elementFromPoint(x, y);
 
         // Find the correct iframe (direct hit, or inside the specific embed wrapper we hit)
         let targetIframe = null;
