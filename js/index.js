@@ -14153,12 +14153,15 @@ function setupDrawerInteractions() {
         }
     });
 	
+	// Track global touch time to prevent ghost clicks safely across all scopes
+    window.addEventListener('touchstart', () => { window.lastTouchTime = Date.now(); }, { capture: true, passive: true });
+
 	// Mouse Events for regular drawer interaction
     document.addEventListener('mousedown', (e) => {
 		if (oneButtonNavEnabled) return;
         if (e.button !== 0) return;
         // Prevent ghost duplicate clicks when using a touchscreen
-        if (Date.now() - lastTouchTime < 500) return; 
+        if (Date.now() - (window.lastTouchTime || 0) < 500) return; 
 
         const element = document.elementFromPoint(e.clientX, e.clientY);
         
@@ -14179,9 +14182,9 @@ function setupDrawerInteractions() {
 		if (oneButtonNavEnabled) return;
         // Prevent ghost duplicate clicks when using a touchscreen
         // (Browsers fire mouseup a few milliseconds after touchend)
-        if (Date.now() - lastTouchTime < 500) return; 
+        if (Date.now() - (window.lastTouchTime || 0) < 500) return; 
 
-        if (isDragging) { 
+        if (isDragging) {
             let isTap = false;
             const deltaX = Math.abs(e.clientX - startX);
             const deltaY = Math.abs(e.clientY - startY);
