@@ -1460,7 +1460,6 @@ window.addEventListener('message', async (event) => {
               if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
                   el.focus();
               } else {
-                  // Dispatch a true MouseEvent for maximum compatibility (React, Vue, Vanilla)
                   const clickEvent = new MouseEvent('click', {
                       view: window,
                       bubbles: true,
@@ -1470,12 +1469,6 @@ window.addEventListener('message', async (event) => {
                   });
                   el.dispatchEvent(clickEvent);
               }
-              
-              const origTransform = el.style.transform;
-              el.style.transform = 'scale(1.1)';
-              el.style.filter = 'brightness(1.5)';
-              el.style.transition = 'transform 0.3s cubic-bezier(.2, 1.3, .64, 1), filter 0.3s cubic-bezier(.2, 1.3, .64, 1)';
-              setTimeout(() => { el.style.transform = origTransform; }, 300);
           }
           break;
       case 'dialog-response':
