@@ -14081,6 +14081,7 @@ function setupDrawerInteractions() {
         const drawerHandle = document.querySelector('.drawer-handle');
         const appDrawerHandle = document.querySelector('.app-drawer-handle');
         const swipeOverlay = document.getElementById('swipe-overlay'); 
+        const zoom = (parseFloat(document.body.style.zoom) || 100) / 100;
 
         // Save original states
         const origDH = drawerHandle ? drawerHandle.style.pointerEvents : '';
@@ -14101,7 +14102,7 @@ function setupDrawerInteractions() {
             el.style.pointerEvents = 'auto';
         });
 
-        const el = document.elementFromPoint(x, y);
+        const el = document.elementFromPoint(x / zoom, y / zoom);
 
         // Find the correct iframe (direct hit, or inside the specific embed wrapper we hit)
         let targetIframe = null;
@@ -14111,13 +14112,13 @@ function setupDrawerInteractions() {
             targetIframe = el.querySelector('iframe');
         }
 
-        if (targetIframe && targetIframe.contentWindow) {
+		if (targetIframe && targetIframe.contentWindow) {
             // Forward to Gurapp
             const rect = targetIframe.getBoundingClientRect();
             targetIframe.contentWindow.postMessage({
                 type: 'forward-click',
-                x: x - rect.left,
-                y: y - rect.top
+                x: (x - rect.left) / zoom,
+                y: (y - rect.top) / zoom
             }, '*');
         } else if (el) {
             // System Support - Trigger native click on parent DOM elements (Dock, Home UI, etc.)
