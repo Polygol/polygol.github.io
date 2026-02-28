@@ -11841,7 +11841,7 @@ async function createFullscreenEmbed(url, options = {}) {
 	    console.warn(`Attempted to open an unknown app or non-allowlisted URL: ${url}`);
 		showDialog({ 
 		    type: 'alert', 
-		    title: `${appData.name}`,
+		    title: `${url}`,
 			message: currentLanguage.GURAPP_NOT_INSTALLED
 		});
 	    return;
