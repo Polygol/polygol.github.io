@@ -14055,45 +14055,68 @@ function setupDrawerInteractions() {
 	    }
 	}, { passive: false });
 
+	// Helper to pass click coordinates exactly into the active iframe or system element
     function forwardClickThroughHandle(x, y) {
         const drawerHandle = document.querySelector('.drawer-handle');
         const appDrawerHandle = document.querySelector('.app-drawer-handle');
-        const swipeOverlay = document.getElementById('swipe-overlay'); // Bypass this if it's blocking
+        const swipeOverlay = document.getElementById('swipe-overlay'); 
 
         // Save original states
         const origDH = drawerHandle ? drawerHandle.style.pointerEvents : '';
         const origADH = appDrawerHandle ? appDrawerHandle.style.pointerEvents : '';
         const origSO = swipeOverlay ? swipeOverlay.style.pointerEvents : '';
 
-        // Temporarily disable pointer events to "look" through the UI
+        // Temporarily disable pointer events on the handles to "look" through the UI
         if (drawerHandle) drawerHandle.style.pointerEvents = 'none';
         if (appDrawerHandle) appDrawerHandle.style.pointerEvents = 'none';
         if (swipeOverlay) swipeOverlay.style.pointerEvents = 'none';
 
+        // FIX: Ensure all embeds and iframes are temporarily "hittable" so elementFromPoint
+        // doesn't fall straight through to the body.
+        const hitElements = document.querySelectorAll('.fullscreen-embed, iframe, .dock-icon, .bento-item');
+        const origPointerEvents = new Map();
+        hitElements.forEach(el => {
+            origPointerEvents.set(el, el.style.pointerEvents);
+            el.style.pointerEvents = 'auto';
+        });
+
         const el = document.elementFromPoint(x, y);
 
-        // Find the iframe (either direct hit, or inside the wrapper)
+        // Find the correct iframe (direct hit, or inside the specific embed wrapper we hit)
         let targetIframe = null;
         if (el && el.tagName === 'IFRAME') {
             targetIframe = el;
-        } else if (el && el.querySelector('iframe')) {
+        } else if (el && el.classList.contains('fullscreen-embed')) {
             targetIframe = el.querySelector('iframe');
         }
 
-        // Send the relative coordinates to the iframe
         if (targetIframe && targetIframe.contentWindow) {
+            // Forward to Gurapp
             const rect = targetIframe.getBoundingClientRect();
             targetIframe.contentWindow.postMessage({
                 type: 'forward-click',
                 x: x - rect.left,
                 y: y - rect.top
             }, '*');
+        } else if (el) {
+            // System Support - Trigger native click on parent DOM elements (Dock, Home UI, etc.)
+            const clickEvent = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: true,
+                clientX: x,
+                clientY: y
+            });
+            el.dispatchEvent(clickEvent);
         }
 
         // Restore original states instantly
         if (drawerHandle) drawerHandle.style.pointerEvents = origDH;
         if (appDrawerHandle) appDrawerHandle.style.pointerEvents = origADH;
         if (swipeOverlay) swipeOverlay.style.pointerEvents = origSO;
+        hitElements.forEach(el => {
+            el.style.pointerEvents = origPointerEvents.get(el);
+        });
     }
 	
 	document.addEventListener('touchend', (e) => {
@@ -14130,10 +14153,13 @@ function setupDrawerInteractions() {
         }
     });
 	
-    // Mouse Events for regular drawer interaction
+	// Mouse Events for regular drawer interaction
     document.addEventListener('mousedown', (e) => {
 		if (oneButtonNavEnabled) return;
         if (e.button !== 0) return;
+        // Prevent ghost duplicate clicks when using a touchscreen
+        if (Date.now() - lastTouchTime < 500) return; 
+
         const element = document.elementFromPoint(e.clientX, e.clientY);
         
         // Check if click is on handle area
@@ -14151,6 +14177,10 @@ function setupDrawerInteractions() {
 
 	document.addEventListener('mouseup', (e) => {
 		if (oneButtonNavEnabled) return;
+        // Prevent ghost duplicate clicks when using a touchscreen
+        // (Browsers fire mouseup a few milliseconds after touchend)
+        if (Date.now() - lastTouchTime < 500) return; 
+
         if (isDragging) { 
             let isTap = false;
             const deltaX = Math.abs(e.clientX - startX);
