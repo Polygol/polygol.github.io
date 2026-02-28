@@ -1454,20 +1454,28 @@ window.addEventListener('message', async (event) => {
           KeyboardNavigationManager.startNavigation(data.direction);
           break;
       case 'forward-click':
+          // Catch forwarded taps from the parent OS handle zone
           const el = document.elementFromPoint(data.x, data.y);
           if (el) {
-              if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.focus();
-              const opts = { bubbles: true, cancelable: true, view: window, clientX: data.x, clientY: data.y };
-              el.dispatchEvent(new PointerEvent('pointerdown', opts));
-              el.dispatchEvent(new MouseEvent('mousedown', opts));
-              el.dispatchEvent(new PointerEvent('pointerup', opts));
-              el.dispatchEvent(new MouseEvent('mouseup', opts));
-              el.click();
+              if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                  el.focus();
+              } else {
+                  // Dispatch a true MouseEvent for maximum compatibility (React, Vue, Vanilla)
+                  const clickEvent = new MouseEvent('click', {
+                      view: window,
+                      bubbles: true,
+                      cancelable: true,
+                      clientX: data.x,
+                      clientY: data.y
+                  });
+                  el.dispatchEvent(clickEvent);
+              }
+              
               const origTransform = el.style.transform;
               el.style.transform = 'scale(1.1)';
               el.style.filter = 'brightness(1.5)';
               el.style.transition = 'transform 0.3s cubic-bezier(.2, 1.3, .64, 1), filter 0.3s cubic-bezier(.2, 1.3, .64, 1)';
-              setTimeout(() => { el.style.transform = origTransform; }, 100);
+              setTimeout(() => { el.style.transform = origTransform; }, 300);
           }
           break;
       case 'dialog-response':
