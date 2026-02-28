@@ -13198,18 +13198,30 @@ function setupDrawerInteractions() {
     swipeOverlay.style.display = 'none';
     swipeOverlay.style.pointerEvents = 'none'; // Start with no interaction
     document.body.appendChild(swipeOverlay);
+	
+	let isPendingDrag = false;
 
-	function startDrag(xPosition, yPosition) {
+	function prepareDrag(xPosition, yPosition) {
         startX = xPosition;
         startY = yPosition;
         lastY = yPosition;
         currentX = xPosition;
         currentY = yPosition;
+        dragStartTime = Date.now();
+        isPendingDrag = true;
+    }
+
+	function startDrag(xPosition, yPosition) {
+        if (xPosition !== undefined) startX = xPosition;
+        if (yPosition !== undefined) startY = yPosition;
+        lastY = startY;
+        currentX = startX;
+        currentY = startY;
         dragStartIndex = -1; // Reset on new drag
         isDragging = true;
+        isPendingDrag = false;
         isDrawerInMotion = true;
-        dragStartTime = Date.now();
-        velocities = [];
+        velocities =[];
         appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
 		document.querySelectorAll('.fullscreen-embed iframe').forEach(frame => {
             frame.style.pointerEvents = 'none';
@@ -13915,7 +13927,7 @@ function setupDrawerInteractions() {
             }
         }
 		
-        if (shouldStart) {
+		if (shouldStart) {
             // Set wallpaper start coordinates
             touchStartX = clientX;
             touchStartY = clientY;
@@ -13924,7 +13936,7 @@ function setupDrawerInteractions() {
 
             // Ensure logic knows we are starting from open/closed state
             initialDrawerPosition = isDrawerOpen ? 0 : -100;
-            startDrag(clientX, clientY);
+            prepareDrag(clientX, clientY);
         }
 	}, { passive: false });
 
@@ -14003,7 +14015,7 @@ function setupDrawerInteractions() {
             touchEndY = clientY;
 
             initialDrawerPosition = isDrawerOpen ? 0 : -100;
-            startDrag(clientX, clientY);
+            prepareDrag(clientX, clientY);
         }
     });
 
@@ -14027,14 +14039,23 @@ function setupDrawerInteractions() {
     document.addEventListener('touchend', resetSplitGesture);
 
 	document.addEventListener('touchmove', (e) => {
-	    if (oneButtonNavEnabled) return;
-	
-	    // --- New, more reliable split gesture detection ---
-	    if (window.potentialSplitSide && !isDragging) {
-	        const touch = e.touches[0];
-	        const start = window.splitGestureStart;
-	        const deltaX = touch.clientX - start.x;
-	        const deltaY = touch.clientY - start.y;
+	    if (handleSplitGestureMove(e.touches[0].clientX, e.touches[0].clientY)) {
+            e.preventDefault();
+            return;
+        }
+        
+        if (isPendingDrag && !isDragging) {
+            const deltaX = Math.abs(e.touches[0].clientX - startX);
+            const deltaY = Math.abs(e.touches[0].clientY - startY);
+            if (deltaX > 10 || deltaY > 10) {
+                startDrag();
+            }
+        }
+
+	    if (isDragging) {
+            const y = e.touches[0].clientY;
+            const isDrawerOpen = appDrawer.classList.contains('open');
+            const deltaY = startY - y; // Positive = Up, Negative = Down
 	
 	        // Check for a clear DIAGONAL-UP movement
 	        if (deltaY < -40 && Math.abs(deltaX) > 40) { 
@@ -14121,7 +14142,7 @@ function setupDrawerInteractions() {
 	
 	document.addEventListener('touchend', (e) => {
 		if (oneButtonNavEnabled) return;
-        if (isDragging) { 
+        if (isDragging || isPendingDrag) { 
             let isTap = false;
             let tapX = 0, tapY = 0;
 
@@ -14139,12 +14160,16 @@ function setupDrawerInteractions() {
                 }
             }
 
-            if (appSwitcherVisible) {
-                selectAndCloseAppSwitcher();
-            } else {
-                endDrag();
+            if (isDragging) {
+                if (appSwitcherVisible) {
+                    selectAndCloseAppSwitcher();
+                } else {
+                    endDrag();
+                }
+                isDragging = false; 
             }
-            isDragging = false; 
+            
+            isPendingDrag = false;
 
             // Forward the click if it was a fast tap on the handle
             if (isTap && dragSource === 'handle') {
@@ -14171,20 +14196,38 @@ function setupDrawerInteractions() {
         }
     });
 
-    document.addEventListener('mousemove', (e) => {
-		if (oneButtonNavEnabled) return;
+	document.addEventListener('mousemove', (e) => {
+        // Check split gesture move
+        if (e.buttons === 1 && handleSplitGestureMove(e.clientX, e.clientY)) {
+            return;
+        }
+
+        if (isPendingDrag && !isDragging && e.buttons === 1) {
+            const deltaX = Math.abs(e.clientX - startX);
+            const deltaY = Math.abs(e.clientY - startY);
+            if (deltaX > 10 || deltaY > 10) {
+                startDrag();
+            }
+        }
+
         if (isDragging) {
+            // Update coordinates for wallpaper swipe calculation
+            touchEndX = e.clientX;
+            touchEndY = e.clientY;
             moveDrawer(e.clientX, e.clientY);
         }
     });
 
 	document.addEventListener('mouseup', (e) => {
 		if (oneButtonNavEnabled) return;
-        // Prevent ghost duplicate clicks when using a touchscreen
+        // FIX: Prevent ghost duplicate clicks when using a touchscreen
         // (Browsers fire mouseup a few milliseconds after touchend)
         if (Date.now() - (window.lastTouchTime || 0) < 500) return; 
 
-        if (isDragging) {
+        if (isDragging || isPendingDrag) { 
+            touchEndX = e.clientX;
+            touchEndY = e.clientY;
+
             let isTap = false;
             const deltaX = Math.abs(e.clientX - startX);
             const deltaY = Math.abs(e.clientY - startY);
@@ -14195,12 +14238,16 @@ function setupDrawerInteractions() {
                 isTap = true;
             }
 
-            if (appSwitcherVisible) {
-                selectAndCloseAppSwitcher();
-            } else {
-                endDrag();
+            if (isDragging) {
+                if (appSwitcherVisible) {
+                    selectAndCloseAppSwitcher();
+                } else {
+                    endDrag();
+                }
+                isDragging = false; 
             }
-            isDragging = false; 
+            
+            isPendingDrag = false;
 
             // Forward the click if it was a fast tap on the handle
             if (isTap && dragSource === 'handle') {
