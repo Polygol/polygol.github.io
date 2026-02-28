@@ -12,7 +12,7 @@
   "scope": "/",
   "start_url": "index.html?fullscreen=true",
   "id": "/",
-  "display": "fullscreen"
+  "display": "fullscreen",
   "display_override": ["window-controls-overlay"],
   "launch_handler": {
     "client_mode": "navigate-existing"
