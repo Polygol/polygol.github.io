@@ -1453,6 +1453,23 @@ window.addEventListener('message', async (event) => {
       case 'switch-control-enter':
           KeyboardNavigationManager.startNavigation(data.direction);
           break;
+      case 'forward-click':
+          const el = document.elementFromPoint(data.x, data.y);
+          if (el) {
+              if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.focus();
+              const opts = { bubbles: true, cancelable: true, view: window, clientX: data.x, clientY: data.y };
+              el.dispatchEvent(new PointerEvent('pointerdown', opts));
+              el.dispatchEvent(new MouseEvent('mousedown', opts));
+              el.dispatchEvent(new PointerEvent('pointerup', opts));
+              el.dispatchEvent(new MouseEvent('mouseup', opts));
+              el.click();
+              const origTransform = el.style.transform;
+              el.style.transform = 'scale(1.1)';
+              el.style.filter = 'brightness(1.5)';
+              el.style.transition = 'transform 0.3s cubic-bezier(.2, 1.3, .64, 1), filter 0.3s cubic-bezier(.2, 1.3, .64, 1)';
+              setTimeout(() => { el.style.transform = origTransform; }, 100);
+          }
+          break;
       case 'dialog-response':
         if (data.requestId && _dialogCallbacks[data.requestId]) {
             _dialogCallbacks[data.requestId](data.value);
