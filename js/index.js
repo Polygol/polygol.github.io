@@ -5563,17 +5563,17 @@ const blurOverlay = document.getElementById('blurOverlay');
 
 clockElement.addEventListener('click', () => {
     if (!gurappsEnabled) return;
-    createFullscreenEmbed('/chronos/index.html');
+    createFullscreenEmbed('https://polygol.github.io/chronos/index.html');
 });
 
 weatherWidget.addEventListener('click', () => {
     if (!gurappsEnabled) return;
-    createFullscreenEmbed('/weather/index.html');
+    createFullscreenEmbed('https://polygol.github.io/weather/index.html');
 });
 
 dateElement.addEventListener('click', () => {
     if (!gurappsEnabled) return;
-    createFullscreenEmbed('/fantaskical/index.html');
+    createFullscreenEmbed('https://polygol.github.io/fantaskical/index.html');
 });
 
 startSynchronizedClockAndDate();
