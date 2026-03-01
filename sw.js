@@ -236,6 +236,9 @@ self.addEventListener('fetch', event => {
   
     // Ensure API requests for live data never serve stale cached versions
     const apiHosts = [
+        'polygol.github.io/kirbstore/inventories',
+        'raw.githubusercontent.com/kirbIndustries/assets/refs/heads/main/kirbindustries-ads-service/octagon/small.json',
+        'kirbindust.goatcounter.com',
         'api.open-meteo.com',
         'dummyjson.com',
         'api.rss2json.com'
