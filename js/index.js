@@ -4679,7 +4679,7 @@ function updateTitle() {
   if (typeof activeIslands !== 'undefined' && activeIslands.length > 0) {
       activeIslands.forEach(i => {
           if (i.type === 'live-activity' && i.data && i.data.text) {
-              liveActivityTexts.push(i.data.text);
+              liveActivityTexts.push(i.data.text.slice(0, 14));
           }
       });
   }
@@ -4693,7 +4693,7 @@ function updateTitle() {
           if (session && session.metadata) {
               const { title, artist } = session.metadata;
               if (title && title !== 'Unknown Title') {
-                  titlePrefix = `${title} | `;
+                  titlePrefix = `${title.slice(0, 14)} | `;
               }
           }
       } 
@@ -4704,7 +4704,7 @@ function updateTitle() {
               const url = openEmbed.dataset.embedUrl;
               const appName = Object.keys(apps).find(name => apps[name].url === url);
               if (appName) {
-                  titlePrefix = `${appName} | `;
+                  titlePrefix = `${appName.slice(0, 14)} | `;
               }
           }
       }
