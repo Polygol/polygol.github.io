@@ -4673,13 +4673,18 @@ function updateTitle() {
   if (isMobileDevice()) return;
 
   let titlePrefix = '';
+
+  const truncate = (str) => {
+      if (!str) return str;
+      return str.length > 14 ? str.slice(0, 11) + '...' : str;
+  };
   
   // 1. Check Live Activities
   const liveActivityTexts = [];
   if (typeof activeIslands !== 'undefined' && activeIslands.length > 0) {
       activeIslands.forEach(i => {
           if (i.type === 'live-activity' && i.data && i.data.text) {
-              liveActivityTexts.push(i.data.text.slice(0, 14));
+              liveActivityTexts.push(truncate(i.data.text));
           }
       });
   }
@@ -4693,7 +4698,7 @@ function updateTitle() {
           if (session && session.metadata) {
               const { title, artist } = session.metadata;
               if (title && title !== 'Unknown Title') {
-                  titlePrefix = `${title.slice(0, 14)} | `;
+                  titlePrefix = `${truncate(title)} | `;
               }
           }
       } 
@@ -4704,7 +4709,7 @@ function updateTitle() {
               const url = openEmbed.dataset.embedUrl;
               const appName = Object.keys(apps).find(name => apps[name].url === url);
               if (appName) {
-                  titlePrefix = `${appName.slice(0, 14)} | `;
+                  titlePrefix = `${truncate(appName)} | `;
               }
           }
       }
