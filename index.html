@@ -387,6 +387,9 @@
                     <button id="fullscreen-btn" class="btn-qc" onclick="goFullscreen()">
                         <span class="material-symbols-rounded" style="font-size: 18px;">expand_content</span>
                     </button>
+                    <button id="blackout-btn" class="btn-qc" style="background-color: var(--tonal);">
+                        <span class="material-symbols-rounded" style="font-size: 18px; color: var(--background-color);">power_settings_new</span>
+                    </button>
                 </div>
             </div>
             <div class="qc-sliders">
@@ -396,9 +399,6 @@
                     </label>
                     <input type="range" min="20" max="100" value="100" class="brightness-slider" id="brightness-control">
                 </div>
-                <button id="blackout-btn" class="btn-qc" style="width: 38px; height: 38px; background-color: var(--tonal);">
-                    <span class="material-symbols-rounded" style="font-size: 20px; color: var(--background-color);">power_settings_new</span>
-                </button>
             </div>
             <div class="quick-controls">
                 <div class="qcontrol-item" id="silent_switch_qc">
@@ -636,7 +636,7 @@
             </div>
             <div class="version-info">
                 <label class="cust-label" for="version-details">
-                    <img src="/assets/img/ver/16.png" alt="Polygol 16" style="width: 24px; height: 24px; scale: 1.5;">
+                    <img src="/assets/img/ver/17.png" style="width: 24px; height: 24px; scale: 1.5;">
                     <span style="margin-left: 4px;">version information</span>
                 </label>
                 <button id="versionButton">LANG_DETAIL_VERS</button>
@@ -948,7 +948,41 @@
         </div>
     </div>
 
+    <!-- JAVASCRIPT -->
+    <!-- Core Utilities -->
+    <script src="js/core/storage.js"></script>
+    <script src="js/core/audio.js"></script>
+    <script src="js/core/a11y.js"></script>
+    <script src="js/core/performance.js"></script>
+    <script src="js/core/system.js"></script>
+    <script src="js/core/dialogs.js"></script>
+    <script src="js/core/files.js"></script>
+    <script src="js/core/power.js"></script>
+    <script src="js/core/first-setup.js"></script>
+    <script src="js/core/sys-connect-waves.js"></script>
+    <!-- UI Components -->
+    <script src="js/ui/theme.js"></script>
+    <script src="js/ui/modes.js"></script>
+    <script src="js/ui/notifications.js"></script>
+    <script src="js/ui/clock-weather.js"></script>
+    <script src="js/ui/environment.js"></script>
+    <script src="js/ui/wallpaper.js"></script>
+    <script src="js/ui/widgets.js"></script>
+    <script src="js/ui/dock-drawer.js"></script>
+    <script src="js/ui/settings.js"></script>
+    <script src="js/ui/physical-keyboard.js"></script>
+    <script src="js/ui/browser-chrome.js"></script>
+    <script src="js/ui/donburi.js"></script>
+    <script src="js/ui/main-ui.js"></script>
+    <!-- App & Window Management -->
+    <script src="js/apps/app-switcher.js"></script>
+    <script src="js/apps/window-manager.js"></script>
+    <script src="js/apps/media-session.js"></script>
+    <script src="js/apps/live-activities.js"></script>
+    <script src="js/apps/api.js"></script>
+    <!-- Boot + Other -->
     <script src="js/index.js"></script>
+    <script src="js/core/boot.js"></script>
     <script src="js/kirbservices.js"></script>
 </body>
 </html>

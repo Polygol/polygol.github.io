@@ -421,7 +421,8 @@ body:not(.reduce-animations)::before,
 	opacity: 0;
     transition: background-color 0.3s, color 0.3s, background-image 0.5s, filter 1s !important;
 	/* Match the main background transform for animations */
-	transform: scale(var(--bg-transform-scale, 1.05));
+	transform: scale(var(--bg-transform-scale));
+	filter: var(--wallpaper-filter, none); /* Use the CSS custom property */
 }
 
 #time-of-day-overlay {
@@ -645,7 +646,7 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 5px;
     opacity: 1;
     outline: 1px solid var(--glass-border);
-	backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(10px) opacity(0.5);
+	backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
 }
 
 /* One Button Navigation Handle */
@@ -808,7 +809,7 @@ body.one-button-nav-active .dock.show {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(10px) opacity(0.5);
+    backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
 }
 
 #status-indicator .material-symbols-rounded {
@@ -863,7 +864,7 @@ body.one-button-nav-active .dock.show {
 	    -webkit-mask-composite: source-in;
 	    mask-image: linear-gradient(black, black);
 	    mask-composite: source-in;
-	    backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(10px) opacity(0.5);
+	    backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
 	}
 }
 
@@ -2544,7 +2545,7 @@ input[type="radio"]:checked::before {
 		width: 12px;
 		height: 12px;
 		background-color: transparent;
-		backdrop-filter: invert(1) hue-rotate(180deg) contrast(2) saturate(1) blur(10px) opacity(0.5);
+		backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
 		opacity: 0.25;
 	}
 
@@ -3164,33 +3165,23 @@ input[type="radio"]:checked::before {
 /* App Drawer Styles */
 .app-drawer {
     position: fixed;
-    bottom: -100%;
+	opacity: 0;
+    bottom: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: transparent;
-    transition: bottom 0.3s ease;
+	background-color: var(--background-color-tr);
+	backdrop-filter: blur(5px);
     z-index: 1001;
     overflow: hidden;
     touch-action: none;
     user-select: none;
-    backdrop-filter: var(--edge-refraction-filter) blur(2.5px);
     touch-action: none;
     user-select: none;
-    opacity: 0;
-    border-top: 1px solid var(--glass-border);
-    border-radius: 50px 50px 0 0;
-    corner-shape: superellipse(1.5);
     content-visibility: hidden;
     pointer-events: none;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--sun-shadow-strong), 0 0 50px rgba(0, 0, 0, 0.2);
-}
-
-#app-drawer {
     transform-origin: bottom;
-    will-change: transform, opacity, bottom;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform, opacity, bottom, content-visibility;
 }
 
 .drawer-action-btn {
@@ -3214,14 +3205,8 @@ input[type="radio"]:checked::before {
 			bottom: 0;
 		    opacity: 1;
 		    transform: none;
-		    filter: none;
 		    content-visibility: auto;
 		    pointer-events: auto;
-		    background-color: var(--background-color-tr);
-			backdrop-filter: blur(5px);
-		    border-radius: 0;
-		    border: none;
-		    box-shadow: none;
         }
 
         .app-drawer-handle {
@@ -4223,12 +4208,6 @@ input[type="radio"]:checked::before {
 	.app-drawer-grid {
 		grid-template-columns: repeat(4, 1fr);
 	}
-}
-
-@media (min-width: 800px) {
-    .app-drawer {
-        transform: scale(0.9);
-    }
 }
 
 @media (max-width: 520px) {
