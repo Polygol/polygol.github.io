@@ -422,7 +422,7 @@ body:not(.reduce-animations)::before,
     transition: background-color 0.3s, color 0.3s, background-image 0.5s, filter 1s !important;
 	/* Match the main background transform for animations */
 	transform: scale(var(--bg-transform-scale));
-	filter: var(--wallpaper-filter, none); /* Use the CSS custom property */
+	filter: var(--wallpaper-filter, none) drop-shadow(0 10px 20px var(--search-background-dark)); /* Use the CSS custom property */
 }
 
 #time-of-day-overlay {
