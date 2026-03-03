@@ -362,7 +362,7 @@ function updatePersistentClock() {
         
         if (recentWallpapers.length === 0) {
             recentWallpapers.push({
-                url: WALLPAPER_URL,
+                url: '/assets/gurapp/intl/airy/img.jpg',
                 clockStyles: {} 
             });
         }
