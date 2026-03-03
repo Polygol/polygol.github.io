@@ -224,7 +224,7 @@ function getDominantColor(imgSrc) {
                 const colorCounts = {};
                 let maxCount = 0;
                 let dominantColor = {r: 255, g: 255, b: 255}; // Default white
-                for (let i = 0; i < data.length; i += 4) {
+                for (let i = 0; i < data.length; i += 40) {
                     // Skip transparent or near-white/black pixels to get actual color
                     if (data[i+3] < 128 || (data[i] > 250 && data[i+1] > 250 && data[i+2] > 250) || (data[i] < 5 && data[i+1] < 5 && data[i+2] < 5)) continue;
                     
@@ -295,6 +295,8 @@ function createAppIcons(filterQuery = '') {
             appsArray.sort((a, b) => a.name.localeCompare(b.name));
             break;
     }
+
+    const fragment = document.createDocumentFragment();
 
     appsArray.forEach((app) => {
         const appIcon = document.createElement('div');
@@ -371,8 +373,10 @@ function createAppIcons(filterQuery = '') {
 		};
         
         appIcon.addEventListener('click', handleAppOpen);
-        appGrid.appendChild(appIcon);
+        fragment.appendChild(appIcon);
     });
+    
+    appGrid.appendChild(fragment);
 }
 
 function openSearch() {
@@ -467,6 +471,10 @@ function setupDrawerInteractions() {
         isPendingDrag = true;
     }
 
+    let cachedOpenEmbed = null;
+    let cachedWindowHeight = window.innerHeight;
+    window.addEventListener('resize', () => cachedWindowHeight = window.innerHeight, {passive: true});
+
 	function startDrag(xPosition, yPosition) {
         if (xPosition !== undefined) startX = xPosition;
         if (yPosition !== undefined) startY = yPosition;
@@ -478,6 +486,10 @@ function setupDrawerInteractions() {
         isPendingDrag = false;
         isDrawerInMotion = true;
         velocities =[];
+        
+        // PRE-CALCULATE DOM queries before the high-frequency move loop starts
+        cachedOpenEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+        
         appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
 		document.querySelectorAll('.fullscreen-embed iframe').forEach(frame => {
             frame.style.pointerEvents = 'none';
@@ -553,10 +565,14 @@ function setupDrawerInteractions() {
 	    lastY = yPosition;
 	    currentY = yPosition;
 	    const deltaY = startY - currentY; // Positive for upward swipe
-	    const windowHeight = window.innerHeight;
-	    const movementPercentage = (deltaY / windowHeight) * 100;
+	    const movementPercentage = (deltaY / cachedWindowHeight) * 100;
 	
-	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    const openEmbed = cachedOpenEmbed;
+
+        // OPTIMIZATION: Throttle visual updates to screen refresh rate
+        if (window._drawerMoveRaf) return;
+        window._drawerMoveRaf = requestAnimationFrame(() => {
+            window._drawerMoveRaf = null;
 
 		if (openEmbed) {
 			// Immersive Mode Check: Do not visually manipulate the window
@@ -566,7 +582,8 @@ function setupDrawerInteractions() {
 			
 			// LOGIC FOR DRAGGING AN OPEN APP
 	        openEmbed.style.transition = 'none !important'; // No transitions during drag for instant response
-	
+	        openEmbed.style.willChange = 'transform, opacity, border-radius'; // GPU Layer Hint
+
 	        // Start effect after a small deadzone
 	        if (deltaY > 50) {
 		    cancelLongPress();
@@ -575,7 +592,7 @@ function setupDrawerInteractions() {
 			
 	            // Progress is how far along the "close" gesture we are. 
 	            // A 20% screen height swipe is considered the full gesture.
-	            const progress = Math.min(1, deltaY / (windowHeight * 0.2));
+	            const progress = Math.min(1, deltaY / (cachedWindowHeight * 0.2));
 	
 	            // Move the card up as you swipe, making it feel like you're pushing it away
 	            const translateY = -deltaY;
@@ -584,24 +601,23 @@ function setupDrawerInteractions() {
 	            const scale = 1 - (progress * 0.2);
 	
 	            // Add border radius up to 35px
-	            const borderRadius = progress * 35;
+	            const borderRadius = progress * 50;
 	
 	            // Apply the border now that we're dragging
 	            openEmbed.style.border = '1px solid var(--glass-border)';
 	
 	            // Set the new styles
-	            openEmbed.style.transform = `translateY(${translateY}px) scale(${scale})`;
-	            openEmbed.style.opacity = 1 - (progress * 0.5); // Fade out slightly
+	            openEmbed.style.transform = `perspective(100vh) rotateX(${(progress * 20)}deg) translateY(${translateY}px) scale(${scale})`;
+	            openEmbed.style.opacity = 1 - (progress * 1); // Fade out slightly
+	            openEmbed.style.filter = `blur(${(progress * 10)}px)`;
 				openEmbed.style.cornerShape = 'superellipse(1.5)';
 	            openEmbed.style.borderRadius = `${borderRadius}px`;
-	
-	            // Animate background blur from 1px (blurry) to 0px (clear)
-	            const blurRadius = 1 - progress;
 	        } else {
                 cancelLongPress();
 	            // If dragging back down below the deadzone, reset to initial state
-	            openEmbed.style.transform = 'translateY(0px) scale(1)';
+	            openEmbed.style.transform = 'perspective(100vh) rotateX(0deg) translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
+    	        openEmbed.style.filter = 'none';
 	            openEmbed.style.borderRadius = '0px';
 	            openEmbed.style.border = 'none';
 				openEmbed.style.cornerShape = 'square';
@@ -682,23 +698,22 @@ function setupDrawerInteractions() {
                 interactionBlocker.style.pointerEvents = openEmbed ? 'none' : 'auto';
             }
 	    }
+        });
 	}
 
 	function endDrag() {
 	    if (!isDragging) return;
 	
 	    const deltaY = startY - currentY; // Positive for upward swipe
-	    const deltaTime = Date.now() - dragStartTime;
 	    let avgVelocity = 0;
 	    if (velocities.length > 0) {
 	        avgVelocity = velocities.reduce((sum, v) => sum + v, 0) / velocities.length;
 	    }
-	    const windowHeight = window.innerHeight;
-	    const movementPercentage = (deltaY / windowHeight) * 100;
+	    const movementPercentage = (deltaY / cachedWindowHeight) * 100;
 	    const isFlickUp = avgVelocity > flickVelocityThreshold;
 	    const isFlickDown = avgVelocity < -flickVelocityThreshold;
 	
-	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+	    const openEmbed = cachedOpenEmbed;
 	    
 	    if (openEmbed) {
             // Immersive Mode Exit Logic
@@ -732,13 +747,17 @@ function setupDrawerInteractions() {
 	        // LOGIC FOR FINISHING AN APP DRAG
 	        // Add transitions for the snap-back or close animation
 	        openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
+            
+            // Clean up GPU hint after transition ends
+            setTimeout(() => { if (openEmbed) openEmbed.style.willChange = 'auto'; }, 300);
 	
 	        // Condition to close: swipe up more than 20% of the screen OR a fast flick up
 	        if (movementPercentage > 20 || isFlickUp) {
 	            // Animate to a shrunken state and then minimize
-	            openEmbed.style.transform = 'translateY(-40px) scale(0.8)'; // Center and shrink
+	            openEmbed.style.transform = 'perspective(100vh) rotateX(40deg) translateY(-40px) scale(0.8)'; // Center and shrink
 	            openEmbed.style.opacity = '0';
-	            openEmbed.style.borderRadius = '35px';
+	            openEmbed.style.filter = 'blur(10px)';
+	            openEmbed.style.borderRadius = '50px';
 				openEmbed.style.cornerShape = 'superellipse(1.5)';
 				openEmbed.style.border = '1px solid var(--glass-border)';
 	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
@@ -772,8 +791,9 @@ function setupDrawerInteractions() {
 	            interactionBlocker.style.display = 'none';
 	        } else {
 	            // Animate back to the original fullscreen state
-	            openEmbed.style.transform = 'translateY(0px) scale(1)';
+	            openEmbed.style.transform = 'perspective(100vh) rotateX(0deg) translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
+	            openEmbed.style.filter = 'none';
 	            openEmbed.style.borderRadius = '0px';
 				openEmbed.style.cornerShape = 'square';
 	            openEmbed.style.border = 'none'; // Animate border removal
@@ -782,8 +802,8 @@ function setupDrawerInteractions() {
 				const dynArea = document.getElementById('dynamic-area');
 				if (dynArea) dynArea.style.opacity = '1';
                 // NEW: Apply opening effects on snap-back
-                const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
-                const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
+                const brightnessValue = document.getElementById('wallpaper-brightness-slider')?.value || 100;
+                const contrastValue = document.getElementById('wallpaper-contrast-slider')?.value || 100;
                 const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
                 document.body.style.setProperty('--wallpaper-filter', openFilter);
                 document.body.style.setProperty('--bg-transform-scale', '1.25');

@@ -1,17 +1,5 @@
 window.onload = function() {
     if (window.polygolHasCrashed) { return; } // Abort if a crash was detected
-	
-    const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
-		// Start fade-out animation
-		loadingScreen.classList.add('hidden');
-
-		// Wait for CSS transition before removing from DOM
-		setTimeout(() => {
-			loadingScreen.remove();
-		}, 1000);
-    }
-
     ensureVideoLoaded();
     consoleLoaded();
 	checkFullscreen();
@@ -42,7 +30,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     // --- Initialize UI components ---
     await initializeAndApplyWallpaper().catch(error => {
         console.error("Error initializing wallpaper:", error);
-    }); // Run this first to set localStorage and apply the correct wallpaper
+    });
+
+    // Reveal main UI
+    requestAnimationFrame(() => {
+        if (typeof updateClockAndDate === 'function') updateClockAndDate();
+        document.querySelectorAll('.container, .widget-grid, #dynamic-area').forEach(el => {
+            el.style.opacity = '1';
+        });
+        
+        // ONLY dismiss the loading screen once Javascript and visual trees have totally stabilized
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => loadingScreen.remove(), 1000);
+        }
+    });
 
     const oneButtonNavSwitch = document.getElementById('one-button-nav-switch');
     if (oneButtonNavSwitch) {

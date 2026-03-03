@@ -77,25 +77,17 @@ async function clearLocalStorage() {
     }
 }
 
+const DEFAULTS_TRUE_KEYS = new Set([
+    'gurappsEnabled', 'animationsEnabled', 'showSeconds', 'showWeather', 
+    'aiAssistantEnabled', 'gurappSoundsEnabled', 'glassEffectsEnabled',
+    'resourceManagerEnabled', 'smartDisplayZoom', 'telemetryEnabled'
+]);
+
 function getEffectiveSettingValue(key) {
     const rawValue = localStorage.getItem(key);
-    // Handle toggles that default to 'true' if they are null/undefined
-    const defaultsTrue = [
-        'gurappsEnabled', 
-        'animationsEnabled', 
-        'showSeconds', 
-        'showWeather', 
-        'aiAssistantEnabled',
-        'gurappSoundsEnabled',
-        'glassEffectsEnabled',
-        'resourceManagerEnabled',
-	    'smartDisplayZoom',
-        'telemetryEnabled'
-    ];
-    if (defaultsTrue.includes(key)) {
+    if (DEFAULTS_TRUE_KEYS.has(key)) {
         return (rawValue !== 'false').toString();
     }
-    // For other keys, return the raw value or an empty string
     return rawValue || '';
 }
 

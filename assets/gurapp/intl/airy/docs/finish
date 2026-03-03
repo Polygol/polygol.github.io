@@ -1,0 +1,11 @@
+<div style='text-align:center;'>
+  <br><br>
+  <h1>Ready?</h1>
+  <p style='font-size: 1.1rem; opacity: 0.8;'>You've learned the basics of Polygol!</p>
+  <br><br>
+  <button onclick='completeAiryOnboarding()' style='padding: 15px 30px; border-radius: 25px; background: var(--text-color); color: var(--background-color); border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 30px; font-family: "Inter", sans-serif; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.2s;'>
+    Get Started
+  </button>
+  <br><br>
+  <p style='font-size: 0.8rem; opacity: 0.5;'>Data will be deleted when finishing.</p>
+</div>

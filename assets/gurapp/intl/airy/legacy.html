@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Airy Polygol Onboarding</title>
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <style>
+        /* --- CSS Variables & Theme Setup --- */
+        :root {
+            --text-color: #f9f9f9;
+            --secondary-text-color: rgba(255, 255, 255, 0.7);
+            --card-background: rgba(51, 51, 51, 0.5);
+            --glass-border: rgba(100, 100, 100, 0.2);
+        }
+
+        body.light-theme {
+            --text-color: #333333;
+            --secondary-text-color: rgba(0, 0, 0, 0.7);
+            --card-background: rgba(220, 220, 220, 0.5);
+            --glass-border: rgba(200, 200, 200, 0.2);
+        }
+        
+        /* --- Base & Animation --- */
+        * {
+            box-sizing: border-box;
+            transition: all 0.3s cubic-bezier(.3,1.2,.64,1);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: transparent;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        .container {
+            width: clamp(300px, 90vw, 600px);
+            text-align: center;
+        }
+        
+        .card {
+            background-color: var(--card-background);
+            backdrop-filter: blur(10px) saturate(2);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            corner-shape: superellipse(1.5);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .card-content {
+            opacity: 1;
+            transform: translateX(0);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .card-content.exiting {
+            opacity: 0;
+            transform: translateX(-20px);
+            position: absolute; 
+            top: 30px; left: 30px; right: 30px; /* Pin it */
+        }
+        
+        .card-content.entering {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+
+        .hero-media {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .hero-media img, .hero-media video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        h1 {
+            font-family: 'Open Runde', sans-serif;
+            font-size: 2rem;
+            margin: 25px 15px;
+            color: var(--text-color);
+        }
+
+        p {
+            font-size: 1rem;
+            margin: 25px 15px;
+        }
+        
+        /* --- Navigation & Progress --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            position: fixed;
+            bottom: 20px;
+            width: 50%;
+        }
+
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+            background-color: var(--search-background);
+            padding: 8px 10px;
+            border-radius: 20px;
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--secondary-text-color);
+            opacity: 0.5;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        .dot.active {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+        
+        .nav-btn {
+            background-color: transparent;
+            color: var(--text-color);
+            border: none;
+            border-radius: 50px;
+            padding: 12px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn.hidden {
+            display: flex !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .nav-btn .material-symbols-rounded {
+             font-size: 24px;
+        }
+
+        #finish-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-radius: 25px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+     <link rel="stylesheet" 
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+</head>
+<body data-app-name="Airy">
+    <div class="container">
+        <div class="card">
+            <!-- Content will be injected here by JS -->
+        </div>
+    </div>
+
+    <div class="navigation">
+        <div class="progress-dots">
+            <!-- Dots will be generated by JS -->
+        </div>
+        <button id="prev-btn" class="nav-btn"><span class="material-symbols-rounded">chevron_backward</span></button>
+        <button id="finish-btn" class="nav-btn hidden">Get Started</button>
+        <button id="next-btn" class="nav-btn"><span class="material-symbols-rounded">chevron_forward</span></button>
+    </div>
+
+    <script>
+        function initializeAiry() {
+            // --- Content for Onboarding Pages ---
+            const pages = [
+                {
+                    mediaType: 'image',
+                    media: '/assets/gurapp/intl/airy/airyintro.png',
+                    title: 'Hi.',
+                    description: 'I\'m Airy... and I guess I\'ll guide you through Polygol.'
+                },
+                {
+                    mediaType: 'video',
+                    media: '/assets/gurapp/intl/airy/gesture.mp4',
+                    title: 'Not really used to these touch things... probably still works with the mouse though...',
+                    description: 'Swipe left or right on the Home Screen to switch wallpapers, and that\'s if you even have any. Swipe up from the pill shaped thing to open the App Drawer. Yay...'
+                },
+                {
+                    mediaType: 'image',
+                    media: '/assets/gurapp/intl/airy/controls.png',
+                    title: 'Apparently, you can change anything about your home screen.',
+                    description: 'When you open Controls, you can change nearly everything about your Home Screen. Why are you staring at me? I don\'t know. I just got spawned here...'
+                },
+                {
+                    mediaType: 'image',
+                    media: '/assets/gurapp/intl/airy/bye.png',
+                    title: 'Uhhh... pretty sure this is the end of our chat.',
+                    description: 'Polygol is waiting for you. Tap below to get started and explore your new dashboard... or don\'t... ...bye.'
+                }
+            ];
+
+            let currentPageIndex = 0;
+            let isTransitioning = false;
+            
+            const card = document.querySelector('.card');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const finishBtn = document.getElementById('finish-btn');
+            const dotsContainer = document.querySelector('.progress-dots');
+            
+            // --- Functions ---
+            function renderPage(index) {
+                const oldContent = card.querySelector('.card-content');
+                if(oldContent) {
+                    oldContent.classList.add('exiting');
+                    setTimeout(() => oldContent.remove(), 400);
+                }
+
+                const pageData = pages[index];
+                const newContent = document.createElement('div');
+                newContent.className = 'card-content entering';
+
+                const mediaElement = pageData.mediaType === 'video' 
+                    ? `<video class="hero-media" autoplay loop muted playsinline src="${pageData.media}"></video>`
+                    : `<div class="hero-media"><img src="${pageData.media}" alt=""></div>`;
+                
+                newContent.innerHTML = `
+                    ${mediaElement}
+                    <h1>${pageData.title}</h1>
+                    <p>${pageData.description}</p>
+                `;
+
+                card.appendChild(newContent);
+                requestAnimationFrame(() => {
+                    newContent.classList.remove('entering');
+                });
+
+                // Re-enable navigation after the animation is complete
+                setTimeout(() => {
+                    isTransitioning = false;
+                }, 400); // Must match the CSS transition duration
+                
+                updateNavigation(index);
+            }
+
+            function updateNavigation(index) {
+                // Update dots
+                dotsContainer.querySelectorAll('.dot').forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+
+                // Update buttons
+                prevBtn.classList.toggle('hidden', index === 0);
+
+                const isLastPage = index === pages.length - 1;
+                nextBtn.classList.toggle('hidden', isLastPage);
+                finishBtn.classList.toggle('hidden', !isLastPage);
+    
+                if (finishBtn && !finishBtn.classList.contains('hidden')) {
+                    dotsContainer.style.opacity = '0';
+                    dotsContainer.style.pointerEvents = 'none';
+                } else {
+                    dotsContainer.style.opacity = '1';
+                    dotsContainer.style.pointerEvents = 'auto';
+                }
+            }
+
+            nextBtn.addEventListener('click', () => {
+                if (isTransitioning || currentPageIndex >= pages.length - 1) return;
+                isTransitioning = true;
+                currentPageIndex++;
+                renderPage(currentPageIndex);
+            });
+            
+            prevBtn.addEventListener('click', () => {
+                if (isTransitioning || currentPageIndex <= 0) return;
+                isTransitioning = true;
+                currentPageIndex--;
+                renderPage(currentPageIndex);
+            });
+
+            finishBtn.addEventListener('click', () => {
+                // Use the native postMessage to tell the parent setup is complete
+                if (window.self !== window.top) { // Check if inside an iframe
+                    window.parent.postMessage({ type: 'onboarding-complete' }, '*');
+                }
+            });
+            
+            // Initial render
+            pages.forEach(() => {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dotsContainer.appendChild(dot);
+            });
+            renderPage(currentPageIndex);
+        }
+
+        if (window.GURASURAISU_API_READY) {
+            initializeAiry();
+        } else {
+            window.addEventListener('GurasuraisuReady', initializeAiry, { once: true });
+        }
+    </script>
+</body>
+</html>

@@ -77,9 +77,15 @@ detectPerformanceProfile();
 
 // Global Interaction Tracker for Performance Heuristics
 window.lastUserInteraction = Date.now();
+let _interactionThrottle = false;
 ['mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'].forEach(evt => {
     window.addEventListener(evt, () => {
-        window.lastUserInteraction = Date.now();
+        if (!_interactionThrottle) {
+            window.lastUserInteraction = Date.now();
+            _interactionThrottle = true;
+            // Only record interaction once per second to avoid freezing the CPU on scroll
+            setTimeout(() => _interactionThrottle = false, 1000);
+        }
     }, { passive: true, capture: true });
 });
 
@@ -122,24 +128,45 @@ const ResourceManager = {
             console.log("[System] Resource Manager disabled by user settings.");
             return;
         }
-        if (this.rafId) return; // Already running
+        if (this.isInitialized) return; 
 
         console.log("[System] Resource Manager Initialized");
-        this.lastFpsCheck = performance.now();
-        this.rafId = requestAnimationFrame(t => this.loop(t));
-        this.intervalId = setInterval(() => this.checkMemory(), this.MEMORY_CHECK_INTERVAL);
+        
+        // CPU OPTIMIZATION: Replace manual 60fps rAF polling with native PerformanceObserver
+        try {
+            this.observer = new PerformanceObserver((list) => {
+                const entries = list.getEntries();
+                for (const entry of entries) {
+                    // A task longer than 100ms indicates heavy main-thread blocking (jank/lag)
+                    if (entry.duration > 100) {
+                        const hasWindows = document.querySelector('.fullscreen-embed') || Object.keys(minimizedEmbeds).length > 0;
+                        if (hasWindows && !document.hidden) {
+                            console.warn(`[System] Main thread lag detected (${entry.duration.toFixed(0)}ms). Adaptating...`);
+                            this.handleHighLoad();
+                            this.recoveryCounter = 0;
+                        }
+                    }
+                }
+            });
+            this.observer.observe({ type: 'longtask', buffered: false });
+        } catch (e) {
+            console.warn("[System] PerformanceObserver (longtask) not supported.");
+        }
+
+        this.intervalId = setInterval(() => {
+            this.checkMemory();
+            // If we are struggling but tasks are clearing up, attempt recovery
+            if (this.isStruggling) {
+                this.recoveryCounter++;
+                if (this.recoveryCounter >= (this.RECOVERY_THRESHOLD * this.penaltyMultiplier)) {
+                    this.attemptRecovery();
+                }
+            } else {
+                this.penaltyMultiplier = Math.max(this.penaltyMultiplier - 0.1, 1);
+            }
+        }, this.MEMORY_CHECK_INTERVAL);
         
         this.initPressureObserver();
-
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                this.isStruggling = false;
-                this.recoveryCounter = 0;
-                // Don't count frames when hidden to avoid messing up averages
-                this.lastFpsCheck = performance.now();
-                this.frameCount = 0;
-            }
-        });
 
         window.addEventListener('message', (e) => {
             if (e.data.type === 'gurapp-performance-report') {
@@ -150,17 +177,20 @@ const ResourceManager = {
                 };
             }
         });
+
+        this.isInitialized = true;
     },
 
     stop() {
-        if (this.rafId) {
-            cancelAnimationFrame(this.rafId);
-            this.rafId = null;
+        if (this.observer) {
+            this.observer.disconnect();
+            this.observer = null;
         }
         if (this.intervalId) {
             clearInterval(this.intervalId);
             this.intervalId = null;
         }
+        this.isInitialized = false;
         console.log("[System] Resource Manager Stopped");
     },
 
@@ -188,89 +218,6 @@ const ResourceManager = {
 
     markAppActive(url) {
         this.appActivity[url] = Date.now();
-    },
-
-    loop(now) {
-        this.frameCount++;
-        
-        if (now - this.lastFpsCheck > this.FPS_CHECK_INTERVAL) {
-            const duration = now - this.lastFpsCheck;
-            const fps = (this.frameCount / duration) * 1000;
-            
-            // Calculate Global FPS (System + Active Apps)
-            let totalFps = fps;
-            let count = 1;
-            
-            Object.values(this.gurappMetrics).forEach(m => {
-                // Only count recent reports (last 5s)
-                if (Date.now() - m.lastUpdate < 5000) {
-                    totalFps += m.fps;
-                    count++;
-                }
-            });
-            
-            // FIX: Change 'const' to 'let' to allow reassignment below
-            let averageFps = totalFps / count;
-            
-            // Dynamic Baseline: Learn the screen's refresh rate capabilities
-            if (fps > averageFps) {
-                averageFps = fps;
-            }
-
-            const hasWindows = document.querySelector('.fullscreen-embed') || Object.keys(minimizedEmbeds).length > 0;
-			const isInteracting = (Date.now() - window.lastUserInteraction) < 5000;
-            const isPressureHigh = this.pressureState === 'critical' || this.pressureState === 'serious';
-
-            if (!document.hidden && hasWindows) {
-                this.fpsHistory.push(fps);
-                if (this.fpsHistory.length > 5) this.fpsHistory.shift();
-
-                const relativeThreshold = averageFps * 0.7;
-                const threshold = Math.max(this.MIN_ABSOLUTE_FPS, relativeThreshold);
-                const isLaggy = fps < threshold && fps > this.THROTTLE_FPS_THRESHOLD;
-
-                // Predictive CPU Trend Analysis
-                // If FPS drops consistently over 4 checks, preemptively adapt before it gets worse
-                const isDegrading = this.fpsHistory.length === 5 && 
-                                    this.fpsHistory[4] < this.fpsHistory[3] && 
-                                    this.fpsHistory[3] < this.fpsHistory[2] &&
-                                    this.fpsHistory[4] < (threshold * 1.1);
-
-                if ((isLaggy && (isInteracting || isPressureHigh)) || this.pressureState === 'critical' || isDegrading) {
-                    if (isDegrading && !isLaggy) console.warn(`[System] Predictive adaptation: FPS steadily degrading.`);
-                    else if (isLaggy) console.warn(`[System] Visual Lag Detected (${fps.toFixed(1)} / ${averageFps.toFixed(0)} FPS).`);
-                    
-                    this.handleHighLoad();
-                    this.recoveryCounter = 0;
-                    
-                    // Increase penalty if we keep struggling
-                    if (isDegrading || this.pressureState === 'critical') {
-                        this.penaltyMultiplier = Math.min(this.penaltyMultiplier + 0.5, 3);
-                    }
-                } 
-                else if (fps >= threshold) {
-                    if (this.isStruggling) {
-                        if (!isPressureHigh) {
-                            this.recoveryCounter++;
-                            // Require more stable frames if we've repeatedly failed
-                            if (this.recoveryCounter >= (this.RECOVERY_THRESHOLD * this.penaltyMultiplier)) {
-                                this.attemptRecovery();
-                            }
-                        } else {
-                            this.recoveryCounter = 0; 
-                        }
-                    } else {
-                        // Slowly forgive penalty over long stable periods
-                        this.penaltyMultiplier = Math.max(this.penaltyMultiplier - 0.1, 1);
-                    }
-                }
-            }
-
-            this.lastFpsCheck = now;
-            this.frameCount = 0;
-        }
-        
-        this.rafId = requestAnimationFrame(t => this.loop(t));
     },
 
     async checkMemory() {

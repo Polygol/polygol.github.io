@@ -495,9 +495,13 @@ const EnvironmentManager = {
 
     onResize() {
         if (!this.app) return;
-        this.app.camera.aspect = window.innerWidth / window.innerHeight;
-        this.app.camera.updateProjectionMatrix();
-        this.app.renderer.setSize(window.innerWidth, window.innerHeight);
+        clearTimeout(this._resizeTimer);
+        this._resizeTimer = setTimeout(() => {
+            if (!this.app) return;
+            this.app.camera.aspect = window.innerWidth / window.innerHeight;
+            this.app.camera.updateProjectionMatrix();
+            this.app.renderer.setSize(window.innerWidth, window.innerHeight);
+        }, 100); // 100ms debounce
     },
 
 	startLoop() {

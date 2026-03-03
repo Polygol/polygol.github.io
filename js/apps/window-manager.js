@@ -423,6 +423,7 @@ function updateSplitLayout(percentage) {
 }
 
 let isAppOpen = false;
+window.currentActiveAppUrl = null; 
 let drawerWasOpen = false;
 let drawerInactivityTimeout = null;
 const DRAWER_AUTO_CLOSE_MS = 30000; // 30 second inactivity
@@ -752,9 +753,10 @@ async function createFullscreenEmbed(url, options = {}) {
         embedContainer.style.transition = 'none';
         
         // Set initial state with rounded corners
-        embedContainer.style.transform = 'scale(0.8)';
+        embedContainer.style.transform = 'perspective(100vh) rotateX(-40deg) translateY(40px) scale(0.8)';
         embedContainer.style.opacity = '0';
-        embedContainer.style.borderRadius = '35px';
+        embedContainer.style.filter = 'blur(10px)';
+        embedContainer.style.borderRadius = '50px';
 		embedContainer.style.cornerShape = 'superellipse(1.5)';
 		embedContainer.style.border = '1px solid var(--glass-border)';
         embedContainer.style.overflow = 'clip';
@@ -786,6 +788,7 @@ async function createFullscreenEmbed(url, options = {}) {
 	    setTimeout(() => {
 	        embedContainer.style.transform = 'scale(1)';
 	        embedContainer.style.opacity = '1';
+	        embedContainer.style.filter = 'none';
 	        embedContainer.style.borderRadius = '0px';
 			embedContainer.style.cornerShape = 'square';
 			embedContainer.style.border = 'none';
@@ -886,10 +889,11 @@ async function createFullscreenEmbed(url, options = {}) {
         embedContainer.classList.add(window.pendingSplitClass);
     }
     
-    // Set initial styles BEFORE adding to DOM (removed filter)
-    embedContainer.style.transform = 'scale(0.8)'; 
+    // Set initial styles BEFORE adding to DOM
+    embedContainer.style.transform = 'perspective(100vh) rotateX(-40deg) translateY(40px) scale(0.8)';
     embedContainer.style.opacity = '0';
-    embedContainer.style.borderRadius = '35px';
+    embedContainer.style.filter = 'blur(10px)';
+    embedContainer.style.borderRadius = '50px';
 	embedContainer.style.cornerShape = 'superellipse(1.5)';
 	embedContainer.style.border = '1px solid var(--glass-border)';
     embedContainer.style.overflow = 'clip';
@@ -908,6 +912,7 @@ async function createFullscreenEmbed(url, options = {}) {
     
     // Store the URL as a data attribute
     embedContainer.dataset.embedUrl = url;
+    window.currentActiveAppUrl = url; // Update global state
 
     window.Analytics?.trackAppOpen(url);
 	
@@ -1023,6 +1028,7 @@ async function createFullscreenEmbed(url, options = {}) {
     setTimeout(() => {
         embedContainer.style.transform = 'scale(1)';
         embedContainer.style.opacity = '1';
+        embedContainer.style.filter = 'none';
         embedContainer.style.borderRadius = '0px';
 		embedContainer.style.cornerShape = 'square';
 		embedContainer.style.border = 'none';
@@ -1052,8 +1058,10 @@ async function createFullscreenEmbed(url, options = {}) {
 // Wrapper to intercept app open calls
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
 createFullscreenEmbed = async function(url, options = {}) {
-    // Log activity for Resource Manager
-    ResourceManager.markAppActive(url);
+    // Wake up and log activity for Resource Manager
+    if (typeof ResourceManager !== 'undefined') {
+        ResourceManager.markAppActive(url);
+    }
 	
     // Default options to empty object if undefined
     const { isSplitActivation = false } = options || {};
@@ -1244,7 +1252,8 @@ function closeFullscreenEmbed() {
     }, 50);
 	
     isAppOpen = false;
-
+    window.currentActiveAppUrl = null; // Clear global state
+    
 	SoundManager.play('close'); 
 
     window.speechSynthesis.cancel();
@@ -1448,6 +1457,7 @@ function forceCloseApp(url) {
     // 3. UI Restoration Logic (Only if the app was active)
     if (isActiveApp) {
         isAppOpen = false;
+        window.currentActiveAppUrl = null; // Clear global state
         
         if (typeof SoundManager !== 'undefined') SoundManager.play('close');
         if (window.speechSynthesis) window.speechSynthesis.cancel();
@@ -1621,6 +1631,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 	
 	// --- Standard Single App Minimize Logic ---
     isAppOpen = false;
+    window.currentActiveAppUrl = null; // Clear global state
 	SoundManager.play('close'); 
 	
 	const embedContainer = urlToMinimize 
@@ -1682,7 +1693,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 
 				const dynArea = document.getElementById('dynamic-area');
 				if (dynArea) dynArea.style.opacity = '1';
-				embedContainer.style.transform = 'scale(0.8)';
+                embedContainer.style.transform = 'perspective(100vh) rotateX(-40deg) translateY(40px) scale(0.8)';
 
 				resetIndicatorTimeout();
 				updateDockVisibility();

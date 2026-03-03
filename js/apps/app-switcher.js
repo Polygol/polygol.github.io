@@ -373,6 +373,8 @@ function openAppSwitcher() {
     const switcherList = document.getElementById('app-switcher-list');
     switcherList.innerHTML = '';
 
+    const fragment = document.createDocumentFragment();
+
     appSwitcherApps.forEach(item => {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'app-switcher-item';
@@ -430,8 +432,10 @@ function openAppSwitcher() {
             itemDiv.dataset.url = item.url;
         }
         
-        switcherList.appendChild(itemDiv);
+        fragment.appendChild(itemDiv);
     });
+    
+    switcherList.appendChild(fragment);
 
 	// Determine initial selection
     const currentItemIndex = appSwitcherApps.findIndex(item => 

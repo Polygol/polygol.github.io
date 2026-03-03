@@ -1,3 +1,10 @@
+// State cache for title logic
+const lastTitleData = {
+    prefix: '',
+    time: '',
+    weather: ''
+};
+
 // Function to update the document title
 function updateTitle() {
   if (isMobileDevice()) return;
@@ -23,7 +30,7 @@ function updateTitle() {
       titlePrefix = liveActivityTexts.join(' | ') + ' | ';
   } else {
       // 2. Check Media (Only if no live activities)
-      if (activeMediaSessionApp && mediaSessionStack.length > 0) {
+      if (typeof activeMediaSessionApp !== 'undefined' && activeMediaSessionApp && typeof mediaSessionStack !== 'undefined' && mediaSessionStack.length > 0) {
           const session = mediaSessionStack.find(s => s.appName === activeMediaSessionApp);
           if (session && session.metadata) {
               const { title, artist } = session.metadata;
@@ -34,10 +41,8 @@ function updateTitle() {
       } 
       // 3. Check Active App (Only if no Live Activity and no Media info)
       else {
-          const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-          if (openEmbed) {
-              const url = openEmbed.dataset.embedUrl;
-              const appName = Object.keys(apps).find(name => apps[name].url === url);
+          if (window.currentActiveAppUrl) {
+              const appName = Object.keys(apps).find(name => apps[name].url === window.currentActiveAppUrl);
               if (appName) {
                   titlePrefix = `${truncate(appName)} | `;
               }
@@ -67,16 +72,20 @@ function updateTitle() {
     `${displayHours}:${minutes}${period}`;
 
   // 5. Weather Logic
-  const showWeather = localStorage.getItem('showWeather') !== 'false';
+  // Caching the showWeather check into a global state (updated by the toggle) avoids localStorage reads every second
+  const isWeatherShown = typeof showWeather !== 'undefined' ? showWeather : (localStorage.getItem('showWeather') !== 'false');
   let weatherString = '';
   
-  if (showWeather) {
-    const temperatureElement = document.getElementById('temperature');
-    const weatherIconElement = document.getElementById('weather-icon');
+  if (isWeatherShown) {
+    // Only query if we don't have it, or it was removed
+    if (!window._cachedTempEl || !document.body.contains(window._cachedTempEl)) {
+        window._cachedTempEl = document.getElementById('temperature');
+        window._cachedIconEl = document.getElementById('weather-icon');
+    }
 
-    if (temperatureElement && weatherIconElement && weatherIconElement.dataset.weatherCode) {
-      const temperature = temperatureElement.textContent;
-      const weatherCode = parseInt(weatherIconElement.dataset.weatherCode);
+    if (window._cachedTempEl && window._cachedIconEl && window._cachedIconEl.dataset.weatherCode) {
+      const temperature = window._cachedTempEl.textContent;
+      const weatherCode = parseInt(window._cachedIconEl.dataset.weatherCode);
 
       if (weatherConditionsForTitle[weatherCode]) {
         weatherString = ` • ${temperature} ${weatherConditionsForTitle[weatherCode].icon}`;
@@ -84,7 +93,13 @@ function updateTitle() {
     }
   }
 
-  document.title = `${titlePrefix}${timeString}${weatherString}`;
+  // OPTIMIZATION: Only write to DOM if a string segment has actually changed
+  if (lastTitleData.prefix !== titlePrefix || lastTitleData.time !== timeString || lastTitleData.weather !== weatherString) {
+      document.title = `${titlePrefix}${timeString}${weatherString}`;
+      lastTitleData.prefix = titlePrefix;
+      lastTitleData.time = timeString;
+      lastTitleData.weather = weatherString;
+  }
 }
 
 function createShapedFavicon(source, shape) {
@@ -168,7 +183,7 @@ function createCompositeFavicon(sources) {
 
 async function restoreCorrectFavicon(forceAppUrl = null) {
     // 1. Priority: Media (Square)
-    if (activeMediaSessionApp && mediaSessionStack.length > 0) {
+    if (typeof activeMediaSessionApp !== 'undefined' && activeMediaSessionApp && typeof mediaSessionStack !== 'undefined' && mediaSessionStack.length > 0) {
         const session = mediaSessionStack.find(s => s.appName === activeMediaSessionApp);
         if (session?.metadata?.artwork?.[0]?.src) {
             const url = session.metadata.artwork[0].src;
@@ -206,10 +221,9 @@ async function restoreCorrectFavicon(forceAppUrl = null) {
     // 3. Priority: Current App (Circle)
     let targetUrl = forceAppUrl;
     
-    // If no forced URL provided, try to find it in DOM
-    if (!targetUrl) {
-        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (openEmbed) targetUrl = openEmbed.dataset.embedUrl;
+    // If no forced URL provided, use global state
+    if (!targetUrl && window.currentActiveAppUrl) {
+        targetUrl = window.currentActiveAppUrl;
     }
 
     if (targetUrl) {
@@ -306,8 +320,20 @@ async function updateFavicon(url, round = true) {
     }
 }
 
-// Start an interval to update the title
-setInterval(updateTitle, 1000);
+// Recursively update title based on whether seconds are needed
+function startSynchronizedTitle() {
+    updateTitle();
+    const now = new Date();
+    
+    // IDLE OPTIMIZATION: Only update once per minute if seconds are not displayed
+    const isShowingSeconds = typeof showSeconds !== 'undefined' ? showSeconds : true;
+    const delay = isShowingSeconds 
+        ? (1000 - now.getMilliseconds()) 
+        : ((60 - now.getSeconds()) * 1000 - now.getMilliseconds());
+        
+    setTimeout(startSynchronizedTitle, delay);
+}
+startSynchronizedTitle();
 
 function isFullScreen() {
   return (

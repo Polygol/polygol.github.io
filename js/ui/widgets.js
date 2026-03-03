@@ -59,7 +59,7 @@ function adjustWidgetsForViewportResize() {
         widget.x = Math.max(MARGIN, Math.min(widget.x, maxX));
         widget.y = Math.max(MARGIN, Math.min(widget.y, maxY));
 
-        // Check if the position was changed
+        // Check if the position was changedb
         if (widget.x !== originalX || widget.y !== originalY) {
             hasChanges = true;
         }
@@ -71,14 +71,20 @@ function adjustWidgetsForViewportResize() {
     }
 }
 
+let resizeDebounceTimer = null;
 function handleViewportResize() {
-    const smartZoomPref = localStorage.getItem('smartDisplayZoom');
-    if (smartZoomPref === 'true' || smartZoomPref === null) {
-        const smartScale = calculateSmartZoom();
-        document.body.style.zoom = `${smartScale}%`;
-    }
-    adjustWidgetsForViewportResize(); // First, fix the data
-    renderWidgets();                  // Then, re-render with the corrected data
+    clearTimeout(resizeDebounceTimer);
+    resizeDebounceTimer = setTimeout(() => {
+        const smartZoomPref = localStorage.getItem('smartDisplayZoom');
+        if (smartZoomPref === 'true' || smartZoomPref === null) {
+            const smartScale = calculateSmartZoom();
+            document.body.style.zoom = `${smartScale}%`;
+        }
+        if (typeof activeWidgets !== 'undefined' && activeWidgets.length > 0) {
+            adjustWidgetsForViewportResize(); 
+            renderWidgets();                  
+        }
+    }, 150); // Wait 150ms after resizing stops before recalculating layout
 }
 
 function saveWidgets() {
@@ -172,6 +178,7 @@ function renderWidgets() {
 
     const SNAP_DISTANCE = 15;
     const widgetElements = new Map();
+    const fragment = document.createDocumentFragment();
 
     // 1. Create and position all widget elements from the activeWidgets array
     activeWidgets.forEach((widget, index) => {
@@ -235,9 +242,11 @@ function renderWidgets() {
         
         instance.appendChild(overlay);
         instance.appendChild(resizeHandle);
-        gridContainer.appendChild(instance);
+        fragment.appendChild(instance);
         widgetElements.set(index.toString(), instance);
     });
+    
+    gridContainer.appendChild(fragment);
 
     // Trigger snapshot update for remote
     if (window.WavesHost) {
@@ -367,6 +376,10 @@ function renderWidgets() {
             rotateHandle.addEventListener('touchstart', onRotateStart, { passive: false });
         }
 
+        // CACHE variables for layout thrashing prevention
+        let cachedGridRect, cachedGridW, cachedGridH, cachedOtherWidgets, cachedDraggedRect;
+        let dragAnimationFrame = null;
+
         const onDragStart = (e) => {
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -377,6 +390,23 @@ function renderWidgets() {
             initialMouseY = clientY;
             initialWidgetX = instance.offsetLeft;
             initialWidgetY = instance.offsetTop;
+            
+            // PRE-CALCULATE all static bounds ONCE to prevent Layout Thrashing during move
+            cachedGridRect = gridContainer.getBoundingClientRect();
+            cachedGridW = gridContainer.offsetWidth;
+            cachedGridH = gridContainer.offsetHeight;
+            cachedDraggedRect = { w: instance.offsetWidth, h: instance.offsetHeight };
+            
+            cachedOtherWidgets = [];
+            widgetElements.forEach((otherInstance, otherIndexKey) => {
+                if (indexKey === otherIndexKey) return;
+                cachedOtherWidgets.push({
+                    left: otherInstance.offsetLeft,
+                    top: otherInstance.offsetTop,
+                    width: otherInstance.offsetWidth,
+                    height: otherInstance.offsetHeight
+                });
+            });
 
             longPressTimer = setTimeout(() => {
                 longPressFired = true;
@@ -402,35 +432,32 @@ function renderWidgets() {
 
             if (!isDragging) return;
 
-            let newX = initialWidgetX + (clientX - initialMouseX);
-            let newY = initialWidgetY + (clientY - initialMouseY);
+            // THROTTLE with requestAnimationFrame
+            if (dragAnimationFrame) return;
+            dragAnimationFrame = requestAnimationFrame(() => {
+                dragAnimationFrame = null;
 
-            // --- JS-Controlled Spacing & Snapping ---
-            snapLineV.style.display = 'none';
-            snapLineH.style.display = 'none';
-            
-            // --- FIX: Get the grid's current position on every move event ---
-            const gridRect = gridContainer.getBoundingClientRect();
+                let newX = initialWidgetX + (clientX - initialMouseX);
+                let newY = initialWidgetY + (clientY - initialMouseY);
 
-            let finalX = newX;
-            let finalY = newY;
-            const draggedRect = { w: instance.offsetWidth, h: instance.offsetHeight };
-
-            // Find the single best snap point for each axis
-            let bestX = { dist: SNAP_DISTANCE, pos: newX };
-            let bestY = { dist: SNAP_DISTANCE, pos: newY };
-
-            // 1. Check against other widgets using their direct offset properties for accuracy
-            widgetElements.forEach((otherInstance, otherIndexKey) => {
-                if (indexKey === otherIndexKey) return;
+                snapLineV.style.display = 'none';
+                snapLineH.style.display = 'none';
                 
-                // Use offsetLeft/Top which are relative to the grid container, avoiding conversion errors.
-                const otherLeft = otherInstance.offsetLeft;
-                const otherTop = otherInstance.offsetTop;
-                const otherRight = otherInstance.offsetLeft + otherInstance.offsetWidth;
-                const otherBottom = otherInstance.offsetTop + otherInstance.offsetHeight;
-                const otherCenterX = otherLeft + otherInstance.offsetWidth / 2;
-                const otherCenterY = otherTop + otherInstance.offsetHeight / 2;
+                let finalX = newX;
+                let finalY = newY;
+
+                // Find the single best snap point for each axis
+                let bestX = { dist: SNAP_DISTANCE, pos: newX };
+                let bestY = { dist: SNAP_DISTANCE, pos: newY };
+
+                // 1. Check against other widgets using CACHED properties
+                cachedOtherWidgets.forEach((other) => {
+                    const otherLeft = other.left;
+                    const otherTop = other.top;
+                    const otherRight = other.left + other.width;
+                    const otherBottom = other.top + other.height;
+                    const otherCenterX = otherLeft + other.width / 2;
+                    const otherCenterY = otherTop + other.height / 2;
 
                 const xPoints = [
                     otherLeft, otherRight - draggedRect.w, otherCenterX - draggedRect.w / 2, // Flush
@@ -450,46 +477,39 @@ function renderWidgets() {
                     if (dist < bestY.dist) bestY = { dist, pos: p };
                 }
             });
-            
-            // 2. Check against grid container edges
-            const gridW = gridContainer.offsetWidth;
-            const gridH = gridContainer.offsetHeight;
-            const screenXPoints = [MARGIN, gridW - draggedRect.w - MARGIN];
+
+            // 2. Check against grid container edges using CACHED sizes
+            const screenXPoints = [MARGIN, cachedGridW - cachedDraggedRect.w - MARGIN];
             for (const p of screenXPoints) {
                 const dist = Math.abs(newX - p);
                 if (dist < bestX.dist) bestX = { dist, pos: p };
             }
-            const screenYPoints = [MARGIN, gridH - draggedRect.h - MARGIN];
+            const screenYPoints = [MARGIN, cachedGridH - cachedDraggedRect.h - MARGIN];
             for (const p of screenYPoints) {
                 const dist = Math.abs(newY - p);
                 if (dist < bestY.dist) bestY = { dist, pos: p };
             }
 
-            // 3. Apply the winning snaps and draw the guide lines in the correct coordinate space
+            // 3. Apply the winning snaps and draw the guide lines
             if (bestX.dist < SNAP_DISTANCE) {
                 finalX = bestX.pos;
-                // FIX: Offset the fixed-position snap line by the grid's viewport position
-                snapLineV.style.left = `${finalX + gridRect.left}px`;
+                snapLineV.style.left = `${finalX + cachedGridRect.left}px`;
                 snapLineV.style.display = 'block';
             }
             if (bestY.dist < SNAP_DISTANCE) {
                 finalY = bestY.pos;
-                // FIX: Offset the fixed-position snap line by the grid's viewport position
-                snapLineH.style.top = `${finalY + gridRect.top}px`;
+                snapLineH.style.top = `${finalY + cachedGridRect.top}px`;
                 snapLineH.style.display = 'block';
             }
 			
-            // Boundary and Clock Collision Check
-            const clockRect = document.querySelector('.container').getBoundingClientRect();
-            
-            // Grid boundary clamp (keep inside screen)
-            finalX = Math.max(MARGIN, Math.min(finalX, gridContainer.offsetWidth - instance.offsetWidth - MARGIN));
-            finalY = Math.max(MARGIN, Math.min(finalY, gridContainer.offsetHeight - instance.offsetHeight - MARGIN));
-
-            const widgetRect = { left: finalX, top: finalY, right: finalX + instance.offsetWidth, bottom: finalY + instance.offsetHeight };
+            // Grid boundary clamp (keep inside screen) using CACHED sizes
+            finalX = Math.max(MARGIN, Math.min(finalX, cachedGridW - cachedDraggedRect.w - MARGIN));
+            finalY = Math.max(MARGIN, Math.min(finalY, cachedGridH - cachedDraggedRect.h - MARGIN));
 
 			instance.style.left = `${finalX}px`;
             instance.style.top = `${finalY}px`;
+            
+            }); // End requestAnimationFrame
         };
 		
         const onDragEnd = () => {

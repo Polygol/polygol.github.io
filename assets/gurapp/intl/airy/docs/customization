@@ -1,0 +1,40 @@
+<div style="text-align: center; max-width: 500px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+    <img src="https://polygol.github.io/assets/appicon/feedback.png" style="width: 64px; height: 64px; margin-bottom: 20px; border-radius: 50%;">
+    <h1 style="margin: 0 0 10px 0; font-weight: 600;">Customization</h1>
+    <p style="opacity: 0.8; font-size: 1.1rem; line-height: 1.5; margin-bottom: 30px;">
+        Make Polygol yours. The environment adapts to your style.
+    </p>
+
+    <div style="text-align: left; margin-bottom: 30px;">
+        <h3 style="margin-bottom: 10px;">Wallpapers</h3>
+        <p style="opacity: 0.8; margin-bottom: 15px;">
+            Open Controls and select Wallpaper to upload images or videos. If you upload multiple files, they will automatically play as a slideshow.
+        </p>
+
+        <h3 style="margin-bottom: 10px;">Clock Styles</h3>
+        <p style="opacity: 0.8; margin-bottom: 15px;">
+            Change the font, weight, color, and size of the clock directly from the Controls menu. You can even create a stacked layout.
+        </p>
+
+        <h3 style="margin-bottom: 10px;">Widgets</h3>
+        <p style="opacity: 0.8; margin-bottom: 15px;">
+            Polygol supports a simple weather widget that appear automatically when needed. Toggle them in Controls.
+        </p>
+    </div>
+
+    <button onclick="minimizeFullscreenEmbed(); document.getElementById('persistent-clock').click();" style="
+        padding: 12px 24px; 
+        border-radius: 20px; 
+        background: var(--search-background); 
+        color: var(--text-color); 
+        border: 1px solid var(--glass-border); 
+        font-size: 1rem; 
+        font-weight: 500; 
+        cursor: pointer; 
+        display: inline-flex; 
+        align-items: center; 
+        gap: 8px;
+        font-family: 'Inter';">
+        Try customization
+    </button>
+</div>

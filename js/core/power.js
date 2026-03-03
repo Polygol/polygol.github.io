@@ -81,6 +81,9 @@ async function applyWakeLockSettings() {
 function blackoutScreen() {
     // FIX: Don't re-apply if already in blackout mode
     if (document.body.classList.contains('blackout-active')) return;
+    
+    window.isBlackoutActive = true;
+    if (typeof updateClockAndDate === 'function') updateClockAndDate();
 
     closeControls();
 
@@ -147,6 +150,10 @@ function blackoutScreen() {
 }
 
 function exitBlackoutMode() {
+    window.isBlackoutActive = false;
+    // Force immediate clock update to bring seconds back to the UI seamlessly
+    if (typeof updateClockAndDate === 'function') updateClockAndDate();
+    
     // Restore previous settings
     setControlValueAndDispatch('highContrast', previousBlackoutSettings.highContrast || 'false');
     setControlValueAndDispatch('animationsEnabled', previousBlackoutSettings.animationsEnabled || 'true');

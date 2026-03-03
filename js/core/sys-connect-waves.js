@@ -151,6 +151,8 @@ async function broadcastWidgetSnapshots() {
         return;
     }
 
+    // OPTIMIZATION: Defer heavy canvas operations to idle periods
+    const requestIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
     const snapshots = [];
     // Determine background color based on theme to prevent transparency artifacts
     const isLight = document.body.classList.contains('light-theme');
@@ -184,24 +186,30 @@ async function broadcastWidgetSnapshots() {
                     img: cachedImg
                 });
             } else {
-                // Fallback: Capture container (might be white, but better than error)
+                // Fallback: Capture container
+                await new Promise(resolve => requestIdle(async () => {
+                    try {
+                        const canvas = await html2canvas(widget, options);
+                        snapshots.push({
+                            id: index,
+                            img: canvas.toDataURL('image/jpeg', 0.5)
+                        });
+                    } catch(e) {}
+                    resolve();
+                }));
+            }
+        } else {
+            // It's a sticker or simple element
+            await new Promise(resolve => requestIdle(async () => {
                 try {
                     const canvas = await html2canvas(widget, options);
                     snapshots.push({
                         id: index,
                         img: canvas.toDataURL('image/jpeg', 0.5)
                     });
-                } catch(e) {}
-            }
-        } else {
-            // It's a sticker or simple element
-            try {
-                const canvas = await html2canvas(widget, options);
-                snapshots.push({
-                    id: index,
-                    img: canvas.toDataURL('image/jpeg', 0.5)
-                });
-            } catch (e) {}
+                } catch (e) {}
+                resolve();
+            }));
         }
     }
     

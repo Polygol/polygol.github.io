@@ -1,20 +1,42 @@
 const SoundManager = {
-    sounds: {
-        'select': new Audio('/assets/sound/ui/select.mp3'),    // Standard Button
-        'toggle': new Audio('/assets/sound/ui/seltoggle.mp3'), // Switches
-        'check': new Audio('/assets/sound/ui/check.mp3'),      // Checkboxes
-        'open': new Audio('/assets/sound/ui/in.mp3'),          // Drawer/App Open
-        'close': new Audio('/assets/sound/ui/out.mp3'),        // Drawer/App Close
-        'popup': new Audio('/assets/sound/ui/popup.mp3'),      // Alerts/Modals
-        'error': new Audio('/assets/sound/ui/tone2.mp3'),      // Errors
-        'success': new Audio('/assets/sound/ui/tone1.mp3'),    // Success
-        'type': new Audio('/assets/sound/ui/mecha.mp3'),       // Input focus/typing
-        'expand': new Audio('/assets/sound/ui/tridown.mp3'),   // Dropdowns open
-        'collapse': new Audio('/assets/sound/ui/tripuck.mp3'), // Dropdowns close
-        'delay': new Audio('/assets/sound/ui/seldelay.mp3')
+    audioCtx: null,
+    buffers: {},
+    soundPaths: {
+        'select': '/assets/sound/ui/select.mp3',
+        'toggle': '/assets/sound/ui/seltoggle.mp3',
+        'check': '/assets/sound/ui/check.mp3',
+        'open': '/assets/sound/ui/in.mp3',
+        'close': '/assets/sound/ui/out.mp3',
+        'popup': '/assets/sound/ui/popup.mp3',
+        'error': '/assets/sound/ui/tone2.mp3',
+        'success': '/assets/sound/ui/tone1.mp3',
+        'type': '/assets/sound/ui/mecha.mp3',
+        'expand': '/assets/sound/ui/tridown.mp3',
+        'collapse': '/assets/sound/ui/tripuck.mp3',
+        'delay': '/assets/sound/ui/seldelay.mp3'
     },
 
-    play: function(type) {
+    init() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.audioCtx = new AudioContext();
+            
+            // Preload all sounds directly into RAM buffers to avoid OS media hooks
+            for (const [key, path] of Object.entries(this.soundPaths)) {
+                fetch(path)
+                    .then(response => response.arrayBuffer())
+                    .then(arrayBuffer => this.audioCtx.decodeAudioData(arrayBuffer))
+                    .then(audioBuffer => {
+                        this.buffers[key] = audioBuffer;
+                    })
+                    .catch(err => console.warn(`Failed to load sound ${key}`, err));
+            }
+        } catch (e) {
+            console.warn("Web Audio API not supported", e);
+        }
+    },
+
+    play(type) {
         // 1. Check Global Settings
         const mode = localStorage.getItem('uiSoundMode') || 'silent_off';
         const isSilent = localStorage.getItem('silentMode') === 'true';
@@ -22,21 +44,30 @@ const SoundManager = {
         if (mode === 'always_off') return;
         if (mode === 'silent_off' && isSilent) return;
 
-        // 2. Play Sound
-        const audio = this.sounds[type];
-        if (audio) {
-            // Clone to allow rapid-fire playback (overlapping sounds)
-            const clone = audio.cloneNode();
+        // 2. Play via Web Audio API (Prevents Media Session takeover)
+        if (this.audioCtx && this.buffers[type]) {
+            // Browser policy workaround (must be resumed on interaction)
+            if (this.audioCtx.state === 'suspended') {
+                this.audioCtx.resume();
+            }
             
-            // Apply volume setting (default 40%)
+            const source = this.audioCtx.createBufferSource();
+            source.buffer = this.buffers[type];
+            
+            const gainNode = this.audioCtx.createGain();
             const volSetting = localStorage.getItem('sfxVolume');
             const volume = volSetting ? parseInt(volSetting) / 100 : 0.4;
-            clone.volume = Math.max(0, Math.min(1, volume));
+            gainNode.gain.value = Math.max(0, Math.min(1, volume));
             
-            clone.play().catch(e => { /* Ignore autoplay blocks */ });
+            source.connect(gainNode);
+            gainNode.connect(this.audioCtx.destination);
+            source.start(0);
         }
     }
 };
+
+// Initialize immediately on file load
+SoundManager.init();
 
 window.SoundManager = SoundManager; // Expose to global scope for API access
 

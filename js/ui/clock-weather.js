@@ -39,22 +39,36 @@ function getCurrentTime24() {
     return `${hours}:${minutes}:${seconds}`;
 }
 
+// DOM Cache for the clock loop to prevent 10 DOM queries every second
+const clockCache = { elements: {} };
+function getCachedElement(id, selector = false) {
+    if (!clockCache.elements[id] || !document.body.contains(clockCache.elements[id])) {
+        clockCache.elements[id] = selector ? document.querySelector(id) : document.getElementById(id);
+    }
+    return clockCache.elements[id];
+}
+
 function updateClockAndDate() {
-    let clockElement = document.getElementById('clock');
-    let dateElement = document.getElementById('date');
-    let modalTitle = document.querySelector('#customizeModal h3');
+    const clockElement = getCachedElement('clock');
+    const dateElement = getCachedElement('date');
+    const modalTitle = getCachedElement('#customizeModal h3', true);
     if (!clockElement || !dateElement) return;
 
-    const fontSelect = document.getElementById('font-select');
-    const roundnessSlider = document.getElementById('roundness-slider');
-    const hourSwitch = document.getElementById('hour-switch');
-    const secondsSwitch = document.getElementById('seconds-switch');
+    const fontSelect = getCachedElement('font-select');
+    const roundnessSlider = getCachedElement('roundness-slider');
+    const hourSwitch = getCachedElement('hour-switch');
+    const clockFormatInput = getCachedElement('clock-format-input');
+    const dateFormatInput = getCachedElement('date-format-input');
 
 	const now = moment();
 
-    // Get formats directly from the input fields, which hold the wallpaper-specific settings.
-    let clockFormat = document.getElementById('clock-format-input').value;
-    let dateFormat = document.getElementById('date-format-input').value;
+    // Prevent empty strings from causing ISO date flashes during boot
+    let clockFormat = (clockFormatInput && clockFormatInput.value) ? clockFormatInput.value : (localStorage.getItem('use12HourFormat') === 'true' ? 'h:mm:ss A' : 'HH:mm:ss');
+    let dateFormat = (dateFormatInput && dateFormatInput.value) ? dateFormatInput.value : (localStorage.getItem('dateFormat') || 'dddd, MMMM D');
+
+    if (window.isBlackoutActive) {
+        clockFormat = clockFormat.replace(/[:.]ss/, '').replace(/ss/, '');
+    }
 
     // Handle literal text escaping (convert ```text``` to [text] for moment.js)
     if (clockFormat) clockFormat = clockFormat.replace(/```(.*?)```/g, '[$1]');
@@ -64,7 +78,7 @@ function updateClockAndDate() {
     const formattedDate = now.format(dateFormat);
     
     // Condition for special AM/PM font
-    const useOpenRundeForAmPm = hourSwitch.checked && 
+    const useOpenRundeForAmPm = hourSwitch && hourSwitch.checked && 
                                 fontSelect && fontSelect.value === 'Inter' && 
                                 roundnessSlider && parseInt(roundnessSlider.value, 10) > 0;
     
@@ -95,7 +109,19 @@ function updateClockAndDate() {
         return wrappedTime;
     }
     
-    const isStacked = document.getElementById('clock-stack-switch')?.checked;
+    // Trust recentWallpapers/localStorage during early boot before the switch is populated by JS
+    let isStacked = false;
+    const stackSwitch = document.getElementById('clock-stack-switch');
+    if (window.recentWallpapers && window.recentWallpapers.length > 0 && window.recentWallpapers[window.currentWallpaperPosition]) {
+        isStacked = window.recentWallpapers[window.currentWallpaperPosition].clockStyles?.stackEnabled === true;
+    } else {
+        isStacked = localStorage.getItem('stackEnabled') === 'true';
+    }
+    
+    // If DOM is fully loaded and switch exists, it becomes the source of truth for the UI
+    if (stackSwitch && document.readyState === 'complete') {
+        isStacked = stackSwitch.checked;
+    }
     
     if (isStacked) {
         let html = '';
@@ -148,10 +174,18 @@ function startSynchronizedClockAndDate() {
     updateClockAndDate(); 
     
     const now = new Date();
-    const msUntilNextSecond = 1000 - now.getMilliseconds();
+    let delay;
     
-    // Recursive setTimeout recalculates the exact offset every second, eliminating drift
-    setTimeout(startSynchronizedClockAndDate, msUntilNextSecond);
+    // If we aren't showing seconds (or screen is asleep), sleep the CPU until the next minute starts.
+    const isShowingSeconds = typeof showSeconds !== 'undefined' ? showSeconds : true;
+    if (isShowingSeconds && !window.isBlackoutActive) {
+        delay = 1000 - now.getMilliseconds();
+    } else {
+        delay = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+    }
+    
+    // Recursive setTimeout eliminates drift
+    setTimeout(startSynchronizedClockAndDate, delay);
 }
 startSynchronizedClockAndDate();
 
