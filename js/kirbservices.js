@@ -15,7 +15,7 @@ window.Analytics = {
         const setupComplete = localStorage.getItem('hasVisitedBefore') === 'true';
         if (!setupComplete) return;
 
-        const enabled = localStorage.getItem('telemetryEnabled') !== 'false';
+        const enabled = localStorage.getItem('telemetryEnabled') === 'true';
         if (!enabled) return;
 
         if (!document.getElementById('goatcounter-script')) {
