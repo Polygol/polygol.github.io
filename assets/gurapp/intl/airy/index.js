@@ -354,6 +354,21 @@ function updatePersistentClock() {
     
     // Initial update
     updatePersistentClock();
+
+    function applySysWallpaper() {
+        document.body.style.backgroundImage = `url('/assets/gurapp/intl/airy/img.jpg') !important`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        
+        if (recentWallpapers.length === 0) {
+            recentWallpapers.push({
+                url: WALLPAPER_URL,
+                clockStyles: {} 
+            });
+        }
+    }
+
+    applySysWallpaper();
 }); 
 
 // Function to check if it's daytime (between 6:00 and 18:00)
