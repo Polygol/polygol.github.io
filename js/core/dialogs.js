@@ -25,13 +25,25 @@ function _displayDialog(options) {
         dialogOpenTimeout = null;
     }
 
-    if (options.type === 'confirm') {
-        title.textContent = options.message || '';
-        message.textContent = '';
-    } else {
-        title.textContent = options.title || '';
-        message.textContent = options.message || '';
+    let displayTitle = options.title;
+    let displayMessage = options.message;
+
+    // If a dialog has a message but no title, apply the message as the title and leave the message blank
+    if (!displayTitle && displayMessage) {
+        displayTitle = displayMessage;
+        displayMessage = '';
     }
+    
+    // Legacy handling: Confirm dialogs default to the title 'Confirm'. 
+    // We promote the question to the title for better visual hierarchy if it's using the default.
+    if (options.type === 'confirm' && displayTitle === 'Confirm' && displayMessage) {
+        displayTitle = displayMessage;
+        displayMessage = '';
+    }
+
+    title.textContent = displayTitle || '';
+    message.textContent = displayMessage || '';
+    
     buttons.innerHTML = '';
     promptContainer.style.display = 'none';
 

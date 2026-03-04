@@ -1,21 +1,30 @@
-// --- Permission Model ---
-// Maps trusted app IDs to their permission levels.
-const TRUSTED_APP_PERMISSIONS = {
-    'Settings': ['system-admin'], // Full access to everything, needs permissions to change settings
-    'Terminal': ['system-admin'], // Full access to everything
-    'Donburi': ['system-admin'], // Full access to everything
-    'kirbStore': ['app-management']  // Can only manage apps
-};
-
-// Maps function names to the required permission level.
-// Functions not listed here are considered "public" and can be called by any app.
-const FUNCTION_PERMISSIONS = {
-    // App Management Permissions
+// --- Dynamic Permission Model ---
+const PERMISSION_MAPPINGS = {
+    // Direct Actions
+    'requestFileUpload': 'file-upload',
+    
+    // API Functions
+    'showNotification': 'notifications',
+    'startLiveActivity': 'live-activity',
+    'updateLiveActivity': 'live-activity',
+    'stopLiveActivity': 'live-activity',
+    'setImmersiveMode': 'immersive-mode',
+    'registerWidget': 'widgets',
+    'registerMediaSession': 'media-session',
+    'clearMediaSession': 'media-session',
+    'updateMediaPlaybackState': 'media-session',
+    'updateMediaProgress': 'media-session',
+    'speakText': 'tts',
+    'setRemoteUI': 'waves',
+    'sendRemoteUpdate': 'waves',
+    'playUiSound': 'ui-sounds',
+    
+    // App Management
     'installApp': 'app-management',
     'deleteApp': 'app-management',
-    'requestInstalledApps': 'app-management', // Let kirbStore see what's installed
-
-    // System Admin Permissions (Terminal Only)
+    'requestInstalledApps': 'app-management',
+    
+    // System Admin (Root)
     'getLocalStorageItem': 'system-admin',
     'setLocalStorageItem': 'system-admin',
     'removeLocalStorageItem': 'system-admin',
@@ -36,13 +45,85 @@ const FUNCTION_PERMISSIONS = {
     'setIDBRecord': 'system-admin',
     'removeIDBRecord': 'system-admin',
     'clearIDBStore': 'system-admin',
-	'deleteIDBDatabase': 'system-admin',
-	'getLocalStorageAll': 'system-admin',
+    'deleteIDBDatabase': 'system-admin',
+    'getLocalStorageAll': 'system-admin',
     'listCaches': 'system-admin',
-	'deleteCache': 'system-admin',
+    'deleteCache': 'system-admin',
     'forceUpdatePolygol': 'system-admin',
-    'clearAllNotifications': 'system-admin'
+    'clearAllNotifications': 'system-admin',
+    'forceCloseAppByName': 'app-management',
+    'clearAppData': 'app-management'
 };
+
+const PERMISSION_NAMES = {
+    'notifications': 'send notifications',
+    'live-activity': 'show live activities',
+    'immersive-mode': 'hide system UI',
+    'file-upload': 'access your files',
+    'widgets': 'register dashboard widgets',
+    'media-session': 'control media playback',
+    'tts': 'use text-to-speech',
+    'waves': 'connect to Waves remotes',
+    'ui-sounds': 'play system sound effects',
+    'app-management': 'manage installed apps',
+    'system-admin': 'modify core system settings (root access)'
+};
+
+// Lock mechanism to prevent spamming the user if an app fires 5 requests at once
+const _pendingPermissionRequests = {};
+
+async function checkAppPermission(sourceAppId, targetAction, origin) {
+    const requiredPerm = PERMISSION_MAPPINGS[targetAction];
+    if (!requiredPerm) return true; // No permission required for this action
+
+    // Security Hardening: system-admin ALWAYS requires trusted origin
+    if (requiredPerm === 'system-admin') {
+        const trustedOrigins = [window.location.origin, 'https://polygol.github.io'];
+        if (!trustedOrigins.includes(origin)) {
+            console.error(`[Security] Blocked system-admin from untrusted origin: ${origin}`);
+            return false;
+        }
+    }
+
+    let perms = JSON.parse(localStorage.getItem('appPermissions') || '{}');
+    if (!perms[sourceAppId]) perms[sourceAppId] = {};
+
+    let status = perms[sourceAppId][requiredPerm];
+
+    // Auto-grant for trusted internal system apps to prevent annoying the user
+    const systemApps = ['Settings', 'Terminal', 'Donburi', 'kirbStore'];
+    if (systemApps.includes(sourceAppId) && (origin === window.location.origin || origin.startsWith('internal://'))) {
+        return true;
+    }
+
+    if (status === 'granted') return true;
+    if (status === 'denied') return false;
+
+    // Check if we are already asking the user for this exact permission right now
+    const requestKey = `${sourceAppId}_${requiredPerm}`;
+    if (_pendingPermissionRequests[requestKey]) {
+        // Wait for the existing dialogue to finish instead of spawning a new one
+        return await _pendingPermissionRequests[requestKey];
+    }
+
+    // Pause execution and prompt the user, storing the promise in our lock map
+    const friendlyName = PERMISSION_NAMES[requiredPerm] || requiredPerm;
+    
+    _pendingPermissionRequests[requestKey] = showCustomConfirm(`Allow "${sourceAppId}" to ${friendlyName}?`, 'Permission Request')
+        .then(allowed => {
+            // Save choice so we don't ask again across reboots
+            let currentPerms = JSON.parse(localStorage.getItem('appPermissions') || '{}');
+            if (!currentPerms[sourceAppId]) currentPerms[sourceAppId] = {};
+            currentPerms[sourceAppId][requiredPerm] = allowed ? 'granted' : 'denied';
+            localStorage.setItem('appPermissions', JSON.stringify(currentPerms));
+            
+            // Clear the lock
+            delete _pendingPermissionRequests[requestKey];
+            return allowed;
+        });
+
+    return await _pendingPermissionRequests[requestKey];
+}
 
 function getLocalStorageItem(key) {
     return localStorage.getItem(key);
@@ -705,6 +786,32 @@ window.addEventListener('message', async (event) => { // Make listener async
                 _updateActiveMediaSession();
             }
         },
+        forceCloseAppByName: (appName) => {
+            const app = apps[appName];
+            if (app && app.url) {
+                forceCloseApp(app.url);
+                return `Force closed ${appName}`;
+            }
+            return `App not running or not found`;
+        },
+        clearAppTrackingData: (appName) => {
+            // Clear usage tracking
+            if (typeof appUsage !== 'undefined') {
+                delete appUsage[appName];
+                localStorage.setItem('appUsage', JSON.stringify(appUsage));
+            }
+            if (typeof appLastOpened !== 'undefined') {
+                delete appLastOpened[appName];
+                localStorage.setItem('appLastOpened', JSON.stringify(appLastOpened));
+            }
+            // Clear permissions
+            let perms = JSON.parse(localStorage.getItem('appPermissions') || '{}');
+            if (perms[appName]) {
+                delete perms[appName];
+                localStorage.setItem('appPermissions', JSON.stringify(perms));
+            }
+            return `Cleared OS data and permissions for ${appName}`;
+        },
 		installApp, 
 		deleteApp,
 		requestInstalledApps, 
@@ -774,6 +881,17 @@ window.addEventListener('message', async (event) => { // Make listener async
     const data = event.data;
     const sourceWindow = event.source;
 
+    // Identify App Identity safely once at the top
+    let sourceAppId = null;
+    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    for (const iframe of iframes) {
+        if (iframe.contentWindow === sourceWindow) {
+            sourceAppId = iframe.dataset.appId;
+            break;
+        }
+    }
+    if (!sourceAppId) sourceAppId = 'Untrusted Source';
+
 	// Handle API presence handshake to prevent legacy mode
 	if (data.type === 'gurasuraisu-api-present') {
 	    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
@@ -812,19 +930,16 @@ window.addEventListener('message', async (event) => { // Make listener async
     }
 
     if (data.action === 'requestFileUpload') {
+        // CHECK PERMISSIONS FIRST
+        const hasPerm = await checkAppPermission(sourceAppId, 'requestFileUpload', event.origin);
+        if (!hasPerm) {
+            sourceWindow.postMessage({ type: 'parentActionError', message: 'Permission denied: file-upload' }, event.origin);
+            return;
+        }
+
         // args: [{ accept, multiple, requestId }]
         const args = data.args[0];
         const { accept, multiple, requestId } = args;
-
-        // Identify App
-        let sourceAppId = 'Unknown';
-        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
-        for (const iframe of iframes) {
-            if (iframe.contentWindow === sourceWindow) {
-                sourceAppId = iframe.dataset.appId;
-                break;
-            }
-        }
 
         // Register callback to send data back to iframe
         // We use a unique ID combo to avoid collisions
@@ -1053,85 +1168,19 @@ window.addEventListener('message', async (event) => { // Make listener async
             return;
         }
 
-        // --- REVISED Security Check ---
-        const requiredPermission = FUNCTION_PERMISSIONS[funcName];
-
-		if (requiredPermission) {
-            // CRITICAL: Verify the origin of the message for sensitive commands
-            const trustedOrigins = [
-                window.location.origin,
-                'https://polygol.github.io'
-                // Add other trusted origins if necessary
-            ];
-            if (!trustedOrigins.includes(event.origin)) {
-                console.error(`[Polygol Security] Discarded sensitive command '${funcName}' from untrusted origin: ${event.origin}`);
-                if(sourceWindow) {
-                    sourceWindow.postMessage({ type: 'parentActionError', message: `Access Denied: Untrusted origin.` }, event.origin);
-                }
-                return; // Stop processing immediately.
+        // --- NEW: Interactive Security Check ---
+        const hasPerm = await checkAppPermission(sourceAppId, funcName, event.origin);
+        if (!hasPerm) {
+            if (sourceWindow) {
+                sourceWindow.postMessage({ type: 'parentActionError', message: `Permission Denied: ${PERMISSION_MAPPINGS[funcName]}` }, event.origin);
             }
-
-			let sourceAppId = null;
-            let sourceIframeUrl = null;
-            const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
-            for (const iframe of iframes) {
-                if (iframe.contentWindow === sourceWindow) {
-                    sourceAppId = iframe.dataset.appId;
-                    sourceIframeUrl = iframe.src;
-                    break;
-                }
-            }
-
-            const appPermissions = TRUSTED_APP_PERMISSIONS[sourceAppId] ||[];
-            
-            // Strict Origin verification for trusted apps
-            // Even if an app manages to spoof the data-app-id, it cannot spoof the iframe's actual src origin
-            let hasPermission = false;
-            if (appPermissions.length > 0) {
-                try {
-                    const srcUrl = new URL(sourceIframeUrl, window.location.origin);
-                    // Ensure trusted apps requesting high privileges are running from the system's own secure origin
-                    if (srcUrl.origin === window.location.origin) {
-                        hasPermission = appPermissions.includes(requiredPermission) || appPermissions.includes('system-admin');
-                    } else {
-                        console.error(`[Security] App '${sourceAppId}' requested elevated permissions but is running from an untrusted origin: ${srcUrl.origin}`);
-                    }
-                } catch(e) {
-                    hasPermission = false;
-                }
-            }
-
-            // Check if the app has the specific permission OR the admin permission
-            if (!hasPermission) {
-                const errorMessage = `SECURITY VIOLATION: App '${sourceAppId || 'Unknown'}' attempted to call function '${funcName}' without required permission '${requiredPermission}'. Access denied.`;
-                console.error(errorMessage);
-                if(sourceWindow) {
-                    sourceWindow.postMessage({ type: 'parentActionError', message: `Access Denied: Missing permission '${requiredPermission}'.` }, event.origin);
-                }
-                return; // Stop processing immediately.
-            }
-		}
+            return; // Stop execution immediately.
+        }
 
         const funcToCall = allowedFunctions[funcName];
 
         if (typeof funcToCall === 'function') {
 			try {
-                // Identity Enforcement & Hijacking Protection
-                let sourceAppId = null;
-                const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
-                for (const iframe of iframes) {
-                    if (iframe.contentWindow === sourceWindow) {
-                        sourceAppId = iframe.dataset.appId;
-                        break;
-                    }
-                }
-
-                // If the message comes from an untraceable source (nested iframe, worker, or popup),
-                // we assign it a hostile identity so it cannot bypass the enforcement block.
-                if (!sourceAppId) {
-                    sourceAppId = 'Untrusted Source';
-                }
-
 				const normalizedSourceId = sourceAppId.toLowerCase();
 
                 // 1. Notification Spoofing Protection

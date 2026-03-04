@@ -11,8 +11,9 @@ function initializeSettingsApp() {
         'main-settings': 'Settings',
         'page-display': 'Display',
         'page-sound': 'Sound & Haptics',
+        'page-apps': 'Apps',
+        'page-app-details': 'App Details',
         'page-homescreen': 'Home Screen',
-        'page-live-activities': 'Live Activities',
         'page-clock': 'Clock',
         'page-wallpaper': 'Wallpaper',
         'page-system': 'System',
@@ -291,45 +292,128 @@ function initializeSettingsApp() {
         }
     }
 
-    function refreshLiveActivitiesPage() {
-        const container = document.getElementById('live-activity-list-container');
-        const senders = JSON.parse(window.parent.localStorage.getItem('appsWithActivities') || '[]');
-        const blocked = JSON.parse(window.parent.localStorage.getItem('blockedActivities') || '[]');
-        
+    function refreshAppsListPage() {
+        const container = document.getElementById('apps-list-container');
         container.innerHTML = '';
-        if (senders.length === 0) {
-            container.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">No activities recorded.</p>';
+        
+        const perms = JSON.parse(window.parent.localStorage.getItem('appPermissions') || '{}');
+        const systemAppsObj = window.parent.apps || {};
+        const installedAppsObj = JSON.parse(window.parent.localStorage.getItem('userInstalledApps') || '{}');
+        
+        const allApps = new Set([...Object.keys(installedAppsObj), ...Object.keys(perms)]);
+        
+        const excludedApps = ['Settings', 'Terminal', 'Donburi', 'kirbStore', 'Apps'];
+        
+        if (allApps.size === 0) {
+            container.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">No installed apps found.</p>';
             return;
         }
 
-        senders.forEach(name => {
-            const item = document.createElement('div');
-            item.className = 'setting-item';
-            const isBlocked = blocked.includes(name);
+        allApps.forEach(appName => {
+            if (excludedApps.includes(appName)) return;
             
-            item.innerHTML = `
-                <div class="setting-info">
-                    <span class="setting-label">${name}</span>
-                </div>
-                <input type="checkbox" class="toggle-switch" ${!isBlocked ? 'checked' : ''}>
-            `;
+            const appDef = systemAppsObj[appName] || installedAppsObj[appName] || {};
+            let iconSrc = appDef.icon || 'system.png';
+            if (!iconSrc.startsWith('http') && !iconSrc.startsWith('/') && !iconSrc.startsWith('data:')) {
+                iconSrc = `/assets/appicon/${iconSrc}`;
+            }
 
-            const toggle = item.querySelector('input');
-            toggle.onchange = () => {
-                let currentBlocked = JSON.parse(window.parent.localStorage.getItem('blockedActivities') || '[]');
-                if (!toggle.checked) {
-                    if (!currentBlocked.includes(name)) currentBlocked.push(name);
-                } else {
-                    currentBlocked = currentBlocked.filter(n => n !== name);
-                }
-                window.parent.localStorage.setItem('blockedActivities', JSON.stringify(currentBlocked));
-                // Notify parent to stop current activities if blocked
-                if (!toggle.checked) {
-                    window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'stopActivitiesForApp', args: [name] }, '*');
-                }
-            };
+            const item = document.createElement('div');
+            item.className = 'setting-item nav-item';
+            item.innerHTML = `
+                <div class="setting-info" style="display: flex; align-items: center; gap: 12px; flex-direction: row;">
+                    <img src="${iconSrc}" style="width: 36px; height: 36px; border-radius: 35%; object-fit: cover; corner-shape: superellipse(1.25);">
+                    <span class="setting-label">${appName}</span>
+                </div>
+                <span class="material-symbols-rounded">arrow_forward_ios</span>
+            `;
+            item.onclick = () => openAppDetails(appName, appDef);
             container.appendChild(item);
         });
+    }
+
+    function openAppDetails(appName, appDef) {
+        // Setup Header
+        document.getElementById('detail-app-name').textContent = appName;
+        document.getElementById('detail-app-url').textContent = appDef.url || 'System App / Unknown URL';
+        
+        let iconSrc = appDef.icon || 'system.png';
+        if (!iconSrc.startsWith('http') && !iconSrc.startsWith('/') && !iconSrc.startsWith('data:')) {
+            iconSrc = `/assets/appicon/${iconSrc}`;
+        }
+        document.getElementById('detail-app-icon').src = iconSrc;
+        
+        // Buttons
+        document.getElementById('btn-app-force-stop').onclick = () => {
+            window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'forceCloseAppByName', args: [appName] }, '*');
+            Gurasuraisu.showPopup(`Force stopped ${appName}`);
+        };
+        
+        document.getElementById('btn-app-uninstall').onclick = async () => {
+            if (await Gurasuraisu.showConfirm(`Are you sure you want to uninstall ${appName}?`)) {
+                Gurasuraisu.deleteApp(appName);
+                navigateBack();
+                setTimeout(refreshAppsListPage, 300);
+            }
+        };
+
+        document.getElementById('btn-app-clear-tracking-data').onclick = async () => {
+            if (await Gurasuraisu.showConfirm(`Clear all tracking data and revoke all permissions for ${appName}?`)) {
+                window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'clearAppData', args: [appName] }, '*');
+                Gurasuraisu.showPopup(`Data cleared for ${appName}`);
+                openAppDetails(appName, appDef); // Refresh view to update toggles
+            }
+        };
+
+        // Permissions List
+        const permContainer = document.getElementById('detail-app-permissions');
+        permContainer.innerHTML = '';
+
+        const availablePerms = [
+            { id: 'notifications', name: 'Notifications' },
+            { id: 'live-activity', name: 'Live Activities' },
+            { id: 'immersive-mode', name: 'Immersive mode' },
+            { id: 'file-upload', name: 'File access' },
+            { id: 'widgets', name: 'Widgets' },
+            { id: 'media-session', name: 'Media session' },
+            { id: 'tts', name: 'Text-to-Speech' },
+            { id: 'waves', name: 'Waves remote' },
+            { id: 'ui-sounds', name: 'Sound effects' },
+            { id: 'app-management', name: 'App management' },
+            { id: 'system-admin', name: 'Modify core system settings (root access)' }
+        ];
+
+        let currentPerms = JSON.parse(window.parent.localStorage.getItem('appPermissions') || '{}');
+        let appPerms = currentPerms[appName] || {};
+
+        availablePerms.forEach(p => {
+            const isGranted = appPerms[p.id] === 'granted';
+            
+            const item = document.createElement('div');
+            item.className = 'setting-item';
+            item.innerHTML = `
+                <span class="setting-label">${p.name}</span>
+                <input type="checkbox" class="toggle-switch" ${isGranted ? 'checked' : ''}>
+            `;
+            
+            item.querySelector('input').onchange = (e) => {
+                currentPerms = JSON.parse(window.parent.localStorage.getItem('appPermissions') || '{}');
+                if (!currentPerms[appName]) currentPerms[appName] = {};
+                currentPerms[appName][p.id] = e.target.checked ? 'granted' : 'denied';
+                window.parent.localStorage.setItem('appPermissions', JSON.stringify(currentPerms));
+                
+                // Real-time cleanup if a feature is revoked
+                if (p.id === 'live-activity' && !e.target.checked) {
+                    window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'stopActivitiesForApp', args: [appName] }, '*');
+                }
+                if (p.id === 'media-session' && !e.target.checked) {
+                    window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'clearMediaSession', args: [appName] }, '*');
+                }
+            };
+            permContainer.appendChild(item);
+        });
+
+        navigateTo('page-app-details');
     }
 
     function bindEventListeners() {
@@ -347,6 +431,10 @@ function initializeSettingsApp() {
         const aboutBtn = document.querySelector('.nav-item[data-page="page-about"]');
         if (aboutBtn) {
             aboutBtn.addEventListener('click', updateVersionDisplay);
+        }
+        const appsListBtn = document.querySelector('.nav-item[data-page="page-apps"]');
+        if (appsListBtn) {
+            appsListBtn.addEventListener('click', refreshAppsListPage);
         }
 
         backBtn.addEventListener('click', navigateBack);

@@ -3474,6 +3474,7 @@ input[type="radio"]:checked::before {
 	box-sizing: border-box; 
     border-radius: 35px;
     corner-shape: superellipse(1.5);
+    box-shadow: 0 5px 20px -10px rgba(0, 0, 0, 0.2);
 }
 
 .widget-instance.is-dragging {

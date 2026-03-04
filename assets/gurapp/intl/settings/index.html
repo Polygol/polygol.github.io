@@ -92,11 +92,11 @@
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
-                <div class="setting-item nav-item" data-page="page-system">
+                <div class="setting-item nav-item" data-page="page-general">
                     <div class="setting-info">
-                         <span class="material-symbols-rounded">manufacturing</span>
-                        <span class="setting-label">System</span>
-                        <span class="setting-description">Adjust system settings</span>
+                        <span class="material-symbols-rounded">page_info</span>
+                        <span class="setting-label">General</span>
+                        <span class="setting-description">Manage your overall setup and perferences</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -110,11 +110,13 @@
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
-                <div class="setting-item nav-item" data-page="page-general">
+            </div>
+            <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-apps">
                     <div class="setting-info">
-                        <span class="material-symbols-rounded">page_info</span>
-                        <span class="setting-label">General</span>
-                        <span class="setting-description">Manage your overall setup and perferences</span>
+                        <span class="material-symbols-rounded">grid_view</span>
+                        <span class="setting-label">Apps</span>
+                        <span class="setting-description">Manage applications</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -123,6 +125,14 @@
                         <span class="material-symbols-rounded">accessible_forward</span>
                         <span class="setting-label">Accessibility</span>
                         <span class="setting-description">Personalize Polygol in ways that work best for you</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-system">
+                    <div class="setting-info">
+                         <span class="material-symbols-rounded">manufacturing</span>
+                        <span class="setting-label">System</span>
+                        <span class="setting-description">Adjust system settings</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -263,6 +273,39 @@
             </div>
         </div>
 
+        <!-- Apps Page -->
+        <div class="page" id="page-apps">
+            <div class="setting-section">
+                <div id="apps-list-container">
+                    <!-- Dynamic list of apps and permissions -->
+                </div>
+            </div>
+        </div>
+
+        <!-- App Details Page -->
+        <div class="page" id="page-app-details">
+            <div class="setting-section" style="display: flex; flex-direction: column; align-items: center; padding: 25px 20px 20px;">
+                <img id="detail-app-icon" src="" style="width: 72px; height: 72px; corner-shape: superellipse(1.25); border-radius: 35%; margin-bottom: 12px; object-fit: cover; box-shadow: var(--sun-shadow);">
+                <h2 id="detail-app-name" style="margin: 0; color: var(--text-color); font-size: 24px;">App Name</h2>
+                <span id="detail-app-url" style="opacity: 0.5; font-size: 13px; margin-top: 4px; text-align: center; word-break: break-all;">url</span>
+                
+                <div style="display: flex; gap: 10px; margin-top: 24px; width: 100%;">
+                    <button class="action-btn" id="btn-app-force-stop" style="flex: 1; background-color: var(--search-background); justify-content: center;">Force stop</button>
+                    <button class="action-btn" id="btn-app-uninstall" style="flex: 1; background-color: #ff5252; color: white; border: none; justify-content: center;">Uninstall</button>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px; width: 100%;">
+                    <button class="action-btn" id="btn-app-clear-tracking-data" style="flex: 1; background-color: var(--search-background); justify-content: center;">Clear tracking data</button>
+                </div>
+            </div>
+            
+            <div class="setting-section">
+                <h2 class="section-title">Permissions</h2>
+                <div id="detail-app-permissions">
+                    <!-- Toggles injected here -->
+                </div>
+            </div>
+        </div>
+
         <!-- Home Screen Page -->
         <div class="page" id="page-homescreen">
             <div class="setting-section">
@@ -315,22 +358,6 @@
                         <span class="setting-label">Show on Home Scren</span>
                     </div>
                     <input type="checkbox" class="toggle-switch" data-key="homeActivitiesEnabled">
-                </div>
-                <div class="setting-item nav-item" data-page="page-live-activities">
-                    <div class="setting-info">
-                        <span class="setting-label">Manage permissions</span>
-                    </div>
-                    <span class="material-symbols-rounded">arrow_forward_ios</span>
-                </div>
-            </div>
-        </div>
-        <!-- Live Activities Management Page -->
-        <div class="page" id="page-live-activities">
-            <div class="setting-section">
-                <h2 class="section-title">Permissions</h2>
-                <p class="setting-description" style="margin-bottom: 20px;">Apps that have previously sent a Live Activity appear here.</p>
-                <div id="live-activity-list-container">
-                    <!-- Dynamic list of apps -->
                 </div>
             </div>
         </div>
