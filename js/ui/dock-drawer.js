@@ -729,7 +729,7 @@ function setupDrawerInteractions() {
 
 	        // Immersive Mode Trigger
             // movementPercentage is negative for down swipes.
-            if (movementPercentage < -2) {
+            if (movementPercentage < -10) {
                 setImmersiveMode(true);
                 isDragging = false;
 				setTimeout(() => {
