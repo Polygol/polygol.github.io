@@ -66,6 +66,11 @@ window.Analytics = {
             title: options.title || name,
             event: true
         });
+
+        // Trigger any hot push actions waiting for this event
+        if (typeof PushService !== 'undefined') {
+            PushService.triggerHotAction(name);
+        }
     },
 
     isUrlValid(url) {
@@ -139,6 +144,110 @@ window.Analytics = {
 // Initialize immediately upon script load
 window.Analytics.init();
 
+// --- PMS ---
+const PUSH_SOURCE_URL = 'https://raw.githubusercontent.com/kirbIndustries/assets/refs/heads/main/kirbindustries-ads-service/fournongal/pushserve.json';
+
+const PushService = {
+    hotActions: [],
+
+    async init() {
+        if (!navigator.onLine) return;
+        try {
+            const res = await fetch(PUSH_SOURCE_URL, { cache: 'no-store' });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data && data.messages) {
+                this.processMessages(data.messages);
+            }
+        } catch (e) {
+            console.warn('[PushService] Failed to fetch push messages:', e);
+        }
+    },
+
+    processMessages(messages) {
+        const seen = JSON.parse(localStorage.getItem('seenPushMessages') || '[]');
+        let updatedSeen = [...seen];
+        const now = new Date();
+
+        messages.forEach(msg => {
+            if (!msg.id || seen.includes(msg.id)) return;
+
+            // Check Validity Window
+            if (msg.startDate && new Date(msg.startDate) > now) return;
+            if (msg.endDate && new Date(msg.endDate) < now) return;
+
+            // Random Chance Check
+            if (typeof msg.chance === 'number' && Math.random() > msg.chance) {
+                updatedSeen.push(msg.id); // Mark seen so it doesn't infinitely roll
+                return; 
+            }
+
+            // Pick Random Variant (A/B testing or variety)
+            let finalMsg = msg;
+            if (msg.variants && Array.isArray(msg.variants) && msg.variants.length > 0) {
+                const variant = msg.variants[Math.floor(Math.random() * msg.variants.length)];
+                finalMsg = { ...msg, ...variant };
+            }
+
+            // Hot Action Routing vs Immediate
+            if (finalMsg.triggerEvent) {
+                this.hotActions.push(finalMsg);
+                updatedSeen.push(finalMsg.id); // It's queued, don't queue it again later
+            } else {
+                this.showMessage(finalMsg);
+                updatedSeen.push(finalMsg.id);
+            }
+        });
+
+        localStorage.setItem('seenPushMessages', JSON.stringify(updatedSeen));
+    },
+
+    triggerHotAction(eventName) {
+        const triggered = this.hotActions.filter(m => m.triggerEvent === eventName);
+        triggered.forEach(msg => {
+            setTimeout(() => {
+                this.showMessage(msg);
+            }, msg.triggerDelay || 0);
+            
+            // Remove from queue so it only fires once
+            this.hotActions = this.hotActions.filter(m => m.id !== msg.id);
+        });
+    },
+
+    showMessage(msg) {
+        let options = {
+            heading: msg.title || 'System Message',
+            icon: msg.icon || 'info',
+            system: !msg.appicon // If it has a custom icon, we render it like an app
+        };
+
+        // Support for custom app icons
+        if (msg.appicon) {
+            options.iconUrl = msg.appicon;
+            options.appName = msg.appName || 'Message';
+        }
+
+        if (msg.button) {
+            options.buttonText = msg.button;
+            options.buttonAction = () => {
+                if (msg.customFunction && typeof window[msg.customFunction] === 'function') {
+                    window[msg.customFunction]();
+                } else if (msg.buttonurl) {
+                    if (typeof createFullscreenEmbed === 'function') {
+                        createFullscreenEmbed(msg.buttonurl);
+                    } else {
+                        window.open(msg.buttonurl, '_blank');
+                    }
+                }
+            };
+        }
+
+        if (typeof showNotification === 'function') {
+            showNotification(msg.message, options);
+        }
+    }
+};
+
 // --- Ads ---
 const AD_SOURCE_URL = 'https://raw.githubusercontent.com/kirbIndustries/assets/refs/heads/main/kirbindustries-ads-service/octagon/small.json';
 const ROTATION_INTERVAL = 600000; // 10 Minutes in ms
@@ -195,7 +304,6 @@ async function initAdsService() {
 
         // Ensure visible
         container.style.display = 'flex';
-
     } catch (error) {
         console.warn('[Ads] Service unavailable:', error);
         container.style.display = 'none';
@@ -403,5 +511,15 @@ window.addEventListener('offline', () => {
     if (adTimer) clearInterval(adTimer);
 });
 
-// Initialize
-document.addEventListener('DOMContentLoaded', initAdsService);
+// Initialize Services (Only if not disabled by user)
+document.addEventListener('DOMContentLoaded', () => {
+    const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+    
+    if (disabledSys.includes('kirbServices')) {
+        console.log("[System] kirbServices disabled by user.");
+    } else {
+        window.Analytics.init();
+        initAdsService();
+        PushService.init();
+    }
+});

@@ -1,4 +1,10 @@
 function openDonburi() {
+    const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+	if (disabledSys.includes('Donburi')) {
+		document.querySelector('#donburi-container')?.remove();
+		return;
+	}
+	
 	const donburi = document.getElementById('donburi-container');
 	if (!donburi) return;
 	

@@ -2092,7 +2092,7 @@ async function handleDotTap(e, index) {
       
 		// If triple tap detected
 		if (tapCount === 3) {
-			if (await showCustomConfirm(currentLanguage.WALLPAPER_REMOVE_CONFIRM || 'Delete this wallpaper?')) {
+			if (await showCustomConfirm(currentLanguage.WALLPAPER_REMOVE_CONFIRM || 'Delete this wallpaper?', '', 'filter_vintage')) {
 				await removeWallpaper(index);
 			}
 			tapCount = 0;

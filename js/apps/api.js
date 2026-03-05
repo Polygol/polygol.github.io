@@ -76,23 +76,21 @@ async function checkAppPermission(sourceAppId, targetAction, origin) {
     const requiredPerm = PERMISSION_MAPPINGS[targetAction];
     if (!requiredPerm) return true; // No permission required for this action
 
-    // Security Hardening: system-admin ALWAYS requires trusted origin
-    if (requiredPerm === 'system-admin') {
-        const trustedOrigins = [window.location.origin, 'https://polygol.github.io'];
-        if (!trustedOrigins.includes(origin)) {
-            console.error(`[Security] Blocked system-admin from untrusted origin: ${origin}`);
-            return false;
-        }
-    }
-
     let perms = JSON.parse(localStorage.getItem('appPermissions') || '{}');
     if (!perms[sourceAppId]) perms[sourceAppId] = {};
 
     let status = perms[sourceAppId][requiredPerm];
 
     // Auto-grant for trusted internal system apps to prevent annoying the user
-    const systemApps = ['Settings', 'Terminal', 'Donburi', 'kirbStore'];
+    const systemApps = ['Settings', 'Donburi', 'kirbStore'];
     if (systemApps.includes(sourceAppId) && (origin === window.location.origin || origin.startsWith('internal://'))) {
+        return true;
+    }
+
+    // Default Grants 
+    if (status === undefined && requiredPerm === 'ui-sounds') {
+        perms[sourceAppId][requiredPerm] = 'granted';
+        localStorage.setItem('appPermissions', JSON.stringify(perms));
         return true;
     }
 
@@ -106,21 +104,67 @@ async function checkAppPermission(sourceAppId, targetAction, origin) {
         return await _pendingPermissionRequests[requestKey];
     }
 
-    // Pause execution and prompt the user, storing the promise in our lock map
     const friendlyName = PERMISSION_NAMES[requiredPerm] || requiredPerm;
-    
-    _pendingPermissionRequests[requestKey] = showCustomConfirm(`Allow "${sourceAppId}" to ${friendlyName}?`, 'Permission Request')
-        .then(allowed => {
-            // Save choice so we don't ask again across reboots
-            let currentPerms = JSON.parse(localStorage.getItem('appPermissions') || '{}');
-            if (!currentPerms[sourceAppId]) currentPerms[sourceAppId] = {};
-            currentPerms[sourceAppId][requiredPerm] = allowed ? 'granted' : 'denied';
-            localStorage.setItem('appPermissions', JSON.stringify(currentPerms));
-            
-            // Clear the lock
-            delete _pendingPermissionRequests[requestKey];
-            return allowed;
-        });
+
+    // Helper to resolve and save permission state
+    const resolvePermission = (allowed) => {
+        let currentPerms = JSON.parse(localStorage.getItem('appPermissions') || '{}');
+        if (!currentPerms[sourceAppId]) currentPerms[sourceAppId] = {};
+        currentPerms[sourceAppId][requiredPerm] = allowed ? 'granted' : 'denied';
+        localStorage.setItem('appPermissions', JSON.stringify(currentPerms));
+        delete _pendingPermissionRequests[requestKey];
+        return allowed;
+    };
+
+    _pendingPermissionRequests[requestKey] = new Promise(async (resolve) => {
+        if (requiredPerm === 'system-admin') {
+            let confirmed = await showCustomConfirm(`${sourceAppId} will be able to read, modify, and delete all system data, settings, and other apps from now on. ONLY ALLOW THIS IF YOU ABSOLUTELY TRUST THIS APP!`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (1/5)`, 'crisis_alert');
+            if (!confirmed) return resolve(resolvePermission(false));
+
+            confirmed = await showCustomConfirm(`Are you absolutely sure? A malicious app with root access can permanently destroy your setup and cause irreversible damage.`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (2/5)`, 'crisis_alert');
+            if (!confirmed) return resolve(resolvePermission(false));
+
+            confirmed = await showCustomConfirm(`The system is not responsible for any damage caused by granting root to ${sourceAppId}. Proceed?`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (3/5)`, 'crisis_alert');
+            if (!confirmed) return resolve(resolvePermission(false));
+
+            confirmed = await showCustomConfirm(`This is last on-screen warning. Do you completely trust ${sourceAppId} with full control over your system?`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (4/5)`, 'crisis_alert');
+            if (!confirmed) return resolve(resolvePermission(false));
+
+            // STAGE 5: Notification Action
+            let resolved = false;
+            showNotification(`Ignore to deny`, {
+                heading: `Allow ${sourceAppId} to ${friendlyName}? (5/5)`,
+                icon: 'crisis_alert',
+                system: true,
+                buttonText: 'Grant permission',
+                buttonAction: () => {
+                    if (!resolved) {
+                        resolved = true;
+                        resolve(resolvePermission(true));
+                    }
+                }
+            });
+
+            // Auto-deny if not clicked within 6 seconds
+            setTimeout(() => {
+                if (!resolved) {
+                    resolved = true;
+                    showPopup(`Automatically denied access to ${friendlyName} for ${sourceAppId}`);
+                    resolve(resolvePermission(false));
+                }
+            }, 6000);
+
+        } else {
+            // Standard App Permission Flow
+            const friendlyName = PERMISSION_NAMES[requiredPerm] || requiredPerm;
+            let promptText = `${sourceAppId} will be able to ${friendlyName} from now on.`;
+            let promptTitle = `Allow ${sourceAppId} to ${friendlyName}?`;
+            let promptIcon = 'security';
+
+            const allowed = await showCustomConfirm(promptText, promptTitle, promptIcon);
+            resolve(resolvePermission(allowed));
+        }
+    });
 
     return await _pendingPermissionRequests[requestKey];
 }

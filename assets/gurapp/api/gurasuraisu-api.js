@@ -1341,30 +1341,30 @@ const Gurasuraisu = {
   downloadFile: function(filename, dataUrl) {
     this._call('downloadFile', [filename, dataUrl]);
   },
-
-  showAlert: function(message, title = 'Alert') {
-      this._call('showDialog', [{ type: 'alert', message, title }]);
+  
+  showAlert: function(message, title = 'Alert', icon = null) {
+      this._call('showDialog', [{ type: 'alert', message, title, icon }]);
   },
 
-  showConfirm: function(message, title = 'Confirm') {
+  showConfirm: function(message, title = 'Confirm', icon = null) {
       return new Promise((resolve) => {
           if (!isInsideGurasuraisu) {
               return resolve(window.confirm(message));
           }
           const requestId = `confirm_${++_dialogRequestId}`;
           _dialogCallbacks[requestId] = resolve;
-          this._call('showDialog', [{ type: 'confirm', message, title, requestId }]);
+          this._call('showDialog', [{ type: 'confirm', message, title, icon, requestId }]);
       });
   },
 
-  showPrompt: function(message, title = 'Prompt', defaultValue = '') {
+  showPrompt: function(message, title = 'Prompt', defaultValue = '', icon = null) {
       return new Promise((resolve) => {
           if (!isInsideGurasuraisu) {
               return resolve(window.prompt(message, defaultValue));
           }
           const requestId = `prompt_${++_dialogRequestId}`;
           _dialogCallbacks[requestId] = resolve;
-          this._call('showDialog', [{ type: 'prompt', message, title, defaultValue, requestId }]);
+          this._call('showDialog', [{ type: 'prompt', message, title, defaultValue, icon, requestId }]);
       });
   }
 };

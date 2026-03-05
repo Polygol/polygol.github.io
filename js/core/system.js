@@ -57,6 +57,12 @@ async function updateSystemVersionUI() {
 let updateNotificationInterval = null;
 
 async function setupServiceWorkerUpdateListener() {
+    const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+    if (disabledSys.includes('SystemUpdate')) {
+        console.log("[System] System Update component disabled by user.");
+        return;
+    }
+
     if (!('serviceWorker' in navigator)) return;
 	
     // Load Version Info on startup

@@ -1318,17 +1318,21 @@ body.one-button-nav-active .dock.show {
             pointer-events: none;
 		    border-radius: 50px;
 		    corner-shape: superellipse(1.5);
-		    padding: 20px;
+		    padding: 16px;
 		    box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
         }
 
 		/* --- Form & Dialog Styles --- */
 		#dialogTitle {
-		    margin: 0 0 25px 0;
+		    margin: 0;
 		    padding: 0 8px;
 		    font-size: 1.2rem;
 		    font-weight: 500;
 		    font-family: 'Open Runde';
+		}
+
+		#dialogMessage {
+		    padding: 0 8px;
 		}
 
 		.form-group {

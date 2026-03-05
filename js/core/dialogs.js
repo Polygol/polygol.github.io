@@ -8,6 +8,7 @@ let dialogCloseTimeout = null; // Timer for exit cleanup
 function _displayDialog(options) {
     const dialog = document.getElementById('dialogModal');
     const title = document.getElementById('dialogTitle');
+    const icon = document.getElementById('dialogIcon');
     const message = document.getElementById('dialogMessage');
     const promptContainer = document.getElementById('dialogPromptContainer');
     const input = document.getElementById('dialogInput');
@@ -43,6 +44,37 @@ function _displayDialog(options) {
 
     title.textContent = displayTitle || '';
     message.textContent = displayMessage || '';
+    
+    if (options.icon) {
+        icon.textContent = options.icon;
+        icon.style.display = 'block';
+
+        // Clear previous blink if any
+        if (icon._blinkInterval) {
+            clearInterval(icon._blinkInterval);
+            icon._blinkInterval = null;
+            icon.style.visibility = 'visible';
+        }
+
+        if (options.icon === 'crisis_alert') {
+            icon.style.color = '#ff5252';
+            let visible = true;
+            icon._blinkInterval = setInterval(() => {
+                visible = !visible;
+                icon.style.visibility = visible ? 'visible' : 'hidden';
+            }, 1000);
+        } else {
+            icon.style.color = 'var(--text-color)';
+        }
+
+    } else {
+        icon.style.display = 'none';
+
+        if (icon._blinkInterval) {
+            clearInterval(icon._blinkInterval);
+            icon._blinkInterval = null;
+        }
+    }
     
     buttons.innerHTML = '';
     promptContainer.style.display = 'none';
@@ -189,14 +221,14 @@ function showDialog(options) {
     processDialogQueue();
 }
 
-function showCustomConfirm(message, title = 'Confirm') {
+function showCustomConfirm(message, title = 'Confirm', icon = null) {
     return new Promise(resolve => {
-        showDialog({ type: 'confirm', message, title, resolve });
+        showDialog({ type: 'confirm', message, title, icon, resolve });
     });
 }
 
-function showCustomPrompt(message, title = 'Prompt', defaultValue = '') {
+function showCustomPrompt(message, title = 'Prompt', defaultValue = '', icon = null) {
     return new Promise(resolve => {
-        showDialog({ type: 'prompt', message, title, defaultValue, resolve });
+        showDialog({ type: 'prompt', message, title, defaultValue, icon, resolve });
     });
 }

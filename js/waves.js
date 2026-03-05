@@ -86,6 +86,12 @@ function generatePSK() {
     return 'psk_' + Math.random().toString(36).substr(2) + Date.now().toString(36);
 }
 function initWavesHost() {
+    const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+    if (disabledSys.includes('Waves')) {
+        console.log("[System] Waves component disabled by user.");
+        return;
+    }
+
     if (!window.Trystero) {
         window.addEventListener('trystero-ready', initWavesHost, { once: true });
         return;

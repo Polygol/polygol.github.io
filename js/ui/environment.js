@@ -6,6 +6,13 @@ let currentSunShadowStrong = ''; // To store the intensified sun shadow string
  * Uses timezone data to estimate sun position instead of geolocation.
  */
 function updateSunEffect() {
+    const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+    if (disabledSys.includes('SunShadow')) {
+        document.body.style.removeProperty('--sun-shadow');
+        document.body.style.removeProperty('--sun-shadow-strong');
+        return;
+    }
+
     const now = new Date();
     
     // Estimate Longitude from Timezone Offset (15 degrees per hour)

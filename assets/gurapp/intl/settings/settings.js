@@ -12,7 +12,7 @@ function initializeSettingsApp() {
         'page-display': 'Display',
         'page-sound': 'Sound & Haptics',
         'page-apps': 'Apps',
-        'page-app-details': 'App Details',
+        'page-app-details': 'Details',
         'page-homescreen': 'Home Screen',
         'page-clock': 'Clock',
         'page-wallpaper': 'Wallpaper',
@@ -300,18 +300,28 @@ function initializeSettingsApp() {
         const systemAppsObj = window.parent.apps || {};
         const installedAppsObj = JSON.parse(window.parent.localStorage.getItem('userInstalledApps') || '{}');
         
-        const allApps = new Set([...Object.keys(installedAppsObj), ...Object.keys(perms)]);
-        
-        const excludedApps = ['Settings', 'Terminal', 'Donburi', 'kirbStore', 'Apps'];
-        
-        if (allApps.size === 0) {
-            container.innerHTML = '<p style="text-align:center; opacity:0.5; padding:20px;">No installed apps found.</p>';
-            return;
-        }
+        // Define System Components
+        const systemComponents = {
+            'kirbServices': { iconSymbol: 'auto_awesome', url: 'internal://kirbservices', type: 'component', desc: 'Communication service with kirbIndustries' },
+            'Waves': { iconSymbol: 'cell_tower', url: 'internal://waves', type: 'component', desc: 'Communication service with phone remote control' },
+            'SunShadow': { iconSymbol: 'light_mode', url: 'internal://sunshadow', type: 'component', desc: 'Dynamic directional shadows based on time' },
+            'Donburi': { iconSymbol: 'dashboard', url: 'internal://donburi', type: 'component', desc: 'Dashboard and assistant menu' },
+            'SystemUpdate': { iconSymbol: 'update', url: 'internal://systemupdate', type: 'component', desc: 'Background updates and caching' },
+            'TitleFavicon': { iconSymbol: 'tab', url: 'internal://titlefavicon', type: 'component', desc: 'Dynamic browser tab title and icon updates' },
+            'NavBlocker': { iconSymbol: 'block', url: 'internal://navblocker', type: 'component', desc: 'Prevents browser navigation' },
+            'Weather': { iconSymbol: 'partly_cloudy_day', url: 'internal://weather', type: 'component', desc: 'Weather fetching and rendering' },
+            'Location': { iconSymbol: 'location_on', url: 'internal://location', type: 'component', desc: 'Hardware geolocation access for services' }
+        };
 
-        allApps.forEach(appName => {
-            if (excludedApps.includes(appName)) return;
-            
+        const allApps = new Set([...Object.keys(installedAppsObj), ...Object.keys(perms)]);
+        const excludedApps = ['Settings', 'Terminal', 'Donburi', 'kirbStore', 'Apps'];
+
+        // Render normal apps (Sorted Alphabetically)
+        const sortedApps = Array.from(allApps)
+            .filter(appName => !excludedApps.includes(appName))
+            .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+
+        sortedApps.forEach(appName => {
             const appDef = systemAppsObj[appName] || installedAppsObj[appName] || {};
             let iconSrc = appDef.icon || 'system.png';
             if (!iconSrc.startsWith('http') && !iconSrc.startsWith('/') && !iconSrc.startsWith('data:')) {
@@ -330,88 +340,167 @@ function initializeSettingsApp() {
             item.onclick = () => openAppDetails(appName, appDef);
             container.appendChild(item);
         });
+
+        // Render System Components
+        Object.keys(systemComponents).forEach(compName => {
+            const comp = systemComponents[compName];
+            const item = document.createElement('div');
+            item.className = 'setting-item nav-item';
+            item.innerHTML = `
+                <div class="setting-info" style="display: flex; align-items: center; gap: 12px; flex-direction: row;">
+                    <div style="width: 36px; height: 36px; border-radius: 35%; background: var(--accent); display:flex; align-items:center; justify-content:center; color: var(--background-color); corner-shape: superellipse(1.25);">
+                        <span class="material-symbols-rounded" style="color: var(--background-color); font-size: 20px;">${comp.iconSymbol}</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span class="setting-label" style="margin-top: 0; font-size: 15px;">${compName}</span>
+                        <span class="setting-description" style="font-size: 11px; opacity: 0.7;">System component</span>
+                    </div>
+                </div>
+                <span class="material-symbols-rounded">arrow_forward_ios</span>
+            `;
+            item.onclick = () => openAppDetails(compName, comp);
+            container.appendChild(item);
+        });
     }
 
     function openAppDetails(appName, appDef) {
+        // Cleanup injected component toggles
+        const existingToggle = document.getElementById('component-toggle-container');
+        if (existingToggle) existingToggle.remove();
+
         // Setup Header
         document.getElementById('detail-app-name').textContent = appName;
-        document.getElementById('detail-app-url').textContent = appDef.url || 'System App / Unknown URL';
+        document.getElementById('detail-app-url').textContent = appDef.desc || appDef.url || 'System App / Unknown URL';
         
-        let iconSrc = appDef.icon || 'system.png';
-        if (!iconSrc.startsWith('http') && !iconSrc.startsWith('/') && !iconSrc.startsWith('data:')) {
-            iconSrc = `/assets/appicon/${iconSrc}`;
+        const iconEl = document.getElementById('detail-app-icon');
+        if (appDef.type === 'component') {
+            // Setup generic icon for components
+            iconEl.src = '/assets/appicon/system.png';
+        } else {
+            let iconSrc = appDef.icon || 'system.png';
+            if (!iconSrc.startsWith('http') && !iconSrc.startsWith('/') && !iconSrc.startsWith('data:')) {
+                iconSrc = `/assets/appicon/${iconSrc}`;
+            }
+            iconEl.src = iconSrc;
         }
-        document.getElementById('detail-app-icon').src = iconSrc;
-        
-        // Buttons
-        document.getElementById('btn-app-force-stop').onclick = () => {
-            window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'forceCloseAppByName', args: [appName] }, '*');
-            Gurasuraisu.showPopup(`Force stopped ${appName}`);
-        };
-        
-        document.getElementById('btn-app-uninstall').onclick = async () => {
-            if (await Gurasuraisu.showConfirm(`Are you sure you want to uninstall ${appName}?`)) {
-                Gurasuraisu.deleteApp(appName);
-                navigateBack();
-                setTimeout(refreshAppsListPage, 300);
-            }
-        };
 
-        document.getElementById('btn-app-clear-tracking-data').onclick = async () => {
-            if (await Gurasuraisu.showConfirm(`Clear all tracking data and revoke all permissions for ${appName}?`)) {
-                window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'clearAppData', args: [appName] }, '*');
-                Gurasuraisu.showPopup(`Data cleared for ${appName}`);
-                openAppDetails(appName, appDef); // Refresh view to update toggles
-            }
-        };
+        // Component vs Standard App UI Routing
+        const forceBtn = document.getElementById('btn-app-force-stop');
+        const uninstallBtn = document.getElementById('btn-app-uninstall');
+        const clearTrackingBtn = document.getElementById('btn-app-clear-tracking-data');
+        const permsSection = document.getElementById('detail-app-permissions').parentElement;
 
-        // Permissions List
-        const permContainer = document.getElementById('detail-app-permissions');
-        permContainer.innerHTML = '';
+        if (appDef.type === 'component') {
+            forceBtn.style.display = 'none';
+            uninstallBtn.style.display = 'none';
+            clearTrackingBtn.style.display = 'none';
+            permsSection.style.display = 'none';
 
-        const availablePerms = [
-            { id: 'notifications', name: 'Notifications' },
-            { id: 'live-activity', name: 'Live Activities' },
-            { id: 'immersive-mode', name: 'Immersive mode' },
-            { id: 'file-upload', name: 'File access' },
-            { id: 'widgets', name: 'Widgets' },
-            { id: 'media-session', name: 'Media session' },
-            { id: 'tts', name: 'Text-to-Speech' },
-            { id: 'waves', name: 'Waves remote' },
-            { id: 'ui-sounds', name: 'Sound effects' },
-            { id: 'app-management', name: 'App management' },
-            { id: 'system-admin', name: 'Modify core system settings (root access)' }
-        ];
+            // Inject Custom Component Toggle
+            const disabledSys = JSON.parse(window.parent.localStorage.getItem('disabledSystemComponents') || '[]');
+            const isEnabled = !disabledSys.includes(appName);
 
-        let currentPerms = JSON.parse(window.parent.localStorage.getItem('appPermissions') || '{}');
-        let appPerms = currentPerms[appName] || {};
-
-        availablePerms.forEach(p => {
-            const isGranted = appPerms[p.id] === 'granted';
-            
-            const item = document.createElement('div');
-            item.className = 'setting-item';
-            item.innerHTML = `
-                <span class="setting-label">${p.name}</span>
-                <input type="checkbox" class="toggle-switch" ${isGranted ? 'checked' : ''}>
+            const toggleContainer = document.createElement('div');
+            toggleContainer.id = 'component-toggle-container';
+            toggleContainer.className = 'setting-item';
+            toggleContainer.style.width = '100%';
+            toggleContainer.style.marginTop = '20px';
+            toggleContainer.innerHTML = `
+                <div class="setting-info"><span class="setting-label">Enable Component</span></div>
+                <input type="checkbox" class="toggle-switch" ${isEnabled ? 'checked' : ''}>
             `;
             
-            item.querySelector('input').onchange = (e) => {
-                currentPerms = JSON.parse(window.parent.localStorage.getItem('appPermissions') || '{}');
-                if (!currentPerms[appName]) currentPerms[appName] = {};
-                currentPerms[appName][p.id] = e.target.checked ? 'granted' : 'denied';
-                window.parent.localStorage.setItem('appPermissions', JSON.stringify(currentPerms));
-                
-                // Real-time cleanup if a feature is revoked
-                if (p.id === 'live-activity' && !e.target.checked) {
-                    window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'stopActivitiesForApp', args: [appName] }, '*');
+            toggleContainer.querySelector('input').onchange = (e) => {
+                let currentDisabled = JSON.parse(window.parent.localStorage.getItem('disabledSystemComponents') || '[]');
+                if (e.target.checked) {
+                    currentDisabled = currentDisabled.filter(c => c !== appName);
+                } else {
+                    if (!currentDisabled.includes(appName)) currentDisabled.push(appName);
                 }
-                if (p.id === 'media-session' && !e.target.checked) {
-                    window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'clearMediaSession', args: [appName] }, '*');
+                window.parent.localStorage.setItem('disabledSystemComponents', JSON.stringify(currentDisabled));
+                
+                Gurasuraisu.showConfirm('A system restart is required to apply component changes. Reboot now?', 'Restart Required', 'power_settings_new').then(res => {
+                    if (res) window.parent.location.reload();
+                });
+            };
+            document.getElementById('detail-app-url').parentElement.appendChild(toggleContainer);
+
+        } else {
+            forceBtn.style.display = 'flex';
+            uninstallBtn.style.display = 'flex';
+            clearTrackingBtn.style.display = 'flex';
+            permsSection.style.display = 'block';
+
+            // Standard Buttons
+            forceBtn.onclick = () => {
+                window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'forceCloseAppByName', args: [appName] }, '*');
+                Gurasuraisu.showPopup(`Force stopped ${appName}`);
+            };
+            
+            uninstallBtn.onclick = async () => {
+                if (await Gurasuraisu.showConfirm(`Are you sure you want to uninstall ${appName}?`)) {
+                    Gurasuraisu.deleteApp(appName);
+                    navigateBack();
+                    setTimeout(refreshAppsListPage, 300);
                 }
             };
-            permContainer.appendChild(item);
-        });
+
+            clearTrackingBtn.onclick = async () => {
+                if (await Gurasuraisu.showConfirm(`Clear all tracking data and revoke all permissions for ${appName}?`, '', 'warning')) {
+                    window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'clearAppData', args: [appName] }, '*');
+                    Gurasuraisu.showPopup(`Data cleared for ${appName}`);
+                    openAppDetails(appName, appDef); // Refresh view to update toggles
+                }
+            };
+
+            // Permissions List
+            const permContainer = document.getElementById('detail-app-permissions');
+            permContainer.innerHTML = '';
+
+            const availablePerms = [
+                { id: 'notifications', name: 'Notifications' },
+                { id: 'live-activity', name: 'Live Activities' },
+                { id: 'immersive-mode', name: 'Immersive mode' },
+                { id: 'file-upload', name: 'File access' },
+                { id: 'widgets', name: 'Widgets' },
+                { id: 'media-session', name: 'Media session' },
+                { id: 'tts', name: 'Text-to-Speech' },
+                { id: 'waves', name: 'Waves remote' },
+                { id: 'ui-sounds', name: 'Sound effects' },
+                { id: 'app-management', name: 'App management' },
+                { id: 'system-admin', name: 'Modify core system settings (root access)' }
+            ];
+
+            let currentPerms = JSON.parse(window.parent.localStorage.getItem('appPermissions') || '{}');
+            let appPerms = currentPerms[appName] || {};
+
+            availablePerms.forEach(p => {
+                const isGranted = appPerms[p.id] === 'granted';
+                
+                const item = document.createElement('div');
+                item.className = 'setting-item';
+                item.innerHTML = `
+                    <span class="setting-label">${p.name}</span>
+                    <input type="checkbox" class="toggle-switch" ${isGranted ? 'checked' : ''}>
+                `;
+                
+                item.querySelector('input').onchange = (e) => {
+                    currentPerms = JSON.parse(window.parent.localStorage.getItem('appPermissions') || '{}');
+                    if (!currentPerms[appName]) currentPerms[appName] = {};
+                    currentPerms[appName][p.id] = e.target.checked ? 'granted' : 'denied';
+                    window.parent.localStorage.setItem('appPermissions', JSON.stringify(currentPerms));
+                    
+                    // Real-time cleanup if a feature is revoked
+                    if (p.id === 'live-activity' && !e.target.checked) {
+                        window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'stopActivitiesForApp', args: [appName] }, '*');
+                    }
+                    if (p.id === 'media-session' && !e.target.checked) {
+                        window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'clearMediaSession', args: [appName] }, '*');
+                    }
+                };
+                permContainer.appendChild(item);
+            });
+        }
 
         navigateTo('page-app-details');
     }

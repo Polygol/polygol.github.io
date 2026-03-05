@@ -228,6 +228,17 @@ async function fetchLocationAndWeather() {
     if (_activeWeatherPromise) return _activeWeatherPromise;
 
     _activeWeatherPromise = new Promise((resolve, reject) => {
+        const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+        if (disabledSys.includes('Location')) {
+            console.warn("[System] Location service disabled by user. Falling back to cache.");
+            // Resolve with cached data if available, to gracefully fail without throwing
+            SwapManager.get('lastWeatherData').then(cached => {
+                if (cached) resolve(cached);
+                else reject(new Error('Location Component Disabled'));
+            });
+            return;
+        }
+
         navigator.geolocation.getCurrentPosition(async (position) => {
             try {
                 const { latitude, longitude } = position.coords;
@@ -373,6 +384,13 @@ function getHourString(dateString) {
 }
 
 async function updateSmallWeather() {
+    const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+    if (disabledSys.includes('Weather')) {
+        const weatherWidget = document.getElementById('weather');
+        if (weatherWidget) weatherWidget.style.display = 'none';
+        return;
+    }
+
     const showWeather = localStorage.getItem('showWeather') !== 'false';
     if (!showWeather) return;
     

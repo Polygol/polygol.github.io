@@ -82,7 +82,7 @@ async function installApp(appData) {
     
     if (reservedNames.includes(normalizedName)) {
         console.error(`[Security] Blocked installation of protected system app: ${appData.name}`);
-        showDialog({ type: 'alert', title: 'App installation blocked', message: `Cannot install or overwrite protected system app ${appData.name}` });
+        showDialog({ type: 'alert', title: 'App installation blocked', message: `Cannot install or overwrite protected system app ${appData.name}`, icon: 'do_not_touch'});
         return;
     }
 	
@@ -128,7 +128,8 @@ async function installApp(appData) {
             console.error('Service Worker not ready:', error);
 			showDialog({ 
 			    type: 'alert', 
-			    title: currentLanguage.GURAPP_INSTALL_FAILED.replace('{appName}', appData.name)
+			    title: currentLanguage.GURAPP_INSTALL_FAILED.replace('{appName}', appData.name),
+                icon: 'file_download_off'
 			});
         }
     } else {
@@ -150,13 +151,14 @@ async function deleteApp(appName) {
 	) {
 	showDialog({ 
 		    type: 'alert', 
-		    title: currentLanguage.GURAPP_DELETE_STORE_DENIED
+		    title: currentLanguage.GURAPP_DELETE_STORE_DENIED,
+            icon: 'do_not_touch'
 		});
         return; // Stop the function immediately
     }
 
     // Confirmation dialog
-    if (!(await showCustomConfirm(currentLanguage.GURAPP_DELETE_ASK.replace('{appName}', appName)))) {
+    if (!(await showCustomConfirm(currentLanguage.GURAPP_DELETE_ASK.replace('{appName}', appName)), '', 'delete_forever')) {
         return;
     }
 
@@ -214,7 +216,8 @@ async function deleteApp(appName) {
     } else {
 		showDialog({ 
 		    type: 'alert', 
-		    title: currentLanguage.GURAPP_DELETE_FAILED.replace('{appName}', appName)
+		    title: currentLanguage.GURAPP_DELETE_FAILED.replace('{appName}', appName),
+            icon: 'cancel'
 		});
     }
 }
@@ -676,8 +679,9 @@ async function createFullscreenEmbed(url, options = {}) {
 	    console.warn(`Attempted to open an unknown app or non-allowlisted URL: ${url}`);
 		showDialog({ 
 		    type: 'alert', 
-		    title: `${url}`,
-			message: currentLanguage.GURAPP_NOT_INSTALLED
+		    title: currentLanguage.GURAPP_NOT_INSTALLED,
+			message: `${url}`,
+            icon: 'cancel'
 		});
 	    return;
 	}

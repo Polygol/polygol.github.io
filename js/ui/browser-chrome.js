@@ -7,6 +7,9 @@ const lastTitleData = {
 
 // Function to update the document title
 function updateTitle() {
+  const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+  if (disabledSys.includes('TitleFavicon')) return;
+
   if (isMobileDevice()) return;
 
   let titlePrefix = '';
@@ -286,8 +289,11 @@ function createRoundedFavicon(url) {
 
 // Function to dynamically update the document's favicon
 async function updateFavicon(url, round = true) {
+    const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+    if (disabledSys.includes('TitleFavicon')) return;
+
     if (isMobileDevice()) return;
-	
+
     let link = document.querySelector("link[rel='icon']") || document.querySelector("link[rel='shortcut icon']");
 
     if (!link) {
@@ -455,13 +461,18 @@ window.addEventListener('wheel', function(e) {
 }, { passive: false });
 
 // Prevents back/forward navigation
-history.pushState(null, null, location.href);
-window.onpopstate = function () {
-    history.go(1);
-};
+const _disabledSysNav = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+if (!_disabledSysNav.includes('NavBlocker')) {
+    history.pushState(null, null, location.href);
+    window.onpopstate = function () {
+        history.go(1);
+    };
+}
 
 // Block navigation keyboard shortcuts
 window.addEventListener('keydown', (e) => {
+    const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+    if (disabledSys.includes('NavBlocker')) return;
     const isNavigationKey = 
         (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) || // Alt + Left/Right
         (e.metaKey && (e.key === '[' || e.key === ']')); // Cmd + [ / ] (Mac)
@@ -474,6 +485,9 @@ window.addEventListener('keydown', (e) => {
 
 function preventLeaving() {
     window.addEventListener('beforeunload', function (e) {
+        const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+        if (disabledSys.includes('NavBlocker')) return;
+
         if (window.allowPageLeave) { return; } // Bypass for controlled reloads
 
 		// Only prevent leaving if an app is open (foreground or minimized).

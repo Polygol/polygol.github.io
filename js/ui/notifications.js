@@ -302,8 +302,8 @@ function createOnScreenPopup(message, options = {}, onClosed) {
         iconType = 'info';
     }
     
-    // Add app icon and title if appName is provided and not a system notification
-    const showAppInfo = options.appName && !options.system && apps[options.appName];
+    // Add app icon and title if appName or iconUrl is provided and not a system notification
+    const showAppInfo = (!options.system) && (options.iconUrl || (options.appName && apps[options.appName]));
     if (showAppInfo) {
         const appIconContainer = document.createElement('div');
         appIconContainer.className = 'app-icon-img';
@@ -313,11 +313,15 @@ function createOnScreenPopup(message, options = {}, onClosed) {
         const appIconImg = document.createElement('img');
         appIconImg.className = 'media-widget-app-icon';
         appIconImg.style.display = 'block';
-        let iconUrl = apps[options.appName].icon;
-        if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
-            iconUrl = `/assets/appicon/${iconUrl}`;
+        
+        let iconUrl = options.iconUrl;
+        if (!iconUrl && apps[options.appName]) {
+            iconUrl = apps[options.appName].icon;
+            if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
+                iconUrl = `/assets/appicon/${iconUrl}`;
+            }
         }
-        appIconImg.src = iconUrl;
+        appIconImg.src = iconUrl || '/assets/appicon/system.png';
         appIconContainer.appendChild(appIconImg);
         popup.appendChild(appIconContainer);
     }
@@ -467,8 +471,8 @@ function createHomeNotificationElement(message, options, notifId) {
     div.className = 'home-media-widget home-activity-item';
     div.style.cssText = 'padding: 12px 18px 12px 12px; flex-direction: row; align-items: center; height: 100%;';
     
-    let iconUrl = '/assets/appicon/system.png';
-    if (options.appName && apps[options.appName]) {
+    let iconUrl = options.iconUrl || '/assets/appicon/default.png';
+    if (!options.iconUrl && options.appName && apps[options.appName]) {
         iconUrl = apps[options.appName].icon;
         if (!iconUrl.startsWith('http') && !iconUrl.startsWith('/') && !iconUrl.startsWith('data:')) {
             iconUrl = `/assets/appicon/${iconUrl}`;
@@ -629,7 +633,7 @@ function addToNotificationShade(message, options = {}) {
         }
 		
 		// Add app icon and title if appName is provided and not a system notification
-		const showAppInfo = options.appName && !options.system && apps[options.appName];
+		const showAppInfo = (!options.system) && (options.iconUrl || (options.appName && apps[options.appName]));
 		if (showAppInfo) {
 			const appIconContainer = document.createElement('div');
 			appIconContainer.className = 'app-icon-img';
@@ -639,11 +643,15 @@ function addToNotificationShade(message, options = {}) {
 			const appIconImg = document.createElement('img');
 			appIconImg.className = 'media-widget-app-icon';
 			appIconImg.style.display = 'block';
-			let iconUrl = apps[options.appName].icon;
-			if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
-				iconUrl = `/assets/appicon/${iconUrl}`;
-			}
-			appIconImg.src = iconUrl;
+            
+            let iconUrl = options.iconUrl;
+            if (!iconUrl && apps[options.appName]) {
+                iconUrl = apps[options.appName].icon;
+                if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
+                    iconUrl = `/assets/appicon/${iconUrl}`;
+                }
+            }
+			appIconImg.src = iconUrl || '/assets/appicon/system.png';
 			appIconContainer.appendChild(appIconImg);
 			notification.appendChild(appIconContainer);
 		}
