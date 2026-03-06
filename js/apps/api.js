@@ -118,23 +118,23 @@ async function checkAppPermission(sourceAppId, targetAction, origin) {
 
     _pendingPermissionRequests[requestKey] = new Promise(async (resolve) => {
         if (requiredPerm === 'system-admin') {
-            let confirmed = await showCustomConfirm(`${sourceAppId} will be able to read, modify, and delete all system data, settings, and other apps from now on. ONLY ALLOW THIS IF YOU ABSOLUTELY TRUST THIS APP!`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (1/5)`, 'crisis_alert');
+            let confirmed = await showCustomConfirm(`${sourceAppId} will be able to read, modify, and delete all system data, settings, and other apps from now on. ONLY ALLOW THIS IF YOU ABSOLUTELY TRUST THIS APP!`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (1/5)`, 'report');
             if (!confirmed) return resolve(resolvePermission(false));
 
-            confirmed = await showCustomConfirm(`Are you absolutely sure? A malicious app with root access can permanently destroy your setup and cause irreversible damage.`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (2/5)`, 'crisis_alert');
+            confirmed = await showCustomConfirm(`Are you absolutely sure? A malicious app with root access can permanently destroy your setup and cause irreversible damage.`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (2/5)`, 'report');
             if (!confirmed) return resolve(resolvePermission(false));
 
-            confirmed = await showCustomConfirm(`The system is not responsible for any damage caused by granting root to ${sourceAppId}. Proceed?`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (3/5)`, 'crisis_alert');
+            confirmed = await showCustomConfirm(`The system is not responsible for any damage caused by granting root to ${sourceAppId}. Proceed?`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (3/5)`, 'report');
             if (!confirmed) return resolve(resolvePermission(false));
 
-            confirmed = await showCustomConfirm(`This is last on-screen warning. Do you completely trust ${sourceAppId} with full control over your system?`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (4/5)`, 'crisis_alert');
+            confirmed = await showCustomConfirm(`This is last on-screen warning. Do you completely trust ${sourceAppId} with full control over your system?`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (4/5)`, 'report');
             if (!confirmed) return resolve(resolvePermission(false));
 
             // STAGE 5: Notification Action
             let resolved = false;
             showNotification(`Ignore to deny`, {
                 heading: `Allow ${sourceAppId} to ${friendlyName}? (5/5)`,
-                icon: 'crisis_alert',
+                icon: 'report',
                 system: true,
                 buttonText: 'Grant permission',
                 buttonAction: () => {

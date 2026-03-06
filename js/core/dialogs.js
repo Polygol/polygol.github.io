@@ -56,7 +56,7 @@ function _displayDialog(options) {
             icon.style.visibility = 'visible';
         }
 
-        if (options.icon === 'crisis_alert') {
+        if (options.icon === 'report') {
             icon.style.color = '#ff5252';
             let visible = true;
             icon._blinkInterval = setInterval(() => {
@@ -213,6 +213,7 @@ function processDialogQueue() {
         return;
     }
     activeDialog = dialogQueue.shift();
+    activeDialog.openTime = Date.now();
     _displayDialog(activeDialog);
 }
 

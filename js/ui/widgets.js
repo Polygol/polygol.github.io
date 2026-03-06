@@ -145,8 +145,8 @@ function addWidget(widgetData, isTransparent = false) {
         appName: widgetData.appName,
         w: defaultWidth,
         h: defaultHeight,
-        x: 10,
-        y: 80,
+        x: 20,
+        y: 20,
         transparent: isTransparent // Save transparency state
     });
     renderWidgets();
@@ -459,57 +459,56 @@ function renderWidgets() {
                     const otherCenterX = otherLeft + other.width / 2;
                     const otherCenterY = otherTop + other.height / 2;
 
-                const xPoints = [
-                    otherLeft, otherRight - draggedRect.w, otherCenterX - draggedRect.w / 2, // Flush
-                    otherRight + MARGIN, otherLeft - draggedRect.w - MARGIN              // Adjacent
-                ];
-                for (const p of xPoints) {
+                    const xPoints = [
+                        otherLeft, otherRight - cachedDraggedRect.w, otherCenterX - cachedDraggedRect.w / 2, // Flush
+                        otherRight + MARGIN, otherLeft - cachedDraggedRect.w - MARGIN              // Adjacent
+                    ];
+                    for (const p of xPoints) {
+                        const dist = Math.abs(newX - p);
+                        if (dist < bestX.dist) bestX = { dist, pos: p };
+                    }
+
+                    const yPoints = [
+                        otherTop, otherBottom - cachedDraggedRect.h, otherCenterY - cachedDraggedRect.h / 2, // Flush
+                        otherBottom + MARGIN, otherTop - cachedDraggedRect.h - MARGIN              // Adjacent
+                    ];
+                    for (const p of yPoints) {
+                        const dist = Math.abs(newY - p);
+                        if (dist < bestY.dist) bestY = { dist, pos: p };
+                    }
+                });
+
+                // 2. Check against grid container edges using CACHED sizes
+                const screenXPoints = [MARGIN, cachedGridW - cachedDraggedRect.w - MARGIN];
+                for (const p of screenXPoints) {
                     const dist = Math.abs(newX - p);
                     if (dist < bestX.dist) bestX = { dist, pos: p };
                 }
-
-                const yPoints = [
-                    otherTop, otherBottom - draggedRect.h, otherCenterY - draggedRect.h / 2, // Flush
-                    otherBottom + MARGIN, otherTop - draggedRect.h - MARGIN              // Adjacent
-                ];
-                for (const p of yPoints) {
+                const screenYPoints = [MARGIN, cachedGridH - cachedDraggedRect.h - MARGIN];
+                for (const p of screenYPoints) {
                     const dist = Math.abs(newY - p);
                     if (dist < bestY.dist) bestY = { dist, pos: p };
                 }
+
+                // 3. Apply the winning snaps and draw the guide lines
+                if (bestX.dist < SNAP_DISTANCE) {
+                    finalX = bestX.pos;
+                    snapLineV.style.left = `${finalX + cachedGridRect.left}px`;
+                    snapLineV.style.display = 'block';
+                }
+                if (bestY.dist < SNAP_DISTANCE) {
+                    finalY = bestY.pos;
+                    snapLineH.style.top = `${finalY + cachedGridRect.top}px`;
+                    snapLineH.style.display = 'block';
+                }
+                
+                // Grid boundary clamp (keep inside screen) using CACHED sizes
+                finalX = Math.max(MARGIN, Math.min(finalX, cachedGridW - cachedDraggedRect.w - MARGIN));
+                finalY = Math.max(MARGIN, Math.min(finalY, cachedGridH - cachedDraggedRect.h - MARGIN));
+
+                instance.style.left = `${finalX}px`;
+                instance.style.top = `${finalY}px`;
             });
-
-            // 2. Check against grid container edges using CACHED sizes
-            const screenXPoints = [MARGIN, cachedGridW - cachedDraggedRect.w - MARGIN];
-            for (const p of screenXPoints) {
-                const dist = Math.abs(newX - p);
-                if (dist < bestX.dist) bestX = { dist, pos: p };
-            }
-            const screenYPoints = [MARGIN, cachedGridH - cachedDraggedRect.h - MARGIN];
-            for (const p of screenYPoints) {
-                const dist = Math.abs(newY - p);
-                if (dist < bestY.dist) bestY = { dist, pos: p };
-            }
-
-            // 3. Apply the winning snaps and draw the guide lines
-            if (bestX.dist < SNAP_DISTANCE) {
-                finalX = bestX.pos;
-                snapLineV.style.left = `${finalX + cachedGridRect.left}px`;
-                snapLineV.style.display = 'block';
-            }
-            if (bestY.dist < SNAP_DISTANCE) {
-                finalY = bestY.pos;
-                snapLineH.style.top = `${finalY + cachedGridRect.top}px`;
-                snapLineH.style.display = 'block';
-            }
-			
-            // Grid boundary clamp (keep inside screen) using CACHED sizes
-            finalX = Math.max(MARGIN, Math.min(finalX, cachedGridW - cachedDraggedRect.w - MARGIN));
-            finalY = Math.max(MARGIN, Math.min(finalY, cachedGridH - cachedDraggedRect.h - MARGIN));
-
-			instance.style.left = `${finalX}px`;
-            instance.style.top = `${finalY}px`;
-            
-            }); // End requestAnimationFrame
         };
 		
         const onDragEnd = () => {

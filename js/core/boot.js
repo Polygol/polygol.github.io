@@ -1147,6 +1147,9 @@ document.addEventListener('DOMContentLoaded', () => {
         blurOverlay.addEventListener('click', () => {
             // Priority 1: Close active dialog.
             if (activeDialog) {
+                // Prevent accidental dismissals within the first 500ms
+                if (Date.now() - (activeDialog.openTime || 0) < 500) return;
+
                 let cancelValue = true; // Default for alerts
                 if (activeDialog.type === 'confirm') cancelValue = false;
                 if (activeDialog.type === 'prompt') cancelValue = null;

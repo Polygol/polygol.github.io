@@ -631,11 +631,13 @@ function setupDrawerInteractions() {
 	        interactionBlocker.style.pointerEvents = 'none';
 	
 	    } else {
-	        // LOGIC FOR DRAGGING THE DRAWER (NO APP OPEN)
+            // LOGIC FOR DRAGGING THE DRAWER (NO APP OPEN)
             // --- Donburi Swipe Down ---
             if (dragSource === 'body' && movementPercentage < -5) {
                 const donburi = document.getElementById('donburi-container');
                 if (donburi) {
+                    const dynArea = document.getElementById('dynamic-area');
+                    if (dynArea) dynArea.style.opacity = '0';
                     donburi.style.display = 'block';
                     donburi.style.contentVisibility = 'auto';
 	                donburi.style.pointerEvents = 'none';
@@ -682,8 +684,6 @@ function setupDrawerInteractions() {
 	        }
 		    
 			cancelLongPress();
-			const dynArea = document.getElementById('dynamic-area');
-			if (dynArea) dynArea.style.opacity = '0';
 	
 			const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
 	        
