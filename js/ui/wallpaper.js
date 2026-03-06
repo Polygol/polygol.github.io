@@ -237,11 +237,16 @@ const SlideshowManager = {
         if (!data || data.length === 0) return;
 
         this.wallpapers = data;
+        
+        // If already active, don't restart/reset the index
+        if (this.active) {
+            this.startTimer();
+            return;
+        }
+
         this.active = true;
-        // Keep index within bounds
         if (this.currentIndex >= this.wallpapers.length) this.currentIndex = 0;
 
-        // Render first frame
         this.render();
         this.startTimer();
 
@@ -264,28 +269,20 @@ const SlideshowManager = {
         stopLiveActivity('sys-slideshow');
     },
 
-	startTimer() {
+    startTimer() {
         clearTimeout(this.timer);
-        if (this.paused) return;
+        if (this.paused || !this.active) return;
         
-        const currentGroup = recentWallpapers[currentWallpaperPosition];
-        const duration = currentGroup?.slideshowInterval || parseInt(localStorage.getItem('slideshowInterval') || '600000', 10);
+        const currentGroup = window.recentWallpapers[window.currentWallpaperPosition];
+        const duration = parseInt(currentGroup?.slideshowInterval || localStorage.getItem('slideshowInterval') || '600000', 10);
         
-        const now = new Date();
-        const msInCurrentMinute = (now.getSeconds() * 1000) + now.getMilliseconds();
-        
-        // Calculate delay to the next exact interval boundary
-        let delay;
-        if (duration < 60000) {
-            delay = duration - (msInCurrentMinute % duration);
-        } else {
-            // Align to the next exact minute
-            delay = 60000 - msInCurrentMinute;
-        }
+        // Calculate delay to the next clean interval boundary (e.g. if 5m, fires at :00, :05, :10...)
+        const now = Date.now();
+        const delay = duration - (now % duration);
 
         this.timer = setTimeout(() => {
             this.next();
-            this.startTimer(); // Recursively align
+            this.startTimer(); 
         }, delay);
     },
 

@@ -89,16 +89,17 @@ function setupFormatControls() {
     secondsSwitch.addEventListener('change', function() {
         let currentFormat = clockFormatInput.value;
         if (this.checked) {
-            // Add seconds back if they are missing
             if (!currentFormat.includes('ss')) {
                 currentFormat = currentFormat.replace(/mm(?!:)/, 'mm:ss');
             }
         } else {
-            // Remove seconds
             currentFormat = currentFormat.replace(/[:.]ss/, '');
         }
         clockFormatInput.value = currentFormat;
-        clockFormatInput.dispatchEvent(new Event('input')); // Trigger save and update
+        clockFormatInput.dispatchEvent(new Event('input')); 
+        
+        // Force immediate loop restart
+        if (window.refreshClockUI) window.refreshClockUI();
     });
 
     hourSwitch.addEventListener('change', function() {
@@ -114,6 +115,9 @@ function setupFormatControls() {
         }
         clockFormatInput.value = currentFormat;
         clockFormatInput.dispatchEvent(new Event('input'));
+
+        // Force immediate loop restart
+        if (window.refreshClockUI) window.refreshClockUI();
     });
 }
 

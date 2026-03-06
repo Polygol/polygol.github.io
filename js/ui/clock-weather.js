@@ -171,22 +171,33 @@ function updateClockAndDate() {
 }
 
 function startSynchronizedClockAndDate() {
+    // Clear any existing pending timeout to prevent double-firing or "zombie ticks"
+    if (window.clockLoopId) clearTimeout(window.clockLoopId);
+
     updateClockAndDate(); 
     
     const now = new Date();
     let delay;
     
-    // If we aren't showing seconds (or screen is asleep), sleep the CPU until the next minute starts.
+    // IDLE OPTIMIZATION: If we aren't showing seconds (or screen is asleep), sleep the CPU until the next minute starts.
     const isShowingSeconds = typeof showSeconds !== 'undefined' ? showSeconds : true;
+    
     if (isShowingSeconds && !window.isBlackoutActive) {
         delay = 1000 - now.getMilliseconds();
     } else {
+        // Next clean minute (:00)
         delay = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
     }
     
-    // Recursive setTimeout eliminates drift
-    setTimeout(startSynchronizedClockAndDate, delay);
+    // Recursive setTimeout eliminates drift and allows for immediate restarts
+    window.clockLoopId = setTimeout(startSynchronizedClockAndDate, delay);
 }
+
+// Global helper to trigger an immediate UI refresh
+window.refreshClockUI = function() {
+    startSynchronizedClockAndDate();
+};
+
 startSynchronizedClockAndDate();
 
 async function getTimezoneFromCoords(latitude, longitude) {
@@ -748,7 +759,7 @@ function initializeGeolocationFeatures() {
 secondsSwitch.addEventListener('change', function() {
     showSeconds = this.checked;
     localStorage.setItem('showSeconds', showSeconds);
-    updateClockAndDate();
+    refreshClockUI();
     
     // Save to current wallpaper's clock styles
     if (recentWallpapers.length > 0 && currentWallpaperPosition >= 0 && currentWallpaperPosition < recentWallpapers.length) {
