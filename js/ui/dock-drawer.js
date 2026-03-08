@@ -581,7 +581,6 @@ function setupDrawerInteractions() {
 			}
 			
 			// LOGIC FOR DRAGGING AN OPEN APP
-	        openEmbed.style.transition = 'none !important'; // No transitions during drag for instant response
 	        openEmbed.style.willChange = 'transform, opacity, border-radius'; // GPU Layer Hint
 
 	        // Start effect after a small deadzone
@@ -703,6 +702,12 @@ function setupDrawerInteractions() {
 
 	function endDrag() {
 	    if (!isDragging) return;
+
+        // Cancel any pending drag frames to prevent them from overriding the snap animation
+        if (window._drawerMoveRaf) {
+            cancelAnimationFrame(window._drawerMoveRaf);
+            window._drawerMoveRaf = null;
+        }
 	
 	    const deltaY = startY - currentY; // Positive for upward swipe
 	    let avgVelocity = 0;
@@ -744,12 +749,14 @@ function setupDrawerInteractions() {
 				return;
             }
 	    
-	        // LOGIC FOR FINISHING AN APP DRAG
-	        // Add transitions for the snap-back or close animation
-	        openEmbed.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease, border 0.3s ease';
-            
+	        // LOGIC FOR FINISHING AN APP DRAG            
             // Clean up GPU hint after transition ends
-            setTimeout(() => { if (openEmbed) openEmbed.style.willChange = 'auto'; }, 300);
+            setTimeout(() => { 
+                if (openEmbed) {
+                    openEmbed.style.willChange = 'auto'; 
+                    openEmbed.style.removeProperty('transition');
+                }
+            }, 300);
 	
 	        // Condition to close: swipe up more than 20% of the screen OR a fast flick up
 	        if (movementPercentage > 20 || isFlickUp) {

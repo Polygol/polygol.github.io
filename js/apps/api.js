@@ -21,6 +21,7 @@ const PERMISSION_MAPPINGS = {
     
     // App Management
     'installApp': 'app-management',
+    'installAppLink': 'app-management',
     'deleteApp': 'app-management',
     'requestInstalledApps': 'app-management',
     
@@ -159,7 +160,7 @@ async function checkAppPermission(sourceAppId, targetAction, origin) {
             const friendlyName = PERMISSION_NAMES[requiredPerm] || requiredPerm;
             let promptText = `${sourceAppId} will be able to ${friendlyName} from now on.`;
             let promptTitle = `Allow ${sourceAppId} to ${friendlyName}?`;
-            let promptIcon = 'security';
+            let promptIcon = 'shield';
 
             const allowed = await showCustomConfirm(promptText, promptTitle, promptIcon);
             resolve(resolvePermission(allowed));
@@ -857,6 +858,18 @@ window.addEventListener('message', async (event) => { // Make listener async
             return `Cleared OS data and permissions for ${appName}`;
         },
 		installApp, 
+		installAppLink: (appData) => {
+            if (typeof window.installApp === 'function') {
+                // Map the data structure to what installApp expects
+                window.installApp({
+                    name: appData.title || 'Shortcut',
+                    url: appData.url,
+                    iconUrl: appData.icon,
+                    // Mark as a simple link so it doesn't try to cache offline files
+                    isLink: true 
+                });
+            }
+        },
 		deleteApp,
 		requestInstalledApps, 
 		getLocalStorageItem, 

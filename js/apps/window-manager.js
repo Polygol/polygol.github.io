@@ -8,6 +8,10 @@ var apps = {
         url: "/assets/gurapp/intl/forudaraisu/index.html",
         icon: "files.png"
 	},
+    "Internet": {
+        url: "/assets/gurapp/intl/internet/index.html",
+        icon: "internet.png"
+	},
     "Assistant": {
         url: "https://kirbindustries.gitbook.io/polygol/assistant-for-polygol",
         icon: "assistant.png"
