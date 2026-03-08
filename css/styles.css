@@ -2982,6 +2982,7 @@ input[type="radio"]:checked::before {
     body.immersive-active #one-button-nav-handle {
         opacity: 0 !important;
 	    width: 150px;
+        height: 25px;
 	    left: 50%;
 	    transform: translateX(-50%);
         transition: opacity 0.3s ease !important;
