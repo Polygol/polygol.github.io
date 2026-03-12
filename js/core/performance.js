@@ -56,14 +56,9 @@ function detectPerformanceProfile() {
     if (score <= 2) {
         console.log("[System] Low-end device detected. Maximizing performance.");
         
-        // Enable High Contrast (Removes all backdrop-filters entirely)
-        if (localStorage.getItem('highContrast') === null) {
-            localStorage.setItem('highContrast', 'true');
-        }
-        
-        // Disable Animations
-        if (localStorage.getItem('animationsEnabled') === null) {
-            localStorage.setItem('animationsEnabled', 'false');
+        // Turn off Glass Effects instead of forcing High Contrast
+        if (localStorage.getItem('glassEffectsMode') === null || localStorage.getItem('glassEffectsMode') !== 'off') {
+            localStorage.setItem('glassEffectsMode', 'off');
         }
     } else {
         if (localStorage.getItem('animationsEnabled') === null) localStorage.setItem('animationsEnabled', 'true');
@@ -295,7 +290,10 @@ const ResourceManager = {
     },
 
     handleHighLoad() {
-        if (this.isStruggling) return; 
+        const now = Date.now();
+        // Prevent rapid cascading downgrades (10s cooldown)
+        if (this.isStruggling && this._lastDowngrade && (now - this._lastDowngrade < 10000)) return;
+
         this.isStruggling = true;
 
         const currentMode = localStorage.getItem('glassEffectsMode') || 'on';
@@ -307,6 +305,11 @@ const ResourceManager = {
         if (currentMode === 'on' || currentMode === 'frosted') {
             console.log("[System] Downgrading Glass to Focused.");
             this.applyDowngrade('focused');
+            this._lastDowngrade = now;
+        } else if (currentMode === 'focused') {
+            console.log("[System] Downgrading Glass to Off.");
+            this.applyDowngrade('off');
+            this._lastDowngrade = now;
         }
     },
 
@@ -319,6 +322,7 @@ const ResourceManager = {
         this.isStruggling = false;
         this.originalGlassMode = null;
         this.recoveryCounter = 0;
+        this._lastDowngrade = 0;
     },
 
     applyDowngrade(mode) {

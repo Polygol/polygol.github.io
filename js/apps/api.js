@@ -1080,7 +1080,7 @@ window.addEventListener('message', async (event) => { // Make listener async
 
         const glassMode = localStorage.getItem('glassEffectsMode') || 'on';
         const glassValue = getGlassFilterValue(glassMode);
-		sourceWindow.postMessage({ type: 'glassEffectsUpdate', value: glassValue }, targetOrigin);
+		sourceWindow.postMessage({ type: 'glassEffectsUpdate', value: glassValue, mode: glassMode }, targetOrigin);
 
         if (window.currentTintVariables) {
             sourceWindow.postMessage({

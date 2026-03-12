@@ -260,13 +260,18 @@
                         <option value="always_off">Always Off</option>
                     </select>
                 </div>
-            
                 <div class="setting-item">
                     <div class="setting-info">
                         <span class="setting-label">Gurapp Sounds</span>
                         <span class="setting-description">Allow apps to play system UI sounds</span>
                     </div>
                     <input type="checkbox" class="toggle-switch" data-key="gurappSoundsEnabled">
+                </div>
+                <div class="setting-item slider-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Volume</span>
+                    </div>
+                    <input type="range" min="0" max="100" class="styled-slider" data-key="sfxVolume">
                 </div>
             </div>
         </div>
@@ -548,50 +553,6 @@
         <!-- System Page -->
         <div class="page" id="page-system">
             <div class="setting-section">
-                <h2 class="section-title">Functionality</h2>
-                 <div class="setting-item" id="setting-gurappsEnabled">
-                    <div class="setting-info">
-                        <span class="setting-label">Gurapps</span>
-                        <span class="setting-description">Enable Polygol applications</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" 
-                               data-key="gurappsEnabled">
-                    </div>
-                </div>
-            </div>
-            <div class="setting-section">
-                <h2 class="section-title">Browser</h2>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Keep Polygol on</span>
-                        <span class="setting-description">Prevent display sleep from the browser</span>
-                    </div>
-                    <select class="styled-select" data-key="wakeLockMode">
-                        <option value="modern">Auto</option>
-                        <option value="legacy">Legacy</option>
-                        <option value="disabled">Disabled</option>
-                    </select>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Resource Manager</span>
-                        <span class="setting-description">Automatically reduce resource intensity when detected</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" data-key="resourceManagerEnabled">
-                    </div>
-                </div>
-                <div class="setting-item slider-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Screen Curve</span>
-                        <span class="setting-description">Virtual bezel curvature</span>
-                    </div>
-                    <input type="range" min="0" max="50" class="styled-slider" 
-                           data-key="screenCurve">
-                </div>
-            </div>
-            <div class="setting-section">
                 <h2 class="section-title">Sleep</h2>
                 <div class="setting-item">
                     <div class="setting-info">
@@ -626,12 +587,52 @@
                     </select>
                 </div>
             </div>
+            <div class="setting-section">
+                <h2 class="section-title">Browser</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Keep Polygol on</span>
+                        <span class="setting-description">Prevent display sleep from the browser</span>
+                    </div>
+                    <select class="styled-select" data-key="wakeLockMode">
+                        <option value="modern">Auto</option>
+                        <option value="legacy">Legacy</option>
+                        <option value="disabled">Disabled</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Resource Manager</span>
+                        <span class="setting-description">Automatically reduce resource intensity when detected</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" data-key="resourceManagerEnabled">
+                    </div>
+                </div>
+                <div class="setting-item slider-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Screen Curve</span>
+                        <span class="setting-description">Virtual bezel curvature</span>
+                    </div>
+                    <input type="range" min="0" max="50" class="styled-slider" 
+                           data-key="screenCurve">
+                </div>
+            </div>
         </div>
         <!-- General Page -->
         <div class="page" id="page-general">
             <div class="setting-section">
-                <h2 class="section-title">GuraAI</h2>
-                <span class="setting-description">GuraAI is discontinued</span>
+                <h2 class="section-title">Functionality</h2>
+                 <div class="setting-item" id="setting-gurappsEnabled">
+                    <div class="setting-info">
+                        <span class="setting-label">Gurapps</span>
+                        <span class="setting-description">Enable Polygol applications</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" 
+                               data-key="gurappsEnabled">
+                    </div>
+                </div>
             </div>
             <div class="setting-section">
                 <h2 class="section-title">Region</h2>
@@ -736,12 +737,7 @@
             </div>
             <div class="setting-section">
                 <h2 class="section-title">Hearing</h2>
-                <div class="setting-item slider-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Sound Feedback Volume</span>
-                    </div>
-                    <input type="range" min="0" max="100" class="styled-slider" data-key="sfxVolume">
-                </div>
+                Go to Sound & Haptics to adjust these settings
             </div>
         </div>
         <!-- About Page -->

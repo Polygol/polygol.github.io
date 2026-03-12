@@ -278,6 +278,40 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         html.gurasuraisu-glass-disabled {
             --edge-refraction-filter: blur(17.5px); /* Frosted glass appearance */
         }
+            
+        html.gurasuraisu-trans-off {
+            /* Dark Theme (Default) Variables */
+            --background-mono-dark: #1c1c1c;
+            --background-pure-dark: #000000;
+            --background-color-dark: #1c1c1c;
+            --background-color-dark-tr: rgba(28, 28, 28, 0.7);
+            --text-color-dark: #f9f9f9;
+            --secondary-text-color-dark: rgba(255, 255, 255, 1);
+            --accent-dark: #f9f9f9;
+            --tonal-dark: #f9f9f9;
+            --modal-background-dark: rgba(51, 51, 51, 1);
+            --modal-transparent-dark: rgba(51, 51, 51, 1);
+            --search-background-dark: rgba(40, 40, 40, 1);
+            --dark-overlay: rgba(51, 51, 51, 0.6);
+            --dark-transparent: rgba(71, 71, 71, 1); 
+            --glass-border-dark: rgba(100, 100, 100, 0.2);
+            
+            /* Light Theme Variables */
+            --background-mono-light: #f0f0f0;
+            --background-pure-light: #ffffff;
+            --background-color-light: #f0f0f0;
+            --background-color-light-tr: rgba(240, 240, 240, 0.7);
+            --text-color-light: #333333;
+            --secondary-text-color-light: rgba(0, 0, 0, 1);
+            --accent-light: #333333;
+            --tonal-light: #333333;
+            --modal-background-light: rgba(220, 220, 220, 1);
+            --modal-transparent-light: rgba(240, 240, 240, 1);
+            --search-background-light: rgba(230, 230, 230, 1);
+            --light-overlay: rgba(220, 220, 220, 0.6);
+            --light-transparent: rgba(230, 230, 230, 1); 
+            --glass-border-light: rgba(200, 200, 200, 0.2);
+        }
 
         :root.standalone {
             --background-color-dark-tr: var(--background-color-dark);
@@ -1438,6 +1472,9 @@ window.addEventListener('message', async (event) => {
         if (data.value) {
             document.documentElement.style.setProperty('--edge-refraction-filter', data.value);
         }
+        if (data.mode) {
+            document.documentElement.classList.toggle('gurasuraisu-trans-off', data.mode === 'off');
+        }
         break;
       case 'settingUpdate':
         if (data.key === 'gurappSoundsEnabled') {
@@ -1597,9 +1634,8 @@ document.addEventListener('DOMContentLoaded', () => {
         highContrastEnabled = contrastValue === 'true';
     }
 
-    // FIX: Target the <html> element for the initial high contrast check
     document.documentElement.classList.toggle('gurasuraisu-high-contrast', highContrastEnabled);
-      
+
     // We use setTimeout to ensure the SVG injection (which happens in another listener) has completed
     setTimeout(() => {
         const feBlend = document.querySelector('#edge-refraction-only feBlend');

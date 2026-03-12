@@ -145,6 +145,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             localStorage.setItem('glassEffectsMode', this.value);
             broadcastSettingUpdate('glassEffectsMode', this.value);
             applyGlassEffects();
+            applySystemTint();
         });
     }
     

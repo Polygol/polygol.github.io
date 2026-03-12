@@ -54,22 +54,22 @@ function applySystemTint() {
 
     if (wallpaperColors) {
         if (wallpaperColors.primary) {
-            // New Object Structure
             primaryTint = wallpaperColors.primary;
             backgroundTint = wallpaperColors.secondary || primaryTint;
         } else if (Array.isArray(wallpaperColors)) {
-            // Legacy Array Structure
             primaryTint = { r: wallpaperColors[0], g: wallpaperColors[1], b: wallpaperColors[2] };
             backgroundTint = primaryTint;
         } else {
-             // Legacy Object Structure?
              primaryTint = wallpaperColors;
              backgroundTint = wallpaperColors;
         }
     }
 
+    // Check if transparency is off to apply stronger tints
+    const isTransOff = localStorage.getItem('glassEffectsMode') === 'off';
+
     // Define variables to tint and their intensity weights
-	const tintWeights = {
+	let tintWeights = {
 	    '--background-color-dark': { w: 0.2, type: 'bg' },
 	    '--background-color-dark-tr': { w: 0.2, type: 'bg' },
 	    '--modal-background-dark': { w: 0.2, type: 'bg' },
@@ -118,6 +118,29 @@ function applySystemTint() {
 	    '--accent-light-highcontrast': { w: 0.6, type: 'primary' },
 	    '--tonal-light-highcontrast': { w: 0.6, type: 'bg' }
 	};
+
+    if (isTransOff) {
+        tintWeights = {
+            ...tintWeights,
+            '--background-color-dark': { w: 0.35, type: 'bg' },
+            '--background-color-dark-tr': { w: 0.2, type: 'bg' },
+            '--modal-background-dark': { w: 0.35, type: 'bg' },
+            '--modal-transparent-dark': { w: 0.35, type: 'bg' },
+            '--search-background-dark': { w: 0.35, type: 'bg' },
+            '--dark-overlay': { w: 0.5, type: 'bg' },
+            '--dark-transparent': { w: 0.3, type: 'bg' },
+            '--glass-border-dark': { w: 0.3, type: 'primary' },
+            
+            '--background-color-light': { w: 0.35, type: 'bg' },
+            '--background-color-light-tr': { w: 0.2, type: 'bg' },
+            '--modal-background-light': { w: 0.35, type: 'bg' },
+            '--modal-transparent-light': { w: 0.35, type: 'bg' },
+            '--search-background-light': { w: 0.35, type: 'bg' },
+            '--light-overlay': { w: 0.5, type: 'bg' },
+            '--light-transparent': { w: 0.3, type: 'bg' },
+            '--glass-border-light': { w: 0.3, type: 'primary' }
+        };
+    }
 
     Object.keys(tintWeights).forEach(key => root.style.removeProperty(key));
 
@@ -200,6 +223,7 @@ function applyGlassEffects() {
 
     // 2. Apply to Host
     root.style.setProperty('--edge-refraction-filter', filterValue);
+    root.classList.toggle('trans-off', mode === 'off');
 
     // 3. Broadcast to Gurapps
     const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
@@ -208,7 +232,8 @@ function applyGlassEffects() {
             const targetOrigin = getOriginFromUrl(iframe.src);
             iframe.contentWindow.postMessage({
                 type: 'glassEffectsUpdate',
-                value: filterValue // Send the raw CSS value
+                value: filterValue, // Send the raw CSS value
+                mode: mode
             }, targetOrigin);
         }
     });
