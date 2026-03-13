@@ -305,8 +305,8 @@ html.trans-off {
 }
 
 /* Universal backdrop-filter removal for high contrast */
-body.high-contrast *:not(#brightness-overlay):not(#temperature-overlay) {
-	backdrop-filter: none !important;
+body.high-contrast *:not(#brightness-overlay):not(#temperature-overlay):not(#a11y-overlay) {
+    	backdrop-filter: none !important;
 }
 
 body.glass-effects-disabled {
@@ -731,12 +731,12 @@ body.one-button-nav-active .dock.show {
 
 /* One Button Nav Split Trigger */
 .nav-btn-small {
-    width: 35px;
+    width: 40px;
     height: 25px;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: flex-start;
-    border-radius: 50%;
+    overflow: visible;
     position: absolute;
     cursor: pointer;
     transition: transform 0.2s, opacity 0.2s;
@@ -744,7 +744,7 @@ body.one-button-nav-active .dock.show {
     color: transparent;
     position: fixed;
     bottom: 0;
-    left: 2px;
+    left: 0;
     z-index: 9997;
 }
 
@@ -752,10 +752,13 @@ body.one-button-nav-active .dock.show {
     transform: scale(0.9);
 }
 
-.nav-btn-small .material-symbols-rounded {
-	font-size: 22px;
-    transform: rotate(180deg);
-	font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 200, 'opsz' 20;
+.nav-btn-small svg {
+    width: auto;
+    height: auto;
+    margin: 8px;
+    color: var(--text-color);
+    pointer-events: none;
+    flex-shrink: 0;
 }
 
 #dynamic-area {
@@ -891,7 +894,6 @@ body.one-button-nav-active .dock.show {
 	body:not(.high-contrast) .persistent-clock .persistent-colon,
 	body:not(.high-contrast) .persistent-clock .persistent-clock-digit,
 	body:not(.high-contrast) .persistent-clock .material-symbols-rounded,
-	body:not(.high-contrast) .nav-btn-small .material-symbols-rounded,
 	body:not(.high-contrast) #status-indicator .material-symbols-rounded {
 	    -webkit-mask-image: linear-gradient(black, black);
 	    -webkit-mask-clip: text;
@@ -899,7 +901,20 @@ body.one-button-nav-active .dock.show {
 	    mask-image: linear-gradient(black, black);
 	    mask-composite: source-in;
 	    backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
-	}
+    }
+
+    body:not(.high-contrast) .nav-btn-small svg {
+        -webkit-mask-image: var(--trigger-mask, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M 3 3 L 3 9 A 10 10 0 0 0 13 19 L 19 19' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>"));
+        mask-image: var(--trigger-mask, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M 3 3 L 3 9 A 10 10 0 0 0 13 19 L 19 19' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>"));
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
+        color: transparent; /* Hide solid stroke so only the masked backdrop-filter shows */
+    }
 }
 
 .persistent-clock:active {
@@ -1696,19 +1711,10 @@ body.one-button-nav-active .dock.show {
     pointer-events: none;
     --curve: 0px;
     
-    /* Create 4 concave corners using radial gradients */
-    background: 
-        /* Top Left */
-        radial-gradient(circle at bottom right, transparent var(--curve), black calc(var(--curve) + 0.5px)) top left,
-        /* Top Right */
-        radial-gradient(circle at bottom left, transparent var(--curve), black calc(var(--curve) + 0.5px)) top right,
-        /* Bottom Left */
-        radial-gradient(circle at top right, transparent var(--curve), black calc(var(--curve) + 0.5px)) bottom left,
-        /* Bottom Right */
-        radial-gradient(circle at top left, transparent var(--curve), black calc(var(--curve) + 0.5px)) bottom right;
-        
-    background-size: var(--curve) var(--curve);
-    background-repeat: no-repeat;
+    /* Squircle mask using an outward-spreading box-shadow */
+    border-radius: var(--curve);
+    corner-shape: superellipse(1.5);
+    box-shadow: 0 0 0 calc(var(--curve) + 5px) black;
 }
 
 .settings-grid {

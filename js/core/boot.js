@@ -311,10 +311,44 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 	if (screenCurveSlider) {
         const applyScreenCurve = (val) => {
+            // Update global variable for other JS modules
+            window.systemScreenCurve = parseInt(val) || 0;
+
             // Update the CSS variable on the overlay
             const overlay = document.getElementById('screen-curve-overlay');
             if (overlay) {
                 overlay.style.setProperty('--curve', `${val}px`);
+            }
+            
+            // Dynamically adjust the split screen trigger SVG
+            let r = parseInt(val) / 2 || 0;
+            r = Math.max(5, r);
+            
+            const padding = 3; 
+            const tails = 1;
+            const s = r + tails + padding * 2;
+            const d = `M ${padding} ${padding} L ${padding} ${padding + tails} A ${r} ${r} 0 0 0 ${padding + r} ${padding + tails + r} L ${padding + tails + r} ${padding + tails + r}`;
+                
+            const svgPath = document.getElementById('split-trigger-path');
+            const svgEl = document.getElementById('split-trigger-svg');
+            
+            if (svgPath) svgPath.setAttribute('d', d);
+            if (svgEl) {
+                svgEl.setAttribute('width', s);
+                svgEl.setAttribute('height', s);
+                svgEl.setAttribute('viewBox', `0 0 ${s} ${s}`);
+            }
+
+            // Encode the SVG as a mask for the glassmorphism effect
+            const triggerDiv = document.getElementById('split-screen-trigger');
+            if (triggerDiv) {
+                // Update the physical container size to match the dynamic SVG
+                svgEl.style.width = `${s}px`;
+                svgEl.style.height = `${s}px`;
+                
+                const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}"><path d="${d}" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+                const encoded = "data:image/svg+xml;base64," + btoa(svgData);
+                triggerDiv.style.setProperty('--trigger-mask', `url("${encoded}")`);
             }
         };
 

@@ -106,7 +106,6 @@ async function installApp(appData) {
         console.log(`Installing new app: ${appData.name}`);
     }
 
-    // THE FIX IS HERE: Use appData.iconUrl instead of appData.icon
     const iconPath = appData.iconUrl;
 
     apps[appData.name] = { url: appData.url, icon: iconPath };
@@ -797,8 +796,8 @@ async function createFullscreenEmbed(url, options = {}) {
 	        embedContainer.style.transform = 'scale(1)';
 	        embedContainer.style.opacity = '1';
 	        embedContainer.style.filter = 'none';
-	        embedContainer.style.borderRadius = '0px';
-			embedContainer.style.cornerShape = 'square';
+	        embedContainer.style.borderRadius = `${window.systemScreenCurve || 0}px`;
+			embedContainer.style.cornerShape = 'superellipse(1.5)';
 			embedContainer.style.border = 'none';
 	    }, 10);
         
@@ -1037,8 +1036,8 @@ async function createFullscreenEmbed(url, options = {}) {
         embedContainer.style.transform = 'scale(1)';
         embedContainer.style.opacity = '1';
         embedContainer.style.filter = 'none';
-        embedContainer.style.borderRadius = '0px';
-		embedContainer.style.cornerShape = 'square';
+        embedContainer.style.borderRadius = `${window.systemScreenCurve || 0}px`;
+		embedContainer.style.cornerShape = 'superellipse(1.5)';
 		embedContainer.style.border = 'none';
     }, 10);
     
@@ -1347,30 +1346,6 @@ function closeFullscreenEmbed() {
     }
 	
     // --- STANDARD HOME RESTORATION (Only if history is empty) ---
-
-    if (drawerWasOpen) {
-        // Prevent Home UI from showing
-        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-            el.classList.add('force-hide');
-            el.style.opacity = '0';
-        });
-        HomeActivityManager.updateVisibility();
-
-        appDrawer.style.display = 'flex';
-        appDrawer.style.opacity = '0';
-        void appDrawer.offsetWidth; // Force reflow
-        
-        requestAnimationFrame(() => {
-            appDrawer.style.bottom = ''; // Clear inline styles so class takes over
-            appDrawer.style.opacity = '';
-            appDrawer.classList.add('open');
-            createAppIcons();
-            resetDrawerInactivityTimer();
-        });
-        drawerWasOpen = false; 
-        return;
-    }
-
     // Restore all main UI elements
     document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
 	    el.classList.remove('force-hide');
@@ -1669,27 +1644,6 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
             // would orphan App A's timer, causing it to hide A later even if restored.
 			minimizeTimeouts[url] = setTimeout(() => {
                 applyWallpaperEffects();
-                if (drawerWasOpen) {
-                    // Force hide Home UI elements during minimization restoration
-                    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
-                        el.classList.add('force-hide');
-                        el.style.opacity = '0';
-                    });
-                    HomeActivityManager.updateVisibility();
-
-                    appDrawer.style.display = 'flex';
-                    appDrawer.style.opacity = '0';
-                    void appDrawer.offsetWidth; // Force reflow
-                    
-                    requestAnimationFrame(() => {
-                        appDrawer.style.bottom = ''; // Clear inline styles
-                        appDrawer.style.opacity = '';
-                        appDrawer.classList.add('open');
-                        createAppIcons();
-                        resetDrawerInactivityTimer();
-                    });
-                    drawerWasOpen = false;
-                }
 	
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
                 

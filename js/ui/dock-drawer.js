@@ -617,9 +617,9 @@ function setupDrawerInteractions() {
 	            openEmbed.style.transform = 'perspective(100vh) rotateX(0deg) translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
     	        openEmbed.style.filter = 'none';
-	            openEmbed.style.borderRadius = '0px';
+	            openEmbed.style.borderRadius = `${window.systemScreenCurve || 0}px`;
 	            openEmbed.style.border = 'none';
-				openEmbed.style.cornerShape = 'square';
+				openEmbed.style.cornerShape = 'superellipse(1.5)';
 	            
                 const dynArea = document.getElementById('dynamic-area');
                 if (dynArea) dynArea.style.opacity = '1';
@@ -801,8 +801,8 @@ function setupDrawerInteractions() {
 	            openEmbed.style.transform = 'perspective(100vh) rotateX(0deg) translateY(0px) scale(1)';
 	            openEmbed.style.opacity = '1';
 	            openEmbed.style.filter = 'none';
-	            openEmbed.style.borderRadius = '0px';
-				openEmbed.style.cornerShape = 'square';
+	            openEmbed.style.borderRadius = `${window.systemScreenCurve || 0}px`;
+				openEmbed.style.cornerShape = 'superellipse(1.5)';
 	            openEmbed.style.border = 'none'; // Animate border removal
 	            
 	            appDrawer.style.opacity = '0';

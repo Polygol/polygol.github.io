@@ -331,6 +331,7 @@ const ResourceManager = {
         if (select) select.value = mode;
         broadcastSettingUpdate('glassEffectsMode', mode);
         applyGlassEffects();
+        if (typeof applySystemTint === 'function') applySystemTint(); // Update solid colors if trans-off is triggered
     },
 
     killLeastUsedApp() {
