@@ -44,7 +44,18 @@ const SoundManager = {
         if (mode === 'always_off') return;
         if (mode === 'silent_off' && isSilent) return;
 
-        // 2. Play via Web Audio API (Prevents Media Session takeover)
+        // 2. Trigger Haptic Feedback
+        const hapticsEnabled = localStorage.getItem('hapticsEnabled') !== 'false';
+        if (hapticsEnabled && navigator.vibrate) {
+            try {
+                if (type === 'select' || type === 'check') navigator.vibrate(10);
+                else if (type === 'toggle') navigator.vibrate([10, 30, 10]);
+                else if (type === 'error') navigator.vibrate([20, 50, 20]);
+                else if (type === 'success' || type === 'open') navigator.vibrate([15, 30, 15]);
+            } catch (e) {} // Ignore policy blocks
+        }
+
+        // 3. Play via Web Audio
         if (this.audioCtx && this.buffers[type]) {
             // Browser policy workaround (must be resumed on interaction)
             if (this.audioCtx.state === 'suspended') {
@@ -56,7 +67,17 @@ const SoundManager = {
             
             const gainNode = this.audioCtx.createGain();
             const volSetting = localStorage.getItem('sfxVolume');
-            const volume = volSetting ? parseInt(volSetting) / 100 : 0.4;
+            let volume = volSetting ? parseInt(volSetting) / 100 : 0.4;
+            
+            // Adaptive Volume: Quiet mode at night
+            if (localStorage.getItem('adaptiveVolume') !== 'false') {
+                const hour = new Date().getHours();
+                // If between 10 PM and 7 AM, reduce volume by 60%
+                if (hour >= 22 || hour <= 6) {
+                    volume *= 0.4; 
+                }
+            }
+
             gainNode.gain.value = Math.max(0, Math.min(1, volume));
             
             source.connect(gainNode);

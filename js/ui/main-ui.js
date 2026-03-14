@@ -28,6 +28,30 @@ if (__dateElement) {
     });
 }
 
+// --- Double Tap to Sleep ---
+let lastBgTap = 0;
+document.addEventListener('click', (e) => {
+    // Detect if click is on the empty wallpaper/background
+    const isBg = e.target === document.body || 
+                 e.target.id === 'background-video' || 
+                 e.target.id === 'depth-layer' || 
+                 e.target.id === 'time-of-day-overlay' ||
+                 e.target.classList.contains('container') ||
+                 e.target.id === 'widget-grid';
+                 
+    if (isBg) {
+        const now = Date.now();
+        if (now - lastBgTap < 300) { // 300ms double tap window
+            if (localStorage.getItem('doubleTapToSleep') !== 'false') {
+                if (typeof blackoutScreen === 'function') {
+                    blackoutScreen();
+                }
+            }
+        }
+        lastBgTap = now;
+    }
+});
+
 const customizeModal = document.getElementById('customizeModal');
 const themeSwitch = document.getElementById('theme-switch');
 const wallpaperInput = document.getElementById('wallpaperInput');

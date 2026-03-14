@@ -1388,6 +1388,18 @@ function loadRecentWallpapers() {
 	        delete wallpaper.clockStyles.wallpaperContrast;
 	        updated = true;
 	    }
+        if (wallpaper.clockStyles && wallpaper.clockStyles.wallpaperEffects) {
+            ['light', 'dark'].forEach(t => {
+                if (wallpaper.clockStyles.wallpaperEffects[t].saturate === undefined) { wallpaper.clockStyles.wallpaperEffects[t].saturate = '100'; updated = true; }
+                if (wallpaper.clockStyles.wallpaperEffects[t].hue === undefined) { wallpaper.clockStyles.wallpaperEffects[t].hue = '0'; updated = true; }
+                if (wallpaper.clockStyles.wallpaperEffects[t].vignette === undefined) { wallpaper.clockStyles.wallpaperEffects[t].vignette = '0'; updated = true; }
+            });
+        }
+        if (wallpaper.clockStyles.clockItalic === undefined) { wallpaper.clockStyles.clockItalic = false; updated = true; }
+        if (wallpaper.clockStyles.clockStrokeWidth === undefined) { wallpaper.clockStyles.clockStrokeWidth = '0'; updated = true; }
+        if (wallpaper.clockStyles.clockStrokeColor === undefined) { wallpaper.clockStyles.clockStrokeColor = '#000000'; updated = true; }
+        if (wallpaper.clockStyles.clockBlendMode === undefined) { wallpaper.clockStyles.clockBlendMode = 'normal'; updated = true; }
+
         if (wallpaper.clockStyles.shadowEnabled === undefined) {
             wallpaper.clockStyles.shadowEnabled = false;
             wallpaper.clockStyles.shadowBlur = '10';
@@ -2364,6 +2376,13 @@ async function jumpToWallpaper(index) {
         const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
         const gradientSwitch = document.getElementById('clock-gradient-switch');
         const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
+        const italicSwitch = document.getElementById('clock-italic-switch');
+        const strokeWidthSlider = document.getElementById('clock-stroke-width-slider');
+        const strokeColorPicker = document.getElementById('clock-stroke-color-picker');
+        const blendModeSelect = document.getElementById('clock-blend-mode-select');
+        const saturateSlider = document.getElementById('wallpaper-saturate-slider');
+        const hueSlider = document.getElementById('wallpaper-hue-slider');
+        const vignetteSlider = document.getElementById('wallpaper-vignette-slider');
 	    const roundnessSlider = document.getElementById('roundness-slider');
 	    const sizeSlider = document.getElementById('clock-size-slider');
 	    const posXSlider = document.getElementById('clock-pos-x-slider');
@@ -2381,6 +2400,13 @@ async function jumpToWallpaper(index) {
         if (document.getElementById('text-case-select')) document.getElementById('text-case-select').value = wallpaper.clockStyles.textCase || 'none';
         if (document.getElementById('date-size-slider')) document.getElementById('date-size-slider').value = wallpaper.clockStyles.dateSize || '100';
         if (document.getElementById('date-offset-slider')) document.getElementById('date-offset-slider').value = wallpaper.clockStyles.dateOffset || '0';
+        if (italicSwitch) italicSwitch.checked = wallpaper.clockStyles.clockItalic || false;
+        if (strokeWidthSlider) strokeWidthSlider.value = wallpaper.clockStyles.clockStrokeWidth || '0';
+        if (strokeColorPicker) strokeColorPicker.value = wallpaper.clockStyles.clockStrokeColor || '#000000';
+        if (blendModeSelect) blendModeSelect.value = wallpaper.clockStyles.clockBlendMode || 'normal';
+        if (saturateSlider) saturateSlider.value = effects.saturate !== undefined ? effects.saturate : '100';
+        if (hueSlider) hueSlider.value = effects.hue !== undefined ? effects.hue : '0';
+        if (vignetteSlider) vignetteSlider.value = effects.vignette !== undefined ? effects.vignette : '0';
 	    if (sizeSlider) sizeSlider.value = wallpaper.clockStyles.clockSize || '0';
 	    if (posXSlider) posXSlider.value = wallpaper.clockStyles.clockPosX || '50';
 	    if (posYSlider) posYSlider.value = wallpaper.clockStyles.clockPosY || '50';
@@ -2731,6 +2757,14 @@ function syncUiStates() {
     document.getElementById('setting-wallpaper-brightness').classList.toggle('active', document.getElementById('wallpaper-brightness-slider').value !== '100');
     document.getElementById('setting-wallpaper-contrast-fx').classList.toggle('active', document.getElementById('wallpaper-contrast-slider').value !== '100');
     
+    document.getElementById('setting-wallpaper-saturate').classList.toggle('active', document.getElementById('wallpaper-saturate-slider').value !== '100');
+    document.getElementById('setting-wallpaper-hue').classList.toggle('active', document.getElementById('wallpaper-hue-slider').value !== '0');
+    document.getElementById('setting-wallpaper-vignette').classList.toggle('active', document.getElementById('wallpaper-vignette-slider').value !== '0');
+
+    document.getElementById('setting-italic').classList.toggle('active', document.getElementById('clock-italic-switch').checked);
+    document.getElementById('setting-blend-mode').classList.toggle('active', document.getElementById('clock-blend-mode-select').value !== 'normal');
+    document.getElementById('setting-clock-stroke').classList.toggle('active', parseInt(document.getElementById('clock-stroke-width-slider').value) !== 0);
+    
     // Add roundness and size to sync
     document.getElementById('setting-roundness').classList.toggle('active', document.getElementById('roundness-slider').value !== '0');
     document.getElementById('setting-size').classList.toggle('active', document.getElementById('clock-size-slider').value !== '0');
@@ -2746,10 +2780,23 @@ function applyWallpaperEffects() {
     const theme = isLightMode ? 'light' : 'dark';
 
     const currentWallpaper = recentWallpapers[currentWallpaperPosition];
-    const effects = currentWallpaper?.clockStyles?.wallpaperEffects?.[theme] || { blur: '0', brightness: '100', contrast: '100' };
+    const effects = currentWallpaper?.clockStyles?.wallpaperEffects?.[theme] || { blur: '0', brightness: '100', contrast: '100', saturate: '100', hue: '0', vignette: '0' };
 
-    const filterString = `blur(${effects.blur}px) brightness(${effects.brightness}%) contrast(${effects.contrast}%)`;
+    const saturate = effects.saturate !== undefined ? effects.saturate : '100';
+    const hue = effects.hue !== undefined ? effects.hue : '0';
+    const vignette = effects.vignette !== undefined ? effects.vignette : '0';
+
+    const filterString = `blur(${effects.blur}px) brightness(${effects.brightness}%) contrast(${effects.contrast}%) saturate(${saturate}%) hue-rotate(${hue}deg)`;
     document.body.style.setProperty('--wallpaper-filter', filterString);
+
+    // Apply Vignette by dynamically creating/updating the overlay
+    let vignetteOverlay = document.getElementById('vignette-overlay');
+    if (!vignetteOverlay) {
+        vignetteOverlay = document.createElement('div');
+        vignetteOverlay.id = 'vignette-overlay';
+        document.body.appendChild(vignetteOverlay);
+    }
+    vignetteOverlay.style.opacity = vignette / 100;
 }
 
 function setupFontSelection() {
@@ -2784,7 +2831,11 @@ function setupFontSelection() {
     const textCaseSelect = document.getElementById('text-case-select');
     const dateSizeSlider = document.getElementById('date-size-slider');
     const dateOffsetSlider = document.getElementById('date-offset-slider');
-
+    const italicSwitch = document.getElementById('clock-italic-switch');
+    const strokeWidthSlider = document.getElementById('clock-stroke-width-slider');
+    const strokeColorPicker = document.getElementById('clock-stroke-color-picker');
+    const blendModeSelect = document.getElementById('clock-blend-mode-select');
+    
     // --- Function to save all settings (triggered by user interaction) ---
     async function saveCurrentWallpaperSettings() {
 	    const isLightMode = document.body.classList.contains('light-theme');
@@ -2818,6 +2869,10 @@ function setupFontSelection() {
             textCase: textCaseSelect ? textCaseSelect.value : 'none',
             dateSize: dateSizeSlider ? dateSizeSlider.value : '100',
             dateOffset: dateOffsetSlider ? dateOffsetSlider.value : '0',
+            clockItalic: document.getElementById('clock-italic-switch')?.checked || false,
+            clockStrokeWidth: document.getElementById('clock-stroke-width-slider')?.value || '0',
+            clockStrokeColor: document.getElementById('clock-stroke-color-picker')?.value || '#000000',
+            clockBlendMode: document.getElementById('clock-blend-mode-select')?.value || 'normal',
 			dateFormat: document.getElementById('date-format-input').value,
             clockFormat: document.getElementById('clock-format-input').value
         };
@@ -2845,7 +2900,10 @@ function setupFontSelection() {
             currentWallpaper.clockStyles.wallpaperEffects[theme] = {
                 blur: blurSlider.value,
                 brightness: brightnessSlider.value,
-                contrast: contrastSlider.value
+                contrast: contrastSlider.value,
+                saturate: document.getElementById('wallpaper-saturate-slider')?.value || '100',
+                hue: document.getElementById('wallpaper-hue-slider')?.value || '0',
+                vignette: document.getElementById('wallpaper-vignette-slider')?.value || '0'
             };
 
             saveRecentWallpapers();
@@ -2892,14 +2950,20 @@ function setupFontSelection() {
 	textCaseSelect.value = localStorage.getItem('textCase') || 'none';
 	dateSizeSlider.value = localStorage.getItem('dateSize') || '100';
 	dateOffsetSlider.value = localStorage.getItem('dateOffset') || '0';
-    // Note: Blur, brightness, and contrast sliders are handled by their own setup logic, but it's safe to include here too.
+    document.getElementById('clock-italic-switch').checked = localStorage.getItem('clockItalic') === 'true';
+    document.getElementById('clock-stroke-width-slider').value = localStorage.getItem('clockStrokeWidth') || '0';
+    document.getElementById('clock-stroke-color-picker').value = localStorage.getItem('clockStrokeColor') || '#000000';
+    document.getElementById('clock-blend-mode-select').value = localStorage.getItem('clockBlendMode') || 'normal';
     const isLightModeOnLoad = document.body.classList.contains('light-theme');
     const initialTheme = isLightModeOnLoad ? 'light' : 'dark';
     const initialWallpaper = recentWallpapers[currentWallpaperPosition];
-    const initialEffects = initialWallpaper?.clockStyles?.wallpaperEffects?.[initialTheme] || { blur: '0', brightness: '100', contrast: '100' };
+    const initialEffects = initialWallpaper?.clockStyles?.wallpaperEffects?.[initialTheme] || { blur: '0', brightness: '100', contrast: '100', saturate: '100', hue: '0', vignette: '0' };
     blurSlider.value = initialEffects.blur;
     brightnessSlider.value = initialEffects.brightness;
     contrastSlider.value = initialEffects.contrast;
+    document.getElementById('wallpaper-saturate-slider').value = initialEffects.saturate || '100';
+    document.getElementById('wallpaper-hue-slider').value = initialEffects.hue || '0';
+    document.getElementById('wallpaper-vignette-slider').value = initialEffects.vignette || '0';
     document.getElementById('date-format-input').value = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
     document.getElementById('clock-format-input').value = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
 
@@ -2923,13 +2987,20 @@ function setupFontSelection() {
     });
     
     // --- 3. NOW, set up the event listeners for future user interactions ---
-    const allControls = [
+    const allControls =[
         weightSlider, colorSwitch, colorPicker, stackSwitch, alignmentSelect,
         blurSlider, brightnessSlider, contrastSlider, shadowSwitch, shadowBlurSlider,
         shadowColorPicker, gradientSwitch, gradientColorPicker, glassSwitch, dynamicFillSwitch, roundnessSlider,
         sizeSlider, posXSlider, posYSlider, alignmentSelect, clockFormatInput, dateFormatInput,
-        spacingSlider, textCaseSelect, dateSizeSlider, dateOffsetSlider
-    ];
+        spacingSlider, textCaseSelect, dateSizeSlider, dateOffsetSlider,
+        document.getElementById('clock-italic-switch'),
+        document.getElementById('clock-stroke-width-slider'),
+        document.getElementById('clock-stroke-color-picker'),
+        document.getElementById('clock-blend-mode-select'),
+        document.getElementById('wallpaper-saturate-slider'),
+        document.getElementById('wallpaper-hue-slider'),
+        document.getElementById('wallpaper-vignette-slider')
+    ].filter(Boolean);
 
     allControls.forEach(control => {
         // Use a Set to avoid duplicate event listeners for alignmentSelect
@@ -3012,7 +3083,13 @@ function applyClockStyles() {
     const shadowSwitch = document.getElementById('clock-shadow-switch');
     const shadowBlurSlider = document.getElementById('clock-shadow-blur-slider');
     const shadowColorPicker = document.getElementById('clock-shadow-color-picker');
-    const gradientSwitch = document.getElementById('clock-gradient-switch');
+    const italicSwitch = document.getElementById('clock-italic-switch');
+    const strokeWidthSlider = document.getElementById('clock-stroke-width-slider');
+    const strokeColorPicker = document.getElementById('clock-stroke-color-picker');
+    const blendModeSelect = document.getElementById('clock-blend-mode-select');
+    const saturateSlider = document.getElementById('wallpaper-saturate-slider');
+    const hueSlider = document.getElementById('wallpaper-hue-slider');
+    const vignetteSlider = document.getElementById('wallpaper-vignette-slider');    const gradientSwitch = document.getElementById('clock-gradient-switch');
     const gradientColorPicker = document.getElementById('clock-gradient-color-picker');
     const glassSwitch = document.getElementById('clock-glass-switch');
 	const dynamicFillSwitch = document.getElementById('clock-dynamicfill-switch');
@@ -3092,6 +3169,33 @@ function applyClockStyles() {
     
     clockElement.style.textShadow = 'none';
     infoElement.style.textShadow = 'none';
+
+    const isItalic = italicSwitch && italicSwitch.checked;
+    clockElement.style.fontStyle = isItalic ? 'italic' : 'normal';
+    infoElement.style.fontStyle = isItalic ? 'italic' : 'normal';
+
+    if (blendModeSelect) {
+        // Apply blend mode to the parent container so it blends with the wallpaper underneath
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.mixBlendMode = blendModeSelect.value;
+        }
+        // Clear any isolated blend modes on the children
+        clockElement.style.mixBlendMode = '';
+        infoElement.style.mixBlendMode = '';
+    }
+
+    if (strokeWidthSlider && strokeColorPicker) {
+        const sw = strokeWidthSlider.value;
+        if (sw > 0) {
+            clockElement.style.webkitTextStroke = `${sw}px ${strokeColorPicker.value}`;
+            infoElement.style.webkitTextStroke = `${sw}px ${strokeColorPicker.value}`;
+        } else {
+            // Must use an empty string to properly unset the webkit text stroke property
+            clockElement.style.webkitTextStroke = '';
+            infoElement.style.webkitTextStroke = '';
+        }
+    }
 	
 	// Reset previous effects and custom colors
 	clockElement.classList.remove('glass-effect', 'gradient-effect', 'dynamic-fill-effect');
@@ -3159,9 +3263,13 @@ function resetAndApplyDefaultClockStyles() {
 	    clockSize: '0',
 	    clockPosX: '50',
 	    clockPosY: '50',
+        clockItalic: false,
+        clockStrokeWidth: '0',
+        clockStrokeColor: '#000000',
+        clockBlendMode: 'normal',
 	    wallpaperEffects: {
-	        light: { blur: '0', brightness: '100', contrast: '100' },
-	        dark: { blur: '0', brightness: '100', contrast: '100' }
+	        light: { blur: '0', brightness: '100', contrast: '100', saturate: '100', hue: '0', vignette: '0' },
+	        dark: { blur: '0', brightness: '100', contrast: '100', saturate: '100', hue: '0', vignette: '0' }
 	    },
         wallpaperBlur: '0',
         wallpaperBrightness: '100',
@@ -3201,6 +3309,13 @@ function resetAndApplyDefaultClockStyles() {
 	document.getElementById('wallpaper-blur-slider').value = defaultStyles.wallpaperEffects[theme].blur;
 	document.getElementById('wallpaper-brightness-slider').value = defaultStyles.wallpaperEffects[theme].brightness;
 	document.getElementById('wallpaper-contrast-slider').value = defaultStyles.wallpaperEffects[theme].contrast;
+    document.getElementById('wallpaper-saturate-slider').value = defaultStyles.wallpaperEffects[theme].saturate;
+    document.getElementById('wallpaper-hue-slider').value = defaultStyles.wallpaperEffects[theme].hue;
+    document.getElementById('wallpaper-vignette-slider').value = defaultStyles.wallpaperEffects[theme].vignette;
+    document.getElementById('clock-italic-switch').checked = defaultStyles.clockItalic;
+    document.getElementById('clock-stroke-width-slider').value = defaultStyles.clockStrokeWidth;
+    document.getElementById('clock-stroke-color-picker').value = defaultStyles.clockStrokeColor;
+    document.getElementById('clock-blend-mode-select').value = defaultStyles.clockBlendMode;
     document.getElementById('clock-shadow-switch').checked = defaultStyles.shadowEnabled;
     document.getElementById('clock-shadow-blur-slider').value = defaultStyles.shadowBlur;
     document.getElementById('clock-shadow-color-picker').value = defaultStyles.shadowColor;

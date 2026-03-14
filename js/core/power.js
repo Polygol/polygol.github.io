@@ -89,42 +89,23 @@ function blackoutScreen() {
 
     // Store previous settings
     previousBlackoutSettings = {
-        highContrast: localStorage.getItem('highContrast') || 'false',
         animationsEnabled: localStorage.getItem('animationsEnabled') || 'true'
     };
 
     // 1. Handle the currently active app
     const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
     if (activeEmbed) {
-        const activeUrl = activeEmbed.dataset.embedUrl;
-        const activeAppName = Object.keys(apps).find(name => apps[name].url === activeUrl);
-        if (activeAppName === activeMediaSessionApp || doesAppHaveActiveLiveActivity(activeAppName)) {
-            minimizeFullscreenEmbed(); // Minimize if it has media or a live activity
-        } else {
-            closeFullscreenEmbed(); // Close active non-essential app
-        }
+        minimizeFullscreenEmbed(); // Minimize if it has media or a live activity
     }
-
-    // 2. Clean up all other minimized apps that are not essential
-    const urlsToRemove = [];
-    for (const url in minimizedEmbeds) {
-        const appName = Object.keys(apps).find(name => apps[name].url === url);
-        // Add to removal list if it's NOT the media app AND does NOT have a live activity
-        if (appName !== activeMediaSessionApp && !doesAppHaveActiveLiveActivity(appName)) {
-            urlsToRemove.push(url);
-        }
-    }
-
-	urlsToRemove.forEach(url => {
-        forceCloseApp(url);
-    });
 	
     // Apply power saving settings
-    setControlValueAndDispatch('highContrast', 'true');
     setControlValueAndDispatch('animationsEnabled', 'false');
 
     const sleepStyle = localStorage.getItem('sleepModeStyle') || 'dim-show';
     document.body.classList.add('blackout-active', `blackout-style-${sleepStyle}`);
+
+    // Start OLED Pixel Cleaning sequence
+    runPixelCleaningCycle();
 
     pauseAllAnimations(); // Pause animations on sleep
 
@@ -151,11 +132,14 @@ function blackoutScreen() {
 
 function exitBlackoutMode() {
     window.isBlackoutActive = false;
+
+    // Stop pixel cleaner if it's currently running
+    stopPixelCleaning();
+
     // Force immediate clock update to bring seconds back to the UI seamlessly
     if (typeof updateClockAndDate === 'function') updateClockAndDate();
     
     // Restore previous settings
-    setControlValueAndDispatch('highContrast', previousBlackoutSettings.highContrast || 'false');
     setControlValueAndDispatch('animationsEnabled', previousBlackoutSettings.animationsEnabled || 'true');
 
     document.body.classList.remove('blackout-active', 'blackout-style-dim-show', 'blackout-style-dim-hide', 'blackout-style-hide-show', 'blackout-style-off');
@@ -205,4 +189,198 @@ function resetAutoSleepTimer() {
     if (shouldBeActive) {
         autoSleepTimer = setTimeout(blackoutScreen, duration);
     }
+}
+
+// --- Battery Status Logic ---
+function initBattery() {
+	if ('getBattery' in navigator) {
+		navigator.getBattery().then(battery => {
+			const batContainer = document.getElementById('battery-status-indicator');
+			const batIcon = batContainer.querySelector('span');
+			
+			// Only show the indicator if API is supported and active
+			batContainer.style.display = 'flex';
+
+			function updateBatteryUI() {
+				const level = battery.level * 100;
+				const isCharging = battery.charging;
+
+				// Update Globals for Remote
+                window.currentBatteryLevel = Math.round(level);
+                window.currentBatteryCharging = isCharging;
+
+				// Reset colors
+				batIcon.style.color = 'var(--text-color)';
+
+				// Adaptive Eco Mode
+                const ecoEnabled = localStorage.getItem('adaptiveBatterySaver') !== 'false';
+                let targetTier = 0; // 0 = off, 1 = moderate, 2 = severe, 3 = critical
+                
+                if (ecoEnabled && !isCharging) {
+                    if (level <= 15) targetTier = 3;
+                    else if (level <= 30) targetTier = 2;
+                    else if (level <= 50) targetTier = 1;
+                }
+
+                if (targetTier !== window.currentEcoTier) {
+                    document.body.classList.remove('eco-mode-active', 'eco-critical', 'eco-severe', 'eco-moderate');
+                    
+                    if (targetTier > 0) {
+                        document.body.classList.add('eco-mode-active');
+                        if (targetTier === 1) document.body.classList.add('eco-moderate');
+                        if (targetTier === 2) document.body.classList.add('eco-severe');
+                        if (targetTier === 3) {
+                            document.body.classList.add('eco-critical', 'reduce-animations');
+                            if (window.currentEcoTier < 3) {
+                                showNotification(`Eco mode enabled`, {
+                                    heading: `Low battery`,
+                                    icon: 'battery_android_1',
+                                    system: true
+                                });
+                            }
+                        } else if ((!window.currentEcoTier || window.currentEcoTier === 0) && targetTier === 2) {
+                            return
+                        }
+                    } else {
+                        if (localStorage.getItem('animationsEnabled') !== 'false') {
+                            document.body.classList.remove('reduce-animations');
+                        }
+                        if (window.currentEcoTier > 0) showPopup('Eco mode disabled');
+                    }
+                    window.currentEcoTier = targetTier;
+                }
+
+				if (isCharging) {
+					batIcon.textContent = 'battery_android_bolt';
+				} else {
+					if (level <= 15) {
+						batIcon.textContent = 'battery_android_1';
+						// Make it red for low battery
+						batIcon.style.color = '#ff5252'; 
+					} else if (level <= 30) {
+						batIcon.textContent = 'battery_android_2';
+					} else if (level <= 50) {
+						batIcon.textContent = 'battery_android_3';
+					} else if (level <= 65) {
+						batIcon.textContent = 'battery_android_4';
+					} else if (level <= 85) {
+						batIcon.textContent = 'battery_android_5';
+					} else if (level <= 99) {
+						batIcon.textContent = 'battery_android_6';
+					} else {
+						batIcon.textContent = 'battery_android_0';
+					}
+				}
+
+				if (window.WavesHost) window.WavesHost.pushFullState();
+			}
+
+			updateBatteryUI();
+			battery.addEventListener('chargingchange', updateBatteryUI);
+			battery.addEventListener('levelchange', updateBatteryUI);
+		});
+	}
+}
+
+// --- OLED Burn-in Protection ---
+let pixelCleanerTimeout = null;
+
+function runPixelCleaningCycle() {
+    const enabled = localStorage.getItem('oledBurnInProtection') !== 'false';
+    if (!enabled) return;
+    if (document.getElementById('pixel-cleaner')) return;
+
+    console.log('[Power] Running OLED Pixel Cleaning cycle...');
+    document.body.classList.add('oled-pixel-cleaning');
+
+    const cleaner = document.createElement('div');
+    cleaner.id = 'pixel-cleaner';
+    cleaner.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        z-index: 9999999; pointer-events: none; overflow: hidden;
+        opacity: 0; transition: opacity 2s;
+    `;
+    
+    const bar = document.createElement('div');
+    bar.style.cssText = `
+        width: 100%; height: 20vh;
+        background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0) 100%);
+    `;
+    cleaner.appendChild(bar);
+    document.body.appendChild(cleaner);
+    
+    setTimeout(() => cleaner.style.opacity = '1', 100);
+
+    // Run the cleaning cycle for 5 minutes then remove it
+    clearTimeout(pixelCleanerTimeout);
+    pixelCleanerTimeout = setTimeout(() => {
+        stopPixelCleaning();
+        console.log('[Power] OLED Pixel Cleaning cycle complete.');
+    }, 5 * 60 * 1000);
+}
+
+function stopPixelCleaning() {
+    clearTimeout(pixelCleanerTimeout);
+    document.body.classList.remove('oled-pixel-cleaning');
+    const cleaner = document.getElementById('pixel-cleaner');
+    if (cleaner) {
+        cleaner.style.opacity = '0';
+        setTimeout(() => cleaner.remove(), 2000);
+    }
+}
+
+function startOledProtection() {
+    let angle = 0;
+    const radius = 0.5;
+    
+    // Add CSS for advanced OLED techniques (Pixel Sweep & Logo Luminance Dimming)
+    if (!document.getElementById('oled-advanced-style')) {
+        const style = document.createElement('style');
+        style.id = 'oled-advanced-style';
+        style.textContent = `
+            @keyframes pixel-sweep {
+                0% { transform: translateY(-20vh); }
+                100% { transform: translateY(100vh); }
+            }
+            /* High specificity to override the .reduce-animations global pause during sleep */
+            #pixel-cleaner > div {
+                animation: pixel-sweep 6s linear infinite !important;
+            }
+            .oled-dimmed .persistent-clock, 
+            .oled-dimmed .widget-instance,
+            .oled-dimmed .info,
+            .oled-dimmed .nav-btn-small,
+            .oled-dimmed .drawer-pill,
+            .oled-dimmed .dock {
+                opacity: 0.5 !important;
+                transition: opacity 5s ease-in-out, filter 5s ease-in-out !important;
+                filter: saturate(0.6) !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    setInterval(() => {
+        const enabled = localStorage.getItem('oledBurnInProtection') !== 'false';
+        if (!enabled) {
+            document.body.classList.remove('oled-dimmed');
+            return;
+        }
+
+        // Technique 1: Ultra-subtle sub-pixel shifting
+        const elements = document.querySelectorAll('body > *:not(#screen-curve-overlay):not(#a11y-overlay):not(#blackout-event-overlay):not(#brightness-overlay):not(#temperature-overlay):not(#pixel-cleaner)');
+        
+        let x = 0, y = 0;
+        if (!window.isBlackoutActive) {
+            angle += 0.5;
+            if (angle >= Math.PI * 2) angle -= Math.PI * 2;
+            x = (Math.cos(angle) * radius).toFixed(2);
+            y = (Math.sin(angle) * radius).toFixed(2);
+        }
+        
+        elements.forEach(el => {
+            el.style.translate = `${x}px ${y}px`;
+        });
+
+    }, 60000); // Check every 1 minute
 }

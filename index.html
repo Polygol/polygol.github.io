@@ -529,6 +529,27 @@
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">circles</span></div>
                         <span class="setting-label">Roundness</span>
                     </div>
+                    
+                    <div class="setting-item" id="setting-clock-stroke">
+                        <div class="setting-icon-bg">
+                            <span class="material-symbols-rounded">border_color</span>
+                        </div>
+                        <span class="setting-label">Outline</span>
+                    </div>
+
+                    <div class="setting-item" id="setting-italic">
+                        <div class="setting-icon-bg">
+                            <span class="material-symbols-rounded">format_italic</span>
+                        </div>
+                        <span class="setting-label">Italic</span>
+                    </div>
+
+                    <div class="setting-item" id="setting-blend-mode">
+                        <div class="setting-icon-bg">
+                            <span class="material-symbols-rounded">difference</span>
+                        </div>
+                        <span class="setting-label">Blend Mode</span>
+                    </div>
                 </div>
                 <!-- Layout -->
                 <h4 style="margin: 10px;">Layout</h4>
@@ -608,6 +629,28 @@
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">opacity</span></div>
                         <span class="setting-label" data-lang-key="CONTRAST_FX">Clarity</span>
                     </div>
+
+                    <div class="setting-item" id="setting-wallpaper-saturate">
+                        <div class="setting-icon-bg">
+                            <span class="material-symbols-rounded">tonality</span>
+                        </div>
+                        <span class="setting-label">Saturation</span>
+                    </div>
+
+                    <div class="setting-item" id="setting-wallpaper-hue">
+                        <div class="setting-icon-bg">
+                            <span class="material-symbols-rounded">palette</span>
+                        </div>
+                        <span class="setting-label">Hue</span>
+                    </div>
+
+                    <div class="setting-item" id="setting-wallpaper-vignette">
+                        <div class="setting-icon-bg">
+                            <span class="material-symbols-rounded">lens_blur</span>
+                        </div>
+                        <span class="setting-label">Vignette</span>
+                    </div>
+
                     <div class="setting-item" id="setting-live-environment">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">routine</span></div>
                         <span class="setting-label">Live Scene</span>
@@ -839,6 +882,16 @@
                 <input type="color" id="clock-shadow-color-picker">
             </div>
         </div>
+        <div id="stroke-controls-popup" class="control-popup-content">
+            <div class="popup-control-row">
+                <label>Width</label>
+                <input type="range" id="clock-stroke-width-slider" min="0" max="10" value="0">
+            </div>
+            <div class="popup-control-row">
+                <label>Color</label>
+                <input type="color" id="clock-stroke-color-picker" value="#000000">
+            </div>
+        </div>
         <div id="format-popup" class="control-popup-content">
             <div class="popup-control-row" style="flex-direction: column; align-items: flex-start; gap: 5px;">
                 <label for="date-format-input" data-lang-key="DATE_FORMAT">Date Format</label>
@@ -853,6 +906,17 @@
         <input type="checkbox" id="clock-stack-switch">
         <input type="checkbox" id="depth-effect-switch">
         <input type="checkbox" id="live-environment-switch">
+        <input type="checkbox" id="clock-italic-switch">
+        <select id="clock-blend-mode-select">
+            <option value="normal">Normal</option>
+            <option value="overlay">Overlay</option>
+            <option value="difference">Difference</option>
+            <option value="exclusion">Exclusion</option>
+            <option value="color-dodge">Color Dodge</option>
+        </select>
+        <input type="range" class="wallpaper-effect-slider" id="wallpaper-saturate-slider" min="0" max="300" value="100">
+        <input type="range" class="wallpaper-effect-slider" id="wallpaper-hue-slider" min="-180" max="180" value="0">
+        <input type="range" class="wallpaper-effect-slider" id="wallpaper-vignette-slider" min="0" max="100" value="0">
         <select id="font-select">
             <option value="Inter" data-lang="Default">LANG_DEFAULT</option>
             <option value="Bricolage Grotesque" data-lang="Work">LANG_WORK</option>

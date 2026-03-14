@@ -64,8 +64,17 @@ if (savedUsage) {
 }
 
 // Save usage data whenever an app is opened
-function saveUsageData() {
+function saveUsageData(appName) {
     localStorage.setItem('appUsage', JSON.stringify(appUsage));
+    
+    // Track usage by hour for Predictive Preloading
+    if (appName) {
+        const hour = new Date().getHours();
+        let hourlyUsage = JSON.parse(localStorage.getItem('appUsageHourly') || '{}');
+        if (!hourlyUsage[hour]) hourlyUsage[hour] = {};
+        hourlyUsage[hour][appName] = (hourlyUsage[hour][appName] || 0) + 1;
+        localStorage.setItem('appUsageHourly', JSON.stringify(hourlyUsage));
+    }
 }
 
 function loadUserInstalledApps() {
@@ -1750,4 +1759,34 @@ function createCompositeScreenshot() {
             reject(new Error("Screenshot request to iframe timed out. The active app may not support this feature."));
         }, 3000);
     });
+}
+
+// --- Predictive App Preloading ---
+function initPredictivePreload() {
+    if (localStorage.getItem('predictivePreload') === 'false') return;
+
+    // Wait 10 seconds after boot to ensure system stability before heavy operations
+    setTimeout(() => {
+        // Don't preload if an app was requested via URL or is currently actively loading
+        if (window.isAppOpen || Object.keys(minimizedEmbeds).length > 0) return;
+
+        const hour = new Date().getHours();
+        const hourlyUsage = JSON.parse(localStorage.getItem('appUsageHourly') || '{}');
+        
+        if (hourlyUsage[hour]) {
+            // Sort apps used in this hour by frequency
+            const sorted = Object.entries(hourlyUsage[hour]).sort((a, b) => b[1] - a[1]);
+            
+            // If the user has opened this app at least 3 times during this hour historically
+            if (sorted.length > 0 && sorted[0][1] >= 3) {
+                const predictedAppName = sorted[0][0];
+                const appDef = apps[predictedAppName];
+                
+                if (appDef && appDef.url) {
+                    console.log(`[System] Predictive AI Preloading: ${predictedAppName}`);
+                    createBackgroundEmbed(appDef.url);
+                }
+            }
+        }
+    }, 10000);
 }

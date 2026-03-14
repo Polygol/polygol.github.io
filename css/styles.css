@@ -472,6 +472,16 @@ body:not(.reduce-animations)::before,
     opacity: 0;
 }
 
+#vignette-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2; /* Below depth layer, environment, and UI */
+    background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.85) 150%);
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
 /* 3. Environment Layer (Rain/Snow via Pixi.js) */
 #environment-layer {
     position: fixed;
@@ -2913,6 +2923,35 @@ input[type="radio"]:checked::before {
 	    padding: 0;
 	}
 
+    /* Adaptive Eco Mode */
+    body.eco-mode-active.eco-moderate::before,
+    body.eco-mode-active.eco-moderate #background-video,
+    body.eco-mode-active.eco-moderate #depth-layer {
+	    opacity: 0.7 !important;
+    }
+    
+    body.eco-mode-active.eco-severe::before,
+    body.eco-mode-active.eco-severe #background-video,
+    body.eco-mode-active.eco-severe #depth-layer {
+	    opacity: 0.5 !important;
+        filter: grayscale(0.5) !important;
+    }
+
+	body.eco-mode-active.eco-severe {
+	    background-color: #0b0b0b !important;
+	}
+
+    body.eco-mode-active.eco-critical::before,
+    body.eco-mode-active.eco-critical #background-video,
+    body.eco-mode-active.eco-critical #depth-layer {
+	    opacity: 0.2 !important;
+        filter: grayscale(1) !important;
+    }
+
+	body.eco-mode-active.eco-critical {
+	    background-color: #000 !important;
+	}
+
 	/* Common styles for ALL blackout modes */
 	body.blackout-active .persistent-clock,
 	body.blackout-active .drawer-handle,
@@ -2922,18 +2961,6 @@ input[type="radio"]:checked::before {
 	body.blackout-active .page-indicator,
 	body.blackout-active #customizeModal.modal.show {
 	    display: none !important;
-	}
-	body.blackout-active {
-	    background-color: #000 !important; /* Pure black for dark mode */
-	}
-	body.blackout-active.light-theme {
-	    background-color: #fff !important; /* Pure white for light mode */
-	}
-
-	/* Style 1: Dim Wallpaper, Show Content */
-	body.blackout-active.blackout-style-dim-show::before,
-	body.blackout-active.blackout-style-dim-show #background-video {
-	    opacity: 0.3 !important;
 	}
 
 	/* Style 2: Show Wallpaper, Hide Content */

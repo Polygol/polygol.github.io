@@ -182,6 +182,24 @@
                                data-key="nightMode">
                     </div>
                 </div>   
+                <div class="setting-item" id="setting-autoBrightness">
+                    <div class="setting-info">
+                        <span class="setting-label">Auto brightness</span>
+                        <span class="setting-description">Adapt brightness to ambient light</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" data-key="autoBrightness" id="auto-brightness-switch" checked>
+                    </div>
+                </div>
+                <div class="setting-item" id="setting-dynamicTone">
+                    <div class="setting-info">
+                        <span class="setting-label">Dynamic Tone</span>
+                        <span class="setting-description">Adapt screen temperature to ambient light</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" data-key="dynamicTone" id="dynamic-tone-switch" checked>
+                    </div>
+                </div>
             </div>
             <div class="setting-section">
                 <h2 class="section-title">Appearance</h2>
@@ -273,6 +291,28 @@
                     </div>
                     <input type="range" min="0" max="100" class="styled-slider" data-key="sfxVolume">
                 </div>
+                <div class="setting-item" id="setting-adaptiveVolume">
+                    <div class="setting-info">
+                        <span class="setting-label">Adaptive Volume</span>
+                        <span class="setting-description">Automatically adjust volume to enhance audio</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" data-key="adaptiveVolume" id="adaptive-volume-switch" checked>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-section">
+                <h2 class="section-title">Haptics</h2>
+                <div class="setting-item" id="setting-hapticsEnabled">
+                    <div class="setting-info">
+                        <span class="setting-label">Haptic Feedback</span>
+                        <span class="setting-description">Vibrate on interactions for supported devices</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" data-key="hapticsEnabled" id="haptics-switch" checked>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -331,6 +371,15 @@
                     </div>
                     <input type="checkbox" class="toggle-switch" 
                            data-key="showWeather">
+                </div>
+                <div class="setting-item" id="setting-doubleTapToSleep">
+                    <div class="setting-info">
+                        <span class="setting-label">Double Tap to Sleep</span>
+                        <span class="setting-description">Quickly double tap empty space to enter sleep mode</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" data-key="doubleTapToSleep" id="double-tap-switch" checked>
+                    </div>
                 </div>
                 <div class="setting-item">
                     <div class="setting-info">
@@ -553,6 +602,18 @@
         <!-- System Page -->
         <div class="page" id="page-system">
             <div class="setting-section">
+                <h2 class="section-title">Power</h2>
+                <div class="setting-item" id="setting-adaptiveBatterySaver">
+                    <div class="setting-info">
+                        <span class="setting-label">Adaptive Eco Mode</span>
+                        <span class="setting-description">Dynamically changes settings to be friendly to the enviroment</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" data-key="adaptiveBatterySaver" id="eco-mode-switch" checked>
+                    </div>
+                </div>
+            </div>
+            <div class="setting-section">
                 <h2 class="section-title">Sleep</h2>
                 <div class="setting-item">
                     <div class="setting-info">
@@ -609,13 +670,31 @@
                         <input type="checkbox" class="toggle-switch" data-key="resourceManagerEnabled">
                     </div>
                 </div>
+                <div class="setting-item" id="setting-predictivePreload">
+                    <div class="setting-info">
+                        <span class="setting-label">Predictive Loading</span>
+                        <span class="setting-description">Learn your habits to seamlessly preload your next experience</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" data-key="predictivePreload" id="predictive-preload-switch" checked>
+                    </div>
+                </div>
                 <div class="setting-item slider-item">
                     <div class="setting-info">
                         <span class="setting-label">Screen Curve</span>
-                        <span class="setting-description">Virtual bezel curvature</span>
+                        <span class="setting-description">Bezel curvature</span>
                     </div>
                     <input type="range" min="0" max="50" class="styled-slider" 
                            data-key="screenCurve">
+                </div>
+                <div class="setting-item" id="setting-oledProtection">
+                    <div class="setting-info">
+                        <span class="setting-label">OLED burn-in protection</span>
+                        <span class="setting-description">Periodically shifts the interface to prevent screen burn-in</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" data-key="oledBurnInProtection" id="oled-protection-switch" checked>
+                    </div>
                 </div>
             </div>
         </div>

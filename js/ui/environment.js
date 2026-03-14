@@ -1,3 +1,154 @@
+// --- Dynamic Brightness & Tone (True Tone) ---
+const DynamicEnvironmentManager = {
+    lastLux: 0,
+    lastTargetBright: 100,
+    lastTargetTone: 0,
+
+    init() {
+        // Run immediately, then every 2 minutes
+        this.update();
+        setInterval(() => this.update(), 120000);
+
+        // Optional: Hardware Ambient Light Sensor API (if browser supported)
+        try {
+            if ('AmbientLightSensor' in window) {
+                const sensor = new AmbientLightSensor();
+                sensor.onreading = () => this.handleHardwareSensor(sensor.illuminance);
+                sensor.start();
+            }
+        } catch (e) {}
+    },
+
+    handleHardwareSensor(lux) {
+        const autoBright = localStorage.getItem('autoBrightness') !== 'false';
+        const brightOverridden = localStorage.getItem('autoBrightness_overridden') === 'true';
+
+        if (brightOverridden) {
+            const overrideLux = parseFloat(localStorage.getItem('override_lux'));
+            // If lux changed by more than 100 (significant ambient light shift)
+            if (isNaN(overrideLux) || Math.abs(lux - overrideLux) > 100) {
+                localStorage.setItem('autoBrightness', 'true');
+                localStorage.removeItem('autoBrightness_overridden');
+                if (typeof broadcastSettingUpdate === 'function') broadcastSettingUpdate('autoBrightness', 'true');
+            } else {
+                return; // Keep user override active
+            }
+        } else if (!autoBright) {
+            return;
+        }
+
+        // Map lux (0 - 1000+) to brightness (20 - 100)
+        let targetBrightness = 20 + (Math.min(lux, 1000) / 1000) * 80;
+        this.applySmoothly('page_brightness', targetBrightness);
+        this.lastLux = lux;
+    },
+
+    async update() {
+        const autoBright = localStorage.getItem('autoBrightness') !== 'false';
+        const dynamicTone = localStorage.getItem('dynamicTone') !== 'false';
+        const brightOverridden = localStorage.getItem('autoBrightness_overridden') === 'true';
+        const toneOverridden = localStorage.getItem('dynamicTone_overridden') === 'true';
+
+        if (!autoBright && !dynamicTone && !brightOverridden && !toneOverridden) return;
+
+        const now = new Date();
+        const longitude = (now.getTimezoneOffset() / 60) * -15;
+        let latitude = 40; 
+        try {
+            const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (timeZone && timeZone.startsWith('Australia')) latitude = -25;
+        } catch (e) {}
+
+        const sunPosition = SunCalc.getPosition(now, latitude, longitude);
+        const altitudeDeg = sunPosition.altitude * (180 / Math.PI); // Convert rad to deg
+
+        // Check Weather Context
+        let weatherModifierBright = 1.0;
+        let weatherModifierTone = 0;
+        const savedWeather = await SwapManager.get('lastWeatherData');
+        if (savedWeather) {
+            const code = savedWeather.current.weathercode;
+            const isClouds = (code >= 1 && code <= 3);
+            const isRainSnow = (code >= 51 && code <= 77) || (code >= 80 && code <= 86) || code >= 95;
+            
+            if (isRainSnow) {
+                weatherModifierBright = 0.7; // 30% dimmer during storms
+                weatherModifierTone = -3; // Cooler (bluer)
+            } else if (isClouds) {
+                weatherModifierBright = 0.85; // 15% dimmer
+                weatherModifierTone = -1; // Slightly cool
+            }
+        }
+
+        // --- Calculate Target Brightness ---
+        if (autoBright) {
+            let targetBright = 100;
+            if (altitudeDeg < -10) targetBright = 20; // Night
+            else if (altitudeDeg < 0) targetBright = 40; // Twilight
+            else if (altitudeDeg < 20) targetBright = 40 + ((altitudeDeg / 20) * 60); // Morning/Late Afternoon
+            
+            targetBright = Math.max(20, Math.min(100, targetBright * weatherModifierBright));
+            this.applySmoothly('page_brightness', targetBright);
+        }
+
+        // --- Calculate Target Tone (Temperature) ---
+        let targetTone = 0;
+        if (altitudeDeg < -5) targetTone = 8; // Deep Night (Warm/Blue light filter)
+        else if (altitudeDeg < 15) targetTone = 5; // Golden Hour (Warm)
+        else targetTone = 0; // High Noon (Neutral)
+        
+        targetTone = Math.max(-10, Math.min(10, targetTone + weatherModifierTone));
+
+        // --- Delta Detection for Restoration ---
+        if (brightOverridden) {
+            const overrideBright = parseFloat(localStorage.getItem('override_target_bright'));
+            // If internal target shifted by more than 15 points
+            if (isNaN(overrideBright) || Math.abs(targetBright - overrideBright) > 15) {
+                localStorage.setItem('autoBrightness', 'true');
+                localStorage.removeItem('autoBrightness_overridden');
+                if (typeof broadcastSettingUpdate === 'function') broadcastSettingUpdate('autoBrightness', 'true');
+            }
+        }
+
+        if (toneOverridden) {
+            const overrideTone = parseFloat(localStorage.getItem('override_target_tone'));
+            // If internal target shifted by more than 3 points
+            if (isNaN(overrideTone) || Math.abs(targetTone - overrideTone) > 3) {
+                localStorage.setItem('dynamicTone', 'true');
+                localStorage.removeItem('dynamicTone_overridden');
+                if (typeof broadcastSettingUpdate === 'function') broadcastSettingUpdate('dynamicTone', 'true');
+            }
+        }
+
+        this.lastTargetBright = targetBright;
+        this.lastTargetTone = targetTone;
+
+        if (localStorage.getItem('autoBrightness') !== 'false') {
+            this.applySmoothly('page_brightness', targetBright);
+        }
+        if (localStorage.getItem('dynamicTone') !== 'false') {
+            this.applySmoothly('display_temperature', targetTone);
+        }
+    },
+
+    applySmoothly(key, targetValue) {
+        // Prevent manual slider interaction feedback loop
+        window._isSystemAutoAdjusting = true;
+        
+        const rounded = Math.round(targetValue);
+        // Only dispatch if it's a significant change (prevents constant DOM thrashing)
+        const current = parseInt(localStorage.getItem(key) || (key === 'page_brightness' ? '100' : '0'));
+        
+        if (Math.abs(current - rounded) > 2) {
+            if (typeof setControlValueAndDispatch === 'function') {
+                setControlValueAndDispatch(key, rounded.toString());
+            }
+        }
+        
+        setTimeout(() => { window._isSystemAutoAdjusting = false; }, 100);
+    }
+};
+
 let currentSunShadow = ''; // To store the calculated sun shadow string
 let currentSunShadowStrong = ''; // To store the intensified sun shadow string
 

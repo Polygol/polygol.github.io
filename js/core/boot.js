@@ -15,13 +15,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     requestPersistentStorage();
     loadUserInstalledApps(); // **CRITICAL: Load user apps before creating any UI**
     loadSavedData();         // Load usage and lastOpened data
+    startOledProtection();
 	loadRecentWallpapers();
     applyWallpaper();
     loadAvailableWidgets(); 
 	setupStickerControls();
     initializeWallpaperTracking();
+    DynamicEnvironmentManager.init();
     ResourceManager.init();
     HomeActivityManager.init(); // Initialize Home Activity Manager
+    initPredictivePreload();
     setTimeout(migrateWallpapersColor, 2000); 
 
     // --- Perform initial setup that depends on the loaded data ---
@@ -702,6 +705,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Temperature slider event listener
     temperatureSlider.addEventListener('input', function(e) {
+        // MANUAL OVERRIDE: Turn off Dynamic Tone if user touches the slider
+        if (!window._isSystemAutoAdjusting && localStorage.getItem('dynamicTone') !== 'false') {
+            localStorage.setItem('dynamicTone', 'false');
+            localStorage.setItem('dynamicTone_overridden', 'true');
+            if (window.DynamicEnvironmentManager) {
+                localStorage.setItem('override_target_tone', window.DynamicEnvironmentManager.lastTargetTone || 0);
+            }
+            broadcastSettingUpdate('dynamicTone', 'false');
+        }
+
         const value = e.target.value;
         temperaturePopupValue.textContent = `${value}`;
         temperatureValue.textContent = `${value}`;
@@ -716,6 +729,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Brightness control event listener
     brightnessSlider.addEventListener('input', (e) => {
+        // MANUAL OVERRIDE: Turn off Auto-Brightness if user touches the slider
+        if (!window._isSystemAutoAdjusting && localStorage.getItem('autoBrightness') !== 'false') {
+            localStorage.setItem('autoBrightness', 'false');
+            localStorage.setItem('autoBrightness_overridden', 'true');
+            if (window.DynamicEnvironmentManager) {
+                localStorage.setItem('override_lux', window.DynamicEnvironmentManager.lastLux || 0);
+                localStorage.setItem('override_target_bright', window.DynamicEnvironmentManager.lastTargetBright || 100);
+            }
+            broadcastSettingUpdate('autoBrightness', 'false');
+        }
+
         updateBrightness(e.target.value);
         localStorage.setItem('page_brightness', e.target.value);
         broadcastSettingUpdate('page_brightness', e.target.value);
@@ -1020,63 +1044,126 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 	
-    // --- Helper to connect grid items to their controls ---
-    const connectGridItem = (gridItemId, controlId) => {
+    // --- Helper to connect grid items to their controls and popups ---
+    const connectGridItem = (gridItemId, primaryControlId, popupId = null) => {
         const gridItem = document.getElementById(gridItemId);
-        const control = document.getElementById(controlId);
-        if (!gridItem || !control) return;
+        if (!gridItem) return;
 
-        const isPopupTrigger = control.nodeName === 'SELECT' || control.type === 'range';
-        const isToggle = control.type === 'checkbox';
+        const primaryControl = primaryControlId ? document.getElementById(primaryControlId) : null;
+        const popup = popupId ? document.getElementById(popupId) : null;
 
-        if (isToggle) {
-            const updateActiveState = () => gridItem.classList.toggle('active', control.checked);
-            control.addEventListener('change', updateActiveState);
-            updateActiveState();
-        }
-        
-        gridItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (isPopupTrigger) {
-                showControlPopup(gridItem, control);
-            } else if (isToggle) {
-                control.checked = !control.checked;
-                control.dispatchEvent(new Event('change'));
-            } else {
-                control.click();
+        // --- 1. Click / Toggle Logic ---
+        if (popup) {
+            // Complex item with a dedicated popup container
+            gridItem.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showControlPopup(gridItem, popup);
+            });
+        } else if (primaryControl) {
+            // Simple item (Checkbox, Select, Range)
+            const isPopupTrigger = primaryControl.nodeName === 'SELECT' || primaryControl.type === 'range';
+            const isToggle = primaryControl.type === 'checkbox';
+
+            if (isToggle) {
+                const updateActiveState = () => gridItem.classList.toggle('active', primaryControl.checked);
+                primaryControl.addEventListener('change', updateActiveState);
+                updateActiveState();
             }
-        });
+            
+            gridItem.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (isPopupTrigger) {
+                    showControlPopup(gridItem, primaryControl);
+                } else if (isToggle) {
+                    primaryControl.checked = !primaryControl.checked;
+                    primaryControl.dispatchEvent(new Event('change'));
+                } else {
+                    primaryControl.click();
+                }
+            });
+        }
+
+        // --- 2. Long Press to Reset Logic (Reads directly from HTML defaults) ---
+        let pressTimer;
+        let isLongPress = false;
+        let startX, startY;
+
+        const startPress = (e) => {
+            // Only attach long press if there is a control to reset
+            if (!primaryControl && !popup) return;
+
+            isLongPress = false;
+            startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+            pressTimer = setTimeout(async () => {
+                isLongPress = true;
+                const labelElement = gridItem.querySelector('.setting-label');
+                const label = labelElement ? labelElement.textContent : 'this setting';
+                
+                if (await showCustomConfirm(`Reset ${label}?`)) {
+                    // Gather all inputs connected to this grid item
+                    const controlsToReset = popup 
+                        ? Array.from(popup.querySelectorAll('input, select'))
+                        : [primaryControl].filter(Boolean);
+
+                    controlsToReset.forEach(ctrl => {
+                        // Revert inputs to their original HTML attribute state
+                        if (ctrl.type === 'checkbox' || ctrl.type === 'radio') {
+                            ctrl.checked = ctrl.defaultChecked;
+                        } else if (ctrl.tagName === 'SELECT') {
+                            const defaultOption = Array.from(ctrl.options).find(opt => opt.defaultSelected) || ctrl.options[0];
+                            if (defaultOption) ctrl.value = defaultOption.value;
+                        } else {
+                            ctrl.value = ctrl.defaultValue;
+                        }
+                        
+                        // Fire event so the engine naturally detects and saves the reset value
+                        const eventType = (ctrl.type === 'checkbox' || ctrl.type === 'radio' || ctrl.tagName === 'SELECT') ? 'change' : 'input';
+                        ctrl.dispatchEvent(new Event(eventType, { bubbles: true }));
+                    });
+                }
+            }, 500); // 500ms hold to trigger
+        };
+
+        const cancelPress = (e) => {
+            if (pressTimer) {
+                if (e && e.type.includes('move')) {
+                    const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                    const cy = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                    // Cancel if finger moved more than 10px
+                    if (Math.abs(cx - startX) > 10 || Math.abs(cy - startY) > 10) {
+                        clearTimeout(pressTimer);
+                    }
+                } else {
+                    clearTimeout(pressTimer);
+                }
+            }
+        };
+
+        gridItem.addEventListener('mousedown', startPress);
+        gridItem.addEventListener('touchstart', startPress, { passive: true });
+        gridItem.addEventListener('mousemove', cancelPress);
+        gridItem.addEventListener('touchmove', cancelPress, { passive: true });
+        gridItem.addEventListener('mouseup', cancelPress);
+        gridItem.addEventListener('mouseleave', cancelPress);
+        gridItem.addEventListener('touchend', cancelPress);
+
+        // Block the standard click from firing if we triggered a long press
+        gridItem.addEventListener('click', (e) => {
+            if (isLongPress) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, { capture: true });
     };
 
-    // --- Special handler for Clock Color & Gradient Popup ---
-    const clockColorItem = document.getElementById('setting-clock-color');
-    const clockColorPopup = document.getElementById('clock-color-popup');
-    if (clockColorItem && clockColorPopup) {
-        clockColorItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showControlPopup(clockColorItem, clockColorPopup);
-        });
-    }
-
-    // --- Special handler for Clock Shadow Popup ---
-    const clockShadowItem = document.getElementById('setting-clock-shadow');
-    const shadowControlsPopup = document.getElementById('shadow-controls-popup');
-    if (clockShadowItem && shadowControlsPopup) {
-        clockShadowItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showControlPopup(clockShadowItem, shadowControlsPopup);
-        });
-    }
-
-    // --- Special handler for Position Popup ---
-    const positionItem = document.getElementById('setting-position');
-    const positionPopup = document.getElementById('position-controls-popup');
-    if (positionItem) {
-        positionItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showControlPopup(positionItem, positionPopup);
-        });
-    }
+    // --- Connect Popups ---
+    connectGridItem('setting-clock-color', null, 'clock-color-popup');
+    connectGridItem('setting-clock-shadow', null, 'shadow-controls-popup');
+    connectGridItem('setting-position', null, 'position-controls-popup');
+    connectGridItem('setting-clock-stroke', null, 'stroke-controls-popup');
+    connectGridItem('setting-format', null, 'format-popup');
 
     // --- Connect all other settings ---
     connectGridItem('setting-wallpaper-blur', 'wallpaper-blur-slider');
@@ -1098,18 +1185,14 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-date-size', 'date-size-slider');
     connectGridItem('setting-date-offset', 'date-offset-slider');
     connectGridItem('setting-alignment', 'alignment-select');
+    connectGridItem('setting-italic', 'clock-italic-switch');
+    connectGridItem('setting-blend-mode', 'clock-blend-mode-select');
+    connectGridItem('setting-wallpaper-saturate', 'wallpaper-saturate-slider');
+    connectGridItem('setting-wallpaper-hue', 'wallpaper-hue-slider');
+    connectGridItem('setting-wallpaper-vignette', 'wallpaper-vignette-slider');
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
     connectGridItem('setting-one-button-nav', 'one-button-nav-switch');
-
-    const formatItem = document.getElementById('setting-format');
-    const formatPopup = document.getElementById('format-popup');
-    if (formatItem && formatPopup) {
-        formatItem.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showControlPopup(formatItem, formatPopup);
-        });
-    }
 
     // --- NEW: Special Handler for Widget Picker ---
     const widgetPickerItem = document.getElementById('setting-widgets');

@@ -517,13 +517,14 @@ function broadcastSettingUpdate(key, value) {
 // --- NEW: Function to programmatically change a control's value and dispatch an event ---
 function setControlValueAndDispatch(key, value) {
     // Handle settings without a direct UI control in index.html
-    const settingsWithoutDirectControl = [
+    const settingsWithoutDirectControl =[
         'sleepModeStyle', 'slideshowInterval', 'hideClockIndicator',
         'autoSleepEnabled', 'autoSleepDuration', 'autoSleepScope',
 		'resourceManagerEnabled', 'displayScale', 'smartDisplayZoom',
         'nightStandEnabled', 'nightStandStart', 'nightStandEnd', 'nightStandBrightness',
 	    'colorFilter', 'keyboardNavEnabled', 'sfxVolume', 'homeActivitiesEnabled',
-        'telemetryEnabled'
+        'telemetryEnabled', 'oledBurnInProtection', 'hapticsEnabled', 'adaptiveBatterySaver',
+        'doubleTapToSleep', 'autoBrightness', 'dynamicTone', 'adaptiveVolume', 'predictivePreload'
     ];
     if (settingsWithoutDirectControl.includes(key)) {
         localStorage.setItem(key, value);
