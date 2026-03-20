@@ -3189,11 +3189,9 @@ function applyClockStyles() {
         const sw = strokeWidthSlider.value;
         if (sw > 0) {
             clockElement.style.webkitTextStroke = `${sw}px ${strokeColorPicker.value}`;
-            infoElement.style.webkitTextStroke = `${sw}px ${strokeColorPicker.value}`;
         } else {
             // Must use an empty string to properly unset the webkit text stroke property
             clockElement.style.webkitTextStroke = '';
-            infoElement.style.webkitTextStroke = '';
         }
     }
 	
