@@ -213,8 +213,10 @@
         .item-card-big-text {
             font-size: 2.5rem;
             font-weight: 700;
-            font-family: 'Open Runde', sans-serif;
+            font-family: 'Inter Numeric', 'Open Runde', 'Inter', sans-serif;
             margin: auto 0;
+            font-variation-settings: 'RDNS' 1;
+            font-variant-numeric: tabular-nums;
         }
 
         /* UI Controls inside Bento */
@@ -295,11 +297,11 @@
         }
         
         .media-widget .app-icon-img {
-        	position: absolute;
-            bottom: 164px;
+            position: absolute;
+            bottom: 200px;
             left: 40px;
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             border-radius: 35%;
             z-index: 2;
             mix-blend-mode: luminosity;
@@ -351,7 +353,7 @@
             border: 1px solid var(--glass-border);
             box-shadow: var(--sun-shadow);
             position: absolute;
-            bottom: 168px;
+            bottom: 190px;
             right: 32px;
             font-size: 0.7em;
             display: flex;
@@ -400,10 +402,11 @@
             display: flex;
             gap: 6px;
             flex-direction: column;
-            margin: 0 90px 8px 8px;
+            margin: 0 90px 0 8px;
             z-index: 1;
             pointer-events: none;
             justify-content: flex-end;
+            font-size: 1.5rem;
         }
         
         .media-widget-info .title {
@@ -430,11 +433,11 @@
         .media-widget-progress-container {
             display: flex;
             align-items: center;
-            padding: 0 95px;
+            padding: 0 110px;
             z-index: 1;
             box-sizing: border-box;
             position: fixed;
-            bottom: 20px;
+            bottom: 24px;
             pointer-events: none;
             justify-content: space-between;
             width: 100%;
@@ -463,7 +466,7 @@
             background-color: var(--text-color);
             border-radius: 0;
             transition: width 0.2s ease;
-            --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0,5 Q5,10 10,5 T20,5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' /%3E%3C/svg%3E");
+            --wave: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0,5 Q5,10 10,5 T20,5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' /%3E%3C/svg%3E);
             -webkit-mask-image: var(--wave);
             mask-image: var(--wave);
             -webkit-mask-size: 20px 100%;
@@ -496,17 +499,16 @@
             border: none;
             color: var(--text-color);
             cursor: pointer;
-            width: 50px;
-            height: 50px;
+            width: 64px;
+            height: 64px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
             transition: background-color 0.2s;
         }
 
         .media-widget-controls button .material-symbols-rounded {
-            font-size: 32px;
+            font-size: 36px;
         }
         
         #media-widget-play-pause {
@@ -521,9 +523,46 @@
             color: var(--text-color);
             position: fixed;
             right: 32px;
-            bottom: 80px;
+            bottom: 100px;
             z-index: 1;
             transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+        }
+
+        #mini-media-art {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            corner-shape: superellipse(1.5);
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: -2;
+            mix-blend-mode: overlay;
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 90%, rgba(0, 0, 0, 0) 100%);
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 90%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        html.gurasuraisu-trans-off #bento-mini-media,
+        html.gurasuraisu-high-contrast #bento-mini-media {
+            backdrop-filter: opacity(1) !important;
+        }
+
+        #mini-media-play-pause {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            border-radius: 25px;
+            background: var(--overlay-color);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--sun-shadow);
+            corner-shape: superellipse(1.5);
+            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
         }
 
         .list-item {
@@ -616,7 +655,7 @@
         <div class="bento-item span-2x2" id="bento-smart">
             <!-- Content dynamically managed by SmartManager -->
             <div id="smart-fallback-clock" style="height: 100%; display: flex; flex-direction: column;">
-                <div class="item-card-title"><span class="material-symbols-rounded">schedule</span><span id="greeting-text">Good morning</span></div>
+                <div class="item-card-title" style="item-card-title"><span class="material-symbols-rounded">schedule</span><span id="greeting-text">Good morning</span></div>
                 <div class="item-card-subtitle" id="bento-date" style="font-weight: 600; font-size: 1.1rem;">Monday, Jan 1</div>
                 <div class="item-card-big-text" id="bento-time" style="font-family: 'Inter Numeric', sans-serif; font-size: clamp(6rem, 12%, 12rem); text-align: center; font-variation-settings: 'RDNS' 1; font-variant-numeric: tabular-nums;">00:00</div>
             </div>
@@ -644,13 +683,15 @@
 
         <div class="bento-item span-2x1" id="bento-mini-media">
             <div class="item-card-title"><span class="material-symbols-rounded">play_circle</span>Media</div>
-            <img id="mini-media-art" src="" style="width: 64px;height: 64px;border-radius: 10px;object-fit: cover;background: var(--glass-border);display: block;flex-shrink: 0;corner-shape: superellipse(1.5);">
+            <img id="mini-media-art" src="">
             <div style="display: flex; align-items: center; gap: 12px; margin-top: auto;">
                 <div style="margin-left: 4px; gap: 4px; overflow: hidden; white-space: nowrap; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                    <div id="mini-media-title" style="font-weight: 600; font-size: 1rem; text-overflow: ellipsis; overflow: hidden;">Not playing</div>
-                    <div id="mini-media-artist" class="item-card-subtitle" style="text-overflow: ellipsis; overflow: hidden; font-size: 1rem;"></div>
+                    <div id="mini-media-title" style="font-family: 'Open Runde', 'Inter'; font-weight: 600; font-size: 1.2rem; text-overflow: ellipsis; overflow: hidden;">Not playing</div>
+                    <div id="mini-media-artist" class="item-card-subtitle" style="font-size: 1.2rem; text-overflow: ellipsis; overflow: hidden;"></div>
                 </div>
-                <button id="mini-media-play-pause" style="width:42px;height:42px;flex-shrink:0;border-radius: 50%;background: var(--accent);border: 1px solid var(--glass-border);color: var(--background-color);cursor: pointer;display: flex;align-items: center;justify-content: center;box-shadow: var(--sun-shadow);"><span class="material-symbols-rounded">play_arrow</span></button>
+                <button id="mini-media-prev" style="color: var(--text-color);border: none;background-color: transparent;width: 42px;height: 42px;"><span class="material-symbols-rounded">skip_previous</span></button>
+                <button id="mini-media-play-pause"><span class="material-symbols-rounded">play_arrow</span></button>
+                <button id="mini-media-next" style="color: var(--text-color);border: none;background-color: transparent;width: 42px;height: 42px;"><span class="material-symbols-rounded">skip_next</span></button>
             </div>
         </div>
 
@@ -706,7 +747,7 @@
         </div>
 
         <div class="bento-item span-1x1" id="bento-darkmode">
-            <div class="item-card-title"><span class="material-symbols-rounded">dark_mode</span>Dark Mode</div>
+            <div class="item-card-title"><span class="material-symbols-rounded">radio_button_checked</span>Daylight</div>
             <input type="checkbox" class="toggle-switch" id="theme-toggle">
         </div>
 
@@ -716,7 +757,7 @@
         </div>
 
         <div class="bento-item span-2x1" id="bento-tone">
-            <div class="item-card-title"><span class="material-symbols-rounded">thermostat</span>Tone</div>
+            <div class="item-card-title"><span class="material-symbols-rounded">thermometer</span>Tone</div>
             <input type="range" id="temp-slider" min="-10" max="10" value="0">
         </div>
     </div>
@@ -1220,11 +1261,27 @@
             if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'playPause', type: 'media-control'}, '*');
         };
 
+        const prevMedia = (e) => {
+            e.stopPropagation();
+            if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'prev', type: 'media-control'}, '*');
+        };
+
+        const nextMedia = (e) => {
+            e.stopPropagation();
+            if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'next', type: 'media-control'}, '*');
+        };
+
         document.getElementById('media-widget-play-pause').addEventListener('click', togglePlay);
+        document.getElementById('media-widget-prev').addEventListener('click', prevMedia);
+        document.getElementById('media-widget-next').addEventListener('click', nextMedia);
         
         // Mini media widget interactions
         const miniPlayBtn = document.getElementById('mini-media-play-pause');
+        const miniPrevBtn = document.getElementById('mini-media-prev');
+        const miniNextBtn = document.getElementById('mini-media-next');
         if (miniPlayBtn) miniPlayBtn.addEventListener('click', togglePlay);
+        if (miniPrevBtn) miniPrevBtn.addEventListener('click', prevMedia);
+        if (miniNextBtn) miniNextBtn.addEventListener('click', nextMedia);
 
         const miniWidget = document.getElementById('bento-mini-media');
         if (miniWidget) {
@@ -1234,19 +1291,6 @@
                 if (mediaTabBtn) mediaTabBtn.click();
             });
         }
-
-        document.getElementById('media-widget-prev').addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'playPause', type: 'media-control'}, '*');
-        });
-        document.getElementById('media-widget-prev').addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'prev', type: 'media-control'}, '*');
-        });
-        document.getElementById('media-widget-next').addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'next', type: 'media-control'}, '*');
-        });
 
         // Battery Check
         if ('getBattery' in navigator) {

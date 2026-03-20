@@ -779,9 +779,11 @@ async function createFullscreenEmbed(url, options = {}) {
         embedContainer.style.display = 'block'; // Ensure visibility
         embedContainer.style.removeProperty('content-visibility'); // OPTIMIZATION: Ensure rendering
 
-		const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
-	    const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
-	    const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+		const brightnessValue = document.getElementById('wallpaper-brightness-slider')?.value || 100;
+	    const contrastValue = document.getElementById('wallpaper-contrast-slider')?.value || 100;
+        const saturateValue = document.getElementById('wallpaper-saturate-slider')?.value || 100;
+        const hueValue = document.getElementById('wallpaper-hue-slider')?.value || 0;
+	    const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%) saturate(${saturateValue}%) hue-rotate(${hueValue}deg)`;
 	    document.body.style.setProperty('--wallpaper-filter', openFilter);
 	    document.body.style.setProperty('--bg-transform-scale', '1.25');
         
@@ -920,9 +922,11 @@ async function createFullscreenEmbed(url, options = {}) {
     embedContainer.style.zIndex = '1001';
     embedContainer.appendChild(iframe);
 
-    const brightnessValue = document.getElementById('wallpaper-brightness-slider').value;
-    const contrastValue = document.getElementById('wallpaper-contrast-slider').value;
-    const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+    const brightnessValue = document.getElementById('wallpaper-brightness-slider')?.value || 100;
+    const contrastValue = document.getElementById('wallpaper-contrast-slider')?.value || 100;
+    const saturateValue = document.getElementById('wallpaper-saturate-slider')?.value || 100;
+    const hueValue = document.getElementById('wallpaper-hue-slider')?.value || 0;
+    const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%) saturate(${saturateValue}%) hue-rotate(${hueValue}deg)`;
     document.body.style.setProperty('--wallpaper-filter', openFilter);
     document.body.style.setProperty('--bg-transform-scale', '1.25');
     

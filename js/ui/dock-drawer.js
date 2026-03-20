@@ -811,7 +811,9 @@ function setupDrawerInteractions() {
                 // NEW: Apply opening effects on snap-back
                 const brightnessValue = document.getElementById('wallpaper-brightness-slider')?.value || 100;
                 const contrastValue = document.getElementById('wallpaper-contrast-slider')?.value || 100;
-                const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%)`;
+                const saturateValue = document.getElementById('wallpaper-saturate-slider')?.value || 100;
+                const hueValue = document.getElementById('wallpaper-hue-slider')?.value || 0;
+                const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%) saturate(${saturateValue}%) hue-rotate(${hueValue}deg)`;
                 document.body.style.setProperty('--wallpaper-filter', openFilter);
                 document.body.style.setProperty('--bg-transform-scale', '1.25');
 	        }
