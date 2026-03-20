@@ -2404,6 +2404,11 @@ async function jumpToWallpaper(index) {
         if (strokeWidthSlider) strokeWidthSlider.value = wallpaper.clockStyles.clockStrokeWidth || '0';
         if (strokeColorPicker) strokeColorPicker.value = wallpaper.clockStyles.clockStrokeColor || '#000000';
         if (blendModeSelect) blendModeSelect.value = wallpaper.clockStyles.clockBlendMode || 'normal';
+
+	    const isLightMode = document.body.classList.contains('light-theme');
+	    const theme = isLightMode ? 'light' : 'dark';
+	    const effects = wallpaper.clockStyles?.wallpaperEffects?.[theme] || { blur: '0', brightness: '100', contrast: '100' };
+
         if (saturateSlider) saturateSlider.value = effects.saturate !== undefined ? effects.saturate : '100';
         if (hueSlider) hueSlider.value = effects.hue !== undefined ? effects.hue : '0';
         if (vignetteSlider) vignetteSlider.value = effects.vignette !== undefined ? effects.vignette : '0';
@@ -2435,9 +2440,6 @@ async function jumpToWallpaper(index) {
         }
 
 	    // Update effect sliders based on current theme
-	    const isLightMode = document.body.classList.contains('light-theme');
-	    const theme = isLightMode ? 'light' : 'dark';
-	    const effects = wallpaper.clockStyles?.wallpaperEffects?.[theme] || { blur: '0', brightness: '100', contrast: '100' };
 	    if (blurSlider) blurSlider.value = effects.blur;
 	    if (brightnessSlider) brightnessSlider.value = effects.brightness;
 	    if (contrastSlider) contrastSlider.value = effects.contrast;
@@ -2622,7 +2624,15 @@ function switchWallpaper(direction, skipSave = false) {
 	    if (blurSlider) blurSlider.value = effects.blur;
 	    if (brightnessSlider) brightnessSlider.value = effects.brightness;
 	    if (contrastSlider) contrastSlider.value = effects.contrast;
+        if (document.getElementById('wallpaper-saturate-slider')) document.getElementById('wallpaper-saturate-slider').value = effects.saturate !== undefined ? effects.saturate : '100';
+        if (document.getElementById('wallpaper-hue-slider')) document.getElementById('wallpaper-hue-slider').value = effects.hue !== undefined ? effects.hue : '0';
+        if (document.getElementById('wallpaper-vignette-slider')) document.getElementById('wallpaper-vignette-slider').value = effects.vignette !== undefined ? effects.vignette : '0';
 		
+        if (document.getElementById('clock-italic-switch')) document.getElementById('clock-italic-switch').checked = wallpaper.clockStyles.clockItalic || false;
+        if (document.getElementById('clock-stroke-width-slider')) document.getElementById('clock-stroke-width-slider').value = wallpaper.clockStyles.clockStrokeWidth || '0';
+        if (document.getElementById('clock-stroke-color-picker')) document.getElementById('clock-stroke-color-picker').value = wallpaper.clockStyles.clockStrokeColor || '#000000';
+        if (document.getElementById('clock-blend-mode-select')) document.getElementById('clock-blend-mode-select').value = wallpaper.clockStyles.clockBlendMode || 'normal';
+
         if (shadowSwitch) shadowSwitch.checked = wallpaper.clockStyles.shadowEnabled || false;
         if (shadowBlurSlider) shadowBlurSlider.value = wallpaper.clockStyles.shadowBlur || '10';
         if (shadowColorPicker) shadowColorPicker.value = wallpaper.clockStyles.shadowColor || '#000000';
