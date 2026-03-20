@@ -783,6 +783,10 @@ body.one-button-nav-active .dock.show {
     pointer-events: none; /* Let clicks pass through, children will re-enable */
 }
 
+body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area {
+    right: calc(25px + clamp(300px, 30%, 420px));
+}
+
 #activity-island {
     display: flex;
     align-items: center;
@@ -1015,7 +1019,7 @@ body.one-button-nav-active .dock.show {
 }
 
 #home-activity-container.pos-tl { top: 20px; left: 20px; }
-#home-activity-container.pos-tr { top: 80px; right: 20px; }
+#home-activity-container.pos-tr { top: 20px; right: 20px; }
 #home-activity-container.pos-bl { bottom: 20px; left: 20px }
 #home-activity-container.pos-br { bottom: 20px; right: 20px; }
 

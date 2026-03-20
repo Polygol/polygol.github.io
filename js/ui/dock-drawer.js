@@ -1706,7 +1706,9 @@ function setupDrawerInteractions() {
 const appDrawerObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            
+            if (typeof HomeActivityManager !== 'undefined') {
+                HomeActivityManager.updateVisibility();
+            }
         }
     });
 });

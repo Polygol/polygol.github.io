@@ -114,7 +114,7 @@ function blackoutScreen() {
     blockingOverlay.id = 'blackout-event-overlay';
     blockingOverlay.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        z-index: 48; cursor: pointer; pointer-events: all;
+        z-index: 2000; cursor: pointer; pointer-events: all;
         background-color: transparent; transition: background-color 0.2s;
     `;
     document.body.appendChild(blockingOverlay);
