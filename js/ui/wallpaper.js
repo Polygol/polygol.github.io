@@ -1431,8 +1431,8 @@ function loadRecentWallpapers() {
              updated = true;
         }
         if (wallpaper.clockStyles.dateFormat === undefined) {
-            wallpaper.clockStyles.dateFormat = 'dddd, MMMM D';
-            wallpaper.clockStyles.clockFormat = 'H:mm:ss';
+            wallpaper.clockStyles.dateFormat = 'ddd MMM D • $(smart)$';
+            wallpaper.clockStyles.clockFormat = 'HH:mm:ss';
             updated = true;
         }
 		// Migration for new typography settings
@@ -2416,7 +2416,7 @@ async function jumpToWallpaper(index) {
 	    if (posXSlider) posXSlider.value = wallpaper.clockStyles.clockPosX || '50';
 	    if (posYSlider) posYSlider.value = wallpaper.clockStyles.clockPosY || '50';
 	    if (alignmentSelect) alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
-        if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'dddd, MMMM D';
+        if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'ddd MMM D • $(smart)$';
         if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
 
 		if (document.getElementById('depth-effect-switch')) {
@@ -2594,7 +2594,7 @@ function switchWallpaper(direction, skipSave = false) {
             offSwitch.checked = !(wallpaper.clockStyles.colorEnabled) && !(wallpaper.clockStyles.gradientEnabled) && !(wallpaper.clockStyles.glassEnabled) && !(wallpaper.clockStyles.clockDynamicFillEnabled);
         }
         if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
-        if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'dddd, MMMM D';
+        if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'ddd MMM D • $(smart)$';
         if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
 
         if (document.getElementById('depth-effect-switch')) {
@@ -2974,7 +2974,7 @@ function setupFontSelection() {
     document.getElementById('wallpaper-saturate-slider').value = initialEffects.saturate || '100';
     document.getElementById('wallpaper-hue-slider').value = initialEffects.hue || '0';
     document.getElementById('wallpaper-vignette-slider').value = initialEffects.vignette || '0';
-    document.getElementById('date-format-input').value = localStorage.getItem('dateFormat') || 'dddd, MMMM D';
+    document.getElementById('date-format-input').value = localStorage.getItem('dateFormat') || 'ddd MMM D • $(smart)$';
     document.getElementById('clock-format-input').value = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
 
     // --- 2. Apply the visual styles based on the now-correct state of the controls ---
@@ -3298,7 +3298,7 @@ function resetAndApplyDefaultClockStyles() {
         customFontUrl: null,
         customLineHeight: null,
         customCSS: null,
-        dateFormat: 'dddd, MMMM D',
+        dateFormat: 'ddd MMM D • $(smart)$',
         clockFormat: document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss'
     };
 

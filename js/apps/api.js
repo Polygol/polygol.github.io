@@ -1378,7 +1378,7 @@ function broadcastAllWallpaperSettings(wallpaper) {
         'glassEnabled': val(styles.glassEnabled, 'false'),
         'clockDynamicFillEnabled': val(styles.clockDynamicFillEnabled, 'false'),
         'roundness': val(styles.roundness, '0'),
-        'dateFormat': val(styles.dateFormat, 'dddd, MMMM D'),
+        'dateFormat': val(styles.dateFormat, 'ddd MMM D • $(smart)$'),
         'depthEffectEnabled': val(wallpaper.depthEnabled, 'false'),
         'letterSpacing': val(styles.letterSpacing, '0'),
         'textCase': val(styles.textCase, 'none'),

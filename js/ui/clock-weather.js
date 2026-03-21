@@ -48,6 +48,8 @@ function getCachedElement(id, selector = false) {
     return clockCache.elements[id];
 }
 
+
+
 function updateClockAndDate() {
     const clockElement = getCachedElement('clock');
     const dateElement = getCachedElement('date');
@@ -64,7 +66,7 @@ function updateClockAndDate() {
 
     // Prevent empty strings from causing ISO date flashes during boot
     let clockFormat = (clockFormatInput && clockFormatInput.value) ? clockFormatInput.value : (localStorage.getItem('use12HourFormat') === 'true' ? 'h:mm:ss A' : 'HH:mm:ss');
-    let dateFormat = (dateFormatInput && dateFormatInput.value) ? dateFormatInput.value : (localStorage.getItem('dateFormat') || 'dddd, MMMM D');
+    let dateFormat = (dateFormatInput && dateFormatInput.value) ? dateFormatInput.value : (localStorage.getItem('dateFormat') || 'ddd MMM D • $(smart)$');
 
     if (window.isBlackoutActive) {
         clockFormat = clockFormat.replace(/[:.]ss/, '').replace(/ss/, '');
@@ -105,83 +107,75 @@ function updateClockAndDate() {
     if (h >= 5 && h < 12) timeGreeting = 'Good morning';
     else if (h >= 12 && h < 17) timeGreeting = 'Good afternoon';
     
+    // --- Hourly Greeting Logic ---
+    const updateGreetings = () => {
+        if (window.personalGreetingGenerator) {
+            window.currentPersonalGreeting = window.personalGreetingGenerator();
+        } else if (window.personalGreetingsList) {
+            window.currentPersonalGreeting = window.personalGreetingsList[Math.floor(Math.random() * window.personalGreetingsList.length)];
+        }
+        window.lastGreetingHour = new Date().getHours();
+        if (window.refreshClockUI) window.refreshClockUI();
+    };
+
     if (!window.currentPersonalGreeting) {
-        window.personalGreetingsList =["Welcome back", "Hello there", "Have a great day", "Stay focused", "Take a deep breath", "You've got this"];
-        window.currentPersonalGreeting = window.personalGreetingsList[Math.floor(Math.random() * window.personalGreetingsList.length)];
-        
-        // Fetch the expanded list asynchronously
+        window.personalGreetingsList = ["Welcome back", "Hello there", "You've got this"];
+        window.currentPersonalGreeting = window.personalGreetingsList[0];
+        window.lastGreetingHour = new Date().getHours();
+
         fetch('/assets/text/greet/home.json')
             .then(res => res.json())
             .then(data => {
                 if (data.matrix) {
-                    // Combinatorial Engine: 10 Million+ Logic
                     const m = data.matrix;
                     const pick = (arr) => arr[Math.floor(Math.random() * (arr ? arr.length : 0))];
-                    
-                    const generate = () => {
-                        const o = pick(m.openers);
-                        const s = pick(m.subjects);
-                        const c = pick(m.connectors);
-                        const a = pick(m.attributes);
-                        const p = pick(m.punchlines);
-                        return `${o} ${s} ${c} ${a} ${p}`;
-                    };
-                    
-                    window.personalGreetingGenerator = generate;
-                    window.currentPersonalGreeting = generate();
+                    window.personalGreetingGenerator = () => `${pick(m.subjects)} ${pick(m.connectors)} ${pick(m.attributes)} ${pick(m.punchlines)}`;
                 } else if (data.greetings) {
                     window.personalGreetingsList = data.greetings;
-                    window.currentPersonalGreeting = window.personalGreetingsList[Math.floor(Math.random() * window.personalGreetingsList.length)];
                 }
-                
-                if (window.refreshClockUI) window.refreshClockUI();
-            })
-            .catch(e => console.warn("[System] Could not load expanded personal greetings list:", e));
+                updateGreetings();
+            }).catch(e => console.warn("[System] Greet fail:", e));
+    }
 
-        // Rotate personal greeting occasionally (every hour)
-        setInterval(() => {
-            if (window.personalGreetingGenerator) {
-                window.currentPersonalGreeting = window.personalGreetingGenerator();
-            } else if (window.personalGreetingsList) {
-                window.currentPersonalGreeting = window.personalGreetingsList[Math.floor(Math.random() * window.personalGreetingsList.length)];
-            }
-            if (window.refreshClockUI) window.refreshClockUI();
-        }, 3600000);
+    // Check for hour rollover to refresh greetings
+    const currentHour = new Date().getHours();
+    if (currentHour !== window.lastGreetingHour) {
+        updateGreetings();
     }
 
     const resolveVariables = (str) => {
         if (!str) return str;
 
-        // --- Smart Variable Engine ---
+        // --- Smart Variable Engine (Priority Based) ---
         const getSmartValue = () => {
-            const pool = [];
+            // 1. Check for ACTIVE Media
+            // We look for the 'playing' state in the session stack
+            const activeSession = (typeof mediaSessionStack !== 'undefined') 
+                ? mediaSessionStack.find(s => s.appName === activeMediaSessionApp) 
+                : null;
             
-            // Priority 1: Current Media (Title Only)
-            // Logic: Only show if an app is actually sending metadata
-            if (mediaTitle && mediaTitle !== 'No song playing' && mediaTitle !== 'Unknown Title') {
-                pool.push(mediaTitle);
-            }
-            
-            // Priority 2: Weather (Emoji + Temp)
-            if (weatherIconEmoji && weatherDegrees) {
-                pool.push(`${weatherIconEmoji} ${weatherDegrees}`);
-            }
-            
-            // Priority 3: Simple Time-based Greeting
-            pool.push(timeGreeting);
+            const isPlaying = activeSession && activeSession.playbackState === 'playing';
 
-            // Priority 4: 10 Million+ Matrix Personal Greeting
-            if (window.currentPersonalGreeting) {
-                pool.push(window.currentPersonalGreeting);
+            if (isPlaying && mediaTitle) {
+                return mediaTitle; // Lock display to music while playing
             }
 
-            // Logic: 8-second rotation for snappy dashboard feel
-            const interval = 8000;
+            // 2. Rotation Pool (Minimal Content: Weather & Greetings)
+            const items = [];
             
-            // Use system clock to ensure rotation stays synced across potential multi-displays
-            const index = Math.floor(Date.now() / interval) % pool.length;
+            // Add Weather only if the big Home Widget is hidden to avoid duplicate info
+            const isWeatherWidgetVisible = localStorage.getItem('showWeather') !== 'false';
+            if (!isWeatherWidgetVisible && weatherIconEmoji && weatherDegrees) {
+                items.push(`${weatherIconEmoji} ${weatherDegrees}`);
+            }
             
-            return pool[index] || "...";
+            items.push(timeGreeting);
+            items.push(window.currentPersonalGreeting);
+
+            // Use a stable 10-minute (600,000ms) rotation based on system clock
+            const slot = Math.floor(Date.now() / 600000);
+            const index = slot % items.length;
+            return items[index] || "";
         };
         
         // 1. Resolve standard data variables, with optional numeric length limit
@@ -344,6 +338,7 @@ function updateClockAndDate() {
 }
 
 function startSynchronizedClockAndDate() {
+    // Clear any existing pending timeout to prevent double-firing or "zombie ticks"
     if (window.clockLoopId) clearTimeout(window.clockLoopId);
 
     updateClockAndDate(); 
@@ -351,18 +346,17 @@ function startSynchronizedClockAndDate() {
     const now = new Date();
     let delay;
     
-    const cf = localStorage.getItem('clockFormat') || "";
-    const df = localStorage.getItem('dateFormat') || "";
-    const needsFastTick = cf.includes('$(smart)$') || df.includes('$(smart)$');
-
+    // IDLE OPTIMIZATION: If we aren't showing seconds (or screen is asleep), sleep the CPU until the next minute starts.
     const isShowingSeconds = typeof showSeconds !== 'undefined' ? showSeconds : true;
     
-    if ((isShowingSeconds || needsFastTick) && !window.isBlackoutActive) {
+    if (isShowingSeconds && !window.isBlackoutActive) {
         delay = 1000 - now.getMilliseconds();
     } else {
+        // Next clean minute (:00)
         delay = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
     }
     
+    // Recursive setTimeout eliminates drift and allows for immediate restarts
     window.clockLoopId = setTimeout(startSynchronizedClockAndDate, delay);
 }
 
