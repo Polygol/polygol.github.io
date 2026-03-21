@@ -367,6 +367,12 @@ async function handleRemoteCommand(payload, peerId) {
                 setControlValueAndDispatch('display_temperature', data);
             }
             break;
+
+        case 'setVolume':
+            if (typeof setControlValueAndDispatch === 'function') {
+                setControlValueAndDispatch('master_volume', data);
+            }
+            break;
         
         case 'toggleSleep':
             if (document.body.classList.contains('blackout-active')) {
