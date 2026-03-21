@@ -990,7 +990,7 @@ const Gurasuraisu = {
 
     /**
      * Plays a system UI sound.
-     * @param {string} type - 'select', 'toggle', 'check', 'error', 'success', 'open', 'close', 'type'
+     * @param {string} type
      */
     playSound: function(type) {
         if (_systemSoundsAllowed) {

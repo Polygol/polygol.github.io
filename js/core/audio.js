@@ -8,11 +8,10 @@ const SoundManager = {
         'open': '/assets/sound/ui/in.mp3',
         'close': '/assets/sound/ui/out.mp3',
         'popup': '/assets/sound/ui/popup.mp3',
-        'error': '/assets/sound/ui/tone2.mp3',
+        'notify': '/assets/sound/ui/tone2.mp3',
         'success': '/assets/sound/ui/tone1.mp3',
-        'type': '/assets/sound/ui/mecha.mp3',
+        'type': '/assets/sound/ui/tripuck.mp3',
         'expand': '/assets/sound/ui/tridown.mp3',
-        'collapse': '/assets/sound/ui/tripuck.mp3',
         'delay': '/assets/sound/ui/seldelay.mp3'
     },
 
@@ -50,8 +49,6 @@ const SoundManager = {
             try {
                 if (type === 'select' || type === 'check') navigator.vibrate(10);
                 else if (type === 'toggle') navigator.vibrate([10, 30, 10]);
-                else if (type === 'error') navigator.vibrate([20, 50, 20]);
-                else if (type === 'success' || type === 'open') navigator.vibrate([15, 30, 15]);
             } catch (e) {} // Ignore policy blocks
         }
 

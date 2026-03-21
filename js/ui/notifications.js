@@ -177,7 +177,7 @@ function processNotificationQueue() {
         setTimeout(processNotificationQueue, 300); // Delay before next
     });
     
-    window.SoundManager.play('success');
+    window.SoundManager.play('notify');
     resolve(popupControls);
 }
 
