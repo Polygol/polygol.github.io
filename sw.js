@@ -1,4 +1,4 @@
-const CORE_CACHE_VERSION = 'Bismuth 17.1.2.25';
+const CORE_CACHE_VERSION = 'Bismuth 17.1.2.26';
 const CORE_CACHE_NAME = `polygol-core-${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polygol-apps';
 
@@ -51,6 +51,7 @@ const ASSETS_TO_CACHE = [
   '/assets/ui/svg/load.svg',
   '/manifest.json',
   '/about/external.md',
+  '/assets/text/greet/home.json',
   '/assets/img/favi/regular.png',
   '/assets/img/pwaicon/coloricon.png',
   '/assets/img/pwaicon/regular.png',

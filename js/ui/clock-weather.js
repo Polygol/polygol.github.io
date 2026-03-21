@@ -106,19 +106,70 @@ function updateClockAndDate() {
     else if (h >= 12 && h < 17) timeGreeting = 'Good afternoon';
     
     if (!window.currentPersonalGreeting) {
-        const greetings =["Welcome back", "Hello there", "Have a great day", "Stay focused", "Take a deep breath", "You've got this"];
-        window.currentPersonalGreeting = greetings[Math.floor(Math.random() * greetings.length)];
-        // Rotate personal greeting occasionally
+        window.personalGreetingsList =["Welcome back", "Hello there", "Have a great day", "Stay focused", "Take a deep breath", "You've got this"];
+        window.currentPersonalGreeting = window.personalGreetingsList[Math.floor(Math.random() * window.personalGreetingsList.length)];
+        
+        // Fetch the expanded list asynchronously
+        fetch('/assets/text/greet/home.json')
+            .then(res => res.json())
+            .then(data => {
+                if (data.matrix) {
+                    // Combinatorial Engine: Generate a unique string from parts
+                    const m = data.matrix;
+                    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+                    
+                    const generate = () => `${pick(m.openers)} ${pick(m.subjects)} ${pick(m.closers)}`;
+                    
+                    // Store the generator function globally so we can call it every hour
+                    window.personalGreetingGenerator = generate;
+                    window.currentPersonalGreeting = generate();
+                } else if (data.greetings) {
+                    window.personalGreetingsList = data.greetings;
+                    window.currentPersonalGreeting = window.personalGreetingsList[Math.floor(Math.random() * window.personalGreetingsList.length)];
+                }
+                
+                if (window.refreshClockUI) window.refreshClockUI();
+            })
+            .catch(e => console.warn("[System] Could not load expanded personal greetings list:", e));
+
+        // Rotate personal greeting occasionally (every hour)
         setInterval(() => {
-            window.currentPersonalGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+            if (window.personalGreetingGenerator) {
+                window.currentPersonalGreeting = window.personalGreetingGenerator();
+            } else if (window.personalGreetingsList) {
+                window.currentPersonalGreeting = window.personalGreetingsList[Math.floor(Math.random() * window.personalGreetingsList.length)];
+            }
+            if (window.refreshClockUI) window.refreshClockUI();
         }, 3600000);
     }
 
     const resolveVariables = (str) => {
         if (!str) return str;
+
+        // --- Smart Variable Engine ---
+        const getSmartValue = () => {
+            const items = [];
+            
+            // 1. Add Media if active
+            if (mediaTitle) items.push(mediaTitle);
+            
+            // 2. Add Weather if available
+            if (weatherIconEmoji && weatherDegrees) {
+                items.push(`${weatherIconEmoji} ${weatherDegrees}`);
+            }
+            
+            // 3. Add Greetings
+            items.push(timeGreeting);
+            items.push(window.currentPersonalGreeting);
+
+            // Use a 10-second rotation based on system time
+            const rotationInterval = 10000;
+            const index = Math.floor(Date.now() / rotationInterval) % items.length;
+            return items[index] || "";
+        };
         
         // 1. Resolve standard data variables, with optional numeric length limit
-        let resolved = str.replace(/\$\((media\.title|media\.artist|weather\.degrees|weather\.icon|greeting\.time|greeting\.personal)\)(\d*)\$/g, (match, varName, limitStr) => {
+        let resolved = str.replace(/\$\((media\.title|media\.artist|weather\.degrees|weather\.icon|greeting\.time|greeting\.personal|smart)\)(\d*)\$/g, (match, varName, limitStr) => {
             let res = '';
             switch(varName) {
                 case 'media.title': res = mediaTitle; break;
@@ -127,8 +178,9 @@ function updateClockAndDate() {
                 case 'weather.icon': res = weatherIconEmoji; break;
                 case 'greeting.time': res = timeGreeting; break;
                 case 'greeting.personal': res = window.currentPersonalGreeting; break;
+                case 'smart': res = getSmartValue(); break;
             }
-            
+
             if (res) {
                 res = res.trim();
                 const limit = parseInt(limitStr, 10);

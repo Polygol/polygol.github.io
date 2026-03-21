@@ -1,0 +1,68 @@
+{
+    "matrix": {
+        "openers": [
+            "Hey,",
+            "Hello,",
+            "Hi there,",
+            "Welcome,",
+            "Ready?",
+            "Focus,",
+            "Listen,",
+            "Look up,",
+            "Deep breath:",
+            "Friendly reminder:",
+            "Stay wild,",
+            "Stay calm,",
+            "Keep going,",
+            "Today is the day:",
+            "Believe it:",
+            "Believe me,"
+        ],
+        "subjects": [
+            "you're looking",
+            "the world is",
+            "your journey is",
+            "everything is",
+            "progress is",
+            "life is",
+            "your potential is",
+            "success is",
+            "this moment is",
+            "your future is",
+            "creativity is",
+            "the vibe is",
+            "your energy is",
+            "happiness is",
+            "change is",
+            "adventure is"
+        ],
+        "closers": [
+            "legendary.",
+            "unstoppable.",
+            "magical.",
+            "blooming.",
+            "glowing.",
+            "electric.",
+            "pure.",
+            "worth it.",
+            "on fire.",
+            "limitless.",
+            "beautiful.",
+            "shifting.",
+            "calling.",
+            "within reach.",
+            "yours to keep.",
+            "happening now.",
+            "inspiring.",
+            "solid.",
+            "radiant.",
+            "fearless."
+        ]
+    },
+    "greetings": [
+        "You've got this.",
+        "Stay focused.",
+        "Take a deep breath.",
+        "Welcome back."
+    ]
+}
