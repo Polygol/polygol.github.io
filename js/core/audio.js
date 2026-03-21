@@ -10,7 +10,7 @@ const SoundManager = {
         'popup': '/assets/sound/ui/popup.mp3',
         'notify': '/assets/sound/ui/tone2.mp3',
         'success': '/assets/sound/ui/tone1.mp3',
-        'type': '/assets/sound/ui/tripuck.mp3',
+        'type': '/assets/sound/ui/select.mp3',
         'expand': '/assets/sound/ui/tridown.mp3',
         'delay': '/assets/sound/ui/seldelay.mp3'
     },

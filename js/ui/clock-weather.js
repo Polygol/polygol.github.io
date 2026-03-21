@@ -70,7 +70,111 @@ function updateClockAndDate() {
         clockFormat = clockFormat.replace(/[:.]ss/, '').replace(/ss/, '');
     }
 
-    // Handle literal text escaping (convert ```text``` to [text] for moment.js)
+    // --- Dynamic Variable Resolution ---
+    let mediaTitle = '';
+    let mediaArtist = '';
+    if (typeof activeMediaSessionApp !== 'undefined' && activeMediaSessionApp && typeof mediaSessionStack !== 'undefined') {
+        const session = mediaSessionStack.find(s => s.appName === activeMediaSessionApp);
+        if (session && session.metadata) {
+            mediaTitle = session.metadata.title || '';
+            mediaArtist = session.metadata.artist || '';
+        }
+    }
+
+    const weatherEmojis = {
+        0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 48: '🌫️', 51: '🌦️', 53: '🌦️', 55: '🌧️',
+        56: '🌧️', 57: '🌧️', 61: '🌧️', 63: '🌧️', 65: '🌧️', 66: '🌧️', 67: '🌧️', 71: '🌨️',
+        73: '❄️', 75: '❄️', 77: '❄️', 80: '🌦️', 81: '🌧️', 82: '⛈️', 85: '🌨️', 86: '❄️',
+        95: '⛈️', 96: '⛈️', 99: '🌩️'
+    };
+
+    let weatherDegrees = '';
+    let weatherIconEmoji = '';
+    const tempEl = getCachedElement('temperature');
+    const iconEl = getCachedElement('weather-icon');
+    if (tempEl && iconEl && iconEl.dataset.weatherCode) {
+        weatherDegrees = tempEl.textContent;
+        const code = parseInt(iconEl.dataset.weatherCode);
+        if (weatherEmojis[code]) {
+            weatherIconEmoji = weatherEmojis[code];
+        }
+    }
+
+    const h = now.hours();
+    let timeGreeting = 'Good evening';
+    if (h >= 5 && h < 12) timeGreeting = 'Good morning';
+    else if (h >= 12 && h < 17) timeGreeting = 'Good afternoon';
+    
+    if (!window.currentPersonalGreeting) {
+        const greetings =["Welcome back", "Hello there", "Have a great day", "Stay focused", "Take a deep breath", "You've got this"];
+        window.currentPersonalGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+        // Rotate personal greeting occasionally
+        setInterval(() => {
+            window.currentPersonalGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+        }, 3600000);
+    }
+
+    const resolveVariables = (str) => {
+        if (!str) return str;
+        
+        // 1. Resolve standard data variables, with optional numeric length limit
+        let resolved = str.replace(/\$\((media\.title|media\.artist|weather\.degrees|weather\.icon|greeting\.time|greeting\.personal)\)(\d*)\$/g, (match, varName, limitStr) => {
+            let res = '';
+            switch(varName) {
+                case 'media.title': res = mediaTitle; break;
+                case 'media.artist': res = mediaArtist; break;
+                case 'weather.degrees': res = weatherDegrees; break;
+                case 'weather.icon': res = weatherIconEmoji; break;
+                case 'greeting.time': res = timeGreeting; break;
+                case 'greeting.personal': res = window.currentPersonalGreeting; break;
+            }
+            
+            if (res) {
+                res = res.trim();
+                const limit = parseInt(limitStr, 10);
+                if (!isNaN(limit) && limit > 0) {
+                    if (limit > 3 && res.length > limit) {
+                        res = res.substring(0, limit - 3) + '...';
+                    } else if (limit <= 3 && res.length > limit) {
+                        res = res.substring(0, limit);
+                    }
+                }
+                
+                // Strip existing brackets from result to avoid moment.js nested bracket breakage, then wrap it
+                res = res.replace(/\[/g, '(').replace(/\]/g, ')');
+                return `[${res}]`;
+            }
+            return '';
+        });
+
+        // 2. Resolve Smart Separators (only appear if bounded by non-empty content)
+        const tokens = resolved.split(/\s*\$\(separator\.(pipe|dot)\)\$\s*/);
+        let finalStr = "";
+        let pendingSeparator = null;
+        
+        for (let i = 0; i < tokens.length; i++) {
+            if (i % 2 === 0) {
+                // It's a content token
+                if (tokens[i].trim() !== '') {
+                    // Only apply the pending separator if there is already content appended to the final string
+                    if (finalStr !== '' && pendingSeparator) {
+                        finalStr += (pendingSeparator === 'pipe' ? '[ | ]' : '[ • ]');
+                    }
+                    finalStr += tokens[i];
+                    pendingSeparator = null; // Clear out the separator now that we've used it
+                }
+            } else {
+                // It's a separator token
+                pendingSeparator = tokens[i];
+            }
+        }
+        return finalStr;
+    };
+
+    if (clockFormat) clockFormat = resolveVariables(clockFormat);
+    if (dateFormat) dateFormat = resolveVariables(dateFormat);
+
+    // Handle literal text escaping (convert ```text``` to[text] for moment.js)
     if (clockFormat) clockFormat = clockFormat.replace(/```(.*?)```/g, '[$1]');
     if (dateFormat) dateFormat = dateFormat.replace(/```(.*?)```/g, '[$1]');
 
@@ -83,14 +187,15 @@ function updateClockAndDate() {
                                 roundnessSlider && parseInt(roundnessSlider.value, 10) > 0;
     
     function wrapDigits(timeString) {
-        return timeString.split('').map(char => {
+        // Array.from is used instead of .split('') to properly support Emoji Surrogate Pairs
+        return Array.from(timeString).map(char => {
             if (/\d/.test(char)) {
                 return `<span class="digit">${char}</span>`;
             } else if (char === ':') {
                 return `<span class="colon">${char}</span>`;
             }
-            // Also wrap other separators for custom formats
-            if (/[.,]/.test(char)) return `<span class="separator">${char}</span>`;
+            // Also wrap other separators for custom formats, including the new smart separators
+            if (/[.,|•]/.test(char)) return `<span class="separator">${char}</span>`;
             return char;
         }).join('');
     }
@@ -422,6 +527,9 @@ async function updateSmallWeather() {
         weatherIconElement.className = 'material-symbols-rounded';
         weatherIconElement.textContent = weatherInfo.icon(true);
         weatherIconElement.dataset.weatherCode = weatherData.current.weathercode;
+
+        // Force clock format to update immediately with the new weather data
+        if (window.refreshClockUI) window.refreshClockUI();
     } catch (error) {
         console.error('Error updating small weather widget:', error);
         document.getElementById('weather').style.display = 'none';

@@ -586,12 +586,7 @@
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">calendar_view_day</span></div>
                         <span class="setting-label">Date Size</span>
                     </div>
-            
-                    <div class="setting-item" id="setting-date-offset">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">vertical_align_center</span></div>
-                        <span class="setting-label">Date Offset</span>
-                    </div>
-            
+
                     <div class="setting-item" id="setting-format">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">edit_calendar</span></div>
                         <span class="setting-label" data-lang-key="FORMAT">Format</span>
@@ -600,6 +595,11 @@
                     <div class="setting-item" id="setting-seconds">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">timer_10_select</span></div>
                         <span class="setting-label" data-lang-key="SECONDS">Seconds</span>
+                    </div>
+            
+                    <div class="setting-item" id="setting-date-offset">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">vertical_align_center</span></div>
+                        <span class="setting-label">Date Offset</span>
                     </div>
                 </div>
                 <!-- Other -->
@@ -900,6 +900,9 @@
             <div class="popup-control-row" style="flex-direction: column; align-items: flex-start; gap: 5px;">
                 <label for="clock-format-input" data-lang-key="CLOCK_FORMAT">Clock Format</label>
                 <input type="text" id="clock-format-input" placeholder="e.g., HH:mm:ss" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 12px; background: var(--transparent-color); border: 1px solid var(--glass-border); color: var(--text-color);">
+            </div>
+            <div style="font-size: 11px; color: var(--secondary-text-color); margin-top: 5px; line-height: 1.4;">
+                <b>Variables:</b> $(media.title)$, $(media.artist)$, $(weather.degrees)$, $(weather.icon)$, $(separator.pipe)$, $(separator.dot)$, $(greeting.time)$, $(greeting.personal)$<br>
             </div>
         </div>
         <input type="checkbox" id="seconds-switch" checked>

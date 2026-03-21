@@ -72,6 +72,8 @@ function _updateActiveMediaSession() {
         // localStorage.removeItem('lastMediaMetadata');
         // localStorage.removeItem('lastMediaSessionApp');
         restoreCorrectFavicon();
+        
+        if (window.refreshClockUI) window.refreshClockUI();
         return;
     }
 
@@ -130,6 +132,9 @@ function _updateActiveMediaSession() {
         appIconEl.style.display = 'none';
         if(appIconEl.parentElement) appIconEl.parentElement.style.display = 'none';
     }
+
+    // Refresh clock UI to update media format variables immediately
+    if (window.refreshClockUI) window.refreshClockUI();
 
     // Update control button visibility and state.
     const prevBtn = document.getElementById('media-widget-prev');
@@ -288,6 +293,9 @@ function updateMediaPlaybackState(appName, state) {
         if (state.metadata) {
             showMediaWidget(state.metadata);
         }
+
+        // Keep clock text variables in sync with metadata updates
+        if (window.refreshClockUI) window.refreshClockUI();
 
 		if (window.WavesHost) {
             window.WavesHost.pushMediaUpdate(
