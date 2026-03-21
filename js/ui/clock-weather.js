@@ -154,24 +154,34 @@ function updateClockAndDate() {
 
         // --- Smart Variable Engine ---
         const getSmartValue = () => {
-            const items = [];
+            const pool = [];
             
-            // 1. Add Media if active
-            if (mediaTitle) items.push(mediaTitle);
-            
-            // 2. Add Weather if available
-            if (weatherIconEmoji && weatherDegrees) {
-                items.push(`${weatherIconEmoji} ${weatherDegrees}`);
+            // Priority 1: Current Media (Title Only)
+            // Logic: Only show if an app is actually sending metadata
+            if (mediaTitle && mediaTitle !== 'No song playing' && mediaTitle !== 'Unknown Title') {
+                pool.push(mediaTitle);
             }
             
-            // 3. Add Greetings
-            items.push(timeGreeting);
-            items.push(window.currentPersonalGreeting);
+            // Priority 2: Weather (Emoji + Temp)
+            if (weatherIconEmoji && weatherDegrees) {
+                pool.push(`${weatherIconEmoji} ${weatherDegrees}`);
+            }
+            
+            // Priority 3: Simple Time-based Greeting
+            pool.push(timeGreeting);
 
-            // Use a 10-second rotation based on system time
-            const rotationInterval = 10000;
-            const index = Math.floor(Date.now() / rotationInterval) % items.length;
-            return items[index] || "";
+            // Priority 4: 10 Million+ Matrix Personal Greeting
+            if (window.currentPersonalGreeting) {
+                pool.push(window.currentPersonalGreeting);
+            }
+
+            // Logic: 8-second rotation for snappy dashboard feel
+            const interval = 8000;
+            
+            // Use system clock to ensure rotation stays synced across potential multi-displays
+            const index = Math.floor(Date.now() / interval) % pool.length;
+            
+            return pool[index] || "...";
         };
         
         // 1. Resolve standard data variables, with optional numeric length limit
@@ -334,7 +344,6 @@ function updateClockAndDate() {
 }
 
 function startSynchronizedClockAndDate() {
-    // Clear any existing pending timeout to prevent double-firing or "zombie ticks"
     if (window.clockLoopId) clearTimeout(window.clockLoopId);
 
     updateClockAndDate(); 
@@ -342,17 +351,18 @@ function startSynchronizedClockAndDate() {
     const now = new Date();
     let delay;
     
-    // IDLE OPTIMIZATION: If we aren't showing seconds (or screen is asleep), sleep the CPU until the next minute starts.
+    const cf = localStorage.getItem('clockFormat') || "";
+    const df = localStorage.getItem('dateFormat') || "";
+    const needsFastTick = cf.includes('$(smart)$') || df.includes('$(smart)$');
+
     const isShowingSeconds = typeof showSeconds !== 'undefined' ? showSeconds : true;
     
-    if (isShowingSeconds && !window.isBlackoutActive) {
+    if ((isShowingSeconds || needsFastTick) && !window.isBlackoutActive) {
         delay = 1000 - now.getMilliseconds();
     } else {
-        // Next clean minute (:00)
         delay = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
     }
     
-    // Recursive setTimeout eliminates drift and allows for immediate restarts
     window.clockLoopId = setTimeout(startSynchronizedClockAndDate, delay);
 }
 
