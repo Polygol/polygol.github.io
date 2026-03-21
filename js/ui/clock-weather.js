@@ -114,13 +114,19 @@ function updateClockAndDate() {
             .then(res => res.json())
             .then(data => {
                 if (data.matrix) {
-                    // Combinatorial Engine: Generate a unique string from parts
+                    // Combinatorial Engine: 10 Million+ Logic
                     const m = data.matrix;
-                    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+                    const pick = (arr) => arr[Math.floor(Math.random() * (arr ? arr.length : 0))];
                     
-                    const generate = () => `${pick(m.openers)} ${pick(m.subjects)} ${pick(m.closers)}`;
+                    const generate = () => {
+                        const o = pick(m.openers);
+                        const s = pick(m.subjects);
+                        const c = pick(m.connectors);
+                        const a = pick(m.attributes);
+                        const p = pick(m.punchlines);
+                        return `${o} ${s} ${c} ${a} ${p}`;
+                    };
                     
-                    // Store the generator function globally so we can call it every hour
                     window.personalGreetingGenerator = generate;
                     window.currentPersonalGreeting = generate();
                 } else if (data.greetings) {
