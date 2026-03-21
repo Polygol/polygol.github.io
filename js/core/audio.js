@@ -63,19 +63,22 @@ const SoundManager = {
             source.buffer = this.buffers[type];
             
             const gainNode = this.audioCtx.createGain();
-            const volSetting = localStorage.getItem('sfxVolume');
-            let volume = volSetting ? parseInt(volSetting) / 100 : 0.4;
-            
+
+            // SFX Volume = Master Volume * System Channel Volume
+            const master = (parseInt(localStorage.getItem('master_volume') || 100)) / 100;
+            const channel = (parseInt(localStorage.getItem('system_channel_volume') || 100)) / 100;
+            let finalVolume = master * channel;
+
             // Adaptive Volume: Quiet mode at night
             if (localStorage.getItem('adaptiveVolume') !== 'false') {
                 const hour = new Date().getHours();
                 // If between 10 PM and 7 AM, reduce volume by 60%
                 if (hour >= 22 || hour <= 6) {
-                    volume *= 0.4; 
+                    finalVolume *= 0.4;
                 }
             }
 
-            gainNode.gain.value = Math.max(0, Math.min(1, volume));
+            gainNode.gain.value = Math.max(0, Math.min(1, finalVolume));
             
             source.connect(gainNode);
             gainNode.connect(this.audioCtx.destination);

@@ -1514,7 +1514,38 @@ window.addEventListener('message', async (event) => {
             delete _dialogCallbacks[data.requestId];
         }
         break;
+      case 'volumeUpdate':
+        // 1. HARDWARE ENFORCEMENT: Force mute all media elements if the signal is true
+        if (data.muted === true || data.level === 0) {
+            const media = document.querySelectorAll('video, audio');
+            media.forEach(m => {
+                m.muted = true;
+                m.pause(); // Optional: stop playback to save data/power
+            });
             
+            // If the app uses Web Audio API (like the Music app visualizer)
+            if (window.AudioContext || window.webkitAudioContext) {
+                // We attempt to suspend the context to kill all sound
+                const context = window._gurasuraisuAudioContext; 
+                if (context && context.state !== 'suspended') context.suspend();
+            }
+        } else {
+            // Unmute if volume is restored
+            const media = document.querySelectorAll('video, audio');
+            media.forEach(m => m.muted = false);
+        }
+
+        // 2. DISPATCH EVENT: Let the app handle the specific level (e.g., slider movement)
+        const volEvent = new CustomEvent('GurasuraisuVolumeChange', { 
+            detail: { 
+                level: data.level, 
+                muted: data.muted,
+                scope: data.scope 
+            } 
+        });
+        window.dispatchEvent(volEvent);
+        break;
+        
       // --- Handles screenshot requests from the parent ---
       case 'request-screenshot':
         // Helper function to perform the capture

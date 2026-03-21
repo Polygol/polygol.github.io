@@ -394,14 +394,7 @@
                     </button>
                 </div>
             </div>
-            <div class="qc-sliders">
-                <div class="brightness-slider-container">
-                    <label for="brightness-control" class="cust-label">
-                        <span class="material-symbols-rounded" style="font-size: 20px;">sunny</span>
-                    </label>
-                    <input type="range" min="20" max="100" value="100" class="brightness-slider" id="brightness-control">
-                </div>
-            </div>
+
             <div class="quick-controls">
                 <div class="qcontrol-item" id="silent_switch_qc">
                     <span class="material-symbols-rounded">notifications_off</span>
@@ -427,6 +420,24 @@
                     <span class="material-symbols-rounded">contrast</span>
                     <span class="qc-label">LANG_DAYLIGHT</span>
                     <input type="checkbox" id="theme-switch" class="qc-switch" hidden>
+                </div>
+            </div>
+
+            <div class="qc-sliders">
+                <div class="brightness-slider-container" style="border-radius: 28px 27px 10px 10px;">
+                    <label for="brightness-control" class="cust-label">
+                        <span class="material-symbols-rounded" style="font-size: 20px;">sunny</span>
+                    </label>
+                    <input type="range" min="20" max="100" value="100" class="brightness-slider" id="brightness-control">
+                </div>
+                <div class="volume-slider-container" style="border-radius: 10px 10px 28px 28px;">
+                    <label for="volume-control" class="cust-label">
+                        <span class="material-symbols-rounded" style="font-size: 20px;">volume_up</span>
+                    </label>
+                    <input type="range" min="0" max="100" value="100" class="volume-slider" id="volume-control">
+                    <button id="sound-opt-btn" class="btn-qc" style="background-color: transparent;margin-right: 4px;backdrop-filter: none;box-shadow: none;border: none;">
+                        <span class="material-symbols-rounded" style="font-size: 18px;">discover_tune</span>
+                    </button>
                 </div>
             </div>
 
@@ -745,6 +756,17 @@
         <div class="widget-drawer-content">
             <div id="wallpaper-picker-grid">
                 <!-- Presets and upload option will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="volume-mixer-popup" class="thermostat-popup">
+        <div class="thermostat-popup-content">
+            <div class="thermostat-popup-header">
+                <span class="adjust-label">App volume</span>
+            </div>
+            <div id="volume-mixer-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 250px; overflow-y: auto; padding-right: 4px;">
+                <!-- App sliders injected here -->
             </div>
         </div>
     </div>

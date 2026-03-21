@@ -726,6 +726,56 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 		if (window.WavesHost) window.WavesHost.pushFullState();
     });
+
+    // Master Volume control logic
+    const masterVolumeSlider = document.getElementById('volume-control');
+    masterVolumeSlider.value = localStorage.getItem('master_volume') || 100;
+    
+    masterVolumeSlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        localStorage.setItem('master_volume', val);
+        
+        // Update Icon based on level
+        const icon = masterVolumeSlider.parentElement.querySelector('.material-symbols-rounded');
+        if (val == 0) icon.textContent = 'volume_off';
+        else if (val < 50) icon.textContent = 'volume_down';
+        else icon.textContent = 'volume_up';
+        
+        // 1. Notify all apps. If master is 0, enforce mute.
+        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+        iframes.forEach(f => {
+            f.contentWindow.postMessage({ 
+                type: 'volumeUpdate', 
+                level: val / 100, 
+                muted: (val == 0),
+                scope: 'master' 
+            }, '*');
+        });
+
+        // 2. Sync UI Sound volume instantly
+        if (window.SoundManager) localStorage.setItem('sfxVolume', val);
+    });
+
+    // Volume Mixer Button & Outside Click Logic
+    document.getElementById('sound-opt-btn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        const popup = document.getElementById('volume-mixer-popup');
+        if (popup.style.display === 'block') { popup.style.display = 'none'; return; }
+        
+        if (typeof updateVolumeMixerUI === 'function') updateVolumeMixerUI();
+        const rect = this.getBoundingClientRect();
+        const zoom = parseFloat(document.body.style.zoom) / 100 || 1;
+        popup.style.top = `${(rect.bottom + 10) / zoom}px`;
+        popup.style.left = `${(rect.right - 220) / zoom}px`;
+        popup.style.display = 'block';
+    });
+
+    document.addEventListener('click', (e) => {
+        const popup = document.getElementById('volume-mixer-popup');
+        if (popup && popup.style.display === 'block' && !popup.contains(e.target) && e.target.id !== 'sound-opt-btn') {
+            popup.style.display = 'none';
+        }
+    });
     
     // Brightness control event listener
     brightnessSlider.addEventListener('input', (e) => {

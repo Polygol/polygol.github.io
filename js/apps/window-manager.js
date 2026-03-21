@@ -30,6 +30,70 @@ var apps = {
 	}
 };
 
+function updateVolumeMixerUI() {
+    const list = document.getElementById('volume-mixer-list');
+    list.innerHTML = '';
+    
+    // 1. Add System Channel (Internal sounds/alerts)
+    const sysVol = localStorage.getItem('system_channel_volume') || 100;
+    const sysItem = document.createElement('div');
+    sysItem.style.cssText = 'display:flex; flex-direction:column; gap:4px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--glass-border);';
+    sysItem.innerHTML = `
+        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:500;">
+            <span>System</span>
+            <span>${sysVol}%</span>
+        </div>
+        <input type="range" min="0" max="100" value="${sysVol}" class="thermostat-slider">
+    `;
+    sysItem.querySelector('input').oninput = (e) => {
+        const val = e.target.value;
+        sysItem.querySelector('span:last-child').textContent = `${val}%`;
+        localStorage.setItem('system_channel_volume', val);
+    };
+    list.appendChild(sysItem);
+
+    // 2. Add Active Apps (Exclude Donburi)
+    const activeApps = Array.from(document.querySelectorAll('iframe[data-app-id]'))
+                            .filter(f => f.dataset.appId !== 'Donburi');
+    
+    if (activeApps.length === 0) {
+        const msg = document.createElement('p');
+        msg.style.cssText = 'font-size:11px; opacity:0.5; text-align:center; margin: 10px 0;';
+        msg.textContent = 'No running apps';
+        list.appendChild(msg);
+    }
+
+    activeApps.forEach(iframe => {
+        const appId = iframe.dataset.appId;
+        const currentVol = localStorage.getItem(`vol_${appId}`) || 100;
+        
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex; flex-direction:column; gap:4px;';
+        item.innerHTML = `
+            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:500;">
+                <span>${appId}</span>
+                <span>${currentVol}%</span>
+            </div>
+            <input type="range" min="0" max="100" value="${currentVol}" class="thermostat-slider">
+        `;
+        
+        item.querySelector('input').oninput = (e) => {
+            const val = e.target.value;
+            item.querySelector('span:last-child').textContent = `${val}%`;
+            localStorage.setItem(`vol_${appId}`, val);
+            
+            // Send volume update. If val is 0, we explicitly set muted: true
+            iframe.contentWindow.postMessage({ 
+                type: 'volumeUpdate', 
+                level: val / 100, 
+                muted: (val == 0),
+                scope: 'app' 
+            }, '*');
+        };
+        list.appendChild(item);
+    });
+}
+
 let appUsage = {};
 window.appHistoryStack = []; // Track app navigation history
 let minimizedEmbeds = {}; // Object to store minimized embeds by URL
