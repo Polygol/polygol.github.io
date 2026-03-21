@@ -30,6 +30,25 @@ var apps = {
 	}
 };
 
+// Helper to calculate and send final volume (Master * App)
+function syncAppVolume(iframe) {
+    const appId = iframe.dataset.appId;
+    if (!appId || appId === 'Donburi') return;
+
+    const master = (parseInt(localStorage.getItem('master_volume') || 100)) / 100;
+    const appLevel = (parseInt(localStorage.getItem(`vol_${appId}`) || 100)) / 100;
+    
+    const finalLevel = master * appLevel;
+
+    if (iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ 
+            type: 'volumeUpdate', 
+            level: finalLevel, 
+            muted: (finalLevel === 0)
+        }, '*');
+    }
+}
+
 function updateVolumeMixerUI() {
     const list = document.getElementById('volume-mixer-list');
     list.innerHTML = '';
@@ -81,14 +100,7 @@ function updateVolumeMixerUI() {
             const val = e.target.value;
             item.querySelector('span:last-child').textContent = `${val}%`;
             localStorage.setItem(`vol_${appId}`, val);
-            
-            // Send volume update. If val is 0, we explicitly set muted: true
-            iframe.contentWindow.postMessage({ 
-                type: 'volumeUpdate', 
-                level: val / 100, 
-                muted: (val == 0),
-                scope: 'app' 
-            }, '*');
+            syncAppVolume(iframe);
         };
         list.appendChild(item);
     });
@@ -1310,6 +1322,9 @@ async function createBackgroundEmbed(url) {
 
     // 5. Listeners
     iframe.addEventListener('load', () => {
+        // Set initial volume based on current Master and App settings
+        syncAppVolume(iframe);
+        
         const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
         if (iframe.contentWindow) {
             iframe.contentWindow.postMessage({

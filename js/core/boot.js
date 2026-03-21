@@ -741,15 +741,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         else if (val < 50) icon.textContent = 'volume_down';
         else icon.textContent = 'volume_up';
         
-        // 1. Notify all apps. If master is 0, enforce mute.
-        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+        // Update all running apps with their new limited volume
+        const iframes = document.querySelectorAll('iframe[data-app-id]');
         iframes.forEach(f => {
-            f.contentWindow.postMessage({ 
-                type: 'volumeUpdate', 
-                level: val / 100, 
-                muted: (val == 0),
-                scope: 'master' 
-            }, '*');
+            if (typeof syncAppVolume === 'function') syncAppVolume(f);
         });
 
         // 2. Sync UI Sound volume instantly
