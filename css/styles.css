@@ -1737,6 +1737,7 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     background: var(--accent);
     cursor: pointer;
     border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
     transition: width 0.3s, height 0.3s, transform 0.3s;
 }
 
@@ -1753,6 +1754,7 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     background: var(--accent);
     cursor: pointer;
     border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
     transition: width 0.3s, height 0.3s, transform 0.3s;
 }
 

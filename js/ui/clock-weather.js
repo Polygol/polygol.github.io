@@ -48,8 +48,6 @@ function getCachedElement(id, selector = false) {
     return clockCache.elements[id];
 }
 
-
-
 function updateClockAndDate() {
     const clockElement = getCachedElement('clock');
     const dateElement = getCachedElement('date');
@@ -66,7 +64,7 @@ function updateClockAndDate() {
 
     // Prevent empty strings from causing ISO date flashes during boot
     let clockFormat = (clockFormatInput && clockFormatInput.value) ? clockFormatInput.value : (localStorage.getItem('use12HourFormat') === 'true' ? 'h:mm:ss A' : 'HH:mm:ss');
-    let dateFormat = (dateFormatInput && dateFormatInput.value) ? dateFormatInput.value : (localStorage.getItem('dateFormat') || 'ddd MMM D • $(smart)$');
+    let dateFormat = (dateFormatInput && dateFormatInput.value) ? dateFormatInput.value : (localStorage.getItem('dateFormat') || 'ddd MMM D $(separator.dot)$ $(smart)50$');
 
     if (window.isBlackoutActive) {
         clockFormat = clockFormat.replace(/[:.]ss/, '').replace(/ss/, '');
@@ -129,7 +127,7 @@ function updateClockAndDate() {
                 if (data.matrix) {
                     const m = data.matrix;
                     const pick = (arr) => arr[Math.floor(Math.random() * (arr ? arr.length : 0))];
-                    window.personalGreetingGenerator = () => `${pick(m.subjects)} ${pick(m.connectors)} ${pick(m.attributes)} ${pick(m.punchlines)}`;
+                    window.personalGreetingGenerator = () => `${pick(m.subjects)} ${pick(m.connectors)}, ${pick(m.attributes)}`;
                 } else if (data.greetings) {
                     window.personalGreetingsList = data.greetings;
                 }
@@ -148,29 +146,32 @@ function updateClockAndDate() {
 
         // --- Smart Variable Engine (Priority Based) ---
         const getSmartValue = () => {
-            // 1. Check for ACTIVE Media
-            // We look for the 'playing' state in the session stack
             const activeSession = (typeof mediaSessionStack !== 'undefined') 
                 ? mediaSessionStack.find(s => s.appName === activeMediaSessionApp) 
                 : null;
             
             const isPlaying = activeSession && activeSession.playbackState === 'playing';
-
-            if (isPlaying && mediaTitle) {
+            const isMediaSmartEnabled = localStorage.getItem('isMediaSmartEnabled') !== 'false';
+            if (isMediaSmartEnabled && isPlaying && mediaTitle) {
                 return mediaTitle; // Lock display to music while playing
             }
 
-            // 2. Rotation Pool (Minimal Content: Weather & Greetings)
             const items = [];
             
-            // Add Weather only if the big Home Widget is hidden to avoid duplicate info
             const isWeatherWidgetVisible = localStorage.getItem('showWeather') !== 'false';
             if (!isWeatherWidgetVisible && weatherIconEmoji && weatherDegrees) {
                 items.push(`${weatherIconEmoji} ${weatherDegrees}`);
             }
             
-            items.push(timeGreeting);
-            items.push(window.currentPersonalGreeting);
+            const isPersonalGreetingSmartEnabled = localStorage.getItem('isPersonalGreetingSmartEnabled') !== 'false';
+            if (isPersonalGreetingSmartEnabled) {
+                items.push(window.currentPersonalGreeting);
+            }
+            
+            const isTimeGreetingSmartEnabled = localStorage.getItem('isTimeGreetingSmartEnabled') !== 'false';
+            if (isTimeGreetingSmartEnabled) {
+                items.push(timeGreeting);
+            }
 
             // Use a stable 10-minute (600,000ms) rotation based on system clock
             const slot = Math.floor(Date.now() / 600000);
@@ -570,7 +571,6 @@ async function updateSmallWeather() {
     }
 
     const showWeather = localStorage.getItem('showWeather') !== 'false';
-    if (!showWeather) return;
     
     try {
         const weatherData = await fetchLocationAndWeather();
