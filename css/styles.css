@@ -1326,7 +1326,7 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 
 .clock .colon {
     position: relative;
-    top: -0.1em; /* Fine-tune vertical alignment if needed */
+    top: -0.125em; /* Fine-tune vertical alignment if needed */
 }
 
 /* .clock::before {
