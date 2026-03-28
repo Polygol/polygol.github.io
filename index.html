@@ -121,10 +121,10 @@
             const bootHelp = document.getElementById('boot-help');
             if (loadingScreen && bootHelp) { // Check if loading is still happening
                 bootHelp.innerHTML = `
-                    Please wait...
+                    Tap here to open recovery.
                 `;
             }
-        }, 5000); // 5 seconds
+        }, 10000); // 10 seconds
     
         // Catch crashes during load
         window.polygolHasCrashed = false; // Global crash flag
@@ -213,14 +213,10 @@
 </head>
 <body>
     <div id="loading-screen" class="loading-overlay">
-        <div id="boot-help" class="boot-help">F12 • Recovery</div>
-        <img src="/assets/img/icon.svg" alt="Polygol Logo" class="loading-logo">
-        <div class="loading-spinner">
-            <svg width="24" height="24" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--text-color);">
-                <style>.spinner_V8m1{transform-origin:center;animation:spinner_zKoa 2s linear infinite}.spinner_V8m1 circle{stroke-linecap:round;animation:spinner_YpZS 1.5s ease-in-out infinite}@keyframes spinner_zKoa{100%{transform:rotate(360deg)}}@keyframes spinner_YpZS{0%{stroke-dasharray:0 150;stroke-dashoffset:0}47.5%{stroke-dasharray:42 150;stroke-dashoffset:-16}95%,100%{stroke-dasharray:42 150;stroke-dashoffset:-59}}</style>
-                <g class="spinner_V8m1"><circle cx="12" cy="12" r="9.5" fill="none" stroke-width="3"></circle></g>
-            </svg>
-        </div>
+        <svg class="loading-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width: 72px; height: 72px;">
+            <rect width="100%" height="100%" fill="var(--accent)" stroke="none" class="loading-spinner-ind" />
+        </svg>
+        <div id="boot-help" class="boot-help"></div>
     </div>
     
     <script>
@@ -285,7 +281,7 @@
         </svg>
     </div>
 
-    <div id="dynamic-area" style="opacity: 0;">
+    <div id="dynamic-area" style="opacity: 0; scale: 0.9;">
         <div id="activity-island"></div>
         <div id="persistent-clock" class="persistent-clock"></div>
         <div id="status-indicator"></div>
@@ -348,7 +344,7 @@
         </div>
     </div>
 
-    <div class="container" style="opacity: 0;">
+    <div class="container" style="opacity: 0; scale: 0.9;">
         <div class="info">
             <div class="date" id="date"></div>
         </div>
@@ -357,16 +353,15 @@
             <div class="weather-widget" id="weather">
                 <span class="temperature" id="temperature"></span>
                 <span class="weather-icon" id="weather-icon">
-                    <svg width="24" height="24" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--text-color);">
-                        <style>.spinner_V8m1{transform-origin:center;animation:spinner_zKoa 2s linear infinite}.spinner_V8m1 circle{stroke-linecap:round;animation:spinner_YpZS 1.5s ease-in-out infinite}@keyframes spinner_zKoa{100%{transform:rotate(360deg)}}@keyframes spinner_YpZS{0%{stroke-dasharray:0 150;stroke-dashoffset:0}47.5%{stroke-dasharray:42 150;stroke-dashoffset:-16}95%,100%{stroke-dasharray:42 150;stroke-dashoffset:-59}}</style>
-                        <g class="spinner_V8m1"><circle cx="12" cy="12" r="9.5" fill="none" stroke-width="3"></circle></g>
+                    <svg class="loading-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="100%" height="100%" fill="currentColor" stroke="none" class="loading-spinner-ind" />
                     </svg>
                 </span>
             </div>
         </div>
     </div>
 
-    <div id="widget-grid" class="widget-grid" style="opacity: 0;"></div>
+    <div id="widget-grid" class="widget-grid" style="opacity: 0; scale: 0.9;"></div>
     
     <div id="donburi-container" class="system-overlay" style="display: none; transform: translateY(-100%);">
         <iframe src="/assets/gurapp/intl/donburi/index.html" data-gurasuraisu-iframe="true" data-app-id="Donburi"></iframe>

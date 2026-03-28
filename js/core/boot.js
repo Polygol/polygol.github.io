@@ -35,20 +35,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.error("Error initializing wallpaper:", error);
     });
 
-    // Reveal main UI
-    requestAnimationFrame(() => {
+    setTimeout(() => {
         if (typeof updateClockAndDate === 'function') updateClockAndDate();
-        document.querySelectorAll('.container, .widget-grid, #dynamic-area').forEach(el => {
-            el.style.opacity = '1';
-        });
-        
-        // ONLY dismiss the loading screen once Javascript and visual trees have totally stabilized
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen) {
             loadingScreen.classList.add('hidden');
             setTimeout(() => loadingScreen.remove(), 1000);
         }
-    });
+
+        setTimeout(() => {
+            document.querySelectorAll('.container, .widget-grid, #dynamic-area').forEach(el => {
+                el.style.opacity = '';
+                el.style.scale = '';
+            });
+        }, 300);
+    }, 2000);
 
     const oneButtonNavSwitch = document.getElementById('one-button-nav-switch');
     if (oneButtonNavSwitch) {
