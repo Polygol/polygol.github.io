@@ -943,7 +943,7 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 /* Fix for misaligned colon in persistent clock */
 .persistent-clock .persistent-colon {
     position: relative;
-    top: -0.08em;
+    top: -0.125em;
 }
 
 @supports (-webkit-mask-clip: text) {
