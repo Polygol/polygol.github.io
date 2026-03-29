@@ -263,24 +263,20 @@
         }
     }
 
-    // Unified pointer variables
-    let activeKey = null;
-    let longPressTimer = null;
+    // --- Unified Multi-Touch Tracking ---
+    const activeTouches = new Map();
     let isAltPopupOpen = false;
     let altPopupEl = null;
+    let altPopupOwnerId = null;
 
-    let backspaceTimeout = null;
-    let backspaceInterval = null;
+    function triggerBackspace() {
+        window.parent.postMessage({ type: 'osk-keypress', action: 'backspace' }, '*');
+        currentWordBuffer = currentWordBuffer.slice(0, -1);
+        updatePredictions();
+    }
 
-    let swipeStartY = 0;
-    let isSwipingDown = false;
-
-    function handlePointerDown(e, clientY) {
-        e.preventDefault();
-        swipeStartY = clientY;
-        isSwipingDown = true;
-
-        const pred = e.target.closest('.prediction-btn');
+    function handlePointerDown(id, target, clientX, clientY) {
+        const pred = target.closest('.prediction-btn');
         if (pred) {
             const wordToInsert = pred.dataset.word;
             window.parent.postMessage({ 
@@ -291,44 +287,64 @@
             return;
         }
 
-        const key = e.target.closest('.key');
-        if (key) {
-            activeKey = key;
-            key.classList.add('active');
+        const key = target.closest('.key');
+        const touchData = {
+            id: id,
+            keyEl: key,
+            startX: clientX,
+            startY: clientY,
+            isSwipingDown: true,
+            longPressTimer: null,
+            backspaceTimeout: null,
+            backspaceInterval: null,
+            handled: false
+        };
 
+        if (key) {
+            key.classList.add('active');
             const action = key.dataset.action;
             const val = key.dataset.val;
 
             if (action === 'backspace') {
-                window.parent.postMessage({ type: 'osk-keypress', action: 'backspace' }, '*');
-                currentWordBuffer = currentWordBuffer.slice(0, -1);
-                updatePredictions();
+                triggerBackspace();
+                touchData.handled = true; // Prevent single backspace on release
 
-                backspaceTimeout = setTimeout(() => {
-                    backspaceInterval = setInterval(() => {
-                        window.parent.postMessage({ type: 'osk-keypress', action: 'backspace' }, '*');
-                        currentWordBuffer = currentWordBuffer.slice(0, -1);
-                        updatePredictions();
+                touchData.backspaceTimeout = setTimeout(() => {
+                    touchData.backspaceInterval = setInterval(() => {
+                        triggerBackspace();
                     }, 50); // Rapid delete
                 }, 400);
             } else if (val && altKeys[val.toLowerCase()]) {
-                longPressTimer = setTimeout(() => {
-                    openAltPopup(key, val);
+                touchData.longPressTimer = setTimeout(() => {
+                    touchData.handled = true;
+                    // Only allow one popup at a time to prevent overlapping menus
+                    if (!isAltPopupOpen) {
+                        altPopupOwnerId = id;
+                        openAltPopup(key, val);
+                    }
                 }, 400);
             }
         }
+
+        activeTouches.set(id, touchData);
     }
 
-    function handlePointerMove(e, clientX, clientY) {
-        if (isSwipingDown && !isAltPopupOpen) {
-            const deltaY = clientY - swipeStartY;
+    function handlePointerMove(id, clientX, clientY) {
+        const touchData = activeTouches.get(id);
+        if (!touchData) return;
+
+        // Check for swipe down to close OSK
+        if (touchData.isSwipingDown && altPopupOwnerId !== id) {
+            const deltaY = clientY - touchData.startY;
             if (deltaY > 60) {
                 window.parent.postMessage({ type: 'osk-request-close' }, '*');
-                isSwipingDown = false;
+                touchData.isSwipingDown = false;
+                touchData.handled = true;
             }
         }
 
-        if (isAltPopupOpen && altPopupEl) {
+        // Handle sliding over alternative keys
+        if (isAltPopupOpen && altPopupOwnerId === id && altPopupEl) {
             const el = document.elementFromPoint(clientX, clientY);
             const altKey = el ? el.closest('.alt-key') : null;
             
@@ -339,49 +355,80 @@
         }
     }
 
-    function handlePointerUp() {
-        isSwipingDown = false;
+    function handlePointerUp(id) {
+        const touchData = activeTouches.get(id);
+        if (!touchData) return;
 
-        if (backspaceTimeout) clearTimeout(backspaceTimeout);
-        if (backspaceInterval) clearInterval(backspaceInterval);
+        // Clear timeouts and intervals for this touch
+        if (touchData.backspaceTimeout) clearTimeout(touchData.backspaceTimeout);
+        if (touchData.backspaceInterval) clearInterval(touchData.backspaceInterval);
+        if (touchData.longPressTimer) clearTimeout(touchData.longPressTimer);
 
-        if (longPressTimer) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-        }
+        if (touchData.keyEl) {
+            touchData.keyEl.classList.remove('active');
 
-        if (activeKey) {
-            activeKey.classList.remove('active');
-
-            if (isAltPopupOpen) {
+            if (isAltPopupOpen && altPopupOwnerId === id) {
                 const selected = altPopupEl.querySelector('.alt-key.selected');
-                const insertVal = selected ? selected.dataset.val : activeKey.dataset.val;
+                const insertVal = selected ? selected.dataset.val : touchData.keyEl.dataset.val;
                 
                 window.parent.postMessage({ type: 'osk-keypress', action: 'insert', key: insertVal }, '*');
                 updateWordBufferInsert(insertVal);
                 checkRevertShift();
 
                 closeAltPopup();
-            } else {
-                if (activeKey.dataset.action !== 'backspace') {
-                    handleKeyRelease(activeKey);
-                }
+                altPopupOwnerId = null;
+            } else if (!touchData.handled) {
+                handleKeyRelease(touchData.keyEl);
             }
-            activeKey = null;
         }
+
+        activeTouches.delete(id);
     }
 
-    document.addEventListener('touchstart', e => handlePointerDown(e, e.touches[0].clientY), {passive: false});
-    document.addEventListener('touchmove', e => handlePointerMove(e, e.touches[0].clientX, e.touches[0].clientY), {passive: true});
-    document.addEventListener('touchend', handlePointerUp);
+    // --- Touch Events ---
+    document.addEventListener('touchstart', e => {
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (target) handlePointerDown(touch.identifier, target, touch.clientX, touch.clientY);
+        }
+    }, {passive: false});
 
-    document.addEventListener('mousedown', e => handlePointerDown(e, e.clientY), {passive: false});
-    document.addEventListener('mousemove', e => {
-        if (e.buttons > 0) handlePointerMove(e, e.clientX, e.clientY);
+    document.addEventListener('touchmove', e => {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            handlePointerMove(touch.identifier, touch.clientX, touch.clientY);
+        }
     }, {passive: true});
-    document.addEventListener('mouseup', handlePointerUp);
-    document.addEventListener('mouseleave', handlePointerUp);
 
+    document.addEventListener('touchend', e => {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            handlePointerUp(e.changedTouches[i].identifier);
+        }
+    });
+
+    document.addEventListener('touchcancel', e => {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            handlePointerUp(e.changedTouches[i].identifier);
+        }
+    });
+
+    // --- Mouse Events (Fallback for testing) ---
+    document.addEventListener('mousedown', e => {
+        e.preventDefault();
+        handlePointerDown('mouse', e.target, e.clientX, e.clientY);
+    }, {passive: false});
+
+    document.addEventListener('mousemove', e => {
+        if (e.buttons > 0) handlePointerMove('mouse', e.clientX, e.clientY);
+    }, {passive: true});
+
+    document.addEventListener('mouseup', e => handlePointerUp('mouse'));
+    document.addEventListener('mouseleave', e => handlePointerUp('mouse'));
+
+
+    // --- Processing State logic ---
     function updateWordBufferInsert(val) {
         if (val === ' ' || val === '.' || val === ',') currentWordBuffer = "";
         else currentWordBuffer += val;
@@ -475,6 +522,33 @@
         }
         isAltPopupOpen = false;
     }
+
+    // Handle closing/clearing buffer from system
+    window.addEventListener('message', e => {
+        if (e.data.type === 'themeUpdate') {
+            if (e.data.theme === 'light') {
+                document.documentElement.style.setProperty('--text-color', '#000000');
+                document.documentElement.style.setProperty('--key-bg', 'rgba(0, 0, 0, 0.05)');
+                document.documentElement.style.setProperty('--key-active', 'rgba(0, 0, 0, 0.15)');
+                document.documentElement.style.setProperty('--key-dark', 'rgba(0, 0, 0, 0.1)');
+            } else {
+                document.documentElement.style.setProperty('--text-color', '#ffffff');
+                document.documentElement.style.setProperty('--key-bg', 'rgba(255, 255, 255, 0.1)');
+                document.documentElement.style.setProperty('--key-active', 'rgba(255, 255, 255, 0.3)');
+                document.documentElement.style.setProperty('--key-dark', 'rgba(0, 0, 0, 0.2)');
+            }
+        } else if (e.data.type === 'osk-closed') {
+            // Reset text prediction buffers
+            currentWordBuffer = "";
+            updatePredictions();
+
+            // Auto-revert Shift lock if we close the keyboard while it's active
+            if (currentMode === 'uppercase' && !capsLock) {
+                currentMode = 'lowercase';
+                renderKeys();
+            }
+        }
+    });
 
     renderKeys();
 </script>

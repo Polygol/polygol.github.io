@@ -81,6 +81,12 @@ function closeOSK() {
     if (container) {
         container.classList.remove('open');
         document.body.classList.remove('osk-active');
+        
+        // Notify iframe to clear buffers and state
+        const iframe = container.querySelector('iframe');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'osk-closed' }, '*');
+        }
     }
     currentTargetElement = null;
     currentTargetFrame = null;
