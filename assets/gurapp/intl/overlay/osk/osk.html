@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+    <style>
+        :root {
+            --key-bg: rgba(255, 255, 255, 0.1);
+            --key-active: rgba(255, 255, 255, 0.3);
+            --key-dark: rgba(0, 0, 0, 0.2);
+            --text-color: #ffffff;
+        }
+        body.light-theme {
+            --key-bg: rgba(0, 0, 0, 0.05);
+            --key-active: rgba(0, 0, 0, 0.15);
+            --key-dark: rgba(0, 0, 0, 0.1);
+            --text-color: #000000;
+        }
+        body {
+            margin: 0;
+            padding: 10px;
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            color: var(--text-color);
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .predictions {
+            display: flex;
+            height: 40px;
+            gap: 6px;
+        }
+        .prediction-btn {
+            flex: 1;
+            border-radius: 20px;
+            corner-shape: superellipse(1.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            padding: 0 5px;
+            transition: background 0.1s, transform 0.1s;
+        }
+        .prediction-btn:active {
+            background: var(--key-active);
+            transform: scale(0.9);
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        .key {
+            background: var(--key-bg);
+            border-radius: 20px;
+            corner-shape: superellipse(1.5);
+            flex: 1;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background 0.1s, transform 0.1s;
+            color: inherit;
+        }
+        .key.active {
+            background: var(--key-active);
+            transform: scale(0.9);
+        }
+        .alt-popup {
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            background: var(--search-background);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 6px;
+            gap: 6px;
+            box-shadow: var(--sun-shadow), 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        .alt-key {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            border-radius: 50%;
+            color: var(--text-color);
+            transition: background 0.1s, transform 0.1s;
+        }
+        .alt-key.selected {
+            background: var(--accent);
+            color: var(--background-color);
+        }
+        .caps-lock-indicator {
+            position: absolute;
+            bottom: 6px;
+            width: 14px;
+            height: 3px;
+            border-radius: 3px;
+            background-color: var(--accent);
+        }
+        .key.wide { flex: 1.5; font-size: 16px; }
+        .key.space { flex: 5; }
+        .key.dark { background: var(--key-dark); }
+        .material-symbols-rounded { font-size: 22px; pointer-events: none; }
+        .key span { pointer-events: none; }
+    </style>
+</head>
+<body>
+<div class="keyboard" id="kb-main">
+    <div class="predictions" id="predictions-bar"></div>
+    <div class="row" id="row1"></div>
+    <div class="row" id="row2"></div>
+    <div class="row">
+        <div class="key wide dark" data-action="shift"><span class="material-symbols-rounded" id="shift-icon">shift</span></div>
+        <div class="row" id="row3" style="flex: 7;"></div>
+        <div class="key wide dark" data-action="backspace"><span class="material-symbols-rounded">backspace</span></div>
+    </div>
+    <div class="row">
+        <div class="key wide dark" data-action="symbols">?123</div>
+        <div class="key" data-val=",">,</div>
+        <div class="key space" data-val=" "></div>
+        <div class="key" data-val=".">.</div>
+        <div class="key wide dark" data-action="enter"><span class="material-symbols-rounded">keyboard_return</span></div>
+    </div>
+</div>
+
+<script>
+    const layouts = {
+        lowercase: [
+            ['q','w','e','r','t','y','u','i','o','p'],
+            ['a','s','d','f','g','h','j','k','l'],
+            ['z','x','c','v','b','n','m']
+        ],
+        uppercase: [
+            ['Q','W','E','R','T','Y','U','I','O','P'],
+            ['A','S','D','F','G','H','J','K','L'],
+            ['Z','X','C','V','B','N','M']
+        ],
+        numbers: [
+            ['1','2','3','4','5','6','7','8','9','0'],
+            ['@','#','$','_','&','-','+','(',')'],
+            ['*','"',"'",':',';','!','?']
+        ]
+    };
+
+    let dictionary = [];
+    let fuse = null;
+
+    // Fetch top 10k English words for predictions and autocorrect
+    fetch('https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english.txt')
+        .then(res => res.text())
+        .then(text => {
+            // Keep words longer than 1 character, add some system-specific terms
+            dictionary = text.split('\n').filter(w => w.length > 1);
+            dictionary.push("polygol", "gurapp", "gurasuraisu");
+            
+            // Initialize Fuse.js for fuzzy matching / autocorrect
+            fuse = new Fuse(dictionary, {
+                includeScore: true,
+                threshold: 0.3, // Allow minor typos (e.g. "teh" -> "the")
+                distance: 100
+            });
+        }).catch(err => console.warn("Failed to load dictionary", err));
+
+    const altKeys = {
+        'a': ['a', 'à', 'á', 'â', 'ä', 'æ', 'ã', 'å', 'ā', '@'],
+        'c': ['c', 'ç', 'ć', 'č'],
+        'e': ['e', 'è', 'é', 'ê', 'ë', 'ē', 'ė', 'ę'],
+        'i': ['i', 'î', 'ï', 'í', 'ī', 'į', 'ì'],
+        'o': ['o', 'ô', 'ö', 'ò', 'ó', 'œ', 'ø', 'ō', 'õ'],
+        'u': ['u', 'û', 'ü', 'ù', 'ú', 'ū'],
+        's': ['s', 'ß', 'ś', 'š'],
+        'l': ['l', 'ł'],
+        'z': ['z', 'ž', 'ź', 'ż'],
+        'n': ['n', 'ñ', 'ń'],
+        '.': ['.', ',', '?', '!', ':', ';', '-']
+    };
+
+    let currentMode = 'lowercase';
+    let currentWordBuffer = "";
+    let capsLock = false;
+    let lastShiftTap = 0;
+    
+    function renderKeys() {
+        const layout = layouts[currentMode];
+        document.getElementById('row1').innerHTML = layout[0].map(k => `<div class="key" data-val="${k}"><span>${k}</span></div>`).join('');
+        document.getElementById('row2').innerHTML = layout[1].map(k => `<div class="key" data-val="${k}"><span>${k}</span></div>`).join('');
+        document.getElementById('row3').innerHTML = layout[2].map(k => `<div class="key" data-val="${k}"><span>${k}</span></div>`).join('');
+        
+        const shiftIcon = document.getElementById('shift-icon');
+        const shiftKey = shiftIcon.parentElement;
+        const existingInd = shiftKey.querySelector('.caps-lock-indicator');
+        if (existingInd) existingInd.remove();
+
+        if (capsLock) {
+            shiftIcon.style.fontVariationSettings = "'FILL' 1";
+            const ind = document.createElement('div');
+            ind.className = 'caps-lock-indicator';
+            shiftKey.appendChild(ind);
+        } else if (currentMode === 'uppercase') {
+            shiftIcon.style.fontVariationSettings = "'FILL' 1";
+        } else {
+            shiftIcon.style.fontVariationSettings = "'FILL' 0";
+        }
+        
+        const symBtn = document.querySelector('[data-action="symbols"]');
+        symBtn.textContent = currentMode === 'numbers' ? 'ABC' : '?123';
+    }
+
+    function updatePredictions() {
+        const bar = document.getElementById('predictions-bar');
+        if (!currentWordBuffer || dictionary.length === 0) {
+            bar.innerHTML = '';
+            return;
+        }
+
+        const lowerWord = currentWordBuffer.toLowerCase();
+        let matches = [];
+
+        matches = dictionary.filter(w => w.startsWith(lowerWord) && w !== lowerWord).slice(0, 3);
+        if (matches.length < 3 && fuse) {
+            const fuzzyResults = fuse.search(lowerWord).map(r => r.item);
+            for (let fw of fuzzyResults) {
+                if (!matches.includes(fw) && fw !== lowerWord) {
+                    matches.push(fw);
+                    if (matches.length >= 3) break;
+                }
+            }
+        }
+
+        if (matches.length > 0) {
+            bar.innerHTML = matches.map(w => `<div class="prediction-btn" data-word="${w}">${w}</div>`).join('');
+        } else {
+            bar.innerHTML = '';
+        }
+    }
+
+    // Unified pointer variables
+    let activeKey = null;
+    let longPressTimer = null;
+    let isAltPopupOpen = false;
+    let altPopupEl = null;
+
+    let backspaceTimeout = null;
+    let backspaceInterval = null;
+
+    let swipeStartY = 0;
+    let isSwipingDown = false;
+
+    function handlePointerDown(e, clientY) {
+        e.preventDefault();
+        swipeStartY = clientY;
+        isSwipingDown = true;
+
+        const pred = e.target.closest('.prediction-btn');
+        if (pred) {
+            const wordToInsert = pred.dataset.word;
+            window.parent.postMessage({ 
+                type: 'osk-keypress', action: 'replace-word', length: currentWordBuffer.length, word: wordToInsert 
+            }, '*');
+            currentWordBuffer = "";
+            updatePredictions();
+            return;
+        }
+
+        const key = e.target.closest('.key');
+        if (key) {
+            activeKey = key;
+            key.classList.add('active');
+
+            const action = key.dataset.action;
+            const val = key.dataset.val;
+
+            if (action === 'backspace') {
+                window.parent.postMessage({ type: 'osk-keypress', action: 'backspace' }, '*');
+                currentWordBuffer = currentWordBuffer.slice(0, -1);
+                updatePredictions();
+
+                backspaceTimeout = setTimeout(() => {
+                    backspaceInterval = setInterval(() => {
+                        window.parent.postMessage({ type: 'osk-keypress', action: 'backspace' }, '*');
+                        currentWordBuffer = currentWordBuffer.slice(0, -1);
+                        updatePredictions();
+                    }, 50); // Rapid delete
+                }, 400);
+            } else if (val && altKeys[val.toLowerCase()]) {
+                longPressTimer = setTimeout(() => {
+                    openAltPopup(key, val);
+                }, 400);
+            }
+        }
+    }
+
+    function handlePointerMove(e, clientX, clientY) {
+        if (isSwipingDown && !isAltPopupOpen) {
+            const deltaY = clientY - swipeStartY;
+            if (deltaY > 60) {
+                window.parent.postMessage({ type: 'osk-request-close' }, '*');
+                isSwipingDown = false;
+            }
+        }
+
+        if (isAltPopupOpen && altPopupEl) {
+            const el = document.elementFromPoint(clientX, clientY);
+            const altKey = el ? el.closest('.alt-key') : null;
+            
+            altPopupEl.querySelectorAll('.alt-key').forEach(k => k.classList.remove('selected'));
+            if (altKey) {
+                altKey.classList.add('selected');
+            }
+        }
+    }
+
+    function handlePointerUp() {
+        isSwipingDown = false;
+
+        if (backspaceTimeout) clearTimeout(backspaceTimeout);
+        if (backspaceInterval) clearInterval(backspaceInterval);
+
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+
+        if (activeKey) {
+            activeKey.classList.remove('active');
+
+            if (isAltPopupOpen) {
+                const selected = altPopupEl.querySelector('.alt-key.selected');
+                const insertVal = selected ? selected.dataset.val : activeKey.dataset.val;
+                
+                window.parent.postMessage({ type: 'osk-keypress', action: 'insert', key: insertVal }, '*');
+                updateWordBufferInsert(insertVal);
+                checkRevertShift();
+
+                closeAltPopup();
+            } else {
+                if (activeKey.dataset.action !== 'backspace') {
+                    handleKeyRelease(activeKey);
+                }
+            }
+            activeKey = null;
+        }
+    }
+
+    document.addEventListener('touchstart', e => handlePointerDown(e, e.touches[0].clientY), {passive: false});
+    document.addEventListener('touchmove', e => handlePointerMove(e, e.touches[0].clientX, e.touches[0].clientY), {passive: true});
+    document.addEventListener('touchend', handlePointerUp);
+
+    document.addEventListener('mousedown', e => handlePointerDown(e, e.clientY), {passive: false});
+    document.addEventListener('mousemove', e => {
+        if (e.buttons > 0) handlePointerMove(e, e.clientX, e.clientY);
+    }, {passive: true});
+    document.addEventListener('mouseup', handlePointerUp);
+    document.addEventListener('mouseleave', handlePointerUp);
+
+    function updateWordBufferInsert(val) {
+        if (val === ' ' || val === '.' || val === ',') currentWordBuffer = "";
+        else currentWordBuffer += val;
+        updatePredictions();
+    }
+
+    function checkRevertShift() {
+        if (currentMode === 'uppercase' && !capsLock) {
+            currentMode = 'lowercase';
+            renderKeys();
+        }
+    }
+
+    function handleKeyRelease(key) {
+        const action = key.dataset.action;
+        const val = key.dataset.val;
+
+        if (action === 'shift') {
+            const now = Date.now();
+            if (now - lastShiftTap < 300) {
+                capsLock = true;
+                currentMode = 'uppercase';
+            } else {
+                if (capsLock) {
+                    capsLock = false;
+                    currentMode = 'lowercase';
+                } else {
+                    currentMode = currentMode === 'lowercase' ? 'uppercase' : 'lowercase';
+                }
+            }
+            lastShiftTap = now;
+            renderKeys();
+            return;
+        }
+        
+        if (action === 'symbols') {
+            currentMode = currentMode === 'numbers' ? 'lowercase' : 'numbers';
+            renderKeys();
+            return;
+        }
+
+        if (action) {
+            window.parent.postMessage({ type: 'osk-keypress', action: action }, '*');
+            if (action === 'enter') currentWordBuffer = "";
+            updatePredictions();
+        } else if (val) {
+            window.parent.postMessage({ type: 'osk-keypress', action: 'insert', key: val }, '*');
+            updateWordBufferInsert(val);
+            checkRevertShift();
+        }
+    }
+
+    // --- Options Popup Logic ---
+    function openAltPopup(keyEl, baseVal) {
+        const alts = altKeys[baseVal.toLowerCase()];
+        if (!alts) return;
+
+        isAltPopupOpen = true;
+        altPopupEl = document.createElement('div');
+        altPopupEl.className = 'alt-popup';
+
+        const isUpper = currentMode === 'uppercase';
+
+        alts.forEach((char, i) => {
+            const displayChar = isUpper ? char.toUpperCase() : char;
+            const altKey = document.createElement('div');
+            altKey.className = 'alt-key';
+            if (i === 0) altKey.classList.add('selected'); 
+            altKey.dataset.val = displayChar;
+            altKey.innerHTML = `<span>${displayChar}</span>`;
+            altPopupEl.appendChild(altKey);
+        });
+
+        keyEl.appendChild(altPopupEl);
+
+        const rect = altPopupEl.getBoundingClientRect();
+        if (rect.left < 5) {
+            altPopupEl.style.left = '0';
+            altPopupEl.style.transform = 'translateX(0)';
+        } else if (rect.right > window.innerWidth - 5) {
+            altPopupEl.style.left = 'auto';
+            altPopupEl.style.right = '0';
+            altPopupEl.style.transform = 'translateX(0)';
+        }
+    }
+
+    function closeAltPopup() {
+        if (altPopupEl) {
+            altPopupEl.remove();
+            altPopupEl = null;
+        }
+        isAltPopupOpen = false;
+    }
+
+    renderKeys();
+</script>
+</body>
+</html>

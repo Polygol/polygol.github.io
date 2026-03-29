@@ -1,4 +1,4 @@
-const CORE_CACHE_VERSION = 'Bismuth 17.1.2.29';
+const CORE_CACHE_VERSION = 'Bismuth 17.1.2.3';
 const CORE_CACHE_NAME = `polygol-core-${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polygol-apps';
 
@@ -32,6 +32,7 @@ const ASSETS_TO_CACHE = [
   '/js/ui/dock-drawer.js',
   '/js/ui/settings.js',
   '/js/ui/physical-keyboard.js',
+  '/js/ui/osk.js',
   '/js/ui/browser-chrome.js',
   '/js/ui/donburi.js',
   '/js/ui/main-ui.js',
@@ -64,6 +65,7 @@ const ASSETS_TO_CACHE = [
   '/assets/gurapp/intl/settings/settings.js',
   '/assets/gurapp/intl/forudaraisu/index.html',
   '/assets/gurapp/intl/donburi/index.html',
+  '/assets/gurapp/intl/overlay/osk/osk.html',
   '/assets/gurapp/intl/liveactivity/weather-alert.html',
   '/assets/gurapp/intl/liveactivity/slideshow-control.html',
   '/assets/gurapp/intl/system-widgets/media-widget.html',
@@ -120,7 +122,8 @@ const ASSETS_TO_CACHE = [
   'https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@100..800&display=swap',
   'https://fonts.googleapis.com/css2?family=Jaro:opsz@6..72&display=swap',    
   'https://fonts.googleapis.com/css2?family=Doto:wght@400;700&display=swap', 
-  'https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap'
+  'https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap',
+  'https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english.txt'
 ];
 
 // --- IndexedDB Helper Functions ---
