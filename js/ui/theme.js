@@ -258,7 +258,7 @@ function setupThemeSwitcher() {
 function getGlassFilterValue(mode) {
     switch (mode) {
         case 'focused': return 'opacity(0.9)';
-        case 'frosted': return 'blur(17.5px)';
+        case 'frosted': return 'blur(10px) opacity(0.9)';
         case 'off': return 'none'; // Will effectively disable backdrop-filter due to CSS syntax rules or explicit override
         case 'on': 
         default: return "url('#edge-refraction-only')";
