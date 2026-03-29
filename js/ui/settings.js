@@ -38,7 +38,8 @@ const controlIdMap = {
     'showWeather': 'weather-switch',
     'page_brightness': 'brightness-control',
     'display_temperature': 'thermostat-control',
-    'nightMode': 'night-mode-qc', // Using the container as the clickable element
+    'nightMode': 'night-mode-qc',
+    'master_volume': 'volume-control',
     'minimalMode': 'minimal_mode_qc',
     'silentMode': 'silent_switch_qc',
     'selectedLanguage': 'language-switcher',
