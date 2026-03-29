@@ -1,7 +1,6 @@
 <img width="1200" height="630" alt="Polygol • Really good universial dashboard, made by kirbIndustries" src="https://github.com/user-attachments/assets/727d905f-48c4-4b27-ae0e-068b04059d56" />
 
-# Polygol
-⏰ Ambient OS-like dashboard with clock, weather and advanced features without displaying ads.
+⏰ Ambient enviroment with clock, weather and advanced features.
 
 **[>> You can access Polygol at https://polygol.github.io <<]**
 
@@ -62,14 +61,14 @@ Polygol includes a Boot State System that runs immediately upon page load (befor
 If a user visits index.html without any parameters and has not completed the setup process, they are automatically redirected to the landing page.
 
 ## Boot Commands
-You can control the startup behavior using the ?s= query parameter. The URL is automatically cleaned after the command executes.
+Control the startup behavior using the ?s= query parameter. The URL is automatically cleaned after the command executes.
 
 | Parameter | Action | Description |
 | :--- | :--- | :--- |
-| `?s=oobe` | **Force Setup** | Clears the "visited" flag and forces the Out-of-Box Experience (Setup Screen) to launch. Useful for resetting or testing the onboarding flow. |
-| `?s=nooobe` | **Skip Setup** | Sets the "visited" flag to true and bypasses the Setup Screen, taking the user directly to the Desktop. |
-| `?s=manage&url=[URL]` | **Import Config** | Fetches a raw text/JS file from the provided `[URL]`, saves it as a `customStartupScript`, marks setup as complete, and loads the OS. Useful for remote management or custom deployments. |
-| `?s=[AppName]` | **Deep Link** | Skips setup and immediately launches the specified app once the system loads (e.g., `?s=Terminal`). |
+| `?s=oobe` | Force Setup | Clears the "visited" flag and forces the Out-of-Box Experience (Setup Screen) to launch. **This is NOT a factory reset. Use Recovery to wipe system data** |
+| `?s=nooobe` | Skip Setup | Sets the "visited" flag to true and skips setup |
+| `?s=manage&url=[URL]` | Import Config | Fetches a raw text/JS file from the provided `[URL]`, saves it as a `customStartupScript` |
+| `?s=[AppName]` | Deep Link | Immediately launches the specified app once the system loads |
 
 ## Examples
 * Reset and start fresh:
