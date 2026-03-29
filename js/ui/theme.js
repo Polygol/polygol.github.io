@@ -257,7 +257,7 @@ function setupThemeSwitcher() {
 
 function getGlassFilterValue(mode) {
     switch (mode) {
-        case 'focused': return 'grayscale(0)';
+        case 'focused': return 'opacity(0.9)';
         case 'frosted': return 'blur(17.5px)';
         case 'off': return 'none'; // Will effectively disable backdrop-filter due to CSS syntax rules or explicit override
         case 'on': 
