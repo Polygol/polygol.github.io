@@ -4152,6 +4152,14 @@ body.osk-active .fullscreen-embed {
     margin-bottom: 300px;
 }
 
+body.osk-active .modal {
+    transform: translateX(-50%) translateY(-50%) scale(1) translateY(-150px);
+}
+
+body.osk-active .control-popup-content {
+    transform: translateY(-150px);
+}
+
 /* The draggable divider */
 #split-divider {
     position: fixed;
