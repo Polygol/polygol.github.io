@@ -910,6 +910,8 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     height: 6px;
     border-radius: 50%;
     backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
+    position: fixed;
+    top: 0;
 }
 
 #status-indicator .material-symbols-rounded {
@@ -934,13 +936,8 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     cursor: pointer;
     transform: scale(1);
     transition: all 0.15s cubic-bezier(.2, 1.3, .64, 1);
-	font-weight: bold;
+	font-weight: 600;
 	transform-origin: top;
-}
-
-.persistent-clock.island-active {
-	letter-spacing: -1.3px;
-    font-weight: 500;
 }
 
 /* Fix for misaligned colon in persistent clock */
