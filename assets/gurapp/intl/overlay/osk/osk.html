@@ -43,8 +43,9 @@
         }
         .predictions {
             display: flex;
-            height: 40px;
-            gap: 6px;
+            height: 32px;
+            gap: 8px;
+            margin-right: 50px;
         }
         .prediction-btn {
             flex: 1;
@@ -136,9 +137,10 @@
 <body>
 <div class="keyboard" id="kb-main">
     <div class="predictions" id="predictions-bar"></div>
+    <div id="emoji-grid" style="display: none; height: 174px; overflow-y: auto; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 6px; align-content: start;"></div>
     <div class="row" id="row1"></div>
     <div class="row" id="row2"></div>
-    <div class="row">
+    <div class="row" id="row3-container">
         <div class="key wide dark" data-action="shift"><span class="material-symbols-rounded" id="shift-icon">shift</span></div>
         <div class="row" id="row3" style="flex: 7;"></div>
         <div class="key wide dark" data-action="backspace"><span class="material-symbols-rounded">backspace</span></div>
@@ -204,10 +206,17 @@
         '.': ['.', ',', '?', '!', ':', ';', '-']
     };
 
+    const emojiList = ["😀","😃","😄","😁","😆","😅","😂","🤣","🥲","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😮‍💨","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🫣","🤗","🫡","🤔","🤫","🤥","😶","😶‍🌫️","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","😵‍💫","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸","😹","😻","😼","😽","🙀","😿","😾","👋","🤚","🖐","✋","🖖","👌","🤌","🤏","✌️","🤞","🫰","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","🫶","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦵","🦿","🦶","👣","👂","🦻","👃","🦼","🧠","🫀","🫁","🦷","🦴","👀","👁","👅","👄","💋","🩸","❤️","🔥","✨","🎉","💯","✅","❌"];
+
     let currentMode = 'lowercase';
     let currentWordBuffer = "";
     let capsLock = false;
     let lastShiftTap = 0;
+    
+    function renderEmojis() {
+        const grid = document.getElementById('emoji-grid');
+        grid.innerHTML = emojiList.map(e => `<div class="key" data-val="${e}" style="height: 40px; font-size: 24px; box-shadow: none; border: none; background: transparent;"><span>${e}</span></div>`).join('');
+    }
     
     function renderKeys() {
         const layout = layouts[currentMode];
@@ -525,7 +534,24 @@
 
     // Handle closing/clearing buffer from system
     window.addEventListener('message', e => {
-        if (e.data.type === 'themeUpdate') {
+        if (e.data.type === 'set-mode') {
+            if (e.data.mode === 'emoji') {
+                document.getElementById('predictions-bar').style.display = 'none';
+                document.getElementById('row1').style.display = 'none';
+                document.getElementById('row2').style.display = 'none';
+                document.getElementById('row3-container').style.display = 'none';
+                document.getElementById('emoji-grid').style.display = 'grid';
+                if (document.getElementById('emoji-grid').innerHTML === '') {
+                    renderEmojis();
+                }
+            } else {
+                document.getElementById('predictions-bar').style.display = 'flex';
+                document.getElementById('row1').style.display = 'flex';
+                document.getElementById('row2').style.display = 'flex';
+                document.getElementById('row3-container').style.display = 'flex';
+                document.getElementById('emoji-grid').style.display = 'none';
+            }
+        } else if (e.data.type === 'themeUpdate') {
             if (e.data.theme === 'light') {
                 document.documentElement.style.setProperty('--text-color', '#000000');
                 document.documentElement.style.setProperty('--key-bg', 'rgba(0, 0, 0, 0.05)');

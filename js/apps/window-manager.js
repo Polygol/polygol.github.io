@@ -251,7 +251,6 @@ async function deleteApp(appName) {
     }
 
     if (apps[appName]) {
-        // --- CORRECTED WIDGET CLEANUP ---
         // 1. Remove widget definitions from the available list
         if (availableWidgets[appName]) {
             delete availableWidgets[appName];
@@ -261,7 +260,11 @@ async function deleteApp(appName) {
         activeWidgets = activeWidgets.filter(widget => widget.appName !== appName);
         saveWidgets(); // Save the cleaned active widgets list
         renderWidgets(); // Re-render the grid immediately
-        // --- End of fix ---
+        
+        // Unregister custom OSK if the app provided one
+        if (typeof window.unregisterCustomOSK === 'function') {
+            window.unregisterCustomOSK(appName);
+        }
 
         // Remove from the in-memory `apps` object
         delete apps[appName];

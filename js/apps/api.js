@@ -17,6 +17,7 @@ const PERMISSION_MAPPINGS = {
     'speakText': 'tts',
     'setRemoteUI': 'waves',
     'sendRemoteUpdate': 'waves',
+    'registerOSK': 'custom-osk',
     'playUiSound': 'ui-sounds',
     
     // App Management
@@ -65,6 +66,7 @@ const PERMISSION_NAMES = {
     'media-session': 'control media playback',
     'tts': 'use text-to-speech',
     'waves': 'connect to Waves remotes',
+    'custom-osk': 'provide a custom on-screen keyboard',
     'ui-sounds': 'play system sound effects',
     'app-management': 'manage installed apps',
     'system-admin': 'modify core system settings (root access)'
@@ -932,6 +934,13 @@ window.addEventListener('message', async (event) => { // Make listener async
                 }
             }
             return false;
+        },
+        registerOSK: (url, name) => {
+            if (typeof window.registerCustomOSK === 'function' && sourceAppId) {
+                window.registerCustomOSK(sourceAppId, name, url);
+                return `Custom OSK registered successfully.`;
+            }
+            throw new Error('OSK registration not supported.');
         },
 		forceUpdatePolygol
     };

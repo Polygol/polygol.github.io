@@ -1,5 +1,20 @@
 let activeMediaSessionApp = null; // To track which app controls the media widget
 let mediaSessionStack = []; // A stack to manage multiple media sessions
+let mediaInactivityTimer = null; // Timer to auto-dismiss inactive media
+const MEDIA_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+
+function _handleMediaInactivity(appName, state) {
+    if (mediaInactivityTimer) {
+        clearTimeout(mediaInactivityTimer);
+        mediaInactivityTimer = null;
+    }
+    if (state === 'paused') {
+        mediaInactivityTimer = setTimeout(() => {
+            console.log(`[Media] Auto-dismissing inactive media session for ${appName}`);
+            clearMediaSession(appName);
+        }, MEDIA_TIMEOUT_MS);
+    }
+}
 
 // --- Media Session Management Functions ---
 
@@ -115,6 +130,7 @@ function _updateActiveMediaSession() {
 
     // Restore the playback state (default to paused if not set)
     updateMediaWidgetState(playbackState || 'paused');
+    _handleMediaInactivity(appName, playbackState || 'paused');
     
     restoreCorrectFavicon();
 
@@ -289,6 +305,7 @@ function updateMediaPlaybackState(appName, state) {
     // Update UI if this is the active app
     if (activeMediaSessionApp && activeMediaSessionApp.toLowerCase() === appName.toLowerCase()) {
         updateMediaWidgetState(state.playbackState);
+        _handleMediaInactivity(appName, state.playbackState);
         
         if (state.metadata) {
             showMediaWidget(state.metadata);

@@ -2,6 +2,80 @@ let oskLastTouchTime = 0;
 let currentTargetFrame = null;
 let currentTargetElement = null;
 
+let registeredOSKs = JSON.parse(localStorage.getItem('registeredOSKs') || '[]');
+let currentOskIndex = 0;
+
+window.registerCustomOSK = function(appId, name, url) {
+    registeredOSKs = registeredOSKs.filter(osk => osk.appId !== appId);
+    registeredOSKs.push({ appId, name, url });
+    localStorage.setItem('registeredOSKs', JSON.stringify(registeredOSKs));
+    updateOskSwitcherVisibility();
+};
+
+window.unregisterCustomOSK = function(appId) {
+    registeredOSKs = registeredOSKs.filter(osk => osk.appId !== appId);
+    localStorage.setItem('registeredOSKs', JSON.stringify(registeredOSKs));
+    updateOskSwitcherVisibility();
+    
+    // If the currently active OSK was uninstalled, revert to default
+    if (currentOskIndex > 0) {
+        const allOSKs = [{ name: 'Default', url: '/assets/gurapp/intl/overlay/osk/osk.html' }, ...registeredOSKs];
+        if (currentOskIndex >= allOSKs.length) {
+            currentOskIndex = 0;
+            const iframe = document.querySelector('#system-osk-container iframe');
+            if (iframe) iframe.src = allOSKs[0].url;
+        }
+    }
+};
+
+function updateOskSwitcherVisibility() {
+    const btn = document.getElementById('osk-switcher-btn');
+    if (btn) {
+        btn.style.display = 'flex'; // Always show to allow emoji toggling
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateOskSwitcherVisibility();
+    const btn = document.getElementById('osk-switcher-btn');
+    if (btn) {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const allOSKs = [
+                { name: 'Default', type: 'internal', mode: 'text' },
+                { name: 'Emoji', type: 'internal', mode: 'emoji' },
+                ...registeredOSKs.map(osk => ({...osk, type: 'external'}))
+            ];
+
+            currentOskIndex = (currentOskIndex + 1) % allOSKs.length;
+            const selectedOSK = allOSKs[currentOskIndex];
+            
+            const iframe = document.querySelector('#system-osk-container iframe');
+            if (iframe) {
+                if (selectedOSK.type === 'internal') {
+                    if (!iframe.src.includes('/assets/gurapp/intl/overlay/osk/osk.html')) {
+                        iframe.src = '/assets/gurapp/intl/overlay/osk/osk.html';
+                        iframe.onload = () => {
+                            iframe.contentWindow.postMessage({ type: 'set-mode', mode: selectedOSK.mode }, '*');
+                            const isLight = document.body.classList.contains('light-theme');
+                            iframe.contentWindow.postMessage({ type: 'themeUpdate', theme: isLight ? 'light' : 'dark' }, '*');
+                        };
+                    } else if (iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({ type: 'set-mode', mode: selectedOSK.mode }, '*');
+                    }
+                } else {
+                    iframe.src = selectedOSK.url;
+                    iframe.onload = null;
+                }
+
+                if (window.showPopup) window.showPopup(`${selectedOSK.name}`);
+            }
+        });
+    }
+});
+
 function isTextInput(el) {
     if (!el) return false;
     const tag = el.tagName;
@@ -82,10 +156,17 @@ function closeOSK() {
         container.classList.remove('open');
         document.body.classList.remove('osk-active');
         
-        // Notify iframe to clear buffers and state
         const iframe = container.querySelector('iframe');
         if (iframe && iframe.contentWindow) {
             iframe.contentWindow.postMessage({ type: 'osk-closed' }, '*');
+        }
+
+        // Reset OSK to default text mode when closed
+        currentOskIndex = 0;
+        if (iframe && !iframe.src.includes('/assets/gurapp/intl/overlay/osk/osk.html')) {
+            iframe.src = '/assets/gurapp/intl/overlay/osk/osk.html';
+        } else if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'set-mode', mode: 'text' }, '*');
         }
     }
     currentTargetElement = null;
