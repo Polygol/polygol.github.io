@@ -1,124 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap');
-
-/* DynaPuff: variable font, full range */
-@import url('https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&display=swap');
-
-/* DM Serif Display: only has regular (400) and italic – no bold! */
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap');
-
-/* Iansui: only supports regular (400) */
-@import url('https://fonts.googleapis.com/css2?family=Iansui&display=swap');
-
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap');
-
-/* DotGothic16: only supports regular (400) */
-@import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
-
-/* Patrick Hand: only regular (400) */
-@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
-
-/* Rampart One: only regular (400) */
-@import url('https://fonts.googleapis.com/css2?family=Rampart+One&display=swap');
-
-/* Doto: regular and bold */
-@import url('https://fonts.googleapis.com/css2?family=Doto:wght@400;700&display=swap'); 
-
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap');
-
-:root {
-    /* Dark Theme (Default) Variables */
-    --background-color-dark: #1c1c1c;
-    --text-color-dark: #f9f9f9;
-    --secondary-text-color-dark: rgba(255, 255, 255, 0.7);
-    --modal-background-dark: rgba(51, 51, 51, 0.8);
-    --modal-transparent-dark: rgba(51, 51, 51, 0.7);
-    --search-background-dark: rgba(51, 51, 51, 0.5);
-    --dark-overlay: rgba(51, 51, 51, 0.2);
-    --dark-transparent: rgba(255, 255, 255, 0.1); 
-    --glass-border-dark: rgba(100, 100, 100, 0.2);
-    
-    /* Light Theme Variables */
-    --background-color-light: #f0f0f0;
-    --text-color-light: #333333;
-    --secondary-text-color-light: rgba(0, 0, 0, 0.7);
-    --modal-background-light: rgba(220, 220, 220, 0.8);
-    --modal-transparent-light: rgba(240, 240, 240, 0.7);
-    --search-background-light: rgba(220, 220, 220, 0.5);
-    --light-overlay: rgba(220, 220, 220, 0.2);
-    --light-transparent: rgba(255, 255, 255, 0.1); 
-    --glass-border-light: rgba(200, 200, 200, 0.2);
-    
-    /* High Contrast Dark Theme Variables */
-    --background-color-dark-highcontrast: #1c1c1c;
-    --text-color-dark-highcontrast: #f9f9f9;
-    --secondary-text-color-dark-highcontrast: #b3b3b3;
-    --modal-background-dark-highcontrast: #333333;
-    --modal-transparent-dark-highcontrast: #333333;
-    --search-background-dark-highcontrast: #333333;
-    --dark-overlay-highcontrast: #1c1c1c;
-    --dark-transparent-highcontrast: #000000;
-    
-    /* High Contrast Light Theme Variables */
-    --background-color-light-highcontrast: #f0f0f0;
-    --text-color-light-highcontrast: #333333;
-    --secondary-text-color-light-highcontrast: #4d4d4d;
-    --modal-background-light-highcontrast: #dcdcdc;
-    --modal-transparent-light-highcontrast: #f0f0f0;
-    --search-background-light-highcontrast: #dcdcdc;
-    --light-overlay-highcontrast: #f0f0f0;
-    --light-transparent-highcontrast: #ffffff;
-    
-    /* Base Variables */
-    --base-font-size: clamp(16px, 2vw + 1rem, 24px);
-    
-    /* Default to Dark Theme */
-    --background-color: var(--background-color-dark);
-    --text-color: var(--text-color-dark);
-    --secondary-text-color: var(--secondary-text-color-dark);
-    --modal-background: var(--modal-background-dark);
-    --modal-transparent: var(--modal-transparent-dark);
-    --search-background: var(--search-background-dark);
-    --overlay-color: var(--dark-overlay);
-    --transparent-color: var(--dark-transparent);
-    --glass-border: var(--glass-border-dark);
-}
-
-body.light-theme {
-    --background-color: var(--background-color-light);
-    --text-color: var(--text-color-light);
-    --secondary-text-color: var(--secondary-text-color-light);
-    --modal-background: var(--modal-background-light);
-    --modal-transparent: var(--modal-transparent-light);
-    --search-background: var(--search-background-light);
-    --overlay-color: var(--light-overlay);
-    --transparent-color: var(--light-transparent);
-    --glass-border: var(--glass-border-light);
-}
-
-/* For dark theme (default) with high contrast */
-body.high-contrast:not(.light-theme) {
-    --secondary-text-color: var(--secondary-text-color-dark-highcontrast);
-    --modal-background: var(--modal-background-dark-highcontrast);
-    --modal-transparent: var(--modal-transparent-dark-highcontrast);
-    --search-background: var(--search-background-dark-highcontrast);
-    --overlay-color: var(--dark-overlay-highcontrast);
-    --transparent-color: var(--dark-transparent-highcontrast);
-    backdrop-filter: none !important;
-}
-
-/* For light theme with high contrast */
-body.high-contrast.light-theme {
-    --secondary-text-color: var(--secondary-text-color-light-highcontrast);
-    --modal-background: var(--modal-background-light-highcontrast);
-    --modal-transparent: var(--modal-transparent-light-highcontrast);
-    --search-background: var(--search-background-light-highcontrast);
-    --overlay-color: var(--light-overlay-highcontrast);
-    --transparent-color: var(--light-transparent-highcontrast);
-    backdrop-filter: none !important;
-}
-
 * {
-  transition: all 0.3s cubic-bezier(.3,1.2,.64,1) !IMPORTANT; /* Temporary */
+  transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1) !important; /* Temporary */
   -webkit-tap-highlight-color: transparent;
   cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 10.04 10.04"><circle cx="5.02" cy="5.02" r="4.52" style="fill:rgba(0,0,0,0.5);stroke:rgba(255,255,255,0.5);stroke-width:1"/></svg>') 10 10, auto !important;
 }
@@ -130,21 +11,7 @@ a,
 input[type="button"], 
 input[type="submit"],
 .clickable {
-  cursor: pointer;
-  transform: scale(1);
-  transition: transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9);
-}
-
-/* Active effect (when clicking down) */
-[onclick]:active, 
-button:active, 
-a:active, 
-input[type="button"]:active, 
-input[type="submit"]:active,
-.clickable:active {
-  transform: scale(0.96);
-  transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-  filter: brightness(1.5);
+    box-shadow: var(--sun-shadow);
 }
 
         body {
@@ -172,7 +39,7 @@ body::before {
     width: 100%;
     height: 100%;
     z-index: -1;
-    transition: background-color 0.3s, color 0.3s, background-image 0.5s, filter 0.3s;
+    transition: background-color 0.3s, color 0.3s, background-image 0.5s linear(0 0%, 0 1.8%, 0.01 3.6%, 0.03 6.35%, 0.07 9.1%, 0.13 11.4%, 0.19 13.4%, 0.27 15%, 0.34 16.1%, 0.54 18.35%, 0.66 20.6%, 0.72 22.4%, 0.77 24.6%, 0.81 27.3%, 0.85 30.4%, 0.88 35.1%, 0.92 40.6%, 0.94 47.2%, 0.96 55%, 0.98 64%, 0.99 74.4%, 1 86.4%, 1 100%), filter 1s, transform 1s linear(0 0%, 0 1.8%, 0.01 3.6%, 0.03 6.35%, 0.07 9.1%, 0.13 11.4%, 0.19 13.4%, 0.27 15%, 0.34 16.1%, 0.54 18.35%, 0.66 20.6%, 0.72 22.4%, 0.77 24.6%, 0.81 27.3%, 0.85 30.4%, 0.88 35.1%, 0.92 40.6%, 0.94 47.2%, 0.96 55%, 0.98 64%, 0.99 74.4%, 1 86.4%, 1 100%) !important;
     background-image: var(--bg-image);
     background-size: cover;
     background-position: center;
@@ -183,96 +50,6 @@ body::before {
 
 .force-hide {
     display: none !important;
-}
-
-/* Disabled
-body[style*="background-image"] .clock {
-    text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-body[style*="background-image"] .date,
-body[style*="background-image"] .info {
-    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-body.light-theme[style*="background-image"] .clock {
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-}
-
-body.light-theme[style*="background-image"] .date,
-body.light-theme[style*="background-image"] .info {
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-}
-*/
-
-.material-symbols-rounded {
-  font-variation-settings:
-  'FILL' 1,
-  'wght' 700,
-  'GRAD' 0,
-  'opsz' 24;
-  vertical-align: middle;
-}
- 
-/* When animations are disabled */
-.reduce-animations * {
-    /* Disable all animations */
-    animation: none !important;
-
-    /* Disable all transitions except opacity */
-    transition: opacity 0.3s ease !important;
-    transition-property: opacity !important;
-}
-
-/* Special handling for clickable elements */
-.reduce-animations [onclick],
-.reduce-animations button,
-.reduce-animations a,
-.reduce-animations input[type="button"],
-.reduce-animations input[type="submit"],
-.reduce-animations .clickable {
-    /* Keep initial state but remove transition */
-    transform: scale(1) !important;
-    transition: opacity 0.3s ease !important;
-}
-
-/* Keep active state functional but without animation */
-.reduce-animations [onclick]:active,
-.reduce-animations button:active,
-.reduce-animations a:active,
-.reduce-animations input[type="button"]:active,
-.reduce-animations input[type="submit"]:active,
-.reduce-animations .clickable:active {
-    /* Apply scale instantly without transition */
-    transform: scale(0.98) !important;
-    transition: none !important;
-}
-
-input[type="color"] {
-  -webkit-appearance: none;
-  appearance: none;
-  border: 1px solid var(--glass-border);
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  background: none;
-  border-radius: 999px;
-  cursor: pointer;
-  overflow: hidden;
-}
-
-input[type="color"]::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-
-input[type="color"]::-webkit-color-swatch {
-  border: none;
-  border-radius: 999px;
-}
-
-input[type="color"]::-moz-color-swatch {
-  border: 1px solid var(--glass-border);
-  border-radius: 999px;
 }
 
 .drawer-handle {
@@ -330,12 +107,12 @@ input[type="color"]::-moz-color-swatch {
 
 .drawer-pill {
     position: absolute;
-    bottom: 10px;
+    bottom: 12px;
     left: 50%;
     transform: translateX(-50%);
     transition: opacity 0.3s ease, background-color 0.3s, width 0.3s;
-    width: 50%;
-    height: 5px;
+    width: 60px;
+    height: 2.5px;
     background-color: var(--secondary-text-color);
     border-radius: 5px;
     opacity: 1;
@@ -1892,3 +1669,260 @@ input[type="color"]::-moz-color-swatch {
                 grid-template-columns: repeat(1, 1fr);
             }
         }
+
+@font-face {
+    font-family: "Burbank Big Wide Bold";
+    src: url("https://db.onlinewebfonts.com/t/5e494424e637ff77e06f1c584739d866.eot");
+    src: url("https://db.onlinewebfonts.com/t/5e494424e637ff77e06f1c584739d866.eot?#iefix")format("embedded-opentype"),
+    url("https://db.onlinewebfonts.com/t/5e494424e637ff77e06f1c584739d866.woff2")format("woff2"),
+    url("https://db.onlinewebfonts.com/t/5e494424e637ff77e06f1c584739d866.woff")format("woff"),
+    url("https://db.onlinewebfonts.com/t/5e494424e637ff77e06f1c584739d866.ttf")format("truetype"),
+    url("https://db.onlinewebfonts.com/t/5e494424e637ff77e06f1c584739d866.svg#Burbank Big Wide Bold")format("svg");
+}
+
+/* Hide all main UI elements during initial setup and post-setup onboarding */
+body.setup-active .container,
+body.setup-active .widget-grid,
+body.setup-active .persistent-clock,
+body.setup-active .drawer-handle,
+body.setup-active #one-button-nav-handle,
+body.setup-active #dock,
+body.setup-active .page-indicator,
+body.onboarding-active .container,
+body.onboarding-active .widget-grid,
+body.onboarding-active .persistent-clock,
+body.onboarding-active .drawer-handle,
+body.onboarding-active #one-button-nav-handle,
+body.onboarding-active #dock,
+body.onboarding-active .page-indicator {
+    display: none !important;
+}
+
+.setup-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    transition: opacity 0.5s ease;
+    backdrop-filter: blur(50px);
+}
+
+.setup-top-btn {
+    position: fixed;
+    left: 28px;
+    top: 24px;
+    border: 1px solid var(--glass-border);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    box-shadow: var(--sun-shadow);
+    background-color: var(--search-background);
+    color: var(--text-color);
+}
+
+.setup-page {
+    display: flex;
+    flex-direction: column;
+    align-items: normal;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 10% 10% 100px 10%;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    max-height: 70%;
+    overflow: auto;
+    background-color: var(--background-color-tr);
+    border-radius: 64px;
+    corner-shape: superellipse(1.5);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 60%;
+    height: 50%;
+    filter: blur(2.5px);
+}
+
+.setup-page.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    filter: none;
+}
+
+.setup-screen.startimpression {
+    backdrop-filter: none;
+}
+
+body:has(.setup-screen.startimpression)::before {
+    transform: scale(1.2);
+}
+
+.setup-screen.startimpression .setup-progress {
+    opacity: 0;
+}
+
+.setup-screen.startimpression .setup-button.primary {
+    backdrop-filter: blur(2.5px) saturate(2) var(--edge-refraction-filter);
+}
+
+.setup-screen.startimpression .setup-buttons {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 26px;
+}
+
+.setup-screen.startimpression .setup-page {
+    background-color: transparent;
+    box-shadow: none;
+    border: none;
+    justify-content: center;
+}
+
+.setup-screen.startimpression .setup-title {
+    margin: 0;
+    font-size: 5rem;
+    text-shadow: 0 10px 40px var(--background-color);
+}
+
+.setup-title {
+    font-family: 'Burbank Big Wide Bold', 'Open Runde', 'Inter', sans-serif;
+    font-size: 2.5rem;
+    margin-bottom: 0;
+}
+
+.setup-description {
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-bottom: 2rem;
+    opacity: 0.8;
+}
+
+.option-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.option-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.option-description {
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+.setup-option {
+    background: var(--search-background);
+    padding: 14px 16px 14px 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border-radius: 35px;
+    border: 1px solid var(--glass-border);
+    corner-shape: round;
+    box-shadow: var(--sun-shadow);
+}
+
+.setup-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    position: absolute;
+    bottom: 24px;
+    right: 28px;
+}
+
+.setup-button {
+    padding: 16px 24px;
+    border-radius: 35px;
+    border: 1px solid var(--glass-border);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+}
+
+.setup-button.primary {
+    background: var(--search-background);
+    color: var(--text-color);
+}
+
+.setup-button.secondary {
+    background: var(--search-background);
+    color: var(--text-color);
+}
+
+.setup-progress {
+    position: fixed;
+    bottom: 2rem;
+    display: flex;
+    gap: 12px;
+    z-index: 1;
+    background: var(--search-background);
+    padding: 12px 14px;
+    border-radius: 18px;
+}
+
+.progress-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-color);
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+}
+
+.progress-dot.active {
+    opacity: 1;
+    scale: 1.2;
+}
+
+.setup-music-attribution {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    font-size: 8px;
+    color: var(--text-color);
+    text-shadow: 0 0 4px var(--background-color);
+    opacity: 0.7;
+    z-index: 10000; /* Ensure it's on top of the setup screen */
+    transition: opacity 0.5s ease;
+    font-family: 'Inter', sans-serif;
+    pointer-events: none;
+}
+
+.setup-option.selected {
+    border-color: var(--text-color);
+    background-color: var(--accent);
+    color: var(--background-color);
+    corner-shape: superellipse(1.5);
+}
+
+.setup-option .material-symbols-rounded {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.setup-option.selected .material-symbols-rounded {
+    opacity: 1;
+}

@@ -28,9 +28,7 @@ async function firstSetup() {
         apps['Airy'] = { url: '/assets/gurapp/intl/airy/index.html', icon: 'airy.png' };
 
         // Launch Airy as the setup environment
-        setTimeout(() => {
-            createFullscreenEmbed('/assets/gurapp/intl/airy/index.html');
-        }, 100);
+        createFullscreenEmbed('/assets/gurapp/intl/airy/index.html');
 
         // Listen for completion
         const onOnboardingComplete = (event) => {

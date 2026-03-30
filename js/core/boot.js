@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Apply immediately
     applyGlassEffects();
+    updateSunEffect();
     
     initAppDraw(); // Now this will use the fully populated 'apps' object
     initializeCustomization(); // Now reads correct styles and applies them to DOM

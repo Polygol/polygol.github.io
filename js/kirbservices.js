@@ -10,13 +10,14 @@ window.Analytics = {
 
     init() {
         if (this.initialized) return;
-        
+
         // Do not initialize until setup is complete
         const setupComplete = localStorage.getItem('hasVisitedBefore') === 'true';
         if (!setupComplete) return;
 
-        const enabled = localStorage.getItem('telemetryEnabled') === 'true';
-        if (!enabled) return;
+        const telemetryEnabled = localStorage.getItem('telemetryEnabled') === 'true' || localStorage.getItem('telemetryEnabled') === null;
+
+        if (!telemetryEnabled) return;
 
         if (!document.getElementById('goatcounter-script')) {
             const script = document.createElement('script');

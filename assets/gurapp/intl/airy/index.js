@@ -113,11 +113,9 @@ function consoleLoaded() {
 
 const secondsSwitch = document.getElementById('seconds-switch');
 let appUsage = {};
-const weatherSwitch = document.getElementById('weather-switch');
 const MAX_RECENT_WALLPAPERS = 10;
 
 let showSeconds = true; // defaults to true
-let showWeather = true; // defaults to true
 let recentWallpapers = [];
 let currentWallpaperPosition = 0;
 let isSlideshow = false;
@@ -245,7 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-reset', 'resetButton');
     connectGridItem('setting-seconds', 'seconds-switch');
     connectGridItem('setting-clock-stack', 'clock-stack-switch');
-    connectGridItem('setting-weather', 'weather-switch');
     connectGridItem('setting-gurapps', 'gurapps-switch');
     connectGridItem('setting-animation', 'animation-switch');
     connectGridItem('setting-contrast', 'contrast-switch');
@@ -354,21 +351,6 @@ function updatePersistentClock() {
     
     // Initial update
     updatePersistentClock();
-
-    function applySysWallpaper() {
-        document.body.style.backgroundImage = `url('/assets/gurapp/intl/airy/img.jpg') !important`;
-        document.body.style.backgroundSize = 'cover';
-        document.body.style.backgroundPosition = 'center';
-        
-        if (recentWallpapers.length === 0) {
-            recentWallpapers.push({
-                url: '/assets/gurapp/intl/airy/img.jpg',
-                clockStyles: {} 
-            });
-        }
-    }
-
-    applySysWallpaper();
 }); 
 
 // Function to check if it's daytime (between 6:00 and 18:00)
@@ -380,185 +362,6 @@ function isDaytime() {
 function isDaytimeForHour(timeString) {
     const hour = new Date(timeString).getHours();
     return hour >= 6 && hour <= 18;
-}
-
-// Title weather conditions using emojis
-        const weatherConditionsForTitle = {
-            0: { description: 'Clear Sky', icon: '☀️' },
-            1: { description: 'Mainly Clear', icon: '🌤️' },
-            2: { description: 'Partly Cloudy', icon: '⛅' },
-            3: { description: 'Overcast', icon: '☁️' },
-            45: { description: 'Fog', icon: '🌫️' },
-            48: { description: 'Depositing Rime Fog', icon: '🌫️' },
-            51: { description: 'Light Drizzle', icon: '🌦️' },
-            53: { description: 'Moderate Drizzle', icon: '🌦️' },
-            55: { description: 'Dense Drizzle', icon: '🌧️' },
-            56: { description: 'Light Freezing Drizzle', icon: '🌧️' },
-            57: { description: 'Dense Freezing Drizzle', icon: '🌧️' },
-            61: { description: 'Slight Rain', icon: '🌧️' },
-            63: { description: 'Moderate Rain', icon: '🌧️' },
-            65: { description: 'Heavy Rain', icon: '🌧️' },
-            66: { description: 'Light Freezing Rain', icon: '🌧️' },
-            67: { description: 'Heavy Freezing Rain', icon: '🌧️' },
-            71: { description: 'Slight Snow', icon: '🌨️' },
-            73: { description: 'Moderate Snow', icon: '❄️' },
-            75: { description: 'Heavy Snow', icon: '❄️' },
-            77: { description: 'Snow Grains', icon: '❄️' },
-            80: { description: 'Slight Showers', icon: '🌦️' },
-            81: { description: 'Moderate Showers', icon: '🌧️' },
-            82: { description: 'Violent Showers', icon: '⛈️' },
-            85: { description: 'Slight Snow Showers', icon: '🌨️' },
-            86: { description: 'Heavy Snow Showers', icon: '❄️' },
-            95: { description: 'Thunderstorm', icon: '⛈️' },
-            96: { description: 'Thunderstorm with Hail', icon: '⛈️' },
-            99: { description: 'Heavy Thunderstorm with Hail', icon: '🌩️' }
-        };
-
-const weatherConditions = {
-    0: { 
-        description: 'Clear Sky', 
-        icon: () => isDaytime() ? 'clear_day' : 'clear_night'
-    },
-    1: { 
-        description: 'Mainly Clear', 
-        icon: () => isDaytime() ? 'partly_cloudy_day' : 'partly_cloudy_night'
-    },
-    2: { 
-        description: 'Partly Cloudy', 
-        icon: () => isDaytime() ? 'partly_cloudy_day' : 'partly_cloudy_night'
-    },
-    3: { description: 'Overcast', icon: () => 'cloudy' },
-    45: { description: 'Fog', icon: () => 'foggy' },
-    48: { description: 'Depositing Rime Fog', icon: () => 'foggy' },
-    51: { 
-        description: 'Light Drizzle', 
-        icon: () => isDaytime() ? 'rainy_light' : 'rainy_light'
-    },
-    53: { 
-        description: 'Moderate Drizzle', 
-        icon: () => isDaytime() ? 'rainy' : 'rainy'
-    },
-    55: { 
-        description: 'Dense Drizzle', 
-        icon: () => isDaytime() ? 'rainy' : 'rainy'
-    },
-    56: { 
-        description: 'Light Freezing Drizzle', 
-        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
-    },
-    57: { 
-        description: 'Dense Freezing Drizzle', 
-        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
-    },
-    61: { 
-        description: 'Slight Rain', 
-        icon: () => isDaytime() ? 'rainy_light' : 'rainy_light'
-    },
-    63: { 
-        description: 'Moderate Rain', 
-        icon: () => isDaytime() ? 'rainy' : 'rainy'
-    },
-    65: { 
-        description: 'Heavy Rain', 
-        icon: () => isDaytime() ? 'rainy' : 'rainy'
-    },
-    66: { 
-        description: 'Light Freezing Rain', 
-        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
-    },
-    67: { 
-        description: 'Heavy Freezing Rain', 
-        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
-    },
-    71: { 
-        description: 'Slight Snow', 
-        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
-    },
-    73: { 
-        description: 'Moderate Snow', 
-        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
-    },
-    75: { 
-        description: 'Heavy Snow', 
-        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
-    },
-    77: { 
-        description: 'Snow Grains', 
-        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
-    }, 
-    80: { 
-        description: 'Slight Showers', 
-        icon: () => isDaytime() ? 'rainy_light' : 'rainy_light'
-    },
-    81: { 
-        description: 'Moderate Showers', 
-        icon: () => isDaytime() ? 'rainy' : 'rainy'
-    },
-    82: { 
-        description: 'Violent Showers', 
-        icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
-    },
-    85: { 
-        description: 'Slight Snow Showers', 
-        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
-    },
-    86: { 
-        description: 'Heavy Snow Showers', 
-        icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
-    },
-    95: { 
-        description: 'Thunderstorm', 
-        icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
-    },
-    96: { 
-        icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
-    },
-    99: { 
-        description: 'Heavy Thunderstorm with Hail', 
-        icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
-    }
-};
-
-function updateWeatherVisibility() {
-    const weatherWidget = document.getElementById('weather');
-    weatherWidget.style.display = showWeather ? 'block' : 'none';
-}
-
-function setupWeatherToggle() {
-    const weatherSwitch = document.getElementById('weather-switch');
-    if (!weatherSwitch) return;
-    
-    let showWeather = true;
-    
-    weatherSwitch.checked = showWeather;
-    
-    function updateWeatherVisibility() {
-        const weatherWidget = document.getElementById('weather');
-        if (weatherWidget) {
-            weatherWidget.style.display = showWeather ? 'block' : 'none';
-        }
-        
-        // Force title update without weather when weather is hidden
-        if (!showWeather) {
-            let now = new Date();
-            let hours = String(now.getHours()).padStart(2, '0');
-            let minutes = String(now.getMinutes()).padStart(2, '0');
-            let seconds = String(now.getSeconds()).padStart(2, '0');
-            document.title = showSeconds ? 
-                `${hours}:${minutes}:${seconds}` : 
-                `${hours}:${minutes}`;
-        }
-    }
-    
-    weatherSwitch.addEventListener('change', function() {
-        showWeather = this.checked;
-        updateWeatherVisibility();
-        if (showWeather) {
-            updateSmallWeather();
-        }
-    });
-    
-    updateWeatherVisibility();
 }
 
 function updateClockAndDate() {
@@ -659,94 +462,6 @@ function startSynchronizedClockAndDate() {
             }
         }
 
-function getTemperatureUnit(country) {
-    // Countries that primarily use Fahrenheit
-    const fahrenheitCountries = ['US', 'USA', 'United States', 'Liberia', 'Myanmar', 'Burma'];
-    
-    return fahrenheitCountries.some(c => 
-        country?.toLowerCase().includes(c.toLowerCase())
-    ) ? 'fahrenheit' : 'celsius';
-}
-
-async function fetchLocationAndWeather() {
-    return new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            try {
-                const { latitude, longitude } = position.coords;
-                const geocodingUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
-                let city = 'Unknown Location';
-                let country = '';
-                let timezone = 'UTC';
-                
-                try {
-                    const geocodingResponse = await fetch(geocodingUrl);
-                    const geocodingData = await geocodingResponse.json();
-                    city = geocodingData.address.city ||
-                        geocodingData.address.town ||
-                        geocodingData.address.village ||
-                        'Unknown Location';
-                    country = geocodingData.address.country || '';
-                    
-                    // Get timezone based on coordinates
-                    timezone = await getTimezoneFromCoords(latitude, longitude);
-                } catch (geocodingError) {
-                    console.warn('Failed to retrieve location details', geocodingError);
-                    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                }
-
-                // Determine temperature unit based on location
-                const temperatureUnit = getTemperatureUnit(country);
-                const tempUnitParam = temperatureUnit === 'fahrenheit' ? '&temperature_unit=fahrenheit' : '';
-                
-                const currentWeatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=${encodeURIComponent(timezone)}${tempUnitParam}`;
-                const dailyForecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,weathercode&timezone=${encodeURIComponent(timezone)}${tempUnitParam}`;
-                const hourlyForecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weathercode&timezone=${encodeURIComponent(timezone)}${tempUnitParam}`;
-                
-                const [currentResponse, dailyResponse, hourlyResponse] = await Promise.all([
-                    fetch(currentWeatherUrl),
-                    fetch(dailyForecastUrl),
-                    fetch(hourlyForecastUrl)
-                ]);
-                
-                const currentWeatherData = await currentResponse.json();
-                const dailyForecastData = await dailyResponse.json();
-                const hourlyForecastData = await hourlyResponse.json();
-
-                const weatherData = {
-                    city,
-                    country,
-                    timezone,
-                    temperatureUnit,
-                    current: currentWeatherData.current_weather,
-                    dailyForecast: dailyForecastData.daily,
-                    hourlyForecast: hourlyForecastData.hourly
-                };
- 
-                resolve(weatherData);
-                
-            } catch (error) {
-                console.error('Error fetching weather data:', error);
-                if (!navigator.onLine) {
-                    showPopup(currentLanguage.OFFLINE);
-                }
-                // Return cached data if available
-                if (cachedData) {
-                    resolve(JSON.parse(cachedData));
-                    return;
-                }
-                reject(error);
-            }
-        }, (error) => {
-            console.error('Geolocation error:', error);
-            reject(error);
-        }, {
-            enableHighAccuracy: true,
-            timeout: 30000,
-            maximumAge: 0
-        });
-    });
-}
-
 function getDayOfWeek(dateString) {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { weekday: 'long' });
@@ -757,34 +472,6 @@ function getHourString(dateString) {
     return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
-async function updateSmallWeather() {
-    const showWeather = true;
-    if (!showWeather) return;
-    
-    try {
-        const weatherData = await fetchLocationAndWeather();
-        if (!weatherData) throw new Error('Weather data not available');
-        
-        const temperatureElement = document.getElementById('temperature');
-        const weatherIconElement = document.getElementById('weather-icon');
-        const weatherInfo = weatherConditions[weatherData.current.weathercode] || { description: 'Unknown', icon: () => '❓' };
-        
-        document.getElementById('weather').style.display = showWeather ? 'block' : 'none';
-        
-        // Display temperature with appropriate unit symbol
-        const tempUnit = weatherData.temperatureUnit === 'fahrenheit' ? '°F' : '°C';
-        temperatureElement.textContent = `${Math.round(weatherData.current.temperature)}${tempUnit}`;
-        
-        weatherIconElement.className = 'material-symbols-rounded';
-        weatherIconElement.textContent = weatherInfo.icon(true);
-        weatherIconElement.dataset.weatherCode = weatherData.current.weathercode;
-    } catch (error) {
-        console.error('Error updating small weather widget:', error);
-        document.getElementById('weather').style.display = 'none';
-        showPopup(currentLanguage.FAIL_WEATHER);
-    }
-}
-
 // Updated helper function to determine if a specific hour is daytime based on timezone
 function isDaytimeForHour(timeString, timezone = 'UTC') {
     const date = new Date(timeString);
@@ -793,17 +480,11 @@ function isDaytimeForHour(timeString, timezone = 'UTC') {
 }
 
 const clockElement = document.getElementById('clock');
-const weatherWidget = document.getElementById('weather');
 const dateElement = document.getElementById('date');
 const closeModal = document.getElementById('closeModal');
 const blurOverlay = document.getElementById('blurOverlay');
 
 clockElement.addEventListener('click', () => {
-    if (!gurappsEnabled) return;
-    showPopup('Finish setup to do this action');
-});
-
-weatherWidget.addEventListener('click', () => {
     if (!gurappsEnabled) return;
     showPopup('Finish setup to do this action');
 });
@@ -814,8 +495,6 @@ dateElement.addEventListener('click', () => {
 });
 
 startSynchronizedClockAndDate();
-setInterval(updateSmallWeather, 600000);
-updateSmallWeather();
 
 function showPopup(message) {
     const popup = document.createElement('div');
@@ -1469,7 +1148,6 @@ gurappsSwitch.addEventListener("change", function() {
 
 function updateMinimalMode() {
     const elementsToHide = [
-        document.getElementById('weather'),
         document.querySelector('.info'),
         document.querySelector('.clockwidgets')
     ];
@@ -1482,11 +1160,6 @@ function updateMinimalMode() {
         // Add minimal-active class to body for potential CSS styling
         document.body.classList.add('minimal-active');
     } else {
-        // Show elements
-        if (document.getElementById('weather')) {
-            document.getElementById('weather').style.display = '';
-        }
-            
         if (document.querySelector('.info'))
             document.querySelector('.info').style.display = '';
             
@@ -1573,7 +1246,6 @@ function setupFontSelection() {
                 colorEnabled: colorSwitch.checked,
                 stackEnabled: stackSwitch.checked,
                 showSeconds: document.getElementById('seconds-switch')?.checked || false, // Add this
-                showWeather: document.getElementById('weather-switch')?.checked !== false // Add this
             };
             
             // Update the current wallpaper's clock styles
@@ -2105,28 +1777,6 @@ function setupDrawerInteractions() {
     const openThreshold = -50;
     const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
-
-    const startLongPress = (e) => {
-        longPressTimer = setTimeout(() => {
-            showPopup('Swipe up instead of tapping');
-        }, longPressDuration);
-    };
-
-    const cancelLongPress = () => {
-        if (longPressTimer) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-        }
-    };
-
-    if (drawerPill) {
-        drawerPill.addEventListener('mousedown', startLongPress);
-        drawerPill.addEventListener('touchstart', startLongPress);
-        
-        drawerPill.addEventListener('mouseup', cancelLongPress);
-        drawerPill.addEventListener('mouseleave', cancelLongPress);
-        drawerPill.addEventListener('touchend', cancelLongPress);
-    }
         
     // Create interaction blocker overlay
     const interactionBlocker = document.createElement('div');
@@ -2646,7 +2296,6 @@ document.addEventListener('keydown', (event) => {
 
 window.addEventListener('online', () => {
     showPopup(currentLanguage.ONLINE);
-    updateSmallWeather(); // Refresh weather data
 });
 
 window.addEventListener('offline', () => {
@@ -2655,9 +2304,9 @@ window.addEventListener('offline', () => {
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize control states
-    const storedLightMode = 'dark';
-    const storedMinimalMode = 'true';
-    const storedSilentMode = 'false';
+    const storedLightMode = localStorage.getItem('theme') || 'dark';
+    const storedMinimalMode = localStorage.getItem('minimalMode') || 'true';
+    const storedSilentMode = localStorage.getItem('silentMode') || 'false';
     const storedTemperature = '0';
     const storedBrightness = '100';
     
@@ -2995,7 +2644,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     firstSetup(); // This handles language
     initAppDraw(); // Now this will use the fully populated 'apps' object
-    setupWeatherToggle();
     updateGurappsVisibility();
     syncUiStates();
 
@@ -3017,9 +2665,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
         }
     }
-
-    // Automatically launch the welcome onboarding screen once initialized
-    createFullscreenEmbed("docs:welcome");
 });
 
 window.addEventListener('load', () => {
@@ -3175,3 +2820,480 @@ function updateMediaProgress(appName, progressState) {
         createAppIcons();
         setupDrawerInteractions();
     }
+
+let isDuringFirstSetup = false; // Flag to prevent prompts during setup
+let WALLPAPER_PRESETS = [];
+async function fetchWallpaperPresets() {
+    try {
+        const res = await fetch('/assets/img/wallpapers/index.json');
+        if (res.ok) {
+            WALLPAPER_PRESETS = await res.json();
+        }
+    } catch (e) {
+        console.warn("Failed to load wallpaper presets", e);
+    }
+}
+// Call this early
+fetchWallpaperPresets();
+
+async function firstSetup() {
+    document.body.classList.add('setup-active'); // Add class to hide UI
+    isDuringFirstSetup = true; // Set flag to block initial loads
+    
+    // 1. If presets haven't loaded yet, wait for them
+    if (WALLPAPER_PRESETS.length === 0) {
+        await fetchWallpaperPresets();
+    }
+
+    if (WALLPAPER_PRESETS.length > 0) {
+        const randomPreset = WALLPAPER_PRESETS[Math.floor(Math.random() * WALLPAPER_PRESETS.length)];
+        
+        if (randomPreset && randomPreset.fullUrl) {
+            document.body.style.setProperty('--bg-image', `url('${randomPreset.fullUrl}')`);
+        }
+    } else {
+        console.warn("No wallpaper presets found. Using fallback.");
+        document.body.style.setProperty('--bg-image', "url('/assets/gurapp/intl/airy/img.jpg')");
+    }
+
+    createSetupScreen(); // UI now uses the correct currentLanguage
+}
+
+function createSetupScreen() {
+    const generateNonsenseName = () => {
+        const pre = ["Zork", "Bli", "Phro", "Kran", "Velt", "Spli", "Grom", "Twi", "Quar", "Mox", "Jub", "Vax", "Zym", "Plo", "Ska", "Tro", "Flu", "Bly", "Dwa", "Glo", "Snu", "Kri", "Vle", "Shu", "Pra", "Zon", "Cli", "Fro", "Ste", "Yol"];
+        const mid = ["a", "o", "u", "e", "i", "ee", "oo", "ou", "y", "ia"];
+        const post = ["nix", "zap", "loid", "tron", "vax", "mutt", "gle", "dax", "kin", "th", "rk", "zz", "nk", "st", "sh", "mp", "rt", "lk", "gn", "pl", "sk", "ch", "ff", "wn", "ly", "xy", "qu", "zt", "rd", "nz"];
+        
+        const getWord = () => {
+            const p = pre[Math.floor(Math.random() * pre.length)];
+            const m = mid[Math.floor(Math.random() * mid.length)];
+            const s = post[Math.floor(Math.random() * post.length)];
+            return p + m + s;
+        };
+
+        return `${getWord()} ${getWord()}`;
+    };
+	
+    const setupContainer = document.createElement('div');
+    setupContainer.className = 'setup-screen';
+
+    // Ambient Music and Attribution
+    const audio = document.createElement('audio');
+    audio.id = 'setup-music';
+    audio.src = '/assets/sound/setup/swinging.mp3';
+    audio.loop = true;
+    audio.volume = 0; // Start silently for fade-in
+
+    const attribution = document.createElement('div');
+    attribution.className = 'setup-music-attribution';
+    attribution.innerHTML = '🎵 Brittle Rille - Reunited • Kevin MacLeod (CC BY 4.0)';
+    
+    document.body.appendChild(audio); // Append to body to persist
+    setupContainer.appendChild(attribution);
+
+    const setupPages = [
+        {
+            title: "Hello",
+            description: "",
+            options: []
+        },
+        {
+            title: "SETUP_CLOCK_FORMAT",
+            description: "",
+            icon: "schedule",
+            options: [
+                { name: "24-hour", value: false, default: true },
+                { name: "12-hour", value: true }
+            ]
+        },
+        {
+            title: "Name this Device",
+            description: "I have a name, it's Screwy! I wonder what this thing's name is...",
+            image: "https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy2.png?raw=true",
+            isInput: true,
+            inputType: "text",
+            inputPlaceholder: "Name",
+            configKey: "system_device_name",
+            default: generateNonsenseName()
+        },
+        {
+            title: "SETUP_ALLOW_PERMISSIONS",
+            description: "Permissions are required to access certain functionality. Data may be sent to service providers.",
+		    icon: "data_check", // Add icon
+            options: [
+                { 
+                    name: "SETUP_BASIC_ACCESS",
+                    default: true
+                },
+                { 
+                    name: "SETUP_LOCATION_ACCESS",
+                    description: "SETUP_LOCATION_ACCESS_DESC",
+                    permission: "geolocation"
+                },
+                { 
+                    name: "SETUP_NOTIFICATIONS",
+                    description: "SETUP_NOTIFICATIONS_DESC",
+                    permission: "notifications"
+                }
+            ]
+        },
+        {
+            title: "Choose a display theme",
+            description: "",
+		    icon: "palette",
+            options: [
+                { name: "SETUP_LIGHT", value: "light" },
+                { name: "SETUP_DARK", value: "dark", default: true }
+            ]
+        },
+        {
+            title: "SETUP_SHOW_WEATHER",
+            description: "Data will be shared to service providers if enabled. Data is anonymized and sent securely.",
+		    icon: "partly_cloudy_day",
+            options: [
+                { name: "SETUP_SHOW_WEATHER_TRUE", value: true, default: true },
+                { name: "SETUP_SHOW_WEATHER_FALSE", value: false }
+            ]
+        },
+        {
+            title: "Keep your device up to date",
+            description: "Get the latest security, features and improvements by updating Polygol automatically. You will recieve a notification before updates are installed.",
+		    icon: "deployed_code_update", // Add icon
+            options: []
+        },
+		{
+            title: "Back Up your Data",
+            description: "Automatically back up and save your data. A notification will be sent when your data backup is ready.",
+            icon: "settings_backup_restore",
+            options: [
+                { name: "Enable", value: 'true', default: true },
+                { name: "Disable", value: 'false' }
+            ]
+        },
+        {
+            title: "Privacy & Data",
+            description: "To improve your experience, the device will collect anonymous usage data and error reports. No personal data is stored.",
+            icon: "encrypted",
+            options: [
+                { name: "Allow collection and sending of data", value: 'true', default: true },
+                { name: "Don't collect or send", value: 'false' }
+            ]
+        },
+        {
+            title: "To continue using the software, you must agree to the terms of the software license agreement.",
+            description: "To decline, stop and close the software now. A copy of the License can be found at https://kirbindustries.gitbook.io/polygol/legal/license",
+		    icon: "partner_exchange",
+            options: []
+        },
+        {
+            title: "Goodbye (for now)",
+            description: "Let's talk sometime later! I'm in the App Drawer at any time.",
+		    image: "https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy3.png?raw=true",
+            options: []
+        },
+    ];
+
+	let currentPage = 0;
+    let isTransitioning = false; // Flag to prevent button spam
+
+    function createPage(pageData) {
+        const page = document.createElement('div');
+        page.className = 'setup-page';
+        
+        // Add title with icon
+        const titleContainer = document.createElement('div'); // Container for icon and title
+        titleContainer.style.display = 'flex';
+        titleContainer.style.flexDirection = 'column'; // Stack icon and title vertically
+        titleContainer.style.alignItems = 'center'; // Center horizontally
+
+        let headerVisual;
+        if (pageData.image) {
+            headerVisual = document.createElement('img');
+            headerVisual.src = pageData.image;
+            headerVisual.style.cssText = "width: 100px; height: 100px; object-fit: contain; margin-bottom: 8px;";
+        } else {
+            headerVisual = document.createElement('span');
+            headerVisual.className = 'material-symbols-rounded';
+            headerVisual.textContent = pageData.icon;
+            headerVisual.style.fontSize = '64px';
+            headerVisual.style.marginBottom = '8px';
+        }
+
+        const title = document.createElement('h1');
+        title.className = 'setup-title';
+        title.textContent = currentLanguage[pageData.title] || pageData.title;
+
+        titleContainer.appendChild(headerVisual);
+        titleContainer.appendChild(title);
+        page.appendChild(titleContainer);
+        
+        // Add description
+        const description = document.createElement('p');
+        description.className = 'setup-description';
+        description.textContent = currentLanguage[pageData.description] || pageData.description;
+        page.appendChild(description);
+        
+        // Add options
+        if (pageData.isInput) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = localStorage.getItem(pageData.configKey) || pageData.default;
+            input.placeholder = pageData.inputPlaceholder;
+            input.className = 'setup-input-field'; 
+            input.style.cssText = "background: transparent;border-top: none;border-right: none;border-left: none;border-image: initial;color: var(--text-color);font-size: 1.2rem;outline: none;border-bottom: 2px solid var(--accent);padding: 10px;font-family: 'Inter';";
+            
+            input.addEventListener('input', (e) => {
+                localStorage.setItem(pageData.configKey, e.target.value);
+            });
+
+            page.appendChild(input);
+            
+            // Auto-focus
+            setTimeout(() => input.focus(), 500);
+
+        } else if (pageData.options.length > 0) {
+            // 1. Determine if we already have a saved value for this specific page
+            let savedValue = null;
+            switch (pageData.title) {
+                case "Privacy & Data": 
+                    savedValue = localStorage.getItem('telemetryEnabled'); 
+                    break;
+                case "Choose a display theme": 
+                    savedValue = localStorage.getItem('theme'); 
+                    break;
+                case "SETUP_CLOCK_FORMAT": 
+                    savedValue = localStorage.getItem('use12HourFormat'); 
+                    break;
+                case "SETUP_SHOW_WEATHER": 
+                    savedValue = localStorage.getItem('showWeather'); 
+                    break;
+                case "Back Up your Data": 
+                    savedValue = localStorage.getItem('automaticBackupsEnabled'); 
+                    break;
+            }
+
+            pageData.options.forEach(option => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'setup-option';
+                
+                // 2. Logic to persist the selection:
+                // If we have a saved value, check if this option matches it.
+                // Otherwise, fall back to the hardcoded default.
+                let isSelected = false;
+                if (savedValue !== null) {
+                    // Convert both to string for reliable comparison (handles "true" vs true)
+                    isSelected = String(option.value) === String(savedValue);
+                } else {
+                    isSelected = !!option.default;
+                }
+
+                if (isSelected) optionElement.classList.add('selected');
+
+                const optionContent = document.createElement('div');
+                optionContent.className = 'option-content';
+
+                const optionText = document.createElement('span');
+                optionText.className = 'option-title';
+                optionText.textContent = currentLanguage[option.name] || option.name;
+
+                if (option.description) {
+                    const optionDesc = document.createElement('span');
+                    optionDesc.className = 'option-description';
+                    optionDesc.textContent = currentLanguage[option.description] || option.description;
+                    optionContent.appendChild(optionDesc);
+                }
+
+                optionContent.insertBefore(optionText, optionContent.firstChild);
+                optionElement.appendChild(optionContent);
+
+                const checkIcon = document.createElement('span');
+                checkIcon.className = 'material-symbols-rounded';
+                checkIcon.textContent = 'check_circle';
+                optionElement.appendChild(checkIcon);
+        
+                // Handle click events based on option type
+                if (option.permission) {
+                    optionElement.addEventListener('click', async () => {
+                        try {
+                            let permissionGranted = false;
+                            switch (option.permission) {
+                                case 'geolocation':
+                                    permissionGranted = await new Promise(resolve => {
+                                        navigator.geolocation.getCurrentPosition(
+                                            () => resolve(true),
+                                            () => resolve(false)
+                                        );
+                                    });
+                                    break;
+                                case 'notifications':
+                                    const notifResult = await Notification.requestPermission();
+                                    permissionGranted = notifResult === 'granted';
+                                    break;
+                            }
+                            if (permissionGranted) optionElement.classList.add('selected');
+                        } catch (error) {
+                            console.error(`Permission request failed:`, error);
+                            optionElement.classList.remove('selected');
+                        }
+                    });
+                } else {
+                    optionElement.addEventListener('click', () => {
+                        // Deselect all options
+                        page.querySelectorAll('.setup-option').forEach(el => el.classList.remove('selected'));
+                        optionElement.classList.add('selected');
+        
+                        // Save the selection
+                        switch (pageData.title) {
+                            case "Privacy & Data":
+                                localStorage.setItem('telemetryEnabled', option.value);
+                                break;
+                            case "Choose a display theme":
+                                localStorage.setItem('theme', option.value);
+                                document.body.classList.toggle('light-theme', option.value === 'light');
+                                break;
+                            case "SETUP_CLOCK_FORMAT":
+                                localStorage.setItem('use12HourFormat', option.value);
+                                use12HourFormat = option.value;
+                                const hrSwitch = document.getElementById('hour-switch');
+                                if (hrSwitch) hrSwitch.checked = use12HourFormat;
+                                break;
+                            case "SETUP_SHOW_WEATHER":
+                                localStorage.setItem('showWeather', option.value);
+                                showWeather = option.value;
+                                break;
+							case "Back Up your Data":
+                                localStorage.setItem('automaticBackupsEnabled', option.value);
+                                break;
+                        }
+                    });
+                }
+        
+                page.appendChild(optionElement);
+            });
+        
+            // Ensure a default option is selected if none are selected
+            if (!page.querySelector('.setup-option.selected')) {
+                page.querySelector('.setup-option').classList.add('selected');
+            }
+        }
+        
+        // --- Navigation buttons ---
+        const buttons = document.createElement('div');
+        buttons.className = 'setup-buttons';
+        
+        // Back
+        if (currentPage > 0) {
+            const backButton = document.createElement('button');
+            backButton.className = 'setup-top-btn';
+            // Use a language key if available, otherwise default to "Back"
+            backButton.innerHTML = '<span class="material-symbols-rounded">arrow_back</span>';
+            backButton.addEventListener('click', () => {
+                if (isTransitioning) return;
+                isTransitioning = true;
+                currentPage--;
+                updateSetup();
+            });
+            page.appendChild(backButton);
+        }
+
+        const nextButton = document.createElement('button');
+        nextButton.className = 'setup-button primary';
+        
+        if (currentPage === 0) {
+            nextButton.textContent = currentLanguage.SETUP_START || "Start";
+        } else if (currentPage === setupPages.length - 1) {
+            nextButton.textContent = currentLanguage.SETUP_FINISH || "Finish setup";
+        } else {
+            nextButton.textContent = currentLanguage.SETUP_CONTINUE || "Continue";
+        }
+
+        nextButton.addEventListener('click', () => {
+            if (isTransitioning) return;
+            isTransitioning = true;
+
+            // Music Start on first interaction
+            if (currentPage === 0) {
+                const setupMusic = document.getElementById('setup-music');
+                if (setupMusic && setupMusic.paused) {
+                    setupMusic.play().then(() => {
+                        let volume = 0;
+                        const fadeInInterval = setInterval(() => {
+                            volume += 0.1;
+                            if (volume >= 0.5) {
+                                setupMusic.volume = 0.5;
+                                clearInterval(fadeInInterval);
+                            } else {
+                                setupMusic.volume = volume;
+                            }
+                        }, 50);
+                    }).catch(e => console.error("Music blocked:", e));
+                }
+            }
+
+            if (currentPage === setupPages.length - 1) {
+                setupContainer.style.opacity = '0';
+                setTimeout(() => {
+                    setupContainer.remove();
+                    document.body.classList.remove('setup-active');
+                    isDuringFirstSetup = false;
+                    createFullscreenEmbed("docs:welcome");
+                }, 300);
+            } else {
+                currentPage++;
+                updateSetup();
+            }
+        });
+        
+        buttons.appendChild(nextButton);
+        page.appendChild(buttons);
+        return page;
+    }
+
+    function updateSetup() {
+        if (currentPage === 0) {
+            setupContainer.classList.add('startimpression');
+        } else {
+            setupContainer.classList.remove('startimpression');
+        }
+
+        const currentPageElement = setupContainer.querySelector('.setup-page');
+        if (currentPageElement) {
+            currentPageElement.classList.remove('active');
+            setTimeout(() => {
+                currentPageElement.remove();
+                const newPage = createPage(setupPages[currentPage]);
+                setupContainer.appendChild(newPage);
+                setTimeout(() => {
+                    newPage.classList.add('active');
+                    isTransitioning = false; 
+                }, 10);
+            }, 300);
+        } else {
+            const newPage = createPage(setupPages[currentPage]);
+            setupContainer.appendChild(newPage);
+            setTimeout(() => {
+                newPage.classList.add('active');
+                isTransitioning = false; 
+            }, 10);
+        }
+
+        const progressDots = setupContainer.querySelectorAll('.progress-dot');
+        progressDots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentPage);
+        });
+    }
+
+    // Create progress dots
+    const progressContainer = document.createElement('div');
+    progressContainer.className = 'setup-progress';
+    setupPages.forEach(() => {
+        const dot = document.createElement('div');
+        dot.className = 'progress-dot';
+        progressContainer.appendChild(dot);
+    });
+    setupContainer.appendChild(progressContainer);
+
+    document.body.appendChild(setupContainer);
+    updateSetup();
+}

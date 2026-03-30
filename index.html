@@ -1,6 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        (function () {
+          const onKeyDown = (e) => {
+            if (e.code === 'F12' && !window.location.pathname.includes('/recovery/')) {
+              console.log('F12 detected. Redirecting to Safe Mode...');
+              window.onbeforeunload = null;
+              window.location.href = '/recovery/index.html';
+            }
+          };
+        
+          const onBootHelpClick = (e) => {
+            if (!window.location.pathname.includes('/recovery/')) {
+              console.log('.boot-help clicked. Redirecting to Safe Mode...');
+              window.onbeforeunload = null;
+              window.location.href = '/recovery/index.html';
+            }
+          };
+        
+          // Attach F12 recovery shortcut
+          window.addEventListener('keydown', onKeyDown, { capture: true });
+        
+          // Wait until DOM is ready before looking for `.boot-help`
+          document.addEventListener('DOMContentLoaded', () => {
+            const helpButton = document.querySelector('.boot-help');
+            if (helpButton) {
+              helpButton.addEventListener('click', onBootHelpClick, { once: true });
+            }
+          });
+        })();
+    </script>
     <link rel="icon" href="/assets/img/favi/regular.png" type="image/png">
     <meta charset="UTF-8">
     <meta name="description" content="Relax, work or take a sip of coffee and relax. Polygol has customizability, privacy, powerful functions and more, packed in a lightweight dashboard.">
@@ -46,30 +76,10 @@
             const urlParams = new URLSearchParams(window.location.search);
             const bootState = urlParams.get('s');
             const hasSetup = localStorage.getItem('hasVisitedBefore') === 'true';
-
-            // Mobile Redirect Logic: Send new mobile users to Waves Lander
-            // Conditions: Is Mobile AND No URL Params AND No Previous Setup Data
             const isMobile = /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             const hasAnyParams = window.location.search.length > 0;
 
-            if (isMobile && !hasAnyParams && !hasSetup) {
-                window.location.href = 'https://kirbindustries.gitbook.io/polygol/waves-lander';
-                return;
-            }
-
-            // Detect mobile and ask for Desktop mode
-            if (isMobile && !localStorage.getItem('mobile_desktop_hint_shown')) {
-                alert("Features will not work if 'Request Desktop Site' is not enabled in your browser settings. Open the browser menu (three dots in the top/bottom-right corner) and check the 'Desktop site' option.");
-                localStorage.setItem('mobile_desktop_hint_shown', 'true');
-            }
-
-            // 1. Default Redirect to Lander if not setup and no command
-            if (!hasSetup && !bootState) {
-                window.location.href = 'https://kirbindustries.gitbook.io/polygol/lander';
-                return; // Stop execution
-            }
-
-            // 2. Handle Boot Commands (?s=...)
+            // Handle Boot Commands (?s=...)
             if (bootState) {
                 console.log(`[Boot] State detected: ${bootState}`);
                 
@@ -218,37 +228,6 @@
         </svg>
         <div id="boot-help" class="boot-help"></div>
     </div>
-    
-    <script>
-        (function () {
-          const onKeyDown = (e) => {
-            if (e.code === 'F12' && !window.location.pathname.includes('/recovery/')) {
-              console.log('F12 detected. Redirecting to Safe Mode...');
-              window.onbeforeunload = null;
-              window.location.href = '/recovery/index.html';
-            }
-          };
-        
-          const onBootHelpClick = (e) => {
-            if (!window.location.pathname.includes('/recovery/')) {
-              console.log('.boot-help clicked. Redirecting to Safe Mode...');
-              window.onbeforeunload = null;
-              window.location.href = '/recovery/index.html';
-            }
-          };
-        
-          // Attach F12 recovery shortcut
-          window.addEventListener('keydown', onKeyDown, { capture: true });
-        
-          // Wait until DOM is ready before looking for `.boot-help`
-          document.addEventListener('DOMContentLoaded', () => {
-            const helpButton = document.querySelector('.boot-help');
-            if (helpButton) {
-              helpButton.addEventListener('click', onBootHelpClick, { once: true });
-            }
-          });
-        })();
-    </script>
     
     <svg style="display: none">
         <filter id="edge-refraction-only" color-interpolation-filters="linearRGB" color-rendering="optimizeSpeed">

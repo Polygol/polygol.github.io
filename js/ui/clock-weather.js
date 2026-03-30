@@ -920,7 +920,6 @@ function isDaytimeForHour(timeString, timezone = 'UTC') {
 
 function initializeGeolocationFeatures() {
     console.log("Initializing features requiring geolocation permission.");
-    updateSunEffect();
     setInterval(updateSunEffect, 10 * 60 * 1000); // Update every 10 minutes
     updateSmallWeather();
     setInterval(updateSmallWeather, 600000); // Update weather every 10 minutes
