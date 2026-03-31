@@ -563,28 +563,23 @@ async function handleRemoteCommand(payload, peerId) {
                 } catch (e) {
                     console.error("[Waves] System screenshot failed:", e);
                 }
-            } else if (window.modernScreenshot) {
-                // Fallback
+            } else {
                 try {
                     const isLight = document.body.classList.contains('light-theme');
+                    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                     const bgColor = isLight ? '#ffffff' : '#000000';
+                    let imgData = '';
 
-                    const imgData = await modernScreenshot.domToJpeg(document.body, {
-                        filter: (node) => {
-                            if (node.nodeType === 1) {
-                                if (node.id === 'ai-assistant-overlay') return false;
-                                if ((node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
-                                    try {
-                                        const url = new URL(node.src, window.location.href);
-                                        if (url.origin !== window.location.origin && !node.crossOrigin) return false;
-                                    } catch(e) {}
-                                }
-                            }
-                            return true;
-                        },
-                        backgroundColor: bgColor,
-                        quality: 0.4
-                    });
+                    if (isMobile && typeof html2canvas === 'function') {
+                        const canvas = await html2canvas(document.body, { useCORS: false, backgroundColor: bgColor, scale: 0.4 });
+                        imgData = canvas.toDataURL('image/jpeg', 0.4);
+                    } else if (typeof modernScreenshot !== 'undefined') {
+                        imgData = await modernScreenshot.domToJpeg(document.body, {
+                            filter: (node) => node.id !== 'ai-assistant-overlay',
+                            backgroundColor: bgColor,
+                            quality: 0.4
+                        });
+                    }
                     wavesSend({ type: 'screenshot', data: imgData }, peerId);
                 } catch (e) {
                     console.error("[Waves] Fallback screenshot failed:", e);

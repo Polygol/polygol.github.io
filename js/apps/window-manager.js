@@ -1810,38 +1810,30 @@ function createCompositeScreenshot() {
         const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
         const iframe = activeEmbed ? activeEmbed.querySelector('iframe') : null;
 
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
         if (!iframe) {
-            const dataUrl = await modernScreenshot.domToJpeg(document.body, { 
-                quality: 0.5,
-                filter: (node) => {
-                    if (node.nodeType === 1 && (node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
-                        try {
-                            const url = new URL(node.src, window.location.href);
-                            if (url.origin !== window.location.origin && !node.crossOrigin) return false;
-                        } catch(e) {}
-                    }
-                    return true;
-                }
-            });
+            let dataUrl = '';
+            if (isMobile && typeof html2canvas === 'function') {
+                const canvas = await html2canvas(document.body, { useCORS: false, scale: 0.5 });
+                dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+            } else if (typeof modernScreenshot !== 'undefined') {
+                dataUrl = await modernScreenshot.domToJpeg(document.body, { quality: 0.5 });
+            }
             resolve(dataUrl);
             return;
         }
 
-        const parentDataUrl = await modernScreenshot.domToJpeg(document.body, {
-            filter: (node) => {
-                if (node.nodeType === 1) {
-                    if (node.tagName === 'IFRAME') return false;
-                    if ((node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
-                        try {
-                            const url = new URL(node.src, window.location.href);
-                            if (url.origin !== window.location.origin && !node.crossOrigin) return false;
-                        } catch(e) {}
-                    }
-                }
-                return true;
-            },
-            quality: 1.0 // Keep high quality for the base composition step
-        });
+        let parentDataUrl = '';
+        if (isMobile && typeof html2canvas === 'function') {
+            const canvas = await html2canvas(document.body, { useCORS: false, ignoreElements: (el) => el.tagName === 'IFRAME' });
+            parentDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        } else if (typeof modernScreenshot !== 'undefined') {
+            parentDataUrl = await modernScreenshot.domToJpeg(document.body, {
+                filter: (node) => node.tagName !== 'IFRAME',
+                quality: 1.0
+            });
+        }
 
         const iframeListener = (event) => {
             if (event.source === iframe.contentWindow && event.data.type === 'screenshot-response') {
