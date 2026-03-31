@@ -393,9 +393,11 @@ async function exportCurrentWallpaper() {
 
     try {
         const exportObject = {
-            version: "1.1",
+            version: "1.2",
             type: "guraatmos",
             isSlideshow: !!current.isSlideshow,
+            slideshowInterval: current.slideshowInterval || 600000,
+            shuffle: !!current.shuffle,
             clockStyles: current.clockStyles,
             widgetLayout: current.widgetLayout,
             items: []
@@ -410,20 +412,22 @@ async function exportCurrentWallpaper() {
             const base64Data = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(dbRecord.blob || dataURLtoBlob(dbRecord.dataUrl));
+                const source = dbRecord.blob || dataURLtoBlob(dbRecord.dataUrl);
+                reader.readAsDataURL(source);
             });
 
             exportObject.items.push({
-                wallpaperType: item.type,
+                wallpaperType: dbRecord.type,
                 isVideo: item.isVideo,
                 depthEnabled: item.depthEnabled,
                 depthDataUrl: dbRecord.depthDataUrl,
+                dominantColor: dbRecord.dominantColor,
                 imageData: base64Data
             });
         }
 
-        // Backward compatibility for older importers
-        if (!current.isSlideshow && exportObject.items.length > 0) {
+        // Provide single imageData at root for legacy compatibility
+        if (exportObject.items.length > 0) {
             exportObject.imageData = exportObject.items[0].imageData;
             exportObject.wallpaperType = exportObject.items[0].wallpaperType;
             exportObject.isVideo = exportObject.items[0].isVideo;
@@ -479,61 +483,67 @@ async function processWallpaperFiles(files) {
                     continue;
                 }
 
-                if (data.type !== 'guraatmos' || !data.imageData) {
-                    continue; // Skip invalid files
-                }
+                if (data.type !== 'guraatmos') continue;
 
-                const wallpaperId = `guraatmos_${Date.now()}_${Math.random()}`;
-                
-                // Convert Base64 back to Blob
-                const imageBlob = dataURLtoBlob(data.imageData);
-                const isVideo = data.isVideo || file.type.startsWith('video');
+                const itemsToImport = (data.items && data.items.length > 0) ? data.items : [data];
+                const reconstructedItems = [];
 
-				let dominantColor = null;
-                let firstFrame = null;
-                
-                if (data.wallpaperType.startsWith('image/gif') || data.wallpaperType.startsWith('image/webp')) {
-                     try { firstFrame = await extractFirstFrame(imageBlob); } catch(e){}
-                }
+                for (const item of itemsToImport) {
+                    const wallpaperId = `guraatmos_${Date.now()}_${Math.random()}`;
+                    const imageBlob = dataURLtoBlob(item.imageData);
+                    let firstFrame = null;
+                    let dominantColor = item.dominantColor || null;
 
-                try {
-                    if (data.wallpaperType.startsWith('video/')) {
+                    if (item.wallpaperType.startsWith('video/')) {
                         firstFrame = await extractVideoFrame(imageBlob);
-                        dominantColor = await extractWallpaperColor(firstFrame);
-                    } else {
-                         if (data.wallpaperType.startsWith('image/gif')) {
-                             firstFrame = await extractFirstFrame(imageBlob);
-                             dominantColor = await extractWallpaperColor(firstFrame);
-                         } else {
-                             dominantColor = await extractWallpaperColor(imageBlob);
-                         }
+                    } else if (item.wallpaperType.includes('gif') || item.wallpaperType.includes('webp')) {
+                        firstFrame = await extractFirstFrame(imageBlob);
                     }
-                } catch(e) { console.warn("Color extract on import failed", e); }
 
-                const dbData = {
-                    blob: imageBlob,
-                    type: data.wallpaperType,
-                    clockStyles: data.clockStyles || {},
-                    widgetLayout: data.widgetLayout || [],
-                    depthDataUrl: data.depthDataUrl || null,
-                    depthEnabled: data.depthEnabled || false,
-                    firstFrameDataUrl: firstFrame,
-                    dominantColor: dominantColor,
-                    timestamp: Date.now()
-                };
+                    if (!dominantColor) {
+                        dominantColor = await extractWallpaperColor(firstFrame || imageBlob);
+                    }
 
-                await storeWallpaper(wallpaperId, dbData);
+                    const dbData = {
+                        blob: imageBlob,
+                        type: item.wallpaperType,
+                        clockStyles: data.clockStyles || {},
+                        widgetLayout: data.widgetLayout || [],
+                        depthDataUrl: item.depthDataUrl || null,
+                        depthEnabled: item.depthEnabled || false,
+                        firstFrameDataUrl: firstFrame,
+                        dominantColor: dominantColor,
+                        timestamp: Date.now()
+                    };
 
-                wallpaperObject = {
-                    id: wallpaperId,
-                    type: data.wallpaperType,
-                    isVideo: data.isVideo,
-                    timestamp: Date.now(),
-                    clockStyles: data.clockStyles,
-                    widgetLayout: data.widgetLayout,
-                    depthEnabled: data.depthEnabled,
-					dominantColor: dominantColor
-                };
+                    await storeWallpaper(wallpaperId, dbData);
+
+                    reconstructedItems.push({
+                        id: wallpaperId,
+                        type: item.wallpaperType,
+                        isVideo: item.isVideo,
+                        timestamp: Date.now(),
+                        clockStyles: data.clockStyles,
+                        widgetLayout: data.widgetLayout,
+                        depthEnabled: item.depthEnabled,
+                        dominantColor: dominantColor
+                    });
+                }
+
+                if (reconstructedItems.length > 1 || data.isSlideshow) {
+                    wallpaperObject = {
+                        id: `slideshow_${Date.now()}`,
+                        isSlideshow: true,
+                        slideshowInterval: data.slideshowInterval || 600000,
+                        shuffle: !!data.shuffle,
+                        items: reconstructedItems,
+                        clockStyles: data.clockStyles,
+                        widgetLayout: data.widgetLayout,
+                        dominantColor: reconstructedItems[0].dominantColor
+                    };
+                } else {
+                    wallpaperObject = reconstructedItems[0];
+                }
             } 
             // --- Existing Logic for Standard Images/Videos ---
             else if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
