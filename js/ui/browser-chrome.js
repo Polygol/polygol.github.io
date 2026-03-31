@@ -328,6 +328,11 @@ async function updateFavicon(url, round = true) {
 
 // Recursively update title based on whether seconds are needed
 function startSynchronizedTitle() {
+    const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+    if (disabledSys.includes('TitleFavicon')) return;
+
+    if (isMobileDevice()) return;
+
     updateTitle();
     const now = new Date();
     
