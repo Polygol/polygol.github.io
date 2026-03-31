@@ -874,6 +874,7 @@ body.one-button-nav-active .dock.show {
 }
 
 #dynamic-area {
+    translate: 0 0;
     position: fixed;
     top: 16.5px;
     right: 14px;
