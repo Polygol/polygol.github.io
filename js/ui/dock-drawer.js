@@ -270,7 +270,7 @@ function createAppIcons(filterQuery = '', forceShowNames = false) {
     appGrid.innerHTML = '';
     
     let appsArray = Object.entries(apps)
-        .filter(([appName]) => appName !== "kirbStore")
+        .filter(([appName]) => appName !== "Apps")
         .map(([appName, appDetails]) => ({ name: appName, details: appDetails }));
 
     // Apply search filter if provided
