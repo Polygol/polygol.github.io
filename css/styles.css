@@ -3516,7 +3516,7 @@ body.immersive-active #one-button-nav-handle {
 
 .get-app-btn-container {
     display: flex;
-    justify-content: center;
+    justify-content: end;
     grid-column: span 6;
 }
 
@@ -3524,7 +3524,7 @@ body.immersive-active #one-button-nav-handle {
     background-color: var(--search-background);
     color: var(--text-color);
     font-family: 'Inter', sans-serif;
-    padding: 10px 15px;
+    padding: 6px;
     border-radius: 25px;
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s;

@@ -391,7 +391,7 @@ function createAppIcons(filterQuery = '', forceShowNames = false) {
     button.className = 'get-app-btn';
     // Set initial button text based on preference
     const showNames = localStorage.getItem('showAppNamesAppDrawer') === 'true';
-    button.textContent = showNames ? 'Hide app names' : 'Show app names';
+    button.innerHTML = showNames ? '<span class="material-symbols-rounded">collapse_content</span>' : '<span class="material-symbols-rounded">expand_content</span>';
 
     // Hide button entirely if forced
     if (forceShowNames) {
@@ -424,7 +424,7 @@ function createAppIcons(filterQuery = '', forceShowNames = false) {
         }); 
 
         // Update button text
-        button.textContent = newState ? 'Hide app names' : 'Show app names';
+        button.innerHTML = newState ? '<span class="material-symbols-rounded">collapse_content</span>' : '<span class="material-symbols-rounded">expand_content</span>';
     };
 
     wrapper.appendChild(button);
