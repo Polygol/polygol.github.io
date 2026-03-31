@@ -533,9 +533,9 @@ function resetDrawerInactivityTimer() {
 async function createFullscreenEmbed(url, options = {}) {
     // Save drawer state before opening app
     drawerWasOpen = appDrawer.classList.contains('open');
-	
-    let { isSplitActivation = false, splitSide = null } = options;
-
+    
+    let { isSplitActivation = false, splitSide = null, originRect = null } = options;
+    
     // Safeguard: If active split exists and URL matches, enforce split mode
     if (splitScreenState.active && !isSplitActivation) {
         if (url === splitScreenState.leftAppUrl) {
@@ -842,7 +842,19 @@ async function createFullscreenEmbed(url, options = {}) {
         embedContainer.style.transition = 'none';
         
         // Set initial state with rounded corners
-        embedContainer.style.transform = 'perspective(100vh) rotateX(-40deg) translateY(40px) scale(0.8)';
+        const isValidOrigin = originRect && originRect.width > 0 && originRect.height > 0 && (originRect.left !== 0 || originRect.top !== 0);
+        if (isValidOrigin && !isSplitActivation) {
+            const zoom = parseFloat(document.body.style.zoom) / 100 || 1;
+            const cx = (originRect.left + originRect.width / 2) / zoom;
+            const cy = (originRect.top + originRect.height / 2) / zoom;
+            const startScale = Math.max((originRect.width / zoom) / (window.innerWidth / zoom), 0.05);
+            
+            embedContainer.style.transformOrigin = `${cx}px ${cy}px`;
+            embedContainer.style.transform = `scale(${startScale})`;
+        } else {
+            embedContainer.style.transformOrigin = 'center center';
+            embedContainer.style.transform = 'perspective(100vh) rotateX(-40deg) translateY(40px) scale(0.8)';
+        }
         embedContainer.style.opacity = '0';
         embedContainer.style.filter = 'blur(10px)';
         embedContainer.style.borderRadius = '50px';
@@ -985,7 +997,19 @@ async function createFullscreenEmbed(url, options = {}) {
     }
     
     // Set initial styles BEFORE adding to DOM
-    embedContainer.style.transform = 'perspective(100vh) rotateX(-40deg) translateY(40px) scale(0.8)';
+    const isValidOrigin = originRect && originRect.width > 0 && originRect.height > 0 && (originRect.left !== 0 || originRect.top !== 0);
+    if (isValidOrigin && !isSplitActivation) {
+        const zoom = parseFloat(document.body.style.zoom) / 100 || 1;
+        const cx = (originRect.left + originRect.width / 2) / zoom;
+        const cy = (originRect.top + originRect.height / 2) / zoom;
+        const startScale = Math.max((originRect.width / zoom) / (window.innerWidth / zoom), 0.05);
+        
+        embedContainer.style.transformOrigin = `${cx}px ${cy}px`;
+        embedContainer.style.transform = `scale(${startScale})`;
+    } else {
+        embedContainer.style.transformOrigin = 'center center';
+        embedContainer.style.transform = 'perspective(100vh) rotateX(-40deg) translateY(40px) scale(0.8)';
+    }
     embedContainer.style.opacity = '0';
     embedContainer.style.filter = 'blur(10px)';
     embedContainer.style.borderRadius = '50px';
@@ -1402,6 +1426,7 @@ function closeFullscreenEmbed() {
 	    }
 		
         // Animate out
+        embedContainer.style.transformOrigin = 'center center';
         embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
         embedContainer.style.transform = 'translateY(40px) scale(0.9)';
         embedContainer.style.opacity = '0';
@@ -1718,6 +1743,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
             }
 
 	        if (animate) {
+                embedContainer.style.transformOrigin = 'center center';
 	            embedContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 	            embedContainer.style.transform = 'translateY(40px)';
 	            embedContainer.style.opacity = '0';

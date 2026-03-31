@@ -1382,7 +1382,6 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     transform: scale(1);
     transition: transform 0.3s cubic-bezier(.3, 1.2, .64, 1), filter 0.3s cubic-bezier(.3, 1.2, .64, 1), font-size 0.3s cubic-bezier(.3, 1.2, .64, 1) !important;
     position: relative;
-    border-radius: 10px;
     line-height: 1;
     width: fit-content;
     display: flex;
@@ -1457,7 +1456,6 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     transform: scale(1);
     transition: transform 0.3s cubic-bezier(.3, 1.2, .64, 1), filter 0.3s cubic-bezier(.3, 1.2, .64, 1) !important;
     position: relative;
-    border-radius: 10px;
 }
 
 /* .date::before {
@@ -3342,8 +3340,8 @@ body.immersive-active #one-button-nav-handle {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--background-color-tr);
-    backdrop-filter: blur(5px);
+    background-color: var(--overlay-color);
+    backdrop-filter: blur(5px) opacity(0.9);
     z-index: 1001;
     overflow: hidden;
     touch-action: none;
@@ -3393,12 +3391,14 @@ body.immersive-active #one-button-nav-handle {
 
 #app-drawer .app-drawer-handle {
     height: 80px;
-    left: 50%;
+    left: 20px;
     display: flex;
     align-items: center;
     gap: 16px;
     justify-content: center;
     z-index: 2;
+    width: auto;
+    transform: none;
 }
 
 .drawer-handle-bar {
@@ -3413,8 +3413,7 @@ body.immersive-active #one-button-nav-handle {
 }
 
 .drawer-top-btn {
-    background-color: var(--tonal);
-    color: var(--background-color);
+    background-color: var(--search-background);
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow), 0 0 15px rgba(0, 0, 0, 0.05);
     display: flex;
@@ -3437,8 +3436,7 @@ body.immersive-active #one-button-nav-handle {
 .app-search-container {
     display: flex;
     align-items: center;
-    background-color: var(--accent);
-    color: var(--background-color);
+    background-color: var(--search-background);
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow), 0 0 15px rgba(0, 0, 0, 0.05);
     border-radius: 50px;
@@ -3456,7 +3454,7 @@ body.immersive-active #one-button-nav-handle {
     border: none;
     background: none;
     outline: none;
-    color: var(--background-color);
+    color: var(--text-color);
     padding: 12px 14px;
     font-size: 16px;
     font-family: 'Inter', 'sans-serif';
@@ -3464,7 +3462,7 @@ body.immersive-active #one-button-nav-handle {
 }
 
 #app-search-input::placeholder {
-    color: var(--background-color);
+    color: var(--text-color);
     font-weight: 500;
 }
 
@@ -3503,16 +3501,37 @@ body.immersive-active #one-button-nav-handle {
     height: calc(100% - 80px);
     overflow-y: auto;
     user-select: none;
-    padding: 80px 3% 0 3%;
+    padding: 80px 5% 0 5%;
+    flex-direction: column;
 }
 
 .app-drawer-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 2%;
-    max-height: 90%;
+    gap: clamp(30px, 2vw, 100px);
+    height: 100%;
     width: 100%;
-    padding: 10px 0;
+    padding: 0;
+}
+
+.get-app-btn-container {
+    display: flex;
+    justify-content: center;
+    grid-column: span 6;
+}
+
+.get-app-btn {
+    background-color: var(--search-background);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+    padding: 10px 15px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+    font-weight: 500;
+    margin-bottom: 50px;
 }
 
 .app-icon {
@@ -3522,9 +3541,7 @@ body.immersive-active #one-button-nav-handle {
     align-items: center;
     cursor: pointer;
     transition: transform 0.2s;
-    padding-bottom: 2%;
     user-select: none;
-    gap: 2vh;
 }
 
 .app-icon img {
@@ -3539,7 +3556,7 @@ body.immersive-active #one-button-nav-handle {
 }
 
 .app-icon .app-icon-img {
-    width: 90%;
+    width: 100%;
 }
 
 .app-icon:active .app-icon-img {
@@ -3548,6 +3565,8 @@ body.immersive-active #one-button-nav-handle {
 }
 
 .app-icon span {
+    font-size: 0.9rem;
+    margin-top: 16px;
     text-align: center;
     color: var(--text-color);
     font-weight: 500;
@@ -4450,7 +4469,11 @@ body.osk-active .control-popup-content {
     }
 
     .app-drawer-content {
-        padding: 80px 5% 0 5%;
+        padding: 80px 10% 0 10%;
+    }
+
+    .get-app-btn-container {
+        grid-column: span 6;
     }
 }
 
@@ -4458,11 +4481,19 @@ body.osk-active .control-popup-content {
     .app-drawer-grid {
         grid-template-columns: repeat(4, 1fr);
     }
+
+    .get-app-btn-container {
+        grid-column: span 4;
+    }
 }
 
 @media (max-width: 520px) {
     .app-drawer-grid {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    .get-app-btn-container {
+        grid-column: span 3;
     }
 }
 
@@ -4487,10 +4518,18 @@ body.osk-active .control-popup-content {
     .app-drawer-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .get-app-btn-container {
+        grid-column: span 2;
+    }
 }
 
 @media (max-width: 280px) {
     .app-drawer-grid {
         grid-template-columns: repeat(1, 1fr);
+    }
+
+    .get-app-btn-container {
+        grid-column: span 1;
     }
 }

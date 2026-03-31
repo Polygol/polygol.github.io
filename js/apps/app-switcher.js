@@ -55,9 +55,15 @@ async function captureAppScreenshot(url) {
 async function openAppSwitcherUI() {
     if (isAppSwitcherOpen) return;
     
-    // 1. Snapshot all running/minimized apps dynamically
-    const allEmbeds = document.querySelectorAll('.fullscreen-embed');
-    allEmbeds.forEach(container => {
+    // 1. Snapshot first 4 recently opened apps dynamically
+    const recentEmbeds = Array.from(document.querySelectorAll('.fullscreen-embed'))
+        .sort((a, b) => {
+            const getName = (u) => Object.keys(apps).find(k => apps[k].url === u);
+            return (appLastOpened[getName(b.dataset.embedUrl)] || 0) - (appLastOpened[getName(a.dataset.embedUrl)] || 0);
+        })
+        .slice(0, 4);
+
+    recentEmbeds.forEach(container => {
         const url = container.dataset.embedUrl;
         if (!url) return;
 
@@ -275,10 +281,11 @@ function setupAppCardGestures(card, url, container) {
             // Only if we didn't drag much
             const currentX = e.type.includes('mouse') ? e.clientX : (e.changedTouches ? e.changedTouches[0].clientX : 0);
             if (Math.abs(currentX - startX) < 10 && Math.abs(e.type.includes('mouse') ? e.clientY : (e.changedTouches ? e.changedTouches[0].clientY : 0) - startY) < 10) {
+                const rect = card.getBoundingClientRect();
                 closeAppSwitcherUI();
                 // Delay slightly to allow UI to fade
                 setTimeout(() => {
-                    createFullscreenEmbed(url);
+                    createFullscreenEmbed(url, { originRect: rect });
                 }, 100);
             }
         }
@@ -569,7 +576,12 @@ function selectAndCloseAppSwitcher() {
         if (splitScreenState.isSelecting) {
             finalizeSplitScreen(selectedItem.url);
         } else {
-    	    createFullscreenEmbed(selectedItem.url);
+            const cardElements = document.querySelectorAll('.app-switcher-item');
+            let rect = null;
+            if (cardElements[appSwitcherIndex]) {
+                rect = cardElements[appSwitcherIndex].getBoundingClientRect();
+            }
+    	    createFullscreenEmbed(selectedItem.url, { originRect: rect });
         }
 	}
 
