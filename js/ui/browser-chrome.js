@@ -141,7 +141,7 @@ function createShapedFavicon(source, shape) {
 function createCompositeFavicon(sources) {
     return new Promise(async (resolve) => {
         const canvas = document.createElement('canvas');
-        const size = 64;
+        const size = 16;
         canvas.width = size;
         canvas.height = size;
         const ctx = canvas.getContext('2d');

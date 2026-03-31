@@ -153,17 +153,24 @@ async function broadcastWidgetSnapshots() {
 
     // OPTIMIZATION: Defer heavy canvas operations to idle periods
     const requestIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
-    const snapshots = [];
+    const snapshots =[];
     // Determine background color based on theme to prevent transparency artifacts
     const isLight = document.body.classList.contains('light-theme');
     const bgColor = isLight ? '#ffffff' : '#000000'; // Adaptive background
 
     const options = { 
-        logging: false, 
-        useCORS: true, 
         scale: 0.5, 
-        allowTaint: true,
-        backgroundColor: bgColor // Force background color
+        backgroundColor: bgColor, // Force background color
+        quality: 0.5,
+        filter: (node) => {
+            if (node.nodeType === 1 && (node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
+                try {
+                    const url = new URL(node.src, window.location.href);
+                    if (url.origin !== window.location.origin && !node.crossOrigin) return false;
+                } catch(e) {}
+            }
+            return true;
+        }
     };
     
     for (const widget of widgets) {
@@ -189,10 +196,10 @@ async function broadcastWidgetSnapshots() {
                 // Fallback: Capture container
                 await new Promise(resolve => requestIdle(async () => {
                     try {
-                        const canvas = await html2canvas(widget, options);
+                        const imgData = await modernScreenshot.domToJpeg(widget, options);
                         snapshots.push({
                             id: index,
-                            img: canvas.toDataURL('image/jpeg', 0.5)
+                            img: imgData
                         });
                     } catch(e) {}
                     resolve();
@@ -202,10 +209,10 @@ async function broadcastWidgetSnapshots() {
             // It's a sticker or simple element
             await new Promise(resolve => requestIdle(async () => {
                 try {
-                    const canvas = await html2canvas(widget, options);
+                    const imgData = await modernScreenshot.domToJpeg(widget, options);
                     snapshots.push({
                         id: index,
-                        img: canvas.toDataURL('image/jpeg', 0.5)
+                        img: imgData
                     });
                 } catch (e) {}
                 resolve();

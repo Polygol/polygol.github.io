@@ -760,7 +760,7 @@ async function createFullscreenEmbed(url, options = {}) {
     }
 	
 	// If the URL is not for an installed app, tool, system app, or a fuzzy match, block it.
-	if (!appName && !isInternalTool && !isGoogleForm && !isSystemApp && !isFuzzyMatch) {
+	if (!appName && !isInternalTool && !isSystemApp && !isFuzzyMatch) {
 	    console.warn(`Attempted to open an unknown app or non-allowlisted URL: ${url}`);
 		showDialog({ 
 		    type: 'alert', 
@@ -877,6 +877,10 @@ async function createFullscreenEmbed(url, options = {}) {
 		
 	    // Clear background blur and trigger the animation
 	    setTimeout(() => {
+            const frame = embedContainer.querySelector('iframe');
+            if (frame && frame.contentWindow) {
+                frame.contentWindow.postMessage({ type: 'visibilityUpdate', visible: true }, '*');
+            }
 	        embedContainer.style.transform = 'scale(1)';
 	        embedContainer.style.opacity = '1';
 	        embedContainer.style.filter = 'none';
@@ -1106,7 +1110,7 @@ async function createFullscreenEmbed(url, options = {}) {
             // Finally, apply the legacy class to make it all visible
             embedContainer.classList.add('legacy');
         }
-    }, 500); // 500ms grace period
+    }, 1000); // 1s grace period
     
     // Force reflow to ensure the initial styles are applied
     void embedContainer.offsetWidth;
@@ -1622,13 +1626,6 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
     // Clear any pending cleanup
     clearTimeout(minimizeCleanupTimeout);
 
-    // Capture screenshot before minimizing
-    const targetUrl = urlToMinimize || (document.querySelector('.fullscreen-embed[style*="display: block"]')?.dataset?.embedUrl);
-    if (targetUrl) {
-        // Fire and forget, don't await to keep UI snappy
-        captureAppScreenshot(targetUrl);
-    }
-
 	document.body.classList.remove('app-active');
 	
     // --- Split Screen Support: Handle split screen minimization ---
@@ -1737,6 +1734,10 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
                 document.body.style.setProperty('--bg-transform-scale', '1.05');
                 
                 if (minimizedEmbeds[url] === embedContainer) {
+                    const frame = embedContainer.querySelector('iframe');
+                    if (frame && frame.contentWindow) {
+                        frame.contentWindow.postMessage({ type: 'visibilityUpdate', visible: false }, '*');
+                    }
                     embedContainer.style.display = 'none';
                     embedContainer.style.contentVisibility = 'hidden'; // OPTIMIZATION
 				    embedContainer.style.pointerEvents = 'none';
@@ -1792,15 +1793,36 @@ function createCompositeScreenshot() {
         const iframe = activeEmbed ? activeEmbed.querySelector('iframe') : null;
 
         if (!iframe) {
-            const canvas = await html2canvas(document.body, { useCORS: true, logging: false });
-            resolve(canvas.toDataURL('image/jpeg', 0.5));
+            const dataUrl = await modernScreenshot.domToJpeg(document.body, { 
+                quality: 0.5,
+                filter: (node) => {
+                    if (node.nodeType === 1 && (node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
+                        try {
+                            const url = new URL(node.src, window.location.href);
+                            if (url.origin !== window.location.origin && !node.crossOrigin) return false;
+                        } catch(e) {}
+                    }
+                    return true;
+                }
+            });
+            resolve(dataUrl);
             return;
         }
 
-        const parentCanvas = await html2canvas(document.body, {
-            useCORS: true,
-            logging: false,
-            ignoreElements: (el) => el.tagName === 'IFRAME'
+        const parentDataUrl = await modernScreenshot.domToJpeg(document.body, {
+            filter: (node) => {
+                if (node.nodeType === 1) {
+                    if (node.tagName === 'IFRAME') return false;
+                    if ((node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
+                        try {
+                            const url = new URL(node.src, window.location.href);
+                            if (url.origin !== window.location.origin && !node.crossOrigin) return false;
+                        } catch(e) {}
+                    }
+                }
+                return true;
+            },
+            quality: 1.0 // Keep high quality for the base composition step
         });
 
         const iframeListener = (event) => {
@@ -1826,7 +1848,7 @@ function createCompositeScreenshot() {
                     };
                     childImg.src = childDataUrl;
                 };
-                parentImg.src = parentCanvas.toDataURL();
+                parentImg.src = parentDataUrl;
             }
         };
 
@@ -1845,11 +1867,8 @@ function createCompositeScreenshot() {
 function initPredictivePreload() {
     if (localStorage.getItem('predictivePreload') === 'false') return;
 
-    // Wait 10 seconds after boot to ensure system stability before heavy operations
+    // Wait 5 seconds after boot to ensure system stability before heavy operations
     setTimeout(() => {
-        // Don't preload if an app was requested via URL or is currently actively loading
-        if (window.isAppOpen || Object.keys(minimizedEmbeds).length > 0) return;
-
         const hour = new Date().getHours();
         const hourlyUsage = JSON.parse(localStorage.getItem('appUsageHourly') || '{}');
         
@@ -1868,5 +1887,5 @@ function initPredictivePreload() {
                 }
             }
         }
-    }, 10000);
+    }, 50000);
 }

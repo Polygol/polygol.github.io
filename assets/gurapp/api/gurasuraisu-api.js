@@ -1773,7 +1773,6 @@ window.addEventListener('message', async (event) => {
       case 'request-screenshot':
         // Helper function to perform the capture
         const doCapture = async () => {
-            // Save current shadow state to prevent html2canvas artifacts
             const root = document.documentElement;
             const originalShadow = root.style.getPropertyValue('--sun-shadow');
             const originalShadowStrong = root.style.getPropertyValue('--sun-shadow-strong');
@@ -1789,12 +1788,19 @@ window.addEventListener('message', async (event) => {
                 const bgColor = isLight ? '#ffffff' : '#000000';
 
                 // Generate the screenshot of the app's content
-                const canvas = await html2canvas(document.body, { 
-                    useCORS: true, 
-                    logging: false,
-                    backgroundColor: bgColor // Explicitly set background
+                const screenshotDataUrl = await modernScreenshot.domToJpeg(document.body, {
+                    backgroundColor: bgColor, // Explicitly set background
+                    quality: 0.5,
+                    filter: (node) => {
+                        if (node.nodeType === 1 && (node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
+                            try {
+                                const url = new URL(node.src, window.location.href);
+                                if (url.origin !== window.location.origin && !node.crossOrigin) return false;
+                            } catch(e) {}
+                        }
+                        return true;
+                    }
                 });
-                const screenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
 
                 // Send the generated screenshot data back to the parent
                 window.parent.postMessage({
@@ -1810,13 +1816,13 @@ window.addEventListener('message', async (event) => {
             }
         };
 
-        // Check if html2canvas is loaded
-        if (typeof html2canvas !== 'function') {
+        // Check if modern-screenshot is loaded
+        if (typeof modernScreenshot === 'undefined') {
             // Inject it dynamically
             const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            script.src = 'https://cdn.jsdelivr.net/npm/modern-screenshot@4.6.8/dist/index.min.js';
             script.onload = doCapture;
-            script.onerror = () => console.error("Failed to load html2canvas for Gurapp");
+            script.onerror = () => console.error("Failed to load modern-screenshot for Gurapp");
             document.head.appendChild(script);
         } else {
             doCapture();
@@ -1986,43 +1992,35 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
     // --- Performance Reporting ---
-    let frameCount = 0;
-    let lastTime = performance.now();
-    const REPORT_INTERVAL = 2000;
+    let _perfInterval = null;
+    let _isSuspended = true; // Apps start suspended until system focuses them
 
     function reportPerformance() {
-        // Suspend 60fps performance tracking when hidden
-        if (document.hidden) {
-            lastTime = performance.now(); // Prevent large delta spike on resume
-            frameCount = 0;
-            // Throttle to 1 check per second instead of 60
-            setTimeout(() => requestAnimationFrame(reportPerformance), 1000);
-            return;
-        }
-
-        const now = performance.now();
-        frameCount++;
-
-        if (now - lastTime >= REPORT_INTERVAL) {
-            const fps = (frameCount / (now - lastTime)) * 1000;
-            
-            // Send metrics to parent
+        if (_isSuspended) return;
+        
+        if (performance.memory) {
             window.parent.postMessage({
                 type: 'gurapp-performance-report',
                 appId: document.body.dataset.appName || 'Unknown',
-                fps: fps,
-                memory: performance.memory ? performance.memory.usedJSHeapSize : 0
+                memory: performance.memory.usedJSHeapSize
             }, '*');
-
-            frameCount = 0;
-            lastTime = now;
         }
-        requestAnimationFrame(reportPerformance);
     }
-    
-    // Start reporting
-    requestAnimationFrame(reportPerformance);
 
+    // Handle system-driven visibility updates
+    window.addEventListener('message', (e) => {
+        if (e.source !== window.parent) return;
+        if (e.data.type === 'visibilityUpdate') {
+            _isSuspended = !e.data.visible;
+            if (!_isSuspended && !_perfInterval) {
+                _perfInterval = setInterval(reportPerformance, 30000); // 30s throttle
+            } else if (_isSuspended && _perfInterval) {
+                clearInterval(_perfInterval);
+                _perfInterval = null;
+            }
+        }
+    });
+    
   // Announce API presence to enable full-screen mode and readiness for settings.
   if (isInsideGurasuraisu) {
     window.parent.postMessage({ type: 'gurasuraisu-api-present' }, '*');

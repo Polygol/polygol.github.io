@@ -1,4 +1,4 @@
-const CORE_CACHE_VERSION = 'Bismuth 17.1.2.32';
+const CORE_CACHE_VERSION = 'Bismuth 17.1.2.32.1';
 const CORE_CACHE_NAME = `polygol-core-${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polygol-apps';
 
@@ -97,7 +97,7 @@ const ASSETS_TO_CACHE = [
   '/assets/sound/ui/tone2.mp3',
   '/assets/sound/ui/tridown.mp3',
   '/assets/sound/ui/tripuck.mp3',
-  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+  'https://cdn.jsdelivr.net/npm/modern-screenshot@4.6.8/dist/index.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js',
   'https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js',
   'https://esm.sh/trystero@0.15.1/torrent',

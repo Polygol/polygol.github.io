@@ -8,6 +8,9 @@ It does not include our self made assets/libraries/frameworks.
 *   **html2canvas**
     *   License: [MIT](https://opensource.org/licenses/MIT)
     *   Project: [https://html2canvas.hertzen.com/](https://html2canvas.hertzen.com/)
+*   **modern-screenshot**
+    *   License: [MIT](https://opensource.org/licenses/MIT)
+    *   Project: [https://github.com/qq15725/modern-screenshot]
 *   **Color Thief**
     *   License: [MIT](https://opensource.org/licenses/MIT)
     *   Project: [https://lokeshdhakar.com/projects/color-thief/](https://lokeshdhakar.com/projects/color-thief/)

@@ -55,25 +55,25 @@ async function captureAppScreenshot(url) {
 async function openAppSwitcherUI() {
     if (isAppSwitcherOpen) return;
     
-    // 1. If an app is currently open, snapshot it dynamically
-	const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-    if (activeEmbed) {
-        const url = activeEmbed.dataset.embedUrl;
-        // Fire and forget - update UI when ready
+    // 1. Snapshot all running/minimized apps dynamically
+    const allEmbeds = document.querySelectorAll('.fullscreen-embed');
+    allEmbeds.forEach(container => {
+        const url = container.dataset.embedUrl;
+        if (!url) return;
+
         captureAppScreenshot(url).then(async () => {
             const ssData = await SwapManager.get('app_snap_' + url);
             if (isAppSwitcherOpen && ssData) {
                 const card = document.querySelector(`.app-switcher-card[data-app-url="${url}"]`);
                 if (card) {
                     card.style.backgroundImage = `url('${ssData}')`;
-                    // Remove fallback background if it exists
                     const fallback = card.querySelector('.app-switcher-fallback-bg');
                     if (fallback) fallback.remove();
                 }
             }
         });
-    }
-
+    });
+    
     isAppSwitcherOpen = true;
 	
     // Hide UI
