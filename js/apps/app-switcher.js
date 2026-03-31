@@ -281,11 +281,10 @@ function setupAppCardGestures(card, url, container) {
             // Only if we didn't drag much
             const currentX = e.type.includes('mouse') ? e.clientX : (e.changedTouches ? e.changedTouches[0].clientX : 0);
             if (Math.abs(currentX - startX) < 10 && Math.abs(e.type.includes('mouse') ? e.clientY : (e.changedTouches ? e.changedTouches[0].clientY : 0) - startY) < 10) {
-                const rect = card.getBoundingClientRect();
                 closeAppSwitcherUI();
                 // Delay slightly to allow UI to fade
                 setTimeout(() => {
-                    createFullscreenEmbed(url, { originRect: rect });
+                    createFullscreenEmbed(url);
                 }, 100);
             }
         }
@@ -576,12 +575,7 @@ function selectAndCloseAppSwitcher() {
         if (splitScreenState.isSelecting) {
             finalizeSplitScreen(selectedItem.url);
         } else {
-            const cardElements = document.querySelectorAll('.app-switcher-item');
-            let rect = null;
-            if (cardElements[appSwitcherIndex]) {
-                rect = cardElements[appSwitcherIndex].getBoundingClientRect();
-            }
-    	    createFullscreenEmbed(selectedItem.url, { originRect: rect });
+    	    createFullscreenEmbed(selectedItem.url);
         }
 	}
 
