@@ -19,6 +19,7 @@ const PERMISSION_MAPPINGS = {
     'sendRemoteUpdate': 'waves',
     'registerOSK': 'custom-osk',
     'playUiSound': 'ui-sounds',
+    'showSheet': 'sheets',
     
     // App Management
     'installApp': 'app-management',
@@ -54,12 +55,13 @@ const PERMISSION_MAPPINGS = {
     'forceUpdatePolygol': 'system-admin',
     'clearAllNotifications': 'system-admin',
     'forceCloseAppByName': 'app-management',
-    'clearAppData': 'app-management'
+    'clearAppData': 'app-management',
 };
 
 const PERMISSION_NAMES = {
     'notifications': 'send notifications',
     'live-activity': 'show live activities',
+    'sheets': 'show app content',
     'immersive-mode': 'hide system UI',
     'file-upload': 'access your files',
     'widgets': 'register dashboard widgets',

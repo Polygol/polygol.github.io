@@ -459,6 +459,7 @@ function initializeSettingsApp() {
             const availablePerms = [
                 { id: 'notifications', name: 'Notifications' },
                 { id: 'live-activity', name: 'Live Activities' },
+                { id: 'sheets', name: 'App content' },
                 { id: 'immersive-mode', name: 'Immersive mode' },
                 { id: 'file-upload', name: 'File access' },
                 { id: 'widgets', name: 'Widgets' },
