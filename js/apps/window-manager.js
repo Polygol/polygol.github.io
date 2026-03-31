@@ -993,6 +993,18 @@ async function createFullscreenEmbed(url, options = {}) {
 	embedContainer.style.border = '1px solid var(--glass-border)';
     embedContainer.style.overflow = 'clip';
 	embedContainer.style.display = 'block';
+    embedContainer.style.backgroundColor = 'var(--background-color-tr)';
+
+    // Create Loading Spinner
+    const spinner = document.createElement('div');
+    spinner.className = 'app-loading-indicator';
+    spinner.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1002; transition: opacity 0.3s ease; pointer-events: none;';
+    spinner.innerHTML = `
+        <svg class="loading-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width: 48px; height: 48px;">
+            <rect width="100%" height="100%" fill="currentColor" stroke="none" class="loading-spinner-ind" />
+        </svg>
+    `;
+    embedContainer.appendChild(spinner);
         
     // IMPORTANT FIX: Set proper z-index and pointer events
     embedContainer.style.pointerEvents = 'auto';
@@ -1017,6 +1029,12 @@ async function createFullscreenEmbed(url, options = {}) {
     let embedFailed = false;
     
 	iframe.addEventListener('load', () => {
+        // Hide spinner and show app
+        iframe.style.opacity = '1';
+        spinner.style.opacity = '0';
+        setTimeout(() => { if (spinner.parentNode) spinner.remove(); }, 300);
+        embedContainer.style.backgroundColor = '';
+
 	    // If iframe loaded successfully, send language to iframe
 	    const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
 	    if (iframe.contentWindow) {
@@ -1025,6 +1043,49 @@ async function createFullscreenEmbed(url, options = {}) {
 	            languageCode: currentLang
 	        }, '*');
 	    }
+
+    	// Set a timeout to apply legacy mode if the app doesn't announce its API
+        setTimeout(() => {
+            // Check if the embed still exists and hasn't received an API handshake
+            if (document.body.contains(embedContainer) && !embedContainer.dataset.hasApi) {
+                console.log(`Gurapp at ${url} did not announce API. Applying legacy mode.`);
+                
+                // Create and prepend the legacy header
+                const legacyHeader = document.createElement('div');
+                legacyHeader.className = 'legacy-app-header';
+
+                const appIconImg = document.createElement('img');
+                const appNameSpan = document.createElement('span');
+                const navControls = document.createElement('div');
+                navControls.className = 'legacy-nav-controls';
+
+                const refreshBtn = document.createElement('button');
+                refreshBtn.className = 'btn-qc';
+                refreshBtn.innerHTML = `<span class="material-symbols-rounded">home</span>`;
+                // This is the cross-origin safe way to reload an iframe.
+                refreshBtn.onclick = () => { iframe.src = iframe.src; };
+
+                // Populate header info
+                let iconUrl = appDetails.icon;
+                if (iconUrl && !(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
+                    iconUrl = `/assets/appicon/${iconUrl}`;
+                }
+                appIconImg.src = iconUrl || '';
+                appNameSpan.textContent = appName;
+
+                // Assemble the header
+                navControls.appendChild(refreshBtn);
+                legacyHeader.appendChild(navControls);
+                legacyHeader.appendChild(appIconImg);
+                legacyHeader.appendChild(appNameSpan);
+                
+                // Add the header before the iframe
+                embedContainer.insertBefore(legacyHeader, iframe);
+                
+                // Finally, apply the legacy class to make it all visible
+                embedContainer.classList.add('legacy');
+            }
+        }, 1000); // 1s grace period
 	});
     
     // Handle iframe loading error
@@ -1068,49 +1129,6 @@ async function createFullscreenEmbed(url, options = {}) {
     document.body.appendChild(embedContainer);
 	
     pauseAllAnimations();
-
-	// Set a timeout to apply legacy mode if the app doesn't announce its API
-    setTimeout(() => {
-        // Check if the embed still exists and hasn't received an API handshake
-        if (document.body.contains(embedContainer) && !embedContainer.dataset.hasApi) {
-            console.log(`Gurapp at ${url} did not announce API. Applying legacy mode.`);
-            
-            // Create and prepend the legacy header
-            const legacyHeader = document.createElement('div');
-            legacyHeader.className = 'legacy-app-header';
-
-            const appIconImg = document.createElement('img');
-            const appNameSpan = document.createElement('span');
-            const navControls = document.createElement('div');
-            navControls.className = 'legacy-nav-controls';
-
-            const refreshBtn = document.createElement('button');
-            refreshBtn.className = 'btn-qc';
-            refreshBtn.innerHTML = `<span class="material-symbols-rounded">home</span>`;
-            // This is the cross-origin safe way to reload an iframe.
-            refreshBtn.onclick = () => { iframe.src = iframe.src; };
-
-            // Populate header info
-            let iconUrl = appDetails.icon;
-            if (iconUrl && !(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
-                iconUrl = `/assets/appicon/${iconUrl}`;
-            }
-            appIconImg.src = iconUrl || '';
-            appNameSpan.textContent = appName;
-
-            // Assemble the header
-            navControls.appendChild(refreshBtn);
-            legacyHeader.appendChild(navControls);
-            legacyHeader.appendChild(appIconImg);
-            legacyHeader.appendChild(appNameSpan);
-            
-            // Add the header before the iframe
-            embedContainer.insertBefore(legacyHeader, iframe);
-            
-            // Finally, apply the legacy class to make it all visible
-            embedContainer.classList.add('legacy');
-        }
-    }, 1000); // 1s grace period
     
     // Force reflow to ensure the initial styles are applied
     void embedContainer.offsetWidth;

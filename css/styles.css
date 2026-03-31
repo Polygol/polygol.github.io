@@ -3509,7 +3509,6 @@ body.immersive-active #one-button-nav-handle {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: clamp(30px, 2vw, 100px);
-    height: 100%;
     width: 100%;
     padding: 0;
 }
@@ -4473,7 +4472,14 @@ body.osk-active .control-popup-content {
     }
 
     .get-app-btn-container {
-        grid-column: span 6;
+        grid-column: span 8;
+    }
+}
+
+@media (min-width: 1000px) {
+    #app-drawer .app-drawer-handle {
+        left: 50%;
+        transform: translateX(-50%);
     }
 }
 
