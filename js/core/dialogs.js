@@ -251,11 +251,31 @@ function displaySheet(options) {
     handle.className = 'sheet-handle';
     container.appendChild(handle);
 
+    const spinnerContainer = document.createElement('div');
+    spinnerContainer.className = 'sheet-loading-spinner';
+    spinnerContainer.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; z-index: 1; transition: opacity 0.3s ease; pointer-events: none;';
+    spinnerContainer.innerHTML = `
+        <svg class="loading-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width: 48px; height: 48px;">
+            <rect width="100%" height="100%" fill="currentColor" stroke="none" class="loading-spinner-ind" />
+        </svg>
+    `;
+    container.appendChild(spinnerContainer);
+
     const iframe = document.createElement('iframe');
     iframe.className = 'sheet-iframe';
     iframe.setAttribute('data-gurasuraisu-iframe', 'true');
     iframe.setAttribute('data-is-sheet', 'true');
     if (options.sourceAppId) iframe.dataset.appId = options.sourceAppId;
+    
+    iframe.style.opacity = '0';
+    iframe.style.transition = 'opacity 0.3s ease';
+    iframe.onload = () => {
+        iframe.style.opacity = '1';
+        spinnerContainer.style.opacity = '0';
+        setTimeout(() => {
+            if (spinnerContainer.parentNode) spinnerContainer.remove();
+        }, 300);
+    };
 
     if (options.url) {
         iframe.src = options.url;
