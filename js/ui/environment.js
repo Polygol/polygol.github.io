@@ -20,7 +20,7 @@ const DynamicEnvironmentManager = {
     },
 
     handleHardwareSensor(lux) {
-        const autoBright = localStorage.getItem('autoBrightness') !== 'false';
+        const autoBright = localStorage.getItem('autoBrightness') === 'true';
         const brightOverridden = localStorage.getItem('autoBrightness_overridden') === 'true';
 
         if (brightOverridden) {
@@ -44,8 +44,8 @@ const DynamicEnvironmentManager = {
     },
 
     async update() {
-        const autoBright = localStorage.getItem('autoBrightness') !== 'false';
-        const dynamicTone = localStorage.getItem('dynamicTone') !== 'false';
+        const autoBright = localStorage.getItem('autoBrightness') === 'true';
+        const dynamicTone = localStorage.getItem('dynamicTone') === 'true';
         const brightOverridden = localStorage.getItem('autoBrightness_overridden') === 'true';
         const toneOverridden = localStorage.getItem('dynamicTone_overridden') === 'true';
 
@@ -123,10 +123,10 @@ const DynamicEnvironmentManager = {
         this.lastTargetBright = targetBright;
         this.lastTargetTone = targetTone;
 
-        if (localStorage.getItem('autoBrightness') !== 'false') {
+        if (localStorage.getItem('autoBrightness') === 'true') {
             this.applySmoothly('page_brightness', targetBright);
         }
-        if (localStorage.getItem('dynamicTone') !== 'false') {
+        if (localStorage.getItem('dynamicTone') === 'true') {
             this.applySmoothly('display_temperature', targetTone);
         }
     },
