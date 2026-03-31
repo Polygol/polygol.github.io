@@ -660,7 +660,7 @@ function setupDrawerInteractions() {
 	            drawerPill.style.opacity = '0';
 
 				// Restore all main UI elements
-			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+			    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 				    el.classList.remove('force-hide');
 			        el.style.display = el.dataset.originalDisplay;
                     el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -872,7 +872,7 @@ function setupDrawerInteractions() {
 	            interactionBlocker.style.display = 'none';
                 applyWallpaperEffects();
                 document.body.style.setProperty('--bg-transform-scale', '1.05');				
-			    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+			    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 				    el.classList.remove('force-hide');
 			        el.style.display = el.dataset.originalDisplay;
                     el.style.removeProperty('content-visibility'); 
@@ -897,7 +897,7 @@ function setupDrawerInteractions() {
                     applyWallpaperEffects();
                     document.body.style.setProperty('--bg-transform-scale', '1.05');
                     SoundManager.play('delay');
-                    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+                    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
                         if (!el.dataset.originalDisplay) el.dataset.originalDisplay = window.getComputedStyle(el).display;
                         el.style.transition = 'opacity 0.3s ease';
                         el.style.opacity = '0';
@@ -919,7 +919,7 @@ function setupDrawerInteractions() {
                     updateDockVisibility();
                     applyWallpaperEffects();
                     document.body.style.setProperty('--bg-transform-scale', '1.05');
-                    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+                    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
                         el.classList.remove('force-hide');
                         el.style.display = el.dataset.originalDisplay;
                         el.style.removeProperty('content-visibility');
@@ -1560,7 +1560,7 @@ function setupDrawerInteractions() {
             applyWallpaperEffects();
             document.body.style.setProperty('--bg-transform-scale', '1.05');			
 			// Restore all main UI elements
-		    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+		    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 			    el.classList.remove('force-hide');
 		        el.style.display = el.dataset.originalDisplay;
                 el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -1743,7 +1743,7 @@ function setupOneButtonNav() {
                     appDrawer.style.zIndex = '';
                 }
             }, 300);
-            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+            document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
                 el.style.display = el.dataset.originalDisplay || '';
                 el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -1776,7 +1776,7 @@ function setupOneButtonNav() {
             // Close app drawer
             appDrawer.classList.remove('open');
             setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
-            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+            document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
                 el.style.removeProperty('content-visibility'); // OPTIMIZATION
                 el.style.opacity = '1';
@@ -1798,7 +1798,7 @@ function setupOneButtonNav() {
                 appDrawer.classList.add('open'); // Now the CSS class will take effect
             });
             
-            document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+            document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
                 if (!el.dataset.originalDisplay) {
                     el.dataset.originalDisplay = window.getComputedStyle(el).display;
                 }

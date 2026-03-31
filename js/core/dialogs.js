@@ -233,3 +233,138 @@ function showCustomPrompt(message, title = 'Prompt', defaultValue = '', icon = n
         showDialog({ type: 'prompt', message, title, defaultValue, icon, resolve });
     });
 }
+
+// --- Sheet Management ---
+let activeSheetInfo = null;
+
+function displaySheet(options) {
+    if (activeSheetInfo) closeSheetUI();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'sheet-overlay';
+    
+    const container = document.createElement('div');
+    container.className = 'sheet-container';
+    if (options.height) container.style.height = options.height;
+
+    const handle = document.createElement('div');
+    handle.className = 'sheet-handle';
+    container.appendChild(handle);
+
+    const iframe = document.createElement('iframe');
+    iframe.className = 'sheet-iframe';
+    iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+    iframe.setAttribute('data-is-sheet', 'true');
+    if (options.sourceAppId) iframe.dataset.appId = options.sourceAppId;
+
+    if (options.url) {
+        iframe.src = options.url;
+    } else if (options.html) {
+        iframe.sandbox = "allow-scripts"; // Secure: No allow-same-origin
+        
+        let headInjection = '';
+        if (options.styleUrls && Array.isArray(options.styleUrls)) {
+            options.styleUrls.forEach(url => {
+                headInjection += `<link rel="stylesheet" href="${url}">\n`;
+            });
+        }
+        if (options.styles) {
+            headInjection += `<style>\n${options.styles}\n</style>\n`;
+        }
+        
+        const apiScriptUrl = new URL('/assets/gurapp/api/gurasuraisu-api.js', window.location.origin).href;
+        let htmlContent = options.html;
+        if (!htmlContent.includes('gurasuraisu-api.js')) {
+            headInjection += `<script src="${apiScriptUrl}"><\/script>\n`;
+        }
+
+        if (htmlContent.includes('<head>')) {
+            htmlContent = htmlContent.replace('<head>', '<head>\n' + headInjection);
+        } else {
+            htmlContent = headInjection + htmlContent;
+        }
+        
+        iframe.srcdoc = htmlContent;
+    }
+
+    container.appendChild(iframe);
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
+
+    // Close when clicking outside
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeSheetUI();
+    });
+
+    // Swipe to close logic
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+
+    const onDragStart = (y) => {
+        startY = y;
+        isDragging = true
+    };
+
+    const onDragMove = (y) => {
+        if (!isDragging) return;
+        currentY = y;
+        const deltaY = currentY - startY;
+        if (deltaY > 0) {
+            container.style.transform = `translateX(-50%) translateY(${deltaY}px)`;
+        }
+    };
+
+    const onDragEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        container.style.transition = 'transform 0.3s cubic-bezier(0.2, 1.3, 0.64, 1)';
+        const deltaY = currentY - startY;
+        if (deltaY > 100) {
+            closeSheetUI();
+        } else {
+            container.style.transform = 'translateX(-50%) translateY(0)';
+        }
+    };
+
+    handle.addEventListener('touchstart', (e) => onDragStart(e.touches[0].clientY), { passive: true });
+    handle.addEventListener('touchmove', (e) => onDragMove(e.touches[0].clientY), { passive: true });
+    handle.addEventListener('touchend', onDragEnd);
+    
+    const mouseMoveHandler = (e) => onDragMove(e.clientY);
+    const mouseUpHandler = () => {
+        onDragEnd();
+        window.removeEventListener('mousemove', mouseMoveHandler);
+        window.removeEventListener('mouseup', mouseUpHandler);
+    };
+    
+    handle.addEventListener('mousedown', (e) => {
+        onDragStart(e.clientY);
+        window.addEventListener('mousemove', mouseMoveHandler);
+        window.addEventListener('mouseup', mouseUpHandler);
+    });
+
+    // Animate in
+    overlay.style.display = 'block';
+    void overlay.offsetWidth; // Force reflow
+    overlay.classList.add('show');
+    container.classList.add('open');
+
+    activeSheetInfo = { overlay, container, iframe };
+}
+
+function closeSheetUI() {
+    if (!activeSheetInfo) return;
+    const { overlay, container } = activeSheetInfo;
+    
+    container.classList.remove('open');
+    overlay.classList.remove('show');
+    
+    setTimeout(() => {
+        if (document.body.contains(overlay)) {
+            document.body.removeChild(overlay);
+        }
+    }, 300);
+
+    activeSheetInfo = null;
+}

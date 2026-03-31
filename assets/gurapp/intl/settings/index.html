@@ -223,7 +223,7 @@
                 </div>
                 <div class="setting-item">
                     <div class="setting-info">
-                        <span class="setting-label">Dynamic Glass</span>
+                        <span class="setting-label">Dynamic Glass<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/display/dynamic-glass', height: '100%' });">?</button></span>
                         <span class="setting-description">Adjust the crunchy, tasty and smooth material</span>
                     </div>
                     <select class="styled-select" id="glass-effects-mode" data-key="glassEffectsMode">
@@ -235,7 +235,7 @@
                 </div>
             </div>
             <div class="setting-section">
-                <h2 class="section-title">Night Stand</h2>
+                <h2 class="section-title">Night Stand<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/display/night-stand', height: '100%' });">?</button></h2>
                 <div class="setting-item">
                     <div class="setting-info">
                         <span class="setting-label">Night Stand</span>
@@ -323,6 +323,7 @@
                     <!-- Dynamic list of apps and permissions -->
                 </div>
             </div>
+            <button class="action-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/apps/disabling-components', height: '100%' });">Help me with components</button>
         </div>
 
         <!-- App Details Page -->
@@ -352,25 +353,11 @@
         <!-- Home Screen Page -->
         <div class="page" id="page-homescreen">
             <div class="setting-section">
-                 <div class="setting-item nav-item" data-page="page-clock">
-                    <div class="setting-info">
-                        <span class="setting-label">Clock</span>
-                    </div>
-                    <span class="material-symbols-rounded">arrow_forward_ios</span>
-                </div>
                  <div class="setting-item nav-item" data-page="page-wallpaper">
                     <div class="setting-info">
                         <span class="setting-label">Wallpaper</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Show Weather Widget on home screen</span>
-                        <span class="setting-description">Weather data is pulled from Open-Meteo</span>
-                    </div>
-                    <input type="checkbox" class="toggle-switch" 
-                           data-key="showWeather">
                 </div>
                 <div class="setting-item" id="setting-doubleTapToSleep">
                     <div class="setting-info">
@@ -413,141 +400,12 @@
                 </div>
             </div>
         </div>
-        <!-- Clock Settings Page -->
-        <div class="page" id="page-clock">
-            <div class="setting-section">
-                <h2 class="section-title">Style</h2>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Style</span>
-                        <span class="setting-description">Choose a font to display the clock in</span>
-                    </div>
-                    <select class="styled-select" data-key="font">
-                        <option value="Inter" data-lang="Default">Default</option>
-                        <option value="Bricolage Grotesque" data-lang="Work">Work</option>
-                        <option value="DynaPuff" data-lang="Puffy">Puffy</option>
-                        <option value="Domine" data-lang="Classic">Classic</option>
-                        <option value="Climate Crisis" data-lang="Strokes">Strokes</option>
-                        <option value="JetBrains Mono" data-lang="Mono">Mono</option>
-                        <option value="DotGothic16" data-lang="Pixel">Pixel</option>
-                        <option value="Playpen Sans" data-lang="Written">Written</option>
-                        <option value="Jaro" data-lang="Raised">Raised</option>
-                        <option value="Doto" data-lang="Dot">Dot</option>
-                        <option value="Nunito" data-lang="Round">Round</option>
-                    </select>
-                </div>
-                <div class="setting-item slider-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Weight</span>
-                        <span class="setting-description">Adjust font weight if supported</span>
-                    </div>
-                    <input type="range" min="20" max="100" 
-                           class="styled-slider" data-key="weight">
-                </div>
-                <div class="setting-item slider-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Roundness</span>
-                        <span class="setting-description">Adjust the font roundness if supported</span>
-                    </div>
-                    <input type="range" min="0" max="100" class="styled-slider" 
-                           data-key="roundness">
-                </div>
-                <div class="setting-item slider-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Spacing</span>
-                        <span class="setting-description">Adjust letter spacing</span>
-                    </div>
-                    <input type="range" min="-5" max="20" class="styled-slider" 
-                           data-key="letterSpacing">
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Text Case</span>
-                        <span class="setting-description">Change capitalization</span>
-                    </div>
-                    <select class="styled-select" data-key="textCase">
-                        <option value="none">Normal</option>
-                        <option value="uppercase">Uppercase</option>
-                        <option value="lowercase">Lowercase</option>
-                        <option value="capitalize">Capitalize</option>
-                    </select>
-                </div>
-            </div>
-            <div class="setting-section">
-                <h2 class="section-title">Format & Layout</h2>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Show Seconds</span>
-                        <span class="setting-description">Overrides Clock Format</span>
-                    </div>
-                    <input type="checkbox" class="toggle-switch" 
-                           data-key="showSeconds">
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Stacked Clock</span>
-                        <span class="setting-description">Use a stacked clock layout</span>
-                    </div>
-                    <input type="checkbox" class="toggle-switch" 
-                           data-key="stackEnabled">
-                </div>
-                <div class="setting-item">
-                    <span class="setting-label">Clock Format</span>
-                    <input type="text" class="form-input" data-key="clockFormat" 
-                           placeholder="HH:mm:ss">
-                </div>
-                <div class="setting-item">
-                    <span class="setting-label">Date Format</span>
-                    <input type="text" class="form-input" data-key="dateFormat"
-                           placeholder="ddd MMM D">
-                </div>
-            </div>
-            <div class="setting-section">
-                <h2 class="section-title">Appearance</h2>
-                <div class="setting-item">
-                    <span class="setting-label">Color & Effects</span>
-                    <button class="action-btn" data-modal="color-modal">
-                        Adjust
-                    </button>
-                </div>
-                 <div class="setting-item">
-                    <span class="setting-label">Text Shadow</span>
-                    <button class="action-btn" data-modal="shadow-modal">
-                        Adjust
-                    </button>
-                </div>
-            </div>
-            <div class="setting-section">
-                <h2 class="section-title">Layout</h2>
-                <div class="setting-item">
-                    <span class="setting-label">Position & Alignment</span>
-                    <button class="action-btn" data-modal="position-modal">
-                        Adjust
-                    </button>
-                </div>
-                <div class="setting-item slider-item">
-                    <span class="setting-label">Size</span>
-                    <input type="range" min="-50" max="50" class="styled-slider" 
-                           data-key="clockSize">
-                </div>
-                <div class="setting-item slider-item">
-                    <span class="setting-label">Date Size</span>
-                    <input type="range" min="50" max="200" class="styled-slider" 
-                           data-key="dateSize">
-                </div>
-                <div class="setting-item slider-item">
-                    <span class="setting-label">Date Offset</span>
-                    <input type="range" min="-50" max="50" class="styled-slider" 
-                           data-key="dateOffset">
-                </div>
-            </div>
-        </div>
         <!-- Wallpaper Settings Page -->
         <div class="page" id="page-wallpaper">
             <div class="setting-section">
                  <div class="setting-item">
                     <div class="setting-info">
-                        <span class="setting-label">Wallpaper</span>
+                        <span class="setting-label">Wallpaper upload</span>
                         <span class="setting-description">Supports PNG, JPEG, JPG, WEBP, GIF and MP4 files<br>Attach multiple files to create a slideshow</span>
                     </div>
                      <button class="action-btn" id="btn-upload-wallpaper">
@@ -560,42 +418,12 @@
             </div>
             <div class="setting-section">
                 <h2 class="section-title">Effects</h2>
-                <div class="setting-item slider-item">
-                    <span class="setting-label">Blur</span>
-                    <input type="range" min="0" max="20" class="styled-slider" 
-                           data-key="wallpaperBlur">
-                </div>
-                <div class="setting-item slider-item">
-                    <span class="setting-label">Brightness</span>
-                    <input type="range" min="50" max="150" class="styled-slider" 
-                           data-key="wallpaperBrightness">
-                </div>
-                <div class="setting-item slider-item">
-                    <span class="setting-label">Contrast</span>
-                    <input type="range" min="50" max="150" class="styled-slider" 
-                           data-key="wallpaperContrast">
-                </div>
                 <div class="setting-item">
                     <div class="setting-info">
-                        <span class="setting-label">Depth Effect</span>
+                        <span class="setting-label">Depth</span>
                         <span class="setting-description">Use on-device intelligence to add overlay effects to your image wallpaper</span>
                     </div>
                     <input type="checkbox" class="toggle-switch" data-key="depthEffectEnabled">
-                </div>
-            </div>
-            <div class="setting-section">
-                <h2 class="section-title">Slideshow</h2>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Slideshow Duration</span>
-                    </div>
-                    <select class="styled-select" data-key="slideshowInterval">
-                        <option value="60000">1 Minute</option>
-                        <option value="300000">5 Minutes</option>
-                        <option value="600000">10 Minutes</option>
-                        <option value="1800000">30 Minutes</option>
-                        <option value="3600000">1 Hour</option>
-                    </select>
                 </div>
             </div>
         </div>
@@ -614,7 +442,7 @@
                 </div>
             </div>
             <div class="setting-section">
-                <h2 class="section-title">Sleep</h2>
+                <h2 class="section-title">Sleep<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/system/sleep-mode', height: '100%' });">?</button></h2>
                 <div class="setting-item">
                     <div class="setting-info">
                         <span class="setting-label">Sleep Mode</span>
@@ -652,7 +480,7 @@
                 <h2 class="section-title">Browser</h2>
                 <div class="setting-item">
                     <div class="setting-info">
-                        <span class="setting-label">Keep Polygol on</span>
+                        <span class="setting-label">Keep Polygol on<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/system/keep-polygol-on', height: '100%' });">?</button></span>
                         <span class="setting-description">Prevent display sleep from the browser</span>
                     </div>
                     <select class="styled-select" data-key="wakeLockMode">
@@ -663,7 +491,7 @@
                 </div>
                 <div class="setting-item">
                     <div class="setting-info">
-                        <span class="setting-label">Resource Manager</span>
+                        <span class="setting-label">Resource Manager<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/system/resource-manager', height: '100%' });">?</button></span>
                         <span class="setting-description">Automatically reduce resource intensity when detected</span>
                     </div>
                     <div class="setting-control">
@@ -826,9 +654,8 @@
                 <div class="setting-item">
                     <div class="setting-info">
                         <span class="setting-label">Polygol</span>
-                        <span class="setting-description">View documentation and release notes</span>
                     </div>
-                    <button class="action-btn" id="btn-version">Details</button>
+                    <button class="action-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol', height: '100%' });">Details</button>
                 </div>
                 <div class="setting-item nav-item" data-page="page-licenses">
                     <div class="setting-info">
@@ -843,6 +670,7 @@
                 <div class="setting-item">
                     <div class="setting-info">
                         <span class="setting-label">Check for Updates</span>
+                        <span class="setting-description">Download an update if it's available</span>
                     </div>
                     <div class="setting-control">
                         <button class="action-btn" id="btn-force-update">
@@ -888,7 +716,7 @@
                         <span class="setting-description">Backup, transfer and restore your data</span>
                     </div>
                     <div class="setting-control">
-                        <button class="action-btn" id="btn-transfer">
+                        <button class="action-btn" onclick="Gurasuraisu.showAlert('polygol.github.io/transfer', 'Close this tab, and open this link in a new tab', 'open_in_new')">
                             Open
                         </button>
                     </div>
@@ -899,7 +727,7 @@
                         <span class="setting-description">Factory reset Polygol</span>
                     </div>
                     <div class="setting-control">
-                        <button class="action-btn" id="btn-recovery">
+                        <button class="action-btn" onclick="Gurasuraisu.showAlert('polygol.github.io/recovery', 'Close this tab, and open this link in a new tab', 'open_in_new')">
                             Open
                         </button>
                     </div>
@@ -909,7 +737,7 @@
                 <h2 class="section-title">Privacy</h2>
                 <div class="setting-item">
                     <div class="setting-info">
-                        <span class="setting-label">Analytics</span>
+                        <span class="setting-label">Analytics<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/your-account/analytics', height: '100%' });">?</button></span>
                         <span class="setting-description">Share anonymous usage data to help improve Polygol</span>
                     </div>
                     <div class="setting-control">
@@ -1055,11 +883,11 @@
 
         <div class="page" id="page-connect">
             <div class="setting-section">
-                <h2 class="section-title">Waves</h2>
+                <h2 class="section-title">Waves<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/waves-lander', height: '100%' });">?</button></h2>
                 
                 <div class="setting-item">
                     <div class="setting-info">
-                        <span class="setting-label">Allow New Connections</span>
+                        <span class="setting-label">Allow New Connections<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/connections/allow-new-connections', height: '100%' });">?</button></span>
                         <span class="setting-description">Make this device visible to remotes</span>
                     </div>
                     <input type="checkbox" class="toggle-switch" id="waves-discovery-switch">
@@ -1094,106 +922,16 @@
     </div>
 
     <!-- Modals for Complex Settings -->
-    <div class="modal-overlay" id="position-modal">
-        <div class="modal-container">
-            <h3>Position & Alignment</h3>
-            <div class="setting-item modal-item slider-item">
-                <label>Horizontal (X)</label>
-                <input type="range" min="0" max="100" class="styled-slider" 
-                       data-key="clockPosX">
-            </div>
-            <div class="setting-item modal-item slider-item">
-                <label>Vertical (Y)</label>
-                <input type="range" min="0" max="100" class="styled-slider" 
-                       data-key="clockPosY">
-            </div>
-            <div class="setting-item modal-item">
-                <label>Text Alignment</label>
-                <select class="styled-select" data-key="alignment">
-                    <option value="center">Center</option>
-                    <option value="left">Left</option>
-                    <option value="right">Right</option>
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="color-modal">
-        <div class="modal-container">
-            <h3>Color & Effects</h3>
-            <div class="setting-item modal-item">
-                <label>Solid Color</label>
-                <div class="setting-control">
-                    <input type="color" class="color-picker" data-key="color">
-                    <input type="checkbox" class="toggle-switch" 
-                           data-key="colorEnabled">
-                </div>
-            </div>
-             <div class="setting-item modal-item">
-                <label>Gradient</label>
-                <div class="setting-control">
-                    <input type="color" class="color-picker" 
-                           data-key="gradientColor">
-                    <input type="checkbox" class="toggle-switch" 
-                           data-key="gradientEnabled">
-                </div>
-            </div>
-             <div class="setting-item modal-item">
-                <label>Glass Effect</label>
-                <input type="checkbox" class="toggle-switch" 
-                       data-key="glassEnabled">
-            </div>
-        </div>
-    </div>
-    
-    <div class="modal-overlay" id="shadow-modal">
-        <div class="modal-container">
-            <h3>Text Shadow</h3>
-            <div class="setting-item modal-item">
-                <label>Enable Shadow</label>
-                <input type="checkbox" class="toggle-switch" 
-                       data-key="shadowEnabled">
-            </div>
-            <div class="setting-item modal-item slider-item">
-                <label>Blur</label>
-                <input type="range" min="0" max="50" class="styled-slider" 
-                       data-key="shadowBlur">
-            </div>
-            <div class="setting-item modal-item">
-                <label>Color</label>
-                <input type="color" class="color-picker" data-key="shadowColor">
-            </div>
-        </div>
-    </div>
-    
-    <div class="modal-overlay" id="format-modal">
-        <div class="modal-container">
-            <h3>Date & Time Format</h3>
-            <div class="setting-item modal-item">
-                <label for="dateFormatInput">Date Format</label>
-                <input type="text" class="form-input" data-key="dateFormat" 
-                       placeholder="e.g., dddd, MMMM D">
-            </div>
-             <div class="setting-item modal-item">
-                <label for="clockFormatInput">Clock Format</label>
-                <input type="text" class="form-input" data-key="clockFormat" 
-                       placeholder="e.g., HH:mm:ss">
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="waves-auth-modal" style="background: rgba(0,0,0,0.8);">
+    <div class="modal-overlay" id="waves-auth-modal">
         <div class="modal-container" style="text-align: center;">
-            <h3>Verify Connection</h3>
+            <h3>Pair a new remote</h3>
             <p style="margin: 10px 0 20px; opacity: 0.8;">Tap this emoji on your phone</p>
             <div id="waves-auth-emoji" style="font-size: 80px; margin: 20px 0;">
                 ❓
             </div>
-            <p style="font-size: 12px; opacity: 0.5;">This ensures you are looking at this screen.</p>
             
-            <!-- NEW: Reject Button -->
             <button class="action-btn" id="btn-reject-auth" style="background-color: #ff5252; color: white; border: none; width: 100%; margin-top: 15px;">
-                Reject Request
+                Reject
             </button>
         </div>
     </div>

@@ -452,6 +452,7 @@ async function clearIDBStore(dbName, storeName) {
 }
 
 function getOriginFromUrl(url) {
+    if (!url || url === 'about:srcdoc' || url.startsWith('data:')) return '*';
     try {
         return new URL(url).origin;
     } catch (e) {
@@ -704,17 +705,18 @@ window.addEventListener('message', async (event) => { // Make listener async
                 });
 
                 Promise.all(promises).then(serializedFiles => {
-                    // Send response back to the app iframe
-                    event.source.postMessage({
-                        type: 'dialog-response', 
-                        requestId: requestId, 
+                    const replyOrigin = event.origin === 'null' ? '*' : event.origin;
+                    sourceWindow.postMessage({
+                        type: 'dialog-response', // Reusing dialog response channel or custom
+                        requestId: requestId, // Original ID from app
                         value: serializedFiles
-                    }, event.origin);
+                    }, replyOrigin);
                 });
             });
 
-            // Trigger the UI (Local picker + Remote request)
+            // Trigger the UI
             FileUploadManager.trigger(accept, multiple, uniqueReqId);
+            return;
         },
 		setRemoteUI: (components) => {
             // NEW: Allow ANY running app (even background) to set remote UI if they are the sender.
@@ -942,7 +944,28 @@ window.addEventListener('message', async (event) => { // Make listener async
             }
             throw new Error('OSK registration not supported.');
         },
-		forceUpdatePolygol
+		forceUpdatePolygol,
+        closeSheet: () => {
+            if (typeof closeSheetUI === 'function') {
+                closeSheetUI();
+            }
+        },
+        sheetMessageToApp: (payload) => {
+            if (!sourceAppId) return;
+            const mainIframe = document.querySelector(`iframe[data-app-id="${sourceAppId}"]:not([data-is-sheet="true"])`);
+            if (mainIframe && mainIframe.contentWindow) {
+                const targetOrigin = getOriginFromUrl(mainIframe.src);
+                mainIframe.contentWindow.postMessage({ type: 'sheet-communication', payload }, targetOrigin);
+            }
+        },
+        appMessageToSheet: (payload) => {
+            if (!sourceAppId) return;
+            const sheetIframe = document.querySelector(`iframe[data-app-id="${sourceAppId}"][data-is-sheet="true"]`);
+            if (sheetIframe && sheetIframe.contentWindow) {
+                const targetOrigin = getOriginFromUrl(sheetIframe.src);
+                sheetIframe.contentWindow.postMessage({ type: 'sheet-communication', payload }, targetOrigin);
+            }
+        }
     };
 
     const data = event.data;
@@ -1050,7 +1073,7 @@ window.addEventListener('message', async (event) => { // Make listener async
     if (data.type === 'gurapp-ready') {
         if (!sourceWindow) return;
 
-	    const targetOrigin = event.origin; // Use the actual origin of the sender
+	    const targetOrigin = event.origin === 'null' ? '*' : event.origin; // Use the actual origin of the sender
 
         // Find which app sent the message
         let sourceAppId = null;
@@ -1204,13 +1227,14 @@ window.addEventListener('message', async (event) => { // Make listener async
                 const unit = weatherData.temperatureUnit === 'fahrenheit' ? '°F' : '°C';
                 const info = weatherConditions[code] || { icon: () => 'question_mark' };
                 const iconString = info.icon();
+                const replyOrigin = event.origin === 'null' ? '*' : event.origin;
                 event.source.postMessage({
                     type: 'system-weather-response',
                     temp: Math.round(weatherData.current.temperature),
                     unit: unit,
                     icon: iconString,
                     city: weatherData.city
-                }, event.origin);
+                }, replyOrigin);
             }
             return;
         }
@@ -1235,11 +1259,24 @@ window.addEventListener('message', async (event) => { // Make listener async
             return;
         }
 
+        // Handle sheets
+        if (funcName === 'showSheet') {
+            const sheetOptions = args[0] || {};
+            sheetOptions.source = sourceWindow;
+            sheetOptions.origin = event.origin;
+            sheetOptions.sourceAppId = sourceAppId;
+            if (typeof displaySheet === 'function') {
+                displaySheet(sheetOptions);
+            }
+            return;
+        }
+
         // --- NEW: Interactive Security Check ---
         const hasPerm = await checkAppPermission(sourceAppId, funcName, event.origin);
         if (!hasPerm) {
             if (sourceWindow) {
-                sourceWindow.postMessage({ type: 'parentActionError', message: `Permission Denied: ${PERMISSION_MAPPINGS[funcName]}` }, event.origin);
+                const replyOrigin = event.origin === 'null' ? '*' : event.origin;
+                sourceWindow.postMessage({ type: 'parentActionError', message: `Permission Denied: ${PERMISSION_MAPPINGS[funcName]}` }, replyOrigin);
             }
             return; // Stop execution immediately.
         }
@@ -1335,10 +1372,12 @@ window.addEventListener('message', async (event) => { // Make listener async
 				    response.message = result;
 				}
                 
-                sourceWindow.postMessage(response, event.origin);
+                const replyOrigin = event.origin === 'null' ? '*' : event.origin;
+                sourceWindow.postMessage(response, replyOrigin);
 
             } catch (error) {
-                sourceWindow.postMessage({ type: 'parentActionError', message: error.message }, event.origin);
+                const replyOrigin = event.origin === 'null' ? '*' : event.origin;
+                sourceWindow.postMessage({ type: 'parentActionError', message: error.message }, replyOrigin);
             }
         } else {
             console.warn(`A Gurapp attempted to call a disallowed or non-existent function: "${funcName}"`);

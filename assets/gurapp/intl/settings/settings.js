@@ -14,7 +14,6 @@ function initializeSettingsApp() {
         'page-apps': 'Apps',
         'page-app-details': 'Details',
         'page-homescreen': 'Home Screen',
-        'page-clock': 'Clock',
         'page-wallpaper': 'Wallpaper',
         'page-system': 'System',
         'page-data': 'Your Account',
@@ -537,13 +536,6 @@ function initializeSettingsApp() {
         const wallpaperInput = document.getElementById('wallpaper-input');
         document.getElementById('btn-upload-wallpaper').onclick = () => 
             window.parent.postMessage({ action: 'triggerWallpaperUpload' }, '*');
-        
-        // This just opens a URL, so Gurasuraisu.openApp is correct
-        document.getElementById('btn-version').onclick = () => 
-            Gurasuraisu.openApp('https://kirbindustries.gitbook.io/polygol');
-
-        document.getElementById('btn-transfer').onclick = () => Gurasuraisu.openApp('/transfer/index.html');
-        document.getElementById('btn-recovery').onclick = () => Gurasuraisu.openApp('/recovery/index.html');
     
         document.getElementById('btn-force-update').onclick = () => {
             // Show immediate feedback in the settings app

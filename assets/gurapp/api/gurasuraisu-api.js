@@ -175,6 +175,11 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             }
         }
 
+        body {
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+        }
+
         h1, h2, h3, h4, h5, h6 {
         	font-family: 'Open Runde', sans-serif;
         }
@@ -1510,6 +1515,55 @@ const Gurasuraisu = {
           _dialogCallbacks[requestId] = resolve;
           this._call('showDialog', [{ type: 'prompt', message, title, defaultValue, icon, requestId }]);
       });
+  },
+
+  /**
+   * Opens a bottom sheet with custom content.
+   * @param {object} options
+   * @param {string} [options.url] - URL to load in the sheet.
+   * @param {string} [options.html] - Sandboxed HTML content to load.
+   * @param {string} [options.height] - CSS height of the sheet (e.g., '60%').
+   * @param {string[]} [options.styleUrls] - Array of stylesheet URLs to inject (for html mode).
+   * @param {string} [options.styles] - Raw CSS string to inject (for html mode).
+   */
+  showSheet: function(options = {}) {
+      this._call('showSheet', [options]);
+  },
+
+  /**
+   * Closes the active bottom sheet.
+   */
+  closeSheet: function() {
+      this._call('closeSheet');
+  },
+
+  sheet: {
+      /**
+       * Send a message from the sheet to the origin application.
+       * @param {any} data
+       */
+      sendToApp: function(data) {
+          Gurasuraisu._call('sheetMessageToApp', [data]);
+      },
+      /**
+       * Send a message from the origin application to the active sheet.
+       * @param {any} data
+       */
+      sendToSheet: function(data) {
+          Gurasuraisu._call('appMessageToSheet', [data]);
+      },
+      /**
+       * Listen for messages (App listens for sheet, Sheet listens for app)
+       * @param {function} callback
+       */
+      onMessage: function(callback) {
+          window.addEventListener('message', (event) => {
+              if (event.source !== window.parent) return;
+              if (event.data.type === 'sheet-communication') {
+                  callback(event.data.payload);
+              }
+          });
+      }
   }
 };
 

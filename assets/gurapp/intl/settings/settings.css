@@ -195,6 +195,19 @@ body {
     font-weight: 500;
 }
 
+.help-btn {
+    background-color: var(--transparent-color);
+    color: var(--text-color);
+    padding: 0 5px;
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    margin-left: 10px;
+}
+
 .toggle-switch:not(:checked) {
     background-color: var(--transparent-color) !important;
 }

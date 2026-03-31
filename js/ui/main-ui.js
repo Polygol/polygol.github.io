@@ -69,11 +69,6 @@ let glassEffectsEnabled = localStorage.getItem('glassEffectsEnabled') !== 'false
 let minimizeCleanupTimeout = null; 
 const minimizeTimeouts = {}; // Track timeouts per app URL
 
-document.getElementById("versionButton").addEventListener("click", function() {
-	closeControls();
-	createFullscreenEmbed('https://kirbindustries.gitbook.io/polygol');
-});
-
 // Close customizeModal when clicking outside
 const __blurOverlayControls = document.getElementById('blurOverlayControls');
 if (__blurOverlayControls) {

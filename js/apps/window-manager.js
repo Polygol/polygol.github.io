@@ -16,10 +16,6 @@ var apps = {
         url: "https://kirbindustries.gitbook.io/polygol/assistant-for-polygol",
         icon: "assistant.png"
 	},
-    "Tips": {
-        url: "https://kirbindustries.gitbook.io/polygol",
-        icon: "tips.png"
-	},
     "Feedback": {
         url: "https://docs.google.com/forms/d/e/1FAIpQLSeSYSJalaX0HCZe0helcK5NCuc0U47tQc6KaO1OAsBs5HxK1A/viewform?embedded=true",
         icon: "feedback.png"
@@ -728,11 +724,9 @@ async function createFullscreenEmbed(url, options = {}) {
     const internalToolUrls = [
         '/recovery/index.html',
         '/transfer/index.html',
-        'https://kirbindustries.gitbook.io/polygol'
     ];
 	
 	const isInternalTool = internalToolUrls.some(t => url.includes(t));
-	const isGoogleForm = url.startsWith('https://docs.google.com/forms/');
     const isSystemApp = url.includes('/assets/gurapp/intl');
 
     // --- Fuzzy Matching for Unknown URLs ---
@@ -892,7 +886,7 @@ async function createFullscreenEmbed(url, options = {}) {
 	    }, 10);
         
         // Hide all main UI elements
-        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+        document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
             if (!el.dataset.originalDisplay) {
                 el.dataset.originalDisplay = window.getComputedStyle(el).display;
             }
@@ -1043,7 +1037,7 @@ async function createFullscreenEmbed(url, options = {}) {
 	});
     
     // Hide all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
         if (!el.dataset.originalDisplay) {
             el.dataset.originalDisplay = window.getComputedStyle(el).display;
         }
@@ -1442,7 +1436,7 @@ function closeFullscreenEmbed() {
 	
     // --- STANDARD HOME RESTORATION (Only if history is empty) ---
     // Restore all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 	    el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay || ''; // Restore original display property
         el.style.removeProperty('content-visibility'); // OPTIMIZATION: Enable rendering
@@ -1560,7 +1554,7 @@ function forceCloseApp(url) {
         }
 
         // Restore Home Screen UI
-        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+        document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
             el.classList.remove('force-hide');
             el.style.display = el.dataset.originalDisplay || ''; 
             el.style.removeProperty('content-visibility'); 
@@ -1695,7 +1689,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         if (interactionBlocker) interactionBlocker.style.pointerEvents = 'auto';
 		
         // Unhide all main UI elements
-        document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+        document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
             el.classList.remove('force-hide');
             el.style.display = el.dataset.originalDisplay || '';
             el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -1761,7 +1755,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         }
     }
     
-    document.querySelectorAll('.container, .settings-grid.home-settings, .version-info, .widget-grid').forEach(el => {
+    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
 	    el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay;
         el.style.removeProperty('content-visibility'); // OPTIMIZATION

@@ -208,10 +208,6 @@ function applyLanguage(language) {
         }
     });
 
-    // Safely update elements that might not always be visible
-    const versionButton = document.querySelector('.version-info button#versionButton');
-    if (versionButton) versionButton.textContent = language.GET_DOCS;
-    
     // Safely update font dropdown options
     const fontSelect = document.getElementById('font-select');
     if (fontSelect) {
