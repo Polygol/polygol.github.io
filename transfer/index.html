@@ -223,8 +223,8 @@
         
         function logStatus(message, isError = false) {
             console.log(message);
-            statusDiv.textContent = `> ${message}`;
-            statusDiv.style.color = isError ? '#ef9a9a' : '#a5d6a7';
+            statusDiv.textContent = `${message}`;
+            statusDiv.style.color = isError ? '#ef9a9a' : 'var(--text-color)';
         }
 
         // --- File & Blob Utilities ---

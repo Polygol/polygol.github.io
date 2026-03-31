@@ -181,11 +181,32 @@
         <h1 data-lang-key="header">Recovery Mode</h1>
         <p data-lang-key="description">Your Polygol instance may be corrupted or broken. Use these tools to perform a factory reset.</p>
 
-        <div style="display: grid;gap: 20px;grid-auto-flow: column;grid-template-columns: repeat(2, minmax(0, 1fr));">
+        <div style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); text-align: left;">
             <div class="card">
                 <span class="material-symbols-rounded" style="font-size: 32px;">info</span>
                 <h2>Information</h2>
-                <p>This tool will not affect your device. These actions are irreversible.</p>
+                <p>Recovery mode will not affect your device.<br>These actions are irreversible.<br>Back up your data at polygol.github.io/transfer</p>
+            </div>
+
+            <div class="card">
+                <span class="material-symbols-rounded" style="font-size: 32px;">build</span>
+                <h2>System data</h2>
+                <p>Fix issues without losing data.</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                    <button id="btn-clear-offline" class="btn-action">Clear offline data or cache</button>
+                    <button id="btn-del-script" class="btn-action">Remove startup script</button>
+                    <button id="btn-reset-waves" class="btn-action">Reset Waves</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <span class="material-symbols-rounded" style="font-size: 32px;">account_circle</span>
+                <h2>User data</h2>
+                <p>Fix issues with apps or customization.</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                    <button id="btn-repair-wp" class="btn-action">Repair wallpapers</button>
+                    <button id="btn-clear-apps" class="btn-destructive">Clear app data</button>
+                </div>
             </div>
 
             <div class="card">
@@ -193,7 +214,7 @@
                 <h2>Factory Reset</h2>
                 <p>Deletes all your settings, wallpapers and app data and restores them to factory settings.<br>This will delete all current data on this device.</p>
                 <div style="display: flex;gap: 14px;">
-                    <button id="full-reset" class="btn-destructive">Reset</button>
+                    <button id="full-reset" class="btn-destructive">Erase everything</button>
                 </div>
             </div>
         </div>
@@ -218,15 +239,19 @@
             });
         }
 
+        const btnClearCache = document.getElementById('btn-clear-offline');
+        const btnDelScript = document.getElementById('btn-del-script');
+        const btnResetWaves = document.getElementById('btn-reset-waves');
+        const btnRepairWp = document.getElementById('btn-repair-wp');
+        const btnClearApps = document.getElementById('btn-clear-apps');
         const fullResetBtn = document.getElementById('full-reset');
         const returnHomeBtn = document.getElementById('return-home');
         const statusDiv = document.getElementById('status');
-        const translatableElements = document.querySelectorAll('[data-lang-key]');
 
         function logStatus(message, isError = false) {
             console.log(message);
-            statusDiv.textContent = `> ${message}`;
-            statusDiv.style.color = isError ? '#ef9a9a' : '#a5d6a7';
+            statusDiv.textContent = `${message}`;
+            statusDiv.style.color = isError ? '#ef9a9a' : 'var(--text-color)';
         }
 
         // Helper to spawn app and wipe it
@@ -259,82 +284,210 @@
             });
         }
 
-        async function performFullReset() {
-            const confirmationText = 'Confirm that you want to erase all user data. This action is not reversible.';
-            
-            if (!confirm(confirmationText)) {
-                logStatus('Reset cancelled by user.');
+        // Action: Clear Cache & Swap
+        btnClearCache.addEventListener('click', async () => {
+            if (!confirm('Clear offline data? This will redownload the latest version of Polygol from the internet.')) return;
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(reg => reg.unregister()));
+                }
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                }
+                if ('indexedDB' in window) {
+                    await new Promise((resolve) => {
+                        const req = window.indexedDB.deleteDatabase('PolygolSystemVaultDB');
+                        req.onsuccess = resolve;
+                        req.onerror = resolve; // Ignore errors
+                        req.onblocked = resolve;
+                    });
+                }
+                logStatus('Offline data cleared.');
+            } catch (e) {
+                logStatus(`Failed to clear cache: ${e.message}`, true);
+            }
+        });
+
+        // Action: Remove Startup Script
+        btnDelScript.addEventListener('click', () => {
+            if (localStorage.getItem('customStartupScript')) {
+                localStorage.removeItem('customStartupScript');
+                logStatus('Startup script removed.');
+            } else {
+                logStatus('No startup script found.');
+            }
+        });
+
+        // Action: Reset Waves Remote
+        btnResetWaves.addEventListener('click', () => {
+            localStorage.removeItem('waves_host_config');
+            localStorage.removeItem('waves_known_devices');
+            localStorage.removeItem('waves_discovery_enabled');
+            logStatus('Waves pairings reset.');
+        });
+
+        // Action: Repair Wallpapers
+        btnRepairWp.addEventListener('click', () => {
+            const wps = localStorage.getItem('recentWallpapers');
+            if (!wps) {
+                logStatus('No wallpapers found to repair.');
                 return;
             }
 
             try {
-                // 0. Wipe External Apps (Must be done before clearing LS which holds the app list)
-                logStatus('Scanning for installed apps...');
+                let parsed = JSON.parse(wps);
+                if (!Array.isArray(parsed)) throw new Error("Invalid format");
+                
+                const defaults = {
+                    font: 'Inter', weight: '700', color: '#ffffff',
+                    colorEnabled: false, stackEnabled: false,
+                    showSeconds: true, showWeather: true,
+                    alignment: 'center', clockSize: '0',
+                    clockPosX: '50', clockPosY: '50',
+                    roundness: '0', letterSpacing: '0', textCase: 'none'
+                };
+
+                const defaultEffects = { blur: '0', brightness: '100', contrast: '100', saturate: '100', hue: '0', vignette: '0' };
+
+                parsed.forEach(wp => {
+                    // 1. Ensure clockStyles object exists
+                    if (!wp.clockStyles || typeof wp.clockStyles !== 'object') wp.clockStyles = {};
+                    
+                    // 2. Fill missing basic properties
+                    Object.entries(defaults).forEach(([key, val]) => {
+                        if (wp.clockStyles[key] === undefined || wp.clockStyles[key] === null) {
+                            wp.clockStyles[key] = val;
+                        }
+                    });
+
+                    // 3. Heal wallpaper effects structure
+                    if (!wp.clockStyles.wallpaperEffects || typeof wp.clockStyles.wallpaperEffects !== 'object') {
+                        wp.clockStyles.wallpaperEffects = { 
+                            light: { ...defaultEffects }, 
+                            dark: { ...defaultEffects } 
+                        };
+                    } else {
+                        ['light', 'dark'].forEach(theme => {
+                            if (!wp.clockStyles.wallpaperEffects[theme]) {
+                                wp.clockStyles.wallpaperEffects[theme] = { ...defaultEffects };
+                            } else {
+                                Object.entries(defaultEffects).forEach(([k, v]) => {
+                                    if (wp.clockStyles.wallpaperEffects[theme][k] === undefined) {
+                                        wp.clockStyles.wallpaperEffects[theme][k] = v;
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    // 4. Validate widgetLayout
+                    if (!Array.isArray(wp.widgetLayout)) wp.widgetLayout = [];
+                });
+
+                localStorage.setItem('recentWallpapers', JSON.stringify(parsed));
+                logStatus('Wallpapers repaired.');
+            } catch (e) {
+                alert('Could not repair wallpapers, as their structures are critically corrupted. Back up your data and perform a factory reset.', true);
+            }
+        });
+
+        async function secureConfirmation(actionName, warningText) {
+            for (let i = 1; i <= 4; i++) {
+                const confirmed = confirm(`${warningText}\n\nStep ${i} of 5: Press OK to continue.`);
+                if (!confirmed) return false;
+            }
+
+            const safetyKeys = ["RESET", "CONFIRM", "DELETE", "PROCEED"];
+            const randomKey = safetyKeys[Math.floor(Math.random() * safetyKeys.length)];
+            
+            const finalInput = prompt(
+                `Please type the word below to finish ${actionName}:\n\n` +
+                `Type this word: ${randomKey}`
+            );
+
+            return finalInput === randomKey;
+        }
+
+        // Action: Clear App Data
+        btnClearApps.addEventListener('click', async () => {
+            const warning = 'CLEAR APP DATA: This clears all in-app data and permissions. This cannot be undone.';
+            const isVerified = await secureConfirmation("App Data Deletion", warning);
+
+            if (isVerified) {
+                logStatus('Deleting data from apps...');
                 const appsJson = localStorage.getItem('userInstalledApps');
                 if (appsJson) {
                     const apps = JSON.parse(appsJson);
                     const urls = Object.values(apps).map(a => a.url);
-                    logStatus(`Found ${urls.length} apps. Wiping external data...`);
-                    
                     for (const url of urls) {
-                        logStatus(`Wiping ${url}...`);
-                        await wipeExternalApp(url);
+                        try { await wipeExternalApp(url); } catch(e) {}
                     }
                 }
 
-                // 1. Clear Storages
-                logStatus('Clearing System Local Storage & Session Storage...');
-                localStorage.clear();
-                sessionStorage.clear();
-                logStatus('Storages cleared.');
-
-                // 2. Unregister Service Workers
-                if ('serviceWorker' in navigator) {
-                    logStatus('Unregistering service workers...');
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    if (registrations.length) {
-                        await Promise.all(registrations.map(reg => reg.unregister()));
-                        logStatus(`${registrations.length} service worker(s) unregistered.`);
-                    } else {
-                        logStatus('No active service workers found.');
-                    }
-                }
-
-                // 3. Clear All Caches
-                if ('caches' in window) {
-                    logStatus('Purging all caches...');
-                    const cacheNames = await caches.keys();
-                    if (cacheNames.length) {
-                        await Promise.all(cacheNames.map(name => caches.delete(name)));
-                        logStatus(`${cacheNames.length} cache(s) purged.`);
-                    } else {
-                        logStatus('No caches found.');
-                    }
-                }
+                localStorage.removeItem('appUsage');
+                localStorage.removeItem('appLastOpened');
+                localStorage.removeItem('appPermissions');
+                localStorage.removeItem('appUsageHourly');
+                localStorage.removeItem('registeredOSKs');
                 
-                // 4. Clear IndexedDB
-                if ('indexedDB' in window && window.indexedDB.databases) {
-                    logStatus('Deleting IndexedDB databases...');
-                    const dbs = await window.indexedDB.databases();
-                     if (dbs.length) {
-                        await Promise.all(dbs.map(db => new Promise((resolve, reject) => {
-                            const req = window.indexedDB.deleteDatabase(db.name);
-                            req.onsuccess = resolve;
-                            req.onerror = reject;
-                            req.onblocked = () => console.warn(`IndexedDB ${db.name} is blocked and cannot be deleted right now.`);
-                        })));
-                        logStatus(`${dbs.length} IndexedDB database(s) deleted.`);
-                    } else {
-                        logStatus('No IndexedDB databases found.');
+                logStatus('App data cleared.');
+                alert('App data cleared.');
+            } else {
+                logStatus('App data deletion cancelled.');
+            }
+        });
+
+        async function performFullReset() {
+            const warning = 'FACTORY RESET: This erases EVERY setting and app. This cannot be undone.';
+            const isVerified = await secureConfirmation("Factory Reset", warning);
+
+            if (isVerified) {
+                logStatus('All confirmations accepted. Proceeding with reset...');
+                try {
+                    // 0. Wipe External Apps
+                    logStatus('Deleting data from apps...');
+                    const appsJson = localStorage.getItem('userInstalledApps');
+                    if (appsJson) {
+                        const apps = JSON.parse(appsJson);
+                        const urls = Object.values(apps).map(a => a.url);
+                        for (const url of urls) {
+                            try { await wipeExternalApp(url); } catch(e) {}
+                        }
                     }
+
+                    // 1. Clear All Storage
+                    logStatus('Deleting LocalStorage...');
+                    localStorage.clear();
+                    sessionStorage.clear();
+
+                    // 2. Unregister SW & Caches
+                    if ('serviceWorker' in navigator) {
+                        const regs = await navigator.serviceWorker.getRegistrations();
+                        await Promise.all(regs.map(reg => reg.unregister()));
+                    }
+                    if ('caches' in window) {
+                        const names = await caches.keys();
+                        await Promise.all(names.map(n => caches.delete(n)));
+                    }
+                    
+                    // 3. Delete All Databases
+                    if ('indexedDB' in window && window.indexedDB.databases) {
+                        const dbs = await window.indexedDB.databases();
+                        await Promise.all(dbs.map(db => new Promise((res) => {
+                            const req = indexedDB.deleteDatabase(db.name);
+                            req.onsuccess = res; req.onerror = res; req.onblocked = res;
+                        })));
+                    }
+
+                    logStatus('Factory reset complete.', false);
+                    alert('System restored to factory settings.');
+                } catch (err) {
+                    logStatus(`Reset failed: ${err.message}`, true);
                 }
-
-                logStatus('Full system reset complete. You can now safely return home.');
-                alert('Recovery complete! Please return to the main page.');
-
-            } catch (err) {
-                logStatus(`An error occurred during reset: ${err.message}`, true);
-                alert('An error occurred. Check the status log for details.');
+            } else {
+                logStatus('Reset cancelled.');
             }
         }
 
