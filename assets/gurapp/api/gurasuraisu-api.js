@@ -1785,6 +1785,9 @@ window.addEventListener('message', async (event) => {
         
       // --- Handles screenshot requests from the parent ---
       case 'request-screenshot':
+        if (window.isLowEndDevice) return; // Do not take screenshots on very low-end devices
+        const _isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
         // Helper function to perform the capture
         const doCapture = async () => {
             // Save current shadow state to prevent artifacts
