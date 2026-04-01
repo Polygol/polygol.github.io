@@ -1829,15 +1829,18 @@ window.addEventListener('message', async (event) => {
             }
         };
 
-        const libUrl = isMobile 
-            ? 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
-            : 'https://cdn.jsdelivr.net/npm/modern-screenshot@4.6.8/dist/index.min.js';
-        const libCheck = isMobile ? (typeof html2canvas === 'function') : (typeof modernScreenshot !== 'undefined');
+        const needsH2C = _isMobile && typeof html2canvas !== 'function';
+        const needsMS = !_isMobile && typeof modernScreenshot === 'undefined';
 
-        if (!libCheck) {
+        if (needsH2C) {
             const script = document.createElement('script');
-            script.src = libUrl;
-            script.onload = doCapture;
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            script.onload = () => doCapture();
+            document.head.appendChild(script);
+        } else if (needsMS) {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/modern-screenshot@4.6.8/dist/index.min.js';
+            script.onload = () => doCapture();
             document.head.appendChild(script);
         } else {
             doCapture();
