@@ -1785,50 +1785,33 @@ window.addEventListener('message', async (event) => {
         
       // --- Handles screenshot requests from the parent ---
       case 'request-screenshot':
-        if (window.isLowEndDevice) return; // Do not take screenshots on very low-end devices
-        const _isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
         // Helper function to perform the capture
         const doCapture = async () => {
             // Save current shadow state to prevent artifacts
             const root = document.documentElement;
             const originalShadow = root.style.getPropertyValue('--sun-shadow');
             const originalShadowStrong = root.style.getPropertyValue('--sun-shadow-strong');
-            
-            // Temporarily hide shadows
             root.style.setProperty('--sun-shadow', 'none');
             root.style.setProperty('--sun-shadow-strong', 'none');
 
             try {
-                // Determine theme-based background color
-                // Gurapps sync the 'light-theme' class from the parent
                 const isLight = document.body.classList.contains('light-theme');
                 const bgColor = isLight ? '#ffffff' : '#000000';
 
                 // Generate the screenshot of the app's content
-                let screenshotDataUrl;
-                if (_isMobile) {
-                    const canvas = await html2canvas(document.body, { 
-                        useCORS: true, 
-                        logging: false,
-                        backgroundColor: bgColor
-                    });
-                    screenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
-                } else {
-                    screenshotDataUrl = await modernScreenshot.domToJpeg(document.body, {
-                        backgroundColor: bgColor, // Explicitly set background
-                        quality: 0.5,
-                        filter: (node) => {
-                            if (node.nodeType === 1 && (node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
-                                try {
-                                    const url = new URL(node.src, window.location.href);
-                                    if (url.origin !== window.location.origin && !node.crossOrigin) return false;
-                                } catch(e) {}
-                            }
-                            return true;
+                const screenshotDataUrl = await modernScreenshot.domToJpeg(document.body, {
+                    backgroundColor: bgColor, // Explicitly set background
+                    quality: 0.5,
+                    filter: (node) => {
+                        if (node.nodeType === 1 && (node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
+                            try {
+                                const url = new URL(node.src, window.location.href);
+                                if (url.origin !== window.location.origin && !node.crossOrigin) return false;
+                            } catch(e) {}
                         }
-                    });
-                }
+                        return true;
+                    }
+                });
 
                 // Send the generated screenshot data back to the parent
                 window.parent.postMessage({
@@ -1838,10 +1821,23 @@ window.addEventListener('message', async (event) => {
             } catch (e) {
                 console.error("Gurapp screenshot failed:", e);
             } finally {
-                // Restore shadows
                 if (originalShadow) root.style.setProperty('--sun-shadow', originalShadow);
                 if (originalShadowStrong) root.style.setProperty('--sun-shadow-strong', originalShadowStrong);
             }
+        };
+
+        const libUrl = isMobile 
+            ? 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+            : 'https://cdn.jsdelivr.net/npm/modern-screenshot@4.6.8/dist/index.min.js';
+        const libCheck = isMobile ? (typeof html2canvas === 'function') : (typeof modernScreenshot !== 'undefined');
+
+        if (!libCheck) {
+            const script = document.createElement('script');
+            script.src = libUrl;
+            script.onload = doCapture;
+            document.head.appendChild(script);
+        } else {
+            doCapture();
         };
 
         if (_isMobile && typeof html2canvas !== 'function') {

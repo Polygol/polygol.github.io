@@ -1836,31 +1836,21 @@ function createCompositeScreenshot() {
             return;
         }
 
-        let parentDataUrl;
-        if (isMobile) {
-            const parentCanvas = await html2canvas(document.body, {
-                useCORS: true,
-                logging: false,
-                ignoreElements: (el) => el.tagName === 'IFRAME'
-            });
-            parentDataUrl = parentCanvas.toDataURL();
-        } else {
-            parentDataUrl = await modernScreenshot.domToJpeg(document.body, {
-                filter: (node) => {
-                    if (node.nodeType === 1) {
-                        if (node.tagName === 'IFRAME') return false;
-                        if ((node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
-                            try {
-                                const url = new URL(node.src, window.location.href);
-                                if (url.origin !== window.location.origin && !node.crossOrigin) return false;
-                            } catch(e) {}
-                        }
+        const parentDataUrl = await modernScreenshot.domToJpeg(document.body, {
+            filter: (node) => {
+                if (node.nodeType === 1) {
+                    if (node.tagName === 'IFRAME') return false;
+                    if ((node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
+                        try {
+                            const url = new URL(node.src, window.location.href);
+                            if (url.origin !== window.location.origin && !node.crossOrigin) return false;
+                        } catch(e) {}
                     }
-                    return true;
-                },
-                quality: 1.0 // Keep high quality for the base composition step
-            });
-        }
+                }
+                return true;
+            },
+            quality: 1.0 // Keep high quality for the base composition step
+        });
 
         const iframeListener = (event) => {
             if (event.source === iframe.contentWindow && event.data.type === 'screenshot-response') {

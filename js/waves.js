@@ -565,40 +565,30 @@ async function handleRemoteCommand(payload, peerId) {
                 } catch (e) {
                     console.error("[Waves] System screenshot failed:", e);
                 }
-            } else {
+            } else if (window.modernScreenshot) {
                 // Fallback
                 try {
                     const isLight = document.body.classList.contains('light-theme');
+                    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                     const bgColor = isLight ? '#ffffff' : '#000000';
 
-                    let imgData;
-                    if (isMobileDevice() && window.html2canvas) {
-                        const canvas = await html2canvas(document.body, { 
-                            useCORS: true, 
-                            logging: false,
-                            ignoreElements: (el) => el.id === 'ai-assistant-overlay',
-                            backgroundColor: bgColor
-                        });
-                        imgData = canvas.toDataURL('image/jpeg', 0.4);
-                    } else if (window.modernScreenshot) {
-                        imgData = await modernScreenshot.domToJpeg(document.body, {
-                            filter: (node) => {
-                                if (node.nodeType === 1) {
-                                    if (node.id === 'ai-assistant-overlay') return false;
-                                    if ((node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
-                                        try {
-                                            const url = new URL(node.src, window.location.href);
-                                            if (url.origin !== window.location.origin && !node.crossOrigin) return false;
-                                        } catch(e) {}
-                                    }
+                    const imgData = await modernScreenshot.domToJpeg(document.body, {
+                        filter: (node) => {
+                            if (node.nodeType === 1) {
+                                if (node.id === 'ai-assistant-overlay') return false;
+                                if ((node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
+                                    try {
+                                        const url = new URL(node.src, window.location.href);
+                                        if (url.origin !== window.location.origin && !node.crossOrigin) return false;
+                                    } catch(e) {}
                                 }
-                                return true;
-                            },
-                            backgroundColor: bgColor,
-                            quality: 0.4
-                        });
-                    }
-                    if (imgData) wavesSend({ type: 'screenshot', data: imgData }, peerId);
+                            }
+                            return true;
+                        },
+                        backgroundColor: bgColor,
+                        quality: 0.4
+                    });
+                    wavesSend({ type: 'screenshot', data: imgData }, peerId);
                 } catch (e) {
                     console.error("[Waves] Fallback screenshot failed:", e);
                 }
