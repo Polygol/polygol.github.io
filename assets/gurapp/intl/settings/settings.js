@@ -437,11 +437,9 @@ function initializeSettingsApp() {
             };
             
             uninstallBtn.onclick = async () => {
-                if (await Gurasuraisu.showConfirm(`Are you sure you want to uninstall ${appName}?`)) {
-                    Gurasuraisu.deleteApp(appName);
-                    navigateBack();
-                    setTimeout(refreshAppsListPage, 300);
-                }
+                Gurasuraisu.deleteApp(appName);
+                navigateBack();
+                setTimeout(refreshAppsListPage, 300);
             };
 
             clearTrackingBtn.onclick = async () => {

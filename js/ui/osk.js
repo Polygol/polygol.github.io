@@ -1,7 +1,7 @@
 let oskLastTouchTime = 0;
 let currentTargetFrame = null;
 let currentTargetElement = null;
-
+let _isSwitchingOSK = false;
 let registeredOSKs = JSON.parse(localStorage.getItem('registeredOSKs') || '[]');
 let currentOskIndex = 0;
 
@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
+            _isSwitchingOSK = true; // Set flag
             
             const allOSKs = [
                 { name: 'Default', type: 'internal', mode: 'text' },
@@ -72,6 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (window.showPopup) window.showPopup(`${selectedOSK.name}`);
             }
+            // Reset flag after a short delay to allow focus to settle
+            setTimeout(() => { _isSwitchingOSK = false; }, 100);
         });
     }
 });
@@ -107,6 +110,7 @@ document.addEventListener('focusin', (e) => {
 });
 
 document.addEventListener('focusout', (e) => {
+    if (_isSwitchingOSK) return; // Abort cleanup
     if (currentTargetElement === e.target) {
         setTimeout(() => {
             if (document.activeElement !== currentTargetElement && 

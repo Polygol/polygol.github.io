@@ -1,6 +1,11 @@
 // --- Performance Auto-Detection ---
 function detectPerformanceProfile() {
-    if (localStorage.getItem('performanceConfigured') === 'true') return;
+    const storedScore = localStorage.getItem('systemPerformanceScore');
+    if (localStorage.getItem('performanceConfigured') === 'true' && storedScore !== null) {
+        window.systemPerformanceScore = parseInt(storedScore);
+        window.isLowEndDevice = (window.systemPerformanceScore <= 2);
+        return;
+    }
 
     console.log("[System] Assessing hardware performance...");
     let score = 0;
@@ -34,6 +39,9 @@ function detectPerformanceProfile() {
     
     if (!isWeakGPU) score += 1;
 
+    window.systemPerformanceScore = score;
+    window.isLowEndDevice = (score <= 2);
+
     console.log(`[System] Performance Score: ${score}/6`);
 
     // 1. Glass Effects
@@ -64,7 +72,14 @@ function detectPerformanceProfile() {
         if (localStorage.getItem('animationsEnabled') === null) localStorage.setItem('animationsEnabled', 'true');
     }
 
+    window.systemPerformanceScore = score;
+    window.isLowEndDevice = (score <= 2);
+    localStorage.setItem('systemPerformanceScore', score);
     localStorage.setItem('performanceConfigured', 'true');
+
+    if (window.isLowEndDevice) {
+        document.body.classList.add('low-end-device');
+    }
 }
 
 // Run immediately to ensure settings are present before main logic reads them

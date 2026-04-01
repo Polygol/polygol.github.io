@@ -754,7 +754,7 @@ function createOnScreenPopup(message, options = {}) {
                     console.log(`[Airy] Sent action '${functionName}' to Gurapp '${appName}'.`);
                 } else {
                     console.warn(`[Airy] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
-                    showPopup(`Error: Could not perform action for ${appName}.`);
+                    showPopup(`Cannot perform action for ${appName}`);
                 }
                 closeNotification(notification); // Close the notification after click
             });
@@ -2264,7 +2264,17 @@ function setupDrawerInteractions() {
 const appDrawerObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            if (typeof HomeActivityManager !== 'undefined') {
+                HomeActivityManager.updateVisibility();
+            }
             
+            if (!appDrawer.classList.contains('open')) {
+                setTimeout(() => {
+                    if (!appDrawer.classList.contains('open')) {
+                        document.getElementById('app-grid').innerHTML = '';
+                    }
+                }, 350);
+            }
         }
     });
 });

@@ -1637,6 +1637,10 @@ window.addEventListener('message', async (event) => {
       case 'contrastUpdate':
         document.documentElement.classList.toggle('gurasuraisu-high-contrast', data.enabled);
         break;
+      case 'performanceProfileUpdate':
+        window.systemPerformanceScore = data.score;
+        window.isLowEndDevice = (data.score <= 2);
+        break;
       case 'sunUpdate':
         document.documentElement.style.setProperty('--sun-shadow', data.shadow);
         document.documentElement.style.setProperty('--sun-shadow-strong', data.shadowStrong);
@@ -1781,8 +1785,12 @@ window.addEventListener('message', async (event) => {
         
       // --- Handles screenshot requests from the parent ---
       case 'request-screenshot':
+        if (window.isLowEndDevice) return; // Do not take screenshots on very low-end devices
+        const _isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
         // Helper function to perform the capture
         const doCapture = async () => {
+            // Save current shadow state to prevent artifacts
             const root = document.documentElement;
             const originalShadow = root.style.getPropertyValue('--sun-shadow');
             const originalShadowStrong = root.style.getPropertyValue('--sun-shadow-strong');
@@ -1798,19 +1806,29 @@ window.addEventListener('message', async (event) => {
                 const bgColor = isLight ? '#ffffff' : '#000000';
 
                 // Generate the screenshot of the app's content
-                const screenshotDataUrl = await modernScreenshot.domToJpeg(document.body, {
-                    backgroundColor: bgColor, // Explicitly set background
-                    quality: 0.5,
-                    filter: (node) => {
-                        if (node.nodeType === 1 && (node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
-                            try {
-                                const url = new URL(node.src, window.location.href);
-                                if (url.origin !== window.location.origin && !node.crossOrigin) return false;
-                            } catch(e) {}
+                let screenshotDataUrl;
+                if (_isMobile) {
+                    const canvas = await html2canvas(document.body, { 
+                        useCORS: true, 
+                        logging: false,
+                        backgroundColor: bgColor
+                    });
+                    screenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+                } else {
+                    screenshotDataUrl = await modernScreenshot.domToJpeg(document.body, {
+                        backgroundColor: bgColor, // Explicitly set background
+                        quality: 0.5,
+                        filter: (node) => {
+                            if (node.nodeType === 1 && (node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
+                                try {
+                                    const url = new URL(node.src, window.location.href);
+                                    if (url.origin !== window.location.origin && !node.crossOrigin) return false;
+                                } catch(e) {}
+                            }
+                            return true;
                         }
-                        return true;
-                    }
-                });
+                    });
+                }
 
                 // Send the generated screenshot data back to the parent
                 window.parent.postMessage({
@@ -1826,13 +1844,15 @@ window.addEventListener('message', async (event) => {
             }
         };
 
-        // Check if modern-screenshot is loaded
-        if (typeof modernScreenshot === 'undefined') {
-            // Inject it dynamically
+        if (_isMobile && typeof html2canvas !== 'function') {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            script.onload = doCapture;
+            document.head.appendChild(script);
+        } else if (!_isMobile && typeof modernScreenshot === 'undefined') {
             const script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/modern-screenshot@4.6.8/dist/index.min.js';
             script.onload = doCapture;
-            script.onerror = () => console.error("Failed to load modern-screenshot for Gurapp");
             document.head.appendChild(script);
         } else {
             doCapture();

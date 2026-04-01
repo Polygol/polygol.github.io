@@ -108,12 +108,12 @@ const LANG_EN = {
     GURAPP_OFFLINE_NOT_SUPPORTED: "Offline installation not supported by this browser",
     GURAPP_INSTALL_FAILED: "Offline installation failed for {appName}",
     GURAPP_DELETED: "{appName} was deleted",
-    GURAPP_DELETE_FAILED: "Error: Could not find {appName} to delete",
+    GURAPP_DELETE_FAILED: "Could not find {appName} to delete",
     GURAPP_DELETE_ASK: "Are you sure you want to delete {appName}?",
     GURAPP_DELETE_STORE_DENIED: "The App Store cannot be deleted",
     GURAPP_INSTALLING: "Installing {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} is already installed",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Error: only the Polygol App Store can install apps"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Only the Polygol App Store can install apps"
 };
 
 const LANG_JP = {
@@ -572,12 +572,12 @@ const LANG_ES = {
     GURAPP_OFFLINE_NOT_SUPPORTED: "La instalación sin conexión no es compatible con este navegador",
     GURAPP_INSTALL_FAILED: "La instalación sin conexión falló para {appName}",
     GURAPP_DELETED: "{appName} fue eliminada",
-    GURAPP_DELETE_FAILED: "Error: No se pudo encontrar {appName} para eliminar",
+    GURAPP_DELETE_FAILED: "No se pudo encontrar {appName} para eliminar",
     GURAPP_DELETE_ASK: "¿Está seguro de que desea eliminar {appName}?",
     GURAPP_DELETE_STORE_DENIED: "La App Store no se puede eliminar",
     GURAPP_INSTALLING: "Instalando {appName}",
     GURAPP_INSTALL_EXISTS: "{appName} ya está instalada",
-    GURAPP_INSTALL_NONSTORE_DENIED: "Error: Solo la App Store de Polygol puede instalar aplicaciones"
+    GURAPP_INSTALL_NONSTORE_DENIED: "Solo la App Store de Polygol puede instalar aplicaciones"
 };
 
 const LANG_KO = {

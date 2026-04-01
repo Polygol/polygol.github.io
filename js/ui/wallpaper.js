@@ -956,7 +956,7 @@ async function saveWallpaper(file, customStyles = null) {
             applyClockLayout();
             applyClockStyles();
             applyWallpaperEffects();
-            updateClockAndDate();
+            if (window.refreshClockUI) window.refreshClockUI();
         }
 
         // Determine Color and Frame
@@ -1725,6 +1725,7 @@ function closeWallpaperSwitcher() {
     
     setTimeout(() => {
         overlay.style.display = 'none';
+        document.getElementById('wallpaper-cards-container').innerHTML = '';
         // Restore UI
         document.querySelector('.container').classList.remove('force-hide');
 	    document.querySelector('.widget-grid').classList.remove('force-hide');
@@ -2663,7 +2664,7 @@ function switchWallpaper(direction, skipSave = false) {
         applyAlignment(wallpaper.clockStyles.alignment || 'center');
 
         // Update clock and weather display
-        updateClockAndDate();
+        if (window.refreshClockUI) window.refreshClockUI();
 
 		broadcastAllWallpaperSettings(wallpaper);
     }
@@ -3363,7 +3364,7 @@ function resetAndApplyDefaultClockStyles() {
     applyClockStyles();
     applyWallpaperEffects();
     updateWeatherVisibility();
-    updateClockAndDate();
+    if (window.refreshClockUI) window.refreshClockUI();
 
     // Update localStorage with the new defaults
     for (const [key, value] of Object.entries(defaultStyles)) {

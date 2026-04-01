@@ -1107,6 +1107,9 @@ window.addEventListener('message', async (event) => { // Make listener async
         const currentTheme = localStorage.getItem('theme') || 'dark';
         sourceWindow.postMessage({ type: 'themeUpdate', theme: currentTheme }, targetOrigin);
 
+        const perfScore = localStorage.getItem('systemPerformanceScore') || '4';
+        sourceWindow.postMessage({ type: 'performanceProfileUpdate', score: parseInt(perfScore) }, targetOrigin);
+
         const animationsEnabled = localStorage.getItem('animationsEnabled') !== 'false';
         sourceWindow.postMessage({ type: 'animationsUpdate', enabled: animationsEnabled }, targetOrigin);
         

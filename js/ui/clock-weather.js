@@ -291,20 +291,19 @@ function updateClockAndDate() {
         isStacked = stackSwitch.checked;
     }
     
+    let newClockHTML = '';
     if (isStacked) {
-        let html = '';
-        
         // Hour
         let hourFormat = clockFormat.match(/[hH]{1,2}/);
-        if(hourFormat) html += `<div>${wrapDigits(now.format(hourFormat[0]))}</div>`;
+        if(hourFormat) newClockHTML += `<div>${wrapDigits(now.format(hourFormat[0]))}</div>`;
 
         // Minute
         let minuteFormat = clockFormat.match(/m{1,2}/);
-        if(minuteFormat) html += `<div>${wrapDigits(now.format(minuteFormat[0]))}</div>`;
+        if(minuteFormat) newClockHTML += `<div>${wrapDigits(now.format(minuteFormat[0]))}</div>`;
         
         // Second
         let secondFormat = clockFormat.match(/s{1,2}/);
-        if(secondFormat) html += `<div>${wrapDigits(now.format(secondFormat[0]))}</div>`;
+        if(secondFormat) newClockHTML += `<div>${wrapDigits(now.format(secondFormat[0]))}</div>`;
 
         // AM/PM Period
         let periodFormat = clockFormat.match(/a|A/);
@@ -313,18 +312,23 @@ function updateClockAndDate() {
             const amPmHtml = useOpenRundeForAmPm 
                 ? `<span style="style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal; transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1), font-size 0.3s cubic-bezier(.3,1.2,.64,1) !important;">${amPmText}</span>`
                 : amPmText;
-            html += `<div>${amPmHtml}</div>`;
+            newClockHTML += `<div>${amPmHtml}</div>`;
         }
-        
-        clockElement.innerHTML = html;
-
     } else {
         // Non-stacked mode
-        clockElement.innerHTML = wrapTime(timeString);
+        newClockHTML = wrapTime(timeString);
     }
         
-    dateElement.textContent = formattedDate;
-    if (modalTitle) modalTitle.textContent = formattedDate;
+    if (clockElement._lastHTML !== newClockHTML) {
+        clockElement.innerHTML = newClockHTML;
+        clockElement._lastHTML = newClockHTML;
+    }
+        
+    if (dateElement._lastText !== formattedDate) {
+        dateElement.textContent = formattedDate;
+        dateElement._lastText = formattedDate;
+        if (modalTitle) modalTitle.textContent = formattedDate;
+    }
 
     // --- FIX to force mask repaint ---
     if (clockElement.classList.contains('glass-effect') || clockElement.classList.contains('dynamic-fill-effect')) {
@@ -339,8 +343,10 @@ function updateClockAndDate() {
 }
 
 function startSynchronizedClockAndDate() {
-    // Clear any existing pending timeout to prevent double-firing or "zombie ticks"
-    if (window.clockLoopId) clearTimeout(window.clockLoopId);
+    if (window.clockLoopId) {
+        clearTimeout(window.clockLoopId);
+        window.clockLoopId = null;
+    }
 
     updateClockAndDate(); 
     
@@ -402,6 +408,12 @@ function getTemperatureUnit(country) {
 
 let _activeWeatherPromise = null;
 async function fetchLocationAndWeather() {
+    const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+
+    if (['Weather', 'Location'].some(item => disabledSys.includes(item))) {
+        return;
+    }
+
     // DEDUPLICATION: If a request is already in flight, return that promise.
     // This prevents hammering the API during boot or multi-widget refreshes.
     if (_activeWeatherPromise) return _activeWeatherPromise;

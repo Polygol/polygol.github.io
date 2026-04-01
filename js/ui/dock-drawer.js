@@ -250,7 +250,10 @@ async function cacheAppIconColors() {
     for (const appName in apps) {
         if (!appIconColors[appName] && apps[appName].icon) {
             try {
-                const iconSrc = apps[appName].icon.startsWith('/') ? window.location.origin + apps[appName].icon : apps[appName].icon;
+                let iconSrc = apps[appName].icon;
+                if (!(iconSrc.startsWith('http') || iconSrc.startsWith('/') || iconSrc.startsWith('data:'))) {
+                    iconSrc = `/assets/appicon/${iconSrc}`;
+                }
                 const color = await getDominantColor(iconSrc);
                 const hsl = rgbToHsl(color.r, color.g, color.b);
                 appIconColors[appName] = hsl[0]; // Store hue

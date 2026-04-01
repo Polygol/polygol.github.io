@@ -83,7 +83,7 @@ function blackoutScreen() {
     if (document.body.classList.contains('blackout-active')) return;
     
     window.isBlackoutActive = true;
-    if (typeof updateClockAndDate === 'function') updateClockAndDate();
+    if (typeof window.refreshClockUI === 'function') window.refreshClockUI();
 
     closeControls();
 
@@ -137,7 +137,7 @@ function exitBlackoutMode() {
     stopPixelCleaning();
 
     // Force immediate clock update to bring seconds back to the UI seamlessly
-    if (typeof updateClockAndDate === 'function') updateClockAndDate();
+    if (typeof window.refreshClockUI === 'function') window.refreshClockUI();
     
     // Restore previous settings
     setControlValueAndDispatch('animationsEnabled', previousBlackoutSettings.animationsEnabled || 'true');

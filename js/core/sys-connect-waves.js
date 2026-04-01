@@ -196,7 +196,13 @@ async function broadcastWidgetSnapshots() {
                 // Fallback: Capture container
                 await new Promise(resolve => requestIdle(async () => {
                     try {
-                        const imgData = await modernScreenshot.domToJpeg(widget, options);
+                        let imgData;
+                        if (isMobileDevice()) {
+                            const canvas = await html2canvas(widget, { useCORS: true, logging: false, scale: 0.5, backgroundColor: bgColor });
+                            imgData = canvas.toDataURL('image/jpeg', 0.5);
+                        } else {
+                            imgData = await modernScreenshot.domToJpeg(widget, options);
+                        }
                         snapshots.push({
                             id: index,
                             img: imgData
@@ -209,7 +215,13 @@ async function broadcastWidgetSnapshots() {
             // It's a sticker or simple element
             await new Promise(resolve => requestIdle(async () => {
                 try {
-                    const imgData = await modernScreenshot.domToJpeg(widget, options);
+                    let imgData;
+                    if (isMobileDevice()) {
+                        const canvas = await html2canvas(widget, { useCORS: true, logging: false, scale: 0.5, backgroundColor: bgColor });
+                        imgData = canvas.toDataURL('image/jpeg', 0.5);
+                    } else {
+                        imgData = await modernScreenshot.domToJpeg(widget, options);
+                    }
                     snapshots.push({
                         id: index,
                         img: imgData

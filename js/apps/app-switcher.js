@@ -8,6 +8,8 @@ let isTabKeyDown = false;
 let shiftSpaceSequenceTimer = null;
 
 async function captureAppScreenshot(url) {
+    if (window.isLowEndDevice) return; // Do not take screenshots on very low-end devices
+
     // Find the embed
     const container = document.querySelector(`.fullscreen-embed[data-embed-url="${url}"]`);
     if (!container) return;
@@ -107,7 +109,8 @@ function closeAppSwitcherUI() {
     
     setTimeout(() => {
         overlay.style.display = 'none';
-        
+        document.getElementById('app-cards-container').innerHTML = '';
+
         // Restore UI
 	    const drawerPill = document.querySelector('.drawer-pill');
 	    if (drawerPill) drawerPill.style.opacity = '1';
