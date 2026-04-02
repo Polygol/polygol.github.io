@@ -90,11 +90,18 @@ function isTextInput(el) {
     return false;
 }
 
+if ('virtualKeyboard' in navigator) {
+    navigator.virtualKeyboard.overlaysContent = true;
+}
+
 document.addEventListener('touchstart', (e) => {
     oskLastTouchTime = Date.now();
     const el = e.target;
     if (isTextInput(el)) {
         el.setAttribute('inputmode', 'none');
+        if ('virtualKeyboard' in navigator) {
+            navigator.virtualKeyboard.hide();
+        }
     }
 }, { capture: true, passive: true });
 
@@ -103,6 +110,9 @@ document.addEventListener('focusin', (e) => {
     if (!isTouch) return;
 
     if (isTextInput(e.target)) {
+        if ('virtualKeyboard' in navigator) {
+            navigator.virtualKeyboard.hide();
+        }
         currentTargetElement = e.target;
         currentTargetFrame = null;
         openOSK();

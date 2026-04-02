@@ -972,11 +972,18 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         return false;
     }
 
+    if ('virtualKeyboard' in navigator) {
+        navigator.virtualKeyboard.overlaysContent = true;
+    }
+
     document.addEventListener('touchstart', (e) => {
         _oskLastTouchTime = Date.now();
         const el = e.target;
         if (isTextInput(el)) {
             el.setAttribute('inputmode', 'none');
+            if ('virtualKeyboard' in navigator) {
+                navigator.virtualKeyboard.hide();
+            }
         }
     }, { capture: true, passive: true });
 
@@ -986,6 +993,9 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         
         const el = e.target;
         if (isTextInput(el)) {
+            if ('virtualKeyboard' in navigator) {
+                navigator.virtualKeyboard.hide();
+            }
             window._currentOskTarget = el;
             window.parent.postMessage({ type: 'osk-request-open' }, '*');
             
