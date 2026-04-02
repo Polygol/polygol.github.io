@@ -1035,12 +1035,11 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
 // Native JS solutions for when the app is running outside of Polygol
 const _fallbacks = {
     showPopup: function(message) {
-        // A simple, non-blocking "toast" notification fallback
         const toast = document.createElement('div');
         toast.textContent = message;
         toast.style.cssText = `
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background-color: #333; color: white; padding: 10px 20px; border-radius: 20px;
+            border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);backdrop-filter:var(--edge-refraction-filter) saturate(2) blur(2.5px);padding: 10px 20px; border-radius: 20px;
             z-index: 9999; transition: opacity 0.5s; font-family: sans-serif;
         `;
         document.body.appendChild(toast);
@@ -1049,11 +1048,116 @@ const _fallbacks = {
             setTimeout(() => toast.remove(), 500);
         }, 3000);
     },
-    showConfirm: function(message) {
-        return window.confirm(message);
+    showNotification: function(message, options = {}) {
+        const title = options.heading || options.header || "Notification";
+        if ("Notification" in window) {
+            if (Notification.permission === "granted") {
+                new Notification(title, { body: message, icon: options.iconUrl || options.icon });
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        new Notification(title, { body: message, icon: options.iconUrl || options.icon });
+                    }
+                });
+            }
+        } else {
+            alert(title + "\n\n" + message);
+        }
     },
-    showPrompt: function(message, defaultValue) {
-        return window.prompt(message, defaultValue);
+    speakText: function(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+        }
+    },
+    playUiSound: function(type) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(100, ctx.currentTime);
+            const gain = ctx.createGain();
+            gain.connect(ctx.destination);
+            gain.gain.setValueAtTime(0.5, ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.05);
+            osc.connect(gain);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.05);
+        } catch (e) {
+            console.error('Audio error:', e);
+        }
+    },
+    createFullscreenEmbed: function(url) {
+        window.location.href = url;
+    },
+    closeFullscreenEmbed: function() {
+        window.close();
+    },
+    setImmersiveMode: function(enabled) {
+        if (enabled && document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(()=>{});
+        } else if (!enabled && document.exitFullscreen) {
+            document.exitFullscreen().catch(()=>{});
+        }
+    },
+    downloadFile: function(filename, dataUrl) {
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    },
+    showDialog: function(options) {
+        let res;
+        if (options.type === 'confirm') res = window.confirm(options.message);
+        else if (options.type === 'prompt') res = window.prompt(options.message, options.defaultValue);
+        else { window.alert(options.message); res = true; }
+        
+        if (options.requestId && _dialogCallbacks[options.requestId]) {
+            _dialogCallbacks[options.requestId](res);
+            delete _dialogCallbacks[options.requestId];
+        }
+    },
+    setLocalStorageItem: function(key, value) {
+        localStorage.setItem(key, value);
+    },
+    getLocalStorageItem: function(key) {
+        const val = localStorage.getItem(key);
+        window.postMessage({ type: 'localStorageItemValue', key: key, value: val }, '*');
+    },
+    listLocalStorageKeys: function() {
+        const keys = Object.keys(localStorage);
+        window.postMessage({ type: 'localStorageKeysList', keys: keys }, '*');
+    },
+    showSheet: function(options = {}) {
+        const overlay = document.createElement('div');
+        overlay.id = 'gura-fallback-sheet';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:var(--overlay-color);backdrop-filter: blur(10px);z-index:99999;display:flex;justify-content:center;align-items:flex-end;';
+        const container = document.createElement('div');
+        container.style.cssText = 'width:100%;max-width:800px;height:' + (options.height || '60%') + ';max-height:calc(100% - 80px);background:var(--background-color);corner-shape: superellipse(1.5);border-radius:35px 35px 0 0;overflow:hidden;position:relative;border:1px solid var(--glass-border);box-shadow: var(--sun-shadow), 0 10px 30px rgba(0, 0, 0, 0.2);';
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Done';
+        closeBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:10;padding:10px 15px;border-radius:50px;border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);backdrop-filter:var(--edge-refraction-filter) saturate(2) blur(2.5px);cursor:pointer;';
+        closeBtn.onclick = () => overlay.remove();
+        
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'width:100%;height:100%;border:none;corner-shape:inherit;border-radius:inherit;';
+        
+        if (options.url) {
+            iframe.src = options.url;
+        } else if (options.html) {
+            iframe.srcdoc = options.html;
+        }
+        
+        container.appendChild(closeBtn);
+        container.appendChild(iframe);
+        overlay.appendChild(container);
+        document.body.appendChild(overlay);
+    },
+    closeSheet: function() {
+        const sheet = document.getElementById('gura-fallback-sheet');
+        if (sheet) sheet.remove();
     },
     // For functions that have no standalone equivalent, we can just log a warning.
     default: function(functionName) {
@@ -1528,6 +1632,14 @@ const Gurasuraisu = {
   },
 
   /**
+   * Listen for changes to the app's visibility (minimized vs restored).
+   * @param {function} callback - Function that receives (isVisible: boolean)
+   */
+  onVisibilityChange: function(callback) {
+      _onVisibilityChangeHandler = callback;
+  },
+
+  /**
    * Opens a bottom sheet with custom content.
    * @param {object} options
    * @param {string} [options.url] - URL to load in the sheet.
@@ -1663,6 +1775,19 @@ window.addEventListener('message', async (event) => {
         }
         if (data.key === 'keyboardNavEnabled') {
             KeyboardNavigationManager.setEnabled(data.value);
+        }
+        break;
+      case 'visibilityUpdate':
+        _isSuspended = !data.visible;
+        if (!_isSuspended && !_perfInterval) {
+            _perfInterval = setInterval(reportPerformance, 30000);
+        } else if (_isSuspended && _perfInterval) {
+            clearInterval(_perfInterval);
+            _perfInterval = null;
+        }
+        // Trigger user-defined handler
+        if (typeof _onVisibilityChangeHandler === 'function') {
+            _onVisibilityChangeHandler(data.visible);
         }
         break;
       case 'switch-control-enter':

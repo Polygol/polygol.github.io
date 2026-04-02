@@ -1,4 +1,4 @@
-const CORE_CACHE_VERSION = 'Bismuth 17.1.2.32.53';
+const CORE_CACHE_VERSION = 'Bismuth 17.1.2.33';
 const CORE_CACHE_NAME = `polygol-core-${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polygol-apps';
 

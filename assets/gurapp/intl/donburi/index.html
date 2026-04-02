@@ -1698,9 +1698,8 @@
                     fetchQuote();
                 }, this.intervals.slow);
 
-                // 3. Page Visibility Logic: Catch up when Donburi is shown
-                document.addEventListener('visibilitychange', () => {
-                    if (!document.hidden) {
+                Gurasuraisu.onVisibilityChange((visible) => {
+                    if (visible) {
                         console.log('[Donburi] Resumed. Syncing live elements...');
                         this.refreshAll();
                     }
