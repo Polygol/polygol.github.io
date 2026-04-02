@@ -228,21 +228,26 @@ async function installApp(appData) {
 async function deleteApp(appName) {
     // --- Protection Clause ---
     const appToDelete = apps[appName];
-	if (
-		appToDelete && 
-		(appToDelete.url.includes('/kirbstore/index.html') ||
-		appToDelete.url.includes('/assets/gurapp/intl/settings/'))
-	) {
-	showDialog({ 
-		    type: 'alert', 
-		    title: currentLanguage.GURAPP_DELETE_STORE_DENIED,
+    if (
+        appToDelete && 
+        (appToDelete.url.includes('/kirbstore/index.html') ||
+         appToDelete.url.includes('/assets/gurapp/intl/settings/'))
+    ) {
+        showDialog({ 
+            type: 'alert', 
+            title: currentLanguage.GURAPP_DELETE_STORE_DENIED,
             icon: 'do_not_touch'
-		});
+        });
         return; // Stop the function immediately
     }
 
     // Confirmation dialog
-    if (!(await showCustomConfirm(currentLanguage.GURAPP_DELETE_ASK.replace('{appName}', appName)), '', 'delete_forever')) {
+    const confirmed = await showCustomConfirm(
+        currentLanguage.GURAPP_DELETE_ASK.replace('{appName}', appName),
+        '', 
+        'cancel'
+    );
+    if (!confirmed) {
         return;
     }
 
