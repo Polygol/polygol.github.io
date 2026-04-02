@@ -1133,35 +1133,82 @@ const _fallbacks = {
         const overlay = document.createElement('div');
         overlay.id = 'gura-fallback-sheet';
         overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:var(--overlay-color);backdrop-filter: blur(10px);z-index:99999;display:flex;justify-content:center;align-items:flex-end;';
+        
         const container = document.createElement('div');
         container.style.cssText = 'width:100%;max-width:800px;height:' + (options.height || '60%') + ';max-height:calc(100% - 80px);background:var(--background-color);corner-shape: superellipse(1.5);border-radius:35px 35px 0 0;overflow:hidden;position:relative;border:1px solid var(--glass-border);box-shadow: var(--sun-shadow), 0 10px 30px rgba(0, 0, 0, 0.2);';
         
+        // Spinner Element
+        const spinnerContainer = document.createElement('div');
+        spinnerContainer.className = 'sheet-loading-spinner';
+        spinnerContainer.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; z-index: 1; transition: opacity 0.3s ease; pointer-events: none;';
+        spinnerContainer.innerHTML = `
+            <svg class="loading-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width: 48px; height: 48px;">
+                <rect width="100%" height="100%" fill="currentColor" stroke="none" class="loading-spinner-ind" />
+            </svg>
+        `;
+        container.appendChild(spinnerContainer);
+
+        // Close Button
         const closeBtn = document.createElement('button');
         closeBtn.textContent = 'Done';
         closeBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:10;padding:10px 15px;border-radius:50px;border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);backdrop-filter:var(--edge-refraction-filter) saturate(2) blur(2.5px);cursor:pointer;';
         closeBtn.onclick = () => overlay.remove();
-        
+
+        // Iframe Element
         const iframe = document.createElement('iframe');
-        iframe.style.cssText = 'width:100%;height:100%;border:none;corner-shape:inherit;border-radius:inherit;';
+        iframe.className = 'sheet-iframe';
+        iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+        iframe.setAttribute('data-is-sheet', 'true');
+        if (options.sourceAppId) iframe.dataset.appId = options.sourceAppId;
         
+        iframe.style.opacity = '0';
+        iframe.style.transition = 'opacity 0.3s ease';
+        iframe.onload = () => {
+            iframe.style.opacity = '1';
+            spinnerContainer.style.opacity = '0';
+            setTimeout(() => {
+                if (spinnerContainer.parentNode) spinnerContainer.remove();
+            }, 300);
+        };
+
+        // Setting iframe source
         if (options.url) {
             iframe.src = options.url;
         } else if (options.html) {
-            iframe.srcdoc = options.html;
+            iframe.sandbox = "allow-scripts"; // Secure: No allow-same-origin
+            
+            let headInjection = '';
+            if (options.styleUrls && Array.isArray(options.styleUrls)) {
+                options.styleUrls.forEach(url => {
+                    headInjection += `<link rel="stylesheet" href="${url}">\n`;
+                });
+            }
+            if (options.styles) {
+                headInjection += `<style>\n${options.styles}\n</style>\n`;
+            }
+            
+            const apiScriptUrl = new URL('https://polygol.github.io/assets/gurapp/api/gurasuraisu-api.js', window.location.origin).href;
+            let htmlContent = options.html;
+            if (!htmlContent.includes('gurasuraisu-api.js')) {
+                headInjection += `<script src="${apiScriptUrl}"><\/script>\n`;
+            }
+
+            if (htmlContent.includes('<head>')) {
+                htmlContent = htmlContent.replace('<head>', '<head>\n' + headInjection);
+            } else {
+                htmlContent = headInjection + htmlContent;
+            }
+            
+            iframe.srcdoc = htmlContent;
         }
-        
+
+        // Append iframe and close button
         container.appendChild(closeBtn);
         container.appendChild(iframe);
+
+        // Append container to overlay
         overlay.appendChild(container);
         document.body.appendChild(overlay);
-    },
-    closeSheet: function() {
-        const sheet = document.getElementById('gura-fallback-sheet');
-        if (sheet) sheet.remove();
-    },
-    // For functions that have no standalone equivalent, we can just log a warning.
-    default: function(functionName) {
-        console.warn(`Gurasuraisu API: '${functionName}' is only available inside the Polygol environment.`);
     }
 };
 
