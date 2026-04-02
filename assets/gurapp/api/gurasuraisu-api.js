@@ -1157,6 +1157,7 @@ const _fallbacks = {
         // Iframe Element
         const iframe = document.createElement('iframe');
         iframe.className = 'sheet-iframe';
+        iframe.style.cssText = 'width:100%;height:100%;border-radius:inherit;corner-shape:inherit;';
         iframe.setAttribute('data-gurasuraisu-iframe', 'true');
         iframe.setAttribute('data-is-sheet', 'true');
         if (options.sourceAppId) iframe.dataset.appId = options.sourceAppId;
