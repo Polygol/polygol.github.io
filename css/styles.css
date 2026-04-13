@@ -2182,7 +2182,6 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     align-items: stretch;
     flex-direction: column;
     padding: 12px 18px 12px 16px;
-    margin: 10px 0;
     background-color: var(--search-background);
     border-radius: 35px;
     corner-shape: superellipse(1.5);
