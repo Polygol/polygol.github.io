@@ -51,6 +51,7 @@ async function firstSetup() {
                 document.body.classList.remove('onboarding-active');
                 localStorage.setItem('hasVisitedBefore', 'true');
                 window.allowPageLeave = true;
+                window.location.reload();
             }
         };
         window.addEventListener('message', onOnboardingComplete);
