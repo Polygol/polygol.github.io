@@ -2884,6 +2884,40 @@ function syncUiStates() {
             item.classList.toggle('active', control.checked);
         }
     });
+
+    // Sync items with non-boolean active states safely using optional chaining
+    document.getElementById('setting-weight')?.classList.toggle('active', document.getElementById('weight-slider').value !== '70');
+    document.getElementById('setting-style')?.classList.toggle('active', document.getElementById('font-select').value !== 'Inter');
+    document.getElementById('setting-clock-spacing')?.classList.toggle('active', parseInt(document.getElementById('clock-spacing-slider').value) !== 0);
+    document.getElementById('setting-text-case')?.classList.toggle('active', document.getElementById('text-case-select').value !== 'none');
+    document.getElementById('setting-date-size')?.classList.toggle('active', parseInt(document.getElementById('date-size-slider').value) !== 100);
+    document.getElementById('setting-date-offset')?.classList.toggle('active', parseInt(document.getElementById('date-offset-slider').value) !== 0);
+    
+    // Update to use the new 'setting-position' ID and check all relevant sliders
+    const posX = document.getElementById('clock-pos-x-slider').value;
+    const posY = document.getElementById('clock-pos-y-slider').value;
+    document.getElementById('setting-position')?.classList.toggle('active', posX !== '50' || posY !== '50');
+    
+    document.getElementById('setting-wallpaper-blur')?.classList.toggle('active', document.getElementById('wallpaper-blur-slider').value !== '0');
+    document.getElementById('setting-wallpaper-brightness')?.classList.toggle('active', document.getElementById('wallpaper-brightness-slider').value !== '100');
+    document.getElementById('setting-wallpaper-contrast-fx')?.classList.toggle('active', document.getElementById('wallpaper-contrast-slider').value !== '100');
+    
+    document.getElementById('setting-wallpaper-saturate')?.classList.toggle('active', document.getElementById('wallpaper-saturate-slider').value !== '100');
+    document.getElementById('setting-wallpaper-hue')?.classList.toggle('active', document.getElementById('wallpaper-hue-slider').value !== '0');
+    document.getElementById('setting-wallpaper-vignette')?.classList.toggle('active', document.getElementById('wallpaper-vignette-slider').value !== '0');
+
+    document.getElementById('setting-italic')?.classList.toggle('active', document.getElementById('clock-italic-switch').checked);
+    document.getElementById('setting-blend-mode')?.classList.toggle('active', document.getElementById('clock-blend-mode-select').value !== 'normal');
+    document.getElementById('setting-clock-stroke')?.classList.toggle('active', parseInt(document.getElementById('clock-stroke-width-slider').value) !== 0);
+    
+    // Add roundness and size to sync
+    document.getElementById('setting-roundness')?.classList.toggle('active', document.getElementById('roundness-slider').value !== '0');
+    document.getElementById('setting-size')?.classList.toggle('active', document.getElementById('clock-size-slider').value !== '0');
+	
+    // Sync special items
+	const isColorActive = !document.getElementById('clock-off-switch').checked;
+    document.getElementById('setting-clock-color')?.classList.toggle('active', isColorActive);
+    document.getElementById('setting-clock-shadow')?.classList.toggle('active', document.getElementById('clock-shadow-switch').checked);
 }
 
 function applyWallpaperEffects() {
