@@ -84,7 +84,7 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    transition: all 0.3s cubic-bezier(.3,1.2,.64,1);
+    transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
     overflow: hidden;
 }
 
@@ -93,18 +93,24 @@ body {
     position: relative;
     transform: translateX(0);
     opacity: 1;
+    filter: none;
+    pointer-events: auto;
 }
 
 .page.entering {
     display: flex;
-    transform: translateX(25%);
+    transform: translateX(25px);
     opacity: 0;
+    filter: blur(2px);
+    pointer-events: none;
 }
 
 .page.exiting {
-    transform: translateX(-25%);
-    height: 0;
+    transform: translateX(-25px);
     opacity: 0;
+    filter: blur(2px);
+    position: absolute;
+    pointer-events: none;
 }
 
 .nav-item .setting-info {

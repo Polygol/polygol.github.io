@@ -748,6 +748,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         css += `
             html, body {
                 overscroll-behavior: none !important; /* Prevent swipe-to-back navigation */
+                touch-action: pan-x pan-y !important; /* Fully disable pinch-to-zoom */
             }
 
             /* Disable native focus for all elements to prevent browser interference */
@@ -778,6 +779,10 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         // Prevent pinch-zoom gestures from scaling the page
         window.addEventListener('touchmove', function(e) {
             if (e.scale !== 1 && e.scale !== undefined) {
+                e.preventDefault();
+            }
+            // Aggressively block 2-finger gestures (pinch zoom)
+            if (e.touches && e.touches.length === 2) {
                 e.preventDefault();
             }
         }, { passive: false });
@@ -976,7 +981,22 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         navigator.virtualKeyboard.overlaysContent = true;
     }
 
+    let _isThreeFingerDrag = false;
+    let _topSwipeStartY = 0;
+    let _isTopSwipe = false;
+
     document.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches.length === 3) {
+            _isThreeFingerDrag = true;
+            window.parent.postMessage({ type: 'three-finger-drag-start', y: e.touches[0].screenY }, '*');
+        }
+        if (e.touches && e.touches.length > 0 && e.touches[0].clientY < 40) {
+            _isTopSwipe = true;
+            _topSwipeStartY = e.touches[0].clientY;
+        } else {
+            _isTopSwipe = false;
+        }
+
         _oskLastTouchTime = Date.now();
         const el = e.target;
         if (isTextInput(el)) {
@@ -985,6 +1005,24 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
                 navigator.virtualKeyboard.hide();
             }
         }
+    }, { capture: true, passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+        if (_isThreeFingerDrag && e.touches && e.touches.length === 3) {
+            window.parent.postMessage({ type: 'three-finger-drag-move', y: e.touches[0].screenY }, '*');
+        }
+        if (_isTopSwipe && e.touches && e.touches.length > 0 && (e.touches[0].clientY - _topSwipeStartY > 50)) {
+            _isTopSwipe = false;
+            window.parent.postMessage({ type: 'open-controls' }, '*');
+        }
+    }, { capture: true, passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        if (_isThreeFingerDrag && (!e.touches || e.touches.length < 3)) {
+            _isThreeFingerDrag = false;
+            window.parent.postMessage({ type: 'three-finger-drag-end' }, '*');
+        }
+        _isTopSwipe = false;
     }, { capture: true, passive: true });
 
     document.addEventListener('focusin', (e) => {

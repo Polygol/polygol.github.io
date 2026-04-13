@@ -392,19 +392,19 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: var(--background-color);
     background-image: none !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    margin: 0;
-    transition: background-color 0.3s, color 0.3s, background-image 0.5s;
-    color: var(--text-color);
-    overflow: hidden;
-    user-select: none;
-    overscroll-behavior: none;
-    touch-action: manipulation;
-    /* Set the default value on the body element */
-    --bg-transform-scale: 1.05;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	margin: 0;
+	transition: background-color 0.3s, color 0.3s, background-image 0.5s;
+	color: var(--text-color);
+	overflow: hidden;
+	user-select: none;
+	overscroll-behavior: none;
+	touch-action: pan-x pan-y;
+	/* Set the default value on the body element */
+	--bg-transform-scale: 1.05; 
 }
 
 body::before,
@@ -754,7 +754,7 @@ input[type="color"]::-moz-color-swatch {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 50px;
+    height: 100px;
     display: flex;
     justify-content: center;
     align-items: flex-end;
@@ -1585,6 +1585,7 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     color: var(--background-color);
 }
 
+/*
 #customizeModal.modal {
     position: fixed;
     top: 0px;
@@ -1613,13 +1614,111 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 
 #customizeModal.modal::-webkit-scrollbar {
     display: none;
-    /* Chrome, Safari, Edge */
 }
 
 #customizeModal.modal.show {
     transform: scale(1);
     opacity: 1;
     filter: none;
+}
+*/
+
+#customizeModal.modal {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    margin: 0;
+    box-sizing: border-box;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    left: auto;
+    bottom: auto;
+    transform: scale(1.2);
+    opacity: 0;
+    filter: blur(5px);
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    z-index: 9999 !important;
+    background: var(--search-background);
+    backdrop-filter: blur(50px);
+    padding: 0;
+    scrollbar-width: none;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+}
+
+#customizeModal.modal::-webkit-scrollbar {
+    display: none;
+}
+
+#customizeModal.modal.show {
+    transform: scale(1);
+    opacity: 1;
+    filter: none;
+}
+
+/* --- Split View for Customize Modal --- */
+.modal-split-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow: auto;
+    padding: 20px 20px 80px 20px;
+    overflow-x: hidden;
+}
+
+.modal-left-pane, .modal-right-pane {
+    display: flex;
+    gap: 12px;
+    flex-direction: column;
+}
+
+@media (min-width: 800px) {
+    .modal-split-layout {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 24px;
+        width: 100%;
+    }
+
+    .modal-left-pane {
+        flex: 1;
+        min-width: 100px;
+        max-width: 400px;
+    }
+
+    .modal-right-pane {
+        flex: 1;
+        min-width: 100px;
+        max-width: 400px;
+        position: sticky;
+        top: 0;
+        box-sizing: border-box;
+        scrollbar-width: none;
+    }
+
+    .modal-right-pane::-webkit-scrollbar {
+        display: none;
+    }
+
+    .modal-right-pane:has(.notification-shade:empty)::before {
+        content: 'No notifications';
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-grow: 1;
+        color: var(--secondary-text-color);
+        font-weight: 500;
+        font-family: 'Open Runde', 'Inter', sans-serif;
+        font-size: 1.1rem;
+        opacity: 0.7;
+    }
 }
 
 .modal.show {
@@ -1852,7 +1951,6 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 
 /* Brightness Control Styles */
 .qc-sliders {
-    margin: 10px 0;
     display: flex;
     gap: 3px;
     flex-direction: column;
@@ -1978,7 +2076,6 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 }
 
 .settings-grid.home-settings {
-    margin-top: 10px;
     display: flex;
     flex-direction: column;
     padding: 0;
@@ -2069,8 +2166,10 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     display: none;
     position: fixed;
     z-index: 10001;
-    /* Above the modal */
     min-width: 155px;
+    max-width: calc(100vw - 40px); /* Leave room for margin */
+    max-height: calc(100vh - 40px);
+    overflow: visible; /* Ensure shadows aren't clipped */
 }
 
 .control-popup select,
@@ -2294,7 +2393,6 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(2, auto);
     gap: 10px;
-    margin: 15px 0 10px;
 }
 
 .qcontrol-item {
@@ -2539,11 +2637,15 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
-    padding: 15px 0 0 4px;
+    padding: 10px 12px;
     transition: background-color 0.2s, transform 0.1s;
-    height: 32px;
-    border-top: 2px solid var(--transparent-color);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+    background-color: var(--background-color);
+    border-radius: 32px;
+    position: fixed;
+    bottom: 25px;
+    gap: 18px;
 }
 
 input[type="checkbox"] {
@@ -2824,6 +2926,7 @@ input[type="radio"]:checked::before {
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: 'Inter';
 }
 
 .controls-container .btn-qc {
@@ -3159,6 +3262,52 @@ body.app-active .page-indicator {
 
 .app-switcher-title {
     display: none;
+}
+
+/* Edit Mode Styling */
+body.edit-mode-active #dynamic-area,
+body.edit-mode-active .dock,
+body.edit-mode-active .drawer-handle,
+body.edit-mode-active .nav-btn-small,
+body.edit-mode-active .page-indicator {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+body.edit-mode-active .container {
+    pointer-events: auto !important;
+    z-index: 9997; /* Above background but below edit UI */
+}
+
+body.edit-mode-active #clock,
+body.edit-mode-active .info {
+    position: relative;
+}
+
+body.edit-mode-active #clock::after,
+body.edit-mode-active .info::after {
+    content: '';
+    position: absolute;
+    inset: -15px;
+    border: 2px dashed rgba(255,255,255,0.5);
+    border-radius: 15px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s, border-color 0.2s;
+}
+
+body.edit-mode-active #clock:hover::after,
+body.edit-mode-active .info:hover::after {
+    opacity: 1;
+}
+
+body.edit-mode-active #clock.edit-selected::after,
+body.edit-mode-active .info.edit-selected::after {
+    opacity: 1;
+    border-style: solid;
+    border-color: var(--accent);
+    background: rgba(255,255,255,0.1);
+    z-index: -1;
 }
 
 body.minimal-active #blurOverlayControls {
@@ -3603,16 +3752,16 @@ body.immersive-active #one-button-nav-handle {
 .dock {
     display: none;
     position: fixed;
-    bottom: 3px;
-    transform: translateX(-50%) scale(0.2);
+    bottom: -10px;
+    transform: translateX(-50%);
     background: var(--search-background);
     backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
     box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
     border-radius: 256px;
-    corner-shape: round;
-    padding: 0;
-    gap: 0;
+    corner-shape: superellipse(1.5);
+    padding: 12px 14px;
+    gap: 12px;
     left: 50%;
     transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
     z-index: 9996;
@@ -3627,14 +3776,10 @@ body.immersive-active #one-button-nav-handle {
 
 .dock.show {
     display: flex;
-    transform: translateX(-50%) scale(1);
     bottom: 10px;
     filter: none;
     opacity: 1;
     pointer-events: auto;
-    corner-shape: superellipse(1.5);
-    padding: 12px 14px;
-    gap: 12px;
 }
 
 .dock-icon {
@@ -4025,7 +4170,7 @@ body.immersive-active #one-button-nav-handle {
     width: 100%;
     height: 100%;
     background-color: var(--background-color);
-    z-index: 9996;
+    z-index: 10000;
     transition: opacity 0.4s cubic-bezier(.2, 1.3, .64, 1);
     display: flex;
     flex-direction: column;

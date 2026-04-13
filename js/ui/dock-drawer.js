@@ -1525,6 +1525,29 @@ function setupDrawerInteractions() {
 	// Track global touch time to prevent ghost clicks safely across all scopes
     window.addEventListener('touchstart', () => { window.lastTouchTime = Date.now(); }, { capture: true, passive: true });
 
+    // Handle 3-finger swipe from Gurapps
+    window.addEventListener('message', (e) => {
+        if (e.data.type === 'three-finger-drag-start') {
+            if (document.body.classList.contains('immersive-active')) return;
+            dragSource = 'handle';
+            const screenY = e.data.y;
+            const screenX = window.innerWidth / 2;
+            touchStartX = screenX;
+            touchStartY = screenY;
+            initialDrawerPosition = appDrawer.classList.contains('open') ? 0 : -100;
+            prepareDrag(screenX, screenY);
+            startDrag(screenX, screenY);
+        } else if (e.data.type === 'three-finger-drag-move') {
+            if (isDragging) {
+                moveDrawer(window.innerWidth / 2, e.data.y);
+            }
+        } else if (e.data.type === 'three-finger-drag-end') {
+            if (isDragging) {
+                endDrag();
+            }
+        }
+    });
+
 	// Mouse Events for regular drawer interaction
     document.addEventListener('mousedown', (e) => {
 		if (oneButtonNavEnabled) return;

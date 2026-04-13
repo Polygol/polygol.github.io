@@ -1151,6 +1151,12 @@ window.addEventListener('message', async (event) => { // Make listener async
         return;
     }
 
+    if (data.type === 'open-controls') {
+        const clock = document.getElementById('persistent-clock');
+        if (clock) clock.click();
+        return;
+    }
+    
     // Handle homescreen updates from a Live Activity iframe
     if (data.type === 'live-activity-homescreen-update') {
         // A. Handle Legacy invisible widget if present (keep existing logic)

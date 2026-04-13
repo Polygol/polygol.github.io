@@ -3,7 +3,12 @@ const blurOverlay = document.getElementById('blurOverlay');
 
 const __clockElement = document.getElementById('clock');
 if (__clockElement) {
-    __clockElement.addEventListener('click', () => {
+    __clockElement.addEventListener('click', (e) => {
+        if (document.body.classList.contains('edit-mode-active')) {
+            e.stopPropagation();
+            if (typeof openEditSheet === 'function') openEditSheet('clock');
+            return;
+        }
         if (typeof window.gurappsEnabled !== 'undefined' && !window.gurappsEnabled) return;
         if (typeof gurappsEnabled !== 'undefined' && !gurappsEnabled) return;
         createFullscreenEmbed('https://polygol.github.io/chronos/index.html');
@@ -12,7 +17,12 @@ if (__clockElement) {
 
 const __weatherWidget = document.getElementById('weather');
 if (__weatherWidget) {
-    __weatherWidget.addEventListener('click', () => {
+    __weatherWidget.addEventListener('click', (e) => {
+        if (document.body.classList.contains('edit-mode-active')) {
+            e.stopPropagation();
+            if (typeof openEditSheet === 'function') openEditSheet('background');
+            return;
+        }
         if (typeof window.gurappsEnabled !== 'undefined' && !window.gurappsEnabled) return;
         if (typeof gurappsEnabled !== 'undefined' && !gurappsEnabled) return;
         createFullscreenEmbed('https://polygol.github.io/weather/index.html');
@@ -21,12 +31,32 @@ if (__weatherWidget) {
 
 const __dateElement = document.getElementById('date');
 if (__dateElement) {
-    __dateElement.addEventListener('click', () => {
+    __dateElement.addEventListener('click', (e) => {
+        if (document.body.classList.contains('edit-mode-active')) {
+            e.stopPropagation();
+            if (typeof openEditSheet === 'function') openEditSheet('date');
+            return;
+        }
         if (typeof window.gurappsEnabled !== 'undefined' && !window.gurappsEnabled) return;
         if (typeof gurappsEnabled !== 'undefined' && !gurappsEnabled) return;
         createFullscreenEmbed('https://polygol.github.io/fantaskical/index.html');
     });
 }
+
+// Catch background clicks in edit mode to open Background Settings
+document.addEventListener('click', (e) => {
+    if (document.body.classList.contains('edit-mode-active')) {
+        const isClickInsideSheet = e.target.closest('#edit-mode-ui');
+        const isClickInsideClock = e.target.closest('#clock');
+        const isClickInsideDate = e.target.closest('.info');
+        const isClickInsideWidget = e.target.closest('.widget-instance');
+        const isControlPopup = e.target.closest('.control-popup');
+
+        if (!isClickInsideSheet && !isClickInsideClock && !isClickInsideDate && !isClickInsideWidget && !isControlPopup) {
+            if (typeof openEditSheet === 'function') openEditSheet('background');
+        }
+    }
+});
 
 // --- Double Tap to Sleep ---
 let lastBgTap = 0;
@@ -53,6 +83,7 @@ document.addEventListener('click', (e) => {
 });
 
 const customizeModal = document.getElementById('customizeModal');
+const customizeModalContent = document.getElementById('customizeModalContent');
 const themeSwitch = document.getElementById('theme-switch');
 const wallpaperInput = document.getElementById('wallpaperInput');
 const uploadButton = document.getElementById('uploadButton');
@@ -101,4 +132,63 @@ function closeControls() {
         if (custModal) custModal.style.display = 'none'; // Hide after animation
         if (blurCtrl) blurCtrl.style.display = 'none';
     }, 300);
+}
+
+// --- Global Top-Edge Swipe for Controls ---
+let topSwipeStartY = 0;
+let isTopSwipe = false;
+
+document.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches.length > 0 && e.touches[0].clientY < 40) {
+        isTopSwipe = true;
+        topSwipeStartY = e.touches[0].clientY;
+    } else {
+        isTopSwipe = false;
+    }
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+    if (isTopSwipe && e.touches && e.touches.length > 0 && (e.touches[0].clientY - topSwipeStartY > 50)) {
+        isTopSwipe = false;
+        const clock = document.getElementById('persistent-clock');
+        if (clock) clock.click();
+    }
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+    isTopSwipe = false;
+}, { passive: true });
+
+// --- bottom-Up Swipe on Controls ---
+let controlsSwipeStartY = 0;
+let isControlsSwipe = false;
+
+if (customizeModal) {
+    customizeModal.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches.length > 0) {
+            const isAtBottom = customizeModalContent.scrollHeight - customizeModalContent.scrollTop <= customizeModalContent.clientHeight + 10;
+            const hasNoScroll = customizeModalContent.scrollHeight <= customizeModalContent.clientHeight;
+            
+            if (isAtBottom || hasNoScroll) {
+                isControlsSwipe = true;
+                controlsSwipeStartY = e.touches[0].clientY;
+            } else {
+                isControlsSwipe = false;
+            }
+        }
+    }, { passive: true });
+
+    customizeModal.addEventListener('touchmove', (e) => {
+        if (isControlsSwipe && e.touches && e.touches.length > 0) {
+            const deltaY = controlsSwipeStartY - e.touches[0].clientY;
+            if (deltaY > 50) {
+                isControlsSwipe = false;
+                closeControls();
+            }
+        }
+    }, { passive: true });
+
+    customizeModal.addEventListener('touchend', () => {
+        isControlsSwipe = false;
+    }, { passive: true });
 }

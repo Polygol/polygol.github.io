@@ -1767,7 +1767,9 @@ function renderSwitcherCards(container, isInitialOpen = false) {
         editBtn.innerHTML = 'Edit';
         editBtn.onclick = (e) => {
             e.stopPropagation();
-            openWallpaperEditMenu(index);
+            if (typeof enterEditMode === 'function') {
+                enterEditMode(index);
+            }
         };
         
         // Active Check
@@ -1889,6 +1891,129 @@ async function openWallpaperEditMenu(index) {
     input.click();
 }
 
+// --- Edit Mode Logic ---
+let editModeWallpaperIndex = -1;
+
+function enterEditMode(index) {
+    closeWallpaperSwitcher(); // Close the switcher overlay
+    
+    editModeWallpaperIndex = index;
+    jumpToWallpaper(index);
+    
+    document.body.classList.add('edit-mode-active');
+    const editUI = document.getElementById('edit-mode-ui');
+    editUI.style.display = 'block';
+    
+    setupEditSheetDrag();
+
+    requestAnimationFrame(() => {
+        editUI.style.opacity = '1';
+    });
+
+    openEditSheet('background');
+
+    showPopup('Tap an element to view its settings')
+}
+
+function exitEditMode() {
+    document.body.classList.remove('edit-mode-active');
+    const editUI = document.getElementById('edit-mode-ui');
+    editUI.style.opacity = '0';
+    closeEditSheet();
+    
+    setTimeout(() => {
+        editUI.style.display = 'none';
+        saveWidgets();
+    }, 300);
+}
+
+function openEditSheet(target) {
+    document.querySelectorAll('#clock, .info').forEach(el => el.classList.remove('edit-selected'));
+    if (target === 'clock') document.getElementById('clock').classList.add('edit-selected');
+    if (target === 'date') document.querySelector('.info').classList.add('edit-selected');
+
+    const sheet = document.getElementById('edit-bottom-sheet');
+    document.getElementById('edit-group-clock').style.display = target === 'clock' ? 'block' : 'none';
+    document.getElementById('edit-group-date').style.display = target === 'date' ? 'block' : 'none';
+    document.getElementById('edit-group-background').style.display = target === 'background' ? 'block' : 'none';
+    
+    const titles = {
+        'clock': 'Clock',
+        'date': 'Date',
+        'background': 'Home screen'
+    };
+    document.getElementById('edit-sheet-title').textContent = titles[target];
+
+    sheet.classList.add('open');
+    sheet.style.transform = 'translateY(0) translateX(-50%)'; // Ensure it's visible if dragged down
+}
+
+function closeEditSheet() {
+    const sheet = document.getElementById('edit-bottom-sheet');
+    if (sheet) {
+        sheet.classList.remove('open');
+        sheet.style.transform = 'translateY(100%) translateX(-50%)';
+    }
+    document.querySelectorAll('#clock, .info').forEach(el => el.classList.remove('edit-selected'));
+}
+
+function setupEditSheetDrag() {
+    const sheet = document.getElementById('edit-bottom-sheet');
+    const handle = document.getElementById('edit-sheet-handle');
+    if (!sheet || !handle) return;
+    
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+
+    const onDragStart = (y) => {
+        startY = y;
+        isDragging = true;
+        sheet.style.transition = 'none';
+    };
+
+    const onDragMove = (y) => {
+        if (!isDragging) return;
+        currentY = y;
+        const deltaY = currentY - startY;
+        if (deltaY > 0) {
+            sheet.style.transform = `translateY(${deltaY}px) translateX(-50%)`;
+        }
+    };
+
+    const onDragEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        sheet.style.transition = 'transform 0.4s cubic-bezier(0.2, 1.3, 0.64, 1)';
+        const deltaY = currentY - startY;
+        if (deltaY > 100) {
+            closeEditSheet();
+        } else {
+            sheet.style.transform = 'translateY(0) translateX(-50%)';
+        }
+    };
+
+    // Remove old listeners to prevent duplicates
+    const newHandle = handle.cloneNode(true);
+    handle.parentNode.replaceChild(newHandle, handle);
+
+    newHandle.addEventListener('touchstart', (e) => onDragStart(e.touches[0].clientY), { passive: true });
+    newHandle.addEventListener('touchmove', (e) => onDragMove(e.touches[0].clientY), { passive: true });
+    newHandle.addEventListener('touchend', onDragEnd);
+    
+    const mouseMoveHandler = (e) => onDragMove(e.clientY);
+    const mouseUpHandler = () => {
+        onDragEnd();
+        window.removeEventListener('mousemove', mouseMoveHandler);
+        window.removeEventListener('mouseup', mouseUpHandler);
+    };
+    
+    newHandle.addEventListener('mousedown', (e) => {
+        onDragStart(e.clientY);
+        window.addEventListener('mousemove', mouseMoveHandler);
+        window.addEventListener('mouseup', mouseUpHandler);
+    });
+}
 
 // Add these variables to track the indicator
 let pageIndicatorTimeout;
@@ -2759,41 +2884,6 @@ function syncUiStates() {
             item.classList.toggle('active', control.checked);
         }
     });
-
-    // Sync items with non-boolean active states
-    document.getElementById('setting-weight').classList.toggle('active', document.getElementById('weight-slider').value !== '70');
-    document.getElementById('setting-style').classList.toggle('active', document.getElementById('font-select').value !== 'Inter');
-    document.getElementById('setting-wallpaper').classList.toggle('active', recentWallpapers.length > 0);
-    document.getElementById('setting-clock-spacing').classList.toggle('active', parseInt(document.getElementById('clock-spacing-slider').value) !== 0);
-    document.getElementById('setting-text-case').classList.toggle('active', document.getElementById('text-case-select').value !== 'none');
-    document.getElementById('setting-date-size').classList.toggle('active', parseInt(document.getElementById('date-size-slider').value) !== 100);
-    document.getElementById('setting-date-offset').classList.toggle('active', parseInt(document.getElementById('date-offset-slider').value) !== 0);
-    
-    // Update to use the new 'setting-position' ID and check all relevant sliders
-    const posX = document.getElementById('clock-pos-x-slider').value;
-    const posY = document.getElementById('clock-pos-y-slider').value;
-    document.getElementById('setting-position').classList.toggle('active', posX !== '50' || posY !== '50');
-    
-    document.getElementById('setting-wallpaper-blur').classList.toggle('active', document.getElementById('wallpaper-blur-slider').value !== '0');
-    document.getElementById('setting-wallpaper-brightness').classList.toggle('active', document.getElementById('wallpaper-brightness-slider').value !== '100');
-    document.getElementById('setting-wallpaper-contrast-fx').classList.toggle('active', document.getElementById('wallpaper-contrast-slider').value !== '100');
-    
-    document.getElementById('setting-wallpaper-saturate').classList.toggle('active', document.getElementById('wallpaper-saturate-slider').value !== '100');
-    document.getElementById('setting-wallpaper-hue').classList.toggle('active', document.getElementById('wallpaper-hue-slider').value !== '0');
-    document.getElementById('setting-wallpaper-vignette').classList.toggle('active', document.getElementById('wallpaper-vignette-slider').value !== '0');
-
-    document.getElementById('setting-italic').classList.toggle('active', document.getElementById('clock-italic-switch').checked);
-    document.getElementById('setting-blend-mode').classList.toggle('active', document.getElementById('clock-blend-mode-select').value !== 'normal');
-    document.getElementById('setting-clock-stroke').classList.toggle('active', parseInt(document.getElementById('clock-stroke-width-slider').value) !== 0);
-    
-    // Add roundness and size to sync
-    document.getElementById('setting-roundness').classList.toggle('active', document.getElementById('roundness-slider').value !== '0');
-    document.getElementById('setting-size').classList.toggle('active', document.getElementById('clock-size-slider').value !== '0');
-	
-    // Sync special items
-	const isColorActive = !document.getElementById('clock-off-switch').checked;
-    document.getElementById('setting-clock-color').classList.toggle('active', isColorActive);
-    document.getElementById('setting-clock-shadow').classList.toggle('active', document.getElementById('clock-shadow-switch').checked);
 }
 
 function applyWallpaperEffects() {
@@ -3372,45 +3462,6 @@ function resetAndApplyDefaultClockStyles() {
     }
     
     return defaultStyles;
-}
-
-function setupCollapsibleSettings() {
-    const homeSettings = document.querySelector('.settings-grid.home-settings');
-    if (!homeSettings) return;
-
-    const headings = homeSettings.querySelectorAll('h4');
-    headings.forEach(heading => {
-        heading.style.cursor = 'pointer';
-        heading.style.userSelect = 'none';
-        heading.style.display = 'flex';
-        heading.style.alignItems = 'center';
-        heading.style.justifyContent = 'space-between';
-        
-        // Prevent duplicate icons if run multiple times
-        if (heading.querySelector('.material-symbols-rounded')) return;
-
-        const icon = document.createElement('span');
-        icon.className = 'material-symbols-rounded';
-        icon.textContent = 'expand_more';
-        icon.style.transition = 'transform 0.3s ease';
-        // Default state is collapsed (pointing down)
-        icon.style.transform = 'rotate(0deg)';
-        
-        heading.appendChild(icon);
-
-        const content = heading.nextElementSibling;
-        content.style.display = 'none'; // Collapse by default
-        
-        heading.addEventListener('click', () => {
-            if (content.style.display === 'none') {
-                content.style.display = ''; // Restore grid layout
-                icon.style.transform = 'rotate(180deg)';
-            } else {
-                content.style.display = 'none';
-                icon.style.transform = 'rotate(0deg)';
-            }
-        });
-    });
 }
 
 // Initialize theme and wallpaper on load

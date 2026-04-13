@@ -159,7 +159,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     initAppDraw(); // Now this will use the fully populated 'apps' object
     initializeCustomization(); // Now reads correct styles and applies them to DOM
-	setupCollapsibleSettings();
     setupWeatherToggle();
     initializePageIndicator();
 	loadWidgets(); // Now renders into a correctly styled layout
@@ -880,6 +879,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
+    // --- Edit Mode Button Bindings ---
+    document.getElementById('edit-replace-bg-btn')?.addEventListener('click', () => {
+        if (typeof editModeWallpaperIndex !== 'undefined' && editModeWallpaperIndex > -1) {
+            openWallpaperEditMenu(editModeWallpaperIndex);
+        }
+    });
+    document.getElementById('edit-done-btn')?.addEventListener('click', () => {
+        if (typeof exitEditMode === 'function') exitEditMode();
+    });
+
     const liveEnvSwitch = document.getElementById('live-environment-switch');
     const liveEnvItem = document.getElementById('setting-live-environment'); // The UI Grid Item
     if (liveEnvSwitch && liveEnvItem) {
@@ -1075,11 +1084,25 @@ document.addEventListener('DOMContentLoaded', () => {
         hideActivePopup();
 
         controlPopup.appendChild(controlElement);
+        controlPopup.style.display = 'block'; // Display block first to get offsetWidth
+
         const rect = sourceElement.getBoundingClientRect();
         const zoom = parseFloat(document.body.style.zoom) / 100 || 1;
-        controlPopup.style.display = 'block';
-        const top = (rect.bottom + 8) / zoom;
-        const left = (rect.left + (rect.width / 2) - (controlPopup.offsetWidth / 2)) / zoom;
+        const screenWidth = window.innerWidth / zoom;
+        const screenHeight = window.innerHeight / zoom;
+        const popupWidth = controlPopup.offsetWidth;
+        const popupHeight = controlPopup.offsetHeight;
+
+        // Calculate horizontal position with clamping
+        let left = (rect.left + (rect.width / 2)) / zoom - (popupWidth / 2);
+        left = Math.max(10, Math.min(left, screenWidth - popupWidth - 10));
+
+        // Calculate vertical position (prefer bottom, flip to top if no space)
+        let top = (rect.bottom + 8) / zoom;
+        if (top + popupHeight > screenHeight - 10) {
+            top = (rect.top - 8) / zoom - popupHeight;
+        }
+
         controlPopup.style.top = `${top}px`;
         controlPopup.style.left = `${left}px`;
     }
@@ -1688,7 +1711,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
 		dynamicArea.style.opacity = '0';
-		customizeModal.style.display = 'block';
+		customizeModal.style.display = 'flex';
         customizeModal.style.pointerEvents = 'none'; 
 		customizeModal.scrollTop = 0; 
 		blurOverlayControls.style.display = 'block';

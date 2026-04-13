@@ -251,20 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-weight', 'weight-slider');
     connectGridItem('setting-language', 'language-switcher');
     connectGridItem('setting-ai', 'ai-switch');
-
-    // Album Art click listener
-    document.getElementById('media-widget-art').addEventListener('click', () => {
-        if (activeMediaSessionApp) {
-            // Find the app's URL from the main 'apps' object
-            const appToOpen = Object.values(apps).find(app => app.name === activeMediaSessionApp);
-            if (appToOpen) {
-                // First, close the settings modal if it's open
-                closeControls();
-                // Then, open the app
-                createFullscreenEmbed(appToOpen.url);
-            }
-        }
-    });
 	
     const appDrawer = document.getElementById('app-drawer');
     const persistentClock = document.querySelector('.persistent-clock');
@@ -2264,11 +2250,9 @@ function setupDrawerInteractions() {
 const appDrawerObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            if (typeof HomeActivityManager !== 'undefined') {
-                HomeActivityManager.updateVisibility();
-            }
-            
-            if (!appDrawer.classList.contains('open')) {
+            if (appDrawer.classList.contains('open')) {
+                createAppIcons(); // Populate when opening
+            } else {
                 setTimeout(() => {
                     if (!appDrawer.classList.contains('open')) {
                         document.getElementById('app-grid').innerHTML = '';
@@ -2702,130 +2686,6 @@ function closeControls() {
     }, 300);
 }
 
-// --- Media Session Management Functions ---
-
-function showMediaWidget(metadata) {
-    const widget = document.getElementById('media-session-widget');
-    if (!widget) return;
-    
-    document.getElementById('media-widget-art').src = metadata.artwork[0]?.src || '//assets/appicon/default.png';
-    document.getElementById('media-widget-title').textContent = metadata.title || 'Unknown Title';
-    document.getElementById('media-widget-artist').textContent = metadata.artist || 'Unknown Artist';
-    
-    widget.style.display = 'flex';
-    // Use a timeout to allow the display property to apply before animating opacity/transform
-    setTimeout(() => {
-        widget.style.opacity = '1';
-        widget.style.transform = 'scale(1)';
-    }, 10);
-}
-
-function hideMediaWidget() {
-    const widget = document.getElementById('media-session-widget');
-    if (!widget) return;
-
-    widget.style.opacity = '0';
-    widget.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-        widget.style.display = 'none';
-	    
-	const prevBtn = document.getElementById('media-widget-prev');
-        const playPauseBtn = document.getElementById('media-widget-play-pause');
-        const nextBtn = document.getElementById('media-widget-next');
-
-        if(prevBtn) { prevBtn.disabled = false; prevBtn.style.opacity = '1'; }
-        if(playPauseBtn) { playPauseBtn.disabled = false; playPauseBtn.style.opacity = '1'; }
-        if(nextBtn) { nextBtn.disabled = false; nextBtn.style.opacity = '1'; }
-    }, 300);
-
-    // Clear actions when the widget is hidden
-    activeMediaSessionApp = null;
-    mediaSessionActions = { playPause: null, next: null, prev: null };
-}
-
-function updateMediaWidgetState(playbackState) {
-    const playPauseIcon = document.querySelector('#media-widget-play-pause .material-symbols-rounded');
-    if (playPauseIcon) {
-        playPauseIcon.textContent = playbackState === 'playing' ? 'pause' : 'play_arrow';
-    }
-}
-
-// This is the new function that Gurapps will call
-function registerMediaSession(appName, metadata, supportedActions = []) {
-    if (!appName) return;
-    console.log(`[Gurasu] App "${appName}" is registering a media session. Supports:`, supportedActions);
-    activeMediaSessionApp = appName;
-    showMediaWidget(metadata);
-
-    // Get references to the control buttons
-    const prevBtn = document.getElementById('media-widget-prev');
-    const playPauseBtn = document.getElementById('media-widget-play-pause');
-    const nextBtn = document.getElementById('media-widget-next');
-
-    // Enable or disable buttons based on the 'supportedActions' array
-    if (prevBtn) {
-        prevBtn.disabled = !supportedActions.includes('prev');
-        prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
-    }
-	
-    if (playPauseBtn) {
-        playPauseBtn.disabled = !supportedActions.includes('playPause');
-        playPauseBtn.style.opacity = playPauseBtn.disabled ? '0.5' : '1';
-    }
-	
-    if (nextBtn) {
-        nextBtn.disabled = !supportedActions.includes('next');
-        nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
-    }
-
-    // 4. Set the initial playback state (usually 'paused')
-    updateMediaWidgetState('paused');
-}
-
-// A function to clear the session, called when an app is closed/minimized
-function clearMediaSession(appName) {
-    if (activeMediaSessionApp === appName) {
-        console.log(`[Airy] Clearing media session for "${appName}".`);
-        hideMediaWidget();
-    }
-}
-
-// A function for the Gurapp to update the parent's state
-function updateMediaPlaybackState(appName, state) {
-    if (activeMediaSessionApp === appName) {
-        updateMediaWidgetState(state.playbackState);
-        // We could also update metadata here if it changes (e.g., new song)
-        if (state.metadata) {
-            showMediaWidget(state.metadata);
-        }
-    }
-}
-
-// Add listeners for the new widget's buttons
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('media-widget-play-pause').addEventListener('click', () => {
-        if (activeMediaSessionApp) Airy.callApp(activeMediaSessionApp, 'playPause');
-    });
-    document.getElementById('media-widget-next').addEventListener('click', () => {
-        if (activeMediaSessionApp) Airy.callApp(activeMediaSessionApp, 'next');
-    });
-    document.getElementById('media-widget-prev').addEventListener('click', () => {
-        if (activeMediaSessionApp) Airy.callApp(activeMediaSessionApp, 'prev');
-    });
-});
-
-function updateMediaProgress(appName, progressState) {
-    if (activeMediaSessionApp === appName) {
-        const progressEl = document.getElementById('media-widget-progress');
-        if (progressEl) {
-            // progressState should be an object like { currentTime, duration }
-            const percentage = (progressState.currentTime / progressState.duration) * 100;
-            progressEl.style.width = `${percentage}%`;
-        }
-    }
-}
-
-    // Initialize app drawer
     function initAppDraw() {
         createAppIcons();
         setupDrawerInteractions();

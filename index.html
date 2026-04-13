@@ -298,6 +298,153 @@
         </button>
     </div>
 
+    <!-- Dedicated Edit Mode UI -->
+    <div id="edit-mode-ui" style="display: none; opacity: 0; transition: opacity 0.3s ease; position: fixed; inset: 0; z-index: 9998; pointer-events: none;">
+        <div class="edit-top-bar" style="position: absolute; top: 25px; left: 25px; right: 25px; pointer-events: auto; display: flex; justify-content: space-between; align-items: center; z-index: 9999;">
+            <div style="margin-left: 10px; font-weight: 600; font-family: 'Open Runde', sans-serif; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Edit home screen</div>
+            <div style="display: flex; gap: 10px;">
+                <button id="edit-replace-bg-btn" class="btn-qc" style="width: auto; padding: 0 14px; border-radius: 30px; font-weight: 500; font-size: 14px;">
+                    <span class="material-symbols-rounded" style="font-size: 18px; margin-right: 6px;">filter_vintage</span> Replace
+                </button>
+                <button id="edit-done-btn" class="btn-qc" style="width: auto; padding: 0 14px; border-radius: 30px; background: var(--accent); color: var(--background-color); font-weight: 600; font-size: 14px;">Done</button>
+            </div>
+        </div>
+
+        <div id="edit-bottom-sheet" class="sheet-container" style="pointer-events: auto; height: auto; max-height: 60%; transition: transform 0.4s cubic-bezier(0.2, 1.3, 0.64, 1); transform: translateY(100%) translateX(-50%); bottom: 0; left: 50%; width: 100%; max-width: 800px; position: absolute;">
+            <div class="sheet-handle" id="edit-sheet-handle"></div>
+            <h3 id="edit-sheet-title" style="margin: 0 0 15px 0; text-align: center; font-family: 'Open Runde', sans-serif; font-weight: 600;">Settings</h3>
+            <div id="edit-sheet-content" style="overflow-y: auto; padding: 0 20px 20px; display: flex; flex-direction: column; gap: 20px; scrollbar-width: none;">
+                
+                <div id="edit-group-clock" style="display: none;">
+                    <div class="settings-grid">
+                        <div class="setting-item" id="setting-style">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">match_case</span></div>
+                            <span class="setting-label" data-lang-key="STYLE">Style</span>
+                        </div>
+                        <div class="setting-item active" id="setting-clock-color">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">colorize</span></div>
+                            <span class="setting-label" data-lang-key="CLOCK_COLOR">Color</span>
+                        </div>
+                        <div class="setting-item" id="setting-clock-shadow">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">text_select_move_down</span></div>
+                            <span class="setting-label" data-lang-key="SHADOW">Shadow</span>
+                        </div>
+                        <div class="setting-item" id="setting-weight">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">line_weight</span></div>
+                            <span class="setting-label" data-lang-key="WEIGHT">Weight</span>
+                        </div>
+                        <div class="setting-item active" id="setting-roundness">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">circles</span></div>
+                            <span class="setting-label">Roundness</span>
+                        </div>
+                        <div class="setting-item" id="setting-clock-stroke">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">border_color</span></div>
+                            <span class="setting-label">Outline</span>
+                        </div>
+                        <div class="setting-item" id="setting-italic">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">format_italic</span></div>
+                            <span class="setting-label">Italic</span>
+                        </div>
+                        <div class="setting-item" id="setting-blend-mode">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">difference</span></div>
+                            <span class="setting-label">Blend Mode</span>
+                        </div>
+                        <div class="setting-item active" id="setting-clock-stack">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">farsight_digital</span></div>
+                            <span class="setting-label" data-lang-key="CLOCK_STACK">Clock Stack</span>
+                        </div>
+                        <div class="setting-item active" id="setting-position">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">open_with</span></div>
+                            <span class="setting-label" data-lang-key="ALIGNMENT">Alignment</span>
+                        </div>
+                        <div class="setting-item active" id="setting-clock-spacing">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">space_bar</span></div>
+                            <span class="setting-label">Spacing</span>
+                        </div>
+                        <div class="setting-item active" id="setting-size">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">measuring_tape</span></div>
+                            <span class="setting-label">Clock Size</span>
+                        </div>
+                        <div class="setting-item" id="setting-seconds">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">timer_10_select</span></div>
+                            <span class="setting-label" data-lang-key="SECONDS">Seconds</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="edit-group-date" style="display: none;">
+                    <div class="settings-grid">
+                        <div class="setting-item active" id="setting-date-size">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">calendar_view_day</span></div>
+                            <span class="setting-label">Date Size</span>
+                        </div>
+                        <div class="setting-item" id="setting-text-case">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">text_fields</span></div>
+                            <span class="setting-label">Case</span>
+                        </div>
+                        <div class="setting-item" id="setting-date-offset">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">vertical_align_center</span></div>
+                            <span class="setting-label">Date Offset</span>
+                        </div>
+                        <div class="setting-item" id="setting-format">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">edit_calendar</span></div>
+                            <span class="setting-label" data-lang-key="FORMAT">Format</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="edit-group-background" style="display: none;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.7;">Atmosphere</h4>
+                    <div class="settings-grid">
+                        <div class="setting-item" id="setting-wallpaper-blur">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">motion_mode</span></div>
+                            <span class="setting-label" data-lang-key="BLUR">Blur</span>
+                        </div>
+                        <div class="setting-item" id="setting-wallpaper-brightness">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">wb_sunny</span></div>
+                            <span class="setting-label" data-lang-key="BRIGHTNESS">Brightness</span>
+                        </div>
+                        <div class="setting-item" id="setting-wallpaper-contrast-fx">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">opacity</span></div>
+                            <span class="setting-label" data-lang-key="CONTRAST_FX">Clarity</span>
+                        </div>
+                        <div class="setting-item" id="setting-wallpaper-saturate">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">tonality</span></div>
+                            <span class="setting-label">Saturation</span>
+                        </div>
+                        <div class="setting-item" id="setting-wallpaper-hue">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">palette</span></div>
+                            <span class="setting-label">Hue</span>
+                        </div>
+                        <div class="setting-item" id="setting-wallpaper-vignette">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">lens_blur</span></div>
+                            <span class="setting-label">Vignette</span>
+                        </div>
+                        <div class="setting-item" id="setting-live-environment">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">routine</span></div>
+                            <span class="setting-label">Live Scene</span>
+                        </div>
+                    </div>
+                    <h4 style="margin: 15px 0 10px 0; font-size: 14px; opacity: 0.7;">Other</h4>
+                    <div class="settings-grid">
+                        <div class="setting-item" id="setting-widgets">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">widget_menu</span></div>
+                            <span class="setting-label" data-lang-key="WIDGETS">Widgets</span>
+                        </div>
+                        <div class="setting-item active" id="setting-gurapps">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">grid_view</span></div>
+                            <span class="setting-label" data-lang-key="GURAPPS">Gurapps</span>
+                        </div>
+                        <div class="setting-item" id="setting-weather">
+                            <div class="setting-icon-bg"><span class="material-symbols-rounded">partly_cloudy_day</span></div>
+                            <span class="setting-label" data-lang-key="WEATHER">Weather</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="home-activity-container" class="pos-bl" style="display: none;">
         <div id="home-media-widget" class="home-media-widget home-activity-item">
             <img id="home-media-art" src="" alt="Album Art">
@@ -348,332 +495,162 @@
     </div>
 
     <div id="customizeModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="controls-container">
-                <h3 style="margin: 0;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;max-width: calc(clamp(280px, 90%, 500px) - 30px);">LANG_CONTROLS</h3>
-                <div style="display: flex; gap: 12px;">
-                    <!-- Network Status Indicator -->
-                    <div id="network-status-indicator" class="status-qc">
-                        <span class="material-symbols-rounded" style="font-size: 20px;">signal_cellular_null</span>
+        <div id="customizeModalContent" class="modal-content modal-split-layout">
+            <div class="modal-left-pane">
+                <div class="controls-container">
+                    <h3 style="margin: 0;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;max-width: calc(clamp(280px, 90%, 500px) - 30px);">LANG_CONTROLS</h3>
+                    <div style="display: flex; gap: 12px;">
+                        <!-- Network Status Indicator -->
+                        <div id="network-status-indicator" class="status-qc">
+                            <span class="material-symbols-rounded" style="font-size: 20px;">signal_cellular_null</span>
+                        </div>
+                        <!-- Battery Status Indicator -->
+                        <div id="battery-status-indicator" class="status-qc">
+                            <span class="material-symbols-rounded" style="font-size: 26px; font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;">battery_android_question</span>
+                        </div>
+                        <div id="active-peers-container" style="display: none; align-items: center;"></div>
+                        <button id="fullscreen-btn" class="btn-qc" onclick="goFullscreen()">
+                            <span class="material-symbols-rounded" style="font-size: 18px;">expand_content</span>
+                        </button>
+                        <button id="blackout-btn" class="btn-qc" style="background-color: var(--tonal);">
+                            <span class="material-symbols-rounded" style="font-size: 18px; color: var(--background-color);">power_settings_new</span>
+                        </button>
                     </div>
-                    <!-- Battery Status Indicator -->
-                    <div id="battery-status-indicator" class="status-qc">
-                        <span class="material-symbols-rounded" style="font-size: 26px; font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;">battery_android_question</span>
+                </div>
+
+                <div class="quick-controls">
+                    <div class="qcontrol-item" id="silent_switch_qc">
+                        <span class="material-symbols-rounded">notifications_off</span>
+                        <span class="qc-label">LANG_SILENT</span>
+                        <input type="checkbox" id="silent_switch" class="qc-switch" hidden>
                     </div>
-                    <div id="active-peers-container" style="display: none; align-items: center;"></div>
-                    <button id="fullscreen-btn" class="btn-qc" onclick="goFullscreen()">
-                        <span class="material-symbols-rounded" style="font-size: 18px;">expand_content</span>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="qcontrol-item" id="temp_control_qc">
+                            <span class="material-symbols-rounded" style="margin: 0;">thermometer</span>
+                            <span class="qc-label">LANG_TONE</span>
+                            <span id="thermostat-value" style="display: none;">0</span>
+                        </div>
+                        <div class="qcontrol-item" id="night-mode-qc">
+                            <span class="material-symbols-rounded" style="margin: 0;">bedtime</span>
+                        </div>
+                    </div>
+                    <div class="qcontrol-item" id="minimal_mode_qc">
+                        <span class="material-symbols-rounded">filter_tilt_shift</span>
+                        <span class="qc-label">LANG_MINIMAL</span>
+                        <input type="checkbox" id="focus-switch" class="qc-switch" hidden>
+                    </div>
+                    <div class="qcontrol-item" id="light_mode_qc">
+                        <span class="material-symbols-rounded">contrast</span>
+                        <span class="qc-label">LANG_DAYLIGHT</span>
+                        <input type="checkbox" id="theme-switch" class="qc-switch" hidden>
+                    </div>
+                </div>
+
+                <div class="qc-sliders">
+                    <div class="brightness-slider-container" style="border-radius: 28px 27px 10px 10px;">
+                        <label for="brightness-control" class="cust-label">
+                            <span class="material-symbols-rounded" style="font-size: 20px;">sunny</span>
+                        </label>
+                        <input type="range" min="20" max="100" value="100" class="brightness-slider" id="brightness-control">
+                    </div>
+                    <div class="volume-slider-container" style="border-radius: 10px 10px 28px 28px;">
+                        <label for="volume-control" class="cust-label">
+                            <span class="material-symbols-rounded" style="font-size: 20px;">volume_up</span>
+                        </label>
+                        <input type="range" min="0" max="100" value="100" class="volume-slider" id="volume-control">
+                        <button id="sound-opt-btn" class="btn-qc" style="background-color: transparent;margin-right: 4px;backdrop-filter: none;box-shadow: none;border: none;">
+                            <span class="material-symbols-rounded" style="font-size: 18px;">discover_tune</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="media-session-widget" class="media-widget" style="display: none;">
+                    <div style="background: var(--background-color-tr);box-shadow: var(--sun-shadow);border-radius: inherit;corner-shape: inherit;width: 100%;height: 100%;position: fixed;left: 0;top: 0;"> </div>
+                    <img id="media-widget-art" src="" alt="Album Art">
+                    <div class="app-icon-img">
+                        <img id="media-widget-app-icon" src="" class="media-widget-app-icon" style="display: none;" />
+                    </div>
+                    <div class="media-widget-device">
+                        <span class="material-symbols-rounded">volume_up</span>
+                        <span>This device</span>
+                    </div>
+                    <div class="media-widget-info">
+                        <div id="media-widget-title" class="title"></div>
+                        <div id="media-widget-artist" class="artist"></div>
+                    </div>
+                    <button id="media-widget-play-pause"><span class="material-symbols-rounded" style="font-size: 28px; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;">play_arrow</span></button>
+                    <div class="media-widget-progress-container">
+                        <span id="media-widget-current-time" class="media-widget-time">0:00</span>
+                        <span id="media-widget-duration" class="media-widget-time">0:00</span>
+                    </div>
+                    <div class="media-widget-controls">
+                        <button id="media-widget-prev"><span class="material-symbols-rounded">skip_previous</span></button>
+                        <div id="media-widget-progress-bar">
+                            <div style="display: flex;flex-direction: row;height: 16px;align-items: center;">
+                                <div id="media-widget-progress"></div>
+                                <div style="z-index: 4;width: 6px;background-color: var(--text-color);border-radius: 16px;margin-right: 4px;flex-shrink: 0;height: 16px;margin-left: -6px;"></div>
+                                <div style="background: var(--overlay-color);width: 100%;height: 6px;border-radius: 10px;backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);box-shadow: var(--sun-shadow);border: 1px solid var(--glass-border);"></div>
+                            </div>
+                        </div>
+                        <button id="media-widget-next"><span class="material-symbols-rounded">skip_next</span></button>
+                    </div>
+                </div>
+                
+                <div class="settings-grid system-settings">
+                    <div class="setting-item" id="setting-animation">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">animation</span></div>
+                        <span class="setting-label" data-lang-key="MOTION"></span>
+                    </div>
+                    <div class="setting-item" id="setting-contrast">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">filter_b_and_w</span></div>
+                        <span class="setting-label" data-lang-key="CONTRAST"></span>
+                    </div>
+                    <div class="setting-item" id="setting-hour-format">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">schedule</span></div>
+                        <span class="setting-label">12hr</span>
+                    </div>
+                    <div class="setting-item" id="setting-language">
+                        <div class="setting-icon-bg"><span class="material-symbols-rounded">language</span></div>
+                        <span class="setting-label" data-lang-key="LANGPICK"></span>
+                    </div>
+                </div>
+
+                <div id="kirbindustries-ads-service" style="background-color: var(--search-background);box-shadow: var(--sun-shadow);color: var(--text-color);padding: 10px 14px 10px 12px;border-radius: 35px;corner-shape: superellipse(1.5);z-index: 9999996;transition: opacity 0.5s;display: none;align-items: center;gap: 12px;border: 1px solid var(--glass-border);">
+                    <div id="kirbindustries-ads-service-img" class="app-icon-img" style="width: 42px;">
+                        <img src="/assets/appicon/default.png" class="media-widget-app-icon" style="display: block;">
+                    </div>
+                    <div style="display: flex;flex-direction: column;gap: 4px;">
+                        <div style="display: flex;align-items: center;gap: 6px;">
+                            <span style="font-size: 12px;background: var(--accent);color: var(--background-color);padding: 2px 6px;border-radius: 12px;">Suggested</span>
+                            <span id="kirbindustries-ads-service-icon" class="material-symbols-rounded" style="font-size: 18px;">question_mark</span>
+                            <span id="kirbindustries-ads-service-header" style="font-weight: 500;font-family: 'Open Runde', 'Inter';">???</span>
+                        </div>
+                        <span id="kirbindustries-ads-service-description">???</span>
+                    </div>
+                    <button id="kirbindustries-ads-service-cta" class="controls-footer-button" style="margin-left: auto;padding: 10px 12px 10px 15px;display: flex;gap: 4px;">
+                        Open
+                        <span class="material-symbols-rounded" style="font-size: 18px;">arrow_outward</span>
                     </button>
-                    <button id="blackout-btn" class="btn-qc" style="background-color: var(--tonal);">
-                        <span class="material-symbols-rounded" style="font-size: 18px; color: var(--background-color);">power_settings_new</span>
-                    </button>
                 </div>
             </div>
 
-            <div class="quick-controls">
-                <div class="qcontrol-item" id="silent_switch_qc">
-                    <span class="material-symbols-rounded">notifications_off</span>
-                    <span class="qc-label">LANG_SILENT</span>
-                    <input type="checkbox" id="silent_switch" class="qc-switch" hidden>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <div class="qcontrol-item" id="temp_control_qc">
-                        <span class="material-symbols-rounded" style="margin: 0;">thermometer</span>
-                        <span class="qc-label">LANG_TONE</span>
-                        <span id="thermostat-value" style="display: none;">0</span>
-                    </div>
-                    <div class="qcontrol-item" id="night-mode-qc">
-                        <span class="material-symbols-rounded" style="margin: 0;">bedtime</span>
-                    </div>
-                </div>
-                <div class="qcontrol-item" id="minimal_mode_qc">
-                    <span class="material-symbols-rounded">filter_tilt_shift</span>
-                    <span class="qc-label">LANG_MINIMAL</span>
-                    <input type="checkbox" id="focus-switch" class="qc-switch" hidden>
-                </div>
-                <div class="qcontrol-item" id="light_mode_qc">
-                    <span class="material-symbols-rounded">contrast</span>
-                    <span class="qc-label">LANG_DAYLIGHT</span>
-                    <input type="checkbox" id="theme-switch" class="qc-switch" hidden>
-                </div>
+            <div class="modal-right-pane">
+                <div class="notification-shade"></div>
             </div>
+        </div>
 
-            <div class="qc-sliders">
-                <div class="brightness-slider-container" style="border-radius: 28px 27px 10px 10px;">
-                    <label for="brightness-control" class="cust-label">
-                        <span class="material-symbols-rounded" style="font-size: 20px;">sunny</span>
-                    </label>
-                    <input type="range" min="20" max="100" value="100" class="brightness-slider" id="brightness-control">
-                </div>
-                <div class="volume-slider-container" style="border-radius: 10px 10px 28px 28px;">
-                    <label for="volume-control" class="cust-label">
-                        <span class="material-symbols-rounded" style="font-size: 20px;">volume_up</span>
-                    </label>
-                    <input type="range" min="0" max="100" value="100" class="volume-slider" id="volume-control">
-                    <button id="sound-opt-btn" class="btn-qc" style="background-color: transparent;margin-right: 4px;backdrop-filter: none;box-shadow: none;border: none;">
-                        <span class="material-symbols-rounded" style="font-size: 18px;">discover_tune</span>
-                    </button>
-                </div>
-            </div>
-
-            <div id="media-session-widget" class="media-widget" style="display: none;">
-                <div style="background: var(--background-color-tr);box-shadow: var(--sun-shadow);border-radius: inherit;corner-shape: inherit;width: 100%;height: 100%;position: fixed;left: 0;top: 0;"> </div>
-                <img id="media-widget-art" src="" alt="Album Art">
-                <div class="app-icon-img">
-                    <img id="media-widget-app-icon" src="" class="media-widget-app-icon" style="display: none;" />
-                </div>
-                <div class="media-widget-device">
-                    <span class="material-symbols-rounded">volume_up</span>
-                    <span>This device</span>
-                </div>
-                <div class="media-widget-info">
-                    <div id="media-widget-title" class="title"></div>
-                    <div id="media-widget-artist" class="artist"></div>
-                </div>
-                <button id="media-widget-play-pause"><span class="material-symbols-rounded" style="font-size: 28px; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;">play_arrow</span></button>
-                <div class="media-widget-progress-container">
-                    <span id="media-widget-current-time" class="media-widget-time">0:00</span>
-                    <span id="media-widget-duration" class="media-widget-time">0:00</span>
-                </div>
-                <div class="media-widget-controls">
-                    <button id="media-widget-prev"><span class="material-symbols-rounded">skip_previous</span></button>
-                    <div id="media-widget-progress-bar">
-                        <div style="display: flex;flex-direction: row;height: 16px;align-items: center;">
-                            <div id="media-widget-progress"></div>
-                            <div style="z-index: 4;width: 6px;background-color: var(--text-color);border-radius: 16px;margin-right: 4px;flex-shrink: 0;height: 16px;margin-left: -6px;"></div>
-                            <div style="background: var(--overlay-color);width: 100%;height: 6px;border-radius: 10px;backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);box-shadow: var(--sun-shadow);border: 1px solid var(--glass-border);"></div>
-                        </div>
-                    </div>
-                    <button id="media-widget-next"><span class="material-symbols-rounded">skip_next</span></button>
-                </div>
-            </div>
-            
-            <div class="notification-shade"></div>
-
-            <div class="settings-grid system-settings">
-                 <div class="setting-item" id="setting-animation">
-                    <div class="setting-icon-bg"><span class="material-symbols-rounded">animation</span></div>
-                    <span class="setting-label" data-lang-key="MOTION"></span>
-                </div>
-                <div class="setting-item" id="setting-contrast">
-                    <div class="setting-icon-bg"><span class="material-symbols-rounded">filter_b_and_w</span></div>
-                    <span class="setting-label" data-lang-key="CONTRAST"></span>
-                </div>
-                <div class="setting-item" id="setting-hour-format">
-                    <div class="setting-icon-bg"><span class="material-symbols-rounded">schedule</span></div>
-                    <span class="setting-label">12hr</span>
-                </div>
-                <div class="setting-item" id="setting-language">
-                    <div class="setting-icon-bg"><span class="material-symbols-rounded">language</span></div>
-                    <span class="setting-label" data-lang-key="LANGPICK"></span>
-                </div>
-            </div>
-            
-            <div class="settings-grid home-settings">
-                <div class="settings-grid general-home-settings" style="border-radius: 10px; display: none; content-visibility: hidden;">
-                    <div class="setting-item" id="setting-one-button-nav">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">arrow_selector_tool</span></div>
-                        <span class="setting-label" data-lang-key="ONE_BUTTON_NAV">Buttons</span>
-                    </div>
-                </div>
-                <!-- Add -->
-                <h4 style="margin: 10px;">Add</h4>
-                <div class="settings-grid add-settings">
-                    <div class="setting-item" id="setting-widgets">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">widget_menu</span></div>
-                        <span class="setting-label" data-lang-key="WIDGETS">Widgets</span>
-                    </div>
-                    <div class="setting-item" id="setting-wallpaper">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">filter_vintage</span></div>
-                        <span class="setting-label" data-lang-key="WALLPAPER"></span>
-                    </div>
-                </div>
-                <!-- Appearance -->
-                <h4 style="margin: 10px;">Appearance</h4>
-                <div class="settings-grid appearance-settings">
-                    <div class="setting-item" id="setting-style">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">match_case</span></div>
-                        <span class="setting-label" data-lang-key="STYLE">Style</span>
-                    </div>
-            
-                    <div class="setting-item active" id="setting-clock-color">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">colorize</span></div>
-                        <span class="setting-label" data-lang-key="CLOCK_COLOR">Color</span>
-                    </div>
-            
-                    <div class="setting-item" id="setting-clock-shadow">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">text_select_move_down</span></div>
-                        <span class="setting-label" data-lang-key="SHADOW">Shadow</span>
-                    </div>
-            
-                    <div class="setting-item" id="setting-weight">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">line_weight</span></div>
-                        <span class="setting-label" data-lang-key="WEIGHT">Weight</span>
-                    </div>
-            
-                    <div class="setting-item active" id="setting-roundness">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">circles</span></div>
-                        <span class="setting-label">Roundness</span>
-                    </div>
-                    
-                    <div class="setting-item" id="setting-clock-stroke">
-                        <div class="setting-icon-bg">
-                            <span class="material-symbols-rounded">border_color</span>
-                        </div>
-                        <span class="setting-label">Outline</span>
-                    </div>
-
-                    <div class="setting-item" id="setting-italic">
-                        <div class="setting-icon-bg">
-                            <span class="material-symbols-rounded">format_italic</span>
-                        </div>
-                        <span class="setting-label">Italic</span>
-                    </div>
-
-                    <div class="setting-item" id="setting-blend-mode">
-                        <div class="setting-icon-bg">
-                            <span class="material-symbols-rounded">difference</span>
-                        </div>
-                        <span class="setting-label">Blend Mode</span>
-                    </div>
-                </div>
-                <!-- Layout -->
-                <h4 style="margin: 10px;">Layout</h4>
-                <div class="settings-grid layout-settings">
-                    <div class="setting-item active" id="setting-clock-stack">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">farsight_digital</span></div>
-                        <span class="setting-label" data-lang-key="CLOCK_STACK">Clock Stack</span>
-                    </div>
-                    
-                    <div class="setting-item active" id="setting-position">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">open_with</span></div>
-                        <span class="setting-label" data-lang-key="ALIGNMENT">Alignment</span>
-                    </div>
-            
-                    <div class="setting-item active" id="setting-clock-spacing">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">space_bar</span></div>
-                        <span class="setting-label">Spacing</span>
-                    </div>
-            
-                    <div class="setting-item" id="setting-text-case">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">text_fields</span></div>
-                        <span class="setting-label">Case</span>
-                    </div>
-                </div>
-                <!-- Time & Date -->
-                <h4 style="margin: 10px;">Time & Date</h4>
-                <div class="settings-grid time-date-settings">
-                    <div class="setting-item active" id="setting-size">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">measuring_tape</span></div>
-                        <span class="setting-label">Clock Size</span>
-                    </div>
-                    
-                    <div class="setting-item active" id="setting-date-size">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">calendar_view_day</span></div>
-                        <span class="setting-label">Date Size</span>
-                    </div>
-
-                    <div class="setting-item" id="setting-format">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">edit_calendar</span></div>
-                        <span class="setting-label" data-lang-key="FORMAT">Format</span>
-                    </div>
-            
-                    <div class="setting-item" id="setting-seconds">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">timer_10_select</span></div>
-                        <span class="setting-label" data-lang-key="SECONDS">Seconds</span>
-                    </div>
-            
-                    <div class="setting-item" id="setting-date-offset">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">vertical_align_center</span></div>
-                        <span class="setting-label">Date Offset</span>
-                    </div>
-                </div>
-                <!-- Other -->
-                <h4 style="margin: 10px;">Other</h4>
-                <div class="settings-grid other-settings">
-                    <div class="setting-item active" id="setting-gurapps">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">grid_view</span></div>
-                        <span class="setting-label" data-lang-key="GURAPPS">Gurapps</span>
-                    </div>
-            
-                    <div class="setting-item" id="setting-weather">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">partly_cloudy_day</span></div>
-                        <span class="setting-label" data-lang-key="WEATHER">Weather</span>
-                    </div>
-                </div>
-                <h4 style="margin: 10px;">Atmosphere</h4>
-                <div class="settings-grid wallpaper-settings" style="border-radius: 10px">
-                    <div class="setting-item" id="setting-wallpaper-blur">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">motion_mode</span></div>
-                        <span class="setting-label" data-lang-key="BLUR">Blur</span>
-                    </div>
-                    <div class="setting-item" id="setting-wallpaper-brightness">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">wb_sunny</span></div>
-                        <span class="setting-label" data-lang-key="BRIGHTNESS">Brightness</span>
-                    </div>
-                    <div class="setting-item" id="setting-wallpaper-contrast-fx">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">opacity</span></div>
-                        <span class="setting-label" data-lang-key="CONTRAST_FX">Clarity</span>
-                    </div>
-
-                    <div class="setting-item" id="setting-wallpaper-saturate">
-                        <div class="setting-icon-bg">
-                            <span class="material-symbols-rounded">tonality</span>
-                        </div>
-                        <span class="setting-label">Saturation</span>
-                    </div>
-
-                    <div class="setting-item" id="setting-wallpaper-hue">
-                        <div class="setting-icon-bg">
-                            <span class="material-symbols-rounded">palette</span>
-                        </div>
-                        <span class="setting-label">Hue</span>
-                    </div>
-
-                    <div class="setting-item" id="setting-wallpaper-vignette">
-                        <div class="setting-icon-bg">
-                            <span class="material-symbols-rounded">lens_blur</span>
-                        </div>
-                        <span class="setting-label">Vignette</span>
-                    </div>
-
-                    <div class="setting-item" id="setting-live-environment">
-                        <div class="setting-icon-bg"><span class="material-symbols-rounded">routine</span></div>
-                        <span class="setting-label">Live Scene</span>
-                    </div>
-                </div>
-            </div>
-
-            <div id="kirbindustries-ads-service" style="margin-top: 10px;background-color: var(--search-background);box-shadow: var(--sun-shadow);color: var(--text-color);padding: 10px 14px 10px 12px;border-radius: 35px;corner-shape: superellipse(1.5);z-index: 9999996;transition: opacity 0.5s;display: none;align-items: center;gap: 12px;border: 1px solid var(--glass-border);">
-                <div id="kirbindustries-ads-service-img" class="app-icon-img" style="width: 42px;">
-                    <img src="/assets/appicon/default.png" class="media-widget-app-icon" style="display: block;">
-                </div>
-                <div style="display: flex;flex-direction: column;gap: 4px;">
-                    <div style="display: flex;align-items: center;gap: 6px;">
-                        <span style="font-size: 12px;background: var(--accent);color: var(--background-color);padding: 2px 6px;border-radius: 12px;">Suggested</span>
-                        <span id="kirbindustries-ads-service-icon" class="material-symbols-rounded" style="font-size: 18px;">question_mark</span>
-                        <span id="kirbindustries-ads-service-header" style="font-weight: 500;font-family: 'Open Runde', 'Inter';">???</span>
-                    </div>
-                    <span id="kirbindustries-ads-service-description">???</span>
-                </div>
-                <button id="kirbindustries-ads-service-cta" class="controls-footer-button" style="margin-left: auto;padding: 10px 12px 10px 15px;display: flex;gap: 4px;">
-                    Open
-                    <span class="material-symbols-rounded" style="font-size: 18px;">arrow_outward</span>
+        <div id="app-management-info" class="app-management-info" style="display: none;">
+            <label class="cust-label" id="current-app-label">
+                <img src="" alt="App Icon" style="width: 32px; height: 32px; border-radius: 35%; corner-shape: superellipse(1.25); object-fit: cover;">
+                <span>App Name</span>
+            </label>
+            <div style="display: flex; gap: 12px;">
+                <button id="app-close-btn" class="btn-qc">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">close</span>
                 </button>
-            </div>
-            <div id="app-management-info" class="app-management-info" style="display: none;">
-                <label class="cust-label" id="current-app-label">
-                    <img src="" alt="App Icon" style="width: 32px; height: 32px; border-radius: 35%; corner-shape: superellipse(1.25); object-fit: cover;">
-                    <span>App Name</span>
-                </label>
-                <div style="display: flex; gap: 12px;">
-                    <button id="app-close-btn" class="btn-qc">
-                        <span class="material-symbols-rounded" style="font-size: 18px;">close</span>
-                    </button>
-                    <button id="app-minimize-btn" class="btn-qc">
-                        <span class="material-symbols-rounded" style="font-size: 18px;">hide</span>
-                    </button>
-                </div>
+                <button id="app-minimize-btn" class="btn-qc">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">hide</span>
+                </button>
             </div>
         </div>
     </div>

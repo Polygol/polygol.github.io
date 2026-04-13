@@ -465,6 +465,16 @@ window.addEventListener('wheel', function(e) {
     }
 }, { passive: false });
 
+// Fully disable pinch-to-zoom on iOS/touch devices
+document.addEventListener('touchmove', function(e) {
+    if (e.scale !== 1 && e.scale !== undefined) {
+        e.preventDefault();
+    }
+    if (e.touches && e.touches.length === 2) {
+        e.preventDefault();
+    }
+}, { passive: false });
+
 // Prevents back/forward navigation
 const _disabledSysNav = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
 if (!_disabledSysNav.includes('NavBlocker')) {
