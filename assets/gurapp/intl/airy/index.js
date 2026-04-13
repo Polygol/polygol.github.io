@@ -2707,8 +2707,8 @@ async function fetchWallpaperPresets() {
 fetchWallpaperPresets();
 
 async function firstSetup() {
-    document.body.classList.add('setup-active'); // Add class to hide UI
-    isDuringFirstSetup = true; // Set flag to block initial loads
+    document.body.classList.add('setup-active');
+    isDuringFirstSetup = true;
     
     // 1. If presets haven't loaded yet, wait for them
     if (WALLPAPER_PRESETS.length === 0) {
@@ -2726,7 +2726,7 @@ async function firstSetup() {
         document.body.style.setProperty('--bg-image', "url('/assets/gurapp/intl/airy/img.jpg')");
     }
 
-    createSetupScreen(); // UI now uses the correct currentLanguage
+    createSetupScreen();
 }
 
 function createSetupScreen() {
