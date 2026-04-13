@@ -99,6 +99,122 @@ let _interactionThrottle = false;
     }, { passive: true, capture: true });
 });
 
+// --- System Garbage Collector ---
+const SystemGC = {
+    isRunning: false,
+    lastRun: 0,
+    INTERVAL_MS: 15 * 60 * 1000, // 15 minutes
+
+    async run(force = false) {
+        const now = Date.now();
+        if (this.isRunning) return;
+        if (!force && (now - this.lastRun < this.INTERVAL_MS)) return;
+
+        this.isRunning = true;
+        console.log("[SystemGC] Starting comprehensive garbage collection...");
+
+        try {
+            // 1. DOM Sweep: Orphaned Embeds
+            const allEmbeds = document.querySelectorAll('.fullscreen-embed');
+            const activeUrl = document.querySelector('.fullscreen-embed[style*="display: block"]')?.dataset?.embedUrl;
+            let removedEmbeds = 0;
+
+            allEmbeds.forEach(embed => {
+                const url = embed.dataset.embedUrl;
+                // If it's not the active app, and not in the minimized cache, it's an orphan
+                if (url !== activeUrl && window.minimizedEmbeds && !window.minimizedEmbeds[url]) {
+                    const iframe = embed.querySelector('iframe');
+                    if (iframe) {
+                        iframe.src = 'about:blank'; // Free memory
+                        iframe.remove();
+                    }
+                    embed.remove();
+                    removedEmbeds++;
+                }
+            });
+            if (removedEmbeds > 0) console.log(`[SystemGC] Cleared ${removedEmbeds} orphaned embeds.`);
+
+            // 2. SwapManager (IndexedDB) Sweep: Stale Snapshots
+            if (typeof SwapManager !== 'undefined' && SwapManager.db) {
+                const tx = SwapManager.db.transaction(SwapManager.storeName, 'readwrite');
+                const store = tx.objectStore(SwapManager.storeName);
+                const req = store.getAllKeys();
+                
+                req.onsuccess = () => {
+                    const keys = req.result;
+                    let removedKeys = 0;
+                    
+                    keys.forEach(key => {
+                        if (typeof key !== 'string') return;
+                        
+                        // Clean app snapshots
+                        if (key.startsWith('app_snap_')) {
+                            const url = key.replace('app_snap_', '');
+                            if (url !== activeUrl && window.minimizedEmbeds && !window.minimizedEmbeds[url]) {
+                                store.delete(key);
+                                removedKeys++;
+                            }
+                        }
+                        
+                        // Clean widget snapshots
+                        if (key.startsWith('widget_snap_')) {
+                            const idx = parseInt(key.replace('widget_snap_', ''));
+                            if (isNaN(idx) || (window.activeWidgets && !window.activeWidgets[idx])) {
+                                store.delete(key);
+                                removedKeys++;
+                            }
+                        }
+                    });
+                    if (removedKeys > 0) console.log(`[SystemGC] Cleared ${removedKeys} stale swap entries.`);
+                };
+            }
+
+            // 3. Memory Tracking Arrays Sweep
+            if (window.appHistoryStack && window.appHistoryStack.length > 20) {
+                window.appHistoryStack = window.appHistoryStack.slice(-20);
+            }
+
+            // 4. Timeout/Interval Sweep
+            if (window.minimizeTimeouts) {
+                for (const url in window.minimizeTimeouts) {
+                    if (window.minimizedEmbeds && !window.minimizedEmbeds[url] && url !== activeUrl) {
+                        clearTimeout(window.minimizeTimeouts[url]);
+                        delete window.minimizeTimeouts[url];
+                    }
+                }
+            }
+
+            // 5. App Usage Tracking Sweep (Remove uninstalled apps)
+            if (window.apps && window.appUsage) {
+                let usageChanged = false;
+                for (const appName in window.appUsage) {
+                    if (!window.apps[appName]) {
+                        delete window.appUsage[appName];
+                        if (window.appLastOpened) delete window.appLastOpened[appName];
+                        usageChanged = true;
+                    }
+                }
+                if (usageChanged) {
+                    localStorage.setItem('appUsage', JSON.stringify(window.appUsage));
+                    if (window.appLastOpened) localStorage.setItem('appLastOpened', JSON.stringify(window.appLastOpened));
+                }
+            }
+
+            // 6. Force GC Hint
+            // Allocating and dereferencing a small block can hint the engine to run its native GC
+            let _gcHint = new ArrayBuffer(1024 * 1024 * 2);
+            _gcHint = null;
+
+        } catch (e) {
+            console.error("[SystemGC] Error during garbage collection:", e);
+        } finally {
+            this.lastRun = now;
+            this.isRunning = false;
+            console.log("[SystemGC] GC cycle complete.");
+        }
+    }
+};
+
 // --- Dynamic Resource Manager ---
 const ResourceManager = {
     // Configuration
@@ -165,6 +281,8 @@ const ResourceManager = {
 
         this.intervalId = setInterval(() => {
             this.checkMemory();
+            SystemGC.run(); // Will self-throttle to 15 mins unless forced
+            
             // If we are struggling but tasks are clearing up, attempt recovery
             if (this.isStruggling) {
                 this.recoveryCounter++;
@@ -371,6 +489,7 @@ const ResourceManager = {
             forceCloseApp(oldestUrl);
             
             showPopup(`Closed ${appName} to free memory`);
+            SystemGC.run(true); // Force GC immediately after OOM kill
         }
     }
 };
