@@ -1755,6 +1755,48 @@ const Gurasuraisu = {
       this._call('closeSheet');
   },
 
+  /**
+   * Registers a Desktop Action that can be executed on files or globally.
+   * @param {object} action { id, label, description, icon, handlerEvent }
+   */
+  registerAction: function(action) {
+      this._call('registerDesktopAction', [action]);
+  },
+
+  /**
+   * Gets a list of all registered Actions across all apps.
+   * @returns {Promise<Array>}
+   */
+  listActions: function() {
+      return new Promise((resolve) => {
+          if (!isInsideGurasuraisu) return resolve([]);
+          const listener = (e) => {
+              if (e.source !== window.parent) return;
+              if (e.data.type === 'desktop-actions-list') {
+                  window.removeEventListener('message', listener);
+                  resolve(e.data.value || e.data.message || []);
+              }
+          };
+          window.addEventListener('message', listener);
+          this._call('listDesktopActions');
+      });
+  },
+
+  /**
+   * Executes a registered action, sending files to the handling app.
+   */
+  runActionOnFiles: function(actionId, filesArray) {
+      this._call('runActionOnFiles', [actionId, filesArray]);
+  },
+
+  /**
+   * Registers top-bar menus for this specific application.
+   * @param {Array} menus Array of { id, label, items: [{id, label}] }
+   */
+  registerAppMenus: function(menus) {
+      this._call('registerDesktopAppMenus', [menus]);
+  },
+
   sheet: {
       /**
        * Send a message from the sheet to the origin application.
