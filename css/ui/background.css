@@ -1,0 +1,76 @@
+body::before,
+#background-video {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    transition: background-color 0.3s, color 0.3s, background-image 0.5s, filter 1s !important;
+    background-image: var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* Use the variable inherited from the body */
+    transform: scale(var(--bg-transform-scale));
+    filter: var(--wallpaper-filter, none);
+    /* Use the CSS custom property */
+}
+
+body:not(.reduce-animations)::before,
+#background-video:not(.reduce-animations),
+#depth-layer:not(.reduce-animations) {
+    transition: background-color 0.3s, color 0.3s, background-image 0.5s linear(0 0%, 0 1.8%, 0.01 3.6%, 0.03 6.35%, 0.07 9.1%, 0.13 11.4%, 0.19 13.4%, 0.27 15%, 0.34 16.1%, 0.54 18.35%, 0.66 20.6%, 0.72 22.4%, 0.77 24.6%, 0.81 27.3%, 0.85 30.4%, 0.88 35.1%, 0.92 40.6%, 0.94 47.2%, 0.96 55%, 0.98 64%, 0.99 74.4%, 1 86.4%, 1 100%), filter 1s, transform 1s linear(0 0%, 0 1.8%, 0.01 3.6%, 0.03 6.35%, 0.07 9.1%, 0.13 11.4%, 0.19 13.4%, 0.27 15%, 0.34 16.1%, 0.54 18.35%, 0.66 20.6%, 0.72 22.4%, 0.77 24.6%, 0.81 27.3%, 0.85 30.4%, 0.88 35.1%, 0.92 40.6%, 0.94 47.2%, 0.96 55%, 0.98 64%, 0.99 74.4%, 1 86.4%, 1 100%) !important
+}
+
+/* Add object-fit for video specifically */
+#background-video {
+    object-fit: cover;
+}
+
+#depth-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* Let clicks pass through to widgets */
+    z-index: 5;
+    /* Above Clock/Widgets, below Apps/Modals */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: background-color 0.3s, color 0.3s, background-image 0.5s, filter 1s !important;
+    /* Match the main background transform for animations */
+    transform: scale(var(--bg-transform-scale));
+    filter: var(--wallpaper-filter, none) drop-shadow(0 10px 20px var(--search-background-dark));
+    /* Use the CSS custom property */
+}
+
+#time-of-day-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    /* Just above background */
+    pointer-events: none;
+    mix-blend-mode: color-burn;
+    transition: background-color 3s ease, opacity 3s ease;
+    opacity: 0;
+}
+
+#vignette-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    /* Below depth layer, environment, and UI */
+    background: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.85) 150%);
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}

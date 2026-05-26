@@ -17,7 +17,6 @@ Documentation at https://kirbindustries.gitbook.io/polygol
 * Extensive wallpaper based customization with Custom CSS
 * Integration with applications
 * Beautiful Dynamic Glass UI
-* Smart AI assistant
 
 # Roadmap
 * Extend language support
@@ -34,12 +33,6 @@ Documentation at https://kirbindustries.gitbook.io/polygol
 
 ### "Why is there no clock app?"
 You must install it from the App Store.
-
-### "How to use GuraAI?"
-You must have a Google AI Studio Gemini key. 
-* Open Settings in Polygol
-* Open General
-* In GuraAI section, turn on GuraAI. It will ask for your key!"
 
 ### "How to transfer my data?"
 Use https://polygol.github.io/transfer
@@ -104,8 +97,9 @@ You are free to do anything to the code under CC BY-NC 4.0.
 
 You may not use our brand in any method not authorized, including identifiable visual assets.
 
-AI Notice: Some sections of code are generated with various AI models. However, AI is not used at all for visual assets, such as Gurapp Icons.
+LLM Notice: Some sections of code may be generated with various LLM models with extremely strict requirements. Your data is always secured and safe. However, LLM is not used at all for visual assets, design, marketing and concept, for example the Gurapp Icons or wallpapers.
+All kirbIndustries products are not vibe-coded.
 
 ---
 
-Please contact us at kirbind.manatee415@passinbox.com for removal/addition/modification requests
+Please contact us at our GitHub email for private removal/addition/modification requests

@@ -1,0 +1,396 @@
+#dynamic-area {
+    translate: 0 0;
+    position: fixed;
+    top: 16.5px;
+    right: 14px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    /* Space between segments */
+    z-index: 9995;
+    pointer-events: none;
+    /* Let clicks pass through, children will re-enable */
+}
+
+body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area {
+    right: calc(25px + clamp(300px, 30%, 420px));
+}
+
+#activity-island {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.activity-capsule {
+    position: relative;
+    height: 26px;
+    border-radius: 10px;
+    corner-shape: superellipse(1.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+    pointer-events: auto;
+    cursor: pointer;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+}
+
+.activity-capsule.has-text {
+    background-color: var(--search-background);
+    padding: 4px 8px;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+    border-radius: 50px;
+    backdrop-filter: blur(2.5px) saturate(2) var(--edge-refraction-filter);
+    display: flex;
+    flex-direction: row;
+    font-size: 12px;
+    gap: 4px;
+    font-variant-numeric: tabular-nums;
+    height: 16px;
+    corner-shape: round;
+}
+
+@keyframes capsule-pop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.activity-capsule img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    scale: 1.5;
+}
+
+.activity-capsule .material-symbols-rounded {
+    font-size: 20px;
+    color: var(--text-color);
+}
+
+.activity-capsule.has-text .material-symbols-rounded {
+    font-size: 12px;
+}
+
+#status-indicator {
+    width: 8px;
+    height: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1);
+    pointer-events: auto;
+    /* Clickable to open Quick Settings */
+    cursor: pointer;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    backdrop-filter: invert(1) grayscale(1) contrast(50) blur(10px);
+    position: fixed;
+    top: 0;
+    right: 4px;
+}
+
+#status-indicator .material-symbols-rounded {
+    font-size: 14px;
+    color: transparent;
+}
+
+.persistent-clock {
+    pointer-events: auto;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    background-color: transparent;
+    opacity: 1;
+    visibility: visible;
+    user-select: none;
+    font-family: 'Inter Numeric', 'Inter';
+    font-variant-numeric: tabular-nums;
+    font-variation-settings: "RDNS" 1;
+    display: flex;
+    align-items: center;
+    /* Keeps the image and text aligned */
+    gap: 0;
+    cursor: pointer;
+    transform: scale(1);
+    transition: all 0.15s cubic-bezier(.2, 1.3, .64, 1);
+    font-weight: 600;
+    transform-origin: top;
+}
+
+/* Fix for misaligned colon in persistent clock */
+.persistent-clock .persistent-colon {
+    position: relative;
+    top: -0.125em;
+}
+
+@supports (-webkit-mask-clip: text) {
+    body:not(.high-contrast) .persistent-clock {
+        color: transparent;
+    }
+
+    body:not(.high-contrast) .persistent-clock .persistent-colon,
+    body:not(.high-contrast) .persistent-clock .persistent-clock-digit,
+    body:not(.high-contrast) .persistent-clock .material-symbols-rounded,
+    body:not(.high-contrast) #status-indicator .material-symbols-rounded {
+        -webkit-mask-image: linear-gradient(black, black);
+        -webkit-mask-clip: text;
+        -webkit-mask-composite: source-in;
+        mask-image: linear-gradient(black, black);
+        mask-composite: source-in;
+        backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
+    }
+
+    body:not(.high-contrast) .nav-btn-small svg {
+        -webkit-mask-image: var(--trigger-mask, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M 3 3 L 3 9 A 10 10 0 0 0 13 19 L 19 19' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>"));
+        mask-image: var(--trigger-mask, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M 3 3 L 3 9 A 10 10 0 0 0 13 19 L 19 19' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>"));
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
+        color: transparent;
+        /* Hide solid stroke so only the masked backdrop-filter shows */
+    }
+}
+
+.persistent-clock:active {
+    transform: scale(1.04) scaleY(1.1);
+    transition: transform 0.1s cubic-bezier(.2, 1.3, .64, 1);
+}
+
+.persistent-clock.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.persistent-clock-actions {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    padding: 8px;
+    z-index: 9996;
+    gap: 12px;
+    transform-origin: right;
+    transform: scale(0.9);
+    filter: blur(2.5px);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    pointer-events: none;
+}
+
+#quick-action-minimize,
+#app-minimize-btn {
+    background-color: rgba(255, 193, 7, 0.75);
+    /* Amber 75% */
+    color: #b26a00;
+}
+
+#quick-action-close,
+#app-close-btn {
+    background-color: rgba(244, 67, 54, 0.75);
+    /* Red 75% */
+    color: #a91b0d;
+}
+
+.persistent-clock-actions.show {
+    transform: scale(1);
+    filter: none;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* --- Home Screen Activities --- */
+#home-activity-container {
+    position: fixed;
+    z-index: 49;
+    width: clamp(300px, 30%, 420px);
+    height: 100px;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#home-activity-container.pos-tl {
+    top: 20px;
+    left: 20px;
+}
+
+#home-activity-container.pos-tr {
+    top: 20px;
+    right: 20px;
+}
+
+#home-activity-container.pos-bl {
+    bottom: 20px;
+    left: 20px
+}
+
+#home-activity-container.pos-br {
+    bottom: 20px;
+    right: 20px;
+}
+
+#home-activity-container.dragging {
+    transition: none;
+    cursor: grabbing;
+    transform: scale(1.05);
+    z-index: 10000;
+}
+
+.home-activity-item {
+    display: none;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    background-color: var(--search-background);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+}
+
+.home-activity-item.active {
+    display: flex;
+}
+
+.home-media-widget {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 12px 14px 12px 14px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+#home-media-art {
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    left: 18px;
+    top: 15px;
+    object-fit: cover;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
+    border-radius: 10px;
+    corner-shape: inherit;
+    outline: 1px solid var(--glass-border);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+}
+
+#home-media-art:active {
+    transform: scale(1.1);
+    transition: transform 0.1s cubic-bezier(.2, 1.3, .64, 1);
+    filter: brightness(1.5);
+}
+
+.home-media-info {
+    flex-grow: 1;
+    min-width: 0;
+    display: flex;
+    gap: 4px;
+    flex-direction: column;
+    margin: 2px 52px 0 52px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.home-media-info .title {
+    font-weight: bold;
+    font-family: 'Open Runde';
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 4px;
+    line-height: 1.25;
+}
+
+.home-media-info .artist {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 4px;
+    line-height: 1.25;
+}
+
+#home-media-progress-bar {
+    border-radius: 0;
+    overflow: visible;
+    margin: 0;
+    box-shadow: none;
+    border: none;
+    flex-grow: 1;
+    z-index: 1;
+}
+
+#home-media-progress {
+    width: 0%;
+    height: 100%;
+    background-color: var(--text-color);
+    border-radius: 0;
+    transition: width 0.2s ease;
+    --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0,5 Q5,10 10,5 T20,5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' /%3E%3C/svg%3E");
+    -webkit-mask-image: var(--wave);
+    mask-image: var(--wave);
+    -webkit-mask-size: 15px 100%;
+    mask-size: 15px 100%;
+    -webkit-mask-repeat: repeat-x;
+    mask-repeat: repeat-x;
+    -webkit-mask-position: 0 center;
+    mask-position: 0 center;
+    animation: wave-move 1s linear infinite;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+}
+
+.home-media-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.home-media-controls button {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    width: 40px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+#home-media-play-pause {
+    background: var(--accent);
+    box-shadow: var(--sun-shadow);
+    border: 1px solid var(--glass-border);
+    width: 40px;
+    height: 40px;
+    border-radius: 25px;
+    corner-shape: superellipse(1.5);
+    color: var(--background-color);
+    position: absolute;
+    right: 18px;
+    top: 15px;
+}

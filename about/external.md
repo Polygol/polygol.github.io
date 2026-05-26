@@ -29,9 +29,6 @@ It does not include our self made assets/libraries/frameworks.
 *   **SunCalc**
     *   License: BSD-2-Clause
     *   Project: [https://github.com/mourner/suncalc](https://github.com/mourner/suncalc)
-*   **Google Generative AI SDK**
-    *   License: [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
-    *   Project: [https://github.com/google/generative-ai-js](https://github.com/google/generative-ai-js)
 *   **@imgly/background-removal**
     *   License: AGPL v3
     *   Project: [https://github.com/imgly/background-removal-js](https://github.com/imgly/background-removal-js)

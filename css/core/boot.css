@@ -1,0 +1,58 @@
+.splash-screen {
+    z-index: 9999999999999 !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 5s ease, filter 1s ease !important;
+}
+
+/* --- Loading Screen Styles --- */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(10px);
+    background-color: var(--search-background);
+    z-index: 999999999999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10%;
+    opacity: 1;
+    transition: opacity 0.8s ease-out, filter 0.2s ease-out, backdrop-filter 0.2s ease-out, transform 1s ease-out, background-color 2s ease, color 2s ease !important;
+}
+
+.loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    filter: blur(5px);
+    backdrop-filter: blur(0px);
+    transform: scale(2);
+    transition: opacity 0.8s ease-out, filter 0.2s ease-out, backdrop-filter 0.2s ease-out, transform 1s ease-out, background-color 2s ease, color 2s ease !important;
+}
+
+.boot-help {
+    position: fixed;
+    bottom: 40px;
+    color: var(--secondary-text-color);
+    background-color: transparent;
+    padding: 8px 10px;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    text-align: right;
+    align-items: center;
+    /* Keeps the image and text aligned */
+    gap: 8px;
+    /* Adds spacing between image and text */
+    cursor: pointer;
+}

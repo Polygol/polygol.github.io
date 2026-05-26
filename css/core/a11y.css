@@ -1,0 +1,121 @@
+/* Universal backdrop-filter removal for high contrast */
+body.high-contrast *:not(#brightness-overlay):not(#temperature-overlay):not(#a11y-overlay) {
+    backdrop-filter: none !important;
+}
+
+body.glass-effects-disabled {
+    --edge-refraction-filter: blur(17.5px);
+    /* Frosted glass appearance */
+}
+
+body.high-contrast .persistent-clock {
+    color: var(--text-color);
+}
+
+body.high-contrast #status-indicator .material-symbols-rounded {
+    color: var(--text-color);
+}
+
+body.high-contrast .status-dot {
+    background-color: var(--accent);
+    backdrop-filter: none;
+}
+
+body.high-contrast .nav-pill {
+    background-color: var(--text-color);
+}
+
+body.high-contrast .nav-btn-small .material-symbols-rounded {
+    color: var(--text-color);
+}
+
+body.high-contrast .info.glass-effect .date,
+body.high-contrast .clock.glass-effect>*,
+body.high-contrast .info.dynamic-fill-effect .date,
+body.high-contrast .clock.dynamic-fill-effect>* {
+    color: var(--accent) !important;
+    background: none !important;
+    /* Ensure no other backgrounds interfere */
+    -webkit-mask-image: none;
+    -webkit-mask-clip: none;
+    -webkit-mask-composite: none;
+    mask-image: none;
+    mask-composite: none;
+    backdrop-filter: none;
+}
+
+/* When animations are disabled */
+.reduce-animations * {
+    /* Disable all animations */
+    animation: none !important;
+
+    /* Disable all transitions except opacity */
+    transition: opacity 0.3s ease !important;
+    transition-property: opacity !important;
+}
+
+/* Special handling for clickable elements */
+.reduce-animations [onclick],
+.reduce-animations button,
+.reduce-animations a,
+.reduce-animations input[type="button"],
+.reduce-animations input[type="submit"],
+.reduce-animations .clickable {
+    /* Keep initial state but remove transition */
+    transform: scale(1) !important;
+    transition: opacity 0.3s ease !important;
+}
+
+/* Keep active state functional but without animation */
+.reduce-animations [onclick]:active,
+.reduce-animations button:active,
+.reduce-animations a:active,
+.reduce-animations input[type="button"]:active,
+.reduce-animations input[type="submit"]:active,
+.reduce-animations .clickable:active {
+    /* Apply scale instantly without transition */
+    transform: scale(1.1) !important;
+    transition: none !important;
+}
+
+/* Accessibility Focus Ring */
+.a11y-focused {
+    outline: 4px solid var(--accent) !important;
+    outline-offset: 4px !important;
+    z-index: 999999 !important;
+    transition: outline 0.1s !important;
+}
+
+/* Accessibility Overlay */
+#a11y-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999997;
+    display: none;
+    transition: backdrop-filter 0.3s ease;
+}
+
+/* Color Filters */
+html.filter-grayscale {
+    filter: grayscale(100%) !important;
+}
+
+html.filter-invert {
+    filter: invert(100%) !important;
+}
+
+html.filter-protanopia {
+    filter: url('#a11y-protanopia') !important;
+}
+
+html.filter-deuteranopia {
+    filter: url('#a11y-deuteranopia') !important;
+}
+
+html.filter-tritanopia {
+    filter: url('#a11y-tritanopia') !important;
+}

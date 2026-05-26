@@ -1,0 +1,301 @@
+/* --- Widget System Styles --- */
+.widget-grid {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    /* The grid itself is not interactive */
+}
+
+.widget-instance {
+    position: absolute;
+    background: var(--search-background);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    width: 200px;
+    /* Default size, can be overridden */
+    height: 200px;
+    pointer-events: auto;
+    touch-action: none;
+    /* Prevent page scroll on mobile */
+    box-sizing: border-box;
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
+    box-shadow: 0 5px 20px -10px rgba(0, 0, 0, 0.2);
+}
+
+.widget-instance.is-dragging {
+    z-index: 1000;
+}
+
+.widget-instance.is-dragging .widget-instance-overlay {
+    cursor: grabbing !important;
+}
+
+.widget-instance iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    pointer-events: none;
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
+}
+
+.widget-instance-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    z-index: 2;
+    /* Sits on top of the iframe */
+    box-shadow: var(--sun-shadow);
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
+}
+
+.widget-instance-overlay:active .widget-instance,
+.widget-instance.is-dragging {
+    transform: scale(1.04) !important;
+    cursor: pointer;
+    filter: brightness(1.5) !important;
+}
+
+/* --- Snap Line Indicators --- */
+.snap-line {
+    position: fixed;
+    background-color: rgba(0, 122, 255, 0.8);
+    display: none;
+    /* Hidden by default */
+    z-index: 9999;
+}
+
+.snap-line-v {
+    width: 2px;
+    height: 100%;
+    top: 0;
+}
+
+.snap-line-h {
+    height: 2px;
+    width: 100%;
+    left: 0;
+}
+
+.widget-instance-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 2;
+    /* Sits on top of the iframe */
+}
+
+.widget-instance.sticker-widget {
+    z-index: 20;
+    transform-origin: center center;
+}
+
+.widget-instance.sticker-widget.is-dragging {
+    z-index: 1001;
+}
+
+.widget-instance.sticker-widget.widget-instance-overlay {
+    cursor: default;
+}
+
+.sticker-content {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* Keep aspect ratio */
+    pointer-events: none;
+    display: block;
+    transition: filter 0.2s ease;
+}
+
+/* Border Logic using Drop Shadow for Alpha transparency support */
+.sticker-content.has-border {
+    --border-color: #fff;
+    --border-width: 2px;
+    filter:
+        drop-shadow(var(--border-width) 0 0 var(--border-color)) drop-shadow(calc(var(--border-width) * -1) 0 0 var(--border-color)) drop-shadow(0 var(--border-width) 0 var(--border-color)) drop-shadow(0 calc(var(--border-width) * -1) 0 var(--border-color))
+}
+
+/* Rotation Handle for Stickers */
+.widget-rotate-handle {
+    position: absolute;
+    opacity: 0;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 24px;
+    background: var(--background-color);
+    border: 1px solid var(--glass-border);
+    border-radius: 50%;
+    cursor: grab;
+    z-index: 1002;
+    /* Above everything */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--sun-shadow);
+}
+
+.widget-rotate-handle:hover,
+.widget-rotate-handle:active {
+    cursor: grabbing;
+    opacity: 1;
+}
+
+.widget-instance.is-dragging,
+.widget-instance:hover,
+.widget-instance:has(.widget-resize-handle:hover),
+/* Parent contains hovered child */
+.widget-instance:has(.widget-resize-handle:active)
+
+/* Parent contains active child */
+    {
+    background: var(--search-background) !important;
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px) !important;
+}
+
+/* --- Widget Picker Drawer Styles --- */
+.widget-drawer {
+    position: fixed;
+    opacity: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-color);
+    z-index: 10000;
+    transition: opacity 0.4s cubic-bezier(.2, 1.3, .64, 1);
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+}
+
+.widget-drawer.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.widget-drawer-handle {
+    width: 100%;
+    padding: 15px 0;
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.widget-drawer-handle .app-drawer-handle {
+    top: 0;
+}
+
+.widget-drawer-header {
+    padding: 15px 40px 15px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.drawer-header-button {
+    background-color: var(--search-background);
+    color: var(--text-color);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    box-shadow: var(--sun-shadow);
+    border-radius: 40px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    height: 40px;
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 18px 0 15px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+}
+
+.drawer-header-button .material-symbols-rounded {
+    font-size: 18px;
+}
+
+.widget-drawer-header h2 {
+    margin: 0;
+}
+
+.widget-drawer-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 0 30px 30px;
+}
+
+#widget-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.widget-picker-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    padding: 15px;
+    border-radius: 18px;
+    transition: background-color 0.2s;
+}
+
+.widget-picker-preview {
+    width: 200px;
+    height: 200px;
+    overflow: auto;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.widget-picker-preview iframe {
+    border: none;
+    pointer-events: none;
+}
+
+.widget-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: se-resize;
+    z-index: 2;
+    /* Must be above the iframe but below the drag overlay */
+}
+
+.widget-resize-handle:hover,
+.widget-resize-handle:active {
+    background: var(--search-background);
+    box-shadow: var(--sun-shadow);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    border: 1px solid var(--glass-border);
+}

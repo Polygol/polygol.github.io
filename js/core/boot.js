@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.error("Error initializing wallpaper:", error);
     });
 
+    setInterval(ensureVideoLoaded, 60000);
+
     setTimeout(() => {
         if (typeof updateClockAndDate === 'function') updateClockAndDate();
         const loadingScreen = document.getElementById('loading-screen');

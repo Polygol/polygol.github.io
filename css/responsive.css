@@ -1,0 +1,77 @@
+@media (min-width: 1500px) {
+    .app-drawer-grid {
+        grid-template-columns: repeat(8, 1fr);
+    }
+
+    .app-drawer-content {
+        padding: 80px 10% 0 10%;
+    }
+
+    .get-app-btn-container {
+        grid-column: span 8;
+    }
+}
+
+@media (min-width: 1000px) {
+    #app-drawer .app-drawer-handle {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+@media (max-width: 970px) {
+    .app-drawer-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .get-app-btn-container {
+        grid-column: span 4;
+    }
+}
+
+@media (max-width: 520px) {
+    .app-drawer-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .get-app-btn-container {
+        grid-column: span 3;
+    }
+}
+
+@media (max-width: 500px) {
+    .legacy-nav-controls {
+        border-right: none;
+        padding-right: 0;
+    }
+
+    .legacy-app-header span {
+        font-weight: 500;
+        color: var(--text-color);
+        display: none;
+    }
+
+    .legacy-app-header span.material-symbols-rounded {
+        display: block;
+    }
+}
+
+@media (max-width: 400px) {
+    .app-drawer-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .get-app-btn-container {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 280px) {
+    .app-drawer-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+
+    .get-app-btn-container {
+        grid-column: span 1;
+    }
+}

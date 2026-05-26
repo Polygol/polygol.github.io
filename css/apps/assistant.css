@@ -1,0 +1,96 @@
+/* Assistant Overlay Styles */
+.assistant-overlay {
+    display: flex;
+    justify-content: flex-end;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9996;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+.assistant-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#assistant-response-area {
+    max-width: 600px;
+    max-height: 70%;
+    /* Limit height */
+    overflow-y: auto;
+    color: var(--text-color);
+    margin-bottom: 35px;
+    corner-shape: superellipse(1.5);
+    border-radius: 35px;
+    padding: 15px 20px;
+    opacity: 0;
+    /* Start hidden */
+    transform: translateY(10px);
+    /* Start slightly lower for a subtle lift effect */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    scrollbar-width: thin;
+    scrollbar-color: var(--transparent-color) transparent;
+    background-color: var(--search-background);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    box-shadow: var(--sun-shadow);
+    border: 1px solid var(--glass-border);
+}
+
+#assistant-response-area p:first-child {
+    margin-top: 0;
+}
+
+#assistant-response-area p:last-child {
+    margin-bottom: 0;
+}
+
+#assistant-response-area pre {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.ai-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background-color: var(--search-background);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    box-shadow: var(--sun-shadow);
+    padding: 15px 20px;
+    border-radius: 40px;
+    width: 80%;
+    max-width: 600px;
+    margin-bottom: 25px;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow), 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+#assistant-input {
+    flex-grow: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    font-family: 'Inter', sans-serif;
+}
+
+#assistant-input::placeholder {
+    color: var(--secondary-text-color);
+}
+
+.assistant-search-bar .material-symbols-rounded {
+    cursor: pointer;
+    color: var(--text-color);
+}

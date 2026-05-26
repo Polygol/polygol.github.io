@@ -1,0 +1,68 @@
+/* --- Styling fonts --- */
+
+/* Bricolage Grotesque */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+
+/* DynaPuff */
+@import url('https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&display=swap');
+
+/* Domine */
+@import url('https://fonts.googleapis.com/css2?family=Domine:wght@400..700&display=swap');
+
+/* Climate Crisis */
+@import url('https://fonts.googleapis.com/css2?family=Climate+Crisis&display=swap');
+
+/* JetBrains Mono */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap');
+
+/* DotGothic16 (400) */
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+
+/* Playpen Sans */
+@import url('https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@100..800&display=swap');
+
+/* Jaro */
+@import url('https://fonts.googleapis.com/css2?family=Jaro:opsz@6..72&display=swap');
+
+/* Doto */
+@import url('https://fonts.googleapis.com/css2?family=Doto:wght@400;700&display=swap');
+
+/* Nunito */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200..900&display=swap');
+
+/* Open Runde */
+@font-face {
+    font-family: 'Open Runde';
+    font-style: normal;
+    font-weight: 400;
+    src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Runde';
+    font-style: normal;
+    font-weight: 500;
+    src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Medium.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Runde';
+    font-style: normal;
+    font-weight: 700;
+    src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Semibold.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Runde';
+    font-style: normal;
+    font-weight: 800;
+    src: url('https://cdn.jsdelivr.net/gh/lauridskern/open-runde@main/src/web/OpenRunde-Bold.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter Numeric';
+    src: url('/assets/fonts/InterNumeric.ttf') format('truetype-variations');
+    font-weight: 100 900;
+    /* Define the supported variable weight range */
+    font-style: normal;
+}

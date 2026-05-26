@@ -1,0 +1,28 @@
+/* Adaptive Eco Mode */
+body.eco-mode-active.eco-moderate::before,
+body.eco-mode-active.eco-moderate #background-video,
+body.eco-mode-active.eco-moderate #depth-layer {
+    opacity: 0.7 !important;
+}
+
+body.eco-mode-active.eco-severe::before,
+body.eco-mode-active.eco-severe #background-video,
+body.eco-mode-active.eco-severe #depth-layer {
+    opacity: 0.5 !important;
+    filter: grayscale(0.5) !important;
+}
+
+body.eco-mode-active.eco-severe {
+    background-color: #0b0b0b !important;
+}
+
+body.eco-mode-active.eco-critical::before,
+body.eco-mode-active.eco-critical #background-video,
+body.eco-mode-active.eco-critical #depth-layer {
+    opacity: 0.2 !important;
+    filter: grayscale(1) !important;
+}
+
+body.eco-mode-active.eco-critical {
+    background-color: #000 !important;
+}

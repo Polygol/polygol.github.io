@@ -1,0 +1,35 @@
+#nightstand-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999999;
+    display: none;
+    transition: backdrop-filter 0.3s ease;
+    background: red;
+    mix-blend-mode: multiply;
+}
+
+/* Night Stand Mode */
+body.night-stand-active {
+    background-color: #000 !important;
+}
+
+body.night-stand-active::before,
+body.night-stand-active #background-video,
+body.night-stand-active #depth-layer,
+body.night-stand-active #environment-layer,
+body.night-stand-active #time-of-day-overlay {
+    opacity: 0 !important;
+    transition: opacity 1s ease !important;
+}
+
+/* Ensure content remains visible but red */
+body.night-stand-active .container,
+body.night-stand-active .widget-grid,
+body.night-stand-active .dock,
+body.night-stand-active .persistent-clock {
+    z-index: 10;
+}

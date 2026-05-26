@@ -1,0 +1,31 @@
+body.minimal-active #blurOverlayControls {
+    backdrop-filter: blur(10px) !important;
+}
+
+body.minimal-active .drawer-handle,
+body.minimal-active .one-button-nav-handle,
+body.minimal-active .nav-btn-small {
+    opacity: 0;
+}
+
+body-minimal-active .persistent-clock-digit,
+body-minimal-active .persistent-colon {
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+    mask-composite: source-in !important;
+    backdrop-filter: none !important;
+}
+
+body.minimal-active .app-drawer,
+body.minimal-active .dock {
+    mix-blend-mode: luminosity;
+    filter: grayscale(0.5);
+}
+
+body.minimal-active .fullscreen-embed iframe {
+    background-color: var(--background-color);
+}
+
+body.night-mode-active #temperature-overlay {
+    backdrop-filter: brightness(0.8) contrast(2) saturate(2) grayscale(0.8);
+}

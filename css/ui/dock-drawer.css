@@ -1,0 +1,477 @@
+.drawer-handle {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    cursor: grab;
+    z-index: 9993;
+    touch-action: none;
+    user-select: none;
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
+}
+
+.drawer-handle:active {
+    cursor: grabbing;
+}
+
+.drawer-pill {
+    padding: 11.5px;
+    display: flex;
+    justify-content: center;
+    width: 50%;
+    max-width: 50px;
+    align-items: center;
+}
+
+.drawer-pill:active {
+    transform: translateY(-5px) scale(1.2);
+    transition: transform 0.1s cubic-bezier(.2, 1.3, .64, 1);
+}
+
+.nav-pill {
+    transform: scale(1);
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1), opacity 0.3s ease, background-color 0.3s, width 0.3s;
+    width: 100%;
+    height: 2.5px;
+    background-color: transparent;
+    border-radius: 5px;
+    opacity: 1;
+    outline: 1px solid var(--glass-border);
+    backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
+}
+
+/* One Button Navigation Handle */
+#one-button-nav-handle {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 9993;
+    touch-action: manipulation;
+    user-select: none;
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1), opacity 0.3s ease;
+}
+
+#one-button-nav-handle .nav-pill {
+    width: 20px;
+    height: 5px;
+    border-radius: 5px;
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
+}
+
+#one-button-nav-handle:active .nav-pill {
+    padding: 0 10px;
+}
+
+/* Swapping between gesture and button handles */
+body.one-button-nav-active .drawer-handle {
+    display: none !important;
+}
+
+body:not(.one-button-nav-active) #one-button-nav-handle {
+    display: none !important;
+}
+
+body.one-button-nav-active #one-button-nav-handle {
+    display: flex !important;
+}
+
+body.one-button-nav-active .dock.show {
+    bottom: 25px;
+}
+
+/* One Button Nav Split Trigger */
+.nav-btn-small {
+    width: 40px;
+    height: 25px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    overflow: visible;
+    position: absolute;
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+    pointer-events: auto;
+    color: transparent;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 9994;
+}
+
+.nav-btn-small:active {
+    transform: scale(0.9);
+}
+
+.nav-btn-small svg {
+    width: auto;
+    height: auto;
+    margin: 8px;
+    color: var(--text-color);
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+#interaction-blocker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    display: none;
+    background: transparent;
+}
+
+.app-icon-img {
+    border: 1px solid var(--glass-border);
+    aspect-ratio: 1 / 1;
+    corner-shape: superellipse(1.25);
+    border-radius: 35%;
+    overflow: hidden;
+    position: relative;
+    box-shadow: var(--sun-shadow), 0px 2px 10px 0px rgb(90 90 90 / 25%);
+}
+
+.app-icon-img img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    corner-shape: inherit;
+    border-radius: inherit;
+    transform: scale(1.15);
+}
+
+.app-icon-img::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-shadow: var(--sun-shadow-strong);
+    pointer-events: none;
+    /* so clicks pass through */
+    corner-shape: inherit;
+    border-radius: inherit;
+    z-index: 1;
+    border: 1px solid var(--glass-border);
+}
+
+/* App Drawer Styles */
+.app-drawer {
+    position: fixed;
+    opacity: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--overlay-color);
+    backdrop-filter: blur(5px) opacity(0.9);
+    z-index: 1001;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    touch-action: none;
+    user-select: none;
+    content-visibility: hidden;
+    pointer-events: none;
+    transform-origin: bottom;
+    will-change: transform, opacity, bottom, content-visibility;
+    transition: height 0.3s cubic-bezier(0.2, 1.3, 0.64, 1);
+}
+
+.drawer-action-btn {
+    position: absolute;
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+    top: 12px;
+    left: 15px;
+}
+
+.app-drawer.open {
+    bottom: 0;
+    opacity: 1;
+    transform: none;
+    content-visibility: auto;
+    pointer-events: auto;
+}
+
+.app-drawer-handle {
+    width: 100%;
+    height: 42px;
+    background-color: transparent;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#app-drawer .app-drawer-handle {
+    height: 80px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: center;
+    z-index: 2;
+    width: auto;
+    transform: none;
+}
+
+.drawer-handle-bar {
+    width: 50px;
+    height: 5px;
+    background-color: var(--text-color);
+    border-radius: 3px;
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.drawer-top-btn {
+    background-color: var(--search-background);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow), 0 0 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    gap: 8px;
+    height: 46px;
+    width: 46px;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    font-size: 14px;
+    border-radius: 50px;
+    cursor: pointer;
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+}
+
+.drawer-top-btn .material-symbols-rounded {
+    font-size: 20px;
+}
+
+.app-search-container {
+    display: flex;
+    align-items: center;
+    background-color: var(--search-background);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow), 0 0 15px rgba(0, 0, 0, 0.05);
+    border-radius: 50px;
+    padding: 0 8px 0 16px;
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    height: 46px;
+}
+
+.app-search-container .material-symbols-rounded {
+    font-size: 20px;
+}
+
+#app-search-input {
+    flex-grow: 1;
+    border: none;
+    background: none;
+    outline: none;
+    color: var(--text-color);
+    padding: 12px 14px;
+    font-size: 16px;
+    font-family: 'Inter', 'sans-serif';
+    width: 54px;
+}
+
+#app-search-input::placeholder {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+#app-search-input:placeholder-shown:not(:focus) {
+    text-align: center;
+}
+
+#app-search-input:not(:placeholder-shown),
+#app-search-input:focus {
+    width: 200px;
+}
+
+.app-drawer-handle:has(#app-search-input:not(:placeholder-shown)) {
+    gap: 0;
+}
+
+.app-drawer-handle:has(#app-search-input:not(:placeholder-shown)) #sort-app-btn {
+    scale: 0;
+    width: 0;
+    opacity: 0;
+    border: none;
+}
+
+#close-search-btn {
+    background: none;
+    border: none;
+    color: var(--secondary-text-color);
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+}
+
+.app-drawer-content {
+    display: flex;
+    align-items: flex-start;
+    height: calc(100% - 80px);
+    overflow-y: auto;
+    user-select: none;
+    padding: 80px 5% 0 5%;
+    flex-direction: column;
+}
+
+.app-drawer-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: clamp(30px, 2%, 100px);
+    width: 100%;
+    padding: 0;
+}
+
+.get-app-btn-container {
+    display: flex;
+    justify-content: end;
+    grid-column: span 6;
+}
+
+.get-app-btn {
+    background-color: var(--search-background);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+    padding: 6px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+    font-weight: 500;
+    margin-bottom: 50px;
+}
+
+.app-icon {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+    user-select: none;
+}
+
+.app-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1);
+    transition: filter 0.2s, transform 0.2s;
+    scale: 1.15;
+    border-radius: inherit;
+    corner-shape: inherit;
+}
+
+.app-icon .app-icon-img {
+    width: 100%;
+}
+
+.app-icon:active .app-icon-img {
+    filter: brightness(1.5);
+    transform: scale(1.2);
+}
+
+.app-icon span {
+    font-size: 0.9rem;
+    margin-top: 16px;
+    text-align: center;
+    color: var(--text-color);
+    font-weight: 500;
+    text-shadow: 0 0 20px var(--background-color-tr);
+}
+
+.dock {
+    display: none;
+    position: fixed;
+    bottom: -10px;
+    transform: translateX(-50%);
+    background: var(--search-background);
+    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    box-shadow: var(--sun-shadow);
+    border: 1px solid var(--glass-border);
+    border-radius: 256px;
+    corner-shape: superellipse(1.5);
+    padding: 12px 14px;
+    gap: 12px;
+    left: 50%;
+    transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+    z-index: 9996;
+    box-shadow: var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1);
+    transform-origin: bottom;
+    will-change: transform, opacity;
+    filter: blur(5px);
+    opacity: 0;
+    max-width: 90%;
+    pointer-events: none;
+}
+
+.dock.show {
+    display: flex;
+    bottom: 10px;
+    filter: none;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.dock-icon {
+    width: clamp(48px, 64px, 128px);
+    height: auto;
+    aspect-ratio: 1/1;
+    transform: scale(1);
+    transition: filter 0.2s, transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
+    cursor: pointer;
+}
+
+.dock-icon:active {
+    transform: scale(1.2);
+    filter: brightness(1.5);
+    transition: filter 0.2s transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
+    cursor: pointer;
+}
+
+.dock-icon.drawer-opener::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.app-drawer.open~.dock .drawer-opener::after {
+    opacity: 1;
+}

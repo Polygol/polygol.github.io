@@ -1,0 +1,11 @@
+/* Hide all main UI elements during initial setup and post-setup onboarding */
+body.onboarding-active .container,
+body.onboarding-active .widget-grid,
+body.onboarding-active #dynamic-area,
+body.onboarding-active .drawer-handle,
+body.onboarding-active #split-screen-trigger,
+body.onboarding-active #one-button-nav-handle,
+body.onboarding-active #dock,
+body.onboarding-active .page-indicator {
+    display: none !important;
+}

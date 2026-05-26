@@ -1,0 +1,71 @@
+/* Disable native focus for all elements to prevent browser interference */
+:focus {
+    outline: none !important;
+}
+
+* {
+    transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1) !important;
+    /* Temporary */
+    -webkit-tap-highlight-color: transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    /* Thin scrollbar */
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--tonal);
+    border-radius: 50px;
+}
+
+/* For all clickable elements */
+[onclick],
+button,
+a,
+input[type="button"],
+input[type="submit"],
+.clickable {
+    cursor: pointer;
+    transform: scale(1);
+    transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1), filter 0.3s cubic-bezier(.2, 1.3, .64, 1);
+}
+
+/* Active effect (when clicking down) */
+[onclick]:active,
+button:active,
+a:active,
+input[type="button"]:active,
+input[type="submit"]:active,
+.clickable:active {
+    transform: scale(1.1);
+    filter: brightness(1.5);
+    transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1), filter 0.3s cubic-bezier(.2, 1.3, .64, 1);
+}
+
+html {
+    overscroll-behavior: none;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background-color);
+    background-image: none !important;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	margin: 0;
+	transition: background-color 0.3s, color 0.3s, background-image 0.5s;
+	color: var(--text-color);
+	overflow: hidden;
+	user-select: none;
+	overscroll-behavior: none;
+	touch-action: pan-x pan-y;
+	/* Set the default value on the body element */
+	--bg-transform-scale: 1.05; 
+}

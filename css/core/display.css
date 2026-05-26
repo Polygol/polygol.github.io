@@ -1,0 +1,51 @@
+/* Page brightness overlay */
+#brightness-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0);
+    pointer-events: none;
+    z-index: 9999999;
+    transition: background-color 0.3s ease;
+    display: block !important;
+}
+
+#screen-curve-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2147483647;
+    /* Max z-index to sit on top of everything */
+    pointer-events: none;
+    --curve: 0px;
+
+    /* Squircle mask using an outward-spreading box-shadow */
+    border-radius: var(--curve);
+    corner-shape: superellipse(1.5);
+    box-shadow: 0 0 0 calc(var(--curve) + 5px) black;
+}
+
+.blur-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9996;
+    opacity: 0;
+    transition: all 0.3s ease;
+    user-select: none;
+    background-color: var(--overlay-color);
+    pointer-events: none;
+}
+
+.blur-overlay.show {
+    opacity: 1;
+    user-select: none;
+    pointer-events: auto;
+}
