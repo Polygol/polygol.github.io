@@ -1519,7 +1519,7 @@ const Gurasuraisu = {
 
   /**
    * Requests the parent to open another Gurapp.
-   * @param {string} url - The URL of the Gurapp to open (e.g., "/chronos/index.html").
+   * @param {string} url - The URL of the Gurapp to open (e.g., "./chronos/index.html").
    */
   openApp: function(url) {
     this._call('createFullscreenEmbed', [url]);

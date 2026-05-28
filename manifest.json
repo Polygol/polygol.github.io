@@ -9,9 +9,9 @@
     "business",
     "personalization"
   ],
-  "scope": "/",
+  "scope": "./",
   "start_url": "index.html?fullscreen=true",
-  "id": "/",
+  "id": "./",
   "display": "fullscreen",
   "display_override": ["window-controls-overlay"],
   "launch_handler": {
@@ -20,13 +20,13 @@
   "background_color": "#1c1c1c",
   "icons": [
     {
-      "src": "/assets/img/pwaicon/regular.png",
+      "src": "./assets/img/pwaicon/regular.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/img/pwaicon/coloricon.png",
+      "src": "./assets/img/pwaicon/coloricon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -34,7 +34,7 @@
   ],
   "screenshots": [
     {
-      "src": "/marketing/hero2.png",
+      "src": "./marketing/hero2.png",
       "sizes": "1200x630",
       "type": "image/png"
     }

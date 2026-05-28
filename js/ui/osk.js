@@ -19,7 +19,7 @@ window.unregisterCustomOSK = function(appId) {
     
     // If the currently active OSK was uninstalled, revert to default
     if (currentOskIndex > 0) {
-        const allOSKs = [{ name: 'Default', url: '/assets/gurapp/intl/overlay/osk/osk.html' }, ...registeredOSKs];
+        const allOSKs = [{ name: 'Default', url: './assets/gurapp/intl/overlay/osk/osk.html' }, ...registeredOSKs];
         if (currentOskIndex >= allOSKs.length) {
             currentOskIndex = 0;
             const iframe = document.querySelector('#system-osk-container iframe');
@@ -56,8 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const iframe = document.querySelector('#system-osk-container iframe');
             if (iframe) {
                 if (selectedOSK.type === 'internal') {
-                    if (!iframe.src.includes('/assets/gurapp/intl/overlay/osk/osk.html')) {
-                        iframe.src = '/assets/gurapp/intl/overlay/osk/osk.html';
+                    if (!iframe.src.includes('./assets/gurapp/intl/overlay/osk/osk.html')) {
+                        iframe.src = './assets/gurapp/intl/overlay/osk/osk.html';
                         iframe.onload = () => {
                             iframe.contentWindow.postMessage({ type: 'set-mode', mode: selectedOSK.mode }, '*');
                             const isLight = document.body.classList.contains('light-theme');
@@ -177,8 +177,8 @@ function closeOSK() {
 
         // Reset OSK to default text mode when closed
         currentOskIndex = 0;
-        if (iframe && !iframe.src.includes('/assets/gurapp/intl/overlay/osk/osk.html')) {
-            iframe.src = '/assets/gurapp/intl/overlay/osk/osk.html';
+        if (iframe && !iframe.src.includes('./assets/gurapp/intl/overlay/osk/osk.html')) {
+            iframe.src = './assets/gurapp/intl/overlay/osk/osk.html';
         } else if (iframe && iframe.contentWindow) {
             iframe.contentWindow.postMessage({ type: 'set-mode', mode: 'text' }, '*');
         }

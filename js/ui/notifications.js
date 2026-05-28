@@ -317,11 +317,11 @@ function createOnScreenPopup(message, options = {}, onClosed) {
         let iconUrl = options.iconUrl;
         if (!iconUrl && apps[options.appName]) {
             iconUrl = apps[options.appName].icon;
-            if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
-                iconUrl = `/assets/appicon/${iconUrl}`;
+            if (!(iconUrl.startsWith('http') || iconUrl.startsWith('./') || iconUrl.startsWith('data:'))) {
+                iconUrl = `./assets/appicon/${iconUrl}`;
             }
         }
-        appIconImg.src = iconUrl || '/assets/appicon/system.png';
+        appIconImg.src = iconUrl || './assets/appicon/system.png';
         appIconContainer.appendChild(appIconImg);
         popup.appendChild(appIconContainer);
     }
@@ -471,11 +471,11 @@ function createHomeNotificationElement(message, options, notifId) {
     div.className = 'home-media-widget home-activity-item';
     div.style.cssText = 'padding: 12px 18px 12px 12px; flex-direction: row; align-items: center; height: 100%;';
     
-    let iconUrl = options.iconUrl || '/assets/appicon/default.png';
+    let iconUrl = options.iconUrl || './assets/appicon/default.png';
     if (!options.iconUrl && options.appName && apps[options.appName]) {
         iconUrl = apps[options.appName].icon;
-        if (!iconUrl.startsWith('http') && !iconUrl.startsWith('/') && !iconUrl.startsWith('data:')) {
-            iconUrl = `/assets/appicon/${iconUrl}`;
+        if (!iconUrl.startsWith('http') && !iconUrl.startsWith('./') && !iconUrl.startsWith('data:')) {
+            iconUrl = `./assets/appicon/${iconUrl}`;
         }
     }
     
@@ -647,11 +647,11 @@ function addToNotificationShade(message, options = {}) {
             let iconUrl = options.iconUrl;
             if (!iconUrl && apps[options.appName]) {
                 iconUrl = apps[options.appName].icon;
-                if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
-                    iconUrl = `/assets/appicon/${iconUrl}`;
+                if (!(iconUrl.startsWith('http') || iconUrl.startsWith('./') || iconUrl.startsWith('data:'))) {
+                    iconUrl = `./assets/appicon/${iconUrl}`;
                 }
             }
-			appIconImg.src = iconUrl || '/assets/appicon/system.png';
+			appIconImg.src = iconUrl || './assets/appicon/system.png';
 			appIconContainer.appendChild(appIconImg);
 			notification.appendChild(appIconContainer);
 		}

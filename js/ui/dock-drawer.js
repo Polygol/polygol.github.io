@@ -24,12 +24,12 @@ function populateDock() {
         img.alt = name;
 
 	const iconSource = details.icon;
-        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('/') || iconSource.startsWith('data:'))) {
+        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('./') || iconSource.startsWith('data:'))) {
             // If it's a full URL, a root-relative path, or a data URI, use it directly.
             img.src = iconSource;
         } else if (iconSource) {
             // Otherwise, assume it's a local filename and prepend the default path.
-            img.src = `/assets/appicon/${iconSource}`;
+            img.src = `./assets/appicon/${iconSource}`;
         } else {
             // Fallback to Fanny for missing icons
             img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJrSURBVHhe7dnrbcIwFEDh7MIwzMIoTMIgzMEsVFeNVGrdpM7DzlFzjuQ/VUmKPzshdHgbKkFgCQJLEFiCwBIEliCwBIElCCxBYAkCSxBYgsASBJYgsASBJQgsQWAJAksQWILAEgSWILAEgSUILEFgCQJLEFiCwBIEliCwBIElCCxBYB0C8ng83sMwVI3b7Ta+al3X6zU9bjaez+f4quPqChJvOJuImnG/38ej1BWQ2XFqxuv1Go/Sv24gS3bF1KjdLUt2xdQ4ard0AdmyM8rx107ZsjPKccRO6QJyuVzSNzy34ud21NREzcHPrfipHRU/711zkGxiA6i2bMVPQWYTu+TeU742Ru9LV3OQbJKWXgqyHVYWxyx/Z+kKz3ZY7X1rr5qDlJO55g1mu6xEzSZzzeouF1Dvy1ZzkM83F2Ppx9eoZrJr0GoqL5FLLq971Bxkj/Za/TUJUlE5STHWrP6ayvP8u0vW1jKMVqu2PE+MNZfYLaFBMowYcb/Yu+w8MXqHBZnCiJ/vXXaeGK3uU3MhQc6KEeFAzowRoUCmMFp80snOE6PF/WlJGBAxvkOAiPHT4SDZl4IxWmDEM0V2LgpGhARp9eCXgfR+8PsrJEirFZuB0BIEliCweH/RyRMEliCwECDxzNHjul7er1p8P7a1w0G8qf8O8ReVk9Tq29aA/jxP7/+X14QA+Zyo1k/On5fH2J20eHv25AkCSxBYgsASBJYgsASBJQgsQWAJAksQWILAEgSWILAEgSUILEFgCQJLEFiCwBIEliCwBIElCCxBYAkCSxBYgsASBJYgsASBJQgsQWAJAksQVO/3F/glxm3ea3j7AAAAAElFTkSuQmCC';
@@ -251,8 +251,8 @@ async function cacheAppIconColors() {
         if (!appIconColors[appName] && apps[appName].icon) {
             try {
                 let iconSrc = apps[appName].icon;
-                if (!(iconSrc.startsWith('http') || iconSrc.startsWith('/') || iconSrc.startsWith('data:'))) {
-                    iconSrc = `/assets/appicon/${iconSrc}`;
+                if (!(iconSrc.startsWith('http') || iconSrc.startsWith('./') || iconSrc.startsWith('data:'))) {
+                    iconSrc = `./assets/appicon/${iconSrc}`;
                 }
                 const color = await getDominantColor(iconSrc);
                 const hsl = rgbToHsl(color.r, color.g, color.b);
@@ -313,12 +313,12 @@ function createAppIcons(filterQuery = '', forceShowNames = false) {
         const iconSource = app.details.icon;
 
         // 2. Check the source type and set img.src only ONCE.
-        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('/') || iconSource.startsWith('data:'))) {
+        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('./') || iconSource.startsWith('data:'))) {
             // If it's an absolute URL or a root-relative path, use it directly.
             img.src = iconSource;
         } else if (iconSource) {
             // Otherwise, assume it's a local filename and prepend the default path.
-            img.src = `/assets/appicon/${iconSource}`;
+            img.src = `./assets/appicon/${iconSource}`;
         } else {
             // Fallback to Fanny for cases where the icon is missing entirely.
             img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJrSURBVHhe7dnrbcIwFEDh7MIwzMIoTMIgzMEsVFeNVGrdpM7DzlFzjuQ/VUmKPzshdHgbKkFgCQJLEFiCwBIEliCwBIElCCxBYAkCSxBYgsASBJYgsASBJQgsQWAJAksQWILAEgSWILAEgSUILEFgCQJLEFiCwBIEliCwBIElCCxBYB0C8ng83sMwVI3b7Ta+al3X6zU9bjaez+f4quPqChJvOJuImnG/38ej1BWQ2XFqxuv1Go/Sv24gS3bF1KjdLUt2xdQ4ard0AdmyM8rx107ZsjPKccRO6QJyuVzSNzy34ud21NREzcHPrfipHRU/711zkGxiA6i2bMVPQWYTu+TeU742Ru9LV3OQbJKWXgqyHVYWxyx/Z+kKz3ZY7X1rr5qDlJO55g1mu6xEzSZzzeouF1Dvy1ZzkM83F2Ppx9eoZrJr0GoqL5FLLq971Bxkj/Za/TUJUlE5STHWrP6ayvP8u0vW1jKMVqu2PE+MNZfYLaFBMowYcb/Yu+w8MXqHBZnCiJ/vXXaeGK3uU3MhQc6KEeFAzowRoUCmMFp80snOE6PF/WlJGBAxvkOAiPHT4SDZl4IxWmDEM0V2LgpGhARp9eCXgfR+8PsrJEirFZuB0BIEliCweH/RyRMEliCwECDxzNHjul7er1p8P7a1w0G8qf8O8ReVk9Tq29aA/jxP7/+X14QA+Zyo1k/On5fH2J20eHv25AkCSxBYgsASBJYgsASBJQgsQWAJAksQWILAEgSWILAEgSUILEFgCQJLEFiCwBIEliCwBIElCCxBYAkCSxBYgsASBJYgsASBJQgsQWAJAksQVO/3F/glxm3ea3j7AAAAAElFTkSuQmCC';

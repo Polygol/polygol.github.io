@@ -188,7 +188,7 @@ function initWavesHost() {
             console.log(`[Waves] Incoming stream from ${peerId}`);
             
             // 1. Launch the Cast Gurapp
-            const castAppUrl = '/assets/gurapp/intl/waves/cast.html';
+            const castAppUrl = './assets/gurapp/intl/waves/cast.html';
             if (typeof window.createFullscreenEmbed === 'function') {
                 window.createFullscreenEmbed(castAppUrl);
             }
@@ -606,7 +606,7 @@ function getApps(targetPeerId = null) {
             .map(([name, details]) => {
                 let iconUrl = details.icon || 'system.png'; 
                 if (!iconUrl.startsWith('http') && !iconUrl.startsWith('data:')) {
-                    if (!iconUrl.startsWith('/')) iconUrl = `/assets/appicon/${iconUrl}`;
+                    if (!iconUrl.startsWith('./')) iconUrl = `./assets/appicon/${iconUrl}`;
                     iconUrl = new URL(iconUrl, window.location.origin).href;
                 }
                 return {

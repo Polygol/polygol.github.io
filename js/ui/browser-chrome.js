@@ -204,8 +204,8 @@ async function restoreCorrectFavicon(forceAppUrl = null) {
                 let src = i.data.imgUrl;
                 if (!src && apps[i.data.appName]) src = apps[i.data.appName].icon;
                 if (src) {
-                    if (!src.startsWith('http') && !src.startsWith('data:') && !src.startsWith('/')) {
-                        src = `/assets/appicon/${src}`;
+                    if (!src.startsWith('http') && !src.startsWith('data:') && !src.startsWith('./')) {
+                        src = `./assets/appicon/${src}`;
                     }
                     if(!activityIcons.includes(src)) activityIcons.push(src);
                 }
@@ -236,8 +236,8 @@ async function restoreCorrectFavicon(forceAppUrl = null) {
         if (!iconUrl && !appName) iconUrl = 'system.png'; 
 
         if (iconUrl) {
-            if (!iconUrl.startsWith('http') && !iconUrl.startsWith('/') && !iconUrl.startsWith('data:')) {
-                iconUrl = `/assets/appicon/${iconUrl}`;
+            if (!iconUrl.startsWith('http') && !iconUrl.startsWith('./') && !iconUrl.startsWith('data:')) {
+                iconUrl = `./assets/appicon/${iconUrl}`;
             }
             const dataUrl = await createShapedFavicon(iconUrl, 'circle');
             updateFavicon(dataUrl, false);

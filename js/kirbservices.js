@@ -24,7 +24,7 @@ window.Analytics = {
             script.id = 'goatcounter-script';
             script.dataset.goatcounter = "https://kirbindust.goatcounter.com/count";
             script.async = true;
-            script.src = "//gc.zgo.at/count.js";
+            script.src = ".//gc.zgo.at/count.js";
             document.head.appendChild(script);
         }
         
@@ -33,7 +33,7 @@ window.Analytics = {
         window.addEventListener('error', (event) => {
             this.trackEvent('error', { 
                 title: `JS Error: ${event.message}`, 
-                path: `/error/${event.filename}` 
+                path: `./error/${event.filename}` 
             });
         });
 
@@ -53,14 +53,14 @@ window.Analytics = {
         if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
         // Track uptime every 30 minutes
         this.heartbeatTimer = setInterval(() => {
-            this.trackEvent('heartbeat', { path: '/system/heartbeat', title: 'System Active' });
+            this.trackEvent('heartbeat', { path: './system/heartbeat', title: 'System Active' });
         }, 1800000);
     },
 
     trackEvent(name, options = {}) {
         if (!this.initialized || !window.goatcounter) return;
-        let path = options.path || `/event/${name}`;
-        if (!path.startsWith('/')) path = '/' + path;
+        let path = options.path || `./event/${name}`;
+        if (!path.startsWith('./')) path = './' + path;
 
         window.goatcounter.count({
             path: path,
@@ -98,7 +98,7 @@ window.Analytics = {
         if (!this.initialized || !this.isUrlValid(appUrl)) return;
         const cleanPath = this.getSanitizedPath(appUrl);
         this.appStartTimes[appUrl] = Date.now();
-        this.trackEvent('app-open', { path: `/app${cleanPath}`, title: `Open: ${cleanPath}` });
+        this.trackEvent('app-open', { path: `./app${cleanPath}`, title: `Open: ${cleanPath}` });
     },
 
     trackAppClose(appUrl) {
@@ -109,7 +109,7 @@ window.Analytics = {
             const cleanPath = this.getSanitizedPath(appUrl);
             delete this.appStartTimes[appUrl];
             this.trackEvent('app-duration', { 
-                path: `/app${cleanPath}/duration`, 
+                path: `./app${cleanPath}/duration`, 
                 title: `${cleanPath}: ${durationSeconds}s` 
             });
         }
@@ -127,7 +127,7 @@ window.Analytics = {
             const durationSeconds = Math.round((Date.now() - startTime) / 1000);
             delete this.wavesStartTimes[peerId];
             this.trackEvent('waves-session', { 
-                path: '/waves/duration', 
+                path: './waves/duration', 
                 title: `Remote Session: ${durationSeconds}s` 
             });
         }
@@ -136,7 +136,7 @@ window.Analytics = {
     trackWallpaperPreset(presetName) {
         if (!this.initialized) return;
         this.trackEvent('wallpaper-preset', { 
-            path: `/wallpaper/preset/${presetName.replace(/\s+/g, '-').toLowerCase()}`, 
+            path: `./wallpaper/preset/${presetName.replace(/\s+/g, '-').toLowerCase()}`, 
             title: `Preset: ${presetName}` 
         });
     }
@@ -352,7 +352,7 @@ function renderCurrentAd() {
             newBtn.onclick = (e) => {
                 e.stopPropagation();
                 window.Analytics?.trackEvent('ad-click', { 
-                    path: `/ads/click/${ad.id}`, 
+                    path: `./ads/click/${ad.id}`, 
                     title: `Ad Click: ${ad.name}` 
                 });
                 if (ad.url) window.open(ad.url, '_blank');
@@ -402,7 +402,7 @@ function blockAd() {
     const adToBlock = adQueue[0];
 
     window.Analytics?.trackEvent('ad-block', { 
-        path: `/ads/block/${adToBlock.id}`, 
+        path: `./ads/block/${adToBlock.id}`, 
         title: `Ad Blocked: ${adToBlock.name}` 
     });
     
@@ -466,7 +466,7 @@ function setupAdGestures(element) {
             const activeAd = adQueue[0];
             if (activeAd) {
                 window.Analytics?.trackEvent('ad-next', { 
-                    path: `/ads/next/${activeAd.id}`, 
+                    path: `./ads/next/${activeAd.id}`, 
                     title: `Ad Swipe Next: ${activeAd.name}` 
                 });
             }

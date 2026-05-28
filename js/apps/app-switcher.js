@@ -155,10 +155,10 @@ function renderAppCards(container) {
         const appName = Object.keys(apps).find(k => apps[k].url === url) || 'App';
         const appDetails = apps[appName];
         let iconSrc = appDetails?.icon || 'system.png';
-        if (iconSrc && (iconSrc.startsWith('http') || iconSrc.startsWith('/') || iconSrc.startsWith('data:'))) {
+        if (iconSrc && (iconSrc.startsWith('http') || iconSrc.startsWith('./') || iconSrc.startsWith('data:'))) {
             // Use as is
         } else {
-            iconSrc = `/assets/appicon/${iconSrc}`;
+            iconSrc = `./assets/appicon/${iconSrc}`;
         }
         
         const card = document.createElement('div');
@@ -414,10 +414,10 @@ function openAppSwitcher() {
             
             let finalSrc = '';
             if (iconSrc) {
-                if (iconSrc.startsWith('http') || iconSrc.startsWith('/') || iconSrc.startsWith('data:')) {
+                if (iconSrc.startsWith('http') || iconSrc.startsWith('./') || iconSrc.startsWith('data:')) {
                     finalSrc = iconSrc;
                 } else {
-                    finalSrc = `/assets/appicon/${iconSrc}`;
+                    finalSrc = `./assets/appicon/${iconSrc}`;
                 }
             }
             

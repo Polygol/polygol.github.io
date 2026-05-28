@@ -2,7 +2,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Polygol - System Transfer</title>
-    <link rel="icon" href="/assets/appicon/transfer.png" type="image/png">
+    <link rel="icon" href="./assets/appicon/transfer.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" rel="stylesheet">
     <script src="https://unpkg.com/fflate@0.8.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
@@ -171,7 +171,7 @@
     </div>
 
     <div class="container">
-        <img src="/assets/img/text-about-banner-transparent.png" style="width: 400px; margin-bottom: 25px;">
+        <img src="./assets/img/text-about-banner-transparent.png" style="width: 400px; margin-bottom: 25px;">
         <h1>System Transfer</h1>
         <p>Use this tool to export your Polygol data to a file, or import it on a new device or browser.</p>
 
@@ -580,10 +580,10 @@
 
                 // 3. Restore IndexedDB
                 // Identify databases by schema files
-                const dbSchemas = Object.keys(unzipped).filter(k => k.startsWith('indexedDB/') && k.endsWith('/schema.json'));
+                const dbSchemas = Object.keys(unzipped).filter(k => k.startsWith('indexedDB/') && k.endsWith('./schema.json'));
                 
                 for (const schemaPath of dbSchemas) {
-                    const dbName = schemaPath.split('/')[1];
+                    const dbName = schemaPath.split('./')[1];
                     logStatus(`Restoring DB: ${dbName}...`);
                     
                     const schemaStr = fflate.strFromU8(unzipped[schemaPath]);
@@ -656,12 +656,12 @@
                 // 4. Restore Apps (Reconstruct from file-system structure)
                 const appFolders = [...new Set(Object.keys(unzipped)
                     .filter(k => k.startsWith('apps/'))
-                    .map(k => k.split('/').slice(0, 2).join('/')))];
+                    .map(k => k.split('./').slice(0, 2).join('./')))];
 
                 if (appFolders.length > 0) {
                     logStatus(`Restoring ${appFolders.length} cross-origin apps...`);
                     for (const folder of appFolders) {
-                        const url = atob(folder.split('/')[1]);
+                        const url = atob(folder.split('./')[1]);
                         logStatus(`Restoring ${url}...`);
 
                         const appPayload = { localStorage: {}, indexedDB: {} };
@@ -674,7 +674,7 @@
                         // Identify DBs in this app
                         const appDBs = [...new Set(Object.keys(unzipped)
                             .filter(k => k.startsWith(`${folder}/idb/`))
-                            .map(k => k.split('/')[3]))];
+                            .map(k => k.split('./')[3]))];
 
                         for (const dbName of appDBs) {
                             const schemaFile = unzipped[`${folder}/idb/${dbName}/_schema.json`];
@@ -720,7 +720,7 @@
                 }
 
                 logStatus('Import complete! Redirecting...');
-                setTimeout(() => window.location.href = '/', 1000);
+                setTimeout(() => window.location.href = './', 1000);
 
             } catch (e) {
                 logStatus(`ZIP Import Error: ${e.message}`, true);
@@ -742,7 +742,7 @@
 
         returnHomeBtn.addEventListener('click', () => {
             logStatus('Closing');
-            window.location.href = '/';
+            window.location.href = './';
         });
 
         // Theme and SunShadow logic
