@@ -6,7 +6,7 @@
     <title>Donburi</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <script src="./assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <style>
         * {
@@ -701,7 +701,7 @@
             <div style="text-align: right; font-size: 0.8rem; color: var(--secondary-text-color);" id="quote-author"></div>
         </div>
 
-        <div class="bento-item span-1x1" id="bento-battery" onclick="Gurasuraisu.openApp('./assets/gurapp/intl/settings/index.html')">
+        <div class="bento-item span-1x1" id="bento-battery" onclick="Gurasuraisu.openApp('/assets/gurapp/intl/settings/index.html')">
             <div class="item-card-title"><span class="material-symbols-rounded">battery_android_0</span>Battery</div>
             <div class="item-card-big-text" id="battery-level">--%</div>
             <div class="item-card-subtitle" id="battery-status"></div>
@@ -1189,8 +1189,8 @@
                 const userApps = JSON.parse(localStorage.getItem('userInstalledApps') || '{}');
                 if (userApps[appName] && userApps[appName].icon) {
                     let iconUrl = userApps[appName].icon;
-                    if (!iconUrl.startsWith('http') && !iconUrl.startsWith('./') && !iconUrl.startsWith('data:')) {
-                        iconUrl = `./assets/appicon/${iconUrl}`;
+                    if (!iconUrl.startsWith('http') && !iconUrl.startsWith('/') && !iconUrl.startsWith('data:')) {
+                        iconUrl = `/assets/appicon/${iconUrl}`;
                     }
                     appIconEl.src = iconUrl;
                     appIconEl.style.display = 'block';

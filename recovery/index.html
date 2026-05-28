@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Polygol - Recovery Mode</title>
-    <link rel="icon" href="./assets/appicon/system.png" type="image/png">
+    <link rel="icon" href="/assets/appicon/system.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <style>
@@ -177,7 +177,7 @@
     </div>
 
     <div class="container">
-        <img src="./assets/img/text-about-banner-transparent.png" style="width: 400px; margin-bottom: 25px;">
+        <img src="/assets/img/text-about-banner-transparent.png" style="width: 400px; margin-bottom: 25px;">
         <h1 data-lang-key="header">Recovery Mode</h1>
         <p data-lang-key="description">Your Polygol instance may be corrupted or broken. Use these tools to perform a factory reset.</p>
 
@@ -494,7 +494,7 @@
         fullResetBtn.addEventListener('click', performFullReset);
         returnHomeBtn.addEventListener('click', () => {
             logStatus('Closing');
-            window.location.href = './';
+            window.location.href = '/';
         });
 
         // Theme and SunShadow logic

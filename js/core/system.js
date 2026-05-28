@@ -30,7 +30,7 @@ function broadcastCursorState(isVisible) {
 // --- System Version Management ---
 async function fetchSystemVersion() {
     try {
-        const response = await fetch('./sw.js');
+        const response = await fetch('/sw.js');
         const text = await response.text();
         const match = text.match(/const CORE_CACHE_VERSION = '(.*)';/);
         if (match && match[1]) {

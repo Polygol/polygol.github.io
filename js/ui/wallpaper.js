@@ -11,7 +11,7 @@ let isSlideshow = false;
 let WALLPAPER_PRESETS = [];
 async function fetchWallpaperPresets() {
     try {
-        const res = await fetch('./assets/img/wallpapers/index.json');
+        const res = await fetch('/assets/img/wallpapers/index.json');
         if (res.ok) {
             WALLPAPER_PRESETS = await res.json();
         }
@@ -109,7 +109,7 @@ async function applyPresetWallpaper(preset) {
         if (!response.ok) throw new Error('Failed to fetch wallpaper image');
 
         const blob = await response.blob();
-        const filename = preset.fullUrl.split('./').pop();
+        const filename = preset.fullUrl.split('/').pop();
         const file = new File([blob], filename, { type: blob.type });
 
         await saveWallpaper(file, preset.clockStyles);
@@ -253,7 +253,7 @@ const SlideshowManager = {
         // Show Control Widget
         startLiveActivity('System', {
             activityId: 'sys-slideshow',
-            url: './assets/gurapp/intl/liveactivity/slideshow-control.html',
+            url: '/assets/gurapp/intl/liveactivity/slideshow-control.html',
             homescreen: false,
 			showInIsland: false,
             height: '40px'
@@ -1129,7 +1129,7 @@ async function renderWallpaperToDOM(wallpaper) {
                     document.body.style.backgroundRepeat = "no-repeat";
 
                     if (imageData.type.includes('gif') || imageData.type.includes('webp')) {
-                        document.body.dataset.wallpaperType = imageData.type.split('./')[1];
+                        document.body.dataset.wallpaperType = imageData.type.split('/')[1];
                         document.body.dataset.wallpaperId = wallpaper.id;
                     }
                     

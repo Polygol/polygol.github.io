@@ -250,7 +250,7 @@ function initializeSettingsApp() {
         if (container.dataset.loaded) return;
 
         try {
-            const response = await fetch('./about/external.md');
+            const response = await fetch('/about//external.md');
             if (!response.ok) throw new Error('Network response was not ok');
             const text = await response.text();
             
@@ -323,8 +323,8 @@ function initializeSettingsApp() {
         sortedApps.forEach(appName => {
             const appDef = systemAppsObj[appName] || installedAppsObj[appName] || {};
             let iconSrc = appDef.icon || 'system.png';
-            if (!iconSrc.startsWith('http') && !iconSrc.startsWith('./') && !iconSrc.startsWith('data:')) {
-                iconSrc = `./assets/appicon/${iconSrc}`;
+            if (!iconSrc.startsWith('http') && !iconSrc.startsWith('/') && !iconSrc.startsWith('data:')) {
+                iconSrc = `/assets/appicon/${iconSrc}`;
             }
 
             const item = document.createElement('div');
@@ -374,11 +374,11 @@ function initializeSettingsApp() {
         const iconEl = document.getElementById('detail-app-icon');
         if (appDef.type === 'component') {
             // Setup generic icon for components
-            iconEl.src = './assets/appicon/system.png';
+            iconEl.src = '/assets/appicon/system.png';
         } else {
             let iconSrc = appDef.icon || 'system.png';
-            if (!iconSrc.startsWith('http') && !iconSrc.startsWith('./') && !iconSrc.startsWith('data:')) {
-                iconSrc = `./assets/appicon/${iconSrc}`;
+            if (!iconSrc.startsWith('http') && !iconSrc.startsWith('/') && !iconSrc.startsWith('data:')) {
+                iconSrc = `/assets/appicon/${iconSrc}`;
             }
             iconEl.src = iconSrc;
         }

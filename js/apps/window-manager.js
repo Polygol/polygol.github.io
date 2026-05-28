@@ -1,15 +1,15 @@
 // App definitions
 var apps = {
     "kirbStore": {
-        url: "./kirbstore/index.html",
+        url: "/kirbstore/index.html",
         icon: "appstore.png"
 	},
     "Files": {
-        url: "./assets/gurapp/intl/forudaraisu/index.html",
+        url: "/assets/gurapp/intl/forudaraisu/index.html",
         icon: "files.png"
 	},
     "Internet": {
-        url: "./assets/gurapp/intl/internet/index.html",
+        url: "/assets/gurapp/intl/internet/index.html",
         icon: "internet.png"
 	},
     "Assistant": {
@@ -21,7 +21,7 @@ var apps = {
         icon: "feedback.png"
 	},
     "Settings": {
-        url: "./assets/gurapp/intl/settings/index.html",
+        url: "/assets/gurapp/intl/settings/index.html",
         icon: "settings.png"
 	}
 };
@@ -230,8 +230,8 @@ async function deleteApp(appName) {
     const appToDelete = apps[appName];
     if (
         appToDelete && 
-        (appToDelete.url.includes('./kirbstore/index.html') ||
-         appToDelete.url.includes('./assets/gurapp/intl/settings/'))
+        (appToDelete.url.includes('/kirbstore/index.html') ||
+         appToDelete.url.includes('/assets/gurapp/intl/settings/'))
     ) {
         showDialog({ 
             type: 'alert', 
@@ -727,12 +727,12 @@ async function createFullscreenEmbed(url, options = {}) {
     // --- START of MODIFICATION ---
     // NEW: Define special internal tool URLs that are always allowed to open.
     const internalToolUrls = [
-        './recovery/index.html',
-        './transfer/index.html',
+        '/recovery/index.html',
+        '/transfer/index.html',
     ];
 	
 	const isInternalTool = internalToolUrls.some(t => url.includes(t));
-    const isSystemApp = url.includes('./assets/gurapp/intl');
+    const isSystemApp = url.includes('/assets/gurapp/intl');
 
     // --- Fuzzy Matching for Unknown URLs ---
     let isFuzzyMatch = false;
@@ -783,7 +783,7 @@ async function createFullscreenEmbed(url, options = {}) {
 	} else { // It must be an internal tool or Google Form to get this far
 	    appDetails = {
             name: 'System Tool',
-            icon: './assets/appicon/system.png', // A generic system icon
+            icon: '/assets/appicon/system.png', // A generic system icon
             url: url
         };
         appName = 'System Tool'; // Assign a temporary name for tracking
@@ -958,13 +958,13 @@ async function createFullscreenEmbed(url, options = {}) {
             const res = await fetch(url, { method: 'HEAD' }).catch(() => null);
             if (!res || !res.ok) {
                 // If unavailable at root, try in the domain's subfolder (e.g. Github Pages)
-                if (url.startsWith('./')) {
+                if (url.startsWith('/')) {
                     const basePath = window.location.pathname.replace(/\/[^\/]*$/, '');
                     if (basePath) finalUrl = basePath + url;
                 } 
                 // Vice versa: if relative, try root
                 else if (!url.startsWith('http')) {
-                    finalUrl = './' + url.replace(/^\.\//, '');
+                    finalUrl = '/' + url.replace(/^\.\//, '');
                 }
             }
         }
@@ -1072,8 +1072,8 @@ async function createFullscreenEmbed(url, options = {}) {
 
                 // Populate header info
                 let iconUrl = appDetails.icon;
-                if (iconUrl && !(iconUrl.startsWith('http') || iconUrl.startsWith('./') || iconUrl.startsWith('data:'))) {
-                    iconUrl = `./assets/appicon/${iconUrl}`;
+                if (iconUrl && !(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
+                    iconUrl = `/assets/appicon/${iconUrl}`;
                 }
                 appIconImg.src = iconUrl || '';
                 appNameSpan.textContent = appName;
@@ -1326,11 +1326,11 @@ async function createBackgroundEmbed(url) {
         if (parsedUrl.origin === window.location.origin) {
             const res = await fetch(url, { method: 'HEAD' }).catch(() => null);
             if (!res || !res.ok) {
-                if (url.startsWith('./')) {
+                if (url.startsWith('/')) {
                     const basePath = window.location.pathname.replace(/\/[^\/]*$/, '');
                     if (basePath) finalUrl = basePath + url;
                 } else if (!url.startsWith('http')) {
-                    finalUrl = './' + url.replace(/^\.\//, '');
+                    finalUrl = '/' + url.replace(/^\.\//, '');
                 }
             }
         }

@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 svgEl.style.width = `${s}px`;
                 svgEl.style.height = `${s}px`;
                 
-                const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}"><path d="${d}" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"./></svg>`;
+                const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}"><path d="${d}" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
                 const encoded = "data:image/svg+xml;base64," + btoa(svgData);
                 triggerDiv.style.setProperty('--trigger-mask', `url("${encoded}")`);
             }
@@ -1392,7 +1392,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 4. If no app is found, provide a sensible default action.
                 console.warn('[Media Widget] No active or cached app found. Falling back to default Music app.');
                 closeControls();
-                createFullscreenEmbed('./music/index.html');
+                createFullscreenEmbed('/music/index.html');
             }
         }
     });
@@ -1647,8 +1647,8 @@ document.addEventListener('DOMContentLoaded', () => {
                  
                  const img = document.createElement('img');
                  let iconUrl = apps[appName]?.icon;
-                 if (iconUrl && !iconUrl.startsWith('http') && !iconUrl.startsWith('./') && !iconUrl.startsWith('data:')) {
-                     iconUrl = `./assets/appicon/${iconUrl}`;
+                 if (iconUrl && !iconUrl.startsWith('http') && !iconUrl.startsWith('/') && !iconUrl.startsWith('data:')) {
+                     iconUrl = `/assets/appicon/${iconUrl}`;
                  }
                  img.src = iconUrl || '';
                  img.style.cssText = 'width: 32px; height: 32px; border-radius: 35%; corner-shape: superellipse(1.25); object-fit: cover;';
@@ -1687,8 +1687,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const img = currentAppLabel.querySelector('img');
                     const span = currentAppLabel.querySelector('span');
                     let iconUrl = appDetails.icon;
-                    if (iconUrl && !(iconUrl.startsWith('http') || iconUrl.startsWith('./') || iconUrl.startsWith('data:'))) {
-                        iconUrl = `./assets/appicon/${iconUrl}`;
+                    if (iconUrl && !(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
+                        iconUrl = `/assets/appicon/${iconUrl}`;
                     }
                     if (img) {
                         img.src = iconUrl || '';

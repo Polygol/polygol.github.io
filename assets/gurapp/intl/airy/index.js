@@ -1336,11 +1336,11 @@ function initializeCustomization() {
 
 // App definitions
 let apps = {
-    "Welcome": { url: "docs:welcome", icon: "./assets/appicon/airy.png" },
-    "Gestures": { url: "docs:gestures", icon: "./assets/appicon/tips.png" },
-    "Controls": { url: "docs:controls", icon: "./assets/appicon/settings.png" },
-    "Customize": { url: "docs:customization", icon: "./assets/appicon/feedback.png" },
-    "Finish": { url: "docs:finish", icon: "./assets/appicon/system.png" }
+    "Welcome": { url: "docs:welcome", icon: "/assets/appicon/airy.png" },
+    "Gestures": { url: "docs:gestures", icon: "/assets/appicon/tips.png" },
+    "Controls": { url: "docs:controls", icon: "/assets/appicon/settings.png" },
+    "Customize": { url: "docs:customization", icon: "/assets/appicon/feedback.png" },
+    "Finish": { url: "docs:finish", icon: "/assets/appicon/system.png" }
 };
 
 window.completeAiryOnboarding = function() {
@@ -1448,7 +1448,7 @@ async function createFullscreenEmbed(url) {
         document.body.appendChild(embedContainer);
 
         try {
-            const response = await fetch('./assets/gurapp/intl/airy/docs/' + pageKey);
+            const response = await fetch('/assets/gurapp/intl/airy/docs/' + pageKey);
             if (!response.ok) throw new Error(`Failed to load ${pageKey}`);
             const htmlContent = await response.text();
             
@@ -1628,18 +1628,18 @@ function populateDock() {
         img.alt = name;
 
 	const iconSource = details.icon;
-        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('./'))) {
+        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('/'))) {
             // If it's a full URL or a root-relative path, use it directly.
             img.src = iconSource;
         } else if (iconSource) {
             // Otherwise, assume it's a local filename and prepend the default path.
-            img.src = `.//appicon/${iconSource}`;
+            img.src = `//appicon/${iconSource}`;
         } else {
             // Fallback for missing icons.
-            img.src = './/assets/appicon/default.png';
+            img.src = '//assets/appicon/default.png';
         }
 
-	img.onerror = () => { img.src = './/assets/appicon/default.png'; };
+	img.onerror = () => { img.src = '//assets/appicon/default.png'; };
         
         dockIcon.appendChild(img);
 	 
@@ -1683,20 +1683,20 @@ function createAppIcons() {
         const iconSource = app.details.icon;
 
         // 2. Check the source type and set img.src only ONCE.
-        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('./'))) {
+        if (iconSource && (iconSource.startsWith('http') || iconSource.startsWith('/'))) {
             // If it's an absolute URL or a root-relative path, use it directly.
             img.src = iconSource;
         } else if (iconSource) {
             // Otherwise, assume it's a local filename and prepend the default path.
-            img.src = `.//appicon/${iconSource}`;
+            img.src = `//appicon/${iconSource}`;
         } else {
             // Fallback for cases where the icon is missing entirely.
-            img.src = './/assets/appicon/default.png';
+            img.src = '//assets/appicon/default.png';
         }
 
         // 3. Set the error handler AFTER defining the initial source.
         img.onerror = () => {
-            img.src = './/assets/appicon/default.png';
+            img.src = '//assets/appicon/default.png';
         };
         
         const label = document.createElement('span');
@@ -2695,7 +2695,7 @@ let isDuringFirstSetup = false; // Flag to prevent prompts during setup
 let WALLPAPER_PRESETS = [];
 async function fetchWallpaperPresets() {
     try {
-        const res = await fetch('./assets/img/wallpapers/index.json');
+        const res = await fetch('/assets/img/wallpapers/index.json');
         if (res.ok) {
             WALLPAPER_PRESETS = await res.json();
         }
@@ -2723,7 +2723,7 @@ async function firstSetup() {
         }
     } else {
         console.warn("No wallpaper presets found. Using fallback.");
-        document.body.style.setProperty('--bg-image', "url('./assets/gurapp/intl/airy/img.jpg')");
+        document.body.style.setProperty('--bg-image', "url('/assets/gurapp/intl/airy/img.jpg')");
     }
 
     createSetupScreen();
@@ -2751,7 +2751,7 @@ function createSetupScreen() {
     // Ambient Music and Attribution
     const audio = document.createElement('audio');
     audio.id = 'setup-music';
-    audio.src = './assets/sound/setup/swinging.mp3';
+    audio.src = '/assets/sound/setup/swinging.mp3';
     audio.loop = true;
     audio.volume = 0; // Start silently for fade-in
 

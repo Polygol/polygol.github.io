@@ -15,7 +15,7 @@ window.updateActiveWavesPeers = function(peersMap) {
     }
 
     const uniqueUsers = new Map();
-    const FALLBACK_AVATAR = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'./%3E%3C/svg%3E";
+    const FALLBACK_AVATAR = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
 
     Object.values(peersMap).forEach(p => {
         const profile = p.profile || { name: "Unknown", avatar: null };
@@ -88,7 +88,7 @@ window.updateActiveWavesPeers = function(peersMap) {
 window.makeAnnouncement = function(text, forceTTS = null, profile = null) {
     if (!text) return;
     
-    let url = `./assets/gurapp/intl/waves/announce.html?text=${encodeURIComponent(text)}`;
+    let url = `/assets/gurapp/intl/waves/announce.html?text=${encodeURIComponent(text)}`;
     
     if (forceTTS !== null) {
         url += `&tts=${forceTTS}`;

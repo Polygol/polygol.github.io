@@ -2,17 +2,17 @@ const SoundManager = {
     audioCtx: null,
     buffers: {},
     soundPaths: {
-        'select': './assets/sound/ui/select.mp3',
-        'toggle': './assets/sound/ui/seltoggle.mp3',
-        'check': './assets/sound/ui/check.mp3',
-        'open': './assets/sound/ui/in.mp3',
-        'close': './assets/sound/ui/out.mp3',
-        'popup': './assets/sound/ui/popup.mp3',
-        'notify': './assets/sound/ui/tone2.mp3',
-        'success': './assets/sound/ui/tone1.mp3',
-        'type': './assets/sound/ui/select.mp3',
-        'expand': './assets/sound/ui/tridown.mp3',
-        'delay': './assets/sound/ui/seldelay.mp3'
+        'select': '/assets/sound/ui/select.mp3',
+        'toggle': '/assets/sound/ui/seltoggle.mp3',
+        'check': '/assets/sound/ui/check.mp3',
+        'open': '/assets/sound/ui/in.mp3',
+        'close': '/assets/sound/ui/out.mp3',
+        'popup': '/assets/sound/ui/popup.mp3',
+        'notify': '/assets/sound/ui/tone2.mp3',
+        'success': '/assets/sound/ui/tone1.mp3',
+        'type': '/assets/sound/ui/select.mp3',
+        'expand': '/assets/sound/ui/tridown.mp3',
+        'delay': '/assets/sound/ui/seldelay.mp3'
     },
 
     init() {

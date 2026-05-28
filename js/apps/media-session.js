@@ -137,8 +137,8 @@ function _updateActiveMediaSession() {
     const appIconEl = document.getElementById('media-widget-app-icon');
     if (appIconEl && apps[appName] && apps[appName].icon) {
         let iconUrl = apps[appName].icon;
-        if (!(iconUrl.startsWith('http') || iconUrl.startsWith('./') || iconUrl.startsWith('data:'))) {
-            iconUrl = `./assets/appicon/${iconUrl}`;
+        if (!(iconUrl.startsWith('http') || iconUrl.startsWith('/') || iconUrl.startsWith('data:'))) {
+            iconUrl = `/assets/appicon/${iconUrl}`;
         }
         appIconEl.src = iconUrl;
         appIconEl.style.display = 'block';

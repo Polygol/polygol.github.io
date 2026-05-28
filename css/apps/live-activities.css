@@ -155,8 +155,8 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     }
 
     body:not(.high-contrast) .nav-btn-small svg {
-        -webkit-mask-image: var(--trigger-mask, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M 3 3 L 3 9 A 10 10 0 0 0 13 19 L 19 19' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'./></svg>"));
-        mask-image: var(--trigger-mask, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M 3 3 L 3 9 A 10 10 0 0 0 13 19 L 19 19' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'./></svg>"));
+        -webkit-mask-image: var(--trigger-mask, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M 3 3 L 3 9 A 10 10 0 0 0 13 19 L 19 19' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>"));
+        mask-image: var(--trigger-mask, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><path d='M 3 3 L 3 9 A 10 10 0 0 0 13 19 L 19 19' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>"));
         -webkit-mask-size: contain;
         mask-size: contain;
         -webkit-mask-repeat: no-repeat;

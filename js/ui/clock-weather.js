@@ -121,7 +121,7 @@ function updateClockAndDate() {
         window.currentPersonalGreeting = window.personalGreetingsList[0];
         window.lastGreetingHour = new Date().getHours();
 
-        fetch('./assets/text/greet/home.json')
+        fetch('/assets/text/greet/home.json')
             .then(res => res.json())
             .then(data => {
                 if (data.matrix) {
@@ -238,8 +238,8 @@ function updateClockAndDate() {
     if (dateFormat) dateFormat = resolveVariables(dateFormat);
 
     // Handle literal text escaping (convert ```text``` to[text] for moment.js)
-    if (clockFormat) clockFormat = clockFormat.replace(/```(.*?)```./g, '[$1]');
-    if (dateFormat) dateFormat = dateFormat.replace(/```(.*?)```./g, '[$1]');
+    if (clockFormat) clockFormat = clockFormat.replace(/```(.*?)```/g, '[$1]');
+    if (dateFormat) dateFormat = dateFormat.replace(/```(.*?)```/g, '[$1]');
 
     const timeString = now.format(clockFormat);
     const formattedDate = now.format(dateFormat);
@@ -884,7 +884,7 @@ const WeatherAlertManager = {
 
         const options = {
             activityId: this.activityId,
-            url: './assets/gurapp/intl/liveactivity/weather-alert.html',
+            url: '/assets/gurapp/intl/liveactivity/weather-alert.html',
             openUrl: 'https://polygol.github.io/weather/index.html',
             homescreen: true,
             icon: icon,

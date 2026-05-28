@@ -292,7 +292,7 @@ function displaySheet(options) {
             headInjection += `<style>\n${options.styles}\n</style>\n`;
         }
         
-        const apiScriptUrl = new URL('./assets/gurapp/api/gurasuraisu-api.js', window.location.origin).href;
+        const apiScriptUrl = new URL('/assets/gurapp/api/gurasuraisu-api.js', window.location.origin).href;
         let htmlContent = options.html;
         if (!htmlContent.includes('gurasuraisu-api.js')) {
             headInjection += `<script src="${apiScriptUrl}"><\/script>\n`;

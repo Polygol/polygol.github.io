@@ -29,7 +29,7 @@ function loadAvailableWidgets() {
                 appName: 'System',
                 widgetId: 'system-media',
                 title: 'Now Playing',
-                url: './assets/system-widgets/media-widget.html',
+                url: '/assets/system-widgets/media-widget.html',
                 defaultSize: [1, 1],
                 openUrl: '#open-last-media-app' // Special action handled by the dashboard
             }
@@ -551,7 +551,7 @@ function renderWidgets() {
                         createFullscreenEmbed(apps[lastApp].url);
                     } else {
                         // SENSIBLE FALLBACK: If no app is found, open Music
-                        createFullscreenEmbed('./music/index.html');
+                        createFullscreenEmbed('/music/index.html');
                     }
                 } else {
                     // Standard app widget behavior

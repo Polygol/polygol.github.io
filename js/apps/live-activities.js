@@ -91,7 +91,7 @@ const IslandManager = {
                 
                 if (desiredTag === 'IMG') {
                     iconEl = document.createElement('img');
-                    iconEl.onerror = () => { iconEl.src = './assets/appicon/system.png'; };
+                    iconEl.onerror = () => { iconEl.src = '/assets/appicon/system.png'; };
                     el.prepend(iconEl);
                 } else {
                     iconEl = document.createElement('span');
@@ -105,13 +105,13 @@ const IslandManager = {
                 let targetSrc = item.data.imgUrl;
                 if (!targetSrc) {
                     // App Icon Fallback
-                    targetSrc = './assets/appicon/system.png';
+                    targetSrc = '/assets/appicon/system.png';
                     if (appDef && appDef.icon) {
                         const rawIcon = appDef.icon;
-                        if (rawIcon.startsWith('http') || rawIcon.startsWith('./') || rawIcon.startsWith('data:')) {
+                        if (rawIcon.startsWith('http') || rawIcon.startsWith('/') || rawIcon.startsWith('data:')) {
                             targetSrc = rawIcon;
                         } else {
-                            targetSrc = `./assets/appicon/${rawIcon}`;
+                            targetSrc = `/assets/appicon/${rawIcon}`;
                         }
                     }
                 }
