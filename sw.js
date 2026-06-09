@@ -19,7 +19,7 @@ const ASSETS_TO_CACHE = [
   '/css/core/dialogs.css',
   '/css/core/display.css',
   '/css/ui/background.css',
-  '/css/ui/enviroment.css',
+  '/css/ui/environment.css',
   '/css/ui/main-ui.css',
   '/css/ui/clock-weather.css',
   '/css/ui/controls.css',
