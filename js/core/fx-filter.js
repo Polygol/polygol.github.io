@@ -374,17 +374,21 @@ class FxFilter {
 FxFilter.add({
     name: "noise",
     callback: (element, saturation = 0, intensity = 1, opacity = .25) => {
-        const width = element.clientWidth;
-        const height = element.clientHeight;
+        const cssWidth = element.clientWidth;
+        const cssHeight = element.clientHeight;
 
-        if (width <= 0 || height <= 0) return '';
+        if (cssWidth <= 0 || cssHeight <= 0) return '';
 
         if (
-            width >= window.innerWidth * 0.9 &&
-            height >= window.innerHeight * 0.9
+            cssWidth >= window.innerWidth * 0.9 &&
+            cssHeight >= window.innerHeight * 0.9
         ) {
             return '';
         }
+
+        const zoom = parseFloat(document.body.style.zoom) / 100 || 1;
+        const width = Math.max(1, Math.round(cssWidth * zoom));
+        const height = Math.max(1, Math.round(cssHeight * zoom));
 
         const cacheKey = `${width}x${height}-${saturation}-${intensity}-${opacity}`;
 
@@ -401,18 +405,20 @@ FxFilter.add({
 
         const imageDataAdd = ctx.createImageData(canvas.width, canvas.height);
         const dataAdd = imageDataAdd.data;
-        const additiveIntensity = intensity;
+        
+        const mult = intensity * 255;
+        const invSat = 1 - saturation;
+        const alpha = 255 * opacity;
 
         for (let i = 0; i < dataAdd.length; i += 4) {
-            const noiseValue1 = Math.random() * additiveIntensity * 255;
-            const noiseValue2 = Math.random() * additiveIntensity * 255;
-            const noiseValue3 = Math.random() * additiveIntensity * 255;
+            const noiseValue1 = Math.random() * mult;
+            const noiseValue2 = Math.random() * mult;
+            const noiseValue3 = Math.random() * mult;
 
-            const baseNoise = noiseValue1;
-            dataAdd[i] = baseNoise * (1 - saturation) + noiseValue1 * saturation;     
-            dataAdd[i + 1] = baseNoise * (1 - saturation) + noiseValue2 * saturation; 
-            dataAdd[i + 2] = baseNoise * (1 - saturation) + noiseValue3 * saturation; 
-            dataAdd[i + 3] = 255 * opacity; 
+            dataAdd[i] = noiseValue1;     
+            dataAdd[i + 1] = noiseValue1 * invSat + noiseValue2 * saturation; 
+            dataAdd[i + 2] = noiseValue1 * invSat + noiseValue3 * saturation; 
+            dataAdd[i + 3] = alpha; 
         }
 
         ctx.putImageData(imageDataAdd, 0, 0);
@@ -424,6 +430,9 @@ FxFilter.add({
         `;
 
         FxFilter.noiseCache.set(cacheKey, result);
+        if (FxFilter.noiseCache.size > 50) {
+            FxFilter.noiseCache.delete(FxFilter.noiseCache.keys().next().value);
+        }
 
         return result;
     },
@@ -434,10 +443,14 @@ FxFilter.add({
 FxFilter.add({
     name: "glass",
     callback: (element, refraction = 1, offset = 10, chromatic = 0) => {
-        const width = Math.round(element.offsetWidth);
-        const height = Math.round(element.offsetHeight);
+        const offsetWidth = element.offsetWidth;
+        const offsetHeight = element.offsetHeight;
 
-        if (width <= 0 || height <= 0) return '';
+        if (offsetWidth <= 0 || offsetHeight <= 0) return '';
+
+        const zoom = parseFloat(document.body.style.zoom) / 100 || 1;
+        const width = Math.max(1, Math.round(offsetWidth * zoom));
+        const height = Math.max(1, Math.round(offsetHeight * zoom));
 
         const maxElementSize = Math.max(width, height);
 
@@ -457,7 +470,7 @@ FxFilter.add({
         const refractionValue = (parseFloat(refraction) / 2 || 0) * Math.sqrt(scaleFactor);
         const chromaticValue = parseFloat(chromatic) || 0;
 
-        const offsetValue = (parseFloat(offset) || 0) / 2;
+        const offsetValue = ((parseFloat(offset) || 0) / 2) * zoom;
         const computedStyle = window.getComputedStyle(element);
         const transform = computedStyle.transform;
 
@@ -466,10 +479,10 @@ FxFilter.add({
 
         if (borderRadiusStr.includes('%')) {
             const percentage = parseFloat(borderRadiusStr);
-            const innerElementSize = Math.min(element.offsetWidth, element.offsetHeight);
+            const innerElementSize = Math.min(width, height);
             borderRadius = (percentage / 100) * innerElementSize;
         } else {
-            borderRadius = parseFloat(borderRadiusStr);
+            borderRadius = parseFloat(borderRadiusStr) * zoom;
         }
 
         // High-performance Cache Lookup
@@ -667,6 +680,9 @@ FxFilter.add({
 
         // Cache the optimized output
         FxFilter.glassCache.set(cacheKey, result);
+        if (FxFilter.glassCache.size > 50) {
+            FxFilter.glassCache.delete(FxFilter.glassCache.keys().next().value);
+        }
         return result;
     },
     updatesOn: ['border-radius', 'width', 'height']

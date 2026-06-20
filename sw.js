@@ -1,4 +1,4 @@
-const CORE_CACHE_VERSION = 'Astatine 27-b2';
+const CORE_CACHE_VERSION = 'Astatine 27-b04';
 const CORE_CACHE_NAME = `polygol-core-${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polygol-apps';
 
@@ -51,6 +51,7 @@ const ASSETS_TO_CACHE = [
   '/js/core/power.js',
   '/js/core/first-setup.js',
   '/js/core/sys-connect-waves.js',
+  '/js/core/fx-filter.js',
   '/js/ui/theme.js',
   '/js/ui/modes.js',
   '/js/ui/notifications.js',
@@ -92,6 +93,7 @@ const ASSETS_TO_CACHE = [
   '/assets/gurapp/intl/settings/index.html',
   '/assets/gurapp/intl/settings/settings.css',
   '/assets/gurapp/intl/settings/settings.js',
+  '/assets/gurapp/intl/settings/img/content.png',
   '/assets/gurapp/intl/forudaraisu/index.html',
   '/assets/gurapp/intl/donburi/index.html',
   '/assets/gurapp/intl/overlay/osk/osk.html',

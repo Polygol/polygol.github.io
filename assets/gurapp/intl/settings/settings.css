@@ -130,7 +130,8 @@ body {
 }
 
 #main-settings .setting-item.nav-item .setting-info .material-symbols-rounded {
-    padding: 8px;
+    padding: 6px;
+    font-size: 16px !important;
     border-radius: 50%;
     background: var(--transparent-color);
     border: 1px solid var(--glass-border);
@@ -154,6 +155,17 @@ body {
 .tab-content.active { display: block; }
 
 /* --- Settings Specific Styles --- */
+@keyframes highlight-pulse {
+    0% { background-color: transparent; }
+    20% { background-color: hsla(200, 100%, 50%, 0.15); }
+    100% { background-color: transparent; }
+}
+
+.setting-highlight {
+    animation: highlight-pulse 2s ease-out;
+    border-radius: 15px;
+}
+
 .setting-section {
     background-color: var(--background-mono);
     border-radius: 35px;
@@ -379,10 +391,7 @@ input.form-input {
 /* Storage Visualizer */
 .storage-visualizer-container {
     padding: 16px 20px;
-    background-color: var(--search-background);
-    border: 1px solid var(--glass-border);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0);
-    box-shadow: var(--sun-shadow);
+    background-color: var(--background-mono);
     border-radius: 35px;
     corner-shape: superellipse(1.5);
 }
@@ -465,7 +474,7 @@ input.form-input {
     height: 200px;
     border-radius: inherit;
     corner-shape: inherit;
-    background-image: url('/assets/img/wallpapers/Polyhills.png');
+    background-image: url('/assets/gurapp/intl/settings/img/content.png');
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center 0%;
@@ -477,7 +486,7 @@ input.form-input {
     gap: 14px;
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
-    animation: panY 12s ease-in-out infinite;
+    animation: panY 60s ease-in-out infinite;
 }
 
 @keyframes panY {
@@ -515,7 +524,7 @@ input.form-input {
 .glass-preview-card2 {
     width: 60px;
     height: 60px;
-    background-color: var(--search-background);
+    background-color: var(--transparent-color);
     border: 1px solid var(--glass-border);
     border-radius: 50%;
     color: var(--text-color);

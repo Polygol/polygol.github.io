@@ -9,23 +9,24 @@ function initializeSettingsApp() {
 
     const pageTitles = {
         'main-settings': 'Settings',
+        'page-search': 'Search',
         'page-display': 'Display',
         'page-glass': 'Dynamic Glass',
         'page-sound': 'Sound & Haptics',
         'page-apps': 'Apps',
         'page-app-details': 'Details',
-        'page-homescreen': 'Home Screen',
+        'page-customize': 'Customize',
         'page-wallpaper': 'Wallpaper',
         'page-system': 'System',
         'page-data': 'Your Account',
         'page-general': 'General',
         'page-a11y': 'Accessibility',
         'page-about': 'About',
-        'page-storage': 'Manage Storage',
+        'page-storage': 'Storage',
         'page-db-details': 'Database',
-        'page-store-viewer': 'Store Data',
-        'page-record-editor': 'Edit Record',
-        'page-localstorage': 'Local Storage',
+        'page-store-viewer': 'Store data',
+        'page-record-editor': 'Edit record',
+        'page-localstorage': 'Local storage',
         'page-cache': 'Cache Storage',
         'page-connect': 'Connections',
         'page-licenses': 'Acknowledgements'
@@ -57,6 +58,98 @@ function initializeSettingsApp() {
 
         navigationStack.push(pageId);
         updateHeader();
+
+        if (pageId === 'page-search') {
+            searchIndex = buildSearchIndex();
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.value = '';
+                performSearch('');
+                setTimeout(() => searchInput.focus(), 150);
+            }
+        }
+    }
+
+    let searchIndex = [];
+
+    function buildSearchIndex() {
+        const items = [];
+        document.querySelectorAll('.page').forEach(page => {
+            const pageId = page.id;
+            if (['page-search', 'page-app-details', 'page-record-editor', 'page-db-details', 'page-store-viewer'].includes(pageId)) {
+                return;
+            }
+            
+            const pageName = pageTitles[pageId] || '';
+            
+            page.querySelectorAll('.setting-item').forEach(item => {
+                const labelEl = item.querySelector('.setting-label');
+                if (!labelEl) return;
+                
+                const label = labelEl.textContent.trim();
+                const descEl = item.querySelector('.setting-description');
+                const desc = descEl ? descEl.textContent.trim() : '';
+                
+                items.push({
+                    element: item,
+                    label: label,
+                    desc: desc,
+                    pageId: pageId,
+                    pageName: pageName
+                });
+            });
+        });
+        return items;
+    }
+
+    function performSearch(query) {
+        const resultsContainer = document.getElementById('search-results-container');
+        if (!resultsContainer) return;
+
+        resultsContainer.innerHTML = '';
+        if (!query.trim()) {
+            resultsContainer.innerHTML = '';
+            return;
+        }
+
+        const normalizedQuery = query.toLowerCase().trim();
+        const results = searchIndex.filter(item => {
+            return item.label.toLowerCase().includes(normalizedQuery) || 
+                   item.desc.toLowerCase().includes(normalizedQuery) ||
+                   item.pageName.toLowerCase().includes(normalizedQuery);
+        });
+
+        if (results.length === 0) {
+            resultsContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--secondary-text-color)">No settings found</div>';
+            return;
+        }
+
+        results.forEach(item => {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'setting-item nav-item';
+            resultItem.innerHTML = `
+                <div class="setting-info">
+                    <span class="setting-label">${item.label}</span>
+                    <span class="setting-description">${item.pageName} ${item.desc ? '• ' + item.desc : ''}</span>
+                </div>
+                <span class="material-symbols-rounded">arrow_forward_ios</span>
+            `;
+            resultItem.onclick = () => {
+                navigateTo(item.pageId);
+                
+                if (item.pageId !== 'main-settings') {
+                    document.querySelectorAll('.setting-highlight').forEach(el => el.classList.remove('setting-highlight'));
+                    
+                    item.element.classList.add('setting-highlight');
+                    item.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    setTimeout(() => {
+                        item.element.classList.remove('setting-highlight');
+                    }, 2000);
+                }
+            };
+            resultsContainer.appendChild(resultItem);
+        });
     }
 
     function navigateBack() {
@@ -526,8 +619,16 @@ function initializeSettingsApp() {
         }
 
         backBtn.addEventListener('click', navigateBack);
+
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                performSearch(e.target.value);
+            });
+        }
         
         document.querySelectorAll('.toggle-switch, .styled-select, .styled-slider, .color-picker, .form-input').forEach(control => {
+            if (control.id === 'search-input') return; // Skip search input from trigger setting changes
             const eventType = (['range', 'color', 'text'].includes(control.type)) ? 'input' : 'change';
             control.addEventListener(eventType, () => handleSettingChange(control));
         });

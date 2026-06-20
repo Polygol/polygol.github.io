@@ -34,7 +34,7 @@
 
 .info.glass-effect .date,
 .clock.glass-effect>* {
-    color: var(--accent) !important;
+    color: var(--search-background-op) !important;
     background: none !important;
     /* Ensure no other backgrounds interfere */
 
@@ -45,7 +45,7 @@
     mask-image: linear-gradient(black, black);
     mask-composite: source-in;
 
-    --fx-filter: var(--blur1) glass(0.6, 8, 0);
+    backdrop-filter: saturate(2) blur(10px);
     transition: transform 0.3s cubic-bezier(.3, 1.2, .64, 1), filter 0.3s cubic-bezier(.3, 1.2, .64, 1), font-size 0.3s cubic-bezier(.3, 1.2, .64, 1) !important;
 }
 

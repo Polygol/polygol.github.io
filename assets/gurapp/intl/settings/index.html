@@ -63,11 +63,26 @@
         <!-- Main Settings Page -->
         <div class="page active" id="main-settings">           
             <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-search">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">search</span>
+                        <span class="setting-label">Search</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
+            <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-data">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">account_circle</span>
+                        <span class="setting-label">Your Account</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
                 <div class="setting-item nav-item" data-page="page-connect">
                     <div class="setting-info">
                         <span class="material-symbols-rounded">cell_tower</span>
                         <span class="setting-label">Connections</span>
-                        <span class="setting-description">Add a device to Waves</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -77,7 +92,6 @@
                     <div class="setting-info">
                         <span class="material-symbols-rounded">dual_screen</span>
                         <span class="setting-label">Display</span>
-                        <span class="setting-description">Control how your screen displays Polygol</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -85,43 +99,47 @@
                     <div class="setting-info">
                         <span class="material-symbols-rounded">volume_up</span>
                         <span class="setting-label">Sound & Haptics</span>
-                        <span class="setting-description">Control how Polygol uses your sound devices</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
+            </div>
+            <div class="setting-section">
                 <div class="setting-item nav-item" data-page="page-general">
                     <div class="setting-info">
                         <span class="material-symbols-rounded">page_info</span>
                         <span class="setting-label">General</span>
-                        <span class="setting-description">Manage your overall setup and perferences</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
-            </div>
-            <div class="setting-section">
-                <div class="setting-item nav-item" data-page="page-homescreen">
+                <div class="setting-item nav-item" data-page="page-customize">
                     <div class="setting-info">
-                        <span class="material-symbols-rounded">home</span>
-                        <span class="setting-label">Home Screen</span>
-                        <span class="setting-description">Customize your Home Screen</span>
+                        <span class="material-symbols-rounded">format_paint</span>
+                        <span class="setting-label">Customize</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
-            </div>
-            <div class="setting-section">
                 <div class="setting-item nav-item" data-page="page-apps">
                     <div class="setting-info">
                         <span class="material-symbols-rounded">grid_view</span>
                         <span class="setting-label">Apps</span>
-                        <span class="setting-description">Manage applications</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
+            </div>
+            <div class="setting-section">
                 <div class="setting-item nav-item" data-page="page-a11y">
                     <div class="setting-info">
                         <span class="material-symbols-rounded">accessible_forward</span>
                         <span class="setting-label">Accessibility</span>
-                        <span class="setting-description">Personalize Polygol in ways that work best for you</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
+             <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-storage">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">storage</span>
+                        <span class="setting-label">Storage</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -129,17 +147,6 @@
                     <div class="setting-info">
                          <span class="material-symbols-rounded">manufacturing</span>
                         <span class="setting-label">System</span>
-                        <span class="setting-description">Adjust system settings</span>
-                    </div>
-                    <span class="material-symbols-rounded">arrow_forward_ios</span>
-                </div>
-            </div>
-             <div class="setting-section">
-                <div class="setting-item nav-item" data-page="page-data">
-                    <div class="setting-info">
-                        <span class="material-symbols-rounded">account_circle</span>
-                        <span class="setting-label">Your Account</span>
-                        <span class="setting-description">Manage your Polygol data</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -147,10 +154,22 @@
                     <div class="setting-info">
                         <span class="material-symbols-rounded">info</span>
                         <span class="setting-label">About</span>
-                        <span class="setting-description">See information about Polygol and your device</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- Search Page -->
+        <div class="page" id="page-search">
+            <div class="setting-section" style="padding: 8px 14px;">
+                <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                    <span class="material-symbols-rounded" style="font-size: 20px !important;">search</span>
+                    <input type="text" id="search-input" class="form-input" placeholder="Find a setting" style="flex-grow: 1; border: none; box-shadow: none; background: transparent; padding: 5px 0; cursor: text;">
+                </div>
+            </div>
+            <div class="setting-section" id="search-results-container">
+                <!-- Search results will be dynamically generated here -->
             </div>
         </div>
 
@@ -201,34 +220,6 @@
                 </div>
             </div>
             <div class="setting-section">
-                <h2 class="section-title">Appearance</h2>
-                <div class="setting-item" id="setting-theme">
-                    <div class="setting-info">
-                        <span class="setting-label">Daylight</span>
-                        <span class="setting-description">Switch between light and dark themes</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" data-key="theme">
-                    </div>
-                </div>
-                <div class="setting-item" id="setting-tintEnabled">
-                    <div class="setting-info">
-                        <span class="setting-label">Color palette</span>
-                        <span class="setting-description">Tint colors with wallpaper</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" id="tint-colors-switch" data-key="tintEnabled">
-                    </div>
-                </div>
-                <div class="setting-item nav-item" data-page="page-glass">
-                    <div class="setting-info">
-                        <span class="setting-label">Dynamic Glass<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/display/dynamic-glass', height: '100%' });">?</button></span>
-                        <span class="setting-description">Adjust the crunchy, tasty and smooth material</span>
-                    </div>
-                    <span class="material-symbols-rounded">arrow_forward_ios</span>
-                </div>
-            </div>
-            <div class="setting-section">
                 <h2 class="section-title">Night Stand<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/display/night-stand', height: '100%' });">?</button></h2>
                 <div class="setting-item">
                     <div class="setting-info">
@@ -253,38 +244,6 @@
                         </div>
                         <input type="range" min="20" max="100" class="styled-slider" data-key="nightStandBrightness">
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Dynamic Glass Page -->
-        <div class="page" id="page-glass">
-            <div class="setting-section">
-                <div class="glass-preview-container">
-                    <div class="glass-preview-bg">
-                        <div class="glass-preview-card">
-                            <div class="glass-preview-content">
-                                <img src="https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy3.png?raw=true" style="width: 32px;">
-                                Screwy
-                            </div>
-                        </div>
-                        <div class="glass-preview-card2">
-                            <div class="glass-preview-content">
-                                <span class="material-symbols-rounded" style="font-size: 28px;">home</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="setting-section">
-                <h2 class="section-title">Adjust</h2>
-                <div class="setting-item slider-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Clarity</span>
-                        <span class="setting-description">Control clarity of the material</span>
-                    </div>
-                    <input type="range" min="0" max="20" value="5" class="styled-slider" id="glass-effects-mode" data-key="glassEffectsMode">
                 </div>
             </div>
         </div>
@@ -376,9 +335,39 @@
             </div>
         </div>
 
-        <!-- Home Screen Page -->
-        <div class="page" id="page-homescreen">
+        <!-- Customize Page -->
+        <div class="page" id="page-customize">
             <div class="setting-section">
+                <h2 class="section-title">Global appearance</h2>
+                <div class="setting-item" id="setting-theme">
+                    <div class="setting-info">
+                        <span class="setting-label">Daylight</span>
+                        <span class="setting-description">Switch between light and dark themes</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" data-key="theme">
+                    </div>
+                </div>
+                <div class="setting-item" id="setting-tintEnabled">
+                    <div class="setting-info">
+                        <span class="setting-label">Color palette</span>
+                        <span class="setting-description">Tint colors with wallpaper</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" id="tint-colors-switch" data-key="tintEnabled">
+                    </div>
+                </div>
+                <div class="setting-item nav-item" data-page="page-glass">
+                    <div class="setting-info">
+                        <span class="setting-label">Dynamic Glass<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/display/dynamic-glass', height: '100%' });">?</button></span>
+                        <span class="setting-description">Adjust the crunchy, tasty and smooth material</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
+
+            <div class="setting-section">
+                <h2 class="section-title">Home screen</h2>
                  <div class="setting-item nav-item" data-page="page-wallpaper">
                     <div class="setting-info">
                         <span class="setting-label">Wallpaper</span>
@@ -423,6 +412,43 @@
                         <span class="setting-label">Show on Home Screen</span>
                     </div>
                     <input type="checkbox" class="toggle-switch" data-key="homeActivitiesEnabled">
+                </div>
+            </div>
+        </div>
+        <!-- Dynamic Glass Page -->
+        <div class="page" id="page-glass">
+            <span class="setting-description" style="margin-bottom: 10px;">Adjust the crunchy, tasty and smooth material.</span>
+            <div class="setting-section">
+                <div class="glass-preview-container">
+                    <div class="glass-preview-bg">
+                        <div class="glass-preview-card2">
+                            <div class="glass-preview-content">
+                                <span class="material-symbols-rounded" style="font-size: 28px;">arrow_back</span>
+                            </div>
+                        </div>
+                        <div class="glass-preview-card">
+                            <div class="glass-preview-content">
+                                <img src="https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy3.png?raw=true" style="width: 32px;">
+                                google.com
+                            </div>
+                        </div>
+                        <div class="glass-preview-card2" style="background-color: var(--accent);">
+                            <div class="glass-preview-content">
+                                <span class="material-symbols-rounded" style="font-size: 28px; color: var(--background-color);">page_info</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-section">
+                <h2 class="section-title">Adjust</h2>
+                <div class="setting-item slider-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Clarity</span>
+                        <span class="setting-description">Control clarity of the material</span>
+                    </div>
+                    <input type="range" min="0" max="20" value="5" class="styled-slider" id="glass-effects-mode" data-key="glassEffectsMode">
                 </div>
             </div>
         </div>
@@ -676,7 +702,7 @@
         <!-- About Page -->
         <div class="page" id="page-about">
             <div class="setting-section">
-                <img src="/assets/img/text-about-banner-transparent.png" style="width: 400px; margin-bottom: 25px;">
+                <img src="/assets/img/text-about-banner-transparent.png" style="width: 500px; padding: 25px 32px;">
                 <div class="setting-item">
                     <div class="setting-info">
                         <span class="setting-label">Polygol</span>
@@ -714,7 +740,7 @@
                     </div>
                 </div>
             </div>
-            <div class="setting-section">
+            <div class="setting-section" style="padding: 0 16px 12px 16px;">
                 <img src="https://github.com/kirbIndustries/assets/blob/main/brand/img/colorlogotxt/text-owner-transparent.png?raw=true" style="width: 200px; margin: 15px 0;">
                 <div>
                     <span>© Copyright kirbIndustries 2024-2026
@@ -730,12 +756,6 @@
         <!-- Account Page -->
         <div class="page" id="page-data">
             <div class="setting-section">
-                <div class="setting-item nav-item" data-page="page-storage">
-                    <div class="setting-info">
-                        <span class="setting-label">Manage storage</span>
-                    </div>
-                    <span class="material-symbols-rounded">arrow_forward_ios</span>
-                </div>
                 <div class="setting-item">
                      <div class="setting-info">
                         <span class="setting-label">System Transfer</span>

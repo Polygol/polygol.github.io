@@ -17,6 +17,9 @@ It does not include our self made assets/libraries/frameworks.
 *   **Three.js**
     *   License: [MIT](https://opensource.org/licenses/MIT)
     *   Project: [https://threejs.org/](https://threejs.org/)
+*   **FxFilterJS (modified)**
+    *   License: [MIT](https://opensource.org/licenses/MIT)
+    *   Project: [https://github.com/berkaytumal/FxFilterJS](https://github.com/berkaytumal/FxFilterJS)
 *   **Simplex Noise**
     *   License: [MIT](https://opensource.org/licenses/MIT)
     *   Project: [https://github.com/jwagner/simplex-noise.js](https://github.com/jwagner/simplex-noise.js)
@@ -56,10 +59,6 @@ Note: Wallpaper information is separate from this file.
     *   License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
 *   **Timer Sound**
     *   Source: Google
-*   **Fallback Fanny**
-    *   Character "Fanny" courtesy of jacknjellify (BFDI)
-*   **Polygol 16 Branding**
-    *   Character "Sixteen" courtesy of jacknjellify (BFDI)
 *   **Airy OOBE**
     *   Character "Airy" courtesy of Cheesy Hfj (ONE)
 
