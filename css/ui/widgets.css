@@ -16,7 +16,7 @@
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 1px solid var(--glass-border);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     width: 200px;
     /* Default size, can be overridden */
     height: 200px;
@@ -165,7 +165,7 @@
 /* Parent contains active child */
     {
     background: var(--search-background) !important;
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
 }
 
 /* --- Widget Picker Drawer Styles --- */
@@ -213,7 +213,7 @@
 .drawer-header-button {
     background-color: var(--search-background);
     color: var(--text-color);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     box-shadow: var(--sun-shadow);
     border-radius: 40px;
     cursor: pointer;
@@ -295,6 +295,6 @@
 .widget-resize-handle:active {
     background: var(--search-background);
     box-shadow: var(--sun-shadow);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     border: 1px solid var(--glass-border);
 }

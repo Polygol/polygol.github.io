@@ -44,7 +44,7 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
     border-radius: 50px;
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     display: flex;
     flex-direction: row;
     font-size: 12px;
@@ -260,7 +260,7 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     height: 100%;
     box-sizing: border-box;
     background-color: var(--search-background);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     border-radius: 35px;
     corner-shape: superellipse(1.5);
     border: 1px solid var(--glass-border);

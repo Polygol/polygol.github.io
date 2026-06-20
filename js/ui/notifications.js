@@ -42,7 +42,7 @@ function showPopup(message) {
 	popup.style.pointerEvents = 'none'
     popup.style.setProperty(
         '--fx-filter',
-        'var(--blur1) glass(0.6, 8, 0.2)'
+        'var(--blur1) glass(0.6, 8, 0)'
     );
     popup.style.boxShadow = 'var(--sun-shadow)';
     popup.style.color = 'var(--text-color)';
@@ -226,7 +226,7 @@ function createOnScreenPopup(message, options = {}, onClosed) {
     popup.style.backgroundColor = 'var(--search-background)';
     popup.style.setProperty(
         '--fx-filter',
-        'var(--blur1) glass(0.6, 8, 0.2)'
+        'var(--blur1) glass(0.6, 8, 0)'
     );
     popup.style.boxShadow = 'var(--sun-shadow), 0 0 10px rgba(0, 0, 0, 0.2)';
     popup.style.color = 'var(--text-color)';
@@ -573,7 +573,7 @@ function addToNotificationShade(message, options = {}) {
     notification.style.border = '1px solid var(--glass-border)';
     notification.style.setProperty(
         '--fx-filter',
-        'var(--blur1) glass(0.6, 8, 0.2)'
+        'var(--blur1) glass(0.6, 8, 0)'
     );
     notification.style.pointerEvents = 'auto';
 	

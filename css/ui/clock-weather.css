@@ -45,7 +45,7 @@
     mask-image: linear-gradient(black, black);
     mask-composite: source-in;
 
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     transition: transform 0.3s cubic-bezier(.3, 1.2, .64, 1), filter 0.3s cubic-bezier(.3, 1.2, .64, 1), font-size 0.3s cubic-bezier(.3, 1.2, .64, 1) !important;
 }
 
@@ -217,7 +217,7 @@ body.light-theme[style*="background-image"] .info {
     color: var(--text-color);
     padding: 8px 18px;
     background-color: var(--search-background);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     box-shadow: var(--sun-shadow);
     display: flex;
     align-items: center;

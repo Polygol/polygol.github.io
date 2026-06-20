@@ -10,7 +10,7 @@
     max-width: 500px;
     max-height: 90%;
     background-color: var(--search-background);
-    --fx-filter: blur(3px) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur2) glass(0.6, 8, 0);
     color: var(--text-color);
     border: 1px solid var(--glass-border);
     opacity: 0;
@@ -159,7 +159,7 @@
     height: 80%;
     max-height: calc(100% - 80px);
     background-color: var(--background-color-tr);
-    --fx-filter: blur(3px) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur2) glass(0.6, 8, 0);
     border-radius: 50px 50px 0 0;
     corner-shape: superellipse(1.5);
     box-shadow: var(--sun-shadow), 0 10px 30px rgba(0, 0, 0, 0.2);

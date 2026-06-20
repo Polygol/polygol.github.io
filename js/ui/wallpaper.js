@@ -3343,16 +3343,20 @@ function applyClockStyles() {
 	// Reset previous effects and custom colors
 	clockElement.classList.remove('glass-effect', 'gradient-effect', 'dynamic-fill-effect');
 	clockElement.style.color = '';
+	clockElement.style.removeProperty('--fx-filter');
 	infoElement.classList.remove('glass-effect', 'dynamic-fill-effect');
 	infoElement.style.color = '';
+	infoElement.style.removeProperty('--fx-filter');
 	
 	if (document.getElementById('clock-off-switch').checked) {
 	    // Do nothing else - clock reverts to default CSS color
 	} 
 	else if (document.getElementById('clock-glass-switch').checked) {
 	    clockElement.classList.add('glass-effect');
+	    clockElement.style.setProperty('--fx-filter', 'var(--blur2) liquid-glass(0.6, 8, 0)');
 	    infoElement.classList.add('glass-effect');
-	} 
+	    infoElement.style.setProperty('--fx-filter', 'var(--blur1) liquid-glass(0.6, 8, 0)');
+	}
 	else if (document.getElementById('clock-gradient-switch').checked) {
 	    clockElement.classList.add('gradient-effect');
 	    const color1 = document.getElementById('clock-color-picker').value;

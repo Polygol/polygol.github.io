@@ -71,8 +71,30 @@ class FxFilter {
             subtree: true
         });
 
-        // initial seed
-        document.querySelectorAll('[style*="--fx-filter"],[class]:not(.fx-container):not(.fx-svg)').forEach(el => {
+        // initial seed: scan stylesheets for selectors defining --fx-filter to capture unclassed static elements
+        try {
+            for (const sheet of document.styleSheets) {
+                let rules;
+                try {
+                    rules = sheet.cssRules || sheet.rules;
+                } catch (e) {
+                    continue; // Skip cross-origin stylesheets (CORS)
+                }
+                if (!rules) continue;
+                for (const rule of rules) {
+                    if (rule.cssText && rule.cssText.includes('--fx-filter') && rule.selectorText) {
+                        document.querySelectorAll(rule.selectorText).forEach(el => {
+                            if (el !== document.body && el !== document.documentElement) {
+                                this.observedElements.add(el);
+                            }
+                        });
+                    }
+                }
+            }
+        } catch (e) {}
+
+        // Supplementary scan to catch inline styles, controls, and other potential targets
+        document.querySelectorAll('[style*="--fx-filter"],[class]:not(.fx-container):not(.fx-svg),input,select,button,iframe').forEach(el => {
             if (el !== document.body && el !== document.documentElement) {
                 this.observedElements.add(el);
             }
@@ -119,9 +141,21 @@ class FxFilter {
                 }
 
                 const currentStyles = this.getTrackedStyles(element, fxFilter, parsedFilter);
-                const rect = element.getBoundingClientRect();
-                currentStyles.set('width', Math.round(rect.width));
-                currentStyles.set('height', Math.round(rect.height));
+                
+                // Only trigger expensive layout reads if the active filter specifically tracks dimension changes
+                const hasSizeTracking = parsedFilter?.customFilters?.some(f => {
+                    const opt = this.filterOptions.get(f.name);
+                    return opt && opt.updatesOn && (opt.updatesOn.includes('width') || opt.updatesOn.includes('height'));
+                });
+
+                if (hasSizeTracking || !storedState) {
+                    const rect = element.getBoundingClientRect();
+                    currentStyles.set('width', Math.round(rect.width));
+                    currentStyles.set('height', Math.round(rect.height));
+                } else if (storedState) {
+                    currentStyles.set('width', storedState.trackedStyles.get('width'));
+                    currentStyles.set('height', storedState.trackedStyles.get('height'));
+                }
 
                 if (!storedState) {
                     toUpdate.push({ element, filterValue: fxFilter, parsedFilter });
@@ -255,7 +289,7 @@ class FxFilter {
     static getFxFilterValue(element) {
         const computed = getComputedStyle(element);
         const value = computed.getPropertyValue('--fx-filter').trim();
-        if (!value) return null;
+        if (!value || value === 'none' || value.includes('none ')) return null;
 
         // Fallback for environments where CSS.registerProperty (inherits: false) is not supported
         if (!('CSS' in window && 'registerProperty' in CSS)) {

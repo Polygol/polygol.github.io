@@ -664,7 +664,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             border-radius: 35px;
             corner-shape: round;
             border: 1px solid var(--glass-border);
-            --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0);
             box-shadow: var(--sun-shadow);
         }
 
@@ -1082,7 +1082,7 @@ const _fallbacks = {
         toast.textContent = message;
         toast.style.cssText = `
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);--fx-filter: var(--blur1) glass(0.6, 8, 0.2);padding: 10px 20px; border-radius: 20px;
+            border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);--fx-filter: var(--blur1) glass(0.6, 8, 0);padding: 10px 20px; border-radius: 20px;
             z-index: 9999; transition: opacity 0.5s; font-family: sans-serif;
         `;
         document.body.appendChild(toast);
@@ -1194,7 +1194,7 @@ const _fallbacks = {
         // Close Button
         const closeBtn = document.createElement('button');
         closeBtn.textContent = 'Done';
-        closeBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:10;padding:10px 15px;border-radius:50px;border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);--fx-filter: var(--blur1) glass(0.6, 8, 0.2);cursor:pointer;';
+        closeBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:10;padding:10px 15px;border-radius:50px;border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);--fx-filter: var(--blur1) glass(0.6, 8, 0);cursor:pointer;';
         closeBtn.onclick = () => overlay.remove();
 
         // Iframe Element

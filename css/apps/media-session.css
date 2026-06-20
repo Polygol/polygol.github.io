@@ -40,7 +40,7 @@
     width: fit-content;
     padding: 4px 10px 4px 8px;
     border-radius: 20px;
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
     position: absolute;
@@ -193,7 +193,7 @@
 
 #media-widget-play-pause {
     background: var(--overlay-color);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
     width: 48px;

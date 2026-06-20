@@ -263,7 +263,7 @@ body.one-button-nav-active .dock.show {
     font-size: 14px;
     border-radius: 50px;
     cursor: pointer;
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
 }
 
 .drawer-top-btn .material-symbols-rounded {
@@ -278,7 +278,7 @@ body.one-button-nav-active .dock.show {
     box-shadow: var(--sun-shadow), 0 0 15px rgba(0, 0, 0, 0.05);
     border-radius: 50px;
     padding: 0 8px 0 16px;
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     height: 46px;
 }
 
@@ -415,7 +415,7 @@ body.one-button-nav-active .dock.show {
     bottom: -10px;
     transform: translateX(-50%);
     background: var(--search-background);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
     border-radius: 256px;

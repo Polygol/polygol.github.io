@@ -233,7 +233,7 @@ input[type="radio"]:checked::before {
     outline: none;
     transition: background-color 0.2s, transform 0.1s;
     border: 1px solid var(--glass-border);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     box-shadow: var(--sun-shadow), 0 4px 20px rgba(0, 0, 0, 0.15);
     cursor: pointer;
     transform: scale(1);
@@ -255,7 +255,7 @@ input[type="radio"]:checked::before {
     padding: 0 8px;
     outline: none;
     border: 1px solid var(--glass-border);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     box-shadow: var(--sun-shadow), 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
@@ -300,7 +300,7 @@ input[type="radio"]:checked::before {
     padding: 15px;
     background: var(--modal-transparent);
     border: 1px solid var(--glass-border);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     box-shadow: var(--sun-shadow);
     border-radius: 35px;
     corner-shape: superellipse(1.5);

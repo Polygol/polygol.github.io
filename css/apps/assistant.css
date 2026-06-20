@@ -39,7 +39,7 @@
     scrollbar-width: thin;
     scrollbar-color: var(--transparent-color) transparent;
     background-color: var(--search-background);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
 }
@@ -65,7 +65,7 @@
     align-items: center;
     gap: 15px;
     background-color: var(--search-background);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     box-shadow: var(--sun-shadow);
     padding: 15px 20px;
     border-radius: 40px;

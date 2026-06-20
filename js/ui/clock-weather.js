@@ -10,6 +10,28 @@ const clockElement = document.getElementById('clock');
 const weatherWidget = document.getElementById('weather');
 const dateElement = document.getElementById('date');
 
+if (!document.getElementById('clock-glass-styles')) {
+    const style = document.createElement('style');
+    style.id = 'clock-glass-styles';
+    style.textContent = `
+        .glass-effect {
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            color: transparent !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
+        html.trans-off .glass-effect,
+        html.gurasuraisu-trans-off .glass-effect {
+            -webkit-background-clip: border-box !important;
+            background-clip: border-box !important;
+            color: var(--text-color) !important;
+            background: transparent !important;
+            --fx-filter: none !important;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 function applyAlignment(alignment) {
     const container = document.querySelector('.container');
     if (!container) return;
