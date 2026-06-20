@@ -194,7 +194,10 @@ function renderWidgets() {
         if (widget.transparent) {
             instance.style.background = 'transparent';
             instance.style.border = 'none';
-            instance.style.backdropFilter = 'none';
+            instance.style.setProperty(
+                '--fx-filter',
+                'none'
+            );
             instance.style.boxShadow = 'none';
         }
 

@@ -70,7 +70,6 @@ function showPopup(message) {
         }
         // Make the popup background invisible
         popup.style.backgroundColor = 'transparent';
-        popup.style.backdropFilter = 'none';
         popup.style.padding = '0';
         popup.style.borderRadius = '500px';
         popup.style.backgroundColor = 'var(--accent)';
