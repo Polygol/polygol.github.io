@@ -17,7 +17,7 @@
         }
         
         body {
-            background-color: var(--background-color-tr);
+            background-color: var(--background-color);
             min-height: 100vh;
             display: flex;
             user-select: none;
@@ -84,7 +84,7 @@
 
         .file-item:active {
             transform: scale(0.98);
-            filter: brightness(1.5);
+            
         }
 
         .file-icon {
@@ -146,7 +146,7 @@
             border: 1px solid var(--glass-border);
             background: var(--search-background);
             color: var(--text-color);
-            backdrop-filter: blur(5px) saturate(2) var(--edge-refraction-filter);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
             font-size: 1rem;
             outline: none;
         }

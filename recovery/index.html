@@ -96,7 +96,7 @@
         }
         .card {
             background-color: var(--search-background);
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(5px);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
             border: 1px solid var(--glass-border);
             box-shadow: var(--sun-shadow);
             border-radius: 50px;
@@ -128,7 +128,7 @@
             box-shadow: var(--sun-shadow);
             background-color: var(--search-background);
             color: var(--text-color);
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(5px);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
             font-family: 'Inter', sans-serif;
             width: -webkit-fill-available;
             outline: none;

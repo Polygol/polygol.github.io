@@ -102,7 +102,7 @@ body::before {
 .drawer-handle:active {
     transform: scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-    filter: brightness(1.5);
+    
 }
 
 .drawer-pill {
@@ -171,7 +171,7 @@ body::before {
 .persistent-clock:active {
     transform: scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-    filter: brightness(1.5);
+    
 }
 
 .persistent-clock.show {
@@ -235,7 +235,7 @@ body::before {
         .clock:active {
             transform: scale(0.96);
             transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-            filter: brightness(1.5);
+            
         }
 
         .info {
@@ -285,7 +285,7 @@ body::before {
         .date:active {
             transform: scale(0.96);
             transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-            filter: brightness(1.5);
+            
         }
 
         .modal {
@@ -462,7 +462,7 @@ body::before {
 .weather-widget:active {
     transform: scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-    filter: brightness(1.5);
+    
 }
 
         .temperature {
@@ -636,7 +636,7 @@ body::before {
 .setting-item:active .setting-icon-bg {
     transform: scale(0.96);
     transition: all 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-    filter: brightness(1.5);
+    
 }
 
 .setting-item.active .setting-icon-bg {
@@ -810,7 +810,7 @@ body::before {
 
 .qcontrol-item:active {
     transform: scale(0.98);
-    filter: brightness(1.5);
+    
 }
 
 .qcontrol-item.active {
@@ -1095,7 +1095,7 @@ body::before {
 #font-select:active, #language-switcher:active {
     transform: scale(0.96);
     transition: transform 0.1s cubic-bezier(0.2, 0, 0.38, 0.9);
-    filter: brightness(1.5);
+    
 }
 
 #font-select option {
@@ -1308,7 +1308,7 @@ body::before {
 
         .app-icon:active {
             background-color: var(--transparent-color);
-            filter: brightness(1.5);
+            
             border: 1px solid var(--glass-border);
             transform: scale(0.95);
         }
@@ -1358,7 +1358,6 @@ body::before {
             z-index: 9998;
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
             transform-origin: bottom;
-            will-change: transform, opacity;
             filter: blur(5px);
             opacity: 0;
             max-width: 90vw;
@@ -1386,7 +1385,7 @@ body::before {
             width: 75px;
             height: 75px;
             transform: scale(0.96);
-            filter: brightness(1.5);
+            
             transition: transform 0.2s ease, transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9) !important;
             cursor: pointer;
         }

@@ -228,6 +228,10 @@ function updateSunEffect() {
 	const MAX_SUN_ALPHA = isLightMode ? 0.95 : 0.7;   // Drastically increased opacity
 	const MAX_MOON_ALPHA = isLightMode ? 0.75 : 0.5;  // Drastically increased moonlight opacity
 
+	// Accessibility outline opacity
+	const blackAlpha = isLightMode ? 0.4 : 0.2;
+	const strongBlackAlpha = isLightMode ? 0.6 : 0.4;
+
 	if (sunPosition.altitude > 0) {
 		// --- SUNLIGHT LOGIC ---
 		const altitudeFactor = Math.sin(sunPosition.altitude); 
@@ -242,12 +246,21 @@ function updateSunEffect() {
 		// Sharp specular highlight on the edge facing the light
 		const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
 		const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
-		currentSunShadow = `${specularHighlight}, ${reflectedSpecular}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
+		
+		// Outset black outline with 0px blur perpendicular to the specular highlight
+		const blackOutline1 = `${(-offsetY).toFixed(2)}px ${offsetX.toFixed(2)}px 0px -0.5px rgba(20, 20, 20, ${blackAlpha})`;
+		const blackOutline2 = `${offsetY.toFixed(2)}px ${(-offsetX).toFixed(2)}px 0px -0.5px rgba(20, 20, 20, ${blackAlpha})`;
+
+		currentSunShadow = `${specularHighlight}, ${reflectedSpecular}, ${blackOutline1}, ${blackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
 		
 		// B: Strong Shadow (Same geometry, higher opacity)
 		const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.25px rgba(255, 255, 255, 1)`;
 		const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.25px rgba(255, 255, 255, 1)`;
-		currentSunShadowStrong = `${strongSpecular}, ${strongReflectedSpecular}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
+		
+		const strongBlackOutline1 = `${(-offsetY).toFixed(2)}px ${offsetX.toFixed(2)}px 0px -0.25px rgba(20, 20, 20, ${strongBlackAlpha})`;
+		const strongBlackOutline2 = `${offsetY.toFixed(2)}px ${(-offsetX).toFixed(2)}px 0px -0.25px rgba(20, 20, 20, ${strongBlackAlpha})`;
+
+		currentSunShadowStrong = `${strongSpecular}, ${strongReflectedSpecular}, ${strongBlackOutline1}, ${strongBlackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
 
 	} else {
 		// --- NIGHT LOGIC (MOONLIGHT OR STARLIGHT) ---
@@ -256,12 +269,21 @@ function updateSunEffect() {
 		// A: Regular Starlight
 		const starlightSpecular = `inset 0px 1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
 		const starlightReflected = `inset 0px -1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
-		currentSunShadow = `${starlightSpecular}, ${starlightReflected}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
+		
+		// Outset black outline with 0px blur perpendicular to the specular highlight
+		const starlightBlackOutline1 = `-1px 0px 0px -0.5px rgba(20, 20, 20, ${blackAlpha})`;
+		const starlightBlackOutline2 = `1px 0px 0px -0.5px rgba(20, 20, 20, ${blackAlpha})`;
+
+		currentSunShadow = `${starlightSpecular}, ${starlightReflected}, ${starlightBlackOutline1}, ${starlightBlackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
 
 		// B: Strong Starlight (Same geometry, higher opacity)
 		const strongStarlightSpecular = `inset 0px 1px 1px -0.25px rgba(255, 255, 255, 1)`;
 		const strongStarlightReflected = `inset 0px -1px 1px -0.25px rgba(255, 255, 255, 1)`;
-		currentSunShadowStrong = `${strongStarlightSpecular}, ${strongStarlightReflected}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
+		
+		const strongStarlightBlackOutline1 = `-1px 0px 0px -0.25px rgba(20, 20, 20, ${strongBlackAlpha})`;
+		const strongStarlightBlackOutline2 = `1px 0px 0px -0.25px rgba(20, 20, 20, ${strongBlackAlpha})`;
+
+		currentSunShadowStrong = `${strongStarlightSpecular}, ${strongStarlightReflected}, ${strongStarlightBlackOutline1}, ${strongStarlightBlackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
 		
 		// If the moon is up, override starlight with brighter, directional moonlight.
 		if (moonPosition.altitude > 0) {
@@ -271,14 +293,20 @@ function updateSunEffect() {
 			const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
 			const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
 			
+			const moonBlackOutline1 = `${(-offsetY).toFixed(2)}px ${offsetX.toFixed(2)}px 0px -0.5px rgba(20, 20, 20, ${blackAlpha})`;
+			const moonBlackOutline2 = `${offsetY.toFixed(2)}px ${(-offsetX).toFixed(2)}px 0px -0.5px rgba(20, 20, 20, ${blackAlpha})`;
+			
 			// A: Regular Moonlight
-			currentSunShadow = `${specularHighlight}, ${reflectedSpecular}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
+			currentSunShadow = `${specularHighlight}, ${reflectedSpecular}, ${moonBlackOutline1}, ${moonBlackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
 
 			// B: Strong Moonlight (Same geometry, higher opacity)
 			const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, 1)`;
 			const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, 1)`;
+			
+			const strongMoonBlackOutline1 = `${(-offsetY).toFixed(2)}px ${offsetX.toFixed(2)}px 0px -0.5px rgba(20, 20, 20, ${strongBlackAlpha})`;
+			const strongMoonBlackOutline2 = `${offsetY.toFixed(2)}px ${(-offsetX).toFixed(2)}px 0px -0.5px rgba(20, 20, 20, ${strongBlackAlpha})`;
 							
-			currentSunShadowStrong = `${strongSpecular}, ${strongReflectedSpecular}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
+			currentSunShadowStrong = `${strongSpecular}, ${strongReflectedSpecular}, ${strongMoonBlackOutline1}, ${strongMoonBlackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
 		}
 	}
 	

@@ -52,7 +52,7 @@
             border-radius: 35px;
             corner-shape: round;
             border: 1px solid var(--glass-border);
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
             box-shadow: var(--sun-shadow);
         }
 
@@ -81,7 +81,7 @@
 
         .don-nav-btn:active {
             transform: scale(1.1);
-            filter: brightness(1.5);
+            
         }
 
         .don-nav-btn.active:active {
@@ -109,7 +109,7 @@
             border-radius: 35px;
             corner-shape: round;
             border: 1px solid var(--glass-border);
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
             box-shadow: var(--sun-shadow);
         }
 
@@ -145,7 +145,7 @@
             border-radius: 50px;
             corner-shape: superellipse(1.5);
             border: 1px solid var(--glass-border);
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
             box-shadow: var(--sun-shadow);
             padding: 18px 20px;
             display: flex;
@@ -159,7 +159,7 @@
 
         .bento-item:active {
             transform: scale(1.1);
-            filter: brightness(1.5);
+            
         }
 
         .reduce-animations .bento-item:active {
@@ -349,7 +349,7 @@
             width: fit-content;
             padding: 4px 10px 4px 8px;
             border-radius: 20px;
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
             border: 1px solid var(--glass-border);
             box-shadow: var(--sun-shadow);
             position: absolute;
@@ -393,7 +393,7 @@
         #media-widget-art:active {
             transform: scale(1.04);
             transition: transform 0.1s cubic-bezier(.2, 1.3, .64, 1);
-            filter: brightness(1.5);
+            
         }
         
         .media-widget-info {
@@ -513,8 +513,8 @@
         
         #media-widget-play-pause {
             background: var(--overlay-color);
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
             box-shadow: var(--sun-shadow);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
             border: 1px solid var(--glass-border);
             width: 64px;
             height: 64px;
@@ -526,26 +526,6 @@
             bottom: 100px;
             z-index: 1;
             transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
-        }
-
-        #mini-media-art {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            corner-shape: superellipse(1.5);
-            position: fixed;
-            left: 0;
-            top: 0;
-            z-index: -2;
-            mix-blend-mode: overlay;
-            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 90%, rgba(0, 0, 0, 0) 100%);
-            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 90%, rgba(0, 0, 0, 0) 100%);
-        }
-
-        html.gurasuraisu-trans-off #bento-mini-media,
-        html.gurasuraisu-high-contrast #bento-mini-media {
-            backdrop-filter: opacity(1) !important;
         }
 
         #mini-media-play-pause {
@@ -562,7 +542,6 @@
             justify-content: center;
             box-shadow: var(--sun-shadow);
             corner-shape: superellipse(1.5);
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
         }
 
         .list-item {
@@ -623,7 +602,7 @@
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
-        .settings-row button:active { filter: brightness(1.5); }
+        .settings-row button:active {  }
     </style>
 </head>
 <body data-app-name="Donburi">
@@ -683,7 +662,6 @@
 
         <div class="bento-item span-2x1" id="bento-mini-media">
             <div class="item-card-title"><span class="material-symbols-rounded">play_circle</span>Media</div>
-            <img id="mini-media-art" src="">
             <div style="display: flex; align-items: center; gap: 12px; margin-top: auto;">
                 <div style="margin-left: 4px; gap: 4px; overflow: hidden; white-space: nowrap; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
                     <div id="mini-media-title" style="font-family: 'Open Runde', 'Inter'; font-weight: 600; font-size: 1.2rem; text-overflow: ellipsis; overflow: hidden;">Not playing</div>
@@ -789,7 +767,7 @@
                     <div style="display: flex;flex-direction: row;height: 24px;align-items: center;">
                         <div id="media-widget-progress"></div>
                         <div style="z-index: 4;width: 8px;background-color: var(--text-color);border-radius: 20px;margin-right: 4px;flex-shrink: 0;height: 20px;margin-left: -8px;"></div>
-                        <div style="background: var(--overlay-color);width: 100%;height: 10px;border-radius: 10px;backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);box-shadow: var(--sun-shadow);border: 1px solid var(--glass-border);"></div>
+                        <div style="background: var(--overlay-color);width: 100%;height: 10px;border-radius: 10px;--fx-filter: var(--blur1) glass(0.6, 8, 0.2);box-shadow: var(--sun-shadow);border: 1px solid var(--glass-border);"></div>
                     </div>
                 </div>
                 <button id="media-widget-next"><span class="material-symbols-rounded">skip_next</span></button>
@@ -1204,20 +1182,10 @@
                 const miniTitle = document.getElementById('mini-media-title');
                 const miniArtist = document.getElementById('mini-media-artist');
                 const miniIcon = document.querySelector('#mini-media-play-pause .material-symbols-rounded');
-                const miniArt = document.getElementById('mini-media-art');
 
                 if (miniTitle) miniTitle.textContent = metadata.title || 'Not Playing';
                 if (miniArtist) miniArtist.textContent = metadata.artist || '---';
                 if (miniIcon) miniIcon.textContent = state === 'playing' ? 'pause' : 'play_arrow';
-
-                if (miniArt) {
-                    if (metadata.artwork && metadata.artwork.length > 0) {
-                        miniArt.src = metadata.artwork[0].src;
-                        miniArt.style.display = 'block';
-                    } else {
-                        miniArt.style.display = 'none';
-                    }
-                }
             }
         }
         

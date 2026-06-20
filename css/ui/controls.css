@@ -17,7 +17,7 @@
     z-index: 9999 !important;
     border-radius: 50px;
     background: var(--search-background);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
     border: 1px solid var(--glass-border);
     padding: 18px 20px 22px 20px;
@@ -38,8 +38,8 @@
 
 #blurOverlayControls {
     z-index: 9996;
-    background: var(--overlay-color);
-    backdrop-filter: blur(50px);
+    background: var(--search-background);
+    backdrop-filter: blur(1px);
 }
 
 .controls-container {
@@ -53,7 +53,7 @@
 .btn-qc {
     background-color: var(--overlay-color);
     color: var(--text-color);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     box-shadow: var(--sun-shadow);
     border-radius: 32px;
     cursor: pointer;
@@ -99,6 +99,7 @@
     z-index: 9999 !important;
     background: transparent;
     backdrop-filter: none;
+    --fx-filter: none !important;
     padding: 0;
     scrollbar-width: none;
     border-radius: 0;
@@ -204,6 +205,7 @@
     border-radius: 20px;
     corner-shape: superellipse(1.5);
     transition: background-color 0.2s, transform 0.1s;
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
 }
 
 .brightness-slider {
@@ -316,7 +318,7 @@
 .setting-item:active .setting-icon-bg {
     transform: scale(1.1);
     transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
-    filter: brightness(1.5);
+    
 }
 
 .setting-item.active .setting-icon-bg {
@@ -403,11 +405,12 @@
     height: 32px;
     box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
 }
 
 .qcontrol-item:active {
     transform: scale(1.1);
-    filter: brightness(1.5);
+    
 }
 
 .qcontrol-item.active {
@@ -521,7 +524,7 @@
     border-radius: 35px;
     corner-shape: superellipse(1.5);
     padding: 15px;
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     box-shadow: var(--sun-shadow);
     width: 155px;
 }

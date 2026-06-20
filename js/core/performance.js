@@ -48,15 +48,15 @@ function detectPerformanceProfile() {
     if (localStorage.getItem('glassEffectsMode') === null) {
         if (score >= 5 && !isWeakGPU) {
             // High-end: Enable full Liquid effects
-            localStorage.setItem('glassEffectsMode', 'on');
+            localStorage.setItem('glassEffectsMode', '5');
         } else if (score >= 4) {
-            // Mid-range: Use Frosted (Blur only, cheaper than SVG)
-            console.log("[System] Defaulting Glass Effects to Focused.");
-            localStorage.setItem('glassEffectsMode', 'focused');
+            // Mid-range
+            console.log("[System] Defaulting Glass Effects to moderate blur.");
+            localStorage.setItem('glassEffectsMode', '3');
         } else {
             // Low-end: Disable effects
             console.log("[System] Disabling Glass Effects for performance.");
-            localStorage.setItem('glassEffectsMode', 'off');
+            localStorage.setItem('glassEffectsMode', '0');
         }
     }
 
@@ -429,19 +429,21 @@ const ResourceManager = {
 
         this.isStruggling = true;
 
-        const currentMode = localStorage.getItem('glassEffectsMode') || 'on';
+        const currentMode = localStorage.getItem('glassEffectsMode') || '5';
         
         if (!this.originalGlassMode) {
             this.originalGlassMode = currentMode;
         }
         
-        if (currentMode === 'on' || currentMode === 'frosted') {
-            console.log("[System] Downgrading Glass to Focused.");
-            this.applyDowngrade('focused');
-            this._lastDowngrade = now;
-        } else if (currentMode === 'focused') {
-            console.log("[System] Downgrading Glass to Off.");
-            this.applyDowngrade('off');
+        const val = parseInt(currentMode, 10);
+        if (!isNaN(val) && val > 0) {
+            if (val > 2) {
+                console.log("[System] Downgrading Glass to low blur.");
+                this.applyDowngrade('1');
+            } else {
+                console.log("[System] Downgrading Glass to Off.");
+                this.applyDowngrade('0');
+            }
             this._lastDowngrade = now;
         }
     },

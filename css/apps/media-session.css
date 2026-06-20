@@ -40,7 +40,7 @@
     width: fit-content;
     padding: 4px 10px 4px 8px;
     border-radius: 20px;
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
     position: absolute;
@@ -75,7 +75,7 @@
 #media-widget-art:active {
     transform: scale(1.04);
     transition: transform 0.1s cubic-bezier(.2, 1.3, .64, 1);
-    filter: brightness(1.5);
+    
 }
 
 .media-widget-info {
@@ -193,7 +193,7 @@
 
 #media-widget-play-pause {
     background: var(--overlay-color);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     box-shadow: var(--sun-shadow);
     border: 1px solid var(--glass-border);
     width: 48px;

@@ -1116,9 +1116,16 @@ window.addEventListener('message', async (event) => { // Make listener async
         const highContrastEnabled = localStorage.getItem('highContrast') === 'true';
         sourceWindow.postMessage({ type: 'contrastUpdate', enabled: highContrastEnabled }, targetOrigin);
 
-        const glassMode = localStorage.getItem('glassEffectsMode') || 'on';
-        const glassValue = getGlassFilterValue(glassMode);
-		sourceWindow.postMessage({ type: 'glassEffectsUpdate', value: glassValue, mode: glassMode }, targetOrigin);
+        let glassMode = localStorage.getItem('glassEffectsMode');
+        if (!glassMode) glassMode = '5';
+        const val = parseInt(glassMode, 10);
+        const isOff = isNaN(val) ? (glassMode === 'off') : (val <= 0);
+        const activeVal = isOff ? 0 : (isNaN(val) ? 5 : val);
+        sourceWindow.postMessage({ 
+            type: 'glassEffectsUpdate', 
+            mode: isOff ? 'off' : 'on', 
+            val: activeVal 
+        }, targetOrigin);
 
         if (window.currentTintVariables) {
             sourceWindow.postMessage({

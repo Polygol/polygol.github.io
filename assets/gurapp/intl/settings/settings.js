@@ -10,6 +10,7 @@ function initializeSettingsApp() {
     const pageTitles = {
         'main-settings': 'Settings',
         'page-display': 'Display',
+        'page-glass': 'Dynamic Glass',
         'page-sound': 'Sound & Haptics',
         'page-apps': 'Apps',
         'page-app-details': 'Details',
@@ -900,6 +901,9 @@ function initializeSettingsApp() {
             if (currentStoreName) refreshStoreRecords();
         }
     });
+
+    document.querySelectorAll('#main-settings .setting-item.nav-item .setting-info .material-symbols-rounded')
+    .forEach((el, i) => el.style.setProperty('--i', i));
 
     // --- INITIALIZATION ---
     bindEventListeners();

@@ -142,12 +142,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         let currentMode = localStorage.getItem('glassEffectsMode');
         if (!currentMode) {
              const old = localStorage.getItem('glassEffectsEnabled');
-             currentMode = (old === 'false') ? 'frosted' : 'on';
+             currentMode = (old === 'false') ? '0' : '5';
         }
         glassModeSelect.value = currentMode;
         
         // Listener
-        glassModeSelect.addEventListener('change', function() {
+        const eventType = glassModeSelect.type === 'range' ? 'input' : 'change';
+        glassModeSelect.addEventListener(eventType, function() {
             localStorage.setItem('glassEffectsMode', this.value);
             broadcastSettingUpdate('glassEffectsMode', this.value);
             applyGlassEffects();

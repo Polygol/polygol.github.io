@@ -9,7 +9,7 @@
     transition: all 0.5s;
     opacity: 1;
     background-color: var(--search-background);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     box-shadow: var(--sun-shadow);
     padding: 14px 16px;
     border: 1px solid var(--glass-border);
@@ -148,10 +148,7 @@ body.app-active .page-indicator {
     transition: background-color 0.2s;
 }
 
-.switcher-scroll-thumb:active {
-    background: var(--accent);
-    scale: 1.1;
-    filter: brightness(1.5);
+.switcher-scroll-thumb:active {    
     cursor: grabbing;
 }
 
@@ -204,7 +201,7 @@ body.app-active .page-indicator {
     font-family: 'Inter';
     padding: 8px 14px;
     background: var(--search-background);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
     border-radius: 50px;
@@ -219,7 +216,7 @@ body.app-active .page-indicator {
 
 .switcher-edit-btn:active {
     transform: scale(1.1);
-    filter: brightness(1.5);
+    
 }
 
 .switcher-check {
@@ -227,7 +224,7 @@ body.app-active .page-indicator {
     bottom: 15px;
     right: 15px;
     background: var(--accent);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     color: var(--background-color);
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
@@ -239,7 +236,7 @@ body.app-active .page-indicator {
     font-size: 16px;
 }
 
-.switcher-add-btn {
+.switcher-bottom-btn {
     margin: 10px 0 30px 0;
     color: var(--text-color);
     border: 1px solid var(--glass-border);

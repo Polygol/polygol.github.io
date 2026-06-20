@@ -333,9 +333,14 @@
         <div class="wallpaper-cards-container" id="wallpaper-cards-container">
             <!-- Cards injected via JS -->
         </div>
-        <button id="switcher-add-btn" class="switcher-add-btn">
-            <span class="material-symbols-rounded">add</span> Add wallpaper
-        </button>
+        <div style="display: flex; flex-direction: row; gap: 12px;">
+            <button id="switcher-add-btn" class="switcher-bottom-btn">
+                <span class="material-symbols-rounded">add</span> Add new
+            </button>
+            <button id="wallpaper-export-btn" class="switcher-bottom-btn">
+                <span class="material-symbols-rounded">ios_share</span> Share
+            </button>            
+        </div>
     </div>
 
     <!-- Dedicated Edit Mode UI -->
@@ -598,7 +603,7 @@
                             <span class="material-symbols-rounded" style="font-size: 20px;">volume_up</span>
                         </label>
                         <input type="range" min="0" max="100" value="100" class="volume-slider" id="volume-control">
-                        <button id="sound-opt-btn" class="btn-qc" style="background-color: transparent;margin-right: 4px;backdrop-filter: none;box-shadow: none;border: none;">
+                        <button id="sound-opt-btn" class="btn-qc" style="background-color: transparent;margin-right: 4px;backdrop-filter: none;box-shadow: none;border: none;--fx-filter: none;">
                             <span class="material-symbols-rounded" style="font-size: 18px;">discover_tune</span>
                         </button>
                     </div>
@@ -629,7 +634,7 @@
                             <div style="display: flex;flex-direction: row;height: 16px;align-items: center;">
                                 <div id="media-widget-progress"></div>
                                 <div style="z-index: 4;width: 6px;background-color: var(--text-color);border-radius: 16px;margin-right: 4px;flex-shrink: 0;height: 16px;margin-left: -6px;"></div>
-                                <div style="background: var(--overlay-color);width: 100%;height: 6px;border-radius: 10px;backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(1px);box-shadow: var(--sun-shadow);border: 1px solid var(--glass-border);"></div>
+                                <div style="background: var(--overlay-color);width: 100%;height: 6px;border-radius: 10px;--fx-filter: var(--blur1) glass(0.6, 8, 0.2);box-shadow: var(--sun-shadow);border: 1px solid var(--glass-border);"></div>
                             </div>
                         </div>
                         <button id="media-widget-next"><span class="material-symbols-rounded">skip_next</span></button>
@@ -655,7 +660,7 @@
                     </div>
                 </div>
 
-                <div id="kirbindustries-ads-service" style="background-color: var(--search-background);box-shadow: var(--sun-shadow);color: var(--text-color);padding: 10px 14px 10px 12px;border-radius: 35px;corner-shape: superellipse(1.5);z-index: 9999996;transition: opacity 0.5s;display: none;align-items: center;gap: 12px;border: 1px solid var(--glass-border);">
+                <div id="kirbindustries-ads-service" style="background-color: var(--search-background);box-shadow: var(--sun-shadow);color: var(--text-color);padding: 10px 14px 10px 12px;border-radius: 35px;corner-shape: superellipse(1.5);z-index: 9999996;transition: opacity 0.5s;display: none;align-items: center;gap: 12px;border: 1px solid var(--glass-border);--fx-filter: var(--blur1) glass(0.6, 8, 0.2);">
                     <div id="kirbindustries-ads-service-img" class="app-icon-img" style="width: 42px;">
                         <img src="/assets/appicon/default.png" class="media-widget-app-icon" style="display: block;">
                     </div>
@@ -728,10 +733,6 @@
         <div class="widget-drawer-header">
             <h2 data-lang-key="WALLPAPER">Wallpaper</h2>
             <div style="display: flex; gap: 15px;">
-                <button id="wallpaper-export-btn" class="drawer-header-button">
-                    <span class="material-symbols-rounded">ios_share</span>
-                    Export
-                </button>
                 <button id="wallpaper-submit-btn" class="drawer-header-button">
                     <span class="material-symbols-rounded">person_raised_hand</span>
                     Request
@@ -954,12 +955,7 @@
         <input type="checkbox" id="tint-colors-switch" checked>
         <input type="checkbox" id="animation-switch" checked>
         <input type="checkbox" id="contrast-switch">
-        <select id="glass-effects-mode">
-            <option value="on">Liquid</option>
-            <option value="focused">Focused</option>
-            <option value="frosted">Frosted</option>
-            <option value="off">Off</option>
-        </select>
+        <input type="range" id="glass-effects-mode" min="0" max="20" value="5">
         <input type="checkbox" id="hour-switch">
         <input type="checkbox" id="ai-switch">
         <input type="checkbox" id="one-button-nav-switch">
@@ -1031,6 +1027,7 @@
     <script src="js/core/power.js"></script>
     <script src="js/core/first-setup.js"></script>
     <script src="js/core/sys-connect-waves.js"></script>
+    <script src="js/core/fx-filter.js"></script>
     <!-- UI Components -->
     <script src="js/ui/theme.js"></script>
     <script src="js/ui/modes.js"></script>

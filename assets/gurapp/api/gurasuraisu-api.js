@@ -13,6 +13,27 @@ const _dialogCallbacks = {}; // For handling dialog responses
 let _dialogRequestId = 0;   // For tracking dialog requests
 const _myActiveActivities = new Set(); // Tracks this app's active activities
 
+// Inject the shared threaded fx-filter logic automatically into Gurapps
+(function () {
+    if (document.querySelector('script[src*="fx-filter.js"]')) return;
+
+    const urls = [
+        'https://polygol.github.io/js/core/fx-filter.js',
+        'https://raw.githubusercontent.com/Polygol/polygol.github.io/refs/heads/main/js/core/fx-filter.js',
+        '/js/core/fx-filter.js'
+    ];
+
+    const load = i => {
+        if (i >= urls.length) return;
+        const s = document.createElement('script');
+        s.src = urls[i];
+        s.onerror = () => load(i + 1);
+        document.head.appendChild(s);
+    };
+
+    load(0);
+})();
+
 // Gurasuraisu Font and Cursor Injection
 // This block runs as soon as the script is loaded by the Gurapp.
 (function() {
@@ -204,11 +225,10 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         }
 
         :root {
-            --edge-refraction-filter: url('#edge-refraction-only');
             --sun-shadow: 0 0 0 0 transparent;
             
             /* Dark Theme (Default) Variables */
-            --background-mono-dark: #1c1c1c;
+            --background-mono-dark: #3a3a3a;
             --background-pure-dark: #000000;
             --background-color-dark: #1c1c1c;
             --background-color-dark-tr: rgba(28, 28, 28, 0.7);
@@ -224,7 +244,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             --glass-border-dark: rgba(100, 100, 100, 0.2);
             
             /* Light Theme Variables */
-            --background-mono-light: #f0f0f0;
+            --background-mono-light: #e2e2e2;
             --background-pure-light: #ffffff;
             --background-color-light: #f0f0f0;
         	--background-color-light-tr: rgba(240, 240, 240, 0.7);
@@ -450,7 +470,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         input[type="submit"]:active,
         .clickable:active {
         	transform: scale(1.1);
-        	filter: brightness(1.5);
+        	
         	transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1), filter 0.3s cubic-bezier(.2, 1.3, .64, 1);
         }
 
@@ -644,7 +664,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             border-radius: 35px;
             corner-shape: round;
             border: 1px solid var(--glass-border);
-            backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
             box-shadow: var(--sun-shadow);
         }
 
@@ -1053,31 +1073,6 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             }, 50);
         }
     });
-
-    // Inject SVG Filter for glass effects, overriding if one already exists
-    document.addEventListener('DOMContentLoaded', () => {
-        const existingFilterSvg = document.querySelector('svg > filter#edge-refraction-only');
-        if (existingFilterSvg) {
-            const parentSvg = existingFilterSvg.closest('svg');
-            if (parentSvg) parentSvg.remove();
-        }
-
-        const svgFilterHtml = `
-            <svg style="display: none">
-                <filter id="edge-refraction-only" color-interpolation-filters="linearRGB" color-rendering="optimizeSpeed">
-                    <feComposite operator="out"></feComposite>
-                    <feComposite result="distMap"></feComposite>
-                    <feDisplacementMap in="SourceGraphic" scale="15" result="pass1"></feDisplacementMap>
-                    <feDisplacementMap in="SourceGraphic" scale="-15" in2="distMap"></feDisplacementMap>
-                    <feBlend mode="darken" result="blended_image" in="pass1"></feBlend>
-                    <feComponentTransfer in="blended_image">
-                        <feFuncA slope="0.9" type="linear"></feFuncA>
-                    </feComponentTransfer>
-                </filter>
-            </svg>
-        `;
-        document.body.insertAdjacentHTML('afterbegin', svgFilterHtml);
-    });
 })();
 
 // Native JS solutions for when the app is running outside of Polygol
@@ -1087,7 +1082,7 @@ const _fallbacks = {
         toast.textContent = message;
         toast.style.cssText = `
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);backdrop-filter:var(--edge-refraction-filter) saturate(2) blur(2.5px);padding: 10px 20px; border-radius: 20px;
+            border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);--fx-filter: var(--blur1) glass(0.6, 8, 0.2);padding: 10px 20px; border-radius: 20px;
             z-index: 9999; transition: opacity 0.5s; font-family: sans-serif;
         `;
         document.body.appendChild(toast);
@@ -1199,7 +1194,7 @@ const _fallbacks = {
         // Close Button
         const closeBtn = document.createElement('button');
         closeBtn.textContent = 'Done';
-        closeBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:10;padding:10px 15px;border-radius:50px;border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);backdrop-filter:var(--edge-refraction-filter) saturate(2) blur(2.5px);cursor:pointer;';
+        closeBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:10;padding:10px 15px;border-radius:50px;border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);--fx-filter: var(--blur1) glass(0.6, 8, 0.2);cursor:pointer;';
         closeBtn.onclick = () => overlay.remove();
 
         // Iframe Element
@@ -1843,11 +1838,6 @@ window.addEventListener('message', async (event) => {
     switch (data.type) {
       case 'themeUpdate':
         document.body.classList.toggle('light-theme', data.theme === 'light');
-        // Update Filter
-        const feBlend = document.querySelector('#edge-refraction-only feBlend');
-        if (feBlend) {
-            feBlend.setAttribute('mode', data.theme === 'light' ? 'lighten' : 'darken');
-        }
         break;
       case 'themeVariablesUpdate':
         if (data.variables) {
@@ -1896,13 +1886,22 @@ window.addEventListener('message', async (event) => {
         document.documentElement.style.setProperty('--sun-shadow-strong', data.shadowStrong);
         break;
       case 'glassEffectsUpdate':
-        // data.value contains the CSS string (e.g. "blur(17.5px)")
-        if (data.value) {
-            document.documentElement.style.setProperty('--edge-refraction-filter', data.value);
+        const isOff = data.mode === 'off';
+        const activeVal = data.val || 5;
+
+        document.documentElement.style.setProperty('--blur0', isOff ? 'none' : `blur(${(activeVal * 0.2).toFixed(1)}px)`);
+        document.documentElement.style.setProperty('--blur1', isOff ? 'none' : `blur(${(activeVal * 0.5).toFixed(1)}px)`);
+        document.documentElement.style.setProperty('--blur2', isOff ? 'none' : `blur(${(activeVal * 1.0).toFixed(1)}px)`);
+        document.documentElement.style.setProperty('--blur3', isOff ? 'none' : `blur(${(activeVal * 2.0).toFixed(1)}px)`);
+
+        if (!isOff) {
+            document.documentElement.classList.remove('gurasuraisu-trans-off', 'trans-off');
+        } else {
+            document.documentElement.classList.add('gurasuraisu-trans-off', 'trans-off');
         }
-        if (data.mode) {
-            document.documentElement.classList.toggle('gurasuraisu-trans-off', data.mode === 'off');
-        }
+        
+        document.documentElement.style.removeProperty('--fx-filter');
+        document.documentElement.style.removeProperty('--edge-refraction-filter');
         break;
       case 'settingUpdate':
         if (data.key === 'gurappSoundsEnabled') {
@@ -2063,21 +2062,35 @@ window.addEventListener('message', async (event) => {
             try {
                 const isLight = document.body.classList.contains('light-theme');
                 const bgColor = isLight ? '#ffffff' : '#000000';
+                let screenshotDataUrl;
 
-                // Generate the screenshot of the app's content
-                const screenshotDataUrl = await modernScreenshot.domToJpeg(document.body, {
-                    backgroundColor: bgColor, // Explicitly set background
-                    quality: 0.5,
-                    filter: (node) => {
-                        if (node.nodeType === 1 && (node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
-                            try {
-                                const url = new URL(node.src, window.location.href);
-                                if (url.origin !== window.location.origin && !node.crossOrigin) return false;
-                            } catch(e) {}
+                // Safely route to the loaded library based on platform context
+                if (_isMobile && typeof html2canvas === 'function') {
+                    const canvas = await html2canvas(document.body, {
+                        backgroundColor: bgColor,
+                        useCORS: true,
+                        logging: false,
+                        scale: 0.5
+                    });
+                    screenshotDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+                } else if (window.modernScreenshot) {
+                    // Generate the screenshot of the app's content using modern-screenshot
+                    screenshotDataUrl = await window.modernScreenshot.domToJpeg(document.body, {
+                        backgroundColor: bgColor, // Explicitly set background
+                        quality: 0.5,
+                        filter: (node) => {
+                            if (node.nodeType === 1 && (node.tagName === 'IMG' || node.tagName === 'VIDEO') && node.src && !node.src.startsWith('data:') && !node.src.startsWith('blob:')) {
+                                try {
+                                    const url = new URL(node.src, window.location.href);
+                                    if (url.origin !== window.location.origin && !node.crossOrigin) return false;
+                                } catch(e) {}
+                            }
+                            return true;
                         }
-                        return true;
-                    }
-                });
+                    });
+                } else {
+                    throw new Error("Required screenshot library is not loaded.");
+                }
 
                 // Send the generated screenshot data back to the parent
                 window.parent.postMessage({
@@ -2093,7 +2106,7 @@ window.addEventListener('message', async (event) => {
         };
 
         const needsH2C = _isMobile && typeof html2canvas !== 'function';
-        const needsMS = !_isMobile && typeof modernScreenshot === 'undefined';
+        const needsMS = !_isMobile && typeof window.modernScreenshot === 'undefined';
 
         if (needsH2C) {
             const script = document.createElement('script');
@@ -2104,20 +2117,6 @@ window.addEventListener('message', async (event) => {
             const script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/modern-screenshot@4.6.8/dist/index.min.js';
             script.onload = () => doCapture();
-            document.head.appendChild(script);
-        } else {
-            doCapture();
-        };
-
-        if (_isMobile && typeof html2canvas !== 'function') {
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-            script.onload = doCapture;
-            document.head.appendChild(script);
-        } else if (!_isMobile && typeof modernScreenshot === 'undefined') {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/modern-screenshot@4.6.8/dist/index.min.js';
-            script.onload = doCapture;
             document.head.appendChild(script);
         } else {
             doCapture();
@@ -2190,15 +2189,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.documentElement.classList.toggle('gurasuraisu-high-contrast', highContrastEnabled);
-
-    // We use setTimeout to ensure the SVG injection (which happens in another listener) has completed
-    setTimeout(() => {
-        const feBlend = document.querySelector('#edge-refraction-only feBlend');
-        if (feBlend) {
-            const isLight = document.body.classList.contains('light-theme');
-            feBlend.setAttribute('mode', isLight ? 'lighten' : 'darken');
-        }
-    }, 0);
   } catch (e) {
     console.error("Gurapp: Could not access localStorage. Settings may not apply.", e);
   }

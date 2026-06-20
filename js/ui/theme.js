@@ -255,44 +255,45 @@ function setupThemeSwitcher() {
     document.body.classList.toggle('light-theme', currentTheme === 'light');
 }
 
-function getGlassFilterValue(mode) {
-    switch (mode) {
-        case 'focused': return 'opacity(0.9)';
-        case 'frosted': return 'blur(10px) opacity(0.9)';
-        case 'off': return 'none'; // Will effectively disable backdrop-filter due to CSS syntax rules or explicit override
-        case 'on': 
-        default: return "url('#edge-refraction-only')";
-    }
-}
-
 function applyGlassEffects() {
-    // 1. Get Mode (Migration Logic)
     let mode = localStorage.getItem('glassEffectsMode');
     if (!mode) {
-        // Migrate old boolean setting
         const oldSetting = localStorage.getItem('glassEffectsEnabled');
-        if (oldSetting === 'false') mode = 'frosted'; // Old behavior for disabled was frosted
-        else mode = 'on';
+        mode = (oldSetting === 'false') ? '0' : '5';
         localStorage.setItem('glassEffectsMode', mode);
         localStorage.removeItem('glassEffectsEnabled');
     }
 
     const root = document.documentElement;
-    const filterValue = getGlassFilterValue(mode);
+    const val = parseInt(mode, 10);
+    const isOff = isNaN(val) ? (mode === 'off') : (val <= 0);
+    const activeVal = isOff ? 0 : (isNaN(val) ? 5 : val);
 
-    // 2. Apply to Host
-    root.style.setProperty('--edge-refraction-filter', filterValue);
-    root.classList.toggle('trans-off', mode === 'off');
+    // Provide 4 distinct blur variables based on the slider value
+    root.style.setProperty('--blur0', isOff ? 'none' : `blur(${(activeVal * 0.2).toFixed(1)}px)`);
+    root.style.setProperty('--blur1', isOff ? 'none' : `blur(${(activeVal * 0.5).toFixed(1)}px)`);
+    root.style.setProperty('--blur2', isOff ? 'none' : `blur(${(activeVal * 1.0).toFixed(1)}px)`);
+    root.style.setProperty('--blur3', isOff ? 'none' : `blur(${(activeVal * 2.0).toFixed(1)}px)`);
 
-    // 3. Broadcast to Gurapps
+    if (!isOff) {
+        root.classList.remove('trans-off');
+    } else {
+        root.classList.add('trans-off');
+    }
+
+    // Clean up legacy global properties
+    root.style.removeProperty('--fx-filter');
+    root.style.removeProperty('--edge-refraction-filter');
+
+    // Broadcast update to Gura iframes
     const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
     iframes.forEach(iframe => {
         if (iframe.contentWindow) {
             const targetOrigin = getOriginFromUrl(iframe.src);
             iframe.contentWindow.postMessage({
                 type: 'glassEffectsUpdate',
-                value: filterValue, // Send the raw CSS value
-                mode: mode
+                mode: isOff ? 'off' : 'on',
+                val: activeVal
             }, targetOrigin);
         }
     });

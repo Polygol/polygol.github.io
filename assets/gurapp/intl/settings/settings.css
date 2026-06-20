@@ -7,7 +7,7 @@
 }
 
 body {
-    background-color: var(--background-color-tr);
+    background-color: var(--background-color);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -42,7 +42,7 @@ body {
     color: var(--text-color);
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     gap: 8px;
     border-radius: 50%;
     width: 48px;
@@ -60,7 +60,7 @@ body {
     border-radius: 35px;
     corner-shape: round;
     border: 1px solid var(--glass-border);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     box-shadow: var(--sun-shadow);
     display: flex;
     padding: 8px 18px;
@@ -129,6 +129,18 @@ body {
     opacity: 0.5;
 }
 
+#main-settings .setting-item.nav-item .setting-info .material-symbols-rounded {
+    padding: 8px;
+    border-radius: 50%;
+    background: var(--transparent-color);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+}
+
+#main-settings .setting-item.nav-item .setting-info .material-symbols-rounded {
+    background: hsl(calc(var(--i) * 28deg) 100% 78% / 0.3);
+}
+
 .setting-item.nav-item {
     cursor: pointer;
 }
@@ -143,6 +155,10 @@ body {
 
 /* --- Settings Specific Styles --- */
 .setting-section {
+    background-color: var(--background-mono);
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
+    padding: 0;
     margin-bottom: 12px;
 }
 
@@ -151,8 +167,8 @@ body {
     font-weight: 600;
     font-size: 1.1rem;
     color: var(--secondary-text-color);
-    margin-bottom: 15px;
-    padding-left: 10px;
+    margin-bottom: 8px;
+    padding: 12px 0 0 20px;
 }
 
 .setting-item {
@@ -160,13 +176,17 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    background-color: var(--search-background);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
-    box-shadow: var(--sun-shadow);
-    border-radius: 35px;
-    corner-shape: superellipse(1.5);
-    margin-bottom: 8px;
+    position: relative;
+}
+
+.setting-item:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    width: calc(100% - 20px);
+    bottom: 0;
+    height: 1.5px;
+    background: var(--glass-border);
 }
 
 .setting-info {
@@ -329,7 +349,7 @@ input.form-input {
     width: 90%;
     max-width: 500px;
     border: 1px solid var(--glass-border);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
 }
 .modal-container h3 {
@@ -361,7 +381,7 @@ input.form-input {
     padding: 16px 20px;
     background-color: var(--search-background);
     border: 1px solid var(--glass-border);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     box-shadow: var(--sun-shadow);
     border-radius: 35px;
     corner-shape: superellipse(1.5);
@@ -426,4 +446,91 @@ input.form-input {
         align-items: flex-start;
         gap: 15px;
     }
+}
+
+/* Live Glass Preview Styles */
+.glass-preview-container {
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    border-radius: inherit;
+    corner-shape: inherit;
+    overflow: hidden;
+}
+
+.glass-preview-bg {
+    width: 100%;
+    height: 200px;
+    border-radius: inherit;
+    corner-shape: inherit;
+    background-image: url('/assets/img/wallpapers/Polyhills.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center 0%;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+    animation: panY 12s ease-in-out infinite;
+}
+
+@keyframes panY {
+    0% {
+        background-position: center 0%;
+    }
+    50% {
+        background-position: center 100%;
+    }
+    100% {
+        background-position: center 0%;
+    }
+}
+
+.glass-preview-card {
+    width: 85%;
+    max-width: 320px;
+    height: 60px;
+    background-color: var(--search-background);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    color: var(--text-color);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    box-shadow: var(--sun-shadow);
+    text-align: center;
+    z-index: 10;
+    contain: paint;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: 500;
+}
+
+.glass-preview-card2 {
+    width: 60px;
+    height: 60px;
+    background-color: var(--search-background);
+    border: 1px solid var(--glass-border);
+    border-radius: 50%;
+    color: var(--text-color);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
+    box-shadow: var(--sun-shadow);
+    text-align: center;
+    z-index: 10;
+    contain: paint;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.glass-preview-content {
+    display: flex;
+    gap: 10px;
 }

@@ -32,7 +32,6 @@ function updateStatusIndicator() {
     }
 }
 
-
 function showPopup(message) {
     const popup = document.createElement('div');
     popup.style.position = 'fixed';
@@ -41,7 +40,10 @@ function showPopup(message) {
     popup.style.transform = 'translateX(-50%)';
     popup.style.backgroundColor = 'var(--search-background)';
 	popup.style.pointerEvents = 'none'
-    popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(2.5px)';
+    popup.style.setProperty(
+        '--fx-filter',
+        'var(--blur1) glass(0.6, 8, 0.2)'
+    );
     popup.style.boxShadow = 'var(--sun-shadow)';
     popup.style.color = 'var(--text-color)';
     popup.style.padding = '10px 16px';
@@ -70,47 +72,49 @@ function showPopup(message) {
         popup.style.backgroundColor = 'transparent';
         popup.style.backdropFilter = 'none';
         popup.style.padding = '0';
+        popup.style.borderRadius = '500px';
+        popup.style.backgroundColor = 'var(--accent)';
         
         const fullscreenBtn = document.createElement('button');
-	    fullscreenBtn.style.pointerEvents = 'auto';
-        fullscreenBtn.style.padding = '10px 10px';
-        fullscreenBtn.style.borderRadius = '25px';
-        fullscreenBtn.style.border = 'var(--glass-border)';
-        fullscreenBtn.style.backgroundColor = 'var(--search-background)';
-        fullscreenBtn.style.backdropFilter = 'blur(5px) saturate(2) var(--edge-refraction-filter)';
-	    fullscreenBtn.style.boxShadow = 'var(--sun-shadow)';
-        fullscreenBtn.style.color = 'var(--text-color)';
+        fullscreenBtn.style.width = '100vw';
+        fullscreenBtn.style.height = '20vh';
+        fullscreenBtn.style.pointerEvents = 'auto';
+        fullscreenBtn.style.borderRadius = '500px';
+        fullscreenBtn.style.backgroundColor = 'transparent';
+        fullscreenBtn.style.border = 'none';
+        fullscreenBtn.style.color = 'var(--background-color)';
         fullscreenBtn.style.cursor = 'pointer';
         fullscreenBtn.style.display = 'flex';
-        fullscreenBtn.style.alignItems = 'center'; // This ensures vertical centering
+        fullscreenBtn.style.alignItems = 'center';
         fullscreenBtn.style.justifyContent = 'center';
-        fullscreenBtn.style.gap = '5px'; // Gap between text and icon
-        fullscreenBtn.style.fontFamily = '"Inter", sans-serif';
-		fullscreenBtn.style.fontWeight = '500';
-        fullscreenBtn.style.height = '36px'; // Setting a fixed height helps with centering
+        fullscreenBtn.style.gap = '20px';
+        fullscreenBtn.style.fontFamily = '"Open Runde", sans-serif';
+        fullscreenBtn.style.fontSize = '60px';
+        fullscreenBtn.style.fontWeight = 'bold';
+        fullscreenBtn.style.zIndex = '9999'; // keep above other content
         
         // Create the icon element
         const icon = document.createElement('span');
         icon.className = 'material-symbols-rounded';
         icon.textContent = 'expand_content';
         icon.style.fontFamily = 'Material Symbols Rounded';
-        icon.style.fontSize = '20px';
+        icon.style.fontSize = '80px';
         icon.style.lineHeight = '1'; // Helps with vertical alignment
         icon.style.display = 'flex'; // Makes the icon behave better for alignment
         icon.style.alignItems = 'center';
     
         // Add the text - use the current language's fullscreen text or fallback to English
-	const buttonText = document.createElement('span');
-	
-	buttonText.textContent = (
-	    currentLanguage && 
-	    currentLanguage.FULLSCREEN
-	) || 'Fullscreen';
-	
-	buttonText.style.lineHeight = '1';
-	
-	fullscreenBtn.appendChild(icon);
-	fullscreenBtn.appendChild(buttonText);
+        const buttonText = document.createElement('span');
+        
+        buttonText.textContent = (
+            currentLanguage && 
+            currentLanguage.FULLSCREEN
+        ) || 'Fullscreen';
+        
+        buttonText.style.lineHeight = '1';
+        
+        fullscreenBtn.appendChild(icon);
+        fullscreenBtn.appendChild(buttonText);
         
         fullscreenBtn.addEventListener('click', function() {
             goFullscreen();
@@ -144,7 +148,7 @@ function showPopup(message) {
 	document.body.appendChild(popup);
 
     // Set a longer timeout for the fullscreen prompt
-    const duration = message === currentLanguage.NOT_FULLSCREEN ? 10000 : 3000;
+    const duration = message === currentLanguage.NOT_FULLSCREEN ? 15000 : 5000;
 
     setTimeout(() => {
         popup.style.opacity = '0';
@@ -221,7 +225,10 @@ function createOnScreenPopup(message, options = {}, onClosed) {
 	popup.style.transformOrigin = 'right top';
     popup.style.width = 'clamp(200px, 90%, 500px)';
     popup.style.backgroundColor = 'var(--search-background)';
-    popup.style.backdropFilter = 'var(--edge-refraction-filter) saturate(2) blur(2.5px)';
+    popup.style.setProperty(
+        '--fx-filter',
+        'var(--blur1) glass(0.6, 8, 0.2)'
+    );
     popup.style.boxShadow = 'var(--sun-shadow), 0 0 10px rgba(0, 0, 0, 0.2)';
     popup.style.color = 'var(--text-color)';
     popup.style.padding = '10px 14px 10px 12px';
@@ -262,7 +269,6 @@ function createOnScreenPopup(message, options = {}, onClosed) {
         // Allow dragging up (negative delta) freely, resist dragging down
         const translateY = deltaY < 0 ? deltaY : deltaY * 0.2; 
         popup.style.transform = `translateY(${translateY}px)`;
-        popup.style.opacity = Math.max(0, 1 - (Math.abs(deltaY) / 100));
     };
 
     const handleEnd = () => {
@@ -276,7 +282,6 @@ function createOnScreenPopup(message, options = {}, onClosed) {
         } else {
             // Snap back
             popup.style.transform = 'translateY(0)';
-            popup.style.opacity = '1';
         }
     };
 
@@ -560,20 +565,22 @@ function addToNotificationShade(message, options = {}) {
     notification.style.cornerShape = 'superellipse(1.5)';
     notification.style.marginBottom = '10px';
     notification.style.transition = 'all 0.3s ease';
-    notification.style.opacity = '0';
+    notification.style.opacity = '1';
     notification.style.transform = 'translateX(50px)';
     notification.style.display = 'flex';
     notification.style.flexDirection = 'row';
 	notification.style.alignItems = 'center';
 	notification.style.gap = '12px';
     notification.style.border = '1px solid var(--glass-border)';
+    notification.style.setProperty(
+        '--fx-filter',
+        'var(--blur1) glass(0.6, 8, 0.2)'
+    );
     notification.style.pointerEvents = 'auto';
 	
 	function closeNotification(notif) {
 	    // Animate out
-	    notification.style.opacity = '0';
-	    notification.style.transform = 'translateX(50px)';
-	    notification.style.height = '0px';
+	    notification.style.transform = 'translateX(100%)';
 		
 	    if (options.liveActivityUrl && options.activityId) {
             if (activeLiveActivities[options.activityId]) {
@@ -821,7 +828,6 @@ function addToNotificationShade(message, options = {}) {
         // Only allow right swipe (positive diff)
         if (diff > 0) {
             notification.style.transform = `translateX(${diff}px)`;
-            notification.style.opacity = 1 - (diff / 200);
         }
     }, { passive: true });
     
@@ -833,7 +839,6 @@ function addToNotificationShade(message, options = {}) {
         } else {
             // Snap back
             notification.style.transform = 'translateX(0)';
-            notification.style.opacity = '1';
         }
     });
     

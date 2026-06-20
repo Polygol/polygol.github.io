@@ -220,17 +220,12 @@
                         <input type="checkbox" class="toggle-switch" id="tint-colors-switch" data-key="tintEnabled">
                     </div>
                 </div>
-                <div class="setting-item">
+                <div class="setting-item nav-item" data-page="page-glass">
                     <div class="setting-info">
                         <span class="setting-label">Dynamic Glass<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/display/dynamic-glass', height: '100%' });">?</button></span>
                         <span class="setting-description">Adjust the crunchy, tasty and smooth material</span>
                     </div>
-                    <select class="styled-select" id="glass-effects-mode" data-key="glassEffectsMode">
-                        <option value="on">Liquid</option>
-                        <option value="focused">Focused</option>
-                        <option value="frosted">Frosted</option>
-                        <option value="off">Off</option>
-                    </select>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
             </div>
             <div class="setting-section">
@@ -243,7 +238,7 @@
                     <input type="checkbox" class="toggle-switch" data-key="nightStandEnabled">
                 </div>
                 
-                <div id="night-stand-config" style="display: none;background: var(--search-background);padding: 8px 16px;margin: 10px 0;border: 1px solid var(--glass-border);backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);box-shadow: var(--sun-shadow);border-radius: 35px;corner-shape: superellipse(1.5);">
+                <div id="night-stand-config" style="display: none;background: var(--search-background);padding: 8px 16px;margin: 10px 0;border: 1px solid var(--glass-border);--fx-filter: var(--blur1) glass(0.6, 8, 0.2);box-shadow: var(--sun-shadow);border-radius: 35px;corner-shape: superellipse(1.5);">
                     <div class="setting-item" style="border:none; padding: 5px 0; background: transparent; box-shadow: none;">
                         <span class="setting-label" style="font-size: 14px;">Schedule</span>
                         <div style="display: flex; gap: 10px; align-items: center;">
@@ -258,6 +253,38 @@
                         </div>
                         <input type="range" min="20" max="100" class="styled-slider" data-key="nightStandBrightness">
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Glass Page -->
+        <div class="page" id="page-glass">
+            <div class="setting-section">
+                <div class="glass-preview-container">
+                    <div class="glass-preview-bg">
+                        <div class="glass-preview-card">
+                            <div class="glass-preview-content">
+                                <img src="https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy3.png?raw=true" style="width: 32px;">
+                                Screwy
+                            </div>
+                        </div>
+                        <div class="glass-preview-card2">
+                            <div class="glass-preview-content">
+                                <span class="material-symbols-rounded" style="font-size: 28px;">home</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-section">
+                <h2 class="section-title">Adjust</h2>
+                <div class="setting-item slider-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Clarity</span>
+                        <span class="setting-description">Control clarity of the material</span>
+                    </div>
+                    <input type="range" min="0" max="20" value="5" class="styled-slider" id="glass-effects-mode" data-key="glassEffectsMode">
                 </div>
             </div>
         </div>

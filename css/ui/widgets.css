@@ -16,7 +16,7 @@
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 1px solid var(--glass-border);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     width: 200px;
     /* Default size, can be overridden */
     height: 200px;
@@ -64,7 +64,6 @@
 .widget-instance.is-dragging {
     transform: scale(1.04) !important;
     cursor: pointer;
-    filter: brightness(1.5) !important;
 }
 
 /* --- Snap Line Indicators --- */
@@ -166,7 +165,7 @@
 /* Parent contains active child */
     {
     background: var(--search-background) !important;
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px) !important;
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
 }
 
 /* --- Widget Picker Drawer Styles --- */
@@ -214,7 +213,7 @@
 .drawer-header-button {
     background-color: var(--search-background);
     color: var(--text-color);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     box-shadow: var(--sun-shadow);
     border-radius: 40px;
     cursor: pointer;
@@ -296,6 +295,6 @@
 .widget-resize-handle:active {
     background: var(--search-background);
     box-shadow: var(--sun-shadow);
-    backdrop-filter: var(--edge-refraction-filter) saturate(2) blur(2.5px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0.2);
     border: 1px solid var(--glass-border);
 }
