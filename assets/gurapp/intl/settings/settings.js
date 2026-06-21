@@ -819,18 +819,6 @@ function initializeSettingsApp() {
             });
         }
 
-        const diagBtn = document.getElementById('btn-run-diagnostics');
-        if (diagBtn) {
-            diagBtn.onclick = async () => {
-                Gurasuraisu.playSound('notify');
-                const isOnline = navigator.onLine ? "Online" : "Offline";
-                const mem = window.isLowEndDevice ? "Limited (Low-end device profile active)" : "Standard";
-                const perf = window.systemPerformanceScore || "N/A";
-                const report = `Status: Excellent\nInternet: ${isOnline}\nPerformance Tier: ${perf}\nHardware Profile: ${mem}\nDatabase Connection: Stable`;
-                Gurasuraisu.showAlert(report, "System Health Check");
-            };
-        }
-
         const optBtn = document.getElementById('btn-optimize-memory');
         if (optBtn) {
             optBtn.onclick = async () => {
