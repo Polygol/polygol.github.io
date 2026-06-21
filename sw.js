@@ -1,4 +1,4 @@
-const CORE_CACHE_VERSION = 'Astatine 27-b04';
+const CORE_CACHE_VERSION = 'Astatine 27-b06';
 const CORE_CACHE_NAME = `polygol-core-${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polygol-apps';
 
@@ -76,6 +76,12 @@ const ASSETS_TO_CACHE = [
   '/js/lang.js',
   '/js/kirbservices.js',
   '/js/waves.js',
+  '/js/features/mecare.js',
+  '/js/features/ambient-music.js',
+  '/js/features/sos.js',
+  '/js/labs/screwy-labs.js',
+  '/js/dev/debug-overlay.js',
+  '/js/dev/console-overlay.js',
   '/assets/gurapp/api/gurasuraisu-api.js',
   'https://polygol.github.io/assets/gurapp/api/gurasuraisu-api.js',
   'https://raw.githubusercontent.com/Polygol/polygol.github.io/refs/heads/main/assets/gurapp/api/gurasuraisu-api.js',
@@ -93,7 +99,6 @@ const ASSETS_TO_CACHE = [
   '/assets/gurapp/intl/settings/index.html',
   '/assets/gurapp/intl/settings/settings.css',
   '/assets/gurapp/intl/settings/settings.js',
-  '/assets/gurapp/intl/settings/img/content.png',
   '/assets/gurapp/intl/forudaraisu/index.html',
   '/assets/gurapp/intl/donburi/index.html',
   '/assets/gurapp/intl/overlay/osk/osk.html',

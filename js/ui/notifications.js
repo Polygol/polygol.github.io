@@ -185,8 +185,40 @@ function processNotificationQueue() {
 }
 
 function showNotification(message, options = {}) {
+    // Check Focus mode suppression rules
+    const focusActive = document.body.classList.contains('minimal-active');
+    const silenceFocus = localStorage.getItem('focusSilenceNotifications') === 'true';
+    if (focusActive && silenceFocus) {
+        console.log("[System] Notification suppressed under active Focus session.");
+        return { closePopup: () => {}, closeShade: () => {}, update: () => {} };
+    }
+
+    // Apply Preview Privacy settings
+    const privacy = localStorage.getItem('notificationPreviewLevel') || 'all';
+    let processedMessage = message;
+    if (privacy === 'hide') {
+        processedMessage = 'Content hidden.';
+    } else if (privacy === 'none') {
+        processedMessage = '';
+    }
+
+    // Outbound Webhook Integration
+    const webhookUrl = localStorage.getItem('integrationWebhookUrl');
+    if (webhookUrl && localStorage.getItem('wifiEnabled') !== 'false') {
+        fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                event: 'notification',
+                heading: options.heading || 'Notification',
+                message: processedMessage,
+                timestamp: Date.now()
+            })
+        }).catch(() => {});
+    }
+
     // Always create persistent notification in the shade immediately
-    const shadeNotification = addToNotificationShade(message, options);
+    const shadeNotification = addToNotificationShade(processedMessage, options);
     
     let popupControls = { close: () => {}, update: () => {} };
 

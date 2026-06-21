@@ -13,6 +13,10 @@ const FileUploadManager = {
 
     // Trigger the unified flow (Local + Remote)
     trigger(accept, multiple, contextId = null) {
+        if (localStorage.getItem('wifiEnabled') === 'false') {
+            showPopup("Wi-Fi is disabled.");
+            return;
+        }
         // 1. Open Local Input
         // We reuse a hidden global input for system actions or create dynamic ones
         let input = document.getElementById('global-file-input');

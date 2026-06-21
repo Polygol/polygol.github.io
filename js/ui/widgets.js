@@ -289,6 +289,9 @@ function renderWidgets() {
         let widgetCenter = { x: 0, y: 0 };
 
         const onRotateStart = (e) => {
+            if (localStorage.getItem('lockHomeLayout') === 'true' && !document.body.classList.contains('edit-mode-active')) {
+                return;
+            }
             e.stopPropagation();
             e.preventDefault(); // Prevent text selection
             isRotating = true;
@@ -384,6 +387,9 @@ function renderWidgets() {
         let dragAnimationFrame = null;
 
         const onDragStart = (e) => {
+            if (localStorage.getItem('lockHomeLayout') === 'true' && !document.body.classList.contains('edit-mode-active')) {
+                return;
+            }
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
@@ -573,6 +579,9 @@ function renderWidgets() {
         let isAnchoredRight, isAnchoredBottom; // Flags to track edge snapping
 
         const onResizeStart = (e) => {
+            if (localStorage.getItem('lockHomeLayout') === 'true' && !document.body.classList.contains('edit-mode-active')) {
+                return;
+            }
             e.stopPropagation(); 
             isResizing = true;
             

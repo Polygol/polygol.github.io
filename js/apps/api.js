@@ -522,15 +522,28 @@ function broadcastSettingUpdate(key, value) {
 // --- NEW: Function to programmatically change a control's value and dispatch an event ---
 function setControlValueAndDispatch(key, value) {
     // Handle settings without a direct UI control in index.html
-    const settingsWithoutDirectControl =[
+    const settingsWithoutDirectControl = [
         'sleepModeStyle', 'slideshowInterval', 'hideClockIndicator',
         'autoSleepEnabled', 'autoSleepDuration', 'autoSleepScope',
-		'resourceManagerEnabled', 'displayScale', 'smartDisplayZoom',
+        'resourceManagerEnabled', 'displayScale', 'smartDisplayZoom',
         'nightStandEnabled', 'nightStandStart', 'nightStandEnd', 'nightStandBrightness',
-	    'colorFilter', 'keyboardNavEnabled', 'sfxVolume', 'homeActivitiesEnabled',
+        'colorFilter', 'keyboardNavEnabled', 'sfxVolume', 'homeActivitiesEnabled',
         'telemetryEnabled', 'oledBurnInProtection', 'hapticsEnabled', 'adaptiveBatterySaver',
-        'doubleTapToSleep', 'autoBrightness', 'dynamicTone', 'adaptiveVolume', 'predictivePreload'
+        'doubleTapToSleep', 'autoBrightness', 'dynamicTone', 'adaptiveVolume', 'predictivePreload',
+        'homeGridSize', 'hideHomeAppNames', 'lockHomeLayout', 'wakeOnMotion', 'standbyOrientation',
+        'wifiEnabled', 'dataSaverEnabled', 'networkDnsMode', 'experimentalGpuAccelerate',
+        'experimentalWebGL', 'aggressiveGC', 'debugOverlayEnabled', 'assistantWakeWord',
+        'assistantLang', 'assistantVoicePitch', 'assistantHistoryRetention', 'focusModeSchedule',
+        'focusModeStart', 'focusModeEnd', 'focusSilenceNotifications', 'focusDimWallpaper',
+        'ambientMusicEnabled', 'ambientMusicSelection', 'ambientMusicVolume', 'timeZoneSelection',
+        'showTimezoneLabel', 'appBadgesEnabled', 'autoClearNotificationsOnSleep',
+        'notificationPreviewLevel', 'oskKey', 'oskLang', 'oskPredict', 'sedentaryReminderEnabled',
+        'screenTimeBreakTimer', 'blueLightReduction', 'profilyUserName', 'profilyUserAvatar',
+        'profilySyncStatus', 'emergencySosHotkey', 'emergencySleepScreen', 'emergencyContacts',
+        'locationPermissionMode', 'clipboardAccessMode', 'clearTempCacheOnClose', 'integrationWebhookUrl',
+        'syncWidgetsExternalScreen', 'smartHomePairingMode', 'developerConsoleEnabled'
     ];
+    
     if (settingsWithoutDirectControl.includes(key)) {
         localStorage.setItem(key, value);
         broadcastSettingUpdate(key, value);
@@ -541,6 +554,34 @@ function setControlValueAndDispatch(key, value) {
             } else {
                 window.Analytics?.disable();
             }
+        }
+        if (key === 'debugOverlayEnabled') {
+            if (typeof toggleDebugOverlay === 'function') toggleDebugOverlay();
+        }
+        if (key === 'standbyOrientation') {
+            if (value === 'landscape' && screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(()=>{});
+            } else if (value === 'portrait' && screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('portrait').catch(()=>{});
+            } else if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+            }
+        }
+        if (key === 'wifiEnabled') {
+            if (typeof updateNetworkInfo === 'function') updateNetworkInfo();
+        }
+        if (key.startsWith('ambientMusic')) {
+            if (localStorage.getItem('ambientMusicEnabled') === 'true') {
+                if (window.AmbientNoiseGenerator) window.AmbientNoiseGenerator.start();
+            } else {
+                if (window.AmbientNoiseGenerator) window.AmbientNoiseGenerator.stop();
+            }
+            if (key === 'ambientMusicVolume' && window.AmbientNoiseGenerator) {
+                window.AmbientNoiseGenerator.updateVolume();
+            }
+        }
+        if (key === 'blueLightReduction') {
+            if (typeof applyColorFilter === 'function') applyColorFilter();
         }
         if (key === 'slideshowInterval') {
             applyWallpaper(); // This will restart the interval with the new duration

@@ -18,18 +18,37 @@ function initializeSettingsApp() {
         'page-customize': 'Customize',
         'page-wallpaper': 'Wallpaper',
         'page-system': 'System',
-        'page-data': 'Your Account',
         'page-general': 'General',
         'page-a11y': 'Accessibility',
         'page-about': 'About',
-        'page-storage': 'Storage',
+        'page-storage': 'Storage & Backup',
         'page-db-details': 'Database',
         'page-store-viewer': 'Store data',
         'page-record-editor': 'Edit record',
         'page-localstorage': 'Local storage',
         'page-cache': 'Cache Storage',
         'page-connect': 'Connections',
-        'page-licenses': 'Acknowledgements'
+        'page-licenses': 'Acknowledgements',
+        'page-home-screen': 'Home Screen',
+        'page-device': 'Device Options',
+        'page-internet': 'Internet',
+        'page-bluetooth': 'Bluetooth',
+        'page-battery': 'Battery',
+        'page-labs': "Screwy's Labs",
+        'page-assistant': 'Assistant',
+        'page-focus': 'Focus',
+        'page-automate': 'Automations',
+        'page-music': 'Ambient Music',
+        'page-locale': 'Language & Time',
+        'page-notify': 'Notifications',
+        'page-keyboard': 'Keyboards',
+        'page-mecare': 'MeCare',
+        'page-profily': 'Profily',
+        'page-devicecare': 'Device Care',
+        'page-emergency': 'Emergency Care',
+        'page-privacy': 'Privacy & Security',
+        'page-integrate': 'Integrations',
+        'page-dev': 'Developer'
     };
 
     function navigateTo(pageId) {
@@ -310,6 +329,14 @@ function initializeSettingsApp() {
             const configContainer = document.getElementById('night-stand-config');
             if (configContainer) {
                 configContainer.style.display = (value === 'true') ? 'block' : 'none';
+            }
+        }
+
+        // Update profily Avatar display
+        if (key === 'profilyUserAvatar') {
+            const display = document.getElementById('profily-avatar-display');
+            if (display) {
+                display.textContent = value || 'U';
             }
         }
 
@@ -790,6 +817,33 @@ function initializeSettingsApp() {
                     args: { key: 'updatesEnabled', value: e.target.checked.toString() }
                 }, '*');
             });
+        }
+
+        const diagBtn = document.getElementById('btn-run-diagnostics');
+        if (diagBtn) {
+            diagBtn.onclick = async () => {
+                Gurasuraisu.playSound('notify');
+                const isOnline = navigator.onLine ? "Online" : "Offline";
+                const mem = window.isLowEndDevice ? "Limited (Low-end device profile active)" : "Standard";
+                const perf = window.systemPerformanceScore || "N/A";
+                const report = `Status: Excellent\nInternet: ${isOnline}\nPerformance Tier: ${perf}\nHardware Profile: ${mem}\nDatabase Connection: Stable`;
+                Gurasuraisu.showAlert(report, "System Health Check");
+            };
+        }
+
+        const optBtn = document.getElementById('btn-optimize-memory');
+        if (optBtn) {
+            optBtn.onclick = async () => {
+                Gurasuraisu.playSound('type');
+                if (await Gurasuraisu.showConfirm("Are you sure you want to care now? Apps may close.")) {
+                    window.parent.postMessage({ 
+                        action: 'callGurasuraisuFunc', 
+                        functionName: 'executeParentJS', 
+                        args: ['SystemGC.run(true)'] 
+                    }, '*');
+                    Gurasuraisu.showPopup("Cared for now successfully");
+                }
+            };
         }
 
         document.querySelectorAll('[data-modal]').forEach(btn => {

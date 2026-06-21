@@ -6,6 +6,12 @@ class FxFilter {
     static noiseCache = new Map();
     static glassCache = new Map();
     static uid = 0;
+    static hasRegisteredProperty = false;
+    static resizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+            FxFilter.markDirty(entry.target);
+        }
+    });
 
     static add(options) {
         if (typeof options === 'string') {
@@ -40,6 +46,7 @@ class FxFilter {
                     syntax: '*',
                     inherits: false
                 });
+                this.hasRegisteredProperty = true;
             } catch (e) {}
         }
 
@@ -47,28 +54,54 @@ class FxFilter {
             for (const m of mutations) {
                 if (m.type === 'childList') {
                     m.addedNodes.forEach(node => {
-                        if (node.nodeType === 1 && !node.classList?.contains('fx-container') && !node.classList?.contains('fx-svg')) {
-                            this.observedElements.add(node);
-                            node.querySelectorAll?.('*').forEach(el => {
-                                if (!el.classList?.contains('fx-container') && !el.classList?.contains('fx-svg')) {
-                                    this.observedElements.add(el);
+                        if (node.nodeType === 1) {
+                            // If a style or link element is dynamically added, re-evaluate existing observed elements
+                            if (node.tagName === 'STYLE' || node.tagName === 'LINK') {
+                                for (const el of this.observedElements) {
+                                    this.markDirty(el);
                                 }
-                            });
+                            } else if (!node.classList?.contains('fx-container') && !node.classList?.contains('fx-svg')) {
+                                this.observeElement(node);
+                                const treeWalker = document.createTreeWalker(
+                                    node,
+                                    NodeFilter.SHOW_ELEMENT
+                                );
+
+                                let current;
+                                while ((current = treeWalker.nextNode())) {
+                                    if (!current.classList?.contains('fx-container') && !current.classList?.contains('fx-svg')) {
+                                        this.observeElement(current);
+                                    }
+                                }
+                            }
                         }
                     });
 
                     m.removedNodes.forEach(node => {
                         if (node.nodeType === 1) {
                             this.observedElements.delete(node);
+                            this.resizeObserver.unobserve(node);
+                            const descendants = node.querySelectorAll('*');
+                            descendants.forEach(child => {
+                                this.observedElements.delete(child);
+                                this.resizeObserver.unobserve(child);
+                            });
                         }
                     });
+                } else if (m.type === 'attributes') {
+                    this.markDirty(m.target);
                 }
             }
         });
 
-        observer.observe(document.body, {
+        observer.observe(document.documentElement, {
             childList: true,
-            subtree: true
+            subtree: true,
+            attributes: true,
+            attributeFilter: [
+                'class',
+                'style'
+            ]
         });
 
         // initial seed: scan stylesheets for selectors defining --fx-filter to capture unclassed static elements
@@ -85,7 +118,7 @@ class FxFilter {
                     if (rule.cssText && rule.cssText.includes('--fx-filter') && rule.selectorText) {
                         document.querySelectorAll(rule.selectorText).forEach(el => {
                             if (el !== document.body && el !== document.documentElement) {
-                                this.observedElements.add(el);
+                                this.observeElement(el);
                             }
                         });
                     }
@@ -96,31 +129,59 @@ class FxFilter {
         // Supplementary scan to catch inline styles, controls, and other potential targets
         document.querySelectorAll('[style*="--fx-filter"],[class]:not(.fx-container):not(.fx-svg),input,select,button,iframe').forEach(el => {
             if (el !== document.body && el !== document.documentElement) {
-                this.observedElements.add(el);
+                this.observeElement(el);
             }
         });
         
         if (!this.running) {
             this.running = true;
-            this.tick();
         }
     }
 
-    static lastTick = 0;
+    static dirtyElements = new Set();
+    static updateScheduled = false;
 
-    static tick(now = 0) {
-        const elapsed = now - this.lastTick;
+    static markDirty(element) {
+        if (!element || element.nodeType !== 1) return;
 
-        // cap at ~10fps (100ms)
-        if (elapsed >= 100) {
-            this.lastTick = now;
-            this.scanElements();
+        this.dirtyElements.add(element);
+
+        if (!this.updateScheduled) {
+            this.updateScheduled = true;
+
+            requestAnimationFrame(() => {
+                this.updateScheduled = false;
+                this.scanDirtyElements();
+            });
+        }
+    }
+
+    static observeElement(element) {
+        if (
+            !element ||
+            element === document.body ||
+            element === document.documentElement
+        ) {
+            return;
         }
 
-        setTimeout(() => requestAnimationFrame((t) => this.tick(t)), 100);
+        this.observedElements.add(element);
+        this.resizeObserver.observe(element);
+        this.markDirty(element);
     }
 
     static observedElements = new Set();
+
+    static scanDirtyElements() {
+        if (this.dirtyElements.size === 0) return;
+
+        const elements = [...this.dirtyElements];
+        this.dirtyElements.clear();
+
+        for (const element of elements) {
+            this.updateElement(element);
+        }
+    }
 
     static scanElements() {
         const toRemove = [];
@@ -202,7 +263,94 @@ class FxFilter {
         }
     }
 
-    static buildFxContainer(element, filterValue, parsedFilter) {
+    static updateElement(element) {
+        if (
+            !element ||
+            element === document.body ||
+            element === document.documentElement
+        ) {
+            return;
+        }
+
+        const computed = getComputedStyle(element);
+
+        const fxFilter = this.getFxFilterValue(
+            element,
+            computed
+        );
+
+        const storedState = this.elements.get(element);
+
+        if (!fxFilter) {
+            if (storedState) {
+                this.removeFxContainer(element);
+                this.elements.delete(element);
+            }
+            return;
+        }
+
+        const parsedFilter =
+            storedState?.filter === fxFilter
+                ? storedState.parsedFilter
+                : this.parseFilterValue(fxFilter);
+
+        if (!this.observedElements.has(element)) {
+            this.observedElements.add(element);
+            this.resizeObserver.observe(element);
+        }
+
+        const trackedStyles = this.getTrackedStyles(
+            element,
+            fxFilter,
+            parsedFilter,
+            computed
+        );
+
+        if (
+            storedState &&
+            storedState.filter === fxFilter &&
+            !this.stylesChanged(
+                storedState.trackedStyles,
+                trackedStyles
+            )
+        ) {
+            return;
+        }
+
+        const built = this.buildFxContainer(
+            element,
+            fxFilter,
+            parsedFilter,
+            computed // Performance optimization: Feed 'computed' to prevent redundantly calling it inside building process
+        );
+
+        // Required Cleanup Check: If container skipped build due to sizing (display: none/shrunk), 
+        // we must clear its history mapping. Missing this skips rebuild evaluations later.
+        if (!built) {
+            if (storedState) {
+                this.removeFxContainer(element);
+                this.elements.delete(element);
+            }
+            return;
+        }
+
+        this.removeFxContainer(element);
+        this.applyFxContainer(built);
+
+        this.elements.set(element, {
+            filter: fxFilter,
+            parsedFilter,
+            trackedStyles,
+            svgWrapper: built.svgWrapper,
+            containerDiv: built.containerDiv
+        });
+    }
+
+    static buildFxContainer(element, filterValue, parsedFilter, computed) {
+        const comp = computed || getComputedStyle(element);
+        const value = comp.getPropertyValue('--fx-filter').trim();
+        if (!value || value === 'none' || value.includes('none ')) return null;
+
         if (element === document.body || element === document.documentElement) return null;
 
         const width = element.offsetWidth || 0;
@@ -237,10 +385,9 @@ class FxFilter {
         const backdropFilter = filterParts.join(' ');
         if (!backdropFilter.trim()) return null;
 
-        const computedStyle = window.getComputedStyle(element);
-        const needsPositionRelative = computedStyle.position === 'static';
+        const needsPositionRelative = comp.position === 'static';
 
-        const parentBoxShadow = computedStyle.boxShadow;
+        const parentBoxShadow = comp.boxShadow;
         let containerBoxShadow = 'none';
         if (parentBoxShadow && parentBoxShadow !== 'none' && parentBoxShadow.includes('inset')) {
             containerBoxShadow = parentBoxShadow;
@@ -283,16 +430,19 @@ class FxFilter {
     }
 
     static removeFxContainer(element) {
-        element.querySelectorAll('.fx-container, .fx-svg').forEach(el => el.remove());
+        const state = this.elements.get(element);
+
+        state?.containerDiv?.remove();
+        state?.svgWrapper?.remove();
     }
 
-    static getFxFilterValue(element) {
-        const computed = getComputedStyle(element);
-        const value = computed.getPropertyValue('--fx-filter').trim();
+    static getFxFilterValue(element, computed) {
+        const comp = computed || getComputedStyle(element);
+        const value = comp.getPropertyValue('--fx-filter').trim();
         if (!value || value === 'none' || value.includes('none ')) return null;
 
-        // Fallback for environments where CSS.registerProperty (inherits: false) is not supported
-        if (!('CSS' in window && 'registerProperty' in CSS)) {
+        // Fallback for environments where CSS.registerProperty (inherits: false) is not supported or failed
+        if (!this.hasRegisteredProperty) {
             const parent = element.parentElement;
             if (parent && parent.nodeType === 1) {
                 const parentValue = getComputedStyle(parent).getPropertyValue('--fx-filter').trim();
@@ -334,7 +484,10 @@ class FxFilter {
         return { orderedFilters, customFilters };
     }
 
-    static getTrackedStyles(element, filterValue, parsedFilter) {
+    static getTrackedStyles(element, filterValue, parsedFilter, computed) {
+        const comp = computed || getComputedStyle(element);
+        const value = comp.getPropertyValue('--fx-filter').trim();
+        if (!value || value === 'none' || value.includes('none ')) return null;
         const { customFilters } = parsedFilter || this.parseFilterValue(filterValue);
         const trackedStyles = new Map();
 
@@ -342,14 +495,23 @@ class FxFilter {
             const filterOptions = this.filterOptions.get(filter.name);
             if (filterOptions && filterOptions.updatesOn) {
                 if (!element.__fxComputedCache || performance.now() - element.__fxCacheTime > 200) {
-                    element.__fxComputedCache = getComputedStyle(element);
+                    element.__fxComputedCache = comp;
                     element.__fxCacheTime = performance.now();
                 }
 
-                const computed = element.__fxComputedCache;
+                const cachedComp = element.__fxComputedCache;
                 filterOptions.updatesOn.forEach(styleProp => {
-                    const value = computed.getPropertyValue(styleProp);
-                    trackedStyles.set(styleProp, value);
+                    let val;
+                    // For static layout bounds (fixed dimensions in CSS) caching dimension variables tricks 
+                    // visibility changes into bypassing redraws. Direct layout dimensions are guaranteed to match visually. 
+                    if (styleProp === 'width') {
+                        val = element.offsetWidth;
+                    } else if (styleProp === 'height') {
+                        val = element.offsetHeight;
+                    } else {
+                        val = cachedComp.getPropertyValue(styleProp);
+                    }
+                    trackedStyles.set(styleProp, val);
                 });
             }
         });
@@ -464,10 +626,11 @@ FxFilter.add({
             maxDimension = Math.max(32, Math.min(256, Math.ceil(maxElementSize))); // LOD High: high fidelity on small areas
         }
 
-        const scaleFactor = maxElementSize / maxDimension;
+        const effectiveSize = Math.sqrt(width * height);
+        const scaleFactor = effectiveSize / maxDimension;
 
         // Adjust refraction to compensate for LOD scaling and maintain consistent visual depth
-        const refractionValue = (parseFloat(refraction) / 2 || 0) * Math.sqrt(scaleFactor);
+        const refractionValue = (parseFloat(refraction) / 2 || 0) * Math.sqrt(Math.max(1, scaleFactor));
         const chromaticValue = parseFloat(chromatic) || 0;
 
         const offsetValue = ((parseFloat(offset) || 0) / 2) * zoom;
@@ -484,6 +647,7 @@ FxFilter.add({
         } else {
             borderRadius = parseFloat(borderRadiusStr) * zoom;
         }
+        borderRadius = Math.min(borderRadius, Math.min(width, height) / 2);
 
         // High-performance Cache Lookup
         const cacheKey = `${width}x${height}-${refraction}-${offset}-${chromatic}-${borderRadius}-${maxDimension}`;
@@ -597,28 +761,35 @@ FxFilter.add({
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.putImageData(imageData, 0, 0);
 
+            // Downscale final rendering resolution since it is already blurred anyway
+            const downscale = 4;
+            const renderWidth = Math.max(8, Math.round(width / downscale));
+            const renderHeight = Math.max(8, Math.round(height / downscale));
+            const renderBorderRadius = borderRadius / downscale;
+            const renderOffsetValue = offsetValue / downscale;
+
             const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = renderWidth;
+            canvas.height = renderHeight;
             const ctx = canvas.getContext('2d');
 
-            // Scale the generated displacement map to match the element dimensions
-            ctx.drawImage(tempCanvas, 0, 0, width, height);
+            // Scale the generated displacement map to match the downscaled dimensions
+            ctx.drawImage(tempCanvas, 0, 0, renderWidth, renderHeight);
             
-            if (borderRadius > 0) {
-                const maskCanvas = new OffscreenCanvas(width, height);
+            if (renderBorderRadius > 0) {
+                const maskCanvas = new OffscreenCanvas(renderWidth, renderHeight);
                 const maskCtx = maskCanvas.getContext('2d');
                 maskCtx.fillStyle = "rgb(127, 127, 127)";
                 maskCtx.beginPath();
-                const inset = offsetValue * 1;
-                maskCtx.roundRect(inset, inset, width - (inset * 2), height - (inset * 2), Math.max(0, borderRadius - inset));
+                const inset = renderOffsetValue * 1;
+                maskCtx.roundRect(inset, inset, renderWidth - (inset * 2), renderHeight - (inset * 2), Math.max(0, renderBorderRadius - inset));
                 maskCtx.clip();
-                maskCtx.fillRect(0, 0, width, height);
+                maskCtx.fillRect(0, 0, renderWidth, renderHeight);
 
-                ctx.filter = `blur(${offsetValue}px)`;
-                ctx.drawImage(maskCanvas, 0, 0, width, height);
-            } else if (offsetValue > 0) {
-                ctx.filter = `blur(${offsetValue}px)`;
+                ctx.filter = `blur(${renderOffsetValue}px)`;
+                ctx.drawImage(maskCanvas, 0, 0, renderWidth, renderHeight);
+            } else if (renderOffsetValue > 0) {
+                ctx.filter = `blur(${renderOffsetValue}px)`;
                 ctx.drawImage(canvas, 0, 0);
             }
 
@@ -699,6 +870,12 @@ FxFilter.add({
         `;
     },
     updatesOn: []
+});
+
+window.addEventListener('resize', () => {
+    for (const element of FxFilter.observedElements) {
+        FxFilter.markDirty(element);
+    }
 });
 
 FxFilter.init();

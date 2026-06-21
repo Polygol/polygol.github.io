@@ -75,7 +75,74 @@ const controlIdMap = {
     'colorFilter': 'colorFilter',
     'sfxVolume': 'sfxVolume',
     'keyboardNavEnabled': 'keyboardNavEnabled',
-    'telemetryEnabled': 'telemetryEnabled'
+    'telemetryEnabled': 'telemetryEnabled',
+    'hideHomeAppNames': 'hideHomeAppNames',
+    'lockHomeLayout': 'lockHomeLayout',
+    'wakeOnMotion': 'wakeOnMotion',
+    'standbyOrientation': 'standbyOrientation',
+    'wifiEnabled': 'wifiEnabled',
+    'dataSaverEnabled': 'dataSaverEnabled',
+    'networkDnsMode': 'networkDnsMode',
+    'experimentalGpuAccelerate': 'experimentalGpuAccelerate',
+    'experimentalWebGL': 'experimentalWebGL',
+    'aggressiveGC': 'aggressiveGC',
+    'debugOverlayEnabled': 'debugOverlayEnabled',
+    'assistantWakeWord': 'assistantWakeWord',
+    'assistantLang': 'assistantLang',
+    'assistantVoicePitch': 'assistantVoicePitch',
+    'assistantHistoryRetention': 'assistantHistoryRetention',
+    'focusModeSchedule': 'focusModeSchedule',
+    'focusModeStart': 'focusModeStart',
+    'focusModeEnd': 'focusModeEnd',
+    'focusSilenceNotifications': 'focusSilenceNotifications',
+    'focusDimWallpaper': 'focusDimWallpaper',
+    'ambientMusicEnabled': 'ambientMusicEnabled',
+    'ambientMusicSelection': 'ambientMusicSelection',
+    'ambientMusicVolume': 'ambientMusicVolume',
+    'timeZoneSelection': 'timeZoneSelection',
+    'showTimezoneLabel': 'showTimezoneLabel',
+    'appBadgesEnabled': 'appBadgesEnabled',
+    'autoClearNotificationsOnSleep': 'autoClearNotificationsOnSleep',
+    'notificationPreviewLevel': 'notificationPreviewLevel',
+    'oskKey': 'oskKey',
+    'oskLang': 'oskLang',
+    'oskPredict': 'oskPredict',
+    'sedentaryReminderEnabled': 'sedentaryReminderEnabled',
+    'screenTimeBreakTimer': 'screenTimeBreakTimer',
+    'blueLightReduction': 'blueLightReduction',
+    'profilyUserName': 'profilyUserName',
+    'profilyUserAvatar': 'profilyUserAvatar',
+    'profilySyncStatus': 'profilySyncStatus',
+    'emergencySosHotkey': 'emergencySosHotkey',
+    'emergencySleepScreen': 'emergencySleepScreen',
+    'emergencyContacts': 'emergencyContacts',
+    'locationPermissionMode': 'locationPermissionMode',
+    'clipboardAccessMode': 'clipboardAccessMode',
+    'clearTempCacheOnClose': 'clearTempCacheOnClose',
+    'integrationWebhookUrl': 'integrationWebhookUrl',
+    'syncWidgetsExternalScreen': 'syncWidgetsExternalScreen',
+    'smartHomePairingMode': 'smartHomePairingMode',
+    'developerConsoleEnabled': 'developerConsoleEnabled',
+    'adaptiveBatterySaver': 'adaptiveBatterySaver',
+    'sleepModeStyle': 'sleepModeStyleSelect',
+    'autoSleepDuration': 'autoSleepDuration',
+    'autoSleepScope': 'autoSleepScope',
+    'dockPinned': 'dock-pinned-switch',
+    'persistentPageIndicator': 'persistent-indicator-switch',
+    'hideClockIndicator': 'hideClockIndicator',
+    'system_device_name': 'system_device_name',
+    'doubleTapToSleep': 'doubleTapToSleep',
+    'sfxVolume': 'sfxVolume',
+    'adaptiveVolume': 'adaptive-volume-switch',
+    'hapticsEnabled': 'haptics-switch',
+    'depthEffectEnabled': 'depth-effect-switch',
+    'wakeLockMode': 'wake-lock-mode-select',
+    'resourceManagerEnabled': 'resourceManagerEnabled',
+    'predictivePreload': 'predictive-preload-switch',
+    'selectedLanguage': 'language-switcher',
+    'use12HourFormat': 'hour-switch',
+    'homeActivitiesEnabled': 'homeActivitiesEnabled',
+    'oledBurnInProtection': 'oled-protection-switch'
 };
 
 function setupFormatControls() {
@@ -202,6 +269,10 @@ const persistentClock = document.getElementById('persistent-clock');
 
 function updateNetworkInfo() {
     const netIcon = document.querySelector('#network-status-indicator span');
+    if (localStorage.getItem('wifiEnabled') === 'false') {
+        if (netIcon) netIcon.textContent = 'signal_disconnected';
+        return;
+    }
 	// Check if API is supported
 	const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
 	

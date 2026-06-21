@@ -108,7 +108,9 @@ const SystemGC = {
     async run(force = false) {
         const now = Date.now();
         if (this.isRunning) return;
-        if (!force && (now - this.lastRun < this.INTERVAL_MS)) return;
+        const isAggressive = localStorage.getItem('aggressiveGC') === 'true';
+        const interval = isAggressive ? 60000 : this.INTERVAL_MS;
+        if (!force && (now - this.lastRun < interval)) return;
 
         this.isRunning = true;
         console.log("[SystemGC] Starting comprehensive garbage collection...");

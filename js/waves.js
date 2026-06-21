@@ -67,7 +67,8 @@ function getWavesHostState() {
     state = state ? JSON.parse(state) : null;
     
     if (state) {
-        state.deviceName = localStorage.getItem('system_device_name') || generateNonsenseName();
+        state.deviceName = localStorage.getItem('profilyUserName') || localStorage.getItem('system_device_name') || generateNonsenseName();
+        state.avatar = localStorage.getItem('profilyUserAvatar') || 'U';
     }
     return state;
 }

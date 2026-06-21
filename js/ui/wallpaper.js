@@ -2927,11 +2927,17 @@ function applyWallpaperEffects() {
     const currentWallpaper = recentWallpapers[currentWallpaperPosition];
     const effects = currentWallpaper?.clockStyles?.wallpaperEffects?.[theme] || { blur: '0', brightness: '100', contrast: '100', saturate: '100', hue: '0', vignette: '0' };
 
-    const saturate = effects.saturate !== undefined ? effects.saturate : '100';
+    let brightness = parseFloat(effects.brightness);
+    const focusActive = document.body.classList.contains('minimal-active');
+    if (focusActive && localStorage.getItem('focusDimWallpaper') === 'true') {
+        brightness *= 0.5; // Dim by 50%
+    }
+
+    const saturate = Math.max(0, parseFloat(effects.saturate !== undefined ? effects.saturate : '100'));
     const hue = effects.hue !== undefined ? effects.hue : '0';
     const vignette = effects.vignette !== undefined ? effects.vignette : '0';
 
-    const filterString = `blur(${effects.blur}px) brightness(${effects.brightness}%) contrast(${effects.contrast}%) saturate(${saturate}%) hue-rotate(${hue}deg)`;
+    const filterString = `blur(${effects.blur}px) brightness(${brightness}%) contrast(${effects.contrast}%) saturate(${saturate}%) hue-rotate(${hue}deg)`;
     document.body.style.setProperty('--wallpaper-filter', filterString);
 
     // Apply Vignette by dynamically creating/updating the overlay

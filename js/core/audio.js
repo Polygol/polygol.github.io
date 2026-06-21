@@ -184,6 +184,9 @@ window.systemSpeak = function(text) {
         utterance.onend = resumeMedia;
         utterance.onerror = resumeMedia; // Ensure resume happens even if TTS errors out
         
+        const savedPitch = parseFloat(localStorage.getItem('assistantVoicePitch') || '100');
+        utterance.pitch = savedPitch / 100;
+
         synth.speak(utterance);
     };
 

@@ -61,11 +61,23 @@ function updateClockAndDate() {
     const dateFormatInput = getCachedElement('date-format-input');
 
 	const now = moment();
+    
+    // Apply Timezone selection
+    const tzMode = localStorage.getItem('timeZoneSelection') || 'auto';
+    if (tzMode === 'UTC') {
+        now.utc();
+    }
 
     // Prevent empty strings from causing ISO date flashes during boot
     let clockFormat = (clockFormatInput && clockFormatInput.value) ? clockFormatInput.value : (localStorage.getItem('use12HourFormat') === 'true' ? 'h:mm:ss A' : 'HH:mm:ss');
     let dateFormat = (dateFormatInput && dateFormatInput.value) ? dateFormatInput.value : (localStorage.getItem('dateFormat') || 'ddd MMM D $(separator.dot)$ $(smart)50$');
 
+    // Apply Timezone label formatting
+    if (localStorage.getItem('showTimezoneLabel') === 'true') {
+        const zoneAbbr = now.zoneAbbr ? now.zoneAbbr() : (tzMode === 'UTC' ? 'UTC' : 'Local');
+        dateFormat += ` [${zoneAbbr}]`;
+    }
+    
     if (window.isBlackoutActive) {
         clockFormat = clockFormat.replace(/[:.]ss/, '').replace(/ss/, '');
     }

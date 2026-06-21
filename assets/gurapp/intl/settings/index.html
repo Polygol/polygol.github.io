@@ -61,36 +61,68 @@
         
     <div class="pages-container">
         <!-- Main Settings Page -->
-        <div class="page active" id="main-settings">           
+        <div class="page active" id="main-settings">       
             <div class="setting-section">
                 <div class="setting-item nav-item" data-page="page-search">
                     <div class="setting-info">
                         <span class="material-symbols-rounded">search</span>
                         <span class="setting-label">Search</span>
                     </div>
-                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
+            <div class="setting-section">    
+                <div class="hero-banner">
+                    <div class="hero-banner-img" style="background-image: url('/assets/gurapp/intl/settings/img/hero/27beta.png');"></div>
+                </div>
+                <div class="setting-item nav-item" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/about/versions/astatine-17', height: '100%' });">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">deployed_code_update</span>
+                        <span class="setting-label">What's new in this update</span>
+                    </div>
+                    <span class="material-symbols-rounded">open_in_new</span>
                 </div>
             </div>
             <div class="setting-section">
-                <div class="setting-item nav-item" data-page="page-data">
+                <div class="setting-item nav-item" data-page="page-profily">
                     <div class="setting-info">
                         <span class="material-symbols-rounded">account_circle</span>
-                        <span class="setting-label">Your Account</span>
+                        <span class="setting-label">Profily</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
                 <div class="setting-item nav-item" data-page="page-connect">
                     <div class="setting-info">
-                        <span class="material-symbols-rounded">cell_tower</span>
+                        <span class="material-symbols-rounded">speaker_phone</span>
                         <span class="setting-label">Connections</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
             </div>
             <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-device">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">hard_drive</span>
+                        <span class="setting-label">Device Options</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-internet">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">wifi</span>
+                        <span class="setting-label">Internet</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-bluetooth">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">bluetooth</span>
+                        <span class="setting-label">Bluetooth</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
                 <div class="setting-item nav-item" data-page="page-display">
                     <div class="setting-info">
-                        <span class="material-symbols-rounded">dual_screen</span>
+                        <span class="material-symbols-rounded">desktop_mac</span>
                         <span class="setting-label">Display</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
@@ -99,6 +131,82 @@
                     <div class="setting-info">
                         <span class="material-symbols-rounded">volume_up</span>
                         <span class="setting-label">Sound & Haptics</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-battery">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">battery_android_full</span>
+                        <span class="setting-label">Battery</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
+            <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-customize">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">format_paint</span>
+                        <span class="setting-label">Customize</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-labs">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded"><img src="https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy3.png?raw=true" style="width: 24px;"></span>
+                        <span class="setting-label">Screwy's Labs</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
+            <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-assistant">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">auto_awesome</span>
+                        <span class="setting-label">Assistant</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-focus">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">filter_tilt_shift</span>
+                        <span class="setting-label">Focus</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-automate">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">arrow_split</span>
+                        <span class="setting-label">Automations</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-music">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">music_note_2</span>
+                        <span class="setting-label">Ambient Music</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
+            <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-mecare">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">self_improvement</span>
+                        <span class="setting-label">MeCare</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-devicecare">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">heart_smile</span>
+                        <span class="setting-label">Device Care</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-emergency">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">sos</span>
+                        <span class="setting-label">Emergency Care</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -111,10 +219,26 @@
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
-                <div class="setting-item nav-item" data-page="page-customize">
+                <div class="setting-item nav-item" data-page="page-a11y">
                     <div class="setting-info">
-                        <span class="material-symbols-rounded">format_paint</span>
-                        <span class="setting-label">Customize</span>
+                        <span class="material-symbols-rounded">accessible_forward</span>
+                        <span class="setting-label">Accessibility</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-locale">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">language</span>
+                        <span class="setting-label">Language & Time</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div>
+            <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-notify">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">notifications</span>
+                        <span class="setting-label">Notifications</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -125,21 +249,35 @@
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
-            </div>
-            <div class="setting-section">
-                <div class="setting-item nav-item" data-page="page-a11y">
+                <div class="setting-item nav-item" data-page="page-keyboard">
                     <div class="setting-info">
-                        <span class="material-symbols-rounded">accessible_forward</span>
-                        <span class="setting-label">Accessibility</span>
+                        <span class="material-symbols-rounded">keyboard</span>
+                        <span class="setting-label">Keyboards</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
             </div>
-             <div class="setting-section">
+            <div class="setting-section">
+                <div class="setting-item nav-item" data-page="page-privacy">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">back_hand</span>
+                        <span class="setting-label">Privacy & Security</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-integrate">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">circles_ext</span>
+                        <span class="setting-label">Integrations</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+            </div> 
+            <div class="setting-section">
                 <div class="setting-item nav-item" data-page="page-storage">
                     <div class="setting-info">
-                        <span class="material-symbols-rounded">storage</span>
-                        <span class="setting-label">Storage</span>
+                        <span class="material-symbols-rounded">backup</span>
+                        <span class="setting-label">Storage & Backup</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -147,6 +285,13 @@
                     <div class="setting-info">
                          <span class="material-symbols-rounded">manufacturing</span>
                         <span class="setting-label">System</span>
+                    </div>
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </div>
+                <div class="setting-item nav-item" data-page="page-dev">
+                    <div class="setting-info">
+                        <span class="material-symbols-rounded">terminal</span>
+                        <span class="setting-label">Developer</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
@@ -338,6 +483,11 @@
         <!-- Customize Page -->
         <div class="page" id="page-customize">
             <div class="setting-section">
+                <div class="hero-banner">
+                    <div class="hero-banner-img" style="background-image: url('/assets/gurapp/intl/settings/img/hero/customize.png');"></div>
+                </div> 
+            </div>
+            <div class="setting-section">
                 <h2 class="section-title">Global appearance</h2>
                 <div class="setting-item" id="setting-theme">
                     <div class="setting-info">
@@ -365,53 +515,20 @@
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
             </div>
-
             <div class="setting-section">
-                <h2 class="section-title">Home screen</h2>
                  <div class="setting-item nav-item" data-page="page-wallpaper">
                     <div class="setting-info">
-                        <span class="setting-label">Wallpaper</span>
+                        <span class="setting-label">Customize wallpaper</span>
                     </div>
                     <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
-                <div class="setting-item" id="setting-doubleTapToSleep">
-                    <div class="setting-info">
-                        <span class="setting-label">Double Tap to Sleep</span>
-                        <span class="setting-description">Quickly double tap empty space to enter sleep mode</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" data-key="doubleTapToSleep" id="double-tap-switch" checked>
-                    </div>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Hide Controls indicator</span>
-                        <span class="setting-description">Hides the arrow icon on the persistent clock</span>
-                    </div>
-                    <input type="checkbox" class="toggle-switch" data-key="hideClockIndicator">
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Always show wallpaper pagination</span>
-                        <span class="setting-description">Makes wallpaper switching more accessible</span>
-                    </div>
-                    <input type="checkbox" class="toggle-switch" data-key="persistentPageIndicator">
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Pin Dock</span>
-                        <span class="setting-description">Keep the dock always visible on the Home Screen</span>
-                    </div>
-                    <input type="checkbox" class="toggle-switch" data-key="dockPinned">
-                </div>
             </div>
             <div class="setting-section">
-                <h2 class="section-title">Live Activities</h2>
-                <div class="setting-item">
+                <div class="setting-item nav-item" data-page="page-home-screen">
                     <div class="setting-info">
-                        <span class="setting-label">Show on Home Screen</span>
+                        <span class="setting-label">Customize home screen</span>
                     </div>
-                    <input type="checkbox" class="toggle-switch" data-key="homeActivitiesEnabled">
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
                 </div>
             </div>
         </div>
@@ -428,7 +545,6 @@
                         </div>
                         <div class="glass-preview-card">
                             <div class="glass-preview-content">
-                                <img src="https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy3.png?raw=true" style="width: 32px;">
                                 google.com
                             </div>
                         </div>
@@ -482,53 +598,6 @@
         <!-- System Page -->
         <div class="page" id="page-system">
             <div class="setting-section">
-                <h2 class="section-title">Power</h2>
-                <div class="setting-item" id="setting-adaptiveBatterySaver">
-                    <div class="setting-info">
-                        <span class="setting-label">Adaptive Eco Mode</span>
-                        <span class="setting-description">Dynamically changes settings to be friendly to the environment</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" data-key="adaptiveBatterySaver" id="eco-mode-switch" checked>
-                    </div>
-                </div>
-            </div>
-            <div class="setting-section">
-                <h2 class="section-title">Sleep<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/system/sleep-mode', height: '100%' });">?</button></h2>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Sleep Mode</span>
-                        <span class="setting-description">Choose what displays when you enter sleep mode</span>
-                    </div>
-                    <select class="styled-select" data-key="sleepModeStyle">
-                        <option value="dim-show">Show all</option>
-                        <option value="dim-hide">Wallpaper only</option>
-                        <option value="hide-show">Content only</option>
-                        <option value="off">Turn off screen</option>
-                    </select>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Sleep After</span>
-                    </div>
-                    <select class="styled-select" data-key="autoSleepDuration">
-                        <option value="60000">1 Minute</option>
-                        <option value="300000">5 Minutes</option>
-                        <option value="900000">15 Minutes</option>
-                        <option value="0">Never</option>
-                    </select>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Apply On</span>
-                    </div>
-                    <select class="styled-select" data-key="autoSleepScope">
-                        <option value="home">Home Screen Only</option>
-                        <option value="home-apps">Home Screen & Apps</option>
-                    </select>
-                </div>
-            </div>
-            <div class="setting-section">
                 <h2 class="section-title">Browser</h2>
                 <div class="setting-item">
                     <div class="setting-info">
@@ -559,23 +628,6 @@
                         <input type="checkbox" class="toggle-switch" data-key="predictivePreload" id="predictive-preload-switch" checked>
                     </div>
                 </div>
-                <div class="setting-item slider-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Screen Curve</span>
-                        <span class="setting-description">Bezel curvature</span>
-                    </div>
-                    <input type="range" min="0" max="50" class="styled-slider" 
-                           data-key="screenCurve">
-                </div>
-                <div class="setting-item" id="setting-oledProtection">
-                    <div class="setting-info">
-                        <span class="setting-label">OLED burn-in protection</span>
-                        <span class="setting-description">Periodically shifts the interface to prevent screen burn-in</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" data-key="oledBurnInProtection" id="oled-protection-switch" checked>
-                    </div>
-                </div>
             </div>
         </div>
         <!-- General Page -->
@@ -591,31 +643,6 @@
                         <input type="checkbox" class="toggle-switch" 
                                data-key="gurappsEnabled">
                     </div>
-                </div>
-            </div>
-            <div class="setting-section">
-                <h2 class="section-title">Region</h2>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Language</span>
-                        <span class="setting-description">Gurapps and other system components are currently not supported</span>
-                    </div>
-                    <select class="styled-select" data-key="selectedLanguage">
-                        <option value="EN">English</option>
-                        <option value="JP">日本語</option>
-                        <option value="DE">Deutsch</option>
-                        <option value="ES">Español</option>
-                        <option value="KO">한국어</option>
-                        <option value="ZH">中文</option>
-                    </select>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">12 hour format</span>
-                        <span class="setting-description">Overrides Clock Format</span>
-                    </div>
-                    <input type="checkbox" class="toggle-switch" 
-                           data-key="use12HourFormat">
                 </div>
             </div>
         </div>
@@ -753,9 +780,25 @@
                 </div>
             </div>
         </div>
-        <!-- Account Page -->
-        <div class="page" id="page-data">
+        <!-- Storage Overview Page -->
+        <div class="page" id="page-storage">
             <div class="setting-section">
+                <div class="prog-visualizer-container">
+                    <div class="prog-labels">
+                        <span id="storage-used-label">Calculating...</span>
+                        <span id="storage-total-label"></span>
+                    </div>
+                    <div class="prog-bar-bg">
+                        <div class="prog-bar-fill" id="storage-bar-fill" style="width: 0%"></div>
+                    </div>
+                    <p class="setting-description" style="margin-top: 10px;">
+                        Includes wallpapers, cached apps, and system data.
+                    </p>
+                </div>
+            </div>
+
+            <div class="setting-section">
+                <h2 class="section-title">Manage your data</h2>
                 <div class="setting-item">
                      <div class="setting-info">
                         <span class="setting-label">System Transfer</span>
@@ -779,37 +822,7 @@
                     </div>
                 </div>
             </div>
-            <div class="setting-section">
-                <h2 class="section-title">Privacy</h2>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <span class="setting-label">Analytics<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/your-account/analytics', height: '100%' });">?</button></span>
-                        <span class="setting-description">Share anonymous usage data to help improve Polygol</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" data-key="telemetryEnabled">
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Storage Overview Page -->
-        <div class="page" id="page-storage">
-            <div class="setting-section">
-                <div class="storage-visualizer-container">
-                    <div class="storage-labels">
-                        <span id="storage-used-label">Calculating...</span>
-                        <span id="storage-total-label"></span>
-                    </div>
-                    <div class="storage-bar-bg">
-                        <div class="storage-bar-fill" id="storage-bar-fill" style="width: 0%"></div>
-                    </div>
-                    <p class="setting-description" style="margin-top: 10px;">
-                        Includes wallpapers, cached apps, and system data.
-                    </p>
-                </div>
-            </div>
         
-            <h2 class="section-title">Data Sources</h2>
             <div class="setting-section">
                 <div class="setting-item nav-item" id="btn-open-ls">
                     <div class="setting-info">
@@ -829,7 +842,6 @@
                 </div>
             </div>
         
-            <h2 class="section-title">Databases (IndexedDB)</h2>
             <div class="setting-section" id="database-list-container">
                 <!-- DB List items will be injected here -->
             </div>
@@ -965,6 +977,577 @@
                 <div style="padding: 20px; text-align: center; color: var(--secondary-text-color);">Loading...</div>
             </div>
         </div>
+
+        <!-- Home Screen Page -->
+        <div class="page" id="page-home-screen">
+            <div class="setting-section">
+                <h2 class="section-title">Home Screen Layout</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Pin Dock</span>
+                        <span class="setting-description">Keep the dock always visible on the Home Screen</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="dockPinned">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Always show wallpaper pagination</span>
+                        <span class="setting-description">Makes wallpaper switching more accessible</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="persistentPageIndicator">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Hide Controls indicator</span>
+                        <span class="setting-description">Hides the arrow icon on the persistent clock</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="hideClockIndicator">
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Preferences</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Lock Home Layout</span>
+                        <span class="setting-description">Prevent accidental dragging of widgets and stickers</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="lockHomeLayout">
+                </div>
+            </div>
+        </div>
+
+        <!-- Device Options Page -->
+        <div class="page" id="page-device">
+            <div class="setting-section">
+                <h2 class="section-title">Identity</h2>
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <div class="setting-info">
+                        <span class="setting-label">Device Name</span>
+                        <span class="setting-description">Identify this device across network connections</span>
+                    </div>
+                    <input type="text" class="form-input" data-key="system_device_name" placeholder="Polygol Device" style="width: 100%;">
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Gestures</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Double Tap to Sleep</span>
+                        <span class="setting-description">Quickly double tap empty space on Home to sleep</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="doubleTapToSleep">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Standby Orientation</span>
+                        <span class="setting-description">Force specific display rendering layout</span>
+                    </div>
+                    <select class="styled-select" data-key="standbyOrientation">
+                        <option value="auto">Auto-detect</option>
+                        <option value="landscape">Landscape Only</option>
+                        <option value="portrait">Portrait Only</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Internet Page -->
+        <div class="page" id="page-internet">
+            <div class="setting-section">
+                <h2 class="section-title">Wireless Connection</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Wi-Fi Connection</span>
+                        <span class="setting-description">Enable or disable radio transceivers</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="wifiEnabled">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Data Saver</span>
+                        <span class="setting-description">Reduce high-bandwidth asset loading</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="dataSaverEnabled">
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Advanced Network</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Private DNS Provider</span>
+                        <span class="setting-description">Secure name resolution for web activities</span>
+                    </div>
+                    <select class="styled-select" data-key="networkDnsMode">
+                        <option value="auto">Automatic (ISP Default)</option>
+                        <option value="cloudflare">Cloudflare (1.1.1.1)</option>
+                        <option value="google">Google (8.8.8.8)</option>
+                        <option value="adguard">AdGuard (Ad-blocking)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bluetooth Page -->
+        <div class="page" id="page-bluetooth">
+            <span class="setting-description">Your device does not support Bluetooth.</span>
+        </div>
+
+        <!-- Battery Page -->
+        <div class="page" id="page-battery">
+            <div class="setting-section">
+                <h2 class="section-title">Eco mode</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Adaptive Eco Mode</span>
+                        <span class="setting-description">Dynamically changes settings to be friendly to the environment</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="adaptiveBatterySaver">
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Sleep<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/system/sleep-mode', height: '100%' });">?</button></h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Sleep Mode</span>
+                        <span class="setting-description">Choose what displays when you enter sleep mode</span>
+                    </div>
+                    <select class="styled-select" data-key="sleepModeStyle">
+                        <option value="dim-show">Show all</option>
+                        <option value="dim-hide">Wallpaper only</option>
+                        <option value="hide-show">Content only</option>
+                        <option value="off">Turn off screen</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Sleep After</span>
+                    </div>
+                    <select class="styled-select" data-key="autoSleepDuration">
+                        <option value="60000">1 Minute</option>
+                        <option value="300000">5 Minutes</option>
+                        <option value="900000">15 Minutes</option>
+                        <option value="0">Never</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Apply On</span>
+                    </div>
+                    <select class="styled-select" data-key="autoSleepScope">
+                        <option value="home">Home Screen Only</option>
+                        <option value="home-apps">Home Screen & Apps</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Wake on Motion</span>
+                    <span class="setting-description">Wake the screen automatically when hover or mouse is detected</span>
+                </div>
+                <input type="checkbox" class="toggle-switch" data-key="wakeOnMotion">
+            </div>
+        </div>
+
+        <!-- Screwy's Labs Page -->
+        <div class="page" id="page-labs">
+            <div class="setting-section">
+                <div class="hero-banner">
+                    <div class="hero-banner-img" style="background-image: url('/assets/gurapp/intl/settings/img/hero/labs.png')"></div>
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Experiments</h2>
+                <div class="setting-item">
+                    <span class="setting-description">There are no experiments currently, check back later.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assistant Page -->
+        <div class="page" id="page-assistant">
+            <div class="setting-section">
+                <h2 class="section-title">Voice</h2>
+                <div class="setting-item slider-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Voice Pitch</span>
+                        <span class="setting-description">Adjust synthesized speech tone</span>
+                    </div>
+                    <input type="range" min="50" max="150" value="100" class="styled-slider" data-key="assistantVoicePitch">
+                </div>
+            </div>
+        </div>
+
+        <!-- Focus Page -->
+        <div class="page" id="page-focus">
+            <div class="setting-section">
+                <h2 class="section-title">Focus Schedule</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Scheduled Focus</span>
+                        <span class="setting-description">Activate focus mode automatically during hours</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="focusModeSchedule">
+                </div>
+                <div class="setting-item" style="justify-content: flex-start; gap: 20px;">
+                    <span class="setting-label">Hours</span>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-left: auto;">
+                        <input type="time" class="form-input" data-key="focusModeStart" style="width: auto;">
+                        <span style="opacity: 0.5;">to</span>
+                        <input type="time" class="form-input" data-key="focusModeEnd" style="width: auto;">
+                    </div>
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Focus Rules</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Silence Notifications</span>
+                        <span class="setting-description">Suppress incoming alerts during Focus sessions</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="focusSilenceNotifications">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Dim Wallpaper</span>
+                        <span class="setting-description">Fade the home screen background to prevent distractions</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="focusDimWallpaper">
+                </div>
+            </div>
+        </div>
+
+        <!-- Automations Page -->
+        <div class="page" id="page-automate">
+            <div class="setting-section">
+                <h2 class="section-title">System Actions</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Eco Mode on Low Battery</span>
+                        <span class="setting-description">Engage power saving modes automatically at 20%</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="automateEcoOnLowBattery">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Auto Sleep</span>
+                        <span class="setting-description">Transition display to sleep when no ambient activity is detected</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="automateAutoSleep">
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Triggers</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Ambient Sound Trigger</span>
+                        <span class="setting-description">Wake screen or resume music on high voice/noise events</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="automateAmbientSoundTrigger">
+                </div>
+            </div>
+        </div>
+
+        <!-- Ambient Music Page -->
+        <div class="page" id="page-music">
+            <div class="setting-section">
+                <h2 class="section-title">Background Ambient Sound</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Enable Ambient Sound</span>
+                        <span class="setting-description">Play low-frequency background waves for relaxation</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="ambientMusicEnabled">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Sound Profile</span>
+                        <span class="setting-description">Choose a relaxation soundscape</span>
+                    </div>
+                    <select class="styled-select" data-key="ambientMusicSelection">
+                        <option value="white_noise">White Noise</option>
+                        <option value="rain">Cozy Rain</option>
+                        <option value="cafe">Parisian Cafe</option>
+                        <option value="forest">Enchanted Forest</option>
+                        <option value="waves">Ocean Waves</option>
+                    </select>
+                </div>
+                <div class="setting-item slider-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Ambient Volume</span>
+                        <span class="setting-description">Separate from master speaker channels</span>
+                    </div>
+                    <input type="range" min="0" max="100" class="styled-slider" data-key="ambientMusicVolume">
+                </div>
+            </div>
+        </div>
+
+        <!-- Language & Time Page -->
+        <div class="page" id="page-locale">
+            <div class="setting-section">
+                <h2 class="section-title">Language</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Language</span>
+                        <span class="setting-description">Translate core widgets and text formatting</span>
+                    </div>
+                    <select class="styled-select" data-key="selectedLanguage" id="language-switcher">
+                        <option value="EN">English</option>
+                        <option value="JP">日本語</option>
+                        <option value="DE">Deutsch</option>
+                        <option value="ES">Español</option>
+                        <option value="KO">한국어</option>
+                        <option value="ZH">中文</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Date & Time</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">12 hour format</span>
+                        <span class="setting-description">Overrides standard 24-hour presentation</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="use12HourFormat">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Time Zone</span>
+                        <span class="setting-description">Align clock ticks with a geographical region</span>
+                    </div>
+                    <select class="styled-select" data-key="timeZoneSelection">
+                        <option value="auto">System Auto-detect</option>
+                        <option value="UTC">Coordinated Universal Time (UTC)</option>
+                        <option value="local">Local Browser Time</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Show Time Zone label</span>
+                        <span class="setting-description">Append zone details (e.g. UTC, GMT) next to seconds</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="showTimezoneLabel">
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Page -->
+        <div class="page" id="page-notify">
+            <div class="setting-section">
+                <h2 class="section-title">Live Activities</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Show on Home Screen</span>
+                        <span class="setting-description">Display running task summaries on background card stack</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="homeActivitiesEnabled">
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Alerts</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Auto-clear on Sleep</span>
+                        <span class="setting-description">Clear notification history when entering sleep mode</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="autoClearNotificationsOnSleep">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Preview Privacy</span>
+                        <span class="setting-description">Hide body texts on lock and sleep screens</span>
+                    </div>
+                    <select class="styled-select" data-key="notificationPreviewLevel">
+                        <option value="all">Show full alert contents</option>
+                        <option value="hide">Hide sensitive body texts</option>
+                        <option value="none">Show heading only</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keyboards Page -->
+        <div class="page" id="page-keyboard">
+            <div class="setting-section">
+                <h2 class="section-title">Polygol On-Screen Keyboard</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Default Keyboard</span>
+                        <span class="setting-description">Select a default keyboard to open with</span>
+                    </div>
+                    <select class="styled-select" data-key="oskKey">
+                        <option value="default">Default</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- MeCare Page -->
+        <div class="page" id="page-mecare">
+            <div class="setting-section">
+                <h2 class="section-title">Screen Wellness</h2>
+                <div class="setting-item slider-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Blue Light Reduction</span>
+                        <span class="setting-description">Make the screen warmer</span>
+                    </div>
+                    <input type="range" min="0" max="100" class="styled-slider" data-key="blueLightReduction">
+                </div>
+            </div>
+        </div>
+
+        <!-- Profily Page -->
+        <div class="page" id="page-profily">
+            <div class="setting-section" style="display: flex; flex-direction: column; align-items: center; padding: 25px 20px 20px;">
+                <div style="font-size: 72px; width: 84px; height: 84px; border-radius: 50%; background: var(--search-background); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; box-shadow: var(--sun-shadow);" id="profily-avatar-display"><span class="material-symbols-rounded" style="font-size: 48px;">person</span></div>
+                <h2 style="margin: 10px 0 0; font-size: 22px; font-family: 'Open Runde';">Your Profily</h2>
+            </div>
+            
+            <div class="setting-section">
+                <h2 class="section-title">Identity</h2>
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                    <span class="setting-label">Name</span>
+                    <input type="text" class="form-input" data-key="profilyUserName" placeholder="User" style="width: 100%;">
+                </div>
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                    <span class="setting-label">Pictogram</span>
+                    <input type="text" class="form-input" data-key="profilyUserAvatar" placeholder="Type a letter" style="width: 100%;">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Sync Profile to Waves</span>
+                        <span class="setting-description">Broadcast name and avatar to paired remotes</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="profilySyncStatus">
+                </div>
+            </div>
+        </div>
+
+        <!-- Device Care Page -->
+        <div class="page" id="page-devicecare">
+            <div class="setting-section">
+                <h2 class="section-title">Performance care</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Care for me now</span>
+                        <span class="setting-description">You can care for the device right now manually.</span>
+                    </div>
+                    <button class="action-btn" id="btn-optimize-memory">Optimize</button>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Run Diagnostics</span>
+                        <span class="setting-description">Check system health and core metrics</span>
+                    </div>
+                    <button class="action-btn" id="btn-run-diagnostics">Check Health</button>
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Screen care</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">OLED burn-in protection</span>
+                        <span class="setting-description">Periodically shifts the interface to prevent screen burn-in</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="oledBurnInProtection">
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Care Page -->
+        <div class="page" id="page-emergency">
+            <div class="setting-section">
+                <h2 class="section-title">SOS Configuration</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Emergency SOS</span>
+                        <span class="setting-description">Tap the bottom center of the screen 5 times to sound a siren and alert contacts</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="emergencySosHotkey">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Show Emergency Info on Home Screen</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="emergencySleepScreen">
+                </div>
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <span class="setting-label">In Case of Emergency (ICE) Contacts</span>
+                    <input type="text" class="form-input" data-key="emergencyContacts" placeholder="Contact Name: +123456789" style="width: 100%;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy & Security Page -->
+        <div class="page" id="page-privacy">
+            <div class="setting-section">
+                <h2 class="section-title">Data Sharing</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Analytics<button class="help-btn" onclick="Gurasuraisu.showSheet({ url: 'https://kirbindustries.gitbook.io/polygol/internal/settings/your-account/analytics', height: '100%' });">?</button></span>
+                        <span class="setting-description">Share anonymous usage data to help improve Polygol</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="telemetryEnabled">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Delete Temporary Data on Close</span>
+                        <span class="setting-description">Delete temporary data when shut down</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="clearTempCacheOnClose">
+                </div>
+            </div>
+        </div>
+
+        <!-- Integrations Page -->
+        <div class="page" id="page-integrate">
+            <div class="setting-section">
+                <h2 class="section-title">External Connectivity</h2>
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <div class="setting-info">
+                        <span class="setting-label">Outbound Webhook URL</span>
+                        <span class="setting-description">Trigger external API alerts on critical events</span>
+                    </div>
+                    <input type="text" class="form-input" data-key="integrationWebhookUrl" placeholder="https://api.example.com/webhook" style="width: 100%;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Developer Page -->
+        <div class="page" id="page-dev">
+            <div class="setting-section">
+                <h2 class="section-title">WARNING</h2>
+                <div class="setting-item">
+                    <span class="setting-description">These settings can break Polygol. If you are a normal user, do not proceed.</span>
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Debugging options.</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Engine Debug Overlay</span>
+                        <span class="setting-description">Overlay current frame rate and rendering cost indicators</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="debugOverlayEnabled">
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Enable Debugger Console</span>
+                        <span class="setting-description">Render an overlay terminal logging system events</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="developerConsoleEnabled">
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Modify the behavior of the system.</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Aggressive Garbage Collection</span>
+                        <span class="setting-description">Initiate memory deletion of hidden iframes every 60 seconds</span>
+                    </div>
+                    <input type="checkbox" class="toggle-switch" data-key="aggressiveGC">
+                </div>
+            </div>
+        </div> 
     </div>
 
     <!-- Modals for Complex Settings -->

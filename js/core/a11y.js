@@ -154,6 +154,7 @@ KeyboardNavigationManager.init();
 // --- Color Filter Logic ---
 function applyColorFilter() {
     const mode = localStorage.getItem('colorFilter') || 'none';
+    const blueLightValue = parseInt(localStorage.getItem('blueLightReduction') || '0', 10);
     let overlay = document.getElementById('a11y-overlay');
     
     if (!overlay) {
@@ -175,6 +176,14 @@ function applyColorFilter() {
     
     overlay.style.backdropFilter = filterVal;
     overlay.style.webkitBackdropFilter = filterVal;
+
+    if (blueLightValue > 0) {
+        overlay.style.backgroundColor = `rgba(255, 140, 0, ${blueLightValue * 0.0035})`;
+        overlay.style.mixBlendMode = 'multiply';
+    } else {
+        overlay.style.backgroundColor = '';
+        overlay.style.mixBlendMode = '';
+    }
 }
 
 // Inject SVG Filters for Color Blindness

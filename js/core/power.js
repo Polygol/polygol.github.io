@@ -119,6 +119,28 @@ function blackoutScreen() {
     `;
     document.body.appendChild(blockingOverlay);
     
+    if (localStorage.getItem('autoClearNotificationsOnSleep') === 'true') {
+        if (typeof clearAllNotifications === 'function') clearAllNotifications();
+    }
+
+    if (localStorage.getItem('emergencySleepScreen') === 'true') {
+        const iceContacts = localStorage.getItem('emergencyContacts') || 'No emergency contacts set';
+        const iceLabel = document.createElement('div');
+        iceLabel.id = 'blackout-ice-info';
+        iceLabel.style.cssText = `
+            position: fixed; top: 20px; left: 20px;
+            color: var(--text-color); font-size: 20px; text-align: center;
+            z-index: 2001; text-shadow: 0 0 10px rgba(0,0,0,0.5);
+            background-color: var(--modal-background);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0);
+            box-shadow: var(--sun-shadow);
+            padding: 8px 16px; border-radius: 35px; corner-shape: superellipse(1.5);
+            border: 4px solid rgba(255,0,0,0.5);
+        `;
+        iceLabel.innerHTML = `Emergency Contacts:<br>${iceContacts}`;
+        document.body.appendChild(iceLabel);
+    }
+
     // After 200ms, enable interaction to prevent immediate dismissal on touch devices
     setTimeout(() => {
         const blocker = document.getElementById('blackout-event-overlay');
@@ -126,12 +148,33 @@ function blackoutScreen() {
             blocker.style.pointerEvents = 'all';
             blocker.addEventListener('click', exitBlackoutMode, { once: true });
             blocker.addEventListener('touchstart', exitBlackoutMode, { once: true });
+
+            if (localStorage.getItem('wakeOnMotion') === 'true') {
+                const handleMotion = () => {
+                    exitBlackoutMode();
+                    blocker.removeEventListener('mousemove', handleMotion);
+                    window.removeEventListener('devicemotion', handleDeviceMotion);
+                };
+                const handleDeviceMotion = (event) => {
+                    const acc = event.accelerationIncludingGravity;
+                    if (acc) {
+                        const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
+                        if (total > 15) {
+                            handleMotion();
+                        }
+                    }
+                };
+                blocker.addEventListener('mousemove', handleMotion);
+                window.addEventListener('devicemotion', handleDeviceMotion);
+            }
         }
     }, 200);
 }
 
 function exitBlackoutMode() {
     window.isBlackoutActive = false;
+    const iceLabel = document.getElementById('blackout-ice-info');
+    if (iceLabel) iceLabel.remove();
 
     // Stop pixel cleaner if it's currently running
     stopPixelCleaning();

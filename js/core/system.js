@@ -1,3 +1,22 @@
+// Prevent all network downloads/uploads automatically when Wi-Fi is disabled
+(function() {
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+        if (localStorage.getItem('wifiEnabled') === 'false') {
+            return Promise.reject(new TypeError('Network request blocked: Wi-Fi is disabled in system settings.'));
+        }
+        return originalFetch.apply(this, args);
+    };
+
+    const originalXHR = window.XMLHttpRequest;
+    window.XMLHttpRequest = function() {
+        if (localStorage.getItem('wifiEnabled') === 'false') {
+            throw new Error('Network request blocked: Wi-Fi is disabled in system settings.');
+        }
+        return new originalXHR();
+    };
+})();
+
 let isSilentMode = localStorage.getItem('silentMode') === 'true'; // Global flag to track silent mode state
 let originalFaviconUrl = '';
 const initialFaviconLink = document.querySelector("link[rel='icon']") || document.querySelector("link[rel='shortcut icon']");
