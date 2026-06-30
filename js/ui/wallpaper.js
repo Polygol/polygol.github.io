@@ -30,12 +30,30 @@ async function extractWallpaperColor(imageSource) {
         
         img.onload = () => {
             try {
+                // Local HSL converter to enable procedural mathematical generation
+                const hslToRgbLocal = (h, s, l) => {
+                    let r, g, b;
+                    if (s === 0) { r = g = b = l; } 
+                    else {
+                        const hue2rgb = (p, q, t) => {
+                            if (t < 0) t += 1; if (t > 1) t -= 1;
+                            if (t < 1/6) return p + (q - p) * 6 * t;
+                            if (t < 1/2) return q;
+                            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                            return p;
+                        };
+                        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                        const p = 2 * l - q;
+                        r = hue2rgb(p, q, h + 1/3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1/3);
+                    }
+                    return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+                };
+
                 const colorThief = new ColorThief();
                 const palette = colorThief.getPalette(img, 30);
                 
                 if (!palette || palette.length === 0) {
-                    resolve(null);
-                    return;
+                    resolve(null); return;
                 }
 
                 let scored = palette.map(rgb => {
@@ -46,100 +64,71 @@ async function extractWallpaperColor(imageSource) {
                         h: hsl[0], s: hsl[1], l: hsl[2]
                     };
                 }).filter(c => {
-                    // Filter out pure or nearly pure black/white, and neutral gray tones
-                    const isBlack = c.l < 0.08;
-                    const isWhite = c.l > 0.92;
-                    const isGray = c.s < 0.06;
+                    // Filter out pure black/white, and heavily washed-out neutral gray tones
+                    const isBlack = c.l < 0.12;
+                    const isWhite = c.l > 0.88;
+                    const isGray = c.s < 0.12;
                     return !isBlack && !isWhite && !isGray;
                 });
 
-                // Generate a highly pleasing random color scheme fallback if no colors remain
+                // Generate a highly pleasing random color scheme fallback if no viable colors remain
                 if (scored.length === 0) {
                     const h = Math.random();
-                    const s = 0.75;
-                    const l = 0.55;
-                    for (let i = 0; i < 15; i++) {
-                        const shift = i * 0.07;
-                        const newH = (h + shift) % 1.0;
-                        const rgbVal = hslToRgb(newH, s, l);
-                        scored.push({
-                            rgb: rgbVal,
-                            hsl: [newH, s, l],
-                            h: newH, s: s, l: l
-                        });
-                    }
+                    scored.push({ rgb: hslToRgbLocal(h, 0.65, 0.5), hsl: [h, 0.65, 0.5], h: h, s: 0.65, l: 0.5 });
                 }
 
-                // Deduplication Filter (Euclidean RGB Vector Clustering)
-                let uniqueScored = [];
-                for (let threshold = 100; threshold >= 30; threshold -= 10) {
-                    uniqueScored = [];
-                    for (const candidate of scored) {
-                        let isSimilar = false;
-                        for (const unique of uniqueScored) {
-                            const rDiff = candidate.rgb.r - unique.rgb.r;
-                            const gDiff = candidate.rgb.g - unique.rgb.g;
-                            const bDiff = candidate.rgb.b - unique.rgb.b;
-                            const dist = Math.sqrt(rDiff*rDiff + gDiff*gDiff + bDiff*bDiff);
-                            if (dist < threshold) {
-                                isSimilar = true;
-                                break;
-                            }
-                        }
-                        if (!isSimilar) {
-                            uniqueScored.push(candidate);
-                        }
-                    }
-                    if (uniqueScored.length >= 5) break;
+                // Calculate a "Vibrance" score balancing saturation and middle lightness
+                scored.forEach(c => {
+                    c.vibrance = c.s * (1 - Math.abs(c.l - 0.5));
+                });
+
+                // 1. Primary: Most vibrant color
+                scored.sort((a, b) => b.vibrance - a.vibrance);
+                const primaryObj = scored[0];
+                const primary = primaryObj.rgb;
+
+                const hueDistance = (h1, h2) => {
+                    const dist = Math.abs(h1 - h2);
+                    return Math.min(dist, 1.0 - dist);
+                };
+
+                // 2. Secondary: Most vibrant color that is AT LEAST 36 degrees (0.1) away in hue from Primary
+                let secondaryObj = scored.find(c => hueDistance(c.h, primaryObj.h) > 0.1);
+                if (!secondaryObj) {
+                    // Fallback to strict Color Theory (Complementary / 180 degrees)
+                    const compH = (primaryObj.h + 0.5) % 1.0;
+                    secondaryObj = { rgb: hslToRgbLocal(compH, primaryObj.s, primaryObj.l), h: compH, s: primaryObj.s, l: primaryObj.l };
                 }
+                const secondary = secondaryObj.rgb;
 
-                // If image is monochromatic/flat, procedurally generate contrasting shifts
-                if (uniqueScored.length < 5) {
-                    const base = uniqueScored[0] || scored[0];
-                    const [h, s, l] = base.hsl;
-                    
-                    while (uniqueScored.length < 5) {
-                        const idx = uniqueScored.length;
-                        const shifts = [0.08, 0.33, -0.08, 0.5];
-                        const shift = shifts[idx % shifts.length];
-                        const newH = (h + shift + 1.0) % 1.0;
-                        
-                        const newS = Math.min(1.0, Math.max(0.1, s * (1.0 + (idx % 2 === 0 ? 0.2 : -0.2))));
-                        const newL = Math.min(0.9, Math.max(0.1, l * (1.0 + (idx % 2 === 0 ? -0.15 : 0.15))));
-                        
-                        const rgbVal = hslToRgb(newH, newS, newL);
-                        uniqueScored.push({
-                            rgb: rgbVal,
-                            hsl: [newH, newS, newL],
-                            h: newH, s: newS, l: newL
-                        });
-                    }
+                // 3. Tertiary: Most vibrant color distinct from BOTH Primary and Secondary
+                let tertiaryObj = scored.find(c => hueDistance(c.h, primaryObj.h) > 0.1 && hueDistance(c.h, secondaryObj.h) > 0.1);
+                if (!tertiaryObj) {
+                    // Fallback to strict Color Theory (Triadic / 120 degrees)
+                    const triH = (primaryObj.h + 0.33) % 1.0;
+                    tertiaryObj = { rgb: hslToRgbLocal(triH, primaryObj.s, primaryObj.l), h: triH, s: primaryObj.s, l: primaryObj.l };
                 }
+                const tertiary = tertiaryObj.rgb;
 
-                const sortedBySat = [...uniqueScored].sort((a, b) => b.s - a.s);
-                const vibrant = sortedBySat[0].rgb;
+                // 4. Analogous: 30 degree shift from primary
+                const anaH = (primaryObj.h + 0.08) % 1.0;
+                const analogous = hslToRgbLocal(anaH, primaryObj.s, primaryObj.l);
 
-                const mutedCand = [...uniqueScored].sort((a, b) => a.s - b.s);
+                // 5. Muted: Lowest saturation
+                const mutedCand = [...scored].sort((a, b) => a.s - b.s);
                 const muted = mutedCand[0].rgb;
 
-                const darkCand = [...uniqueScored].sort((a, b) => a.l - b.l);
+                // 6. Dark: Lowest lightness
+                const darkCand = [...scored].sort((a, b) => a.l - b.l);
                 const dark = darkCand[0].rgb;
 
-                const lightCand = [...uniqueScored].sort((a, b) => b.l - a.l);
+                // 7. Light: Highest lightness
+                const lightCand = [...scored].sort((a, b) => b.l - a.l);
                 const light = lightCand[0].rgb;
 
-                const secondary = sortedBySat[1] ? sortedBySat[1].rgb : vibrant;
-                const tertiary = sortedBySat[2] ? sortedBySat[2].rgb : secondary;
-
                 resolve({
-                    primary: vibrant,
-                    secondary: secondary,
-                    tertiary: tertiary,
-                    vibrant: vibrant,
-                    muted: muted,
-                    dark: dark,
-                    light: light,
-                    all: uniqueScored.map(c => c.rgb)
+                    primary, secondary, tertiary, analogous, vibrant: primary, muted, dark, light,
+                    all: scored.map(c => c.rgb)
                 });
 
             } catch (e) {

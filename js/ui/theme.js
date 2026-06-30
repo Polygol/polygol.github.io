@@ -181,13 +181,13 @@ function applySystemTint() {
             backgroundTint = applyHueSaturationShift(primaryTint, 0, 0.6);
         } else if (paletteMode === 'wallpaper_contrasting') {
             primaryTint = basePrimary;
-            backgroundTint = baseTertiary;
+            backgroundTint = baseSecondary; // Since secondary is explicitly complementary
         } else if (paletteMode === 'wallpaper_triadic') {
             primaryTint = basePrimary;
-            backgroundTint = mixColors(baseSecondary, baseTertiary, 0.5);
+            backgroundTint = baseTertiary; // Since tertiary is explicitly triadic
         } else if (paletteMode === 'wallpaper_analogous') {
             primaryTint = basePrimary;
-            backgroundTint = applyHueSaturationShift(basePrimary, 30, 0.9);
+            backgroundTint = wallpaperColors.analogous || applyHueSaturationShift(basePrimary, 30, 0.9);
         } else if (paletteMode === 'wallpaper_monochromatic') {
             let [h, s, l] = rgbToHsl(basePrimary.r, basePrimary.g, basePrimary.b);
             const rgb1 = hslToRgb(h, s * 0.9, Math.min(l + 0.1, 0.9));

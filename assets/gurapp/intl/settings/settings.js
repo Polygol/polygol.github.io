@@ -1093,8 +1093,10 @@ function initializeSettingsApp() {
             dark = colors.dark || primary;
             light = colors.light || primary;
         }
+        
+        let analogous = colors.analogous || primary;
 
-        return { primary, secondary, tertiary, vibrant, muted, dark, light };
+        return { primary, secondary, tertiary, analogous, vibrant, muted, dark, light };
     }
 
     function updateWallpaperCircles(colors) {
@@ -1113,9 +1115,9 @@ function initializeSettingsApp() {
             'wallpaper_muted': `linear-gradient(135deg, ${rgb(norm.muted)}, ${rgb(norm.light)})`,
             'wallpaper_pastel': `linear-gradient(135deg, ${rgb(norm.light)}, ${rgb(norm.muted)})`,
             'wallpaper_dark': `linear-gradient(135deg, ${rgb(norm.dark)}, #111)`,
-            'wallpaper_contrasting': `linear-gradient(135deg, ${rgb(norm.vibrant)}, ${rgb(norm.tertiary)})`,
-            'wallpaper_triadic': `linear-gradient(135deg, ${rgb(norm.primary)}, ${rgb(norm.secondary)}, ${rgb(norm.tertiary)})`,
-            'wallpaper_analogous': `linear-gradient(135deg, ${rgb(norm.primary)}, ${rgb(norm.secondary)})`,
+            'wallpaper_contrasting': `linear-gradient(135deg, ${rgb(norm.primary)}, ${rgb(norm.secondary)})`,
+            'wallpaper_triadic': `linear-gradient(135deg, ${rgb(norm.primary)}, ${rgb(norm.tertiary)})`,
+            'wallpaper_analogous': `linear-gradient(135deg, ${rgb(norm.primary)}, ${rgb(norm.analogous)})`,
             'wallpaper_monochromatic': `linear-gradient(135deg, ${rgb(norm.primary)}, #121212)`,
             'wallpaper_retro': `linear-gradient(135deg, ${rgb(norm.primary)}, #e6c280)`,
             'wallpaper_nordic': `linear-gradient(135deg, ${rgb(norm.primary)}, #4c566a)`
