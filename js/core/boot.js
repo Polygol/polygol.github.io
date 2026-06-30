@@ -127,11 +127,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     const tintSwitch = document.getElementById('tint-colors-switch');
     if (tintSwitch) {
-        tintSwitch.checked = tintEnabled;
+        tintSwitch.checked = localStorage.getItem('colorPalette') !== 'off';
         tintSwitch.addEventListener('change', function() {
-            tintEnabled = this.checked;
-            localStorage.setItem('tintEnabled', tintEnabled);
-            broadcastSettingUpdate('tintEnabled', tintEnabled.toString());
+            const nextMode = this.checked ? 'wallpaper_vibrant' : 'off';
+            localStorage.setItem('colorPalette', nextMode);
+            broadcastSettingUpdate('colorPalette', nextMode);
             applySystemTint();
         });
     }

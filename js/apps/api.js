@@ -541,7 +541,7 @@ function setControlValueAndDispatch(key, value) {
         'screenTimeBreakTimer', 'blueLightReduction', 'profilyUserName', 'profilyUserAvatar',
         'profilySyncStatus', 'emergencySosHotkey', 'emergencySleepScreen', 'emergencyContacts',
         'locationPermissionMode', 'clipboardAccessMode', 'clearTempCacheOnClose', 'integrationWebhookUrl',
-        'syncWidgetsExternalScreen', 'smartHomePairingMode', 'developerConsoleEnabled'
+        'syncWidgetsExternalScreen', 'smartHomePairingMode', 'developerConsoleEnabled', 'colorPalette'
     ];
     
     if (settingsWithoutDirectControl.includes(key)) {
@@ -582,6 +582,9 @@ function setControlValueAndDispatch(key, value) {
         }
         if (key === 'blueLightReduction') {
             if (typeof applyColorFilter === 'function') applyColorFilter();
+        }
+        if (key === 'colorPalette') {
+            if (typeof applySystemTint === 'function') applySystemTint();
         }
         if (key === 'slideshowInterval') {
             applyWallpaper(); // This will restart the interval with the new duration
@@ -1172,6 +1175,13 @@ window.addEventListener('message', async (event) => { // Make listener async
             sourceWindow.postMessage({
                 type: 'themeVariablesUpdate',
                 variables: window.currentTintVariables
+            }, targetOrigin);
+        }
+
+        if (window.activeWallpaperColor) {
+            sourceWindow.postMessage({
+                type: 'wallpaperPaletteColors',
+                colors: window.activeWallpaperColor
             }, targetOrigin);
         }
 

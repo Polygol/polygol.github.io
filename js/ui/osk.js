@@ -4,6 +4,22 @@ let currentTargetElement = null;
 let _isSwitchingOSK = false;
 let registeredOSKs = JSON.parse(localStorage.getItem('registeredOSKs') || '[]');
 let currentOskIndex = 0;
+const DEFAULT_OSK_URL = '/assets/gurapp/intl/overlay/osk/osk.html';
+
+let oskIframe = null;
+
+function createOSKIframe() {
+    if (oskIframe) return oskIframe;
+
+    const container = document.getElementById('system-osk-container');
+    if (!container) return null;
+
+    oskIframe = document.createElement('iframe');
+    oskIframe.src = DEFAULT_OSK_URL;
+
+    container.appendChild(oskIframe);
+    return oskIframe;
+}
 
 window.registerCustomOSK = function(appId, name, url) {
     registeredOSKs = registeredOSKs.filter(osk => osk.appId !== appId);
@@ -22,7 +38,7 @@ window.unregisterCustomOSK = function(appId) {
         const allOSKs = [{ name: 'Default', url: '/assets/gurapp/intl/overlay/osk/osk.html' }, ...registeredOSKs];
         if (currentOskIndex >= allOSKs.length) {
             currentOskIndex = 0;
-            const iframe = document.querySelector('#system-osk-container iframe');
+            const iframe = oskIframe;
             if (iframe) iframe.src = allOSKs[0].url;
         }
     }
@@ -36,6 +52,7 @@ function updateOskSwitcherVisibility() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    createOSKIframe();
     updateOskSwitcherVisibility();
     const btn = document.getElementById('osk-switcher-btn');
     if (btn) {
@@ -53,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentOskIndex = (currentOskIndex + 1) % allOSKs.length;
             const selectedOSK = allOSKs[currentOskIndex];
             
-            const iframe = document.querySelector('#system-osk-container iframe');
+            const iframe = oskIframe;
             if (iframe) {
                 if (selectedOSK.type === 'internal') {
                     if (!iframe.src.includes('/assets/gurapp/intl/overlay/osk/osk.html')) {

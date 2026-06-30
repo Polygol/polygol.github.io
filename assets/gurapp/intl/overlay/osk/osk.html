@@ -11,6 +11,9 @@
             --key-active: rgba(255, 255, 255, 0.3);
             --key-dark: rgba(0, 0, 0, 0.2);
             --text-color: #ffffff;
+            --row-gap: 8px;
+            --body-padding: 20px;
+            --predictions-height: 32px;
         }
         body.light-theme {
             --key-bg: rgba(0, 0, 0, 0.05);
@@ -43,7 +46,7 @@
         }
         .predictions {
             display: flex;
-            height: 32px;
+            height: var(--predictions-height);
             gap: 8px;
             margin-right: 50px;
         }
@@ -76,7 +79,14 @@
             border-radius: 20px;
             corner-shape: superellipse(1.5);
             flex: 1;
-            height: 54px;
+            height: calc(
+                (
+                    100vh
+                    - var(--body-padding)
+                    - var(--predictions-height)
+                    - (4 * var(--row-gap))
+                ) / 4
+            );
             display: flex;
             align-items: center;
             justify-content: center;
@@ -130,6 +140,7 @@
         .key.wide { flex: 1.5; font-size: 16px; }
         .key.space { flex: 5; }
         .key.dark { background: var(--key-dark); }
+        .key.highlight { background: var(--accent); color: var(--background-color); border-radius: 50px; corner-shape: round; }
         .material-symbols-rounded { font-size: 22px; pointer-events: none; }
         .key span { pointer-events: none; }
     </style>
@@ -146,11 +157,11 @@
         <div class="key wide dark" data-action="backspace"><span class="material-symbols-rounded">backspace</span></div>
     </div>
     <div class="row">
-        <div class="key wide dark" data-action="symbols">?123</div>
-        <div class="key" data-val=",">,</div>
+        <div class="key wide dark" data-action="symbols">123</div>
+        <div class="key dark" data-val="mic"><span class="material-symbols-rounded">mic</span></div>
         <div class="key space" data-val=" "></div>
         <div class="key" data-val=".">.</div>
-        <div class="key wide dark" data-action="enter"><span class="material-symbols-rounded">keyboard_return</span></div>
+        <div class="key wide highlight" data-action="enter"><span class="material-symbols-rounded">keyboard_return</span></div>
     </div>
 </div>
 
@@ -241,7 +252,7 @@
         }
         
         const symBtn = document.querySelector('[data-action="symbols"]');
-        symBtn.textContent = currentMode === 'numbers' ? 'ABC' : '?123';
+        symBtn.textContent = currentMode === 'numbers' ? 'ABC' : '123';
     }
 
     function updatePredictions() {

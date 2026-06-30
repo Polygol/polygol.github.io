@@ -1,42 +1,49 @@
+:root {
+    --osk-height: min(40vh, 300px);
+}
+
 #system-osk-container {
     position: fixed;
-    bottom: -350px;
     left: 0;
+    right: 0;
+    bottom: calc(-1 * var(--osk-height));
+    height: var(--osk-height);
     width: 100%;
-    height: 300px;
     z-index: 10005;
-    background-color: var(--modal-background);
+    background: var(--modal-background);
     --fx-filter: var(--blur2) glass(0.6, 8, 0);
     border-top: 1px solid var(--glass-border);
-    transition: bottom 0.3s cubic-bezier(0.2, 1.3, 0.64, 1);
-    box-shadow: var(--sun-shadow), 0 -10px 30px rgba(0, 0, 0, 0.2);
     border-radius: 50px 50px 0 0;
     corner-shape: superellipse(1.5);
+    box-shadow: none;
+    transition: bottom .3s cubic-bezier(.2, 1.3, .64, 1);
     pointer-events: none;
+    overflow: hidden;
 }
 
 #system-osk-container.open {
     bottom: 0;
     pointer-events: auto;
+    opacity: 1;
+    box-shadow: var(--sun-shadow), 0 -10px 30px rgba(0, 0, 0, 0.2);
 }
 
 #system-osk-container iframe {
+    display: block;
     width: 100%;
     height: 100%;
-    border: none;
-    border-radius: inherit;
-    corner-shape: inherit;
+    border: 0;
 }
 
 body.osk-active .fullscreen-embed {
-    height: calc(100% - 300px) !important;
-    margin-bottom: 300px;
+    height: calc(100% - var(--osk-height)) !important;
+    margin-bottom: var(--osk-height);
 }
 
 body.osk-active .modal {
-    transform: translateX(-50%) translateY(-50%) scale(1) translateY(-150px);
+    transform: translate(-50%, calc(-50% - var(--osk-height) / 2));
 }
 
 body.osk-active .control-popup-content {
-    transform: translateY(-150px);
+    transform: translateY(calc(var(--osk-height) / -2));
 }

@@ -31,56 +31,115 @@ async function extractWallpaperColor(imageSource) {
         img.onload = () => {
             try {
                 const colorThief = new ColorThief();
-                // Get a palette of 10 colors
-                const palette = colorThief.getPalette(img, 10);
+                const palette = colorThief.getPalette(img, 30);
                 
                 if (!palette || palette.length === 0) {
                     resolve(null);
                     return;
                 }
 
-                // Analyze palette
-                const scored = palette.map(rgb => {
+                let scored = palette.map(rgb => {
                     const hsl = rgbToHsl(rgb[0], rgb[1], rgb[2]);
                     return {
-                        rgb: rgb,
+                        rgb: { r: rgb[0], g: rgb[1], b: rgb[2] },
                         hsl: hsl,
-                        saturation: hsl[1]
+                        h: hsl[0], s: hsl[1], l: hsl[2]
                     };
+                }).filter(c => {
+                    // Filter out pure or nearly pure black/white, and neutral gray tones
+                    const isBlack = c.l < 0.08;
+                    const isWhite = c.l > 0.92;
+                    const isGray = c.s < 0.06;
+                    return !isBlack && !isWhite && !isGray;
                 });
 
-                // Filter for saturated colors (Saturation > 15%)
-                // This ignores dull grays unless the whole image is gray
-                let candidates = scored.filter(c => c.saturation > 0.15);
-                
-                // Fallback to original palette if no saturated colors found
-                if (candidates.length === 0) candidates = scored;
-
-                // Sort by Saturation (descending) to find the most vibrant color for Primary
-                candidates.sort((a, b) => b.saturation - a.saturation);
-
-                const primary = candidates[0].rgb;
-                let secondary = primary;
-
-                // Find a secondary color (for backgrounds)
-                // We prefer a different tone. Try to find one with a hue distance.
-                if (candidates.length > 1) {
-                    // Try to find a color with at least 30 degrees hue difference (0.08 in 0-1 scale)
-                    const pH = candidates[0].hsl[0];
-                    const distinct = candidates.find(c => Math.abs(c.hsl[0] - pH) > 0.08);
-                    
-                    if (distinct) {
-                        secondary = distinct.rgb;
-                    } else {
-                        // If no distinct hue, take the second most saturated
-                        secondary = candidates[1].rgb;
+                // Generate a highly pleasing random color scheme fallback if no colors remain
+                if (scored.length === 0) {
+                    const h = Math.random();
+                    const s = 0.75;
+                    const l = 0.55;
+                    for (let i = 0; i < 15; i++) {
+                        const shift = i * 0.07;
+                        const newH = (h + shift) % 1.0;
+                        const rgbVal = hslToRgb(newH, s, l);
+                        scored.push({
+                            rgb: rgbVal,
+                            hsl: [newH, s, l],
+                            h: newH, s: s, l: l
+                        });
                     }
                 }
 
-                // Return structured object
-                resolve({ 
-                    primary: { r: primary[0], g: primary[1], b: primary[2] },
-                    secondary: { r: secondary[0], g: secondary[1], b: secondary[2] }
+                // Deduplication Filter (Euclidean RGB Vector Clustering)
+                let uniqueScored = [];
+                for (let threshold = 100; threshold >= 30; threshold -= 10) {
+                    uniqueScored = [];
+                    for (const candidate of scored) {
+                        let isSimilar = false;
+                        for (const unique of uniqueScored) {
+                            const rDiff = candidate.rgb.r - unique.rgb.r;
+                            const gDiff = candidate.rgb.g - unique.rgb.g;
+                            const bDiff = candidate.rgb.b - unique.rgb.b;
+                            const dist = Math.sqrt(rDiff*rDiff + gDiff*gDiff + bDiff*bDiff);
+                            if (dist < threshold) {
+                                isSimilar = true;
+                                break;
+                            }
+                        }
+                        if (!isSimilar) {
+                            uniqueScored.push(candidate);
+                        }
+                    }
+                    if (uniqueScored.length >= 5) break;
+                }
+
+                // If image is monochromatic/flat, procedurally generate contrasting shifts
+                if (uniqueScored.length < 5) {
+                    const base = uniqueScored[0] || scored[0];
+                    const [h, s, l] = base.hsl;
+                    
+                    while (uniqueScored.length < 5) {
+                        const idx = uniqueScored.length;
+                        const shifts = [0.08, 0.33, -0.08, 0.5];
+                        const shift = shifts[idx % shifts.length];
+                        const newH = (h + shift + 1.0) % 1.0;
+                        
+                        const newS = Math.min(1.0, Math.max(0.1, s * (1.0 + (idx % 2 === 0 ? 0.2 : -0.2))));
+                        const newL = Math.min(0.9, Math.max(0.1, l * (1.0 + (idx % 2 === 0 ? -0.15 : 0.15))));
+                        
+                        const rgbVal = hslToRgb(newH, newS, newL);
+                        uniqueScored.push({
+                            rgb: rgbVal,
+                            hsl: [newH, newS, newL],
+                            h: newH, s: newS, l: newL
+                        });
+                    }
+                }
+
+                const sortedBySat = [...uniqueScored].sort((a, b) => b.s - a.s);
+                const vibrant = sortedBySat[0].rgb;
+
+                const mutedCand = [...uniqueScored].sort((a, b) => a.s - b.s);
+                const muted = mutedCand[0].rgb;
+
+                const darkCand = [...uniqueScored].sort((a, b) => a.l - b.l);
+                const dark = darkCand[0].rgb;
+
+                const lightCand = [...uniqueScored].sort((a, b) => b.l - a.l);
+                const light = lightCand[0].rgb;
+
+                const secondary = sortedBySat[1] ? sortedBySat[1].rgb : vibrant;
+                const tertiary = sortedBySat[2] ? sortedBySat[2].rgb : secondary;
+
+                resolve({
+                    primary: vibrant,
+                    secondary: secondary,
+                    tertiary: tertiary,
+                    vibrant: vibrant,
+                    muted: muted,
+                    dark: dark,
+                    light: light,
+                    all: uniqueScored.map(c => c.rgb)
                 });
 
             } catch (e) {

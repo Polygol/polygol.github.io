@@ -1,5 +1,5 @@
 // --- Color Tinting Logic ---
-let tintEnabled = localStorage.getItem('tintEnabled') === 'true';
+let tintEnabled = localStorage.getItem('colorPalette') !== 'off';
 window.currentTintVariables = null; // Store calculated vars for new apps
 
 // Helper to parse CSS color strings (rgb, rgba, hex) into {r,g,b,a}
@@ -49,6 +49,25 @@ function hslToRgb(h, s, l) {
     return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
 }
 
+function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) {
+        h = s = 0; // achromatic
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return [h, s, l];
+}
+
 function applyHueSaturationShift(colorObj, hueShiftDeg, satMultiplierNorm) {
     if (!colorObj) return colorObj;
     let [h, s, l] = rgbToHsl(colorObj.r, colorObj.g, colorObj.b);
@@ -89,29 +108,120 @@ function mixColors(base, tint, weight) {
 
 function applySystemTint() {
     const root = document.documentElement;
-    const wallpaperColors = window.activeWallpaperColor; // Now expects { primary, secondary }
+    const wallpaperColors = window.activeWallpaperColor; 
 
-    // Normalize input
+    const paletteMode = localStorage.getItem('colorPalette') || 'wallpaper_vibrant';
+    tintEnabled = (paletteMode !== 'off');
+
+    const varsToRemove = [
+        '--background-color-dark', '--background-color-dark-tr',
+        '--modal-background-dark', '--modal-transparent-dark',
+        '--search-background-dark', '--dark-overlay', '--dark-transparent', '--glass-border-dark',
+        '--text-color-dark', '--secondary-text-color-dark', '--accent-dark', '--tonal-dark',
+        
+        '--background-color-light', '--background-color-light-tr',
+        '--modal-background-light', '--modal-transparent-light',
+        '--search-background-light', '--light-overlay', '--light-transparent', '--glass-border-light',
+        '--text-color-light', '--secondary-text-color-light', '--accent-light', '--tonal-light',
+
+        '--background-color-dark-highcontrast', '--background-color-dark-tr-highcontrast',
+        '--modal-background-dark-highcontrast', '--modal-transparent-dark-highcontrast',
+        '--search-background-dark-highcontrast', '--dark-overlay-highcontrast', '--dark-transparent-highcontrast',
+        '--text-color-dark-highcontrast', '--secondary-text-color-dark-highcontrast', '--accent-dark-highcontrast', '--tonal-dark-highcontrast',
+        
+        '--background-color-light-highcontrast', '--background-color-light-tr-highcontrast',
+        '--modal-background-light-highcontrast', '--modal-transparent-light-highcontrast',
+        '--search-background-light-highcontrast', '--light-overlay-highcontrast', '--light-transparent-highcontrast',
+        '--text-color-light-highcontrast', '--secondary-text-color-light-highcontrast', '--accent-light-highcontrast', '--tonal-light-highcontrast'
+    ];
+    
+    varsToRemove.forEach(v => root.style.removeProperty(v));
+
+    if (!tintEnabled) {
+        window.currentTintVariables = null;
+        broadcastThemeVariables(null); 
+        return;
+    }
+
     let primaryTint = null;
     let backgroundTint = null;
 
-    if (wallpaperColors) {
+    if (paletteMode.startsWith('wallpaper') && wallpaperColors) {
+        let basePrimary = null;
+        let baseSecondary = null;
+        let baseTertiary = null;
         if (wallpaperColors.primary) {
-            // New Object Structure
-            primaryTint = wallpaperColors.primary;
-            backgroundTint = wallpaperColors.secondary || primaryTint;
+            basePrimary = wallpaperColors.primary;
+            baseSecondary = wallpaperColors.secondary || basePrimary;
+            baseTertiary = wallpaperColors.tertiary || baseSecondary;
         } else if (Array.isArray(wallpaperColors)) {
-            // Legacy Array Structure
-            primaryTint = { r: wallpaperColors[0], g: wallpaperColors[1], b: wallpaperColors[2] };
-            backgroundTint = primaryTint;
+            basePrimary = { r: wallpaperColors[0], g: wallpaperColors[1], b: wallpaperColors[2] };
+            baseSecondary = basePrimary;
+            baseTertiary = basePrimary;
         } else {
-             primaryTint = wallpaperColors;
-             backgroundTint = wallpaperColors;
+            basePrimary = wallpaperColors;
+            baseSecondary = wallpaperColors;
+            baseTertiary = wallpaperColors;
         }
+
+        if (paletteMode === 'wallpaper_vibrant') {
+            primaryTint = basePrimary;
+            backgroundTint = baseSecondary;
+        } else if (paletteMode === 'wallpaper_tonal') {
+            primaryTint = wallpaperColors.muted || basePrimary;
+            backgroundTint = wallpaperColors.dark || baseSecondary;
+        } else if (paletteMode === 'wallpaper_muted') {
+            primaryTint = wallpaperColors.muted || basePrimary;
+            backgroundTint = wallpaperColors.light || baseSecondary;
+        } else if (paletteMode === 'wallpaper_pastel') {
+            primaryTint = wallpaperColors.light || basePrimary;
+            backgroundTint = applyHueSaturationShift(primaryTint, 0, 0.4);
+        } else if (paletteMode === 'wallpaper_dark') {
+            primaryTint = wallpaperColors.dark || basePrimary;
+            backgroundTint = applyHueSaturationShift(primaryTint, 0, 0.6);
+        } else if (paletteMode === 'wallpaper_contrasting') {
+            primaryTint = basePrimary;
+            backgroundTint = baseTertiary;
+        } else if (paletteMode === 'wallpaper_triadic') {
+            primaryTint = basePrimary;
+            backgroundTint = mixColors(baseSecondary, baseTertiary, 0.5);
+        } else if (paletteMode === 'wallpaper_analogous') {
+            primaryTint = basePrimary;
+            backgroundTint = applyHueSaturationShift(basePrimary, 30, 0.9);
+        } else if (paletteMode === 'wallpaper_monochromatic') {
+            let [h, s, l] = rgbToHsl(basePrimary.r, basePrimary.g, basePrimary.b);
+            const rgb1 = hslToRgb(h, s * 0.9, Math.min(l + 0.1, 0.9));
+            const rgb2 = hslToRgb(h, s * 0.4, Math.max(l - 0.2, 0.15));
+            primaryTint = rgb1;
+            backgroundTint = rgb2;
+        } else if (paletteMode === 'wallpaper_retro') {
+            primaryTint = applyHueSaturationShift(basePrimary, 25, 0.7);
+            backgroundTint = { r: 244, g: 228, b: 204 }; 
+        } else if (paletteMode === 'wallpaper_nordic') {
+            primaryTint = applyHueSaturationShift(basePrimary, 200, 0.5);
+            backgroundTint = { r: 46, g: 52, b: 64 }; 
+        }
+    } else if (paletteMode.startsWith('preset')) {
+        const presets = {
+            'preset_blue': { primary: { r: 10, g: 132, b: 255 }, secondary: { r: 0, g: 102, b: 204 } },
+            'preset_green': { primary: { r: 48, g: 209, b: 88 }, secondary: { r: 34, g: 139, b: 34 } },
+            'preset_orange': { primary: { r: 255, g: 159, b: 10 }, secondary: { r: 204, g: 102, b: 0 } },
+            'preset_purple': { primary: { r: 191, g: 90, b: 242 }, secondary: { r: 128, g: 0, b: 128 } },
+            'preset_red': { primary: { r: 255, g: 69, b: 58 }, secondary: { r: 139, g: 0, b: 0 } },
+            'preset_teal': { primary: { r: 100, g: 210, b: 255 }, secondary: { r: 0, g: 128, b: 128 } },
+            'preset_rose': { primary: { r: 255, g: 100, b: 130 }, secondary: { r: 199, g: 21, b: 133 } },
+            'preset_yellow': { primary: { r: 255, g: 214, b: 10 }, secondary: { r: 218, g: 165, b: 32 } },
+            'preset_slate': { primary: { r: 142, g: 142, b: 147 }, secondary: { r: 112, g: 128, b: 144 } },
+            'preset_plum': { primary: { r: 94, g: 92, b: 230 }, secondary: { r: 75, g: 0, b: 130 } }
+        };
+        const activePreset = presets[paletteMode] || presets['preset_blue'];
+        primaryTint = activePreset.primary;
+        backgroundTint = activePreset.secondary;
     }
 
-    // --- NEW: Apply Live Hue & Saturation Adjustments ---
-    // Reads directly from the current active sliders
+    if (!primaryTint || !backgroundTint) return;
+
+    // --- Apply Live Hue & Saturation Adjustments ---
     const hueSlider = document.getElementById('wallpaper-hue-slider');
     const satSlider = document.getElementById('wallpaper-saturate-slider');
     const hueShift = hueSlider ? parseFloat(hueSlider.value) : 0;
@@ -201,14 +311,6 @@ function applySystemTint() {
         };
     }
 
-    Object.keys(tintWeights).forEach(key => root.style.removeProperty(key));
-
-    if (!tintEnabled || !primaryTint) {
-        window.currentTintVariables = null;
-        broadcastThemeVariables(null); 
-        return;
-    }
-
     const newVars = {};
     const computedStyle = getComputedStyle(root);
 
@@ -233,6 +335,24 @@ function applySystemTint() {
     // 4. Update global state and broadcast
     window.currentTintVariables = newVars;
     broadcastThemeVariables(newVars);
+    
+    if (typeof broadcastWallpaperPaletteColors === 'function') {
+        broadcastWallpaperPaletteColors(wallpaperColors);
+    }
+}
+
+function broadcastWallpaperPaletteColors(colors) {
+    if (!colors) return;
+    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    iframes.forEach(iframe => {
+        if (iframe.contentWindow) {
+            const targetOrigin = getOriginFromUrl(iframe.src);
+            iframe.contentWindow.postMessage({
+                type: 'wallpaperPaletteColors',
+                colors: colors
+            }, targetOrigin);
+        }
+    });
 }
 
 function broadcastThemeVariables(variables) {

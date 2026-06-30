@@ -489,6 +489,35 @@
             </div>
             <div class="setting-section">
                 <h2 class="section-title">Global appearance</h2>
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 12px; height: auto;">
+                    <div class="setting-info">
+                        <span class="setting-label">Color palette</span>
+                    </div>
+                    <div class="palette-options" id="palette-options-container" style="padding: 3px; display: flex; gap: 16px; overflow-x: auto; width: 100%; scrollbar-width: none; flex-wrap: wrap;">
+                        <div class="palette-circle" data-palette="off" title="Off" style="width: 36px; height: 36px; border-radius: 50%; background: #555;  cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; "><span class="material-symbols-rounded" style="color: white;">close</span></div>
+                        <div class="palette-circle" data-palette="wallpaper_vibrant" title="Wallpaper Vibrant" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent, #3c78d8), #90d0b3);  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="wallpaper_tonal" title="Wallpaper Tonal" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #7a90c9, #7a90c9);  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="wallpaper_muted" title="Wallpaper Muted" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #aaa, #888);  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="wallpaper_pastel" title="Wallpaper Pastel" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #ffccd5, #e0f2fe);  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="wallpaper_dark" title="Wallpaper Dark" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #1e1b4b, #0f172a);  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="wallpaper_contrasting" title="Wallpaper Contrasting" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #ff007f, #00ff7f);  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="wallpaper_triadic" title="Wallpaper Triadic" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #ff007f, #00ff7f, #007fff);  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="wallpaper_analogous" title="Wallpaper Analogous" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #ff9800, #ffc107, #ffeb3b);  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="wallpaper_monochromatic" title="Wallpaper Monochromatic" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #121212, #555, #aaa);  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="wallpaper_retro" title="Wallpaper Retro" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #e6c280, #c49a45);  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="wallpaper_nordic" title="Wallpaper Nordic" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #81a1c1, #4c566a);  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="preset_blue" title="Ocean Blue" style="width: 36px; height: 36px; border-radius: 50%; background: #0A84FF;  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="preset_green" title="Forest Green" style="width: 36px; height: 36px; border-radius: 50%; background: #30D158;  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="preset_orange" title="Sunset Orange" style="width: 36px; height: 36px; border-radius: 50%; background: #FF9F0A;  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="preset_purple" title="Lavender Purple" style="width: 36px; height: 36px; border-radius: 50%; background: #BF5AF2;  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="preset_red" title="Ruby Red" style="width: 36px; height: 36px; border-radius: 50%; background: #FF453A;  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="preset_teal" title="Teal" style="width: 36px; height: 36px; border-radius: 50%; background: #64D2FF;  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="preset_rose" title="Rose" style="width: 36px; height: 36px; border-radius: 50%; background: #FF6482;  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="preset_yellow" title="Gold Yellow" style="width: 36px; height: 36px; border-radius: 50%; background: #FFD60A;  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="preset_slate" title="Slate" style="width: 36px; height: 36px; border-radius: 50%; background: #8E8E93;  cursor: pointer; flex-shrink: 0; "></div>
+                        <div class="palette-circle" data-palette="preset_plum" title="Plum" style="width: 36px; height: 36px; border-radius: 50%; background: #5E5CE6;  cursor: pointer; flex-shrink: 0; "></div>
+                    </div>
+                </div>
                 <div class="setting-item" id="setting-theme">
                     <div class="setting-info">
                         <span class="setting-label">Daylight</span>
@@ -496,15 +525,6 @@
                     </div>
                     <div class="setting-control">
                         <input type="checkbox" class="toggle-switch" data-key="theme">
-                    </div>
-                </div>
-                <div class="setting-item" id="setting-tintEnabled">
-                    <div class="setting-info">
-                        <span class="setting-label">Color palette</span>
-                        <span class="setting-description">Tint colors with wallpaper</span>
-                    </div>
-                    <div class="setting-control">
-                        <input type="checkbox" class="toggle-switch" id="tint-colors-switch" data-key="tintEnabled">
                     </div>
                 </div>
                 <div class="setting-item nav-item" data-page="page-glass">
@@ -1030,7 +1050,7 @@
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div class="setting-info">
                         <span class="setting-label">Device Name</span>
-                        <span class="setting-description">Identify this device across network connections</span>
+                        <span class="setting-description">Identify this device</span>
                     </div>
                     <input type="text" class="form-input" data-key="system_device_name" placeholder="Polygol Device" style="width: 100%;">
                 </div>
@@ -1046,8 +1066,7 @@
                 </div>
                 <div class="setting-item">
                     <div class="setting-info">
-                        <span class="setting-label">Standby Orientation</span>
-                        <span class="setting-description">Force specific display rendering layout</span>
+                        <span class="setting-label">Orientation</span>
                     </div>
                     <select class="styled-select" data-key="standbyOrientation">
                         <option value="auto">Auto-detect</option>
@@ -1235,11 +1254,11 @@
         <!-- Ambient Music Page -->
         <div class="page" id="page-music">
             <div class="setting-section">
-                <h2 class="section-title">Background Ambient Sound</h2>
+                <h2 class="section-title">System default</h2>
                 <div class="setting-item">
                     <div class="setting-info">
                         <span class="setting-label">Enable Ambient Sound</span>
-                        <span class="setting-description">Play background sounds for relaxation</span>
+                        <span class="setting-description">Play background sounds</span>
                     </div>
                     <input type="checkbox" class="toggle-switch" data-key="ambientMusicEnabled">
                 </div>
@@ -1256,7 +1275,7 @@
                 <div class="setting-item slider-item">
                     <div class="setting-info">
                         <span class="setting-label">Ambient Volume</span>
-                        <span class="setting-description">Separate from sound effect volume</span>
+                        <span class="setting-description">It is separate from sound effect volume.</span>
                     </div>
                     <input type="range" min="0" max="100" class="styled-slider" data-key="ambientMusicVolume">
                 </div>

@@ -340,6 +340,21 @@ function initializeSettingsApp() {
             }
         }
 
+        if (key === 'colorPalette') {
+            const container = document.getElementById('palette-options-container');
+            if (container) {
+                const circles = container.querySelectorAll('.palette-circle');
+                const activeVal = value || 'wallpaper_vibrant';
+                circles.forEach(c => {
+                    if (c.dataset.palette === activeVal) {
+                        c.classList.add('active');
+                    } else {
+                        c.classList.remove('active');
+                    }
+                });
+            }
+        }
+
         if (controls.length === 0) return;
         controls.forEach(control => {
             // Prevent overwriting the value while the user is actively adjusting the slider
@@ -863,6 +878,10 @@ function initializeSettingsApp() {
             updateControl(key, value);
         }
 
+        if (data.type === 'wallpaperPaletteColors') {
+            updateWallpaperCircles(data.colors);
+        }
+
         if (key === 'waves_auth_challenge') {
             const modal = document.getElementById('waves-auth-modal');
             const emojiDisplay = document.getElementById('waves-auth-emoji');
@@ -1048,9 +1067,102 @@ function initializeSettingsApp() {
     document.querySelectorAll('#main-settings .setting-item.nav-item .setting-info .material-symbols-rounded')
     .forEach((el, i) => el.style.setProperty('--i', i));
 
+    function normalizeColors(colors) {
+        if (!colors) return null;
+        
+        let primary, secondary, tertiary, vibrant, muted, dark, light;
+
+        // Case 1: Legacy Array [r, g, b]
+        if (Array.isArray(colors)) {
+            const r = colors[0], g = colors[1], b = colors[2];
+            primary = { r, g, b };
+            secondary = primary;
+            tertiary = primary;
+            vibrant = primary;
+            muted = primary;
+            dark = primary;
+            light = primary;
+        } 
+        // Case 2: Structured Object
+        else {
+            primary = colors.primary || colors.vibrant || { r: 127, g: 127, b: 127 };
+            secondary = colors.secondary || primary;
+            tertiary = colors.tertiary || secondary;
+            vibrant = colors.vibrant || primary;
+            muted = colors.muted || primary;
+            dark = colors.dark || primary;
+            light = colors.light || primary;
+        }
+
+        return { primary, secondary, tertiary, vibrant, muted, dark, light };
+    }
+
+    function updateWallpaperCircles(colors) {
+        if (!colors) return;
+        const norm = normalizeColors(colors);
+        if (!norm) return;
+
+        const container = document.getElementById('palette-options-container');
+        if (!container) return;
+
+        const rgb = (c) => `rgb(${c.r}, ${c.g}, ${c.b})`;
+
+        const maps = {
+            'wallpaper_vibrant': `linear-gradient(135deg, ${rgb(norm.primary)}, ${rgb(norm.secondary)})`,
+            'wallpaper_tonal': `linear-gradient(135deg, ${rgb(norm.vibrant)}, ${rgb(norm.muted)})`,
+            'wallpaper_muted': `linear-gradient(135deg, ${rgb(norm.muted)}, ${rgb(norm.light)})`,
+            'wallpaper_pastel': `linear-gradient(135deg, ${rgb(norm.light)}, ${rgb(norm.muted)})`,
+            'wallpaper_dark': `linear-gradient(135deg, ${rgb(norm.dark)}, #111)`,
+            'wallpaper_contrasting': `linear-gradient(135deg, ${rgb(norm.vibrant)}, ${rgb(norm.tertiary)})`,
+            'wallpaper_triadic': `linear-gradient(135deg, ${rgb(norm.primary)}, ${rgb(norm.secondary)}, ${rgb(norm.tertiary)})`,
+            'wallpaper_analogous': `linear-gradient(135deg, ${rgb(norm.primary)}, ${rgb(norm.secondary)})`,
+            'wallpaper_monochromatic': `linear-gradient(135deg, ${rgb(norm.primary)}, #121212)`,
+            'wallpaper_retro': `linear-gradient(135deg, ${rgb(norm.primary)}, #e6c280)`,
+            'wallpaper_nordic': `linear-gradient(135deg, ${rgb(norm.primary)}, #4c566a)`
+        };
+
+        Object.entries(maps).forEach(([palette, grad]) => {
+            const circle = container.querySelector(`.palette-circle[data-palette="${palette}"]`);
+            if (circle) {
+                circle.style.background = grad;
+            }
+        });
+    }
+
+    function initPalettePicker() {
+        const container = document.getElementById('palette-picker-container');
+        const dots = document.querySelectorAll('#page-customize .indicator-dot');
+        const targetPalette = window.parent.localStorage.getItem('colorPalette') || 'wallpaper_vibrant';
+        
+        const containerGrid = document.getElementById('palette-options-container');
+        if (containerGrid) {
+            const circles = containerGrid.querySelectorAll('.palette-circle');
+            circles.forEach(circle => {
+                const p = circle.dataset.palette;
+                if (p === targetPalette) {
+                    circle.classList.add('active');
+                } else {
+                    circle.classList.remove('active');
+                }
+
+                circle.onclick = () => {
+                    circles.forEach(c => c.classList.remove('active'));
+                    circle.classList.add('active');
+                    
+                    window.parent.postMessage({ 
+                        action: 'callGurasuraisuFunc', 
+                        functionName: 'setLocalStorageItem', 
+                        args: ['colorPalette', p] 
+                    }, '*');
+                };
+            });
+        }
+    }
+
     // --- INITIALIZATION ---
     bindEventListeners();
     updateHeader();
+    initPalettePicker();
     
     // Announce readiness to the parent, which will trigger the initial settings sync.
     if (window.parent) {
