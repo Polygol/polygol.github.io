@@ -35,17 +35,28 @@ function openQuickMenu() {
     if(interactionBlocker) interactionBlocker.style.display = 'none';
 
     updateQMClock();
-
+    resetQmInactivityTimer();
     requestAnimationFrame(() => qm.classList.add('open'));
 }
 
 function closeQuickMenu() {
     if (!isQuickMenuOpen) return;
     isQuickMenuOpen = false;
+    clearTimeout(qmInactivityTimer);
+    qmInactivityTimer = null;
     const qm = document.getElementById('quick-menu');
     if (!qm) return;
     qm.classList.remove('open');
     setTimeout(() => { if(!isQuickMenuOpen) qm.style.display = 'none'; }, 300);
+}
+
+let qmInactivityTimer = null;
+
+function resetQmInactivityTimer() {
+    clearTimeout(qmInactivityTimer);
+    if (isQuickMenuOpen) {
+        qmInactivityTimer = setTimeout(closeQuickMenu, 5000);
+    }
 }
 
 function populateDock() {
@@ -618,6 +629,10 @@ function setupDrawerInteractions() {
     if (qm) {
         qm.addEventListener('click', (e) => {
             if (e.target.id === 'quick-menu') closeQuickMenu();
+        });
+
+        ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'input', 'change'].forEach(evt => {
+            qm.addEventListener(evt, resetQmInactivityTimer, { passive: true });
         });
     }
 
