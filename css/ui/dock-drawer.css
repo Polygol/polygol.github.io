@@ -525,6 +525,35 @@ body.one-button-nav-active .dock.show {
     background: rgba(255, 255, 255, 0.2);
 }
 
+/* For .reduce-animations */
+.reduce-animations .quick-menu-overlay .quick-menu-content-section,
+.reduce-animations .quick-menu-overlay.open .quick-menu-content-section,
+.reduce-animations .quick-menu-overlay:not(.open) .quick-menu-content-section {
+    animation: none !important;
+    transform: none !important;
+}
+
+.reduce-animations .quick-menu-content {
+    transform: scale(1) !important;
+}
+
+.reduce-animations .quick-menu-overlay,
+.reduce-animations .qm-floating-clock,
+.reduce-animations .quick-menu-content-section {
+    transition: opacity 0.3s ease !important;
+    transition-delay: 0s !important; /* Remove staggered entry delays */
+}
+
+.reduce-animations .quick-menu-overlay:not(.open) .qm-floating-clock,
+.reduce-animations .quick-menu-overlay:not(.open) .quick-menu-content-section {
+    opacity: 0 !important;
+}
+
+.reduce-animations .quick-menu-overlay.open .qm-floating-clock,
+.reduce-animations .quick-menu-overlay.open .quick-menu-content-section {
+    opacity: 1 !important;
+}
+
 .dock {
     display: none;
     position: fixed;
