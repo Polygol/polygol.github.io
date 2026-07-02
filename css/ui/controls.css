@@ -38,7 +38,6 @@
 
 #blurOverlayControls {
     z-index: 9996;
-    background: var(--search-background);
     backdrop-filter: blur(1px);
 }
 
@@ -48,6 +47,7 @@
     gap: 15px;
     justify-content: space-between;
     margin-left: 10px;
+    text-shadow: 0 0 6px var(--search-background);
 }
 
 .btn-qc {

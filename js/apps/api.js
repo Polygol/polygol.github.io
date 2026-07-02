@@ -302,7 +302,7 @@ async function clearAllWallpapers() {
 }
 
 function switchWallpaperParent(directionOrIndex) {
-    if (typeof directionOrIndex === 'string' && (directionOrIndex === 'left' || directionOrIndex === 'right')) {
+    if (typeof directionOrIndex === 'string' && ['left', 'right', 'up', 'down', 'next', 'prev'].includes(directionOrIndex)) {
         switchWallpaper(directionOrIndex);
         return `Switched wallpaper ${directionOrIndex}.`;
     }
@@ -311,7 +311,7 @@ function switchWallpaperParent(directionOrIndex) {
         jumpToWallpaper(index);
         return `Jumped to wallpaper at index ${index}.`;
     }
-    throw new Error('Invalid argument. Use "left", "right", or a numeric index.');
+    throw new Error('Invalid argument. Use a direction string or a numeric index.');
 }
 
 function getCurrentTimeParent() {
@@ -523,7 +523,7 @@ function broadcastSettingUpdate(key, value) {
 function setControlValueAndDispatch(key, value) {
     // Handle settings without a direct UI control in index.html
     const settingsWithoutDirectControl = [
-        'sleepModeStyle', 'slideshowInterval', 'hideClockIndicator',
+        'sleepModeStyle', 'slideshowInterval',
         'autoSleepEnabled', 'autoSleepDuration', 'autoSleepScope',
         'resourceManagerEnabled', 'displayScale', 'smartDisplayZoom',
         'nightStandEnabled', 'nightStandStart', 'nightStandEnd', 'nightStandBrightness',
@@ -591,9 +591,6 @@ function setControlValueAndDispatch(key, value) {
         }
         if (key.startsWith('autoSleep')) {
             resetAutoSleepTimer();
-        }
-        if (key === 'hideClockIndicator') {
-            updatePersistentClock();
         }
         if (key === 'resourceManagerEnabled') {
             if (value === 'true') ResourceManager.init();
@@ -705,6 +702,15 @@ window.addEventListener('message', async (event) => { // Make listener async
 	    startLiveActivity,
 	    updateLiveActivity, // Forward updates
 	    stopLiveActivity,
+        registerActivityIntent: (intentData) => {
+            if (!window.ActivityIntents) window.ActivityIntents = [];
+            window.ActivityIntents.push({
+                appId: sourceAppId,
+                intentName: intentData.intentName,
+                keywords: intentData.keywords
+            });
+            return `Intent ${intentData.intentName} registered.`;
+        },
 		speakText: (text) => {
             if (typeof window.systemSpeak === 'function') {
                 window.systemSpeak(text);
@@ -848,7 +854,7 @@ window.addEventListener('message', async (event) => { // Make listener async
                     if (customizeModal.classList.contains('show')) {
                         closeControls();
                     } else {
-                        document.getElementById('persistent-clock').click();
+                        if (typeof openControls === 'function') openControls();
                     }
                 }
             }
@@ -1210,8 +1216,7 @@ window.addEventListener('message', async (event) => { // Make listener async
     }
 
     if (data.type === 'open-controls') {
-        const clock = document.getElementById('persistent-clock');
-        if (clock) clock.click();
+        if (typeof openControls === 'function') openControls();
         return;
     }
     

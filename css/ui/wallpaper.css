@@ -1,8 +1,8 @@
 .page-indicator {
     position: fixed;
-    bottom: 50px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
     display: flex;
     gap: 14px;
     z-index: 50;
@@ -15,6 +15,7 @@
     border: 1px solid var(--glass-border);
     border-radius: 40px;
     filter: none;
+    flex-direction: column;
 }
 
 /* Hide indicator when app is open */
@@ -112,7 +113,7 @@ body.app-active .page-indicator {
     opacity: 0;
     filter: blur(10px);
     transition: opacity 0.3s ease, filter 0.3s;
-    backdrop-filter: blur(50px);
+    backdrop-filter: blur(1px);
     background-color: var(--overlay-color);
     transform: scale(1.2);
 }
@@ -242,7 +243,8 @@ body.app-active .page-indicator {
     border: 1px solid var(--glass-border);
     font-family: 'Inter';
     padding: 8px 18px 8px 14px;
-    background: var(--overlay-color);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
+    background: var(--search-background);
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
     border-radius: 30px;

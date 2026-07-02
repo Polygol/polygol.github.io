@@ -151,16 +151,6 @@ const IslandManager = {
 	            else if (item.data.url) createFullscreenEmbed(item.data.url);
 	        };
 	    });
-
-        // 3. Update Persistent Clock Styling based on Island State
-        const persistentClock = document.querySelector('.persistent-clock');
-        if (persistentClock) {
-            if (toShow.length > 0) {
-                persistentClock.classList.add('island-active');
-            } else {
-                persistentClock.classList.remove('island-active');
-            }
-        }
     }
 };
 

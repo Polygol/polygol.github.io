@@ -177,7 +177,7 @@ function renderAppCards(container) {
         fallbackBg.style.backgroundImage = `url('${iconSrc}')`;
         fallbackBg.style.backgroundSize = 'cover';
         fallbackBg.style.backgroundPosition = 'center';
-        fallbackBg.style.filter = 'blur(50px)';
+        fallbackBg.style.filter = 'blur(1px)';
         fallbackBg.style.transform = 'scale(1.2)'; 
         card.appendChild(fallbackBg);
         card.style.backgroundColor = 'var(--background-color)';

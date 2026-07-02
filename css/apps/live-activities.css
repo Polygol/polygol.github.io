@@ -225,6 +225,12 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     display: flex;
     flex-direction: column;
     gap: 10px;
+    background-color: var(--search-background);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
 }
 
 #home-activity-container.pos-tl {
@@ -259,12 +265,7 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     width: 100%;
     height: 100%;
     box-sizing: border-box;
-    background-color: var(--search-background);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0);
-    border-radius: 35px;
-    corner-shape: superellipse(1.5);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--sun-shadow);
+    border: none;
 }
 
 .home-activity-item.active {

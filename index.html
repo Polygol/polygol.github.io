@@ -239,6 +239,7 @@
     <link rel="stylesheet" href="css/ui/dock-drawer.css">
     <link rel="stylesheet" href="css/ui/donburi.css">
     <link rel="stylesheet" href="css/ui/notify.css">
+    <link rel="stylesheet" href="css/ui/osd.css">
     <link rel="stylesheet" href="css/ui/osk.css">
     <link rel="stylesheet" href="css/ui/wallpaper.css">
     <link rel="stylesheet" href="css/ui/widgets.css">
@@ -287,36 +288,12 @@
     
     <div class="drawer-handle">
         <div class="drawer-pill">
-            <div class="nav-pill"></div>
         </div>
-    </div>
-
-    <div id="one-button-nav-handle" style="display: none;">
-        <div class="nav-pill"></div>
-    </div>
-
-    <div id="split-screen-trigger" class="nav-btn-small">
-        <svg id="split-trigger-svg" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <path id="split-trigger-path" d="M 3 5 L 3 32 L 30 32" />
-        </svg>
     </div>
 
     <div id="dynamic-area" style="opacity: 0; scale: 0.9;">
         <div id="activity-island"></div>
-        <div id="persistent-clock" class="persistent-clock"></div>
         <div id="status-indicator"></div>
-    </div>
-    
-    <div id="persistent-clock-quick-actions" class="persistent-clock-actions" style="display: none;">
-        <button id="quick-action-close" class="btn-qc">
-            <span class="material-symbols-rounded" style="font-size: 18px;">close</span>
-        </button>
-        <button id="quick-action-minimize" class="btn-qc">
-            <span class="material-symbols-rounded" style="font-size: 18px;">hide</span>
-        </button>
-        <button id="quick-action-controls" class="btn-qc">
-            <span class="material-symbols-rounded" style="font-size: 18px;">keyboard_arrow_down</span>
-        </button>
     </div>
 
     <div id="control-gesture-pane"></div>
@@ -537,6 +514,13 @@
     
     <div id="donburi-container" class="system-overlay" style="display: none; transform: translateY(-100%);">
         <iframe src="/assets/gurapp/intl/donburi/index.html" data-gurasuraisu-iframe="true" data-app-id="Donburi"></iframe>
+    </div>
+
+    <div id="system-osd">
+        <span id="osd-icon" class="material-symbols-rounded"></span>
+        <div class="osd-bar-container">
+            <div id="osd-fill"></div>
+        </div>
     </div>
 
     <div id="customizeModal" class="modal" style="display: none;">
@@ -769,6 +753,48 @@
         </div>
     </div>
 
+    <div id="quick-menu" class="quick-menu-overlay">
+        <div id="qm-clock" class="qm-floating-clock"></div>
+        <div class="quick-menu-content">
+            <div class="quick-menu-content-section" style="border-radius: 50px; corner-shape: superellipse(1.5); background-color: var(--accent);">
+                <div class="qm-buttons">
+                    <button id="qm-btn-assistant">
+                        <span class="material-symbols-rounded" style="color: var(--background-color);"><svg width="32" height="32" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="6.25" cy="7.5" r="2" fill="currentColor" .=""></circle><circle cx="13.75" cy="7.5" r="2" fill="currentColor" .=""></circle><path d="M3.75 12.5q6.25 5 12.5 0" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" .=""></path></svg></span>
+                    </button>
+                </div>
+            </div> 
+            <div class="quick-menu-content-section">
+                <div class="qm-buttons">
+                    <button id="qm-btn-home">
+                        <span class="material-symbols-rounded">home</span>
+                    </button>
+                    <button id="qm-btn-apps">
+                        <span class="material-symbols-rounded">grid_view</span>
+                    </button>
+                    <button id="qm-btn-controls">
+                        <span class="material-symbols-rounded">page_info</span>
+                    </button>
+                </div> 
+            </div> 
+            <div class="quick-menu-content-section">
+                <div class="qm-buttons">
+                    <button id="qm-btn-bright-down">
+                        <span class="material-symbols-rounded" style="font-variation-settings: 'FILL' 0, 'wght' 700, 'GRAD' 0, 'opsz' 24;">wb_sunny</span>
+                    </button>
+                    <button id="qm-btn-bright-up">
+                        <span class="material-symbols-rounded">sunny</span>
+                    </button>
+                    <button id="qm-btn-vol-down">
+                        <span class="material-symbols-rounded">volume_down</span>
+                    </button>
+                    <button id="qm-btn-vol-up">
+                        <span class="material-symbols-rounded">volume_up</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="dock" class="dock"></div>
     
     <div class="blur-overlay" id="blurOverlay"></div>
@@ -807,6 +833,16 @@
         <button id="osk-switcher-btn" class="btn-qc" style="position: absolute; top: 12px; right: 18px; display: none;">
             <span class="material-symbols-rounded" style="font-size: 18px;">language</span>
         </button>
+    </div>
+
+    <div id="assistant-overlay" class="assistant-overlay">
+        <div id="assistant-decision-panel" class="assistant-decision-panel">
+            <div class="assistant-decision-header">Suggested &bull; Say a number</div>
+            <div id="assistant-cards-container" class="assistant-cards-container">
+                <!-- Cards injected dynamically -->
+            </div>
+        </div>
+        <div id="assistant-main-text" class="assistant-main-text">I'm listening...</div>
     </div>
 
     <div id="dialogModal" class="modal">
@@ -1030,6 +1066,7 @@
     <!-- UI Components -->
     <script src="js/ui/theme.js"></script>
     <script src="js/ui/modes.js"></script>
+    <script src="js/ui/osd.js"></script>
     <script src="js/ui/notifications.js"></script>
     <script src="js/ui/clock-weather.js"></script>
     <script src="js/ui/environment.js"></script>
@@ -1057,6 +1094,12 @@
     <script src="js/apps/media-session.js"></script>
     <script src="js/apps/live-activities.js"></script>
     <script src="js/apps/api.js"></script>
+    <!-- Assistant -->
+    <script type="module" src="js/assistant/stt.js"></script>
+    <script type="module" src="js/assistant/tts.js"></script>
+    <script type="module" src="js/assistant/llm.js"></script>
+    <script type="module" src="js/assistant/ui.js"></script>
+    <script type="module" src="js/assistant/core.js"></script>
     <!-- Boot + Other -->
     <script src="js/index.js"></script>
     <script src="js/core/boot.js"></script>

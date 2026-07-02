@@ -58,30 +58,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// --- Double Tap to Sleep ---
-let lastBgTap = 0;
-document.addEventListener('click', (e) => {
-    // Detect if click is on the empty wallpaper/background
-    const isBg = e.target === document.body || 
-                 e.target.id === 'background-video' || 
-                 e.target.id === 'depth-layer' || 
-                 e.target.id === 'time-of-day-overlay' ||
-                 e.target.classList.contains('container') ||
-                 e.target.id === 'widget-grid';
-                 
-    if (isBg) {
-        const now = Date.now();
-        if (now - lastBgTap < 300) { // 300ms double tap window
-            if (localStorage.getItem('doubleTapToSleep') !== 'false') {
-                if (typeof blackoutScreen === 'function') {
-                    blackoutScreen();
-                }
-            }
-        }
-        lastBgTap = now;
-    }
-});
-
 const customizeModal = document.getElementById('customizeModal');
 const customizeModalContent = document.getElementById('customizeModalContent');
 const themeSwitch = document.getElementById('theme-switch');
@@ -133,31 +109,6 @@ function closeControls() {
         if (blurCtrl) blurCtrl.style.display = 'none';
     }, 300);
 }
-
-// --- Global Top-Edge Swipe for Controls ---
-let topSwipeStartY = 0;
-let isTopSwipe = false;
-
-document.addEventListener('touchstart', (e) => {
-    if (e.touches && e.touches.length > 0 && e.touches[0].clientY < 40) {
-        isTopSwipe = true;
-        topSwipeStartY = e.touches[0].clientY;
-    } else {
-        isTopSwipe = false;
-    }
-}, { passive: true });
-
-document.addEventListener('touchmove', (e) => {
-    if (isTopSwipe && e.touches && e.touches.length > 0 && (e.touches[0].clientY - topSwipeStartY > 50)) {
-        isTopSwipe = false;
-        const clock = document.getElementById('persistent-clock');
-        if (clock) clock.click();
-    }
-}, { passive: true });
-
-document.addEventListener('touchend', () => {
-    isTopSwipe = false;
-}, { passive: true });
 
 // --- bottom-Up Swipe on Controls ---
 let controlsSwipeStartY = 0;

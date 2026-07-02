@@ -20,25 +20,45 @@ body {
 }
 
 .header {
-    display: flex;
+    display: grid;
+    grid-template-columns: 48px 1fr 48px;
+    align-items: center;
+    gap: 12px;
     gap: 10px;
     align-items: center;
     position: fixed;
     top: 18px;
     left: 50%;
     transform: translateX(-50%);
-    width: 100%;
+    width: calc(100% - 40px);
     max-width: 700px;
     z-index: 999;
     height: 48px;
 }
 
+.header-blur {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    pointer-events: none;
+    z-index: 999;
+    background: var(--background-color);
+    mask: linear-gradient(
+        to bottom,
+        black 0%,
+        transparent 100%
+    );
+}
+
 .back-btn {
+    grid-column: 1;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--transparent-color);
+    background-color: var(--search-background);
     color: var(--text-color);
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
@@ -50,20 +70,25 @@ body {
 }
 
 .page-title {
+    grid-column: 2;
+    justify-self: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: fit-content;
+    max-width: 100%;
+    margin: 0;
+
     font-family: 'Open Runde', sans-serif;
     font-weight: 700;
     font-size: 1.2rem;
     flex-grow: 1;
     text-align: left;
     margin: 0;
-    background-color: var(--search-background);
-    border-radius: 35px;
-    corner-shape: round;
-    border: 1px solid var(--glass-border);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0);
-    box-shadow: var(--sun-shadow);
+    background-color: transparent;
     display: flex;
-    padding: 8px 18px;
     height: 48px;
     align-items: center;
     gap: 2px;
@@ -459,14 +484,6 @@ input.form-input {
     overflow: hidden;
     text-overflow: ellipsis;
     width: 100%;
-}
-
-@media (max-width: 500px) {
-    .setting-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
 }
 
 /* Hero banner */

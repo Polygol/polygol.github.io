@@ -443,7 +443,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Initialize brightness
     if (storedBrightness) {
         brightnessSlider.value = storedBrightness;
-        updateBrightness(storedBrightness);
+        updateBrightness(storedBrightness, true);
     }
 
     // Initialize display scale
@@ -515,7 +515,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     // Function to update brightness
-    function updateBrightness(value) {        
+    function updateBrightness(value, silent = false) {        
         // Calculate darkness level (inverse of brightness)
         const darknessLevel = (100 - value) / 100;
         
@@ -531,6 +531,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             } else {
                 brightnessIcon.textContent = 'sunny'; // High brightness icon
             }
+        }
+
+        if (!silent && typeof window.showOSD === 'function') {
+            window.showOSD('brightness', parseInt(value, 10));
         }
     }
     
@@ -753,6 +757,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // 2. Sync UI Sound volume instantly
         if (window.SoundManager) localStorage.setItem('sfxVolume', val);
+
+        if (typeof window.showOSD === 'function') window.showOSD('volume', parseInt(val, 10));
     });
 
     // Volume Mixer Button & Outside Click Logic
@@ -1398,121 +1404,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 	
-	const appDrawer = document.getElementById('app-drawer');
+    const appDrawer = document.getElementById('app-drawer');
     const dynamicArea = document.getElementById('dynamic-area');
-    const persistentClock = document.querySelector('.persistent-clock');
     const customizeModal = document.getElementById('customizeModal');
-    const quickActions = document.getElementById('persistent-clock-quick-actions');
     const interactionBlocker = document.getElementById('interaction-blocker');
-    let hideActionsTimeout, longPressTimeout, quickActionsInactivityTimeout;
-    let isLongPress = false;
-
-    const showQuickActions = (isTouch = false) => {
-        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (appIsOpen) {
-            clearTimeout(hideActionsTimeout);
-            clearTimeout(quickActionsInactivityTimeout); // Clear previous inactivity timer
-
-            quickActions.style.display = 'flex';
-            interactionBlocker.style.display = 'block';
-            interactionBlocker.style.pointerEvents = 'auto';
-            interactionBlocker.style.zIndex = '9994'; // Below actions menu but above app
-            dynamicArea.style.opacity = '0';
-
-            document.getElementById('quick-action-controls').style.display = isTouch ? 'none' : 'flex';
-
-            setTimeout(() => {
-                quickActions.classList.add('show');
-            }, 10); // next frame
-
-            if (isTouch) {
-                quickActionsInactivityTimeout = setTimeout(hideQuickActions, 5000);
-            }
-        }
-    };
-
-    const hideQuickActions = () => {
-        clearTimeout(quickActionsInactivityTimeout); // Always clear the inactivity timer on close
-        const delay = isLongPress ? 0 : 100; // Immediate for touch, delayed for mouse
-        clearTimeout(hideActionsTimeout);
-        hideActionsTimeout = setTimeout(() => {
-            quickActions.classList.remove('show');
-            interactionBlocker.style.display = 'none';
-            interactionBlocker.style.zIndex = '999';
-            dynamicArea.style.opacity = '1';
-            // Wait for transition to finish before setting display to none
-            setTimeout(() => {
-                if (!quickActions.classList.contains('show')) {
-                    quickActions.style.display = 'none';
-                }
-            }, 200);
-        }, delay);
-    };
 
     // --- Mouse Hover Logic ---
     let lastTouchTime = 0;
     document.addEventListener('touchstart', () => { lastTouchTime = Date.now(); }, true);
 
-    dynamicArea.addEventListener('mouseenter', () => {
-        // Ignore hover if a touch event happened recently to prevent conflicts
-        if (Date.now() - lastTouchTime < 500) return;
-
-        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (appIsOpen) {
-            showQuickActions(false);
-        }
-    });
-    quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
-    persistentClock.addEventListener('mouseleave', hideQuickActions);
-    quickActions.addEventListener('mouseleave', hideQuickActions);
-    interactionBlocker.addEventListener('click', hideQuickActions); // Tap outside to close
     document.addEventListener('contextmenu', e => e.preventDefault());
-
-    // --- Touch Long-Press Logic ---
-    persistentClock.addEventListener('touchstart', (e) => {
-        isLongPress = false; // Reset on new touch
-        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-        if (!appIsOpen) return;
-
-        clearTimeout(longPressTimeout);
-        longPressTimeout = setTimeout(() => {
-            isLongPress = true;
-            showQuickActions(true);
-        }, 500);
-    }, { passive: true });
-
-    persistentClock.addEventListener('touchmove', () => {
-        clearTimeout(longPressTimeout);
-    });
-
-    persistentClock.addEventListener('touchend', (e) => {
-        clearTimeout(longPressTimeout);
-        if (!isLongPress) {
-            // It was a regular tap, not a long press that was just initiated
-            persistentClock.click();
-        }
-        // If it was a long press, the menu is now open. The user will tap an action or outside.
-        isLongPress = false; // Reset for next interaction
-    });
-    
-    interactionBlocker.addEventListener('touchend', hideQuickActions);
-
-    // --- Quick Action Button Listeners ---
-    document.getElementById('quick-action-minimize').addEventListener('click', (e) => {
-        e.stopPropagation();
-        minimizeFullscreenEmbed();
-        hideQuickActions();
-    });
-    document.getElementById('quick-action-close').addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeFullscreenEmbed();
-        hideQuickActions();
-    });
-    document.getElementById('quick-action-controls').addEventListener('click', (e) => {
-        e.stopPropagation();
-        persistentClock.click();
-        hideQuickActions();
-    });
 
     const blackoutBtn = document.getElementById('blackout-btn');
     const startBlackoutHold = () => {
@@ -1566,53 +1467,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-	function updatePersistentClock() {
-	  const isModalOpen = 
-	    (appDrawer && appDrawer.classList.contains('open')) ||
-	    document.querySelector('.fullscreen-embed[style*="display: block"]');
-
-	    const hasActivities = (typeof activeIslands !== 'undefined' && activeIslands.length > 0);
-	    
-	  if (isModalOpen) {
-	    const now = new Date();
-	    let hours = now.getHours();
-	    let minutes = String(now.getMinutes()).padStart(2, '0');
-	    
-	    let displayHours;
-	    
-	    if (use12HourFormat) {
-	      // 12-hour format without AM/PM
-	      displayHours = hours % 12 || 12;
-	    } else {
-	      // 24-hour format
-	      displayHours = String(hours).padStart(2, '0');
-	    }
-	    
-	    persistentClock.innerHTML = `<span class="persistent-clock-digit">${displayHours}</span><span class="persistent-colon">:</span><span class="persistent-clock-digit">${minutes}</span>`;
-        persistentClock.style.display = 'flex';
-	  } else {
-		if (hasActivities) {
-			// Priority goes to Content (Activities)
-            persistentClock.innerHTML = '<span class="material-symbols-rounded">keyboard_arrow_down</span>';
-        } else {
-	        const hideIndicator = localStorage.getItem('hideClockIndicator') === 'true';
-	        if (hideIndicator) {
-	            persistentClock.innerHTML = '<span class="material-symbols-rounded"><br></span>';
-	            persistentClock.style.opacity = '0';
-	        } else {
-	            persistentClock.innerHTML = '<span class="material-symbols-rounded">maximize</span>';
-	            persistentClock.style.opacity = '1';
-	        }
-		}
-	  }
-	}
-    
-	// Make sure we re-attach the click event listener
-	persistentClock.addEventListener('click', () => {
+    window.openControls = function() {
         // Prevent re-opening if already visible/opening
         if (customizeModal.style.display === 'block') return;
 
-        clearTimeout(hideActionsTimeout); 
         syncUiStates();
 
         const appManagementInfo = document.getElementById('app-management-info');
@@ -1728,7 +1586,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 blurOverlayControls.style.pointerEvents = 'auto';
             }, 150);
         }, 10);
-    });
+    };
 
     const minimizeBtn = document.getElementById('app-minimize-btn');
     if (minimizeBtn) {
@@ -1745,28 +1603,7 @@ document.addEventListener('DOMContentLoaded', () => {
             closeFullscreenEmbed();
         });
     }
-    
-    // Setup observer to watch for embed visibility changes to update clock immediately
-    const embedObserver = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.attributeName === 'style' && 
-                (mutation.target.classList.contains('fullscreen-embed') || 
-                 mutation.target.matches('#app-drawer'))) {
-                updatePersistentClock();
-            }
-        });
-    });
-    
-    // Observe fullscreen-embed style changes
-    document.querySelectorAll('.fullscreen-embed').forEach(embed => {
-        embedObserver.observe(embed, { attributes: true });
-    });
-    
-    // Also observe app drawer for open/close state changes
-    if (appDrawer) {
-        embedObserver.observe(appDrawer, { attributes: true });
-    }
-    
+
     // Watch for new embed elements being added
     const bodyObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
@@ -1776,7 +1613,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (node.nodeType === 1 &&
                         node.classList &&
                         node.classList.contains('fullscreen-embed')) {
-                        embedObserver.observe(node, { attributes: true });
                         changed = true;
                     }
                 });
@@ -1787,30 +1623,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         changed = true;
                     }
                 });
-                if (changed) {
-                    updatePersistentClock();
-                }
             }
         });
     });
     
     bodyObserver.observe(document.body, { childList: true, subtree: true });
-
-	// Update clock to be precise to the minute, saving power.
-	// Uses a recursive setTimeout to prevent browser timer drift.
-	function synchronizePersistentClock() {
-	    updatePersistentClock();
-	    
-	    const now = new Date();
-	    // Calculate exact milliseconds until the start of the next minute
-	    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
-	
-	    // Schedule the next update to happen exactly at XX:XX:00
-	    setTimeout(synchronizePersistentClock, msUntilNextMinute);
-	}
-	
-	// Start the synchronized loop
-	synchronizePersistentClock();
 	
     // --- NEW: Autorun Script ---
     const startupScript = localStorage.getItem('customStartupScript');

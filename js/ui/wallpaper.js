@@ -1569,63 +1569,162 @@ function saveRecentWallpapers() {
 }
 
 // --- Wallpaper Switcher Logic ---
-let wallpaperPressTimer;
-const WALLPAPER_PRESS_DURATION = 500;
 let isWallpaperSwitcherOpen = false;
 
 function setupWallpaperInteraction() {
-    let startX, startY;
+    let startX = 0, startY = 0;
+    let isPressing = false;
+    let isGesturing = false;
+    let wallpaperPressTimer = null;
+    let lastTouchTime = 0;
+    let lastBgTap = 0;
 
-    const startPress = (e) => {
-        const t = e.target;
-        const isWallpaper = 
-            t === document.body ||
+    const isWallpaperElement = (t) => {
+        return t === document.body ||
             t === document.documentElement ||
             t.id === 'background-video' ||
             t.id === 'depth-layer' ||
             t.id === 'environment-layer' ||
             t.id === 'time-of-day-overlay' ||
             t.id === 'widget-grid' ||
-            t.classList.contains('container'); 
+            t.classList.contains('container');
+    };
 
-        if (!isWallpaper) return;
+    const isGhostMouse = (e) => {
+        return e.type.startsWith('mouse') &&
+            (Date.now() - lastTouchTime < 1000);
+    };
 
-        // Store start positions to calculate movement jitter
-        startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-        startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+    const handleStart = (e) => {
+        if (e.type === 'touchstart') {
+            lastTouchTime = Date.now();
+        }
 
+        if (isGhostMouse(e)) return;
+
+        const t = e.target;
+        if (!isWallpaperElement(t)) return;
+
+        isPressing = true;
+        isGesturing = true;
+
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+        startX = clientX;
+        startY = clientY;
+
+        clearTimeout(wallpaperPressTimer);
         wallpaperPressTimer = setTimeout(() => {
-            openWallpaperSwitcher();
-        }, WALLPAPER_PRESS_DURATION);
+            if (isPressing && !document.body.classList.contains('edit-mode-active')) {
+                openWallpaperSwitcher();
+            }
+        }, 500);
     };
 
     const handleMove = (e) => {
-        if (!wallpaperPressTimer) return;
-        
-        const cx = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-        const cy = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-        
-        // Calculate distance from start
-        const dist = Math.sqrt(Math.pow(cx - startX, 2) + Math.pow(cy - startY, 2));
+        if (isGhostMouse(e)) return;
+        if (!isGesturing) return;
 
-        // FIX: Only cancel if user moves more than 10px (Deadzone for jitters)
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+        const dist = Math.hypot(clientX - startX, clientY - startY);
+
         if (dist > 10) {
+            isPressing = false;
             clearTimeout(wallpaperPressTimer);
             wallpaperPressTimer = null;
         }
     };
 
-    const cancelPress = () => {
+    const handleEnd = (e) => {
+        if (e.type === 'touchend') {
+            lastTouchTime = Date.now();
+        }
+
+        if (isGhostMouse(e)) return;
+
+        if (!isGesturing) return;
+
+        isGesturing = false;
+        isPressing = false;
+
         clearTimeout(wallpaperPressTimer);
         wallpaperPressTimer = null;
+
+        const clientX = e.type.includes('touch') ? e.changedTouches[0].clientX : e.clientX;
+        const clientY = e.type.includes('touch') ? e.changedTouches[0].clientY : e.clientY;
+
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
+
+        const isAppOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+        const custModal = document.getElementById('customizeModal');
+        const isControlsOpen = custModal && custModal.classList.contains('show');
+        const drawer = document.getElementById('app-drawer');
+        const isDrawerOpen = drawer && drawer.classList.contains('open');
+
+        // Vertical swipe
+        if (!isAppOpen && !isControlsOpen && !isDrawerOpen) {
+            if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
+                if (typeof switchWallpaper === 'function') {
+                    switchWallpaper(deltaY < 0 ? 'up' : 'down');
+                }
+                return;
+            }
+
+            // Horizontal swipe
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                if (deltaX > 0) {
+                    if (document.body.classList.contains('photo-frame-active')) {
+                        document.body.classList.remove('photo-frame-active');
+                        document.querySelectorAll('.container, .widget-grid').forEach(el => {
+                            el.classList.remove('force-hide');
+                        });
+                    } else if (typeof openDonburi === 'function') {
+                        openDonburi();
+                    }
+                } else {
+                    if (!document.body.classList.contains('photo-frame-active')) {
+                        document.body.classList.add('photo-frame-active');
+                        document.querySelectorAll('.container, .widget-grid').forEach(el => {
+                            el.classList.add('force-hide');
+                        });
+                    }
+                }
+                return;
+            }
+        }
+
+        // Tap detection
+        const dist = Math.hypot(deltaX, deltaY);
+
+        if (dist <= 10) {
+            const now = Date.now();
+
+            if (now - lastBgTap < 300) {
+                lastBgTap = 0; // prevent triple taps
+
+                if (localStorage.getItem('doubleTapToSleep') !== 'false') {
+                    if (typeof blackoutScreen === 'function') {
+                        blackoutScreen();
+                    }
+                }
+            } else {
+                lastBgTap = now;
+            }
+        }
     };
 
-    window.addEventListener('mousedown', startPress);
-    window.addEventListener('touchstart', startPress, { passive: true });
-    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mousedown', handleStart);
+    window.addEventListener('touchstart', handleStart, { passive: true });
+
+    window.addEventListener('mousemove', handleMove, { passive: true });
     window.addEventListener('touchmove', handleMove, { passive: true });
-    window.addEventListener('mouseup', cancelPress);
-    window.addEventListener('touchend', cancelPress);
+
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchend', handleEnd);
 }
 
 // Run this on load
@@ -2071,8 +2170,8 @@ let indicatorActive = false; // Flag to track if indicator interaction is happen
 // Variables for dot dragging
 let isDragging = false;
 let dragIndex = -1;
-let dragStartX = 0;
-let dragCurrentX = 0;
+let dragStartY = 0;
+let dragCurrentY = 0;
 let lastTapTime = 0;
 let tapCount = 0;
 let tapTimer = null;
@@ -2379,9 +2478,9 @@ function handleDotDragStart(e, index) {
 
     // Get initial position
     if (e.type === 'touchstart') {
-        dragStartX = e.touches[0].clientX;
+        dragStartY = e.touches[0].clientY;
     } else {
-        dragStartX = e.clientX;
+        dragStartY = e.clientY;
     }
 
     // Add global event listeners for move and end
@@ -2405,12 +2504,12 @@ function handleDotDragMove(e) {
   
   // Get current position
   if (e.type === 'touchmove') {
-    dragCurrentX = e.touches[0].clientX;
+    dragCurrentY = e.touches[0].clientY;
   } else {
-    dragCurrentX = e.clientX;
+    dragCurrentY = e.clientY;
   }
   
-  const distance = dragCurrentX - dragStartX;
+  const distance = dragCurrentY - dragStartY;
   
   // Get all dots
   const dots = document.querySelectorAll('.indicator-dot');
@@ -2418,16 +2517,16 @@ function handleDotDragMove(e) {
   const dotSpacing = 10; // Gap between dots
   
   // Calculate the offset
-  const offsetX = distance;
+  const offsetY = distance;
   
   // Move the dot being dragged
   const draggedDot = document.querySelector(`.indicator-dot[data-index="${dragIndex}"]`);
   if (draggedDot) {
-    draggedDot.style.transform = `translateX(${offsetX}px) scale(1.3)`;
+    draggedDot.style.transform = `translateY(${offsetY}px) scale(1.3)`;
     
     // Check if we need to reorder
     const dotSize = dotWidth + dotSpacing;
-    const shift = Math.round(offsetX / dotSize);
+    const shift = Math.round(offsetY / dotSize);
     
     if (shift !== 0) {
       const newIndex = Math.max(0, Math.min(recentWallpapers.length - 1, dragIndex + shift));
@@ -2442,7 +2541,7 @@ function handleDotDragMove(e) {
               (index < dragIndex && index >= newIndex)) {
             // Move dots that are between old and new position
             const direction = index > dragIndex ? -1 : 1;
-            dot.style.transform = `translateX(${direction * dotSize}px)`;
+            dot.style.transform = `translateY(${direction * dotSize}px)`;
           } else {
             dot.style.transform = '';
           }
@@ -2457,14 +2556,14 @@ function handleDotDragEnd(e) {
   if (!isDragging) return;
   
   // Get final position
-  let endX;
+  let endY;
   if (e.type === 'touchend') {
-    endX = e.changedTouches[0].clientX;
+    endY = e.changedTouches[0].clientY;
   } else {
-    endX = e.clientX;
+    endY = e.clientY;
   }
   
-  const distance = endX - dragStartX;
+  const distance = endY - dragStartY;
   const dots = document.querySelectorAll('.indicator-dot');
   const dotWidth = dots[0] ? dots[0].offsetWidth : 0;
   const dotSpacing = 10;
@@ -2705,13 +2804,13 @@ function switchWallpaper(direction, skipSave = false) {
     // Calculate new position
     let newPosition = currentWallpaperPosition;
     
-    if (direction === 'right') {
+    if (direction === 'right' || direction === 'up' || direction === 'next') {
         newPosition++;
         if (newPosition >= recentWallpapers.length) {
             newPosition = recentWallpapers.length - 1;
             return;
         }
-    } else if (direction === 'left') {
+    } else if (direction === 'left' || direction === 'down' || direction === 'prev') {
         newPosition--;
         if (newPosition < 0) {
             newPosition = 0;

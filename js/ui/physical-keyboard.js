@@ -45,10 +45,10 @@ document.addEventListener('keydown', (e) => {
         if (customizeModal.classList.contains('show')) {
             closeControls();
         } else {
-            document.getElementById('persistent-clock').click();
+            if (typeof openControls === 'function') openControls();
         }
     }
-
+    
     // App Drawer Search
     const searchInput = document.getElementById('app-search-input');
 

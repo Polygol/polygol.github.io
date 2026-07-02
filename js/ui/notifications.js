@@ -4,11 +4,10 @@ function updateStatusIndicator() {
     const el = document.getElementById('status-indicator');
     if (!el) return;
 
-    // Interaction: Click opens Quick Settings (Clock click)
+    // Interaction: Click opens Quick Settings
     el.onclick = (e) => {
         e.stopPropagation();
-        const clock = document.getElementById('persistent-clock');
-        if (clock) clock.click();
+        if (typeof openControls === 'function') openControls();
     };
 
     el.innerHTML = '';

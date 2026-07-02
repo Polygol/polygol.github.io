@@ -1,4 +1,4 @@
-const CORE_CACHE_VERSION = 'Astatine 27-b07.1';
+const CORE_CACHE_VERSION = 'Astatine 27-b08';
 const CORE_CACHE_NAME = `polygol-core-${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polygol-apps';
 

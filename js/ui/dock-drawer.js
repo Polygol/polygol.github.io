@@ -1,5 +1,52 @@
 const appDrawer = document.getElementById('app-drawer');
 const appGrid = document.getElementById('app-grid');
+let isQuickMenuOpen = false;
+let isWidgetsOpen = false;
+let qmClockTimer = null;
+
+function updateQMClock() {
+    if (!isQuickMenuOpen) {
+        clearTimeout(qmClockTimer);
+        qmClockTimer = null;
+        return;
+    }
+
+    const qmClock = document.getElementById('qm-clock');
+    if (qmClock && typeof moment === 'function') {
+        const now = moment();
+        const use12 = localStorage.getItem('use12HourFormat') === 'true';
+        const format = use12 ? 'h:mm A' : 'HH:mm';
+        qmClock.textContent = now.format(format);
+    }
+
+    const delay = 1000 - (Date.now() % 1000);
+    qmClockTimer = setTimeout(updateQMClock, delay);
+}
+
+function openQuickMenu() {
+    if (isQuickMenuOpen) return;
+    isQuickMenuOpen = true;
+    const qm = document.getElementById('quick-menu');
+    if (!qm) return;
+    qm.style.display = 'flex';
+    void qm.offsetWidth;
+
+    const interactionBlocker = document.getElementById('interaction-blocker');
+    if(interactionBlocker) interactionBlocker.style.display = 'none';
+
+    updateQMClock();
+
+    requestAnimationFrame(() => qm.classList.add('open'));
+}
+
+function closeQuickMenu() {
+    if (!isQuickMenuOpen) return;
+    isQuickMenuOpen = false;
+    const qm = document.getElementById('quick-menu');
+    if (!qm) return;
+    qm.classList.remove('open');
+    setTimeout(() => { if(!isQuickMenuOpen) qm.style.display = 'none'; }, 300);
+}
 
 function populateDock() {
     // Clear only the app icons
@@ -451,1335 +498,265 @@ function closeSearch() {
     createAppIcons(); // Reset to full, sorted list
 }
 
-
+// ridespeedy engine
 function setupDrawerInteractions() {
-    let startY = 0, startX = 0;
-    let currentY = 0, currentX = 0;
-    let dragStartIndex = -1; // NEW: Tracks the initial index for horizontal swipe
-    let initialDrawerPosition = -100;
-    let isDragging = false;
-    let isDrawerInMotion = false;
-    let dragStartTime = 0;
-    let lastY = 0;
-    let velocities = [];
-    let dockHideTimeout = null;
-    let longPressTimer;
-    const longPressDuration = 500; // 500ms for a long press
-	let dragSource = null; // 'handle', 'body', 'content'
-    const flickVelocityThreshold = 0.4;
-    const dockThreshold = -2.5; // Threshold for dock appearance
-    const openThreshold = -50;
-    const drawerPill = document.querySelector('.drawer-pill');
     const drawerHandle = document.querySelector('.drawer-handle');
-	const appDrawerHandle = document.querySelector('.app-drawer-handle');
-    const oneButtonNavHandle = document.getElementById('one-button-nav-handle');
 
-	const startLongPress = (e) => {
-        if (oneButtonNavEnabled) return; 
-        if (document.body.classList.contains('immersive-active')) return;
+    // Swipe up on drawer handle to open quick menu.
+    // Taps are passed through to the content underneath.
+    if (drawerHandle) {
+        let handleStartY = 0;
+        let handleDragging = false;
+        let handleSwiped = false;
+        const SWIPE_THRESHOLD = 50;
 
-        if (!isDragging) {
-             longPressTimer = setTimeout(() => {
-                openAppSwitcherUI();
-            }, longPressDuration);
-        }
-    };
+        function forwardClick(clientX, clientY) {
+            const overlay = document.getElementById("swipe-overlay");
 
-    const cancelLongPress = () => {
-        clearTimeout(longPressTimer);
-    };
+            const handlePE = drawerHandle.style.pointerEvents;
+            const overlayPE = overlay ? overlay.style.pointerEvents : "";
 
-    if (drawerPill) {
-        drawerPill.addEventListener('mousedown', startLongPress);
-        drawerPill.addEventListener('touchstart', startLongPress);
-        
-        drawerPill.addEventListener('mouseup', cancelLongPress);
-        drawerPill.addEventListener('mouseleave', cancelLongPress);
-        drawerPill.addEventListener('touchend', cancelLongPress);
-    }
-        
-    // Create interaction blocker overlay
-	const interactionBlocker = document.getElementById('interaction-blocker');
-    
-    populateDock();
-    
-    // Create transparent overlay for app swipe detection
-    const swipeOverlay = document.createElement('div');
-    swipeOverlay.id = 'swipe-overlay';
-    swipeOverlay.style.position = 'fixed';
-    swipeOverlay.style.bottom = '0';
-    swipeOverlay.style.left = '0';
-    swipeOverlay.style.width = '100%';
-    swipeOverlay.style.height = '100%'; // 100% of screen for swipe detection
-    swipeOverlay.style.zIndex = '1000';
-    swipeOverlay.style.display = 'none';
-    swipeOverlay.style.pointerEvents = 'none'; // Start with no interaction
-    document.body.appendChild(swipeOverlay);
-	
-	let isPendingDrag = false;
+            drawerHandle.style.pointerEvents = "none";
+            if (overlay) overlay.style.pointerEvents = "none";
 
-	function prepareDrag(xPosition, yPosition) {
-        startX = xPosition;
-        startY = yPosition;
-        lastY = yPosition;
-        currentX = xPosition;
-        currentY = yPosition;
-        dragStartTime = Date.now();
-        isPendingDrag = true;
-    }
+            const passthrough = document.querySelectorAll(".fullscreen-embed, iframe");
+            const original = new Map();
 
-    let cachedOpenEmbed = null;
-    let cachedWindowHeight = window.innerHeight;
-    window.addEventListener('resize', () => cachedWindowHeight = window.innerHeight, {passive: true});
-
-	function startDrag(xPosition, yPosition) {
-        if (xPosition !== undefined) startX = xPosition;
-        if (yPosition !== undefined) startY = yPosition;
-        lastY = startY;
-        currentX = startX;
-        currentY = startY;
-        dragStartIndex = -1; // Reset on new drag
-        isDragging = true;
-        isPendingDrag = false;
-        isDrawerInMotion = true;
-        velocities =[];
-        
-        // PRE-CALCULATE DOM queries before the high-frequency move loop starts
-        cachedOpenEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-        
-        appDrawer.style.transition = 'opacity 0.3s, filter 0.3s';
-		document.querySelectorAll('.fullscreen-embed iframe').forEach(frame => {
-            frame.style.pointerEvents = 'none';
-        });
-    }
-
-	function moveDrawer(xPosition, yPosition) {
-	    if (!isDragging) return;
-
-        touchEndX = xPosition;
-        touchEndY = yPosition;
-        currentX = xPosition;
-        const deltaX = currentX - startX;
-        const verticalDelta = startY - yPosition; // Use a different name to avoid conflict
-
-        const HORIZONTAL_SWIPE_DEADZONE = 20; // Min horizontal movement to trigger switcher
-        const VERTICAL_SWIPE_LIMIT = 50;      // Max vertical movement for a horizontal gesture
-
-        // If switcher is visible and user swipes up past the limit, discard it.
-        if (appSwitcherVisible && verticalDelta > VERTICAL_SWIPE_LIMIT) {
-            discardAndCloseAppSwitcher();
-            return; // Stop processing this gesture immediately.
-        }
-
-        // Determine if swipe is horizontal (and not significantly vertical)
-        if (Math.abs(verticalDelta) < VERTICAL_SWIPE_LIMIT && Math.abs(deltaX) > Math.abs(verticalDelta) + 20) {
-            // Immersive Check
-            if (document.body.classList.contains('immersive-active')) return;
-            
-            // 1. App Switcher: Restricted to Handle
-            if (dragSource === 'handle') {
-                if (!appSwitcherVisible && Math.abs(deltaX) > HORIZONTAL_SWIPE_DEADZONE) {
-                    openAppSwitcher();
-                }
-            }
-
-            // 2. Wallpaper Swipe: Handled in touchend/move via simple ignore here
-            const isAppOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-            if (!appSwitcherVisible && !isAppOpen) {
-                // It's a horizontal swipe on home.
-                // If dragging body, let it be handled by wallpaper logic (don't move drawer vertical).
-                // If dragging handle, we allow app switcher (above), but don't move drawer.
-                return; 
-            }
-
-			if (appSwitcherVisible) {
-		        if (dragStartIndex === -1) {
-		            dragStartIndex = appSwitcherIndex; // Set initial index on first horizontal move
-		        }
-		
-		        const itemWidth = 80; // approximate width + gap
-		        const slotsMoved = Math.round(deltaX / itemWidth);
-		        const newIndex = dragStartIndex + slotsMoved;
-		
-		        // Only update the UI if the calculated index has actually changed
-		        if (newIndex !== appSwitcherIndex) {
-		            updateSwitcherSelection(newIndex);
-		        }
-		    }
-		    return; // Don't process vertical drawer movement
-		}
-	
-	    const now = Date.now();
-	    const deltaTime = now - dragStartTime;
-	    if (deltaTime > 0) {
-	        const velocity = (lastY - yPosition) / deltaTime;
-	        velocities.push(velocity);
-	        if (velocities.length > 5) {
-	            velocities.shift();
-	        }
-	    }
-		
-	    lastY = yPosition;
-	    currentY = yPosition;
-	    const deltaY = startY - currentY; // Positive for upward swipe
-	    const movementPercentage = (deltaY / cachedWindowHeight) * 100;
-	
-	    const openEmbed = cachedOpenEmbed;
-
-        // OPTIMIZATION: Throttle visual updates to screen refresh rate
-        if (window._drawerMoveRaf) return;
-        window._drawerMoveRaf = requestAnimationFrame(() => {
-            window._drawerMoveRaf = null;
-
-		if (openEmbed) {
-			// Immersive Mode Check: Do not visually manipulate the window
-			if (document.body.classList.contains('immersive-active')) {
-				return; 
-			}
-			
-			// LOGIC FOR DRAGGING AN OPEN APP
-	        openEmbed.style.willChange = 'transform, opacity, border-radius'; // GPU Layer Hint
-
-	        // Start effect after a small deadzone
-	        if (deltaY > 50) {
-		    cancelLongPress();
-		    const dynArea = document.getElementById('dynamic-area');
-		    if (dynArea) dynArea.style.opacity = '0';
-			
-	            // Progress is how far along the "close" gesture we are. 
-	            // A 20% screen height swipe is considered the full gesture.
-	            const progress = Math.min(1, deltaY / (cachedWindowHeight * 0.2));
-	
-	            // Move the card up as you swipe, making it feel like you're pushing it away
-	            const translateY = -deltaY;
-	
-	            // Scale down from 1 to 0.8 as you drag
-	            const scale = 1 - (progress * 0.2);
-	
-	            // Add border radius up to 35px
-	            const borderRadius = progress * 50;
-	
-	            // Apply the border now that we're dragging
-	            openEmbed.style.border = '1px solid var(--glass-border)';
-	
-	            // Set the new styles
-	            openEmbed.style.transform = `perspective(100vh) rotateX(${(progress * 20)}deg) translateY(${translateY}px) scale(${scale})`;
-	            openEmbed.style.opacity = 1 - (progress * 1); // Fade out slightly
-	            openEmbed.style.filter = `blur(${(progress * 10)}px)`;
-				openEmbed.style.cornerShape = 'superellipse(1.5)';
-	            openEmbed.style.borderRadius = `${borderRadius}px`;
-	        } else {
-                cancelLongPress();
-	            // If dragging back down below the deadzone, reset to initial state
-	            openEmbed.style.transform = 'perspective(100vh) rotateX(0deg) translateY(0px) scale(1)';
-	            openEmbed.style.opacity = '1';
-    	        openEmbed.style.filter = 'none';
-	            openEmbed.style.borderRadius = `${window.systemScreenCurve || 0}px`;
-	            openEmbed.style.border = 'none';
-				openEmbed.style.cornerShape = 'superellipse(1.5)';
-	            
-                const dynArea = document.getElementById('dynamic-area');
-                if (dynArea) dynArea.style.opacity = '1';
-	        }
-	
-	        // Ensure the drawer UI is not visible
-	        appDrawer.style.opacity = '0';
-	        interactionBlocker.style.pointerEvents = 'none';
-	
-	    } else {
-            // LOGIC FOR DRAGGING THE DRAWER (NO APP OPEN)
-            // --- Donburi Swipe Down ---
-            if (dragSource === 'body' && movementPercentage < -5) {
-                const donburi = document.getElementById('donburi-container');
-                if (donburi) {
-                    const dynArea = document.getElementById('dynamic-area');
-                    if (dynArea) dynArea.style.opacity = '0';
-                    donburi.style.display = 'block';
-                    donburi.style.contentVisibility = 'auto';
-	                donburi.style.pointerEvents = 'none';
-                    const progress = Math.min(1, Math.abs(movementPercentage) / 30);
-                    donburi.style.transform = `translateY(${-100 + (progress * 100)}%)`;
-                }
-            }
-			
-            // Only show Dock if dragging from Handle. If dragging from Body, keep it hidden.
-	        if (dragSource === 'handle' && movementPercentage > 2.5 && movementPercentage < 25) {
-	            if (dock.style.display === 'none' || dock.style.display === '') {
-	                dock.style.display = 'flex';
-	                requestAnimationFrame(() => {
-	                    dock.classList.add('show');
-	                });
-	            } else {
-	                dock.classList.add('show');
-	            }
-	            dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
-	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
-	            drawerPill.style.opacity = '0';
-
-				// Restore all main UI elements
-			    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
-				    el.classList.remove('force-hide');
-			        el.style.display = el.dataset.originalDisplay;
-                    el.style.removeProperty('content-visibility'); // OPTIMIZATION
-			        el.style.transition = 'opacity 0.3s ease';
-			
-			        requestAnimationFrame(() => {
-			            el.style.opacity = '1';
-			        });
-			    });
-	        } else {
-	            dock.classList.remove('show');
-	            dock.style.boxShadow = 'none';
-	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
-	            dockHideTimeout = setTimeout(() => {
-	                if (!dock.classList.contains('show')) {
-	                    dock.style.display = 'none';
-	                }
-	            }, 300);
-	            drawerPill.style.opacity = '1';
-	        }
-		    
-			cancelLongPress();
-	
-			const newPosition = Math.max(-100, Math.min(0, initialDrawerPosition + movementPercentage));
-	        
-	        if (appDrawer.style.display === 'none' && newPosition > -100) {
-	            appDrawer.style.display = 'flex';
-	        }
-
-            // Visually, the drawer will only open/close completely upon release (flick/tap).
-            if (movementPercentage > 5 && !appDrawer.classList.contains('open')) {
-                if (appDrawer.style.display === 'none') appDrawer.style.display = 'flex';
-                interactionBlocker.style.display = 'block';
-                interactionBlocker.style.pointerEvents = openEmbed ? 'none' : 'auto';
-            }
-	    }
-        });
-	}
-
-	function endDrag() {
-	    if (!isDragging) return;
-
-        // Cancel any pending drag frames to prevent them from overriding the snap animation
-        if (window._drawerMoveRaf) {
-            cancelAnimationFrame(window._drawerMoveRaf);
-            window._drawerMoveRaf = null;
-        }
-	
-	    const deltaY = startY - currentY; // Positive for upward swipe
-	    let avgVelocity = 0;
-	    if (velocities.length > 0) {
-	        avgVelocity = velocities.reduce((sum, v) => sum + v, 0) / velocities.length;
-	    }
-	    const movementPercentage = (deltaY / cachedWindowHeight) * 100;
-	    const isFlickUp = avgVelocity > flickVelocityThreshold;
-	    const isFlickDown = avgVelocity < -flickVelocityThreshold;
-	
-	    const openEmbed = cachedOpenEmbed;
-	    
-	    if (openEmbed) {
-            // Immersive Mode Exit Logic
-            if (document.body.classList.contains('immersive-active')) {
-                // If swiped up sufficiently, exit immersive mode
-                if (movementPercentage > 5 || isFlickUp) {
-                    setImmersiveMode(false);
-                }
-                // Always reset drag state without closing the app
-                isDragging = false;
-                return;
-            }
-
-	        // Immersive Mode Trigger
-            // movementPercentage is negative for down swipes.
-            if (movementPercentage < -10) {
-                setImmersiveMode(true);
-                isDragging = false;
-				setTimeout(() => {
-			        const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-			        if (activeEmbed) {
-			            const activeIframe = activeEmbed.querySelector('iframe');
-			            if (activeIframe) {
-			                activeIframe.style.pointerEvents = 'auto';
-			            }
-			        }
-			    }, 350); // Delay should be slightly longer than your CSS animation
-				return;
-            }
-	    
-	        // LOGIC FOR FINISHING AN APP DRAG            
-            // Clean up GPU hint after transition ends
-            setTimeout(() => { 
-                if (openEmbed) {
-                    openEmbed.style.willChange = 'auto'; 
-                    openEmbed.style.removeProperty('transition');
-                }
-            }, 300);
-	
-	        // Condition to close: swipe up more than 20% of the screen OR a fast flick up
-	        if (movementPercentage > 20 || isFlickUp) {
-	            // Animate to a shrunken state and then minimize
-	            openEmbed.style.transform = 'perspective(100vh) rotateX(40deg) translateY(-40px) scale(0.8)'; // Center and shrink
-	            openEmbed.style.opacity = '0';
-	            openEmbed.style.filter = 'blur(10px)';
-	            openEmbed.style.borderRadius = '50px';
-				openEmbed.style.cornerShape = 'superellipse(1.5)';
-				openEmbed.style.border = '1px solid var(--glass-border)';
-	            document.querySelector('body').style.setProperty('--bg-blur', 'blur(0px)');
-
-                // NEW: Revert background effects on close
-                applyWallpaperEffects();
-                document.body.style.setProperty('--bg-transform-scale', '1.05');
-	
-	            setTimeout(() => {
-	                minimizeFullscreenEmbed(false); // Call with false to skip animation
-	                swipeOverlay.style.display = 'none';
-	                swipeOverlay.style.pointerEvents = 'none';
-	                openEmbed.style.border = 'none'; // Clean up border after animation
-	            }, 300);
-	
-				// Reset drawer & dock state
-	            dock.classList.remove('show');
-	            dock.style.boxShadow = 'none';
-	            if (dockHideTimeout) clearTimeout(dockHideTimeout);
-	            dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
-	            appDrawer.classList.remove('open');
-                setTimeout(() => {
-                    if (!appDrawer.classList.contains('open')) {
-                        appDrawer.style.display = 'none';
-                        appDrawer.style.bottom = '';
-                        appDrawer.style.opacity = '';
-                        appDrawer.style.zIndex = '';
-                    }
-                }, 300);
-	            initialDrawerPosition = -100;
-	            interactionBlocker.style.display = 'none';
-	        } else {
-	            // Animate back to the original fullscreen state
-	            openEmbed.style.transform = 'perspective(100vh) rotateX(0deg) translateY(0px) scale(1)';
-	            openEmbed.style.opacity = '1';
-	            openEmbed.style.filter = 'none';
-	            openEmbed.style.borderRadius = `${window.systemScreenCurve || 0}px`;
-				openEmbed.style.cornerShape = 'superellipse(1.5)';
-	            openEmbed.style.border = 'none'; // Animate border removal
-	            
-	            appDrawer.style.opacity = '0';
-				const dynArea = document.getElementById('dynamic-area');
-				if (dynArea) dynArea.style.opacity = '1';
-                // NEW: Apply opening effects on snap-back
-                const brightnessValue = document.getElementById('wallpaper-brightness-slider')?.value || 100;
-                const contrastValue = document.getElementById('wallpaper-contrast-slider')?.value || 100;
-                const saturateValue = document.getElementById('wallpaper-saturate-slider')?.value || 100;
-                const hueValue = document.getElementById('wallpaper-hue-slider')?.value || 0;
-                const openFilter = `blur(10px) brightness(${brightnessValue}%) contrast(${contrastValue}%) saturate(${saturateValue}%) hue-rotate(${hueValue}deg)`;
-                document.body.style.setProperty('--wallpaper-filter', openFilter);
-                document.body.style.setProperty('--bg-transform-scale', '1.25');
-	        }
-
-			setTimeout(() => {
-		        const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-		        if (activeEmbed) {
-		            const activeIframe = activeEmbed.querySelector('iframe');
-		            if (activeIframe) {
-		                activeIframe.style.pointerEvents = 'auto';
-		            }
-		        }
-		    }, 350); // Delay should be slightly longer than your CSS animation
-	
-	    } else {
-	        // LOGIC FOR FINISHING A DRAWER DRAG (NO APP OPEN)
-			const dynArea = document.getElementById('dynamic-area');
-			if (dynArea) dynArea.style.opacity = '1';
-	        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-	
-			const startedOpen = appDrawer.classList.contains('open');
-            const closing = startedOpen && (movementPercentage < -10 || isFlickDown);
-            const opening = !startedOpen && (movementPercentage > 10 || isFlickUp);
-            const significant = closing || opening;
-            const smallOpen = false; // Disabled with live drag removal
-			
-            // Donburi Swipe Down Check
-            if (dragSource === 'body' && !startedOpen && movementPercentage < -15) {
-                openDonburi();
-                isDragging = false;
-                return;
-            } else if (dragSource === 'body' && !startedOpen) {
-                // Cancel Donburi drag if not enough
-                const donburi = document.getElementById('donburi-container');
-                if(donburi) {
-                    donburi.style.transform = 'translateY(-100%)';
-                }
-				setTimeout(() => {
-	                if(donburi) {
-	                    donburi.style.display = 'none';
-		                donburi.style.contentVisibility = 'none';
-					}
-				}, 300);
-            }
-			
-	        if (smallOpen && dragSource === 'handle') {
-                // Show Dock (Only from Handle)
-	            dock.style.display = 'flex';
-	            requestAnimationFrame(() => {
-	                dock.classList.add('show');
-	                dock.style.boxShadow = 'var(--sun-shadow), 0 -2px 10px rgba(0, 0, 0, 0.1)';
-	            });
-	            appDrawer.style.opacity = '0';
-	            appDrawer.classList.remove('open');
-	            initialDrawerPosition = -100;
-	            interactionBlocker.style.display = 'none';
-                applyWallpaperEffects();
-                document.body.style.setProperty('--bg-transform-scale', '1.05');				
-			    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
-				    el.classList.remove('force-hide');
-			        el.style.display = el.dataset.originalDisplay;
-                    el.style.removeProperty('content-visibility'); 
-			        el.style.transition = 'opacity 0.3s ease';
-			        requestAnimationFrame(() => { el.style.opacity = '1'; });
-			    });
-	        } else if (significant) {
-                // Execute Action (Open or Close based on direction)
-				if (opening) {
-                    // Open
-                    dock.classList.remove('show');
-                    dock.style.boxShadow = 'none';
-                    if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                    dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
-                    appDrawer.style.display = 'flex';
-                    appDrawer.style.bottom = '0%';
-                    appDrawer.style.opacity = '1';
-                    appDrawer.classList.add('open');
-                    initialDrawerPosition = 0;
-                    interactionBlocker.style.display = 'none';
-                    updateDockVisibility();
-                    applyWallpaperEffects();
-                    document.body.style.setProperty('--bg-transform-scale', '1.05');
-                    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
-                        if (!el.dataset.originalDisplay) el.dataset.originalDisplay = window.getComputedStyle(el).display;
-                        el.style.transition = 'opacity 0.3s ease';
-                        el.style.opacity = '0';
-                        setTimeout(() => {
-                            el.classList.add('force-hide');
-                            el.style.contentVisibility = 'hidden'; 
-                        }, 300);
-                    });
-				} else {
-                    // Close
-                    dock.classList.remove('show');
-                    dock.style.boxShadow = 'none';
-                    if (dockHideTimeout) clearTimeout(dockHideTimeout);
-                    dockHideTimeout = setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
-                    appDrawer.classList.remove('open');
-                    setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
-                    initialDrawerPosition = -100;
-                    interactionBlocker.style.display = 'none';
-                    updateDockVisibility();
-                    applyWallpaperEffects();
-                    document.body.style.setProperty('--bg-transform-scale', '1.05');
-                    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
-                        el.classList.remove('force-hide');
-                        el.style.display = el.dataset.originalDisplay;
-                        el.style.removeProperty('content-visibility');
-                        el.style.transition = 'opacity 0.3s ease';
-                        requestAnimationFrame(() => { el.style.opacity = '1'; });
-                    });
-                }
-			} else {
-                // Snap Back
-	            if (startedOpen) {
-                    appDrawer.classList.add('open');
-                } else {
-                    appDrawer.classList.remove('open');
-                    setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
-                }
-	        }
-			
-            appDrawer.style.bottom = '';
-            appDrawer.style.opacity = '';
-	        
-	        swipeOverlay.style.display = 'none';
-	        swipeOverlay.style.pointerEvents = 'none';
-
-			resetIndicatorTimeout();
-	    }
-		
-        // FIX: Unconditionally restore pointer events for ALL iframes
-        document.querySelectorAll('iframe').forEach(f => f.style.pointerEvents = 'auto');
-	
-	    isDragging = false;
-        
-		// --- Wallpaper Switch Integration ---
-        // Only trigger wallpaper swipe if we didn't initiate a vertical drawer move
-        // AND we started the gesture on the background (not the drawer handle).
-        const swipeDistanceX = touchEndX - touchStartX;
-        const swipeDistanceY = touchEndY - touchStartY;
-        // Added strict check: vertical movement must be < 40px to prevent diagonal Donburi swipes from switching wallpaper
-        if (dragSource === 'body' && Math.abs(swipeDistanceX) > 50 && Math.abs(swipeDistanceY) < 40) {
-             handleSwipe();
-        }
-
-	    setTimeout(() => {
-	        isDrawerInMotion = false;
-	    }, 300);
-	}
-
-    // --- Wallpaper ---
-    let touchStartX = 0, touchStartY = 0;
-    let touchEndX = 0, touchEndY = 0;
-
-    function handleSwipe() {
-        const swipeDistanceX = touchEndX - touchStartX;
-        updatePageIndicator();
-        if (recentWallpapers.length >= 2 && Math.abs(swipeDistanceX) > 50) {
-            switchWallpaper(swipeDistanceX > 0 ? 'left' : 'right');
-        }
-    }
-
-    // Add initial swipe detection in app
-    function setupAppSwipeDetection() {
-        let touchStartY = 0;
-        let touchStartTime = 0;
-        let isInSwipeMode = false;
-
-	swipeOverlay.addEventListener('touchstart', (e) => {
-            // Stop this event from bubbling up to the general document listener.
-            // This ensures that when the overlay is active, it takes priority
-            // and prevents a double-drag initiation.
-            e.stopPropagation(); 
-        
-            touchStartY = e.touches[0].clientY;
-            touchStartTime = Date.now();
-        
-            // We also need to start the long-press timer here for the in-app context
-            startLongPress(e); 
-
-        }, { passive: true });
-        
-        swipeOverlay.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].clientY;
-            touchStartTime = Date.now();
-        }, { passive: true });
-        
-        swipeOverlay.addEventListener('touchmove', (e) => {
-            const currentY = e.touches[0].clientY;
-            const deltaY = touchStartY - currentY;
-            
-            if (deltaY > 25 && !isInSwipeMode) { // Detected upward swipe
-                isInSwipeMode = true;
-                startDrag(touchStartY);
-            }
-            
-            if (isInSwipeMode) {
-                moveDrawer(currentY);
-                e.preventDefault(); // Prevent default scrolling when in swipe mode
-            }
-        }, { passive: false });
-        
-        swipeOverlay.addEventListener('touchend', () => {
-	    cancelLongPress();
-		
-            if (isInSwipeMode) {
-                endDrag();
-                isInSwipeMode = false;
-            }
-        });
-        
-        // Similar handling for mouse events
-        swipeOverlay.addEventListener('mousedown', (e) => {
-            e.stopPropagation();
-            touchStartY = e.clientY;
-            touchStartTime = Date.now();
-            startLongPress(e);
-        });
-        
-        swipeOverlay.addEventListener('mousemove', (e) => {
-            if (e.buttons !== 1) return; // Only proceed if left mouse button is pressed
-
-	    cancelLongPress();
-            
-            const deltaY = touchStartY - e.clientY;
-            
-            if (deltaY > 25 && !isInSwipeMode) {
-                isInSwipeMode = true;
-                startDrag(touchStartY);
-            }
-            
-            if (isInSwipeMode) {
-                moveDrawer(e.clientY);
-            }
-        });
-        
-        swipeOverlay.addEventListener('mouseup', () => {
-            cancelLongPress();
-		
-            if (isInSwipeMode) {
-                endDrag();
-                isInSwipeMode = false;
-            }
-        });
-    }
-    
-    setupAppSwipeDetection();
-
-	// --- Split Screen Divider Drag Logic ---
-    const divider = document.getElementById('split-divider');
-    let isDividerDragging = false;
-    
-    if (divider) {
-        const startDividerDrag = (e) => {
-            isDividerDragging = true;
-            divider.classList.add('active'); 
-            e.preventDefault();
-            // Disable iframe pointer events so they don't steal the mouse drag
-            document.querySelectorAll('iframe').forEach(f => f.style.pointerEvents = 'none');
-        };
-
-        const stopDividerDrag = () => {
-            if (!isDividerDragging) return;
-            isDividerDragging = false;
-            divider.classList.remove('active');
-            // Restore iframe pointer events
-            document.querySelectorAll('iframe').forEach(f => f.style.pointerEvents = 'auto');
-        };
-
-        divider.addEventListener('touchstart', startDividerDrag, {passive: false});
-        divider.addEventListener('mousedown', startDividerDrag);
-
-        const handleDividerMove = (clientX) => {
-            if (!isDividerDragging || !splitScreenState.active) return;
-            
-            const width = window.innerWidth;
-            const percentage = (clientX / width) * 100;
-            
-            // Snap to close thresholds
-            if (percentage < 15) {
-                stopDividerDrag();
-                exitSplitScreen(splitScreenState.rightAppUrl); // Close Left, Right Survives
-            } else if (percentage > 85) {
-                stopDividerDrag();
-                exitSplitScreen(splitScreenState.leftAppUrl); // Close Right, Left Survives
-            } else {
-                updateSplitLayout(percentage);
-            }
-        };
-
-        window.addEventListener('touchmove', (e) => {
-            if (isDividerDragging) handleDividerMove(e.touches[0].clientX);
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (isDividerDragging) handleDividerMove(e.clientX);
-        });
-
-        window.addEventListener('touchend', stopDividerDrag);
-        window.addEventListener('mouseup', stopDividerDrag);
-    }
-
-	// --- Helper for Split Gesture Logic ---
-    const checkSplitGestureStart = (x, y) => {
-        if (oneButtonNavEnabled) return false;
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        
-        // Only consider if an app is open and not already splitting
-        const isOpenSingleApp = document.querySelector('.fullscreen-embed[style*="display: block"]') && !splitScreenState.active && !splitScreenState.isSelecting;
-        
-        if (isOpenSingleApp && y > height * 0.85) {
-            if (x < width * 0.2) { // Bottom-Left Corner
-                window.potentialSplitSide = 'left'; // Dragging FROM left = New app on LEFT
-                window.splitGestureStart = { x, y };
-                return true;
-            } else if (x > width * 0.8) { // Bottom-Right Corner
-                window.potentialSplitSide = 'right'; // Dragging FROM right = New app on RIGHT
-                window.splitGestureStart = { x, y };
-                return true;
-            }
-        }
-        return false;
-    };
-
-    const handleSplitGestureMove = (x, y) => {
-        if (window.potentialSplitSide && !isDragging) {
-            const start = window.splitGestureStart;
-            const deltaX = x - start.x;
-            const deltaY = y - start.y;
-    
-            // Check for diagonal-up movement
-            if (deltaY < -40 && Math.abs(deltaX) > 40) { 
-                const side = window.potentialSplitSide;
-                
-                // Left Corner -> Drag Right -> New App on Left
-                if (side === 'left' && deltaX > 0) {
-                    initiateSplitScreen('left');
-                    window.potentialSplitSide = null;
-                    return true;
-                }
-                // Right Corner -> Drag Left -> New App on Right
-                if (side === 'right' && deltaX < 0) {
-                    initiateSplitScreen('right');
-                    window.potentialSplitSide = null;
-                    return true;
-                }
-            }
-        }
-        return false;
-    };
-
-    // --- Touch Events ---
-	document.addEventListener('touchstart', (e) => {
-	    if (checkSplitGestureStart(e.touches[0].clientX, e.touches[0].clientY)) return;
-        
-        const clientX = e.touches[0].clientX;
-        const clientY = e.touches[0].clientY;
-        const target = e.target;
-        
-        const isAppOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-        const isDrawerOpen = appDrawer.classList.contains('open');
-        const appDrawerContent = document.querySelector('.app-drawer-content');
-
-        let shouldStart = false;
-        dragSource = null;
-
-        if (isAppOpen) {
-            // App Open: Handle Only
-            if (drawerHandle.contains(target)) {
-                shouldStart = true;
-                dragSource = 'handle';
-            }
-        } else {
-            if (isDrawerOpen) {
-                // Drawer Open: Handle or Top Content
-                if (appDrawerHandle.contains(target)) {
-                    shouldStart = true;
-                    dragSource = 'handle';
-                } else if (appDrawer.contains(target) && appDrawerContent && appDrawerContent.scrollTop === 0) {
-                    shouldStart = true;
-                    dragSource = 'content';
-                }
-            } else {
-                // Home Screen
-                const isClockContainer = target.closest('.container');
-                if (drawerHandle.contains(target) || appDrawerHandle.contains(target)) {
-                    shouldStart = true;
-                    dragSource = 'handle';
-                } else if (isClockContainer || target === document.body || target.id === 'background-video' || target.id === 'depth-layer' || target.id === 'environment-layer' || target.id === 'time-of-day-overlay') {
-                    shouldStart = true;
-                    dragSource = 'body';
-                }
-            }
-        }
-		
-		if (shouldStart) {
-            // Set wallpaper start coordinates
-            touchStartX = clientX;
-            touchStartY = clientY;
-            touchEndX = clientX;
-            touchEndY = clientY;
-
-            // Ensure logic knows we are starting from open/closed state
-            initialDrawerPosition = isDrawerOpen ? 0 : -100;
-            prepareDrag(clientX, clientY);
-        }
-	}, { passive: false });
-
-	document.addEventListener('touchmove', (e) => {
-	    if (handleSplitGestureMove(e.touches[0].clientX, e.touches[0].clientY)) {
-            e.preventDefault();
-            return;
-        }
-	    if (isDragging) {
-            const y = e.touches[0].clientY;
-            const isDrawerOpen = appDrawer.classList.contains('open');
-            const deltaY = startY - y; // Positive = Up, Negative = Down
-
-            if (isDrawerOpen) {
-                // If Drawer Open:
-                // Pushing Up (deltaY > 0): Content Scroll. Cancel Drag.
-                if (deltaY > 0) {
-                    isDragging = false;
-                    return; // Allow default scroll
-                }
-            }
-
-	        e.preventDefault();
-	        moveDrawer(e.touches[0].clientX, y);
-	    }
-	}, { passive: false });
-
-    // --- Mouse Events for Split Gesture ---
-    document.addEventListener('mousedown', (e) => {
-		if (oneButtonNavEnabled) return;
-        if (e.button !== 0) return;
-        
-        const clientX = e.clientX;
-        const clientY = e.clientY;
-        const target = e.target;
-        
-        const isAppOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-        const isDrawerOpen = appDrawer.classList.contains('open');
-        const appDrawerContent = document.querySelector('.app-drawer-content');
-
-        let shouldStart = false;
-        dragSource = null;
-
-        if (isAppOpen) {
-            if (drawerHandle.contains(target)) {
-                shouldStart = true;
-                dragSource = 'handle';
-            }
-        } else {
-            if (isDrawerOpen) {
-                if (appDrawerHandle.contains(target)) {
-                    shouldStart = true;
-                    dragSource = 'handle';
-                } else if (appDrawer.contains(target) && appDrawerContent && appDrawerContent.scrollTop === 0) {
-                    shouldStart = true;
-                    dragSource = 'content';
-                }
-            } else {
-                if (drawerHandle.contains(target) || appDrawerHandle.contains(target)) {
-                    shouldStart = true;
-                    dragSource = 'handle';
-                } else {
-                    if (target === document.body || target.id === 'background-video' || target.id === 'depth-layer') {
-                        shouldStart = true;
-                        dragSource = 'body';
-                    }
-                }
-            }
-        }
-
-		if (shouldStart) {
-            // Set coordinate tracking for mouse-based wallpaper swipes
-            touchStartX = clientX;
-            touchStartY = clientY;
-            touchEndX = clientX;
-            touchEndY = clientY;
-
-            initialDrawerPosition = isDrawerOpen ? 0 : -100;
-            prepareDrag(clientX, clientY);
-        }
-    });
-
-	document.addEventListener('mousemove', (e) => {
-        // Check split gesture move
-        if (e.buttons === 1 && handleSplitGestureMove(e.clientX, e.clientY)) {
-            return;
-        }
-
-        if (isDragging) {
-            // Update coordinates for wallpaper swipe calculation
-            touchEndX = e.clientX;
-            touchEndY = e.clientY;
-            moveDrawer(e.clientX, e.clientY);
-        }
-    });
-
-    // Reset split gesture on up
-    const resetSplitGesture = () => { window.potentialSplitSide = null; };
-    document.addEventListener('mouseup', resetSplitGesture);
-    document.addEventListener('touchend', resetSplitGesture);
-
-	document.addEventListener('touchmove', (e) => {
-	    if (handleSplitGestureMove(e.touches[0].clientX, e.touches[0].clientY)) {
-            e.preventDefault();
-            return;
-        }
-        
-        if (isPendingDrag && !isDragging) {
-            const deltaX = Math.abs(e.touches[0].clientX - startX);
-            const deltaY = Math.abs(e.touches[0].clientY - startY);
-            if (deltaX > 10 || deltaY > 10) {
-                startDrag();
-            }
-        }
-
-	    if (isDragging) {
-            const x = e.touches[0].clientX;
-            const y = e.touches[0].clientY;
-            const isDrawerOpen = appDrawer.classList.contains('open');
-            const deltaX = x - startX;
-            const deltaY = startY - y; 
-	
-	        // Check for a clear DIAGONAL-UP movement
-	        if (deltaY < -40 && Math.abs(deltaX) > 40) { 
-	            const side = window.potentialSplitSide;
-	            // Check direction: swipe inwards from the corner
-	            if ((side === 'left' && deltaX > 0) || (side === 'right' && deltaX < 0)) {
-	                initiateSplitScreen(side === 'left' ? 'right' : 'left'); // new app opens on opposite side
-	                window.potentialSplitSide = null; // Consume gesture
-	                e.preventDefault();
-	                return;
-	            }
-	        }
-	    }
-	    
-	    if (isDragging) {
-	        e.preventDefault();
-	        moveDrawer(e.touches[0].clientX, e.touches[0].clientY);
-	    }
-	}, { passive: false });
-
-	// Helper to pass click coordinates exactly into the active iframe or system element
-    function forwardClickThroughHandle(x, y) {
-        const drawerHandle = document.querySelector('.drawer-handle');
-        const appDrawerHandle = document.querySelector('.app-drawer-handle');
-        const swipeOverlay = document.getElementById('swipe-overlay'); 
-        const zoom = (parseFloat(document.body.style.zoom) || 100) / 100;
-
-        // Save original states
-        const origDH = drawerHandle ? drawerHandle.style.pointerEvents : '';
-        const origADH = appDrawerHandle ? appDrawerHandle.style.pointerEvents : '';
-        const origSO = swipeOverlay ? swipeOverlay.style.pointerEvents : '';
-
-        // Temporarily disable pointer events on the handles to "look" through the UI
-        if (drawerHandle) drawerHandle.style.pointerEvents = 'none';
-        if (appDrawerHandle) appDrawerHandle.style.pointerEvents = 'none';
-        if (swipeOverlay) swipeOverlay.style.pointerEvents = 'none';
-
-        // FIX: Ensure all embeds and iframes are temporarily "hittable" so elementFromPoint
-        // doesn't fall straight through to the body.
-        const hitElements = document.querySelectorAll('.fullscreen-embed, iframe, .dock-icon, .bento-item');
-        const origPointerEvents = new Map();
-        hitElements.forEach(el => {
-            origPointerEvents.set(el, el.style.pointerEvents);
-            el.style.pointerEvents = 'auto';
-        });
-
-        const el = document.elementFromPoint(x, y);
-
-        // Find the correct iframe (direct hit, or inside the specific embed wrapper we hit)
-        let targetIframe = null;
-        if (el && el.tagName === 'IFRAME') {
-            targetIframe = el;
-        } else if (el && el.classList.contains('fullscreen-embed')) {
-            targetIframe = el.querySelector('iframe');
-        }
-
-		if (targetIframe && targetIframe.contentWindow) {
-            // Forward to Gurapp
-            const rect = targetIframe.getBoundingClientRect();
-            targetIframe.contentWindow.postMessage({
-                type: 'forward-click',
-                x: (x - rect.left) / zoom,
-                y: (y - rect.top) / zoom
-            }, '*');
-        } else if (el) {
-            // System Support - Trigger native click on parent DOM elements (Dock, Home UI, etc.)
-            const clickEvent = new MouseEvent('click', {
-                view: window,
-                bubbles: true,
-                cancelable: true,
-                clientX: x,
-                clientY: y
+            passthrough.forEach(el => {
+                original.set(el, el.style.pointerEvents);
+                el.style.pointerEvents = "auto";
             });
-            el.dispatchEvent(clickEvent);
+
+            const target = document.elementFromPoint(clientX, clientY);
+
+            if (target) {
+                if (target.tagName === "IFRAME") {
+                    const rect = target.getBoundingClientRect();
+                    const zoom = (parseFloat(document.body.style.zoom) || 100) / 100;
+
+                    target.contentWindow?.postMessage({
+                        type: "forward-click",
+                        x: (clientX - rect.left) / zoom,
+                        y: (clientY - rect.top) / zoom
+                    }, "*");
+                } else {
+                    target.dispatchEvent(new MouseEvent("click", {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true,
+                        clientX,
+                        clientY
+                    }));
+                }
+            }
+
+            drawerHandle.style.pointerEvents = handlePE;
+            if (overlay) overlay.style.pointerEvents = overlayPE;
+
+            passthrough.forEach(el => {
+                el.style.pointerEvents = original.get(el);
+            });
         }
 
-        // Restore original states instantly
-        if (drawerHandle) drawerHandle.style.pointerEvents = origDH;
-        if (appDrawerHandle) appDrawerHandle.style.pointerEvents = origADH;
-        if (swipeOverlay) swipeOverlay.style.pointerEvents = origSO;
-        hitElements.forEach(el => {
-            el.style.pointerEvents = origPointerEvents.get(el);
+        drawerHandle.addEventListener('touchstart', (e) => {
+            handleDragging = true;
+            handleSwiped = false;
+            handleStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        drawerHandle.addEventListener('touchmove', (e) => {
+            if (!handleDragging) return;
+
+            const deltaY = handleStartY - e.touches[0].clientY;
+
+            if (deltaY >= SWIPE_THRESHOLD) {
+                handleDragging = false;
+                handleSwiped = true;
+                openQuickMenu();
+            }
+        }, { passive: true });
+
+        drawerHandle.addEventListener('touchend', (e) => {
+            if (!handleSwiped && e.changedTouches.length) {
+                forwardClick(
+                    e.changedTouches[0].clientX,
+                    e.changedTouches[0].clientY
+                );
+            }
+
+            handleDragging = false;
+        });
+
+        drawerHandle.addEventListener('mousedown', (e) => {
+            handleDragging = true;
+            handleSwiped = false;
+            handleStartY = e.clientY;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!handleDragging) return;
+
+            const deltaY = handleStartY - e.clientY;
+
+            if (deltaY >= SWIPE_THRESHOLD) {
+                handleDragging = false;
+                handleSwiped = true;
+                openQuickMenu();
+            }
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (handleDragging && !handleSwiped) {
+                forwardClick(e.clientX, e.clientY);
+            }
+
+            handleDragging = false;
         });
     }
-	
-	document.addEventListener('touchend', (e) => {
-		if (oneButtonNavEnabled) return;
-        if (isDragging || isPendingDrag) { 
-            let isTap = false;
-            let tapX = 0, tapY = 0;
 
-            if (e.changedTouches && e.changedTouches.length > 0) {
-                const touch = e.changedTouches[0];
-                const deltaX = Math.abs(touch.clientX - startX);
-                const deltaY = Math.abs(touch.clientY - startY);
-                const deltaTime = Date.now() - dragStartTime;
-                
-                // Identify if gesture was a quick tap
-                if (deltaX < 15 && deltaY < 15 && deltaTime < 300) {
-                    isTap = true;
-                    tapX = touch.clientX;
-                    tapY = touch.clientY;
-                }
-            }
-
-            if (isDragging) {
-                if (appSwitcherVisible) {
-                    selectAndCloseAppSwitcher();
-                } else {
-                    endDrag();
-                }
-                isDragging = false; 
-            }
-            
-            isPendingDrag = false;
-
-            // Forward the click if it was a fast tap on the handle
-            if (isTap && dragSource === 'handle') {
-                forwardClickThroughHandle(tapX, tapY);
-            }
-        }
-    });
-	
-	// Track global touch time to prevent ghost clicks safely across all scopes
-    window.addEventListener('touchstart', () => { window.lastTouchTime = Date.now(); }, { capture: true, passive: true });
-
-    // Handle 3-finger swipe from Gurapps
-    window.addEventListener('message', (e) => {
-        if (e.data.type === 'three-finger-drag-start') {
-            if (document.body.classList.contains('immersive-active')) return;
-            dragSource = 'handle';
-            const screenY = e.data.y;
-            const screenX = window.innerWidth / 2;
-            touchStartX = screenX;
-            touchStartY = screenY;
-            initialDrawerPosition = appDrawer.classList.contains('open') ? 0 : -100;
-            prepareDrag(screenX, screenY);
-            startDrag(screenX, screenY);
-        } else if (e.data.type === 'three-finger-drag-move') {
-            if (isDragging) {
-                moveDrawer(window.innerWidth / 2, e.data.y);
-            }
-        } else if (e.data.type === 'three-finger-drag-end') {
-            if (isDragging) {
-                endDrag();
-            }
-        }
-    });
-
-	// Mouse Events for regular drawer interaction
-    document.addEventListener('mousedown', (e) => {
-		if (oneButtonNavEnabled) return;
-        if (e.button !== 0) return;
-        // Prevent ghost duplicate clicks when using a touchscreen
-        if (Date.now() - (window.lastTouchTime || 0) < 500) return; 
-
-        const element = document.elementFromPoint(e.clientX, e.clientY);
-        
-        // Check if click is on handle area
-        if (drawerHandle.contains(element) || appDrawerHandle.contains(element)) {
-            startDrag(e.clientX, e.clientY);
-        }
-    });
-
-	document.addEventListener('mousemove', (e) => {
-        // Check split gesture move
-        if (e.buttons === 1 && handleSplitGestureMove(e.clientX, e.clientY)) {
-            return;
-        }
-
-        if (isPendingDrag && !isDragging && e.buttons === 1) {
-            const deltaX = Math.abs(e.clientX - startX);
-            const deltaY = Math.abs(e.clientY - startY);
-            if (deltaX > 10 || deltaY > 10) {
-                startDrag();
-            }
-        }
-
-        if (isDragging) {
-            // Update coordinates for wallpaper swipe calculation
-            touchEndX = e.clientX;
-            touchEndY = e.clientY;
-            moveDrawer(e.clientX, e.clientY);
-        }
-    });
-
-	document.addEventListener('mouseup', (e) => {
-		if (oneButtonNavEnabled) return;
-        // FIX: Prevent ghost duplicate clicks when using a touchscreen
-        // (Browsers fire mouseup a few milliseconds after touchend)
-        if (Date.now() - (window.lastTouchTime || 0) < 500) return; 
-
-        if (isDragging || isPendingDrag) { 
-            touchEndX = e.clientX;
-            touchEndY = e.clientY;
-
-            let isTap = false;
-            const deltaX = Math.abs(e.clientX - startX);
-            const deltaY = Math.abs(e.clientY - startY);
-            const deltaTime = Date.now() - dragStartTime;
-            
-            // Identify if gesture was a quick tap
-            if (deltaX < 15 && deltaY < 15 && deltaTime < 300) {
-                isTap = true;
-            }
-
-            if (isDragging) {
-                if (appSwitcherVisible) {
-                    selectAndCloseAppSwitcher();
-                } else {
-                    endDrag();
-                }
-                isDragging = false; 
-            }
-            
-            isPendingDrag = false;
-
-            // Forward the click if it was a fast tap on the handle
-            if (isTap && dragSource === 'handle') {
-                forwardClickThroughHandle(e.clientX, e.clientY);
-            }
-        }
-    });
-
-    document.addEventListener('click', (e) => {
-        if (isDrawerInMotion) return; // Do nothing if an animation is in progress
-
-        const isDrawerOpen = appDrawer.classList.contains('open');
-        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-
-		// Close the drawer when clicking outside (on the body)
-        if (isDrawerOpen && !openEmbed && !appDrawer.contains(e.target) && !drawerHandle.contains(e.target) && !oneButtonNavHandle.contains(e.target)) {
-            appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-            appDrawer.classList.remove('open');
-            setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
-            initialDrawerPosition = -100;
-            interactionBlocker.style.display = 'none';
-            applyWallpaperEffects();
-            document.body.style.setProperty('--bg-transform-scale', '1.05');			
-			// Restore all main UI elements
-		    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
-			    el.classList.remove('force-hide');
-		        el.style.display = el.dataset.originalDisplay;
-                el.style.removeProperty('content-visibility'); // OPTIMIZATION
-		        el.style.transition = 'opacity 0.3s ease';
-		
-		        requestAnimationFrame(() => {
-		            el.style.opacity = '1';
-		        });
-		    });
-			resetIndicatorTimeout();
-        }
-
-        // Hide the bottom dock if it's visible and the click was outside of it
-		const isPinned = localStorage.getItem('dockPinned') === 'true';
-        if (!isPinned && dock.classList.contains('show') && !dock.contains(e.target) && !oneButtonNavHandle.contains(e.target)) {
-			dock.classList.remove('show');
-            dock.style.boxShadow = 'none';
-            drawerPill.style.opacity = '1';
-            
-            // This is the crucial fix: ensure display is set to 'none' after the animation
-            if (dockHideTimeout) clearTimeout(dockHideTimeout);
-            dockHideTimeout = setTimeout(() => {
-                // Check if the dock is still supposed to be hidden before changing display property
-                if (!dock.classList.contains('show')) {
-                    dock.style.display = 'none';
-                }
-            }, 300); // Match CSS transition duration
-        }
-    });
-
-	document.addEventListener('click', (e) => {
-	    // Traverse up from target to find the interactive element
-	    // We check 5 levels up to catch clicks inside complex buttons
-	    let target = e.target;
-	    let context = null;
-	
-	    for (let i = 0; i < 5; i++) {
-	        if (!target || target === document.body) break;
-	        
-	        context = determineSoundContext(target);
-	        if (context) break;
-	        
-	        target = target.parentElement;
-	    }
-	
-	    if (context) {
-	        SoundManager.play(context);
-	    }
-	}, { capture: true }); // Use capture to ensure we hear it even if propagation stops
-	
-	// Focus sound for text inputs
-	document.addEventListener('focus', (e) => {
-	    const context = determineSoundContext(e.target);
-	    if (context === 'type') {
-	        SoundManager.play('type');
-	    }
-	}, { capture: true });
-
-	document.addEventListener('click', (e) => {
-	    const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-	    
-	    // Only execute this logic when an embed is open and the dock is showing
-	    if (openEmbed && dock.classList.contains('show')) {
-	        // If clicked outside the dock
-	        if (!dock.contains(e.target)) {
-	            dock.classList.remove('show');
-	            dock.style.boxShadow = 'none';
-	            drawerPill.style.opacity = '1';
-	        }
-	    }
-	});
-    
-	// Make app drawer transparent when an app is open
-    function updateDrawerOpacityForApps() {
-        const isDrawerOpen = appDrawer.classList.contains('open');
-
-        // Priority 1: If Drawer is Open, enforce visibility and interaction
-        // This prevents the observer from hiding the drawer when it's opened over an app
-        if (isDrawerOpen) {
-            appDrawer.style.opacity = '1';
-            interactionBlocker.style.pointerEvents = 'auto';
-            // Hide app swipe overlay so we don't trigger app gestures over the drawer
-            swipeOverlay.style.display = 'none';
-            swipeOverlay.style.pointerEvents = 'none';
-            return;
-        }
-
-        const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-		const isSelectingSplit = document.querySelector('.fullscreen-embed.split-selecting');
-		
-		if (openEmbed && !isSelectingSplit) { // Only hide drawer if an app is fully open
-		    appDrawer.style.opacity = '0';
-            
-            // Show the swipe overlay when an app is open
-            swipeOverlay.style.display = 'block';
-            swipeOverlay.style.pointerEvents = 'auto';
-            
-            // IMPORTANT FIX: Set pointer-events to none for the blocker when an embed is open
-            // so clicks go through to the app (unless blocked by swipeOverlay logic)
-            interactionBlocker.style.pointerEvents = 'none';
-        } else {
-            // Priority 3: Home Screen (No App, No Drawer)
-            
-            // Hide the swipe overlay
-            swipeOverlay.style.display = 'none';
-            swipeOverlay.style.pointerEvents = 'none';
-            
-            // Reset pointer-events. The interaction blocker's visibility (display: none/block)
-            // is handled by the drawer gesture logic, so 'auto' here just ensures it works when visible.
-            interactionBlocker.style.pointerEvents = 'auto';
-        }
+    const qm = document.getElementById('quick-menu');
+    if (qm) {
+        qm.addEventListener('click', (e) => {
+            if (e.target.id === 'quick-menu') closeQuickMenu();
+        });
     }
-    
-    // Monitor for opened apps
-    const bodyObserver = new MutationObserver(() => {
-        updateDrawerOpacityForApps();
-    });
-    
-    bodyObserver.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-    
-    // Initial check
-    updateDrawerOpacityForApps();
-    
-    // Ensure box shadow is disabled initially
-    dock.style.boxShadow = 'none';
-    
-	appDrawer.addEventListener('mousemove', resetDrawerInactivityTimer);
-    appDrawer.addEventListener('touchstart', resetDrawerInactivityTimer);
-    appDrawer.addEventListener('scroll', resetDrawerInactivityTimer);
 
-    interactionBlocker.addEventListener('click', () => {
-        appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-        appDrawer.classList.remove('open');
-        setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
-        initialDrawerPosition = -100;
-        interactionBlocker.style.display = 'none';
+    const btnAssistant = document.getElementById('qm-btn-assistant');
+    if (btnAssistant) {
+        btnAssistant.addEventListener('click', () => {
+            closeQuickMenu();
+
+            showPopup('This feature is not available')
+
+            /* Uncomment when ready.
+            
+            if (window.Assistant && typeof window.Assistant.trigger === 'function') {
+                window.Assistant.trigger();
+            } */
+        });
+    }
+
+    const btnHome = document.getElementById('qm-btn-home');
+    if (btnHome) {
+        btnHome.addEventListener('click', () => {
+            closeQuickMenu();
+            minimizeFullscreenEmbed();
+        });
+    }
+
+    const btnApps = document.getElementById('qm-btn-apps');
+    if (btnApps) {
+        btnApps.addEventListener('click', () => {
+            closeQuickMenu();
+            const appDrawer = document.getElementById('app-drawer');
+            if (!appDrawer) return;
+            appDrawer.style.display = 'flex';
+            requestAnimationFrame(() => {
+                appDrawer.classList.add('open');
+                appDrawer.style.zIndex = '1005';
+                appDrawer.style.bottom = '0%';
+                appDrawer.style.opacity = '1';
+                createAppIcons();
+            });
+            document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+                if (!el.dataset.originalDisplay) el.dataset.originalDisplay = window.getComputedStyle(el).display;
+                el.style.opacity = '0';
+                setTimeout(() => el.classList.add('force-hide'), 300);
+            });
+            const interactionBlocker = document.getElementById('interaction-blocker');
+            if(interactionBlocker) {
+                interactionBlocker.style.display = 'block';
+                interactionBlocker.style.pointerEvents = 'auto';
+            }
+        });
+    }
+
+    const btnControls = document.getElementById('qm-btn-controls');
+    if (btnControls) {
+        btnControls.addEventListener('click', () => {
+            closeQuickMenu();
+            openControls();
+        });
+    }
+
+    const adjustSetting = (key, delta, min, max) => {
+        let current = parseInt(localStorage.getItem(key) || max);
+        if (isNaN(current)) current = max;
+        let next = Math.min(max, Math.max(min, current + delta));
+        if (typeof setControlValueAndDispatch === 'function') {
+            setControlValueAndDispatch(key, next.toString());
+        }
+    };
+
+    const btnBrightDown = document.getElementById('qm-btn-bright-down');
+    if (btnBrightDown) btnBrightDown.addEventListener('click', () => adjustSetting('page_brightness', -10, 20, 100));
+
+    const btnBrightUp = document.getElementById('qm-btn-bright-up');
+    if (btnBrightUp) btnBrightUp.addEventListener('click', () => adjustSetting('page_brightness', 10, 20, 100));
+
+    const btnVolDown = document.getElementById('qm-btn-vol-down');
+    if (btnVolDown) btnVolDown.addEventListener('click', () => adjustSetting('master_volume', -10, 0, 100));
+
+    const btnVolUp = document.getElementById('qm-btn-vol-up');
+    if (btnVolUp) btnVolUp.addEventListener('click', () => adjustSetting('master_volume', 10, 0, 100));
+
+    let startX, startY;
+    let isBottomSwipe = false;
+    let isGesturing = false;
+
+    const handleStart = (clientX, clientY) => {
+        startX = clientX;
+        startY = clientY;
+        isBottomSwipe = startY > window.innerHeight - 50;
+        isGesturing = true;
+    };
+
+    const handleEnd = (clientX, clientY) => {
+        if (!isGesturing) return;
+        isGesturing = false;
+        
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
+
+        if (isBottomSwipe && deltaY < -30) {
+            openQuickMenu();
+            return;
+        }
+    };
+
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 0) handleStart(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    
+    document.addEventListener('touchend', (e) => {
+        if (e.changedTouches.length > 0) handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
     });
+    
+    document.addEventListener('mousedown', (e) => {
+        const t = e.target;
+        if (t === document.body || t.id === 'background-video' || t.id === 'depth-layer' || t.id === 'environment-layer' || (t.classList && t.classList.contains('drawer-handle'))) {
+            handleStart(e.clientX, e.clientY);
+        } else if (e.clientY > window.innerHeight - 50) {
+            handleStart(e.clientX, e.clientY);
+        }
+    });
+    
+    document.addEventListener('mouseup', (e) => {
+        if (isGesturing) handleEnd(e.clientX, e.clientY);
+    });
+
+    const interactionBlocker = document.getElementById('interaction-blocker');
+    if (interactionBlocker) {
+        interactionBlocker.addEventListener('click', () => {
+            const appDrawer = document.getElementById('app-drawer');
+            if (appDrawer) {
+                appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
+                appDrawer.classList.remove('open');
+                setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
+            }
+            interactionBlocker.style.display = 'none';
+        });
+    }
 }
 
 const appDrawerObserver = new MutationObserver((mutations) => {

@@ -87,7 +87,6 @@ const controlIdMap = {
     'oskLang': 'oskLang',
     'oskPredict': 'oskPredict',
     'page_brightness': 'brightness-control',
-    'persistentPageIndicator': 'persistent-indicator-switch',
     'predictivePreload': 'predictive-preload-switch',
     'profilySyncStatus': 'profilySyncStatus',
     'profilyUserAvatar': 'profilyUserAvatar',
@@ -251,8 +250,6 @@ function handleAnimationChange() {
         }
     });
 }
-
-const persistentClock = document.getElementById('persistent-clock');
 
 function updateNetworkInfo() {
     const netIcon = document.querySelector('#network-status-indicator span');

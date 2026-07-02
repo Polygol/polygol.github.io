@@ -9,6 +9,7 @@
 const isInsideGurasuraisu = window.self !== window.top;
 let _mediaControlActions = {};
 let _actionRequestHandlers = {};
+let _intentHandlers = {};
 const _dialogCallbacks = {}; // For handling dialog responses
 let _dialogRequestId = 0;   // For tracking dialog requests
 const _myActiveActivities = new Set(); // Tracks this app's active activities
@@ -730,7 +731,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
             overflow: auto;
         }
 
-        @media (min-width: 1000px) {
+        @media (min-width: 600px) {
             .toolbar {
                 left: 50%;
                 transform: translateX(-50%);
@@ -1751,6 +1752,17 @@ const Gurasuraisu = {
   },
 
   /**
+   * Registers an Activity Intent for the AI Voice Assistant.
+   * @param {string} intentName - The name of the intent (e.g., 'play_music').
+   * @param {Array} keywords - Array of trigger phrases (e.g., ['play music', 'start music']).
+   * @param {function} callback - Function executed when the intent is triggered.
+   */
+  registerActivityIntent: function(intentName, keywords, callback) {
+      _intentHandlers[intentName] = callback;
+      this._call('registerActivityIntent', [{ intentName, keywords }]);
+  },
+
+  /**
    * Registers a Desktop Action that can be executed on files or globally.
    * @param {object} action { id, label, description, icon, handlerEvent }
    */
@@ -2018,6 +2030,11 @@ window.addEventListener('message', async (event) => {
               }
           }
           break;
+      case 'executeActivityIntent':
+        if (data.intentName && _intentHandlers[data.intentName]) {
+            _intentHandlers[data.intentName](data.parameters || {});
+        }
+        break;
       case 'dialog-response':
         if (data.requestId && _dialogCallbacks[data.requestId]) {
             _dialogCallbacks[data.requestId](data.value);

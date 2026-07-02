@@ -7,7 +7,13 @@
     height: 100%;
     z-index: 1;
     pointer-events: none;
-    /* The grid itself is not interactive */
+    transform: translateX(-100%);
+    transition: transform 0.4s cubic-bezier(.2, 1.3, .64, 1);
+}
+
+body.widgets-open .widget-grid {
+    transform: translateX(0);
+    pointer-events: auto;
 }
 
 .widget-instance {
