@@ -512,62 +512,93 @@ function closeSearch() {
 // ridespeedy engine
 function setupDrawerInteractions() {
     const drawerHandle = document.querySelector('.drawer-handle');
+    
+    // 1. Setup Swipe Overlay (from dock-drawer.js)
+    // This allows capturing gestures even when an iframe is in the foreground
+    let swipeOverlay = document.getElementById('swipe-overlay');
+    if (!swipeOverlay) {
+        swipeOverlay = document.createElement('div');
+        swipeOverlay.id = 'swipe-overlay';
+        Object.assign(swipeOverlay.style, {
+            position: 'fixed',
+            bottom: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+            zIndex: '1000',
+            display: 'none',
+            pointerEvents: 'none'
+        });
+        document.body.appendChild(swipeOverlay);
+    }
 
-    // Swipe up on drawer handle to open quick menu.
-    // Taps are passed through to the content underneath.
+    // 2. Mouse-only UI: Create Quick Menu Button
+    // We detect "mouse-only" by checking if the device supports touch
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    let qmTriggerBtn = null;
+
+    if (!isTouchDevice && drawerHandle) {
+        qmTriggerBtn = document.createElement('button');
+        qmTriggerBtn.className = 'qm-trigger-btn';
+        qmTriggerBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 12" fill="currentColor"><circle cx="4" cy="6" r="0.75"/><circle cx="8" cy="6" r="0.75"/><circle cx="12" cy="6" r="0.75"/></svg>';
+        
+        drawerHandle.appendChild(qmTriggerBtn);
+        qmTriggerBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openQuickMenu();
+        });
+    }
+
+    // Helper: Forward clicks through the handle/overlay to underlying content
+    function forwardClick(clientX, clientY) {
+        const handlePE = drawerHandle ? drawerHandle.style.pointerEvents : "";
+        const overlayPE = swipeOverlay.style.pointerEvents;
+
+        if (drawerHandle) drawerHandle.style.pointerEvents = "none";
+        swipeOverlay.style.pointerEvents = "none";
+
+        const passthrough = document.querySelectorAll(".fullscreen-embed, iframe");
+        const original = new Map();
+
+        passthrough.forEach(el => {
+            original.set(el, el.style.pointerEvents);
+            el.style.pointerEvents = "auto";
+        });
+
+        const target = document.elementFromPoint(clientX, clientY);
+
+        if (target) {
+            if (target.tagName === "IFRAME") {
+                const rect = target.getBoundingClientRect();
+                const zoom = (parseFloat(document.body.style.zoom) || 100) / 100;
+
+                target.contentWindow?.postMessage({
+                    type: "forward-click",
+                    x: (clientX - rect.left) / zoom,
+                    y: (clientY - rect.top) / zoom
+                }, "*");
+            } else {
+                target.dispatchEvent(new MouseEvent("click", {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    clientX,
+                    clientY
+                }));
+            }
+        }
+
+        if (drawerHandle) drawerHandle.style.pointerEvents = handlePE;
+        swipeOverlay.style.pointerEvents = overlayPE;
+        passthrough.forEach(el => el.style.pointerEvents = original.get(el));
+    }
+
+    // 3. Gesture Logic (Disabled if mouse-only button is present)
     if (drawerHandle) {
         let handleStartY = 0;
         let handleDragging = false;
         let handleSwiped = false;
         const SWIPE_THRESHOLD = 50;
-
-        function forwardClick(clientX, clientY) {
-            const overlay = document.getElementById("swipe-overlay");
-
-            const handlePE = drawerHandle.style.pointerEvents;
-            const overlayPE = overlay ? overlay.style.pointerEvents : "";
-
-            drawerHandle.style.pointerEvents = "none";
-            if (overlay) overlay.style.pointerEvents = "none";
-
-            const passthrough = document.querySelectorAll(".fullscreen-embed, iframe");
-            const original = new Map();
-
-            passthrough.forEach(el => {
-                original.set(el, el.style.pointerEvents);
-                el.style.pointerEvents = "auto";
-            });
-
-            const target = document.elementFromPoint(clientX, clientY);
-
-            if (target) {
-                if (target.tagName === "IFRAME") {
-                    const rect = target.getBoundingClientRect();
-                    const zoom = (parseFloat(document.body.style.zoom) || 100) / 100;
-
-                    target.contentWindow?.postMessage({
-                        type: "forward-click",
-                        x: (clientX - rect.left) / zoom,
-                        y: (clientY - rect.top) / zoom
-                    }, "*");
-                } else {
-                    target.dispatchEvent(new MouseEvent("click", {
-                        view: window,
-                        bubbles: true,
-                        cancelable: true,
-                        clientX,
-                        clientY
-                    }));
-                }
-            }
-
-            drawerHandle.style.pointerEvents = handlePE;
-            if (overlay) overlay.style.pointerEvents = overlayPE;
-
-            passthrough.forEach(el => {
-                el.style.pointerEvents = original.get(el);
-            });
-        }
 
         drawerHandle.addEventListener('touchstart', (e) => {
             handleDragging = true;
@@ -577,9 +608,7 @@ function setupDrawerInteractions() {
 
         drawerHandle.addEventListener('touchmove', (e) => {
             if (!handleDragging) return;
-
             const deltaY = handleStartY - e.touches[0].clientY;
-
             if (deltaY >= SWIPE_THRESHOLD) {
                 handleDragging = false;
                 handleSwiped = true;
@@ -589,26 +618,22 @@ function setupDrawerInteractions() {
 
         drawerHandle.addEventListener('touchend', (e) => {
             if (!handleSwiped && e.changedTouches.length) {
-                forwardClick(
-                    e.changedTouches[0].clientX,
-                    e.changedTouches[0].clientY
-                );
+                forwardClick(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
             }
-
             handleDragging = false;
         });
 
+        // Mouse listeners for the handle - only enable gestures if button is NOT used
         drawerHandle.addEventListener('mousedown', (e) => {
+            if (qmTriggerBtn) return; // Disable gestures on mouse if button exists
             handleDragging = true;
             handleSwiped = false;
             handleStartY = e.clientY;
         });
 
         document.addEventListener('mousemove', (e) => {
-            if (!handleDragging) return;
-
+            if (!handleDragging || qmTriggerBtn) return;
             const deltaY = handleStartY - e.clientY;
-
             if (deltaY >= SWIPE_THRESHOLD) {
                 handleDragging = false;
                 handleSwiped = true;
@@ -620,17 +645,112 @@ function setupDrawerInteractions() {
             if (handleDragging && !handleSwiped) {
                 forwardClick(e.clientX, e.clientY);
             }
-
             handleDragging = false;
         });
     }
 
+    // 4. Swipe Overlay Interaction (Closing apps)
+    let overlayStartY = 0;
+    let isOverlayDragging = false;
+
+    swipeOverlay.addEventListener('touchstart', (e) => {
+        overlayStartY = e.touches[0].clientY;
+        isOverlayDragging = false;
+    }, { passive: true });
+
+    swipeOverlay.addEventListener('touchmove', (e) => {
+        const deltaY = overlayStartY - e.touches[0].clientY;
+        if (deltaY > 30) isOverlayDragging = true; 
+    }, { passive: true });
+
+    swipeOverlay.addEventListener('touchend', (e) => {
+        const deltaY = overlayStartY - e.changedTouches[0].clientY;
+        // If swiped up from overlay, minimize app
+        if (isOverlayDragging && deltaY > 100) {
+            minimizeFullscreenEmbed();
+        }
+    });
+
+    // 5. Visibility Observer for Swipe Overlay
+    const updateOverlayVisibility = () => {
+        const isAppOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+        const isDrawerOpen = document.getElementById('app-drawer')?.classList.contains('open');
+        
+        if (isAppOpen && !isDrawerOpen) {
+            swipeOverlay.style.display = 'block';
+            swipeOverlay.style.pointerEvents = 'auto';
+        } else {
+            swipeOverlay.style.display = 'none';
+            swipeOverlay.style.pointerEvents = 'none';
+        }
+    };
+
+    const observer = new MutationObserver(updateOverlayVisibility);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+    updateOverlayVisibility();
+
+    // --- Quick Menu Logic ---
     const qm = document.getElementById('quick-menu');
     if (qm) {
+        let qmStartY = 0;
+        let qmIsDragging = false;
+
+        // Close on background click
         qm.addEventListener('click', (e) => {
             if (e.target.id === 'quick-menu') closeQuickMenu();
         });
 
+        // Swipe Down anywhere on Quick Menu to close
+        qm.addEventListener('touchstart', (e) => {
+            qmStartY = e.touches[0].clientY;
+            qmIsDragging = true;
+        }, { passive: true });
+
+        qm.addEventListener('touchmove', (e) => {
+            if (!qmIsDragging) return;
+            const deltaY = e.touches[0].clientY - qmStartY;
+        }, { passive: true });
+
+        qm.addEventListener('touchend', (e) => {
+            if (!qmIsDragging) return;
+            const deltaY = e.changedTouches[0].clientY - qmStartY;
+            const menuContent = qm.querySelector('.quick-menu-content');
+            
+            if (deltaY > 70) { // Threshold to close
+                closeQuickMenu();
+            }
+            qmIsDragging = false;
+        });
+
+        // Mouse support for swipe down
+        qm.addEventListener('mousedown', (e) => {
+            qmStartY = e.clientY;
+            qmIsDragging = true;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!qmIsDragging || qm.style.display === 'none') return;
+            const deltaY = e.clientY - qmStartY;
+            if (deltaY > 0) {
+                const menuContent = qm.querySelector('.quick-menu-content');
+                if (menuContent) menuContent.style.transform = `translateY(${deltaY}px)`;
+            }
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (!qmIsDragging) return;
+            const deltaY = e.clientY - qmStartY;
+            const menuContent = qm.querySelector('.quick-menu-content');
+            
+            if (deltaY > 70) {
+                closeQuickMenu();
+            } else if (menuContent) {
+                menuContent.style.transform = '';
+            }
+            qmIsDragging = false;
+        });
+
+        // Existing inactivity and reset listeners
         ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'input', 'change'].forEach(evt => {
             qm.addEventListener(evt, resetQmInactivityTimer, { passive: true });
         });
@@ -655,7 +775,30 @@ function setupDrawerInteractions() {
     if (btnHome) {
         btnHome.addEventListener('click', () => {
             closeQuickMenu();
-            minimizeFullscreenEmbed();
+            
+            const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
+            if (openEmbed) {
+                // Apply closing animation styling from dock-drawer.js
+                openEmbed.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, filter 0.3s ease, border-radius 0.3s ease';
+                openEmbed.style.transform = 'perspective(100vh) rotateX(40deg) translateY(-40px) scale(0.8)';
+                openEmbed.style.opacity = '0';
+                openEmbed.style.filter = 'blur(10px)';
+                openEmbed.style.borderRadius = '50px';
+                if (openEmbed.style.hasOwnProperty('cornerShape')) openEmbed.style.cornerShape = 'superellipse(1.5)';
+                openEmbed.style.border = '1px solid var(--glass-border)';
+
+                // Revert background effects
+                if (typeof applyWallpaperEffects === 'function') applyWallpaperEffects();
+                document.body.style.setProperty('--bg-transform-scale', '1.05');
+
+                setTimeout(() => {
+                    minimizeFullscreenEmbed(false); // Skip standard minimize animation as we've manually animated it
+                    openEmbed.style.border = 'none';
+                    openEmbed.style.transition = '';
+                }, 300);
+            } else {
+                minimizeFullscreenEmbed();
+            }
         });
     }
 
@@ -671,7 +814,7 @@ function setupDrawerInteractions() {
                 appDrawer.style.zIndex = '1005';
                 appDrawer.style.bottom = '0%';
                 appDrawer.style.opacity = '1';
-                createAppIcons();
+                if (typeof createAppIcons === 'function') createAppIcons();
             });
             document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
                 if (!el.dataset.originalDisplay) el.dataset.originalDisplay = window.getComputedStyle(el).display;
@@ -686,14 +829,7 @@ function setupDrawerInteractions() {
         });
     }
 
-    const btnControls = document.getElementById('qm-btn-controls');
-    if (btnControls) {
-        btnControls.addEventListener('click', () => {
-            closeQuickMenu();
-            openControls();
-        });
-    }
-
+    // Quick Menu Control Buttons
     const adjustSetting = (key, delta, min, max) => {
         let current = parseInt(localStorage.getItem(key) || max);
         if (isNaN(current)) current = max;
@@ -703,75 +839,55 @@ function setupDrawerInteractions() {
         }
     };
 
-    const btnBrightDown = document.getElementById('qm-btn-bright-down');
-    if (btnBrightDown) btnBrightDown.addEventListener('click', () => adjustSetting('page_brightness', -10, 20, 100));
+    document.getElementById('qm-btn-bright-down')?.addEventListener('click', () => adjustSetting('page_brightness', -10, 20, 100));
+    document.getElementById('qm-btn-bright-up')?.addEventListener('click', () => adjustSetting('page_brightness', 10, 20, 100));
+    document.getElementById('qm-btn-vol-down')?.addEventListener('click', () => adjustSetting('master_volume', -10, 0, 100));
+    document.getElementById('qm-btn-vol-up')?.addEventListener('click', () => adjustSetting('master_volume', 10, 0, 100));
+    document.getElementById('qm-btn-controls')?.addEventListener('click', () => { closeQuickMenu(); openControls(); });
 
-    const btnBrightUp = document.getElementById('qm-btn-bright-up');
-    if (btnBrightUp) btnBrightUp.addEventListener('click', () => adjustSetting('page_brightness', 10, 20, 100));
-
-    const btnVolDown = document.getElementById('qm-btn-vol-down');
-    if (btnVolDown) btnVolDown.addEventListener('click', () => adjustSetting('master_volume', -10, 0, 100));
-
-    const btnVolUp = document.getElementById('qm-btn-vol-up');
-    if (btnVolUp) btnVolUp.addEventListener('click', () => adjustSetting('master_volume', 10, 0, 100));
-
+    // Global Bottom Swipe Detection (for Quick Menu)
     let startX, startY;
     let isBottomSwipe = false;
     let isGesturing = false;
 
-    const handleStart = (clientX, clientY) => {
+    const handleGlobalStart = (clientX, clientY) => {
         startX = clientX;
         startY = clientY;
         isBottomSwipe = startY > window.innerHeight - 50;
         isGesturing = true;
     };
 
-    const handleEnd = (clientX, clientY) => {
+    const handleGlobalEnd = (clientX, clientY) => {
         if (!isGesturing) return;
         isGesturing = false;
-        
-        const deltaX = clientX - startX;
         const deltaY = clientY - startY;
-
-        if (isBottomSwipe && deltaY < -30) {
+        // Swipe up from bottom opens Quick Menu (unless mouse button mode is active)
+        if (isBottomSwipe && deltaY < -30 && !qmTriggerBtn) {
             openQuickMenu();
-            return;
         }
     };
 
     document.addEventListener('touchstart', (e) => {
-        if (e.touches.length > 0) handleStart(e.touches[0].clientX, e.touches[0].clientY);
+        if (e.touches.length > 0) handleGlobalStart(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
     
     document.addEventListener('touchend', (e) => {
-        if (e.changedTouches.length > 0) handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        if (e.changedTouches.length > 0) handleGlobalEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
     });
     
     document.addEventListener('mousedown', (e) => {
+        if (qmTriggerBtn) return; // Disable gestures if mouse button exists
         const t = e.target;
-        if (t === document.body || t.id === 'background-video' || t.id === 'depth-layer' || t.id === 'environment-layer' || (t.classList && t.classList.contains('drawer-handle'))) {
-            handleStart(e.clientX, e.clientY);
+        if (t === document.body || t.id === 'background-video' || t.id === 'depth-layer' || (t.classList && t.classList.contains('drawer-handle'))) {
+            handleGlobalStart(e.clientX, e.clientY);
         } else if (e.clientY > window.innerHeight - 50) {
-            handleStart(e.clientX, e.clientY);
+            handleGlobalStart(e.clientX, e.clientY);
         }
     });
     
     document.addEventListener('mouseup', (e) => {
-        if (isGesturing) handleEnd(e.clientX, e.clientY);
+        if (isGesturing) handleGlobalEnd(e.clientX, e.clientY);
     });
-
-    const interactionBlocker = document.getElementById('interaction-blocker');
-    if (interactionBlocker) {
-        interactionBlocker.addEventListener('click', () => {
-            const appDrawer = document.getElementById('app-drawer');
-            if (appDrawer) {
-                appDrawer.style.transition = 'bottom 0.3s ease, opacity 0.3s ease';
-                appDrawer.classList.remove('open');
-                setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
-            }
-            interactionBlocker.style.display = 'none';
-        });
-    }
 }
 
 const appDrawerObserver = new MutationObserver((mutations) => {
