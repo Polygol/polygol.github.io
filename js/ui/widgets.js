@@ -433,6 +433,8 @@ function renderWidgets() {
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
+            const zoom = (parseFloat(document.body.style.zoom) || 100) / 100;
+
             if (!isDragging && (Math.abs(clientX - initialMouseX) > 5 || Math.abs(clientY - initialMouseY) > 5)) {
                 isDragging = true;
                 clearTimeout(longPressTimer);
@@ -446,8 +448,8 @@ function renderWidgets() {
             dragAnimationFrame = requestAnimationFrame(() => {
                 dragAnimationFrame = null;
 
-                let newX = initialWidgetX + (clientX - initialMouseX);
-                let newY = initialWidgetY + (clientY - initialMouseY);
+                let newX = initialWidgetX + (clientX - initialMouseX) / zoom;
+                let newY = initialWidgetY + (clientY - initialMouseY) / zoom;
 
                 snapLineV.style.display = 'none';
                 snapLineH.style.display = 'none';
@@ -613,8 +615,9 @@ function renderWidgets() {
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-			let newWidth = initialWidgetW + (clientX - initialResizeMouseX);
-            let newHeight = initialWidgetH + (clientY - initialResizeMouseY);
+            const zoom = (parseFloat(document.body.style.zoom) || 100) / 100;
+			let newWidth = initialWidgetW + (clientX - initialResizeMouseX) / zoom;
+            let newHeight = initialWidgetH + (clientY - initialResizeMouseY) / zoom;
 
 			if (widgetData.type === 'sticker') {
                 newWidth = Math.max(15, Math.min(window.innerWidth - initialResizeWidgetX, newWidth));
@@ -626,8 +629,6 @@ function renderWidgets() {
 	            // --- Grid Snapping for Size ---
 	            const baseUnit = 200;
 	            const maxUnits = 4;
-	            let newWidth = initialWidgetW + (clientX - initialResizeMouseX);
-	            let newHeight = initialWidgetH + (clientY - initialResizeMouseY);
 	            
 	            let gridW = Math.round((newWidth + MARGIN) / (baseUnit + MARGIN));
 	            let gridH = Math.round((newHeight + MARGIN) / (baseUnit + MARGIN));
