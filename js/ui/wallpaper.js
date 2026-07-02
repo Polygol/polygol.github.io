@@ -1691,6 +1691,7 @@ function setupWallpaperInteraction() {
                         document.querySelectorAll('.container, .widget-grid').forEach(el => {
                             el.classList.add('force-hide');
                         });
+                        showPopup('Photo frame mode');
                     }
                 }
                 return;

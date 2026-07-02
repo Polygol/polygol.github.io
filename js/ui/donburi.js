@@ -9,6 +9,7 @@ function openDonburi() {
 	if (!donburi) return;
 	
 	donburi.style.display = 'block';
+	void donburi.offsetWidth;
 	donburi.style.pointerEvents = 'none'; // Disable during transition
 	donburi.style.opacity = '1';
 	
@@ -37,7 +38,7 @@ window.closeDonburi = function() {
 	if (!donburi) return;
 
 	donburi.classList.remove('open');
-	donburi.style.transform = 'translateY(-100%)';
+	donburi.style.transform = 'translateX(-100%)';
 
 	// Restore Home UI and system handles
 	document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid, .drawer-handle, #dynamic-area, #split-screen-trigger, #one-button-nav-handle').forEach(el => {

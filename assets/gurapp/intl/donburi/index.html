@@ -821,19 +821,19 @@
 
     <script>
 // --- Swipe up to close Donburi ---
-        let touchStartY = 0;
+        let touchStartX = 0;
         let isDragging = false;
 
         document.body.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].clientY;
+            touchStartX = e.touches[0].clientX;
         }, { passive: true });
         
         document.body.addEventListener('touchend', (e) => {
             // Do not close if settings overlay is open
             if (document.getElementById('donburi-settings').classList.contains('show')) return;
 
-            let endY = e.changedTouches[0].clientY;
-            if (touchStartY - endY > 50) { // Swipe up
+            let endX = e.changedTouches[0].clientX;
+            if (touchStartX - endX > 50) { // Swipe left
                 window.parent.postMessage({ type: 'donburi-close' }, '*');
             }
         });
@@ -842,14 +842,14 @@
             // FIX: Do not start drag logic if settings overlay is open
             if (document.getElementById('donburi-settings').classList.contains('show')) return;
             
-            touchStartY = e.clientY;
+            touchStartX = e.clientX;
             isDragging = true;
         });
 
         document.body.addEventListener('mouseup', (e) => {
             if (!isDragging) return;
             isDragging = false;
-            if (touchStartY - e.clientY > 50) {
+            if (touchStartX - e.clientX > 50) {
                 window.parent.postMessage({ type: 'donburi-close' }, '*');
             }
         });
