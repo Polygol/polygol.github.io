@@ -65,7 +65,6 @@ export const AssistantUI = {
         const panel = document.getElementById('assistant-decision-panel');
         if (panel) panel.classList.remove('show');
     },
-    // Shims for legacy compatibility
     setStatus(text) {
         if (text && text.includes('Error')) {
             this.setText(text);
