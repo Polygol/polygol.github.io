@@ -157,7 +157,7 @@
     width: 100%;
     max-width: 800px;
     height: 80%;
-    max-height: calc(100% - 80px);
+    max-height: calc(100% - 20px);
     background-color: var(--background-color-tr);
     --fx-filter: var(--blur2) glass(0.6, 8, 0);
     border-radius: 50px 50px 0 0;

@@ -1,4 +1,4 @@
-const MAX_RECENT_WALLPAPERS = 50;
+const MAX_RECENT_WALLPAPERS = 32767;
 window.recentWallpapers = [];
 let recentWallpapers = window.recentWallpapers; // Alias for local scope use
 let currentWallpaperPosition = 0;
@@ -2039,6 +2039,29 @@ async function openWallpaperEditMenu(index) {
     input.click();
 }
 
+async function duplicateWallpaper(index) {
+    const wp = recentWallpapers[index];
+    if (!wp) return;
+    
+    showPopup("Duplicating...");
+    const newId = `wallpaper_${Date.now()}_${Math.random()}`;
+    const newWp = JSON.parse(JSON.stringify(wp));
+    newWp.id = newId;
+    newWp.timestamp = Date.now();
+    
+    if (wp.id && !wp.isSlideshow) {
+        const dbRecord = await getWallpaper(wp.id);
+        if (dbRecord) await storeWallpaper(newId, dbRecord);
+    }
+    
+    recentWallpapers.splice(index + 1, 0, newWp);
+    if (currentWallpaperPosition > index) currentWallpaperPosition++;
+    
+    saveRecentWallpapers();
+    saveCurrentPosition();
+    updatePageIndicatorDots(true);
+}
+
 // --- Edit Mode Logic ---
 let editModeWallpaperIndex = -1;
 
@@ -2200,6 +2223,12 @@ function initializePageIndicator() {
     const pageIndicator = document.createElement('div');
     pageIndicator.id = 'page-indicator';
     pageIndicator.className = 'page-indicator';
+    
+    const track = document.createElement('div');
+    track.id = 'page-indicator-track';
+    track.className = 'page-indicator-track';
+    
+    pageIndicator.appendChild(track);
     document.body.appendChild(pageIndicator);
     
     // Initial creation of dots
@@ -2215,7 +2244,8 @@ function initializePageIndicator() {
 // Update only the contents of the indicator
 function updatePageIndicatorDots(forceRecreate = false) {
   const pageIndicator = document.getElementById('page-indicator');
-  if (!pageIndicator) return;
+  const track = document.getElementById('page-indicator-track');
+  if (!pageIndicator || !track) return;
   
   // Make sure any fade-out class is removed when updating
   pageIndicator.classList.remove('fade-out');
@@ -2223,14 +2253,14 @@ function updatePageIndicatorDots(forceRecreate = false) {
   // If no wallpapers or only one, show empty/single state
   if (recentWallpapers.length <= 1) {
     // Clear existing content
-    pageIndicator.innerHTML = '';
+    track.innerHTML = '';
     
     if (recentWallpapers.length === 0) {
       // Empty state - no wallpapers
       const emptyText = document.createElement('span');
       emptyText.className = 'empty-indicator';
       emptyText.textContent = currentLanguage.N_WALL;
-      pageIndicator.appendChild(emptyText);
+      track.appendChild(emptyText);
       pageIndicator.classList.add('empty');
     } else {
       // Single wallpaper state
@@ -2243,7 +2273,7 @@ function updatePageIndicatorDots(forceRecreate = false) {
       dot.addEventListener('mousedown', (e) => handleDotTap(e, 0));
       dot.addEventListener('touchstart', (e) => handleDotTap(e, 0));
       
-      pageIndicator.appendChild(dot);
+      track.appendChild(dot);
     }
     return;
   }
@@ -2252,10 +2282,10 @@ function updatePageIndicatorDots(forceRecreate = false) {
   pageIndicator.classList.remove('empty');
   
   // If number of dots doesn't match or forced recreation, recreate all dots
-  const existingDots = pageIndicator.querySelectorAll('.indicator-dot');
+  const existingDots = track.querySelectorAll('.indicator-dot');
   if (forceRecreate || existingDots.length !== recentWallpapers.length) {
     // Clear existing content
-    pageIndicator.innerHTML = '';
+    track.innerHTML = '';
     
     // Create dots for each wallpaper in history, in the correct order
     for (let i = 0; i < recentWallpapers.length; i++) {
@@ -2284,7 +2314,7 @@ function updatePageIndicatorDots(forceRecreate = false) {
       dot.addEventListener('mousedown', (e) => handleDotTap(e, i));
       dot.addEventListener('touchstart', (e) => handleDotTap(e, i));
       
-      pageIndicator.appendChild(dot);
+      track.appendChild(dot);
     }
   } else {
     // Just update active state of existing dots
@@ -2296,8 +2326,43 @@ function updatePageIndicatorDots(forceRecreate = false) {
       }
     });
   }
-}
 
+  // Sliding window logic with smooth CSS translation track shifts
+  const dots = track.querySelectorAll('.indicator-dot');
+  const maxVisible = 5;
+  let start = currentWallpaperPosition - Math.floor(maxVisible / 2);
+  if (start < 0) start = 0;
+  let end = start + maxVisible;
+  if (end > recentWallpapers.length) {
+      end = recentWallpapers.length;
+      start = Math.max(0, end - maxVisible);
+  }
+
+  // Translate the entire track smoothly
+  const spacing = 24; // 10px dot width + 14px gap
+  track.style.transform = `translateY(${-start * spacing}px)`;
+
+  dots.forEach((dot, i) => {
+      dot.style.transform = ''; // Reset
+
+      const isLeftEdge = (i === start && start > 0);
+      const isRightEdge = (i === end - 1 && end < recentWallpapers.length);
+
+      let scale = 1;
+      if (i === currentWallpaperPosition) {
+          scale = 1.5;
+      } else if ((isLeftEdge || isRightEdge)) {
+          scale = 0.6;
+      } else if (i < start || i >= end) {
+          scale = 0; // Shrink completely out of bounds
+      }
+
+      dot.style.transform = `scale(${scale})`;
+      dot.style.opacity = (i < start || i >= end) ? '0' : '1';
+      dot.style.pointerEvents = (i < start || i >= end) ? 'none' : 'auto';
+  });
+}
+    
 function updatePageIndicator() {
   initializePageIndicator();
 }
