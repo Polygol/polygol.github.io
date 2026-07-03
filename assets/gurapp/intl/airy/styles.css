@@ -1308,7 +1308,6 @@ body::before {
 
         .app-icon:active {
             background-color: var(--transparent-color);
-            
             border: 1px solid var(--glass-border);
             transform: scale(0.95);
         }
