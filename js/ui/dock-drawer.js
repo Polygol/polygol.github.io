@@ -730,10 +730,6 @@ function setupDrawerInteractions() {
         window.addEventListener('mousemove', (e) => {
             if (!qmIsDragging || qm.style.display === 'none') return;
             const deltaY = e.clientY - qmStartY;
-            if (deltaY > 0) {
-                const menuContent = qm.querySelector('.quick-menu-content');
-                if (menuContent) menuContent.style.transform = `translateY(${deltaY}px)`;
-            }
         });
 
         window.addEventListener('mouseup', (e) => {
@@ -743,8 +739,6 @@ function setupDrawerInteractions() {
             
             if (deltaY > 70) {
                 closeQuickMenu();
-            } else if (menuContent) {
-                menuContent.style.transform = '';
             }
             qmIsDragging = false;
         });
