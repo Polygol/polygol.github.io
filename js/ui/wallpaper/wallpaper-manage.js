@@ -176,7 +176,9 @@ window.addEventListener('message', async (event) => {
             refreshWallpaperManagerUI();
 
         } else if (action === 'delete') {
-            await removeWallpaper(payload);
+			if (await showCustomConfirm(currentLanguage.WALLPAPER_REMOVE_CONFIRM || 'Delete this wallpaper?', '', 'filter_vintage')) {
+                await removeWallpaper(payload);
+			}
             refreshWallpaperManagerUI(); 
         } else if (action === 'duplicate') {
             await duplicateWallpaper(payload);
