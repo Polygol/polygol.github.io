@@ -15,15 +15,21 @@
 
 .qm-trigger-btn {
     border: none;
-    background: none;
-    color: inherit;
+    background: var(--text-color);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 12'%3E%3Ccircle cx='4' cy='6' r='0.75'/%3E%3Ccircle cx='8' cy='6' r='0.75'/%3E%3Ccircle cx='12' cy='6' r='0.75'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 12'%3E%3Ccircle cx='4' cy='6' r='0.75'/%3E%3Ccircle cx='8' cy='6' r='0.75'/%3E%3Ccircle cx='12' cy='6' r='0.75'/%3E%3C/svg%3E");
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     height: 25px;
     width: 60px;
-    opacity: 0.6;
     position: fixed;
 }
 

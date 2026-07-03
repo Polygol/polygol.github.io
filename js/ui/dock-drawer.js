@@ -540,7 +540,6 @@ function setupDrawerInteractions() {
     if (!isTouchDevice && drawerHandle) {
         qmTriggerBtn = document.createElement('button');
         qmTriggerBtn.className = 'qm-trigger-btn';
-        qmTriggerBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 12" fill="currentColor"><circle cx="4" cy="6" r="0.75"/><circle cx="8" cy="6" r="0.75"/><circle cx="12" cy="6" r="0.75"/></svg>';
         
         drawerHandle.appendChild(qmTriggerBtn);
         qmTriggerBtn.addEventListener('click', (e) => {
