@@ -447,7 +447,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         .reduce-animations input[type="submit"]:active,
         .reduce-animations .clickable:active {
             /* Apply scale instantly without transition */
-            transform: scale(1.1) !important;
+            transform: scale(1) !important;
             transition: none !important;
         }
         
@@ -471,7 +471,7 @@ const _myActiveActivities = new Set(); // Tracks this app's active activities
         input[type="submit"]:active,
         .clickable:active {
         	transform: scale(1.1);
-        	
+        	filter: brightness(1.5);
         	transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1), filter 0.3s cubic-bezier(.2, 1.3, .64, 1);
         }
 

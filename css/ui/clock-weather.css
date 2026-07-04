@@ -157,7 +157,7 @@ body.light-theme[style*="background-image"] .info {
 
 .clock:active {
     transform: scale(1.04);
-    
+    filter: brightness(1.5);
 }
 
 .info {
@@ -206,7 +206,7 @@ body.light-theme[style*="background-image"] .info {
 
 .date:active {
     transform: scale(1.04);
-    
+    filter: brightness(1.5);
 }
 
 .weather-widget {
@@ -240,7 +240,7 @@ body.light-theme[style*="background-image"] .info {
 
 .weather-widget:active {
     transform: scale(1.04);
-    
+    filter: brightness(1.5);
 }
 
 .temperature {

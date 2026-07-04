@@ -642,19 +642,6 @@ FxFilter.add({
             }
         }
 
-        // Apply dynamic brightness scaling when scaled up
-        let brightnessFilter = '';
-        if (scale > 1.01) {
-            const slope = Math.min(3.5, 1 + (scale - 1) * 5.0);
-            brightnessFilter = `
-                <feComponentTransfer color-interpolation-filters="sRGB">
-                    <feFuncR type="linear" slope="${slope}" />
-                    <feFuncG type="linear" slope="${slope}" />
-                    <feFuncB type="linear" slope="${slope}" />
-                </feComponentTransfer>
-            `;
-        }
-
         function createDisplacementMap(refractionMod) {
             const adjustedRefraction = refractionValue + refractionMod;
             const imageData = new ImageData(maxDimension, maxDimension);
@@ -777,7 +764,6 @@ FxFilter.add({
             result = `
                 <feImage result="FEIMG" href="${dataURL}" color-interpolation-filters="sRGB"/>
                 <feDisplacementMap in="SourceGraphic" in2="FEIMG" scale="127" yChannelSelector="B" xChannelSelector="R" color-interpolation-filters="sRGB"/>
-                ${brightnessFilter}
             `;
         } else {
             const chromaticOffset = chromaticValue * 0.25;
@@ -816,7 +802,6 @@ FxFilter.add({
                 </feComponentTransfer>
                 <feComposite in="redChannel" in2="greenChannel" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="redGreen"/>
                 <feComposite in="redGreen" in2="blueChannel" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="final"/>
-                ${brightnessFilter}
             `;
         }
 

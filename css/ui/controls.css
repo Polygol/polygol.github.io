@@ -318,7 +318,7 @@
 .setting-item:active .setting-icon-bg {
     transform: scale(1.1);
     transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
-    
+    filter: brightness(1.5);
 }
 
 .setting-item.active .setting-icon-bg {
@@ -410,7 +410,7 @@
 
 .qcontrol-item:active {
     transform: scale(1.1);
-    
+    filter: brightness(1.5);
 }
 
 .qcontrol-item.active {

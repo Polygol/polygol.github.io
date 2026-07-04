@@ -74,7 +74,7 @@ body.high-contrast .clock.dynamic-fill-effect>* {
 .reduce-animations input[type="submit"]:active,
 .reduce-animations .clickable:active {
     /* Apply scale instantly without transition */
-    transform: scale(1.1) !important;
+    transform: scale(1) !important;
     transition: none !important;
 }
 

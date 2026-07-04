@@ -226,7 +226,7 @@ body.app-active .page-indicator {
 
 .switcher-edit-btn:active {
     transform: scale(1.1);
-    
+    filter: brightness(1.5);
 }
 
 .switcher-check {
