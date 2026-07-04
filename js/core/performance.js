@@ -44,29 +44,16 @@ function detectPerformanceProfile() {
 
     console.log(`[System] Performance Score: ${score}/6`);
 
-    // 1. Glass Effects
+    // 1. Glass Effects - Default to high-end '5' to match custom styles and prevent downgrades [1]
     if (localStorage.getItem('glassEffectsMode') === null) {
-        if (score >= 5 && !isWeakGPU) {
-            // High-end: Enable full Liquid effects
-            localStorage.setItem('glassEffectsMode', '5');
-        } else if (score >= 4) {
-            // Mid-range
-            console.log("[System] Defaulting Glass Effects to moderate blur.");
-            localStorage.setItem('glassEffectsMode', '3');
-        } else {
-            // Low-end: Disable effects
-            console.log("[System] Disabling Glass Effects for performance.");
-            localStorage.setItem('glassEffectsMode', '0');
-        }
+        localStorage.setItem('glassEffectsMode', '5');
     }
 
     // 2. Low End Optimizations (Score <= 2)
     if (score <= 2) {
         console.log("[System] Low-end device detected. Maximizing performance.");
-        
-        // Turn off Glass Effects instead of forcing High Contrast
-        if (localStorage.getItem('glassEffectsMode') === null || localStorage.getItem('glassEffectsMode') !== 'off') {
-            localStorage.setItem('glassEffectsMode', 'off');
+        if (localStorage.getItem('glassEffectsMode') === null) {
+            localStorage.setItem('glassEffectsMode', '0');
         }
     } else {
         if (localStorage.getItem('animationsEnabled') === null) localStorage.setItem('animationsEnabled', 'true');
@@ -203,7 +190,6 @@ const SystemGC = {
             }
 
             // 6. Force GC Hint
-            // Allocating and dereferencing a small block can hint the engine to run its native GC
             let _gcHint = new ArrayBuffer(1024 * 1024 * 2);
             _gcHint = null;
 
@@ -430,45 +416,17 @@ const ResourceManager = {
         if (this.isStruggling && this._lastDowngrade && (now - this._lastDowngrade < 10000)) return;
 
         this.isStruggling = true;
+        this._lastDowngrade = now;
 
-        const currentMode = localStorage.getItem('glassEffectsMode') || '5';
-        
-        if (!this.originalGlassMode) {
-            this.originalGlassMode = currentMode;
-        }
-        
-        const val = parseInt(currentMode, 10);
-        if (!isNaN(val) && val > 0) {
-            if (val > 2) {
-                console.log("[System] Downgrading Glass to low blur.");
-                this.applyDowngrade('1');
-            } else {
-                console.log("[System] Downgrading Glass to Off.");
-                this.applyDowngrade('0');
-            }
-            this._lastDowngrade = now;
-        }
+        // Bypassed automated glass downgrades to protect visual fidelity [1]
+        console.log("[System] Resource Manager detected high load, but Glass downgrading is explicitly disabled.");
     },
 
     attemptRecovery() {
-        if (!this.originalGlassMode) return;
-        
-        console.log("[System] Performance stabilized. Restoring settings.");
-        this.applyDowngrade(this.originalGlassMode);
-        
         this.isStruggling = false;
-        this.originalGlassMode = null;
         this.recoveryCounter = 0;
         this._lastDowngrade = 0;
-    },
-
-    applyDowngrade(mode) {
-        localStorage.setItem('glassEffectsMode', mode);
-        const select = document.getElementById('glass-effects-mode');
-        if (select) select.value = mode;
-        broadcastSettingUpdate('glassEffectsMode', mode);
-        applyGlassEffects();
-        if (typeof applySystemTint === 'function') applySystemTint(); // Update solid colors if trans-off is triggered
+        console.log("[System] Performance stabilized. Recovery processed.");
     },
 
     killLeastUsedApp() {
