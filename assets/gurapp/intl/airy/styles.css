@@ -1771,7 +1771,7 @@ body:has(.setup-screen.startimpression)::before {
 }
 
 .setup-screen.startimpression .setup-button.primary {
-    backdrop-filter: blur(2.5px) saturate(2) var(--edge-refraction-filter);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
 }
 
 .setup-screen.startimpression .setup-buttons {

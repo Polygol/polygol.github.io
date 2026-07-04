@@ -3107,7 +3107,7 @@ function createSetupScreen() {
                     setupContainer.remove();
                     document.body.classList.remove('setup-active');
                     isDuringFirstSetup = false;
-                    createFullscreenEmbed("docs:welcome");
+                    completeAiryOnboarding();
                 }, 300);
             } else {
                 currentPage++;
