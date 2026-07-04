@@ -246,8 +246,8 @@ function updateSunEffect() {
 		// Directional Fresnel (Internal Fade aligned with specular edges)
 		const fadeOffsetX = offsetX * 12;
 		const fadeOffsetY = offsetY * 12;
-		const fresnelAlpha = isLightMode ? 0.25 : 0.15;
-		const fresnelAlphaStrong = isLightMode ? 0.35 : 0.25;
+		const fresnelAlpha = isLightMode ? 0.25 : 0.10;
+		const fresnelAlphaStrong = isLightMode ? 0.35 : 0.20;
 
 		const innerFade1 = `inset ${fadeOffsetX.toFixed(2)}px ${fadeOffsetY.toFixed(2)}px 15px -5px rgba(255, 255, 255, ${fresnelAlpha})`;
 		const innerFade2 = `inset ${-fadeOffsetX.toFixed(2)}px ${-fadeOffsetY.toFixed(2)}px 15px -5px rgba(255, 255, 255, ${fresnelAlpha})`;
@@ -278,8 +278,8 @@ function updateSunEffect() {
 		const moonPosition = SunCalc.getMoonPosition(now, latitude, longitude);
 
 		// Vertical Fresnel matching top/bottom specular highlights
-		const fresnelAlpha = isLightMode ? 0.25 : 0.15;
-		const fresnelAlphaStrong = isLightMode ? 0.35 : 0.25;
+		const fresnelAlpha = isLightMode ? 0.25 : 0.10;
+		const fresnelAlphaStrong = isLightMode ? 0.35 : 0.20;
 
 		const innerFade1 = `inset 0px 3.5px 5px -1.5px rgba(255, 255, 255, ${fresnelAlpha})`;
 		const innerFade2 = `inset 0px -3.5px 5px -1.5px rgba(255, 255, 255, ${fresnelAlpha})`;
@@ -320,8 +320,8 @@ function updateSunEffect() {
 			// Directional Fresnel matching moon position azimuth
 			const fadeOffsetX = offsetX * 3.5;
 			const fadeOffsetY = offsetY * 3.5;
-            const fresnelAlpha = isLightMode ? 0.25 : 0.15;
-            const fresnelAlphaStrong = isLightMode ? 0.35 : 0.25;
+            const fresnelAlpha = isLightMode ? 0.25 : 0.10;
+            const fresnelAlphaStrong = isLightMode ? 0.35 : 0.20;
 
 			const innerFade1 = `inset ${fadeOffsetX.toFixed(2)}px ${fadeOffsetY.toFixed(2)}px 6px -1.5px rgba(255, 255, 255, ${fresnelAlpha})`;
 			const innerFade2 = `inset ${-fadeOffsetX.toFixed(2)}px ${-fadeOffsetY.toFixed(2)}px 6px -1.5px rgba(255, 255, 255, ${fresnelAlpha})`;
