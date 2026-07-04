@@ -341,8 +341,7 @@ class FxFilter {
             filter: fxFilter,
             parsedFilter,
             trackedStyles,
-            svgWrapper: built.svgWrapper,
-            containerDiv: built.containerDiv
+            svgWrapper: built.svgWrapper
         });
     }
 
@@ -385,55 +384,27 @@ class FxFilter {
         const backdropFilter = filterParts.join(' ');
         if (!backdropFilter.trim()) return null;
 
-        const needsPositionRelative = comp.position === 'static';
-
-        const parentBoxShadow = comp.boxShadow;
-        let containerBoxShadow = 'none';
-        if (parentBoxShadow && parentBoxShadow !== 'none' && parentBoxShadow.includes('inset')) {
-            containerBoxShadow = parentBoxShadow;
-        }
-
         const svgNS = "http://www.w3.org/2000/svg";
         const svgWrapper = document.createElementNS(svgNS, "svg");
         svgWrapper.classList.add('fx-svg');
         svgWrapper.style.cssText = "position:absolute;width:0;height:0;pointer-events:none;";
         svgWrapper.innerHTML = svgContent;
 
-        const containerDiv = document.createElement('div');
-        containerDiv.className = 'fx-container';
-        containerDiv.style.cssText = `
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            backdrop-filter: ${backdropFilter};
-            -webkit-backdrop-filter: ${backdropFilter};
-            background: transparent;
-            box-shadow: ${containerBoxShadow};
-            pointer-events: none;
-            z-index: -1;
-            overflow: hidden;
-            border-radius: inherit;
-            corner-shape: inherit;
-        `;
-
-        return { element, svgWrapper, containerDiv, needsPositionRelative };
+        return { element, svgWrapper, backdropFilter };
     }
 
-    static applyFxContainer({ element, svgWrapper, containerDiv, needsPositionRelative }) {
-        if (needsPositionRelative) {
-            element.style.position = 'relative';
-        }
-        
+    static applyFxContainer({ element, svgWrapper, backdropFilter }) {
         element.appendChild(svgWrapper);
-        element.appendChild(containerDiv);
+        element.style.backdropFilter = backdropFilter;
+        element.style.webkitBackdropFilter = backdropFilter;
     }
 
     static removeFxContainer(element) {
         const state = this.elements.get(element);
 
-        state?.containerDiv?.remove();
         state?.svgWrapper?.remove();
+        element.style.removeProperty('backdrop-filter');
+        element.style.removeProperty('-webkit-backdrop-filter');
     }
 
     static getFxFilterValue(element, computed) {

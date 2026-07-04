@@ -282,11 +282,11 @@ function updateSunEffect() {
 		const fresnelAlphaStrong = isLightMode ? 0.35 : 0.20;
 
 		const innerFade1 = `inset 0px 3.5px 5px -1.5px rgba(255, 255, 255, ${fresnelAlpha})`;
-		const innerFade2 = `inset 0px -3.5px 5px -1.5px rgba(255, 255, 255, ${fresnelAlpha})`;
+		const innerFade2 = `inset 0px -3.5px 5px -5px rgba(255, 255, 255, ${fresnelAlpha})`;
 		const innerFade = `${innerFade1}, ${innerFade2}`;
 
-		const innerFadeStrong1 = `inset 0px 4px 7px -2px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
-		const innerFadeStrong2 = `inset 0px -4px 7px -2px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
+		const innerFadeStrong1 = `inset 0px 4px 7px -5px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
+		const innerFadeStrong2 = `inset 0px -4px 7px -5px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
 		const innerFadeStrong = `${innerFadeStrong1}, ${innerFadeStrong2}`;
 
 		const starlightSpecular = `inset 0px 1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
@@ -323,12 +323,12 @@ function updateSunEffect() {
             const fresnelAlpha = isLightMode ? 0.25 : 0.10;
             const fresnelAlphaStrong = isLightMode ? 0.35 : 0.20;
 
-			const innerFade1 = `inset ${fadeOffsetX.toFixed(2)}px ${fadeOffsetY.toFixed(2)}px 6px -1.5px rgba(255, 255, 255, ${fresnelAlpha})`;
-			const innerFade2 = `inset ${-fadeOffsetX.toFixed(2)}px ${-fadeOffsetY.toFixed(2)}px 6px -1.5px rgba(255, 255, 255, ${fresnelAlpha})`;
+			const innerFade1 = `inset ${fadeOffsetX.toFixed(2)}px ${fadeOffsetY.toFixed(2)}px 6px -5px rgba(255, 255, 255, ${fresnelAlpha})`;
+			const innerFade2 = `inset ${-fadeOffsetX.toFixed(2)}px ${-fadeOffsetY.toFixed(2)}px 6px -5px rgba(255, 255, 255, ${fresnelAlpha})`;
 			const innerFade = `${innerFade1}, ${innerFade2}`;
 
-			const innerFadeStrong1 = `inset ${fadeOffsetX.toFixed(2)}px ${fadeOffsetY.toFixed(2)}px 8px -2px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
-			const innerFadeStrong2 = `inset ${-fadeOffsetX.toFixed(2)}px ${-fadeOffsetY.toFixed(2)}px 8px -2px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
+			const innerFadeStrong1 = `inset ${fadeOffsetX.toFixed(2)}px ${fadeOffsetY.toFixed(2)}px 8px -5px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
+			const innerFadeStrong2 = `inset ${-fadeOffsetX.toFixed(2)}px ${-fadeOffsetY.toFixed(2)}px 8px -5px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
 			const innerFadeStrong = `${innerFadeStrong1}, ${innerFadeStrong2}`;
 			
 			currentSunShadow = `${innerFade}, ${specularHighlight}, ${reflectedSpecular}, ${moonBlackOutline1}, ${moonBlackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
