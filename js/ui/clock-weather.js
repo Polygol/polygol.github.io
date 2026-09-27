@@ -334,23 +334,22 @@ function updateClockAndDate() {
     if (clockElement._lastHTML !== newClockHTML) {
         clockElement.innerHTML = newClockHTML;
         clockElement._lastHTML = newClockHTML;
+
+        // Force mask repaint ONLY when text actually changed and glass effect is active
+        if (clockElement.classList.contains('glass-effect') || clockElement.classList.contains('dynamic-fill-effect')) {
+            const hasGlass = clockElement.classList.contains('glass-effect');
+            const hasDynamicFill = clockElement.classList.contains('dynamic-fill-effect');
+            clockElement.classList.remove('glass-effect', 'dynamic-fill-effect');
+            void clockElement.offsetHeight; 
+            if (hasGlass) clockElement.classList.add('glass-effect');
+            if (hasDynamicFill) clockElement.classList.add('dynamic-fill-effect');
+        }
     }
         
     if (dateElement._lastText !== formattedDate) {
         dateElement.textContent = formattedDate;
         dateElement._lastText = formattedDate;
         if (modalTitle) modalTitle.textContent = formattedDate;
-    }
-
-    // --- FIX to force mask repaint ---
-    if (clockElement.classList.contains('glass-effect') || clockElement.classList.contains('dynamic-fill-effect')) {
-        const hasGlass = clockElement.classList.contains('glass-effect');
-        const hasDynamicFill = clockElement.classList.contains('dynamic-fill-effect');
-        clockElement.classList.remove('glass-effect', 'dynamic-fill-effect');
-        // Reading offsetHeight is a trick to force the browser to reflow
-        void clockElement.offsetHeight; 
-        if (hasGlass) clockElement.classList.add('glass-effect');
-        if (hasDynamicFill) clockElement.classList.add('dynamic-fill-effect');
     }
 }
 
@@ -360,15 +359,19 @@ function startSynchronizedClockAndDate() {
         window.clockLoopId = null;
     }
 
-    updateClockAndDate(); 
+    const isObscured = document.hidden || window.isAppOpen;
+    if (!isObscured) {
+        updateClockAndDate(); 
+    }
     
     const now = new Date();
     let delay;
     
-    // IDLE OPTIMIZATION: If we aren't showing seconds (or screen is asleep), sleep the CPU until the next minute starts.
+    // IDLE OPTIMIZATION: If we aren't showing seconds, or tab is hidden, or app is open, or blackout is active,
+    // sleep the timer until the next full minute to save CPU and battery.
     const isShowingSeconds = typeof showSeconds !== 'undefined' ? showSeconds : true;
     
-    if (isShowingSeconds && !window.isBlackoutActive) {
+    if (isShowingSeconds && !window.isBlackoutActive && !isObscured) {
         delay = 1000 - now.getMilliseconds();
     } else {
         // Next clean minute (:00)
@@ -376,8 +379,18 @@ function startSynchronizedClockAndDate() {
     }
     
     // Recursive setTimeout eliminates drift and allows for immediate restarts
-    window.clockLoopId = setTimeout(startSynchronizedClockAndDate, delay);
+    window.clockLoopId = setTimeout(startSynchronizedClockAndDate, Math.max(delay, 50));
 }
+
+// Immediately wake and sync clock when visibility restores or app is closed
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        startSynchronizedClockAndDate();
+    }
+});
+window.addEventListener('polygol-app-closed', () => {
+    startSynchronizedClockAndDate();
+});
 
 // Global helper to trigger an immediate UI refresh
 window.refreshClockUI = function() {

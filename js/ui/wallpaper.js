@@ -1718,14 +1718,31 @@ function setupWallpaperInteraction() {
         }
     };
 
-    window.addEventListener('mousedown', handleStart);
-    window.addEventListener('touchstart', handleStart, { passive: true });
+    let isAttached = false;
+    const onPointerEnd = (e) => {
+        handleEnd(e);
+        if (isAttached) {
+            window.removeEventListener('mousemove', handleMove);
+            window.removeEventListener('touchmove', handleMove);
+            window.removeEventListener('mouseup', onPointerEnd);
+            window.removeEventListener('touchend', onPointerEnd);
+            isAttached = false;
+        }
+    };
 
-    window.addEventListener('mousemove', handleMove, { passive: true });
-    window.addEventListener('touchmove', handleMove, { passive: true });
+    const onPointerStart = (e) => {
+        handleStart(e);
+        if (!isAttached) {
+            window.addEventListener('mousemove', handleMove, { passive: true });
+            window.addEventListener('touchmove', handleMove, { passive: true });
+            window.addEventListener('mouseup', onPointerEnd);
+            window.addEventListener('touchend', onPointerEnd);
+            isAttached = true;
+        }
+    };
 
-    window.addEventListener('mouseup', handleEnd);
-    window.addEventListener('touchend', handleEnd);
+    window.addEventListener('mousedown', onPointerStart);
+    window.addEventListener('touchstart', onPointerStart, { passive: true });
 }
 
 // Run this on load
@@ -1841,11 +1858,32 @@ function setupSwitcherScrolling(container) {
         }
     };
 
+    const onThumbMouseMove = (e) => handleDragMove(e.clientX);
+    const onThumbTouchMove = (e) => {
+        if (isDraggingThumb) e.preventDefault();
+        handleDragMove(e.touches[0].clientX);
+    };
+    const onThumbDragEnd = (e) => {
+        handleDragEnd(e);
+        window.removeEventListener('mousemove', onThumbMouseMove);
+        window.removeEventListener('touchmove', onThumbTouchMove);
+        window.removeEventListener('mouseup', onThumbDragEnd);
+        window.removeEventListener('touchend', onThumbDragEnd);
+    };
+
+    const attachThumbListeners = () => {
+        window.addEventListener('mousemove', onThumbMouseMove);
+        window.addEventListener('touchmove', onThumbTouchMove, { passive: false });
+        window.addEventListener('mouseup', onThumbDragEnd);
+        window.addEventListener('touchend', onThumbDragEnd);
+    };
+
     // Mouse Events
     thumb.addEventListener('mousedown', (e) => {
         e.preventDefault();
         e.stopPropagation(); // Prevent card clicks
         handleDragStart(e.clientX);
+        attachThumbListeners();
     });
     
     // Touch Events
@@ -1853,17 +1891,8 @@ function setupSwitcherScrolling(container) {
         e.preventDefault(); // Prevent default scroll
         e.stopPropagation();
         handleDragStart(e.touches[0].clientX);
+        attachThumbListeners();
     }, { passive: false });
-
-    // Global Move/Up (Passive: false for touch to prevent scrolling page)
-    window.addEventListener('mousemove', (e) => handleDragMove(e.clientX));
-    window.addEventListener('touchmove', (e) => {
-        if (isDraggingThumb) e.preventDefault();
-        handleDragMove(e.touches[0].clientX);
-    }, { passive: false });
-
-    window.addEventListener('mouseup', handleDragEnd);
-    window.addEventListener('touchend', handleDragEnd);
 }
 
 function closeWallpaperSwitcher() {

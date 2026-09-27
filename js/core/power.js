@@ -79,6 +79,7 @@ async function applyWakeLockSettings() {
 }
 
 function blackoutScreen() {
+    window.blackoutScreen = blackoutScreen;
     // FIX: Don't re-apply if already in blackout mode
     if (document.body.classList.contains('blackout-active')) return;
     

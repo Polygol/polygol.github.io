@@ -721,6 +721,31 @@ window.addEventListener('message', async (event) => { // Make listener async
                 window.SoundManager.play(type);
             }
         },
+        aiPrompt: async (payload) => {
+            const { prompt, options = {}, requestId } = payload || {};
+            const source = event.source;
+            const origin = event.origin === 'null' ? '*' : event.origin;
+
+            try {
+                const ai = window.SystemAI || (window.kirbAI && window.kirbAI.ai);
+                if (!ai) {
+                    if (source) source.postMessage({ type: 'ai-response', requestId, error: 'System AI unavailable' }, origin);
+                    return;
+                }
+                const result = await ai.prompt(prompt, options);
+                if (source) source.postMessage({ type: 'ai-response', requestId, result }, origin);
+            } catch (err) {
+                if (source) source.postMessage({ type: 'ai-response', requestId, error: err.message }, origin);
+            }
+        },
+        aiIsReady: (payload) => {
+            const { requestId } = payload || {};
+            const source = event.source;
+            const origin = event.origin === 'null' ? '*' : event.origin;
+            const ai = window.SystemAI || (window.kirbAI && window.kirbAI.ai);
+            const ready = ai ? (typeof ai.isReady === 'function' ? ai.isReady() : !!ai.isReady) : false;
+            if (source) source.postMessage({ type: 'ai-ready-response', requestId, isReady: ready }, origin);
+        },
         requestFileUpload: (options) => {
             const { accept, multiple, requestId } = options;
             

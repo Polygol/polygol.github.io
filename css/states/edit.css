@@ -30,11 +30,6 @@ body.edit-mode-active .info::after {
     transition: opacity 0.2s, border-color 0.2s;
 }
 
-body.edit-mode-active #clock:hover::after,
-body.edit-mode-active .info:hover::after {
-    opacity: 1;
-}
-
 body.edit-mode-active #clock.edit-selected::after,
 body.edit-mode-active .info.edit-selected::after {
     opacity: 1;

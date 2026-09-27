@@ -415,7 +415,22 @@ function createAppIcons(filterQuery = '', forceShowNames = false) {
 		        const drawerPill = document.querySelector('.drawer-pill');
 		        if(drawerPill) drawerPill.style.opacity = '1';
 		        
-		        try {      
+		        try {
+		            if (app.name === 'Assistant') {
+		                appDrawer.classList.remove('open');
+		                setTimeout(() => {
+		                    if (!appDrawer.classList.contains('open')) {
+		                        appDrawer.style.display = 'none';
+		                        appDrawer.style.bottom = '';
+		                        appDrawer.style.opacity = '';
+		                        appDrawer.style.zIndex = '';
+		                    }
+		                }, 300);
+		                if (window.Assistant && typeof window.Assistant.trigger === 'function') {
+		                    window.Assistant.trigger();
+		                }
+		                return;
+		            }
 		            createFullscreenEmbed(app.details.url);
 		            appDrawer.classList.remove('open');
                     setTimeout(() => {
@@ -622,29 +637,38 @@ function setupDrawerInteractions() {
             handleDragging = false;
         });
 
-        // Mouse listeners for the handle - only enable gestures if button is NOT used
-        drawerHandle.addEventListener('mousedown', (e) => {
-            if (qmTriggerBtn) return; // Disable gestures on mouse if button exists
-            handleDragging = true;
-            handleSwiped = false;
-            handleStartY = e.clientY;
-        });
-
-        document.addEventListener('mousemove', (e) => {
+        // Mouse listeners for the handle - only attach move/up listeners during drag
+        const onDrawerMouseMove = (e) => {
             if (!handleDragging || qmTriggerBtn) return;
             const deltaY = handleStartY - e.clientY;
             if (deltaY >= SWIPE_THRESHOLD) {
                 handleDragging = false;
                 handleSwiped = true;
                 openQuickMenu();
+                cleanupDrawerMouse();
             }
-        });
+        };
 
-        document.addEventListener('mouseup', (e) => {
+        const onDrawerMouseUp = (e) => {
             if (handleDragging && !handleSwiped) {
                 forwardClick(e.clientX, e.clientY);
             }
             handleDragging = false;
+            cleanupDrawerMouse();
+        };
+
+        const cleanupDrawerMouse = () => {
+            document.removeEventListener('mousemove', onDrawerMouseMove);
+            document.removeEventListener('mouseup', onDrawerMouseUp);
+        };
+
+        drawerHandle.addEventListener('mousedown', (e) => {
+            if (qmTriggerBtn) return; // Disable gestures on mouse if button exists
+            handleDragging = true;
+            handleSwiped = false;
+            handleStartY = e.clientY;
+            document.addEventListener('mousemove', onDrawerMouseMove);
+            document.addEventListener('mouseup', onDrawerMouseUp);
         });
     }
 
@@ -685,7 +709,11 @@ function setupDrawerInteractions() {
     };
 
     const observer = new MutationObserver(updateOverlayVisibility);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+    observer.observe(document.body, { 
+        childList: true, 
+        attributes: true, 
+        attributeFilter: ['class', 'style'] 
+    });
     updateOverlayVisibility();
 
     // --- Quick Menu Logic ---
@@ -721,26 +749,28 @@ function setupDrawerInteractions() {
             qmIsDragging = false;
         });
 
-        // Mouse support for swipe down
-        qm.addEventListener('mousedown', (e) => {
-            qmStartY = e.clientY;
-            qmIsDragging = true;
-        });
-
-        window.addEventListener('mousemove', (e) => {
+        // Mouse support for swipe down - attach move/up only while dragging
+        const onQmMouseMove = (e) => {
             if (!qmIsDragging || qm.style.display === 'none') return;
             const deltaY = e.clientY - qmStartY;
-        });
+        };
 
-        window.addEventListener('mouseup', (e) => {
+        const onQmMouseUp = (e) => {
             if (!qmIsDragging) return;
             const deltaY = e.clientY - qmStartY;
-            const menuContent = qm.querySelector('.quick-menu-content');
-            
             if (deltaY > 70) {
                 closeQuickMenu();
             }
             qmIsDragging = false;
+            window.removeEventListener('mousemove', onQmMouseMove);
+            window.removeEventListener('mouseup', onQmMouseUp);
+        };
+
+        qm.addEventListener('mousedown', (e) => {
+            qmStartY = e.clientY;
+            qmIsDragging = true;
+            window.addEventListener('mousemove', onQmMouseMove);
+            window.addEventListener('mouseup', onQmMouseUp);
         });
 
         // Existing inactivity and reset listeners
@@ -754,13 +784,9 @@ function setupDrawerInteractions() {
         btnAssistant.addEventListener('click', () => {
             closeQuickMenu();
 
-            showPopup('This feature is not available')
-
-            /* Uncomment when ready.
-            
             if (window.Assistant && typeof window.Assistant.trigger === 'function') {
                 window.Assistant.trigger();
-            } */
+            }
         });
     }
 

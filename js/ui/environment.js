@@ -739,13 +739,21 @@ const EnvironmentManager = {
     },
 
 	startLoop() {
+        this._loopRunning = true;
         const loop = () => {
-            if (!this.active || !this.app) return;
-            requestAnimationFrame(loop);
+            if (!this.active || !this.app) {
+                this._loopRunning = false;
+                return;
+            }
 
             // Suspend 3D rendering and physics math when obscured by an app, when in blackout (sleep) mode, or when the browser tab is hidden.
             const isObscured = document.hidden || window.isAppOpen || document.body.classList.contains('blackout-active');
-            if (isObscured) return;
+            if (isObscured) {
+                this._loopRunning = false;
+                return;
+            }
+
+            requestAnimationFrame(loop);
 
             const { renderer, scene, camera, cloudMaterial, precipSystem, clouds } = this.app;
             
@@ -785,6 +793,19 @@ const EnvironmentManager = {
         };
         loop();
         
+        const ensureLoopRunning = () => {
+            if (!this._loopRunning && this.active && this.app) {
+                const isObscured = document.hidden || window.isAppOpen || document.body.classList.contains('blackout-active');
+                if (!isObscured) {
+                    this._loopRunning = true;
+                    loop();
+                }
+            }
+        };
+
+        document.addEventListener('visibilitychange', ensureLoopRunning);
+        window.addEventListener('polygol-app-closed', ensureLoopRunning);
+
         // Refresh sun pos every 60s
         setInterval(() => this.updateSunCycle(), 60000);
     }

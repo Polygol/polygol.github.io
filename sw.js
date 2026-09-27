@@ -1,6 +1,6 @@
-const CORE_CACHE_VERSION = 'Astatine 27-b08.2';
-const CORE_CACHE_NAME = `polygol-core-${CORE_CACHE_VERSION}`;
-const APPS_CACHE_NAME = 'polygol-apps';
+const CORE_CACHE_VERSION = 'Astatine 2027 (27.2026.9)';
+const CORE_CACHE_NAME = `polcore${CORE_CACHE_VERSION}`;
+const APPS_CACHE_NAME = 'polapps';
 
 // --- IndexedDB Vault Configuration ---
 const VAULT_DB = 'PolygolSystemVaultDB';
@@ -73,6 +73,12 @@ const ASSETS_TO_CACHE = [
   '/js/apps/media-session.js',
   '/js/apps/live-activities.js',
   '/js/apps/api.js',
+  '/js/assistant/core.js',
+  '/js/assistant/ui.js',
+  '/js/assistant/stt.js',
+  '/js/assistant/tts.js',
+  '/js/assistant/llm.js',
+  '/js/assistant/nlp.js',
   '/js/core/boot.js',
   '/js/index.js',
   '/js/lang.js',

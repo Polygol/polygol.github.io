@@ -50,8 +50,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 el.style.opacity = '';
                 el.style.scale = '';
             });
-        }, 300);
-    }, 2000);
+        }, 150);
+    }, 400);
 
     const oneButtonNavSwitch = document.getElementById('one-button-nav-switch');
     if (oneButtonNavSwitch) {

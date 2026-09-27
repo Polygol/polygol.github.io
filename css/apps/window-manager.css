@@ -160,8 +160,7 @@
     transition: height 0.2s, opacity 0.2s;
 }
 
-#split-divider:active .split-handle-bar,
-#split-divider:hover .split-handle-bar {
+#split-divider:active .split-handle-bar {
     width: 8px;
     height: 60px;
     background-color: var(--accent);

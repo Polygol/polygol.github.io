@@ -104,7 +104,7 @@ function updateVolumeMixerUI() {
 
 let appUsage = {};
 window.appHistoryStack = []; // Track app navigation history
-let minimizedEmbeds = {}; // Object to store minimized embeds by URL
+let minimizedEmbeds = window.minimizedEmbeds = (window.minimizedEmbeds || {}); // Object to store minimized embeds by URL
 let appLastOpened = {};
 
 function loadSavedData() {
@@ -1178,6 +1178,13 @@ async function createFullscreenEmbed(url, options = {}) {
 // Wrapper to intercept app open calls
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
 createFullscreenEmbed = async function(url, options = {}) {
+    if (url && (url.includes('assistant-for-polygol') || url === 'internal://assistant')) {
+        if (window.Assistant && typeof window.Assistant.trigger === 'function') {
+            window.Assistant.trigger();
+            return;
+        }
+    }
+
     // Wake up and log activity for Resource Manager
     if (typeof ResourceManager !== 'undefined') {
         ResourceManager.markAppActive(url);
@@ -1291,6 +1298,7 @@ createFullscreenEmbed = async function(url, options = {}) {
 
     return result;
 };
+window.createFullscreenEmbed = createFullscreenEmbed;
 
 async function createBackgroundEmbed(url) {
     // 1. Check if running (Active or Minimized)
@@ -1614,6 +1622,7 @@ function forceCloseApp(url) {
         resetAutoSleepTimer();
         resetIndicatorTimeout();
         updateDockVisibility();
+        window.dispatchEvent(new CustomEvent('polygol-app-closed'));
         
         // Update Title
         setTimeout(() => {
@@ -1803,6 +1812,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
     }
 	
     resumeAllAnimations();
+    window.dispatchEvent(new CustomEvent('polygol-app-closed'));
 }
 
 /**
@@ -1897,7 +1907,7 @@ function createCompositeScreenshot() {
 
 // --- Predictive App Preloading ---
 function initPredictivePreload() {
-    if (localStorage.getItem('predictivePreload') === 'false') return;
+    if (localStorage.getItem('predictivePreload') === 'false' || window.isLowEndDevice) return;
 
     // Wait 5 seconds after boot to ensure system stability before heavy operations
     setTimeout(() => {

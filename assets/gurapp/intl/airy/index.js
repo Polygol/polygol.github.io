@@ -3057,7 +3057,7 @@ function createSetupScreen() {
             const backButton = document.createElement('button');
             backButton.className = 'setup-top-btn';
             // Use a language key if available, otherwise default to "Back"
-            backButton.innerHTML = '<span class="material-symbols-rounded">arrow_back</span>';
+            backButton.innerHTML = '<span class="material-symbols-rounded">arrow_back_ios_new</span>';
             backButton.addEventListener('click', () => {
                 if (isTransitioning) return;
                 isTransitioning = true;

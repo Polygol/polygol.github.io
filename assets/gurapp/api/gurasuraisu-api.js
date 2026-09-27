@@ -11,6 +11,7 @@ let _mediaControlActions = {};
 let _actionRequestHandlers = {};
 let _intentHandlers = {};
 const _dialogCallbacks = {}; // For handling dialog responses
+const _aiCallbacks = {};     // For handling kirbAI (System LLM) responses
 let _dialogRequestId = 0;   // For tracking dialog requests
 const _myActiveActivities = new Set(); // Tracks this app's active activities
 
@@ -1221,6 +1222,18 @@ const _fallbacks = {
         // Append container to overlay
         overlay.appendChild(container);
         document.body.appendChild(overlay);
+    },
+    aiPrompt: function(options) {
+        if (options && options.requestId && _aiCallbacks[options.requestId]) {
+            _aiCallbacks[options.requestId].resolve({ text: "kirbAI local fallback: Ready." });
+            delete _aiCallbacks[options.requestId];
+        }
+    },
+    aiIsReady: function(options) {
+        if (options && options.requestId && _aiCallbacks[options.requestId]) {
+            _aiCallbacks[options.requestId].resolve(true);
+            delete _aiCallbacks[options.requestId];
+        }
     }
 };
 
@@ -1250,6 +1263,82 @@ const Gurasuraisu = {
   },
 
   // --- Public API Functions ---
+
+  // --- kirbAI System LLM Services for Gurapps ---
+  ai: {
+    /**
+     * Prompts the kirbAI LLM to generate text or structured responses.
+     * @param {string} promptText - The prompt or question for the AI.
+     * @param {object} [options] - Generation options.
+     * @returns {Promise<{ text: string, json?: object }>}
+     */
+    prompt: function(promptText, options = {}) {
+      return new Promise((resolve, reject) => {
+        const requestId = 'ai_req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        _aiCallbacks[requestId] = { resolve, reject };
+
+        setTimeout(() => {
+          if (_aiCallbacks[requestId]) {
+            delete _aiCallbacks[requestId];
+            reject(new Error("AI request timed out"));
+          }
+        }, 30000);
+
+        Gurasuraisu._call('aiPrompt', [{ prompt: promptText, options: options, requestId: requestId }]);
+      });
+    },
+
+    /**
+     * Generates a text response using kirbAI.
+     * @param {string} promptText
+     * @param {object} [options]
+     * @returns {Promise<string>}
+     */
+    generate: function(promptText, options = {}) {
+      return this.prompt(promptText, options).then(res => res.text);
+    },
+
+    /**
+     * Summarizes text using kirbAI.
+     * @param {string} text
+     * @param {object} [options]
+     * @returns {Promise<string>}
+     */
+    summarize: function(text, options = {}) {
+      return this.prompt(text, { ...options, type: 'summarize' }).then(res => res.text);
+    },
+
+    /**
+     * Generates smart contextual suggestions.
+     * @param {object} [context]
+     * @returns {Promise<Array>}
+     */
+    suggest: function(context = {}) {
+      return this.prompt('Suggest actions', { ...context, type: 'suggestions' }).then(res => res.json || []);
+    },
+
+    /**
+     * Parses natural language into structured actions.
+     * @param {string} command
+     * @param {object} [context]
+     * @returns {Promise<object>}
+     */
+    parse: function(command, context = {}) {
+      return this.prompt(command, { ...context, type: 'parse' }).then(res => res.json || null);
+    },
+
+    /**
+     * Checks if the AI LLM is ready.
+     * @returns {Promise<boolean>}
+     */
+    isReady: function() {
+      return new Promise((resolve) => {
+        const requestId = 'ai_rdy_' + Date.now();
+        _aiCallbacks[requestId] = { resolve, reject: () => resolve(false) };
+        Gurasuraisu._call('aiIsReady', [{ requestId: requestId }]);
+      });
+    }
+  },
 
   /**
    * Shows a temporary popup message at the bottom of the screen.
@@ -2008,6 +2097,22 @@ window.addEventListener('message', async (event) => {
             delete _dialogCallbacks[data.requestId];
         }
         break;
+      case 'ai-response':
+        if (data.requestId && _aiCallbacks[data.requestId]) {
+            if (data.error) {
+                _aiCallbacks[data.requestId].reject(new Error(data.error));
+            } else {
+                _aiCallbacks[data.requestId].resolve(data.result);
+            }
+            delete _aiCallbacks[data.requestId];
+        }
+        break;
+      case 'ai-ready-response':
+        if (data.requestId && _aiCallbacks[data.requestId]) {
+            _aiCallbacks[data.requestId].resolve(!!data.isReady);
+            delete _aiCallbacks[data.requestId];
+        }
+        break;
       case 'volumeUpdate':
         const media = document.querySelectorAll('video, audio');
         if (data.muted === true || data.level === 0) {
@@ -2485,6 +2590,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 });
+
+// Expose APIs globally to Gurapp context
+window.Gurasuraisu = Gurasuraisu;
+window.GurappAPI = Gurasuraisu;
+window.kirbAI = Gurasuraisu.ai;
 
 // Announce that the API is ready
 window.GURASURAISU_API_READY = true;

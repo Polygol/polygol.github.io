@@ -1,9 +1,22 @@
 // --- Performance Auto-Detection ---
 function detectPerformanceProfile() {
+    const applyLowEndClass = () => {
+        if (window.isLowEndDevice) {
+            if (document.body) {
+                document.body.classList.add('low-end-device');
+            } else {
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.body.classList.add('low-end-device');
+                }, { once: true });
+            }
+        }
+    };
+
     const storedScore = localStorage.getItem('systemPerformanceScore');
     if (localStorage.getItem('performanceConfigured') === 'true' && storedScore !== null) {
         window.systemPerformanceScore = parseInt(storedScore);
         window.isLowEndDevice = (window.systemPerformanceScore <= 2);
+        applyLowEndClass();
         return;
     }
 
@@ -64,9 +77,7 @@ function detectPerformanceProfile() {
     localStorage.setItem('systemPerformanceScore', score);
     localStorage.setItem('performanceConfigured', 'true');
 
-    if (window.isLowEndDevice) {
-        document.body.classList.add('low-end-device');
-    }
+    applyLowEndClass();
 }
 
 // Run immediately to ensure settings are present before main logic reads them
@@ -253,7 +264,8 @@ const ResourceManager = {
                 for (const entry of entries) {
                     // A task longer than 100ms indicates heavy main-thread blocking (jank/lag)
                     if (entry.duration > 100) {
-                        const hasWindows = document.querySelector('.fullscreen-embed') || Object.keys(minimizedEmbeds).length > 0;
+                        const bgEmbeds = window.minimizedEmbeds || (typeof minimizedEmbeds !== 'undefined' ? minimizedEmbeds : {});
+                        const hasWindows = document.querySelector('.fullscreen-embed') || Object.keys(bgEmbeds).length > 0;
                         if (hasWindows && !document.hidden) {
                             console.warn(`[System] Main thread lag detected (${entry.duration.toFixed(0)}ms). Adaptating...`);
                             this.handleHighLoad();
@@ -340,7 +352,8 @@ const ResourceManager = {
         // --- Unknown Background Cleanup Logic ---
         const now = Date.now();
         const UNKNOWN_TIMEOUT = 5 * 60 * 1000; // 5 Minutes
-        const backgroundUrls = Object.keys(minimizedEmbeds);
+        const bgEmbeds = window.minimizedEmbeds || (typeof minimizedEmbeds !== 'undefined' ? minimizedEmbeds : {});
+        const backgroundUrls = Object.keys(bgEmbeds);
 
         // --- Strict App Limit ---
         // Safely restrict max background apps to prevent DOM/Memory bloat over long uptimes
@@ -352,7 +365,7 @@ const ResourceManager = {
 
         backgroundUrls.forEach(url => {
             // 1. Identify if the app is "Officially Installed"
-            const isInstalled = Object.values(apps).some(app => app.url === url);
+            const isInstalled = (typeof apps !== 'undefined') && Object.values(apps).some(app => app.url === url);
             
             if (!isInstalled) {
                 const lastActive = this.appActivity[url] || 0;
@@ -362,9 +375,9 @@ const ResourceManager = {
                     console.log(`[ResourceManager] Closing inactive unknown app: ${url}`);
                     
                     // 3. Safety check: Don't kill it if it's the current Media App
-                    const appName = Object.keys(apps).find(name => apps[name].url === url);
-                    if (appName !== activeMediaSessionApp) {
-                        forceCloseApp(url);
+                    const appName = typeof apps !== 'undefined' ? Object.keys(apps).find(name => apps[name].url === url) : null;
+                    if (typeof activeMediaSessionApp === 'undefined' || appName !== activeMediaSessionApp) {
+                        if (typeof forceCloseApp === 'function') forceCloseApp(url);
                     }
                 }
             }
@@ -373,7 +386,7 @@ const ResourceManager = {
         if (!performance.measureUserAgentSpecificMemory) return;
         if (!window.crossOriginIsolated) {
             // Heuristic Fallback
-            const appCount = Object.keys(minimizedEmbeds).length;
+            const appCount = Object.keys(bgEmbeds).length;
             const maxApps = (navigator.deviceMemory || 4);
             if (appCount > maxApps) {
                 console.warn("[System] Heuristic Memory Pressure.");
@@ -418,19 +431,25 @@ const ResourceManager = {
         this.isStruggling = true;
         this._lastDowngrade = now;
 
-        // Bypassed automated glass downgrades to protect visual fidelity [1]
-        console.log("[System] Resource Manager detected high load, but Glass downgrading is explicitly disabled.");
+        console.log("[System] Resource Manager detected high load. Enabling performance mitigations.");
+        if (document.body) {
+            document.body.classList.add('resource-constrained');
+        }
     },
 
     attemptRecovery() {
         this.isStruggling = false;
         this.recoveryCounter = 0;
         this._lastDowngrade = 0;
+        if (document.body) {
+            document.body.classList.remove('resource-constrained');
+        }
         console.log("[System] Performance stabilized. Recovery processed.");
     },
 
     killLeastUsedApp() {
-        const bgApps = Object.keys(minimizedEmbeds);
+        const bgEmbeds = window.minimizedEmbeds || (typeof minimizedEmbeds !== 'undefined' ? minimizedEmbeds : {});
+        const bgApps = Object.keys(bgEmbeds);
         if (bgApps.length === 0) return;
 
         let oldestUrl = null;
@@ -445,12 +464,12 @@ const ResourceManager = {
         });
 		
 		if (oldestUrl) {
-            const appName = Object.keys(apps).find(n => apps[n].url === oldestUrl) || "an app";
+            const appName = (typeof apps !== 'undefined' ? Object.keys(apps).find(n => apps[n].url === oldestUrl) : null) || "an app";
             console.log(`[System] OOM Killer closing: ${appName}`);
             
-            forceCloseApp(oldestUrl);
+            if (typeof forceCloseApp === 'function') forceCloseApp(oldestUrl);
             
-            showPopup(`Closed ${appName} to free memory`);
+            if (typeof showPopup === 'function') showPopup(`Closed ${appName} to free memory`);
             SystemGC.run(true); // Force GC immediately after OOM kill
         }
     }

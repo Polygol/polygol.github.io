@@ -1492,10 +1492,6 @@ body::before {
   flex-direction: column;
 }
 
-.app-thumb-wrapper:hover {
-  transform: scale(1.05);
-}
-
 .app-icon-container {
   flex: 1;
   display: flex;

@@ -44,12 +44,8 @@ body {
     height: 80px;
     pointer-events: none;
     z-index: 999;
-    background: var(--background-color);
-    mask: linear-gradient(
-        to bottom,
-        black 0%,
-        transparent 100%
-    );
+    background: var(--background-color-tr);
+    backdrop-filter: blur(2.5px);
 }
 
 .back-btn {

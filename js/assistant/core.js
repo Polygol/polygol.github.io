@@ -1,344 +1,739 @@
+// Polygol Assistant Core (kirbAI)
 import { LocalSTT } from './stt.js';
 import { LocalTTS } from './tts.js';
 import { LocalLLM } from './llm.js';
+import { AssistantNLP } from './nlp.js';
 import { AssistantUI } from './ui.js';
-
-const safeInit = (fn, name, timeout = 60000) =>
-    Promise.race([
-        fn(),
-        new Promise((_, reject) =>
-            setTimeout(() => reject(new Error(name + " timeout")), timeout)
-        )
-    ]);
 
 class AssistantCore {
     constructor() {
         this.stt = new LocalSTT();
         this.tts = new LocalTTS();
         this.llm = new LocalLLM();
+        this.nlp = new AssistantNLP();
         this.isProcessing = false;
+        this.isOpen = false;
         this.activeDecisions = [];
+        this._initialized = false;
+        this._wakeWordStream = null;
+        this._inactivityTimer = null;
+        this._touchStartY = 0;
+        this._touchStartX = 0;
+        this._isSwiping = false;
     }
 
     async init() {
-        const wakeWordMode = localStorage.getItem('assistantWakeWord') || 'none';
-        
-        // Bind shortcut globally if enabled
+        if (this._initialized) return;
+        this._initialized = true;
+
+        // 1. Initialize audio/speech subsystems
+        this.tts.init().catch(() => {});
+        this.stt.init().catch(() => {});
+
+        // 2. Bind global keyboard shortcuts
         window.addEventListener('keydown', (e) => {
-            if (e.shiftKey && e.code === 'Space' && localStorage.getItem('assistantWakeWord') === 'shift_space') {
-                e.preventDefault();
-                this.trigger();
+            // Shift + Space triggers kirbAI
+            if (e.shiftKey && (e.code === 'Space' || e.key === ' ')) {
+                const wakeWordPref = localStorage.getItem('assistantWakeWord');
+                // Active by default or if explicitly set to 'shift_space'
+                if (!wakeWordPref || wakeWordPref === 'shift_space' || wakeWordPref === 'default') {
+                    e.preventDefault();
+                    this.toggle();
+                }
+            }
+
+            // Escape key closes kirbAI if open
+            if (e.code === 'Escape' || e.key === 'Escape') {
+                if (this.isOpen) {
+                    e.preventDefault();
+                    this.close();
+                }
             }
         });
 
-        // Initialize voice if needed
+        // 3. Bind UI interactions & gestures
+        this._bindUIEvents();
+        this._initEdgeSwipeListener();
+
+        // 4. Voice wake word listener if requested
+        const wakeWordMode = localStorage.getItem('assistantWakeWord') || 'none';
         if (wakeWordMode === 'voice') {
-            // Wait for user interaction to satisfy browser AudioContext rules
             const bootstrapVoice = async () => {
-                await this.stt.init();
-                this.startWakeWordListener();
+                await this.startWakeWordListener();
                 document.removeEventListener('click', bootstrapVoice);
             };
-            document.addEventListener('click', bootstrapVoice);
+            document.addEventListener('click', bootstrapVoice, { once: true });
         }
     }
 
+    resetInactivityTimer() {
+        clearTimeout(this._inactivityTimer);
+        if (this.isOpen && !this.isProcessing) {
+            this._inactivityTimer = setTimeout(() => {
+                if (this.isOpen && !this.isProcessing) {
+                    this.close();
+                }
+            }, 10000); // 10 seconds of inactivity closes kirbAI
+        }
+    }
+
+    _bindUIEvents() {
+        const overlay = document.getElementById('assistant-overlay');
+        const sendBtn = document.getElementById('assistant-send-btn');
+        const micBtn = document.getElementById('assistant-mic-btn');
+        const textInput = document.getElementById('assistant-text-input');
+
+        if (overlay) {
+            // Inactivity resets on any interaction inside the overlay
+            ['mousemove', 'mousedown', 'touchstart', 'touchmove', 'keydown', 'input', 'scroll'].forEach(evt => {
+                overlay.addEventListener(evt, () => this.resetInactivityTimer(), { passive: true });
+            });
+
+            // Tap on background dismisses
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    this.close();
+                }
+            });
+
+            // Swipe up gesture detection (Touch)
+            overlay.addEventListener('touchstart', (e) => {
+                if (e.touches.length > 0) {
+                    this._touchStartX = e.touches[0].clientX;
+                    this._touchStartY = e.touches[0].clientY;
+                    this._isSwiping = true;
+                }
+                this.resetInactivityTimer();
+            }, { passive: true });
+
+            overlay.addEventListener('touchend', (e) => {
+                if (!this._isSwiping) return;
+                this._isSwiping = false;
+                if (e.changedTouches.length > 0) {
+                    const endX = e.changedTouches[0].clientX;
+                    const endY = e.changedTouches[0].clientY;
+                    const deltaY = this._touchStartY - endY; // positive = swipe up
+                    const deltaX = this._touchStartX - endX;
+
+                    // Swipe up threshold: 50px upward and predominantly vertical
+                    if (deltaY > 50 && Math.abs(deltaY) > Math.abs(deltaX)) {
+                        this.close();
+                    }
+                }
+            });
+
+            // Swipe up gesture detection (Mouse drag for desktop)
+            let mouseDownY = 0;
+            let mouseDownX = 0;
+            let isMouseDown = false;
+
+            overlay.addEventListener('mousedown', (e) => {
+                if (e.target.closest('#assistant-decision-panel') || e.target.closest('#assistant-input-bar')) {
+                    return;
+                }
+                isMouseDown = true;
+                mouseDownX = e.clientX;
+                mouseDownY = e.clientY;
+                this.resetInactivityTimer();
+            });
+
+            overlay.addEventListener('mouseup', (e) => {
+                if (!isMouseDown) return;
+                isMouseDown = false;
+                const deltaY = mouseDownY - e.clientY; // positive = swipe up
+                const deltaX = mouseDownX - e.clientX;
+
+                if (deltaY > 50 && Math.abs(deltaY) > Math.abs(deltaX)) {
+                    this.close();
+                }
+            });
+        }
+
+        const submitText = () => {
+            if (!textInput) return;
+            const text = textInput.value.trim();
+            if (text) {
+                this.resetInactivityTimer();
+                this.stt.stop();
+                AssistantUI.setMicActive(false);
+                AssistantUI.setTranscript(text);
+                textInput.value = '';
+                this.handleCommand(text);
+            }
+        };
+
+        if (sendBtn) {
+            sendBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                submitText();
+            });
+        }
+
+        if (textInput) {
+            textInput.addEventListener('keydown', (e) => {
+                this.resetInactivityTimer();
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitText();
+                }
+            });
+        }
+
+        if (micBtn) {
+            micBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.resetInactivityTimer();
+                if (this.stt.isListening) {
+                    this.stt.stop();
+                    AssistantUI.setMicActive(false);
+                    AssistantUI.setState('listening');
+                    AssistantUI.clearTranscript();
+                } else {
+                    this.startListening();
+                }
+            });
+        }
+    }
+
+    _initEdgeSwipeListener() {
+        const HANDLE_THICKNESS = 28; // Thickness of edge gesture capture zone in px
+        const SWIPE_THRESHOLD = 35;  // Distance required to trigger swipe
+        let suppressClickUntil = 0;
+
+        // 1. Helper: Forward click through the handle to underlying content (identical to Quick Menu)
+        const forwardClick = (clientX, clientY) => {
+            const handles = document.querySelectorAll('.kirbai-edge-handle');
+            handles.forEach(h => h.style.pointerEvents = 'none');
+
+            const passthrough = document.querySelectorAll('.fullscreen-embed, iframe');
+            const original = new Map();
+            passthrough.forEach(el => {
+                original.set(el, el.style.pointerEvents);
+                el.style.pointerEvents = 'auto';
+            });
+
+            const target = document.elementFromPoint(clientX, clientY);
+
+            if (target) {
+                if (target.tagName === 'IFRAME') {
+                    const rect = target.getBoundingClientRect();
+                    const zoom = (parseFloat(document.body.style.zoom) || 100) / 100;
+                    target.contentWindow?.postMessage({
+                        type: 'forward-click',
+                        x: (clientX - rect.left) / zoom,
+                        y: (clientY - rect.top) / zoom
+                    }, '*');
+                } else {
+                    target.dispatchEvent(new MouseEvent('click', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true,
+                        clientX,
+                        clientY
+                    }));
+                }
+            }
+
+            handles.forEach(h => {
+                if (!this.isOpen) h.style.pointerEvents = 'auto';
+            });
+            passthrough.forEach(el => el.style.pointerEvents = original.get(el));
+        };
+
+        // 2. Global capture-phase click suppressor to prevent actions when swiped
+        window.addEventListener('click', (e) => {
+            if (Date.now() < suppressClickUntil) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+            }
+        }, true);
+
+        // 3. Create Edge Handles for Top, Left, and Right (Bottom removed as requested)
+        const createHandle = (id, styles, edgeName) => {
+            let handle = document.getElementById(id);
+            if (!handle) {
+                handle = document.createElement('div');
+                handle.id = id;
+                handle.className = 'kirbai-edge-handle';
+                Object.assign(handle.style, {
+                    position: 'fixed',
+                    zIndex: '99998',
+                    background: 'transparent',
+                    touchAction: 'none',
+                    userSelect: 'none',
+                    pointerEvents: 'auto',
+                    ...styles
+                });
+                document.body.appendChild(handle);
+            }
+
+            let startX = 0;
+            let startY = 0;
+            let isDragging = false;
+            let hasSwiped = false;
+
+            const onStart = (clientX, clientY) => {
+                if (this.isOpen) return;
+                startX = clientX;
+                startY = clientY;
+                isDragging = true;
+                hasSwiped = false;
+            };
+
+            const onMove = (clientX, clientY, e) => {
+                if (!isDragging || hasSwiped || this.isOpen) return;
+                const deltaX = clientX - startX;
+                const deltaY = clientY - startY;
+
+                let triggered = false;
+                if (edgeName === 'top' && deltaY >= SWIPE_THRESHOLD && Math.abs(deltaY) > Math.abs(deltaX) * 0.6) {
+                    triggered = true;
+                } else if (edgeName === 'left' && deltaX >= SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY) * 0.6) {
+                    triggered = true;
+                } else if (edgeName === 'right' && deltaX <= -SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY) * 0.6) {
+                    triggered = true;
+                }
+
+                if (triggered) {
+                    hasSwiped = true;
+                    isDragging = false;
+                    suppressClickUntil = Date.now() + 400;
+                    if (e && e.cancelable) e.preventDefault();
+                    if (typeof closeQuickMenu === 'function') closeQuickMenu();
+                    this.trigger();
+                }
+            };
+
+            const onEnd = (clientX, clientY) => {
+                if (isDragging) {
+                    isDragging = false;
+                    // If not swiped, forward the tap to whatever was underneath
+                    if (!hasSwiped && !this.isOpen) {
+                        forwardClick(clientX, clientY);
+                    }
+                }
+            };
+
+            // Touch events
+            handle.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    onStart(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            }, { passive: true });
+
+            handle.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1) {
+                    onMove(e.touches[0].clientX, e.touches[0].clientY, e);
+                }
+            }, { passive: false });
+
+            handle.addEventListener('touchend', (e) => {
+                if (e.changedTouches.length === 1) {
+                    onEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+                }
+            });
+
+            handle.addEventListener('touchcancel', () => {
+                isDragging = false;
+            });
+
+            // Mouse events
+            const onMouseMove = (e) => {
+                onMove(e.clientX, e.clientY, e);
+            };
+
+            const onMouseUp = (e) => {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                onEnd(e.clientX, e.clientY);
+            };
+
+            handle.addEventListener('mousedown', (e) => {
+                onStart(e.clientX, e.clientY);
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        };
+
+        // Create handles: Top, Left, Right
+        createHandle('kirbai-edge-top', {
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: `${HANDLE_THICKNESS}px`
+        }, 'top');
+
+        createHandle('kirbai-edge-left', {
+            top: `${HANDLE_THICKNESS}px`,
+            left: '0',
+            width: `${HANDLE_THICKNESS}px`,
+            height: `calc(100% - ${HANDLE_THICKNESS}px)`
+        }, 'left');
+
+        createHandle('kirbai-edge-right', {
+            top: `${HANDLE_THICKNESS}px`,
+            right: '0',
+            width: `${HANDLE_THICKNESS}px`,
+            height: `calc(100% - ${HANDLE_THICKNESS}px)`
+        }, 'right');
+    }
+
     async startWakeWordListener() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this._wakeWordStream = stream;
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
             const source = audioCtx.createMediaStreamSource(stream);
             const processor = audioCtx.createScriptProcessor(4096, 1, 1);
-            
+
             source.connect(processor);
             processor.connect(audioCtx.destination);
-            
+
             let audioChunks = [];
             let isSpeaking = false;
-            
+
             processor.onaudioprocess = async (e) => {
-                if (this.isProcessing) return;
+                if (this.isOpen || this.isProcessing) return;
                 const inputData = e.inputBuffer.getChannelData(0);
-                
-                // Voice Activity Detection (Energy detection)
+
                 let sum = 0;
                 for (let i = 0; i < inputData.length; i++) sum += Math.abs(inputData[i]);
                 const avg = sum / inputData.length;
-                
+
                 if (avg > 0.02) {
                     isSpeaking = true;
                     audioChunks.push(new Float32Array(inputData));
                 } else if (isSpeaking) {
                     isSpeaking = false;
-                    this.isProcessing = true;
-                    
                     const totalLength = audioChunks.reduce((acc, val) => acc + val.length, 0);
                     const combined = new Float32Array(totalLength);
                     let offset = 0;
                     audioChunks.forEach(chunk => { combined.set(chunk, offset); offset += chunk.length; });
                     audioChunks = [];
-                    
+
                     const text = await this.stt.transcribe(combined);
-                    if (text.toLowerCase().includes('polygol')) {
+                    if (text && (text.toLowerCase().includes('polygol') || text.toLowerCase().includes('kirb'))) {
                         await this.trigger();
                     }
-                    
-                    this.isProcessing = false;
                 }
             };
         } catch (err) {
-            console.warn("Wake word disabled: Microphone access denied.");
+            console.warn("[Assistant] Wake word initialization skipped (mic denied):", err);
         }
     }
 
     async generateSmartSuggestions() {
-        const weatherData = await window.SwapManager?.get('lastWeatherData');
+        const weatherData = (typeof window !== 'undefined' && window.SwapManager) ? await window.SwapManager.get('lastWeatherData') : null;
+        const now = new Date();
+        const battery = (typeof window !== 'undefined' && window.currentBatteryLevel) || 100;
+        const mediaPlaying = (typeof window !== 'undefined' && !!window.activeMediaSessionApp);
+        const temp = weatherData?.current?.temperature || null;
+
         const context = {
-            time: new Date().toLocaleTimeString(),
-            battery: window.currentBatteryLevel || 100,
-            weather: weatherData?.current ? `${weatherData.current.temperature}°` : 'unknown',
-            mediaPlaying: window.activeMediaSessionApp ? 'yes' : 'no',
-            apps: Object.keys(window.apps || {}),
-            customIntents: window.ActivityIntents || []
+            time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            hour: now.getHours(),
+            battery: battery,
+            temperature: temp,
+            weather: weatherData?.current ? `${temp}°C, ${weatherData.current.weathercode || 'Clear'}` : 'Clear',
+            mediaPlaying: mediaPlaying,
+            apps: typeof window !== 'undefined' ? Object.keys(window.apps || {}) : [],
+            customIntents: typeof window !== 'undefined' ? (window.ActivityIntents || []) : []
         };
-        
-        let llmSuggestions = await this.llm.generateSuggestions(context);
-        
-        const fallbacks = [
-            { label: "Play music", action: { systemAction: 'openApp', payload: 'Music' } },
-            { label: "What's the weather?", action: { systemAction: 'weather' } },
-            { label: "Turn off display", action: { systemAction: 'sleep' } },
-            { label: "Open Settings", action: { systemAction: 'openApp', payload: 'Settings' } }
-        ];
 
-        let decisions = fallbacks;
+        // Power the top Suggestion bar with kirbAI LLM
+        return await this.llm.generateSuggestions(context);
+    }
 
-        if (llmSuggestions && Array.isArray(llmSuggestions) && llmSuggestions.length > 0) {
-            decisions = llmSuggestions.map(s => ({
-                label: s.label || s.action,
-                action: { systemAction: s.action, payload: s.payload, intentName: s.payload, appId: s.appId }
-            }));
-            // Pad with fallbacks if LLM returned too few
-            while (decisions.length < 4) {
-                decisions.push(fallbacks[decisions.length]);
-            }
+    toggle() {
+        if (this.isOpen) {
+            this.close();
+        } else {
+            this.trigger();
         }
-
-        const gradients = [
-            "linear-gradient(135deg, #000, #333)",
-            "linear-gradient(135deg, #4da0b0, #d39d38)",
-            "linear-gradient(135deg, #5b86e5, #36d1dc)",
-            "linear-gradient(135deg, #9c27b0, #673ab7)"
-        ];
-
-        return decisions.slice(0, 4).map((d, i) => ({
-            ...d,
-            background: gradients[i]
-        }));
     }
 
     async trigger() {
-        if (this.isProcessing) return;
-        this.isProcessing = true;
-
-        AssistantUI.show();
-        
-        // Setup initial fallback decisions to avoid empty UI
-        this.activeDecisions = [
-            { label: "Play music", background: "linear-gradient(135deg, #000, #333)", action: { systemAction: 'openApp', payload: 'Music' } },
-            { label: "What's the weather?", background: "linear-gradient(135deg, #4da0b0, #d39d38)", action: { systemAction: 'weather' } },
-            { label: "Show photos on this day", background: "linear-gradient(135deg, #5b86e5, #36d1dc)", action: { systemAction: 'openApp', payload: 'Files' } },
-            { label: "Turn off display", background: "linear-gradient(135deg, #9c27b0, #673ab7)", action: { systemAction: 'sleep' } }
-        ];
-        AssistantUI.setDecisions('Suggested &bull; Say a number', this.activeDecisions);
-
-        // Initialize components if cold
-        if (!this.stt.isReady || !this.tts.isReady || !this.llm.isReady) {
-            AssistantUI.setLoading();
-
-            try {
-                await Promise.all([
-                    this.stt.isReady ? Promise.resolve() : safeInit(() => this.stt.init(), "STT"),
-                ]);
-
-                // LLM loads in background (non-blocking)
-                if (!this.llm.isReady) {
-                    safeInit(() => this.llm.init(), "LLM", 90000)
-                        .catch(e => console.warn("LLM background load failed:", e));
-                }
-
-                // TTS also background
-                if (!this.tts.isReady) {
-                    safeInit(() => this.tts.init(), "TTS", 60000)
-                        .catch(e => console.warn("TTS background load failed:", e));
-                }
-            } catch (e) {
-                console.error("Model init failed:", e);
-                AssistantUI.setText("Failed to load assistant models.");
-                this.isProcessing = false;
-                return;
-            }
+        if (this.isOpen) {
+            this.close();
+            return;
         }
 
-        // Fire LLM Suggestion generation
-        this.generateSmartSuggestions().then(decisions => {
-            if (this.isProcessing) {
-                this.activeDecisions = decisions;
-                AssistantUI.setDecisions('Suggested &bull; Say a number', this.activeDecisions);
+        this.isOpen = true;
+        this.isProcessing = false;
+
+        document.querySelectorAll('.kirbai-edge-handle').forEach(h => h.style.pointerEvents = 'none');
+
+        // Hide command input by default (ONLY shows when microphone is unavailable)
+        AssistantUI.showInput(false);
+        AssistantUI.show();
+
+        // Start 10-second inactivity countdown
+        this.resetInactivityTimer();
+
+        // 1. Setup smart contextual decisions immediately
+        this.activeDecisions = await this.generateSmartSuggestions();
+        AssistantUI.setDecisions('Suggested &bull; Tap or say a number', this.activeDecisions);
+
+        // 2. Clear transcript and set animated SVG character to listening state
+        AssistantUI.clearTranscript();
+        AssistantUI.setState('listening');
+        this.startListening();
+
+        // 3. Lazy-init LLM in background if WebGPU/WASM available (completely non-blocking)
+        if (!this.llm.isReady && !this.llm.isLoading) {
+            setTimeout(() => this.llm.init().catch(() => {}), 1000);
+        }
+    }
+
+    startListening() {
+        AssistantUI.setMicActive(true);
+        AssistantUI.setState('listening');
+
+        const started = this.stt.listen({
+            onInterim: (text) => {
+                this.resetInactivityTimer();
+                AssistantUI.setTranscript(text);
+            },
+            onFinal: (text) => {
+                this.resetInactivityTimer();
+                AssistantUI.setMicActive(false);
+                AssistantUI.setTranscript(text);
+                this.handleCommand(text);
+            },
+            onError: (err) => {
+                AssistantUI.setMicActive(false);
+                console.warn("[Assistant] STT warning:", err);
+                // Microphone is unavailable: show text input bar and error character state
+                AssistantUI.showInput(true);
+                AssistantUI.setState('error');
+                AssistantUI.clearTranscript();
+                this.resetInactivityTimer();
             }
         });
-        
-        AssistantUI.setText("I'm listening...");
 
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-            const source = audioCtx.createMediaStreamSource(stream);
-            
-            const bufferSize = 16000 * 3; // Record 3 seconds
-            const buffer = new Float32Array(bufferSize);
-            let offset = 0;
-            
-            const processor = audioCtx.createScriptProcessor(4096, 1, 1);
-            source.connect(processor);
-            processor.connect(audioCtx.destination);
-            
-            processor.onaudioprocess = async (e) => {
-                const inputData = e.inputBuffer.getChannelData(0);
-                if (offset + inputData.length < bufferSize) {
-                    buffer.set(inputData, offset);
-                    offset += inputData.length;
-                } else {
-                    // Finished recording
-                    processor.disconnect();
-                    source.disconnect();
-                    stream.getTracks().forEach(t => t.stop());
-                    
-                    AssistantUI.setLoading();
-                    const text = await this.stt.transcribe(buffer);
-                    await this.handleCommand(text);
-                }
-            };
-        } catch (err) {
-            console.error("Microphone error:", err);
-            AssistantUI.setText("I need access to your microphone.");
-            setTimeout(() => {
-                AssistantUI.hide();
-                this.isProcessing = false;
-            }, 2000);
-        } finally {
-            // safety net: always unlock even if something breaks earlier
-            setTimeout(() => {
-                this.isProcessing = false;
-            }, 3000);
+        if (!started) {
+            // Microphone unavailable or not supported: show text input bar and error character state
+            AssistantUI.setMicActive(false);
+            AssistantUI.showInput(true);
+            AssistantUI.setState('error');
+            AssistantUI.clearTranscript();
+            this.resetInactivityTimer();
         }
+    }
+
+    close() {
+        clearTimeout(this._inactivityTimer);
+        this._inactivityTimer = null;
+        this.isOpen = false;
+        this.isProcessing = false;
+        this.stt.stop();
+        this.tts.stop();
+        document.querySelectorAll('.kirbai-edge-handle').forEach(h => h.style.pointerEvents = 'auto');
+        AssistantUI.setMicActive(false);
+        AssistantUI.showInput(false);
+        AssistantUI.hide();
     }
 
     executeDecision(index) {
         if (!this.activeDecisions || !this.activeDecisions[index]) return;
+        this.resetInactivityTimer();
         const decision = this.activeDecisions[index];
         this.executeAction(decision.action);
     }
 
     async executeAction(action) {
+        if (!action) return;
+        this.isProcessing = true;
+        clearTimeout(this._inactivityTimer);
+        this.stt.stop();
+        AssistantUI.setMicActive(false);
         AssistantUI.clearDecisions();
-        if (action.systemAction === 'openApp') {
-            AssistantUI.setText(`Opening ${action.payload}...`);
-            window.createFullscreenEmbed(window.apps[action.payload]?.url || '/');
-            await this.tts.speak(`Opening ${action.payload}`);
-        } else if (action.systemAction === 'sleep') {
-            AssistantUI.setText("Going to sleep...");
-            window.blackoutScreen();
+        AssistantUI.showInput(false);
+
+        const openEmbed = (url) => {
+            if (typeof window.createFullscreenEmbed === 'function') {
+                window.createFullscreenEmbed(url);
+            } else if (typeof createFullscreenEmbed === 'function') {
+                createFullscreenEmbed(url);
+            }
+        };
+
+        const actionType = action.systemAction || action.action;
+
+        if (actionType === 'openApp') {
+            const rawName = action.payload || 'App';
+            const apps = window.apps || {};
+
+            let targetUrl = '/';
+            let displayName = rawName;
+
+            if (apps[rawName]) {
+                targetUrl = apps[rawName].url;
+                displayName = rawName;
+            } else if (rawName.toLowerCase() === 'music') {
+                targetUrl = '/music/index.html';
+                displayName = 'Music';
+            } else if (rawName.toLowerCase() === 'weather') {
+                targetUrl = 'https://polygol.github.io/weather/index.html';
+                displayName = 'Weather';
+            } else {
+                const foundKey = Object.keys(apps).find(k => k.toLowerCase() === rawName.toLowerCase());
+                if (foundKey) {
+                    targetUrl = apps[foundKey].url;
+                    displayName = foundKey;
+                }
+            }
+
+            AssistantUI.setState('speaking');
+            AssistantUI.setTranscript(`Opening ${displayName}...`);
+            openEmbed(targetUrl);
+            await this.tts.speak(`Opening ${displayName}`);
+
+        } else if (actionType === 'sleep') {
+            AssistantUI.setState('speaking');
+            AssistantUI.setTranscript("Going to sleep...");
             await this.tts.speak("Goodnight.");
-        } else if (action.systemAction === 'weather') {
-            AssistantUI.setText("Checking the weather...");
-            if (window.apps['Weather']) window.createFullscreenEmbed(window.apps['Weather'].url);
+            if (typeof window.blackoutScreen === 'function') {
+                window.blackoutScreen();
+            } else if (typeof blackoutScreen === 'function') {
+                blackoutScreen();
+            }
+
+        } else if (actionType === 'weather') {
+            AssistantUI.setState('speaking');
+            AssistantUI.setTranscript("Checking the weather...");
+            const weatherUrl = window.apps?.['Weather']?.url || 'https://polygol.github.io/weather/index.html';
+            openEmbed(weatherUrl);
             await this.tts.speak("Here is the weather forecast.");
-        } else if (action.systemAction === 'mediaToggle') {
-            AssistantUI.setText("Controlling media...");
-            if (window.Gurasuraisu && window.Gurasuraisu.callApp) {
-                window.Gurasuraisu.callApp(action.payload, 'playPause');
+
+        } else if (actionType === 'mediaToggle') {
+            AssistantUI.setState('speaking');
+            AssistantUI.setTranscript("Controlling media...");
+            if (window.Gurasuraisu && typeof window.Gurasuraisu.callApp === 'function') {
+                window.Gurasuraisu.callApp(action.payload || 'Music', 'playPause');
             }
             await this.tts.speak("Done.");
-        } else if (action.systemAction === 'nightStand') {
-            AssistantUI.setText("Activating Night Stand...");
-            if (typeof setControlValueAndDispatch === 'function') {
+
+        } else if (actionType === 'nightStand') {
+            AssistantUI.setState('speaking');
+            AssistantUI.setTranscript("Activating Night Stand...");
+            if (typeof window.setControlValueAndDispatch === 'function') {
+                window.setControlValueAndDispatch('nightStandEnabled', 'true');
+            } else if (typeof setControlValueAndDispatch === 'function') {
                 setControlValueAndDispatch('nightStandEnabled', 'true');
             }
             await this.tts.speak("Night Stand activated.");
-        } else if (action.systemAction === 'ecoMode') {
-            AssistantUI.setText("Activating Eco Mode...");
-            if (typeof setControlValueAndDispatch === 'function') {
+
+        } else if (actionType === 'ecoMode') {
+            AssistantUI.setState('speaking');
+            AssistantUI.setTranscript("Activating Eco Mode...");
+            if (typeof window.setControlValueAndDispatch === 'function') {
+                window.setControlValueAndDispatch('adaptiveBatterySaver', 'true');
+            } else if (typeof setControlValueAndDispatch === 'function') {
                 setControlValueAndDispatch('adaptiveBatterySaver', 'true');
             }
-            await this.tts.speak("Eco Mode activated to save battery.");
-        } else if (action.appId && action.intentName) {
-            AssistantUI.setText(`Executing intent...`);
-            window.triggerActivityIntent(action.appId, action.intentName, action.parameters);
+            await this.tts.speak("Eco Mode activated.");
+
+        } else if (actionType === 'info' || action.responseText) {
+            const resp = action.responseText || "Done.";
+            AssistantUI.setState('speaking');
+            AssistantUI.setTranscript(resp);
+            await this.tts.speak(resp);
+
+        } else if (action.appId && (action.intentName || action.payload)) {
+            AssistantUI.setState('speaking');
+            AssistantUI.setTranscript(`Executing task...`);
+            if (typeof window.triggerActivityIntent === 'function') {
+                window.triggerActivityIntent(action.appId, action.intentName || action.payload, action.parameters);
+            }
             await this.tts.speak("Executing task.");
         }
-        
+
         setTimeout(() => {
-            AssistantUI.hide();
-            this.isProcessing = false;
-        }, 1000);
+            this.close();
+        }, 1200);
     }
 
     async handleCommand(text) {
-        if (!text) {
-            AssistantUI.hide();
-            this.isProcessing = false;
+        if (!text || !text.trim()) {
             return;
         }
-        
-        // 1. Check if user said a number corresponding to active decisions
-        const clean = text.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const map = { '1':0, 'one':0, 'won':0, '2':1, 'two':1, 'to':1, 'too':1, '3':2, 'three':2, 'tree':2, '4':3, 'four':3, 'for':3 };
-        const numIndex = map[clean];
-        if (numIndex !== undefined && this.activeDecisions && this.activeDecisions[numIndex]) {
+
+        this.resetInactivityTimer();
+
+        // 1. Check if user specified a card number (1, 2, 3, 4)
+        const numIndex = this.nlp.parseNumber(text);
+        if (numIndex !== null && this.activeDecisions && this.activeDecisions[numIndex]) {
             this.executeDecision(numIndex);
             return;
         }
 
-        // 2. Parse as a natural language command using LLM
-        const context = {
-            apps: Object.keys(window.apps || {}),
-            customIntents: window.ActivityIntents || []
-        };
-        
-        AssistantUI.setLoading();
-
-        let match;
-        try {
-            match = await this.llm.parseCommand(text, context);
-        } catch (e) {
-            console.error("LLM parse failed:", e);
-            match = null;
+        // 2. Check rule-based NLP parser (instant response)
+        const parsed = this.nlp.parse(text);
+        if (parsed) {
+            await this.executeAction(parsed);
+            return;
         }
-        
-        if (match && match.action) {
-            const systemAction = match.action;
-            const payload = match.payload;
-            const intentName = match.payload;
-            const appId = match.appId;
 
-            await this.executeAction({ systemAction, payload, intentName, appId });
-        } else {
-            AssistantUI.clearDecisions();
-            AssistantUI.setText("I didn't quite catch that.");
+        // 3. Fallback to LLM / semantic parser
+        if (this.llm) {
+            AssistantUI.setLoading();
+            const context = {
+                apps: Object.keys(window.apps || {}),
+                customIntents: window.ActivityIntents || []
+            };
 
             try {
-                await this.tts.speak("I didn't quite catch that.");
+                const match = await this.llm.parseCommand(text, context);
+                if (match && (match.action || match.systemAction || match.appId || match.responseText)) {
+                    await this.executeAction({
+                        systemAction: match.action || match.systemAction,
+                        payload: match.payload,
+                        intentName: match.intentName || match.payload,
+                        appId: match.appId,
+                        responseText: match.responseText
+                    });
+                    return;
+                }
             } catch (e) {
-                console.error("TTS fallback failed:", e);
+                console.warn("[Assistant] LLM parse error:", e);
+            }
+
+            // If it's a general question and LLM is ready, generate conversational response
+            if (this.llm.isReady) {
+                try {
+                    const ans = await this.llm.prompt(text, { max_new_tokens: 60 });
+                    if (ans && ans.text && ans.text.trim()) {
+                        await this.executeAction({
+                            systemAction: 'info',
+                            responseText: ans.text.trim()
+                        });
+                        return;
+                    }
+                } catch (err) {
+                    console.warn("[Assistant] General LLM prompt error:", err);
+                }
             }
         }
 
-        // ALWAYS CLEAN UP (safe, no finally needed)
+        // 4. Default fallback when unhandled: show don't understand state on character (no status text)
+        AssistantUI.clearDecisions();
+        AssistantUI.clearTranscript();
+        AssistantUI.setState('dont_understand');
+        try {
+            await this.tts.speak("Sorry, I don't understand.");
+        } catch (e) {}
+
         setTimeout(() => {
-            AssistantUI.hide();
-            this.isProcessing = false;
-        }, 2000);
+            if (this.isOpen) {
+                AssistantUI.setState('listening');
+                AssistantUI.clearTranscript();
+                AssistantUI.setDecisions('Suggested &bull; Tap or say a number', this.activeDecisions);
+                this.resetInactivityTimer();
+            }
+        }, 2200);
     }
 }
 
@@ -350,9 +745,31 @@ window.triggerActivityIntent = (appId, intentName, parameters) => {
     }
 };
 
-/* Uncomment when ready.
+// Instantiate and expose globally
+const assistantInstance = new AssistantCore();
+window.Assistant = assistantInstance;
+window.kirbAI = assistantInstance;
 
-document.addEventListener('DOMContentLoaded', () => {
-    window.Assistant = new AssistantCore();
+// Global System AI API (available to OS services, apps, and widgets)
+const systemAI = {
+    prompt: (text, options) => assistantInstance.llm.prompt(text, options),
+    generate: (text, options) => assistantInstance.llm.generate(text, options),
+    generateSuggestions: (context) => assistantInstance.llm.generateSuggestions(context),
+    parseCommand: (text, context) => assistantInstance.llm.parseCommand(text, context),
+    summarize: (text, options) => assistantInstance.llm.summarize(text, options),
+    isReady: () => assistantInstance.llm.isReady
+};
+
+window.SystemAI = systemAI;
+window.PolygolAI = systemAI;
+assistantInstance.ai = systemAI;
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.Assistant.init();
+    });
+} else {
     window.Assistant.init();
-}); */
+}
+
+export default assistantInstance;
