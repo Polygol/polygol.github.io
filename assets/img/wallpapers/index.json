@@ -152,8 +152,8 @@
         "license": "",
         "fullUrl": "/assets/img/wallpapers/Default/Daycube/02a.png",
         "variants": {
-            "noon": "/assets/img/wallpapers/Default/Daycube/02b.png",
-            "morning/evening": "/assets/img/wallpapers/Default/Daycube/02a.png",
+            "noon": "/assets/img/wallpapers/Default/Daycube/02a.png",
+            "morning/evening": "/assets/img/wallpapers/Default/Daycube/02b.png",
             "night": "/assets/img/wallpapers/Default/Daycube/02c.png"
         },
         "clockStyles": {

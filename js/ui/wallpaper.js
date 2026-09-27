@@ -694,89 +694,494 @@ function drawGradient(ctx, width, height, c1, c2, type = '135deg') {
     ctx.fillRect(0, 0, width, height);
 }
 
-let currentCreatorMode = 'emoji';
+// --- Wallpaper Creator Engine via System Sheets API ---
 
-function openWallpaperCreator(mode = 'emoji') {
-    setupWallpaperCreator();
-    currentCreatorMode = mode;
-    const modal = document.getElementById('wallpaper-creator-modal');
-    const blurOverlay = document.getElementById('blurOverlay');
-    if (!modal) return;
+function openWallpaperCreator(initialMode = 'emoji') {
+    closeWallpaperPicker();
 
-    // Set active tab
-    const tabs = modal.querySelectorAll('#creator-mode-tabs .wallpaper-picker-badge');
-    tabs.forEach(t => {
-        const isActive = t.dataset.mode === mode;
-        t.classList.toggle('active', isActive);
-        t.style.backgroundColor = isActive ? 'var(--accent)' : 'var(--search-background)';
-        t.style.color = isActive ? 'var(--background-color)' : 'var(--secondary-text-color)';
-        t.style.borderColor = isActive ? 'var(--accent)' : 'var(--glass-border)';
-        t.style.fontWeight = isActive ? '600' : 'normal';
+    const currentThemeClass = document.body.className;
+
+    const sheetHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            margin: 0;
+            padding: 60px 20px 24px 20px;
+            color: var(--text-color);
+            font-family: 'Open Runde', 'Inter', -apple-system, sans-serif;
+            user-select: none;
+            background: transparent;
+            overflow-x: hidden;
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .sheet-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            font-family: 'Open Runde', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .preview-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            max-height: 190px;
+            border-radius: 24px;
+            corner-shape: superellipse(1.5);
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 16px;
+            background: #000;
+        }
+        #creator-preview-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+        .form-section {
+            background: var(--background-mono);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            corner-shape: superellipse(1.5);
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .form-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--secondary-text-color);
+            margin-bottom: 4px;
+            display: block;
+        }
+        .text-input, .select-input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            corner-shape: superellipse(1.5);
+            border: 1px solid var(--glass-border);
+            background: var(--search-background);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .text-input:focus, .select-input:focus {
+            border-color: var(--accent);
+        }
+        .color-picker-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: 2px solid var(--glass-border);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            padding: 0;
+            background: none;
+            cursor: pointer;
+            outline: none;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
+        }
+        .palette-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .palette-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s cubic-bezier(0.2, 1.3, 0.64, 1), border-color 0.2s;
+        }
+        .palette-dot.active {
+            border-color: var(--accent);
+            transform: scale(1.1);
+        }
+        .preset-badge {
+            background: var(--search-background);
+            color: var(--text-color);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .btn-sheet {
+            flex: 1;
+            padding: 12px 18px;
+            border-radius: 22px;
+            corner-shape: superellipse(1.5);
+            font-family: 'Open Runde', 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            background: var(--search-background);
+            color: var(--text-color);
+            transition: all 0.2s cubic-bezier(0.2, 1.3, 0.64, 1);
+        }
+        .btn-sheet:active {
+            transform: scale(0.98);
+        }
+        .btn-sheet.primary {
+            background: var(--accent);
+            color: var(--background-color);
+            border-color: var(--accent);
+        }
+    </style>
+</head>
+<body class="${currentThemeClass}">
+    <div class="toolbar" id="mode-tabs" style="top: 0;">
+        <button class="tab-btn active" data-mode="emoji"><span class="material-symbols-rounded">😎</span>Emoji</button>
+        <button class="tab-btn" data-mode="color"><span class="material-symbols-rounded">🎨</span>Color</button>
+        <button class="tab-btn" data-mode="gradient"><span class="material-symbols-rounded">🔥</span>Gradient</button>
+    </div>
+
+    <!-- Live Preview -->
+    <div class="preview-box">
+        <canvas id="creator-preview-canvas" width="480" height="270"></canvas>
+    </div>
+
+    <!-- Emoji Form -->
+    <div id="form-emoji" class="form-section">
+        <div class="form-row">
+            <div style="flex: 1; min-width: 0;">
+                <label class="form-label">Emojis</label>
+                <input type="text" id="emoji-input" class="text-input" value="💗 🌼 🌸" placeholder="Emoji" autocomplete="off">
+            </div>
+            <div>
+                <label class="form-label">Background</label>
+                <div class="color-picker-wrap">
+                    <input type="color" id="emoji-bg" value="#1e1b4b">
+                </div>
+            </div>
+        </div>
+        <div>
+            <label class="form-label">Pattern Layout</label>
+            <select id="emoji-style" class="select-input">
+                <option value="staggered">Staggered Grid</option>
+                <option value="grid">Straight Grid</option>
+                <option value="dense">Dense</option>
+                <option value="spacious">Spacious</option>
+            </select>
+        </div>
+        <div>
+            <label class="form-label">Suggestions</label>
+            <div class="palette-row" id="emoji-presets">
+                <span class="preset-badge" data-val="💗 🌼 🌸">💗 🌼 🌸</span>
+                <span class="preset-badge" data-val="✨ 🌟 💫">✨ 🌟 💫</span>
+                <span class="preset-badge" data-val="🐱 🐶 🐾">🐱 🐶 🐾</span>
+                <span class="preset-badge" data-val="🌿 🍃 🌴">🌿 🍃 🌴</span>
+                <span class="preset-badge" data-val="😎 😂 💀">😎 😂 💀</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Color Form -->
+    <div id="form-color" class="form-section" style="display: none;">
+        <div class="form-row" style="align-items: center;">
+            <label class="form-label" style="margin: 0;">Custom Color:</label>
+            <input type="color" id="color-input" value="#1e293b">
+        </div>
+        <div>
+            <label class="form-label">Palette Presets</label>
+            <div class="palette-row" id="color-presets">
+                <span class="palette-dot" data-col="#09090b" style="background:#09090b;"></span>
+                <span class="palette-dot" data-col="#1e293b" style="background:#1e293b;"></span>
+                <span class="palette-dot" data-col="#172554" style="background:#172554;"></span>
+                <span class="palette-dot" data-col="#052e16" style="background:#052e16;"></span>
+                <span class="palette-dot" data-col="#450a0a" style="background:#450a0a;"></span>
+                <span class="palette-dot" data-col="#3b0764" style="background:#3b0764;"></span>
+                <span class="palette-dot" data-col="#f8fafc" style="background:#f8fafc;"></span>
+                <span class="palette-dot" data-col="#38bdf8" style="background:#38bdf8;"></span>
+                <span class="palette-dot" data-col="#ff6b6b" style="background:#ff6b6b;"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gradient Form -->
+    <div id="form-gradient" class="form-section" style="display: none;">
+        <div class="form-row">
+            <div style="flex: 1; min-width: 0;">
+                <label class="form-label">Color 1</label>
+                <input type="color" id="grad-c1" value="#ff512f">
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <label class="form-label">Color 2</label>
+                <input type="color" id="grad-c2" value="#dd2476">
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <label class="form-label">Direction</label>
+                <select id="grad-type" class="select-input">
+                    <option value="135deg">135°</option>
+                    <option value="180deg">Down</option>
+                    <option value="90deg">Right</option>
+                    <option value="45deg">45°</option>
+                    <option value="radial">Radial</option>
+                </select>
+            </div>
+        </div>
+        <div>
+            <label class="form-label">Presets</label>
+            <div class="palette-row" id="grad-presets">
+                <span class="preset-badge" data-c1="#ff512f" data-c2="#dd2476">Sunset</span>
+                <span class="preset-badge" data-c1="#2193b0" data-c2="#6dd5ed">Ocean</span>
+                <span class="preset-badge" data-c1="#11998e" data-c2="#38ef7d">Forest</span>
+                <span class="preset-badge" data-c1="#0f0c29" data-c2="#302b63">Midnight</span>
+                <span class="preset-badge" data-c1="#ff9a9e" data-c2="#fecfef">Blossom</span>
+                <span class="preset-badge" data-c1="#8a2387" data-c2="#e94057">Smoothie</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-row">
+        <button type="button" class="btn-sheet" onclick="request('cancel')">Cancel</button>
+        <button type="button" class="btn-sheet primary" onclick="submitCreation()">Create</button>
+    </div>
+
+    <script>
+        let currentMode = '${initialMode}';
+
+        function request(action, payload) {
+            window.parent.postMessage({ type: 'wallpaper-creator-action', action, payload }, '*');
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('#mode-tabs .tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            document.getElementById('form-emoji').style.display = mode === 'emoji' ? 'flex' : 'none';
+            document.getElementById('form-color').style.display = mode === 'color' ? 'flex' : 'none';
+            document.getElementById('form-gradient').style.display = mode === 'gradient' ? 'flex' : 'none';
+            updatePreview();
+        }
+
+        function drawEmojiGrid(ctx, width, height, emojiString, bgColor, style) {
+            ctx.fillStyle = bgColor || '#1e1b4b';
+            ctx.fillRect(0, 0, width, height);
+
+            const regex = /\\p{Extended_Pictographic}|\\p{Emoji_Presentation}|\\S/gu;
+            let emojis = emojiString.match(regex);
+            if (!emojis || emojis.length === 0) emojis = ['⚡', '🌸', '🚀'];
+
+            const baseScale = width / 2560;
+            let size, stepX, stepY;
+            if (style === 'dense') {
+                size = Math.round(65 * baseScale);
+                stepX = Math.round(size * 1.8);
+                stepY = Math.round(size * 1.8);
+            } else if (style === 'spacious') {
+                size = Math.round(130 * baseScale);
+                stepX = Math.round(size * 2.2);
+                stepY = Math.round(size * 2.2);
+            } else {
+                size = Math.round(95 * baseScale);
+                stepX = Math.round(size * 2.0);
+                stepY = Math.round(size * 2.0);
+            }
+
+            ctx.font = size + 'px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const isStaggered = style === 'staggered';
+            const cols = Math.ceil(width / stepX) + 2;
+            const rows = Math.ceil(height / stepY) + 2;
+            const offsetX = (width - (cols - 1) * stepX) / 2;
+            const offsetY = (height - (rows - 1) * stepY) / 2;
+
+            let emojiIndex = 0;
+            for (let r = 0; r < rows; r++) {
+                const rowShift = (isStaggered && (r % 2 === 1)) ? (stepX / 2) : 0;
+                for (let c = 0; c < cols; c++) {
+                    const x = offsetX + c * stepX + rowShift;
+                    const y = offsetY + r * stepY;
+                    const emoji = emojis[emojiIndex % emojis.length];
+                    ctx.fillText(emoji, x, y);
+                    emojiIndex++;
+                }
+            }
+        }
+
+        function drawSolidColor(ctx, width, height, color) {
+            ctx.fillStyle = color || '#1e293b';
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        function drawGradient(ctx, width, height, c1, c2, type) {
+            let grad;
+            if (type === 'radial') {
+                const cx = width / 2;
+                const cy = height / 2;
+                const radius = Math.max(width, height) / 1.5;
+                grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+            } else {
+                let x1 = 0, y1 = 0, x2 = width, y2 = height;
+                if (type === '180deg') {
+                    x1 = 0; y1 = 0; x2 = 0; y2 = height;
+                } else if (type === '90deg') {
+                    x1 = 0; y1 = 0; x2 = width; y2 = 0;
+                } else if (type === '45deg') {
+                    x1 = 0; y1 = height; x2 = width; y2 = 0;
+                } else {
+                    x1 = 0; y1 = 0; x2 = width; y2 = height;
+                }
+                grad = ctx.createLinearGradient(x1, y1, x2, y2);
+            }
+            grad.addColorStop(0, c1 || '#ff512f');
+            grad.addColorStop(1, c2 || '#dd2476');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        function updatePreview() {
+            const canvas = document.getElementById('creator-preview-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            if (currentMode === 'emoji') {
+                const em = document.getElementById('emoji-input').value;
+                const bg = document.getElementById('emoji-bg').value;
+                const st = document.getElementById('emoji-style').value;
+                drawEmojiGrid(ctx, w, h, em, bg, st);
+            } else if (currentMode === 'color') {
+                const col = document.getElementById('color-input').value;
+                drawSolidColor(ctx, w, h, col);
+            } else if (currentMode === 'gradient') {
+                const c1 = document.getElementById('grad-c1').value;
+                const c2 = document.getElementById('grad-c2').value;
+                const gt = document.getElementById('grad-type').value;
+                drawGradient(ctx, w, h, c1, c2, gt);
+            }
+        }
+
+        function submitCreation() {
+            let config = { mode: currentMode };
+            if (currentMode === 'emoji') {
+                config.emojis = document.getElementById('emoji-input').value;
+                config.bgColor = document.getElementById('emoji-bg').value;
+                config.style = document.getElementById('emoji-style').value;
+                config.name = 'Emoji Wallpaper';
+            } else if (currentMode === 'color') {
+                config.color = document.getElementById('color-input').value;
+                config.name = 'Color Wallpaper';
+            } else if (currentMode === 'gradient') {
+                config.c1 = document.getElementById('grad-c1').value;
+                config.c2 = document.getElementById('grad-c2').value;
+                config.type = document.getElementById('grad-type').value;
+                config.name = 'Gradient Wallpaper';
+            }
+            request('apply', config);
+        }
+
+        // Setup listeners
+        document.querySelectorAll('#mode-tabs .tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+        });
+
+        ['emoji-input', 'emoji-bg', 'emoji-style', 'color-input', 'grad-c1', 'grad-c2', 'grad-type'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', updatePreview);
+                el.addEventListener('change', updatePreview);
+            }
+        });
+
+        document.querySelectorAll('#emoji-presets .preset-badge').forEach(badge => {
+            badge.addEventListener('click', () => {
+                document.getElementById('emoji-input').value = badge.dataset.val;
+                updatePreview();
+            });
+        });
+
+        document.querySelectorAll('#color-presets .palette-dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                document.getElementById('color-input').value = dot.dataset.col;
+                updatePreview();
+            });
+        });
+
+        document.querySelectorAll('#grad-presets .preset-badge').forEach(badge => {
+            badge.addEventListener('click', () => {
+                document.getElementById('grad-c1').value = badge.dataset.c1;
+                document.getElementById('grad-c2').value = badge.dataset.c2;
+                updatePreview();
+            });
+        });
+
+        // Initialize mode
+        switchMode(currentMode);
+    </script>
+</body>
+</html>
+    `;
+
+    displaySheet({
+        html: sheetHtml,
+        height: '85%'
     });
-
-    const emojiForm = document.getElementById('creator-emoji-form');
-    const colorForm = document.getElementById('creator-color-form');
-    const gradForm = document.getElementById('creator-gradient-form');
-    if (emojiForm) emojiForm.style.display = mode === 'emoji' ? 'flex' : 'none';
-    if (colorForm) colorForm.style.display = mode === 'color' ? 'flex' : 'none';
-    if (gradForm) gradForm.style.display = mode === 'gradient' ? 'flex' : 'none';
-
-    if (blurOverlay) {
-        blurOverlay.style.display = 'block';
-        blurOverlay.classList.add('show');
-    }
-    modal.style.display = 'block';
-    void modal.offsetWidth;
-    modal.classList.add('show');
-
-    updateCreatorPreview();
 }
 
 function closeWallpaperCreator() {
-    const modal = document.getElementById('wallpaper-creator-modal');
-    const blurOverlay = document.getElementById('blurOverlay');
-    if (!modal) return;
-
-    modal.classList.remove('show');
-    if (blurOverlay && !document.querySelector('.modal.show:not(#wallpaper-creator-modal), .widget-drawer.open')) {
-        blurOverlay.classList.remove('show');
-    }
-
-    setTimeout(() => {
-        modal.style.display = 'none';
-        if (blurOverlay && !document.querySelector('.modal.show, .widget-drawer.open')) {
-            blurOverlay.style.display = 'none';
-        }
-    }, 300);
-}
-
-function updateCreatorPreview() {
-    const canvas = document.getElementById('creator-preview-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const w = canvas.width;
-    const h = canvas.height;
-    ctx.clearRect(0, 0, w, h);
-
-    if (currentCreatorMode === 'emoji') {
-        const emojiInput = document.getElementById('creator-emoji-input');
-        const bgInput = document.getElementById('creator-emoji-bg');
-        const styleInput = document.getElementById('creator-emoji-style');
-        drawEmojiGrid(ctx, w, h, emojiInput?.value || '⚡ 🌸 🚀', bgInput?.value || '#1e1b4b', styleInput?.value || 'staggered');
-    } else if (currentCreatorMode === 'color') {
-        const colorInput = document.getElementById('creator-color-input');
-        drawSolidColor(ctx, w, h, colorInput?.value || '#1e293b');
-    } else if (currentCreatorMode === 'gradient') {
-        const c1Input = document.getElementById('creator-grad-c1');
-        const c2Input = document.getElementById('creator-grad-c2');
-        const typeInput = document.getElementById('creator-grad-type');
-        drawGradient(ctx, w, h, c1Input?.value || '#ff512f', c2Input?.value || '#dd2476', typeInput?.value || '135deg');
+    if (typeof closeSheetUI === 'function') {
+        closeSheetUI();
     }
 }
 
-async function applyCreatedWallpaper() {
+async function applyCreatedWallpaper(config = {}) {
     showPopup(currentLanguage.APPLYING_WALLPAPER || 'Applying wallpaper');
 
     const canvas = document.createElement('canvas');
@@ -784,28 +1189,22 @@ async function applyCreatedWallpaper() {
     canvas.height = 1440;
     const ctx = canvas.getContext('2d');
 
-    let wallpaperName = 'Custom Wallpaper';
-    if (currentCreatorMode === 'emoji') {
-        const emojiInput = document.getElementById('creator-emoji-input');
-        const bgInput = document.getElementById('creator-emoji-bg');
-        const styleInput = document.getElementById('creator-emoji-style');
-        drawEmojiGrid(ctx, 2560, 1440, emojiInput?.value || '⚡ 🌸 🚀', bgInput?.value || '#1e1b4b', styleInput?.value || 'staggered');
+    const mode = config.mode || 'emoji';
+    let wallpaperName = config.name || 'Custom Wallpaper';
+    if (mode === 'emoji') {
+        drawEmojiGrid(ctx, 2560, 1440, config.emojis || '⚡ 🌸 🚀', config.bgColor || '#1e1b4b', config.style || 'staggered');
         wallpaperName = 'Emoji Wallpaper';
-    } else if (currentCreatorMode === 'color') {
-        const colorInput = document.getElementById('creator-color-input');
-        drawSolidColor(ctx, 2560, 1440, colorInput?.value || '#1e293b');
+    } else if (mode === 'color') {
+        drawSolidColor(ctx, 2560, 1440, config.color || '#1e293b');
         wallpaperName = 'Color Wallpaper';
-    } else if (currentCreatorMode === 'gradient') {
-        const c1Input = document.getElementById('creator-grad-c1');
-        const c2Input = document.getElementById('creator-grad-c2');
-        const typeInput = document.getElementById('creator-grad-type');
-        drawGradient(ctx, 2560, 1440, c1Input?.value || '#ff512f', c2Input?.value || '#dd2476', typeInput?.value || '135deg');
+    } else if (mode === 'gradient') {
+        drawGradient(ctx, 2560, 1440, config.c1 || '#ff512f', config.c2 || '#dd2476', config.type || '135deg');
         wallpaperName = 'Gradient Wallpaper';
     }
 
     canvas.toBlob(async (blob) => {
         if (!blob) return;
-        const file = new File([blob], `${currentCreatorMode}_wallpaper_${Date.now()}.png`, { type: 'image/png' });
+        const file = new File([blob], `${mode}_wallpaper_${Date.now()}.png`, { type: 'image/png' });
         
         const styles = {
             font: 'Inter',
@@ -813,7 +1212,7 @@ async function applyCreatedWallpaper() {
             alignment: 'center',
             colorEnabled: false,
             stackEnabled: false,
-            glassEnabled: currentCreatorMode !== 'color',
+            glassEnabled: mode !== 'color',
             gradientEnabled: false,
             shadowEnabled: false,
             roundness: '0',
@@ -825,67 +1224,28 @@ async function applyCreatedWallpaper() {
 
         try {
             await saveWallpaper(file, styles, { presetName: wallpaperName });
-            closeWallpaperCreator();
-            closeWallpaperPicker();
+            if (typeof closeSheetUI === 'function') closeSheetUI();
+            if (typeof closeWallpaperPicker === 'function') closeWallpaperPicker();
         } catch (e) {
             console.error('Failed to save created wallpaper:', e);
-            showDialog({ type: 'alert', title: 'Failed to create wallpaper' });
+            if (typeof showDialog === 'function') {
+                showDialog({ type: 'alert', title: 'Failed to create wallpaper' });
+            }
         }
     }, 'image/png');
 }
 
-function setupWallpaperCreator() {
-    const modal = document.getElementById('wallpaper-creator-modal');
-    if (!modal || modal._setupDone) return;
-    modal._setupDone = true;
-
-    const tabs = modal.querySelectorAll('#creator-mode-tabs .wallpaper-picker-badge');
-    tabs.forEach(t => {
-        t.addEventListener('click', () => {
-            openWallpaperCreator(t.dataset.mode);
-        });
-    });
-
-    ['creator-emoji-input', 'creator-emoji-bg', 'creator-emoji-style',
-     'creator-color-input', 'creator-grad-c1', 'creator-grad-c2', 'creator-grad-type'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('input', updateCreatorPreview);
-            el.addEventListener('change', updateCreatorPreview);
+// Global listener for Wallpaper Creator Sheet messages
+window.addEventListener('message', async (event) => {
+    if (event.data && event.data.type === 'wallpaper-creator-action') {
+        const { action, payload } = event.data;
+        if (action === 'cancel') {
+            if (typeof closeSheetUI === 'function') closeSheetUI();
+        } else if (action === 'apply') {
+            await applyCreatedWallpaper(payload);
         }
-    });
-
-    modal.querySelectorAll('#creator-color-presets .wallpaper-picker-badge').forEach(badge => {
-        badge.addEventListener('click', () => {
-            const col = badge.dataset.color;
-            const input = document.getElementById('creator-color-input');
-            if (input && col) {
-                input.value = col;
-                updateCreatorPreview();
-            }
-        });
-    });
-
-    modal.querySelectorAll('#creator-grad-presets .wallpaper-picker-badge').forEach(badge => {
-        badge.addEventListener('click', () => {
-            const c1 = badge.dataset.c1;
-            const c2 = badge.dataset.c2;
-            const in1 = document.getElementById('creator-grad-c1');
-            const in2 = document.getElementById('creator-grad-c2');
-            if (in1 && in2 && c1 && c2) {
-                in1.value = c1;
-                in2.value = c2;
-                updateCreatorPreview();
-            }
-        });
-    });
-
-    const cancelBtn = document.getElementById('creator-cancel-btn');
-    if (cancelBtn) cancelBtn.addEventListener('click', closeWallpaperCreator);
-
-    const applyBtn = document.getElementById('creator-apply-btn');
-    if (applyBtn) applyBtn.addEventListener('click', applyCreatedWallpaper);
-}
+    }
+});
 
 window.openWallpaperCreator = openWallpaperCreator;
 window.closeWallpaperCreator = closeWallpaperCreator;
@@ -899,7 +1259,6 @@ function openWallpaperPicker(preserveOrder = false) {
     const grid = document.getElementById('wallpaper-picker-grid');
     if (!drawer || !grid || !content) return;
 
-    setupWallpaperCreator();
     closeControls();
     content.scrollTop = 0;
 
@@ -970,9 +1329,9 @@ function openWallpaperPicker(preserveOrder = false) {
                 grid.appendChild(createHeading);
             }
 
-            grid.appendChild(createCreationCard('😎', 'Emoji Grid', '', () => openWallpaperCreator('emoji')));
+            grid.appendChild(createCreationCard('😎', 'Emoji', '', () => openWallpaperCreator('emoji')));
 
-            grid.appendChild(createCreationCard('🎨', 'Solid Color', '', () => openWallpaperCreator('color')));
+            grid.appendChild(createCreationCard('🎨', 'Color', '', () => openWallpaperCreator('color')));
 
             grid.appendChild(createCreationCard('🔥', 'Gradient', '', () => openWallpaperCreator('gradient')));
 

@@ -1358,15 +1358,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return; 
             }
 
-            // Priority 1.5: Close wallpaper creator modal if open.
-            const creatorModal = document.getElementById('wallpaper-creator-modal');
-            if (creatorModal && creatorModal.classList.contains('show')) {
-                if (typeof closeWallpaperCreator === 'function') {
-                    closeWallpaperCreator();
-                }
-                return;
-            }
-
             // Priority 2: Close open drawers.
             if (document.querySelector('.widget-drawer.open')) {
                 closeWidgetPicker();

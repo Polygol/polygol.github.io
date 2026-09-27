@@ -296,7 +296,3 @@ body.app-active .page-indicator {
     background-size: cover;
     background-position: center;
 }
-
-#wallpaper-creator-modal {
-    z-index: 10001;
-}
