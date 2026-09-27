@@ -2784,7 +2784,7 @@ function renderSwitcherCards(container, isInitialOpen = false) {
         if (effects) {
             const b = effects.brightness !== undefined ? `brightness(${effects.brightness}%)` : '';
             const c = effects.contrast !== undefined ? `contrast(${effects.contrast}%)` : '';
-            const f = [b, c].filter(Boolean).join(' ');s
+            const f = [b, c].filter(Boolean).join(' ');
             if (f) bgEl.style.filter = f;
         }
         card.appendChild(bgEl);
