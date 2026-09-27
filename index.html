@@ -878,6 +878,110 @@
         </div>
     </div>
 
+    <div id="wallpaper-creator-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="header-row-modal" style="margin-bottom: 16px;">
+                <h2 id="creatorModalTitle" style="padding: 0 8px; margin: 0; font-size: 1.2rem; font-weight: 500; font-family: 'Open Runde', sans-serif;">Create Wallpaper</h2>
+                <div class="wallpaper-picker-links" id="creator-mode-tabs" style="margin: 0;">
+                    <span class="wallpaper-picker-badge active" data-mode="emoji" style="cursor: pointer;">Emoji</span>
+                    <span class="wallpaper-picker-badge" data-mode="color" style="cursor: pointer;">Color</span>
+                    <span class="wallpaper-picker-badge" data-mode="gradient" style="cursor: pointer;">Gradient</span>
+                </div>
+            </div>
+
+            <!-- Live Preview -->
+            <div class="wallpaper-picker-thumbnail" id="creator-preview-container" style="max-height: 180px; margin-bottom: 16px;">
+                <canvas id="creator-preview-canvas" width="480" height="270" style="width: 100%; height: 100%; object-fit: cover;"></canvas>
+            </div>
+
+            <!-- Emoji Form -->
+            <div id="creator-emoji-form" class="form-group">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="flex: 1; min-width: 0;">
+                        <span class="wallpaper-picker-title" style="font-size: 13px; display: block; margin-bottom: 4px;">Emojis</span>
+                        <input type="text" id="creator-emoji-input" class="form-input" style="min-width: 0; width: 100%;" value="⚡ 🌸 🚀" placeholder="Type emojis..." autocomplete="off">
+                    </div>
+                    <div>
+                        <span class="wallpaper-picker-title" style="font-size: 13px; display: block; margin-bottom: 4px;">Background</span>
+                        <input type="color" id="creator-emoji-bg" value="#1e1b4b">
+                    </div>
+                </div>
+                <div style="margin-top: 8px;">
+                    <span class="wallpaper-picker-title" style="font-size: 13px; display: block; margin-bottom: 4px;">Pattern Style</span>
+                    <select id="creator-emoji-style" class="form-input" style="min-width: 0; width: 100%;">
+                        <option value="staggered">Staggered Grid</option>
+                        <option value="grid">Straight Grid</option>
+                        <option value="dense">Dense</option>
+                        <option value="spacious">Spacious</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Color Form -->
+            <div id="creator-color-form" class="form-group" style="display: none;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <span class="wallpaper-picker-title" style="font-size: 13px;">Custom Color:</span>
+                    <input type="color" id="creator-color-input" value="#1e293b">
+                </div>
+                <div style="margin-top: 10px;">
+                    <span class="wallpaper-picker-title" style="font-size: 13px; display: block; margin-bottom: 6px;">Palette Presets</span>
+                    <div class="wallpaper-picker-links" id="creator-color-presets">
+                        <span class="wallpaper-picker-badge" data-color="#09090b" style="background:#09090b; width:28px; height:28px; padding:0; border-radius:50%; cursor:pointer;"></span>
+                        <span class="wallpaper-picker-badge" data-color="#1e293b" style="background:#1e293b; width:28px; height:28px; padding:0; border-radius:50%; cursor:pointer;"></span>
+                        <span class="wallpaper-picker-badge" data-color="#172554" style="background:#172554; width:28px; height:28px; padding:0; border-radius:50%; cursor:pointer;"></span>
+                        <span class="wallpaper-picker-badge" data-color="#052e16" style="background:#052e16; width:28px; height:28px; padding:0; border-radius:50%; cursor:pointer;"></span>
+                        <span class="wallpaper-picker-badge" data-color="#450a0a" style="background:#450a0a; width:28px; height:28px; padding:0; border-radius:50%; cursor:pointer;"></span>
+                        <span class="wallpaper-picker-badge" data-color="#3b0764" style="background:#3b0764; width:28px; height:28px; padding:0; border-radius:50%; cursor:pointer;"></span>
+                        <span class="wallpaper-picker-badge" data-color="#f8fafc" style="background:#f8fafc; width:28px; height:28px; padding:0; border-radius:50%; cursor:pointer;"></span>
+                        <span class="wallpaper-picker-badge" data-color="#38bdf8" style="background:#38bdf8; width:28px; height:28px; padding:0; border-radius:50%; cursor:pointer;"></span>
+                        <span class="wallpaper-picker-badge" data-color="#ff6b6b" style="background:#ff6b6b; width:28px; height:28px; padding:0; border-radius:50%; cursor:pointer;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gradient Form -->
+            <div id="creator-gradient-form" class="form-group" style="display: none;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="flex: 1; min-width: 0;">
+                        <span class="wallpaper-picker-title" style="font-size: 13px; display: block; margin-bottom: 4px;">Color 1</span>
+                        <input type="color" id="creator-grad-c1" value="#ff512f">
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <span class="wallpaper-picker-title" style="font-size: 13px; display: block; margin-bottom: 4px;">Color 2</span>
+                        <input type="color" id="creator-grad-c2" value="#dd2476">
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <span class="wallpaper-picker-title" style="font-size: 13px; display: block; margin-bottom: 4px;">Style</span>
+                        <select id="creator-grad-type" class="form-input" style="min-width: 0; width: 100%; padding: 6px 10px;">
+                            <option value="135deg">135°</option>
+                            <option value="180deg">Down</option>
+                            <option value="90deg">Right</option>
+                            <option value="45deg">45°</option>
+                            <option value="radial">Radial</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <span class="wallpaper-picker-title" style="font-size: 13px; display: block; margin-bottom: 6px;">Presets</span>
+                    <div class="wallpaper-picker-links" id="creator-grad-presets">
+                        <span class="wallpaper-picker-badge" data-c1="#ff512f" data-c2="#dd2476" style="cursor: pointer;">Sunset</span>
+                        <span class="wallpaper-picker-badge" data-c1="#2193b0" data-c2="#6dd5ed" style="cursor: pointer;">Ocean</span>
+                        <span class="wallpaper-picker-badge" data-c1="#11998e" data-c2="#38ef7d" style="cursor: pointer;">Aurora</span>
+                        <span class="wallpaper-picker-badge" data-c1="#0f0c29" data-c2="#302b63" style="cursor: pointer;">Midnight</span>
+                        <span class="wallpaper-picker-badge" data-c1="#ff9a9e" data-c2="#fecfef" style="cursor: pointer;">Pastel</span>
+                        <span class="wallpaper-picker-badge" data-c1="#8a2387" data-c2="#e94057" style="cursor: pointer;">Cosmic</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-row">
+                <button type="button" class="button-dialog" id="creator-cancel-btn">Cancel</button>
+                <button type="button" class="button-dialog primary" id="creator-apply-btn">Set Wallpaper</button>
+            </div>
+        </div>
+    </div>
+
     <div id="hidden-controls-container" style="display: none; content-visibility: hidden;">
         <input type="range" id="screen-curve-slider" min="0" max="50">
         <input type="file" id="wallpaperInput" accept=".png, .jpeg, .jpg, .webp, .gif, .mp4, .guraatmos" multiple>

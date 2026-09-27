@@ -147,20 +147,463 @@ async function extractWallpaperColor(imageSource) {
     });
 }
 
+// --- Wallpaper Dynamic Variant Resolution (Light/Dark and Time of Day) ---
+
+function getCurrentTimeOfDay() {
+    const now = new Date();
+    const h = now.getHours();
+    
+    // Time of day segments:
+    // night: 21:00 - 04:59
+    // noon: 11:00 - 16:59
+    // morning/evening: 05:00 - 10:59 (morning), 17:00 - 20:59 (evening)
+    if (h >= 21 || h < 5) {
+        return 'night';
+    } else if (h >= 11 && h < 17) {
+        return 'noon';
+    } else {
+        return 'morning/evening';
+    }
+}
+
+function resolveWallpaperVariant(wp, options = {}) {
+    if (!wp || !wp.variants || typeof wp.variants !== 'object') return null;
+
+    const variants = wp.variants;
+    const theme = options.theme || (document.body.classList.contains('light-theme') ? 'light' : 'dark');
+    
+    const now = new Date();
+    const h = now.getHours();
+    let timeAliases = ['night'];
+    
+    if (h >= 21 || h < 5) {
+        timeAliases = ['night'];
+    } else if (h >= 11 && h < 17) {
+        timeAliases = ['noon', 'midday', 'day'];
+    } else if (h >= 5 && h < 11) {
+        timeAliases = ['morning', 'morning/evening', 'morning_evening', 'day'];
+    } else {
+        timeAliases = ['evening', 'morning/evening', 'morning_evening', 'dusk', 'sunset'];
+    }
+
+    if (options.timeOfDay) {
+        timeAliases = [options.timeOfDay];
+    }
+
+    // 1. Check if time-of-day variants exist
+    const hasTimeVariants = variants.timeOfDay || 
+        timeAliases.some(k => k in variants) || 
+        ('night' in variants) || ('noon' in variants) || ('morning/evening' in variants) || ('morning' in variants) || ('evening' in variants);
+
+    // 2. Check if theme variants exist
+    const hasThemeVariants = variants.theme || ('light' in variants) || ('dark' in variants);
+
+    let match = null;
+    let matchKey = null;
+
+    // A. Check nested timeOfDay -> theme
+    for (const t of timeAliases) {
+        const tObj = variants[t] || (variants.timeOfDay && variants.timeOfDay[t]);
+        if (tObj && typeof tObj === 'object' && !tObj.fullUrl && !tObj.url && (theme in tObj)) {
+            match = tObj[theme];
+            matchKey = `${t}.${theme}`;
+            break;
+        }
+    }
+
+    // B. Check nested theme -> timeOfDay
+    if (!match) {
+        const themeObj = variants[theme] || (variants.theme && variants.theme[theme]);
+        if (themeObj && typeof themeObj === 'object' && !themeObj.fullUrl && !themeObj.url) {
+            for (const t of timeAliases) {
+                if (t in themeObj) {
+                    match = themeObj[t];
+                    matchKey = `${theme}.${t}`;
+                    break;
+                }
+            }
+        }
+    }
+
+    // C. Check direct time-of-day variants
+    if (!match && hasTimeVariants) {
+        for (const t of timeAliases) {
+            if (variants[t]) {
+                match = variants[t];
+                matchKey = t;
+                break;
+            }
+            if (variants.timeOfDay && variants.timeOfDay[t]) {
+                match = variants.timeOfDay[t];
+                matchKey = `timeOfDay.${t}`;
+                break;
+            }
+        }
+    }
+
+    // D. Check direct theme variants
+    if (!match && hasThemeVariants) {
+        if (variants[theme]) {
+            match = variants[theme];
+            matchKey = theme;
+        } else if (variants.theme && variants.theme[theme]) {
+            match = variants.theme[theme];
+            matchKey = `theme.${theme}`;
+        }
+    }
+
+    if (!match) return null;
+
+    if (typeof match === 'string') {
+        return { key: matchKey, fullUrl: match, clockStyles: null };
+    } else if (typeof match === 'object') {
+        return {
+            key: matchKey,
+            fullUrl: match.fullUrl || match.url || match.src,
+            thumbnailUrl: match.thumbnailUrl || null,
+            clockStyles: match.clockStyles || null,
+            dominantColor: match.dominantColor || null,
+            ...match
+        };
+    }
+
+    return null;
+}
+
+// --- Automatic Clock Style Preview Thumbnail Generator ---
+
+function generateClockPreviewHTML(clockStyles = {}) {
+    if (!clockStyles) clockStyles = {};
+    const isStacked = clockStyles.stackEnabled === true || clockStyles.stackEnabled === 'true';
+    const font = clockStyles.customFontName || clockStyles.font || 'Inter';
+    const weight = clockStyles.weight ? parseInt(clockStyles.weight, 10) : 700;
+    const alignment = clockStyles.alignment || 'center';
+    const isGlass = clockStyles.glassEnabled === true || clockStyles.glassEnabled === 'true';
+    const isGradient = clockStyles.gradientEnabled === true || clockStyles.gradientEnabled === 'true';
+    const isColor = clockStyles.colorEnabled === true || clockStyles.colorEnabled === 'true';
+    const color = clockStyles.color || '#ffffff';
+    const isItalic = clockStyles.clockItalic === true || clockStyles.clockItalic === 'true';
+    const roundness = parseInt(clockStyles.roundness || '0', 10);
+    
+    let alignClass = 'align-center';
+    if (alignment === 'left') alignClass = 'align-left';
+    else if (alignment === 'right') alignClass = 'align-right';
+
+    let styleProps = [];
+    styleProps.push(`font-family: '${font}', sans-serif`);
+    styleProps.push(`font-weight: ${weight}`);
+    if (isItalic) styleProps.push(`font-style: italic`);
+    if (roundness > 0) {
+        const axis = font === 'Inter' ? 'RDNS' : 'ROND';
+        styleProps.push(`font-variation-settings: '${axis}' ${roundness / 100}`);
+    }
+
+    let effectClass = '';
+    if (isGlass) {
+        effectClass = 'glass-effect';
+    } else if (isGradient) {
+        effectClass = 'gradient-effect';
+        const c1 = clockStyles.gradientColor1 || '#ffffff';
+        const c2 = clockStyles.gradientColor2 || '#666666';
+        styleProps.push(`--thumb-grad-1: ${c1}`);
+        styleProps.push(`--thumb-grad-2: ${c2}`);
+    } else if (isColor) {
+        styleProps.push(`color: ${color}`);
+    }
+
+    let timeContent = '';
+    if (isStacked) {
+        timeContent = `<div class="thumb-digit-row">12</div><div class="thumb-digit-row">45</div>`;
+    } else {
+        timeContent = `<span>12:45</span>`;
+    }
+
+    return `
+        <div class="wallpaper-thumb-clock-preview ${alignClass}">
+            <div class="wallpaper-thumb-date" style="font-family: '${font}', sans-serif;">July 16</div>
+            <div class="wallpaper-thumb-clock-time ${isStacked ? 'stacked' : ''} ${effectClass}" style="${styleProps.join('; ')}">
+                ${timeContent}
+            </div>
+        </div>
+    `;
+}
+
+async function generateWallpaperThumbnail(imageUrl, clockStyles = {}, width = 480, height = 270) {
+    return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(imageUrl);
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            try {
+                const scale = Math.max(width / img.width, height / img.height);
+                const x = (width - img.width * scale) / 2;
+                const y = (height - img.height * scale) / 2;
+
+                const theme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+                const effects = clockStyles.wallpaperEffects?.[theme];
+                if (effects) {
+                    const b = effects.brightness ? parseFloat(effects.brightness) / 100 : 1;
+                    const c = effects.contrast ? parseFloat(effects.contrast) / 100 : 1;
+                    ctx.filter = `brightness(${b}) contrast(${c})`;
+                }
+
+                ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+                ctx.filter = 'none';
+
+                const font = clockStyles.customFontName || clockStyles.font || 'Inter';
+                const weight = clockStyles.weight ? parseInt(clockStyles.weight, 10) : 700;
+                const isStacked = clockStyles.stackEnabled === true || clockStyles.stackEnabled === 'true';
+                const isColor = clockStyles.colorEnabled === true || clockStyles.colorEnabled === 'true';
+                const alignment = clockStyles.alignment || 'center';
+
+                let posX = width / 2;
+                ctx.textAlign = 'center';
+                if (alignment === 'left') {
+                    posX = 36;
+                    ctx.textAlign = 'left';
+                } else if (alignment === 'right') {
+                    posX = width - 36;
+                    ctx.textAlign = 'right';
+                }
+
+                ctx.fillStyle = isColor ? (clockStyles.color || '#fff') : 'rgba(255, 255, 255, 0.88)';
+                ctx.font = `600 12px '${font}', sans-serif`;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+                ctx.shadowBlur = 6;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 1;
+
+                const centerY = height / 2;
+                if (isStacked) {
+                    ctx.fillText('Sun, Sep 27', posX, centerY - 46);
+                    ctx.font = `${weight} 46px '${font}', sans-serif`;
+                    applyFill(ctx, clockStyles, centerY - 6);
+                    ctx.fillText('09', posX, centerY - 4);
+                    applyFill(ctx, clockStyles, centerY + 42);
+                    ctx.fillText('41', posX, centerY + 44);
+                } else {
+                    ctx.fillText('Sun, Sep 27', posX, centerY - 28);
+                    ctx.font = `${weight} 52px '${font}', sans-serif`;
+                    applyFill(ctx, clockStyles, centerY + 20);
+                    ctx.fillText('09:41', posX, centerY + 18);
+                }
+
+                resolve(canvas.toDataURL('image/jpeg', 0.88));
+            } catch (e) {
+                console.warn("[Wallpaper] Thumbnail canvas generation failed:", e);
+                resolve(imageUrl);
+            }
+        };
+        img.onerror = () => resolve(imageUrl);
+        img.src = imageUrl;
+    });
+
+    function applyFill(ctx, styles, y) {
+        if (styles.gradientEnabled) {
+            const grad = ctx.createLinearGradient(0, y - 30, 0, y + 20);
+            grad.addColorStop(0, styles.gradientColor1 || '#ffffff');
+            grad.addColorStop(1, styles.gradientColor2 || '#666666');
+            ctx.fillStyle = grad;
+        } else if (styles.glassEnabled) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        } else if (styles.colorEnabled) {
+            ctx.fillStyle = styles.color || '#ffffff';
+        } else {
+            ctx.fillStyle = '#ffffff';
+        }
+    }
+}
+
+async function prefetchWallpaperVariants(wallpaperId, variants, activeKey) {
+    if (!wallpaperId || !variants || typeof variants !== 'object') return;
+
+    const entries = [];
+    const collect = (obj, prefix = '') => {
+        if (!obj || typeof obj !== 'object') return;
+        for (const [k, v] of Object.entries(obj)) {
+            const fullKey = prefix ? `${prefix}.${k}` : k;
+            if (typeof v === 'string') {
+                entries.push({ key: fullKey, url: v });
+            } else if (v && typeof v === 'object') {
+                if (v.fullUrl || v.url) {
+                    entries.push({ key: fullKey, url: v.fullUrl || v.url });
+                } else {
+                    collect(v, fullKey);
+                }
+            }
+        }
+    };
+    collect(variants);
+
+    for (const item of entries) {
+        if (item.key === activeKey) continue;
+        try {
+            const resp = await fetch(item.url);
+            if (resp.ok) {
+                const blob = await resp.blob();
+                const dbRecord = await getWallpaper(wallpaperId);
+                if (dbRecord) {
+                    if (!dbRecord.variantBlobs) dbRecord.variantBlobs = {};
+                    dbRecord.variantBlobs[item.key] = blob;
+                    if (!dbRecord.variantColors) dbRecord.variantColors = {};
+                    const col = await extractWallpaperColor(blob);
+                    if (col) dbRecord.variantColors[item.key] = col;
+                    await storeWallpaper(wallpaperId, dbRecord);
+                }
+            }
+        } catch (e) {
+            console.warn(`[Wallpaper] Background prefetch failed for variant ${item.key}:`, e);
+        }
+    }
+}
+
+async function checkAndApplyWallpaperVariant(options = {}) {
+    // If wallpaper picker is open, refresh its thumbnails to match current theme / time of day
+    const pickerDrawer = document.getElementById('wallpaper-picker-drawer');
+    if (pickerDrawer && (pickerDrawer.classList.contains('open') || pickerDrawer.style.display === 'flex')) {
+        openWallpaperPicker(true);
+    }
+
+    if (isSlideshow || recentWallpapers.length === 0) return;
+    const currentWallpaper = recentWallpapers[currentWallpaperPosition];
+    if (!currentWallpaper || !currentWallpaper.variants) return;
+
+    const newVariant = resolveWallpaperVariant(currentWallpaper, options);
+    if (!newVariant || newVariant.key === currentWallpaper.activeVariantKey) {
+        return;
+    }
+
+    console.log(`[Wallpaper] Transitioning variant: ${currentWallpaper.activeVariantKey} -> ${newVariant.key}`);
+
+    try {
+        let imageUrl = null;
+        let dominantColor = newVariant.dominantColor || null;
+
+        // 1. Try to load from IndexedDB cached variantBlobs
+        let dbRecord = null;
+        if (currentWallpaper.id) {
+            try {
+                dbRecord = await getWallpaper(currentWallpaper.id);
+                if (!dbRecord.variantBlobs) dbRecord.variantBlobs = {};
+                
+                const cachedBlob = dbRecord.variantBlobs[newVariant.key];
+                if (cachedBlob) {
+                    imageUrl = URL.createObjectURL(cachedBlob);
+                    if (!dominantColor && dbRecord.variantColors?.[newVariant.key]) {
+                        dominantColor = dbRecord.variantColors[newVariant.key];
+                    }
+                }
+            } catch (e) {
+                console.warn("[Wallpaper] Error accessing DB variant blobs:", e);
+            }
+        }
+
+        // 2. If not cached, fetch from URL
+        if (!imageUrl && newVariant.fullUrl) {
+            const resp = await fetch(newVariant.fullUrl);
+            if (resp.ok) {
+                const blob = await resp.blob();
+                imageUrl = URL.createObjectURL(blob);
+                
+                if (dbRecord && currentWallpaper.id) {
+                    try {
+                        dbRecord.variantBlobs[newVariant.key] = blob;
+                        dominantColor = await extractWallpaperColor(blob);
+                        if (!dbRecord.variantColors) dbRecord.variantColors = {};
+                        dbRecord.variantColors[newVariant.key] = dominantColor;
+                        await storeWallpaper(currentWallpaper.id, dbRecord);
+                    } catch (_) {}
+                }
+            }
+        }
+
+        if (!imageUrl) return;
+
+        // Revoke previous blob URL after short delay
+        const oldBg = document.body.style.getPropertyValue('--bg-image');
+        if (oldBg.includes('blob:')) {
+            const oldUrl = oldBg.replace(/url\(['"]?|['"]?\)/g, '');
+            setTimeout(() => URL.revokeObjectURL(oldUrl), 2000);
+        }
+
+        // Smoothly update background image
+        document.body.style.setProperty('--bg-image', `url('${imageUrl}')`);
+        currentWallpaper.activeVariantKey = newVariant.key;
+
+        // Apply variant clock styles if provided
+        if (newVariant.clockStyles) {
+            applyCustomWallpaperStyles(newVariant.clockStyles);
+            if (window.applyClockStyles) applyClockStyles();
+            if (window.applyWallpaperEffects) applyWallpaperEffects();
+        }
+
+        // Update dominant color
+        if (dominantColor) {
+            currentWallpaper.dominantColor = dominantColor;
+            window.activeWallpaperColor = dominantColor;
+            applySystemTint();
+            if (window.WavesHost) window.WavesHost.pushFullState();
+        } else {
+            extractWallpaperColor(imageUrl).then(col => {
+                if (col) {
+                    currentWallpaper.dominantColor = col;
+                    window.activeWallpaperColor = col;
+                    applySystemTint();
+                    if (window.WavesHost) window.WavesHost.pushFullState();
+                }
+            });
+        }
+
+        saveRecentWallpapers();
+
+    } catch (err) {
+        console.warn("[Wallpaper] Failed to switch variant:", err);
+    }
+}
+
+// Expose variant and thumbnail functions globally
+window.getCurrentTimeOfDay = getCurrentTimeOfDay;
+window.resolveWallpaperVariant = resolveWallpaperVariant;
+window.checkAndApplyWallpaperVariant = checkAndApplyWallpaperVariant;
+window.generateClockPreviewHTML = generateClockPreviewHTML;
+window.generateWallpaperThumbnail = generateWallpaperThumbnail;
+
 async function applyPresetWallpaper(preset) {
     window.Analytics?.trackWallpaperPreset(preset.name);
     closeWallpaperPicker();
     showPopup(currentLanguage.APPLYING_WALLPAPER || 'Applying new wallpaper');
 
     try {
-        const response = await fetch(preset.fullUrl);
+        const activeVariant = resolveWallpaperVariant(preset);
+        const targetUrl = (activeVariant && activeVariant.fullUrl) ? activeVariant.fullUrl : preset.fullUrl;
+        const mergedClockStyles = {
+            ...(preset.clockStyles || {}),
+            ...(activeVariant?.clockStyles || {})
+        };
+
+        const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('Failed to fetch wallpaper image');
 
         const blob = await response.blob();
-        const filename = preset.fullUrl.split('/').pop();
+        const filename = targetUrl.split('/').pop();
         const file = new File([blob], filename, { type: blob.type });
 
-        await saveWallpaper(file, preset.clockStyles);
+        await saveWallpaper(file, mergedClockStyles, {
+            presetName: preset.name,
+            variants: preset.variants || null,
+            activeVariantKey: activeVariant ? activeVariant.key : null,
+            initialUrl: targetUrl
+        });
+
+        // Prefetch other variants in background for instant offline switching
+        if (preset.variants && recentWallpapers[0]?.id) {
+            prefetchWallpaperVariants(recentWallpapers[0].id, preset.variants, activeVariant?.key);
+        }
 
     } catch (error) {
         console.error('Failed to apply preset wallpaper:', error);
@@ -171,86 +614,482 @@ async function applyPresetWallpaper(preset) {
     }
 }
 
-function openWallpaperPicker() {
+// --- Wallpaper Generator Engine (Emoji Grid, Solid Color, Gradient) ---
+
+function drawEmojiGrid(ctx, width, height, emojiString, bgColor, style = 'staggered') {
+    ctx.fillStyle = bgColor || '#1e1b4b';
+    ctx.fillRect(0, 0, width, height);
+
+    const regex = /\p{Extended_Pictographic}|\p{Emoji_Presentation}|\S/gu;
+    let emojis = emojiString.match(regex);
+    if (!emojis || emojis.length === 0) emojis = ['⚡', '🌸', '🚀'];
+
+    const baseScale = width / 2560;
+    let size, stepX, stepY;
+    if (style === 'dense') {
+        size = Math.round(65 * baseScale);
+        stepX = Math.round(size * 1.8);
+        stepY = Math.round(size * 1.8);
+    } else if (style === 'spacious') {
+        size = Math.round(130 * baseScale);
+        stepX = Math.round(size * 2.2);
+        stepY = Math.round(size * 2.2);
+    } else { // staggered or grid
+        size = Math.round(95 * baseScale);
+        stepX = Math.round(size * 2.0);
+        stepY = Math.round(size * 2.0);
+    }
+
+    ctx.font = `${size}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const isStaggered = style === 'staggered';
+    const cols = Math.ceil(width / stepX) + 2;
+    const rows = Math.ceil(height / stepY) + 2;
+    const offsetX = (width - (cols - 1) * stepX) / 2;
+    const offsetY = (height - (rows - 1) * stepY) / 2;
+
+    let emojiIndex = 0;
+    for (let r = 0; r < rows; r++) {
+        const rowShift = (isStaggered && (r % 2 === 1)) ? (stepX / 2) : 0;
+        for (let c = 0; c < cols; c++) {
+            const x = offsetX + c * stepX + rowShift;
+            const y = offsetY + r * stepY;
+            const emoji = emojis[emojiIndex % emojis.length];
+            ctx.fillText(emoji, x, y);
+            emojiIndex++;
+        }
+    }
+}
+
+function drawSolidColor(ctx, width, height, color) {
+    ctx.fillStyle = color || '#1e293b';
+    ctx.fillRect(0, 0, width, height);
+}
+
+function drawGradient(ctx, width, height, c1, c2, type = '135deg') {
+    let grad;
+    if (type === 'radial') {
+        const cx = width / 2;
+        const cy = height / 2;
+        const radius = Math.max(width, height) / 1.5;
+        grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    } else {
+        let x1 = 0, y1 = 0, x2 = width, y2 = height;
+        if (type === '180deg') {
+            x1 = 0; y1 = 0; x2 = 0; y2 = height;
+        } else if (type === '90deg') {
+            x1 = 0; y1 = 0; x2 = width; y2 = 0;
+        } else if (type === '45deg') {
+            x1 = 0; y1 = height; x2 = width; y2 = 0;
+        } else { // 135deg
+            x1 = 0; y1 = 0; x2 = width; y2 = height;
+        }
+        grad = ctx.createLinearGradient(x1, y1, x2, y2);
+    }
+    grad.addColorStop(0, c1 || '#ff512f');
+    grad.addColorStop(1, c2 || '#dd2476');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, height);
+}
+
+let currentCreatorMode = 'emoji';
+
+function openWallpaperCreator(mode = 'emoji') {
+    setupWallpaperCreator();
+    currentCreatorMode = mode;
+    const modal = document.getElementById('wallpaper-creator-modal');
+    const blurOverlay = document.getElementById('blurOverlay');
+    if (!modal) return;
+
+    // Set active tab
+    const tabs = modal.querySelectorAll('#creator-mode-tabs .wallpaper-picker-badge');
+    tabs.forEach(t => {
+        const isActive = t.dataset.mode === mode;
+        t.classList.toggle('active', isActive);
+        t.style.backgroundColor = isActive ? 'var(--accent)' : 'var(--search-background)';
+        t.style.color = isActive ? 'var(--background-color)' : 'var(--secondary-text-color)';
+        t.style.borderColor = isActive ? 'var(--accent)' : 'var(--glass-border)';
+        t.style.fontWeight = isActive ? '600' : 'normal';
+    });
+
+    const emojiForm = document.getElementById('creator-emoji-form');
+    const colorForm = document.getElementById('creator-color-form');
+    const gradForm = document.getElementById('creator-gradient-form');
+    if (emojiForm) emojiForm.style.display = mode === 'emoji' ? 'flex' : 'none';
+    if (colorForm) colorForm.style.display = mode === 'color' ? 'flex' : 'none';
+    if (gradForm) gradForm.style.display = mode === 'gradient' ? 'flex' : 'none';
+
+    if (blurOverlay) {
+        blurOverlay.style.display = 'block';
+        blurOverlay.classList.add('show');
+    }
+    modal.style.display = 'block';
+    void modal.offsetWidth;
+    modal.classList.add('show');
+
+    updateCreatorPreview();
+}
+
+function closeWallpaperCreator() {
+    const modal = document.getElementById('wallpaper-creator-modal');
+    const blurOverlay = document.getElementById('blurOverlay');
+    if (!modal) return;
+
+    modal.classList.remove('show');
+    if (blurOverlay && !document.querySelector('.modal.show:not(#wallpaper-creator-modal), .widget-drawer.open')) {
+        blurOverlay.classList.remove('show');
+    }
+
+    setTimeout(() => {
+        modal.style.display = 'none';
+        if (blurOverlay && !document.querySelector('.modal.show, .widget-drawer.open')) {
+            blurOverlay.style.display = 'none';
+        }
+    }, 300);
+}
+
+function updateCreatorPreview() {
+    const canvas = document.getElementById('creator-preview-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    if (currentCreatorMode === 'emoji') {
+        const emojiInput = document.getElementById('creator-emoji-input');
+        const bgInput = document.getElementById('creator-emoji-bg');
+        const styleInput = document.getElementById('creator-emoji-style');
+        drawEmojiGrid(ctx, w, h, emojiInput?.value || '⚡ 🌸 🚀', bgInput?.value || '#1e1b4b', styleInput?.value || 'staggered');
+    } else if (currentCreatorMode === 'color') {
+        const colorInput = document.getElementById('creator-color-input');
+        drawSolidColor(ctx, w, h, colorInput?.value || '#1e293b');
+    } else if (currentCreatorMode === 'gradient') {
+        const c1Input = document.getElementById('creator-grad-c1');
+        const c2Input = document.getElementById('creator-grad-c2');
+        const typeInput = document.getElementById('creator-grad-type');
+        drawGradient(ctx, w, h, c1Input?.value || '#ff512f', c2Input?.value || '#dd2476', typeInput?.value || '135deg');
+    }
+}
+
+async function applyCreatedWallpaper() {
+    showPopup(currentLanguage.APPLYING_WALLPAPER || 'Applying wallpaper');
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 2560;
+    canvas.height = 1440;
+    const ctx = canvas.getContext('2d');
+
+    let wallpaperName = 'Custom Wallpaper';
+    if (currentCreatorMode === 'emoji') {
+        const emojiInput = document.getElementById('creator-emoji-input');
+        const bgInput = document.getElementById('creator-emoji-bg');
+        const styleInput = document.getElementById('creator-emoji-style');
+        drawEmojiGrid(ctx, 2560, 1440, emojiInput?.value || '⚡ 🌸 🚀', bgInput?.value || '#1e1b4b', styleInput?.value || 'staggered');
+        wallpaperName = 'Emoji Wallpaper';
+    } else if (currentCreatorMode === 'color') {
+        const colorInput = document.getElementById('creator-color-input');
+        drawSolidColor(ctx, 2560, 1440, colorInput?.value || '#1e293b');
+        wallpaperName = 'Color Wallpaper';
+    } else if (currentCreatorMode === 'gradient') {
+        const c1Input = document.getElementById('creator-grad-c1');
+        const c2Input = document.getElementById('creator-grad-c2');
+        const typeInput = document.getElementById('creator-grad-type');
+        drawGradient(ctx, 2560, 1440, c1Input?.value || '#ff512f', c2Input?.value || '#dd2476', typeInput?.value || '135deg');
+        wallpaperName = 'Gradient Wallpaper';
+    }
+
+    canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `${currentCreatorMode}_wallpaper_${Date.now()}.png`, { type: 'image/png' });
+        
+        const styles = {
+            font: 'Inter',
+            weight: '700',
+            alignment: 'center',
+            colorEnabled: false,
+            stackEnabled: false,
+            glassEnabled: currentCreatorMode !== 'color',
+            gradientEnabled: false,
+            shadowEnabled: false,
+            roundness: '0',
+            wallpaperEffects: {
+                light: { blur: '0', brightness: '100', contrast: '100' },
+                dark: { blur: '0', brightness: '75', contrast: '125' }
+            }
+        };
+
+        try {
+            await saveWallpaper(file, styles, { presetName: wallpaperName });
+            closeWallpaperCreator();
+            closeWallpaperPicker();
+        } catch (e) {
+            console.error('Failed to save created wallpaper:', e);
+            showDialog({ type: 'alert', title: 'Failed to create wallpaper' });
+        }
+    }, 'image/png');
+}
+
+function setupWallpaperCreator() {
+    const modal = document.getElementById('wallpaper-creator-modal');
+    if (!modal || modal._setupDone) return;
+    modal._setupDone = true;
+
+    const tabs = modal.querySelectorAll('#creator-mode-tabs .wallpaper-picker-badge');
+    tabs.forEach(t => {
+        t.addEventListener('click', () => {
+            openWallpaperCreator(t.dataset.mode);
+        });
+    });
+
+    ['creator-emoji-input', 'creator-emoji-bg', 'creator-emoji-style',
+     'creator-color-input', 'creator-grad-c1', 'creator-grad-c2', 'creator-grad-type'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', updateCreatorPreview);
+            el.addEventListener('change', updateCreatorPreview);
+        }
+    });
+
+    modal.querySelectorAll('#creator-color-presets .wallpaper-picker-badge').forEach(badge => {
+        badge.addEventListener('click', () => {
+            const col = badge.dataset.color;
+            const input = document.getElementById('creator-color-input');
+            if (input && col) {
+                input.value = col;
+                updateCreatorPreview();
+            }
+        });
+    });
+
+    modal.querySelectorAll('#creator-grad-presets .wallpaper-picker-badge').forEach(badge => {
+        badge.addEventListener('click', () => {
+            const c1 = badge.dataset.c1;
+            const c2 = badge.dataset.c2;
+            const in1 = document.getElementById('creator-grad-c1');
+            const in2 = document.getElementById('creator-grad-c2');
+            if (in1 && in2 && c1 && c2) {
+                in1.value = c1;
+                in2.value = c2;
+                updateCreatorPreview();
+            }
+        });
+    });
+
+    const cancelBtn = document.getElementById('creator-cancel-btn');
+    if (cancelBtn) cancelBtn.addEventListener('click', closeWallpaperCreator);
+
+    const applyBtn = document.getElementById('creator-apply-btn');
+    if (applyBtn) applyBtn.addEventListener('click', applyCreatedWallpaper);
+}
+
+window.openWallpaperCreator = openWallpaperCreator;
+window.closeWallpaperCreator = closeWallpaperCreator;
+
+let cachedPickerPresets = null;
+let activePickerCollection = 'all';
+
+function openWallpaperPicker(preserveOrder = false) {
     const drawer = document.getElementById('wallpaper-picker-drawer');
     const content = drawer.querySelector('.widget-drawer-content');
     const grid = document.getElementById('wallpaper-picker-grid');
     if (!drawer || !grid || !content) return;
 
+    setupWallpaperCreator();
     closeControls();
     content.scrollTop = 0;
-    grid.innerHTML = '';
 
-    // 1. Add Upload Item (Check Limit)
-    const uploadItem = document.createElement('div');
-    uploadItem.className = 'wallpaper-picker-item upload-item';
-    
-    // Check limit for visual feedback
-    const isFull = recentWallpapers.length >= MAX_RECENT_WALLPAPERS;
-    
-    uploadItem.innerHTML = `
-        <div class="wallpaper-picker-thumbnail" style="${isFull ? 'opacity: 0.5;' : ''}">
-            <span class="material-symbols-rounded">${isFull ? 'error' : 'add'}</span>
-        </div>
-        <span class="wallpaper-picker-title">${isFull ? 'Storage full' : (currentLanguage.UPLOAD_CUSTOM || 'Add')}</span>
-    `;
-    
-    uploadItem.addEventListener('click', () => {
-        if (isFull) {
-            showDialog({ 
-                type: 'alert', 
-                title: 'Wallpaper storage full', 
-                message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers.` 
-            });
-        } else {
-            // Trigger the external input
-            uploadButton.click(); 
-            closeWallpaperPicker(); 
+    // 1. Shuffle or reuse existing order of presets
+    if (!preserveOrder || !cachedPickerPresets || cachedPickerPresets.length !== WALLPAPER_PRESETS.length) {
+        cachedPickerPresets = [...WALLPAPER_PRESETS];
+        for (let i = cachedPickerPresets.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cachedPickerPresets[i], cachedPickerPresets[j]] = [cachedPickerPresets[j], cachedPickerPresets[i]];
         }
-    });
-    grid.appendChild(uploadItem);
+    }
+    const presetsToRender = cachedPickerPresets;
 
-    // 2. Shuffle a copy of the presets array
-    const shuffledPresets = [...WALLPAPER_PRESETS];
-    for (let i = shuffledPresets.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledPresets[i], shuffledPresets[j]] = [shuffledPresets[j], shuffledPresets[i]];
+    // 2. Discover Collections
+    const discoveredCollections = [...new Set(WALLPAPER_PRESETS.map(p => p.collection || (p.fullUrl?.includes('/Photography/') ? 'Photography' : 'Default')))];
+    const allCollectionTabs = ['All', 'Create', ...discoveredCollections];
+
+    // 3. Render Collection Filter Bar (above grid)
+    let collectionsBar = document.getElementById('wallpaper-collections-bar');
+    if (!collectionsBar) {
+        collectionsBar = document.createElement('div');
+        collectionsBar.id = 'wallpaper-collections-bar';
+        collectionsBar.className = 'wallpaper-picker-links';
+        collectionsBar.style.cssText = 'margin-bottom: 25px; gap: 8px; flex-wrap: wrap;';
+        content.insertBefore(collectionsBar, grid);
+    }
+    collectionsBar.innerHTML = '';
+
+    allCollectionTabs.forEach(col => {
+        const badge = document.createElement('span');
+        const isActive = activePickerCollection.toLowerCase() === col.toLowerCase();
+        badge.className = 'wallpaper-picker-badge' + (isActive ? ' active' : '');
+        badge.textContent = col;
+        badge.style.cursor = 'pointer';
+        if (isActive) {
+            badge.style.backgroundColor = 'var(--accent)';
+            badge.style.color = 'var(--background-color)';
+            badge.style.borderColor = 'var(--accent)';
+            badge.style.fontWeight = '600';
+        }
+        badge.addEventListener('click', (e) => {
+            e.stopPropagation();
+            activePickerCollection = col;
+            renderPickerContent();
+            collectionsBar.querySelectorAll('.wallpaper-picker-badge').forEach(b => {
+                const isTabActive = b.textContent.toLowerCase() === activePickerCollection.toLowerCase();
+                b.classList.toggle('active', isTabActive);
+                b.style.backgroundColor = isTabActive ? 'var(--accent)' : 'var(--search-background)';
+                b.style.color = isTabActive ? 'var(--background-color)' : 'var(--secondary-text-color)';
+                b.style.borderColor = isTabActive ? 'var(--accent)' : 'var(--glass-border)';
+                b.style.fontWeight = isTabActive ? '600' : 'normal';
+            });
+        });
+        collectionsBar.appendChild(badge);
+    });
+
+    // 4. Render Grid Content based on Active Collection
+    function renderPickerContent() {
+        grid.innerHTML = '';
+
+        // A. Render Creation Tools
+        if (activePickerCollection.toLowerCase() === 'all' || activePickerCollection.toLowerCase() === 'create') {
+            if (activePickerCollection.toLowerCase() === 'all') {
+                const createHeading = document.createElement('h3');
+                createHeading.className = 'wallpaper-picker-title';
+                createHeading.style.cssText = 'grid-column: 1 / -1; font-size: 1.15rem; margin: 0 0 10px 0; font-family: "Open Runde", sans-serif; display: flex; align-items: center; gap: 8px;';
+                createHeading.innerHTML = '<span class="material-symbols-rounded">auto_awesome</span> Create Wallpaper';
+                grid.appendChild(createHeading);
+            }
+
+            grid.appendChild(createCreationCard('😎', 'Emoji Grid', '', () => openWallpaperCreator('emoji')));
+
+            grid.appendChild(createCreationCard('🎨', 'Solid Color', '', () => openWallpaperCreator('color')));
+
+            grid.appendChild(createCreationCard('🔥', 'Gradient', '', () => openWallpaperCreator('gradient')));
+
+            const isFull = recentWallpapers.length >= MAX_RECENT_WALLPAPERS;
+            grid.appendChild(createCreationCard(isFull ? 'error' : '🖼️', isFull ? 'Storage full' : (currentLanguage.UPLOAD_CUSTOM || 'Photo'), '', () => {
+                if (isFull) {
+                    showDialog({ type: 'alert', title: 'Wallpaper storage full', message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers.` });
+                } else {
+                    uploadButton.click();
+                    closeWallpaperPicker();
+                }
+            }));
+        }
+
+        // B. Render Wallpapers by Collection
+        const grouped = {};
+        presetsToRender.forEach(preset => {
+            const col = preset.collection || (preset.fullUrl?.includes('/Photography/') ? 'Photography' : 'Default');
+            if (!grouped[col]) grouped[col] = [];
+            grouped[col].push(preset);
+        });
+
+        Object.entries(grouped).forEach(([colName, presets]) => {
+            if (activePickerCollection.toLowerCase() !== 'all' && activePickerCollection.toLowerCase() !== colName.toLowerCase()) {
+                return;
+            }
+
+            if (activePickerCollection.toLowerCase() === 'all') {
+                const heading = document.createElement('h3');
+                heading.className = 'wallpaper-picker-title';
+                heading.style.cssText = 'grid-column: 1 / -1; font-size: 1.15rem; margin: 25px 0 10px 0; font-family: "Open Runde", sans-serif; display: flex; align-items: center; gap: 8px;';
+                const icon = colName.toLowerCase() === 'photography' ? 'photo_camera' : 'palette';
+                heading.innerHTML = `<span class="material-symbols-rounded">${icon}</span> ${colName}`;
+                grid.appendChild(heading);
+            }
+
+            presets.forEach(preset => {
+                const item = document.createElement('div');
+                item.className = 'wallpaper-picker-item';
+                item.addEventListener('click', () => applyPresetWallpaper(preset));
+
+                const activeVariant = resolveWallpaperVariant(preset);
+                const wallpaperImgUrl = (activeVariant && activeVariant.fullUrl) ? activeVariant.fullUrl : preset.fullUrl;
+                const clockStyles = { ...(preset.clockStyles || {}), ...(activeVariant?.clockStyles || {}) };
+
+                const theme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+                const effects = clockStyles.wallpaperEffects?.[theme];
+                let filterStyle = '';
+                if (effects) {
+                    const b = effects.brightness !== undefined ? `brightness(${effects.brightness}%)` : '';
+                    const c = effects.contrast !== undefined ? `contrast(${effects.contrast}%)` : '';
+                    filterStyle = [b, c].filter(Boolean).join(' ');
+                }
+
+                let detailsHTML = `<span class="wallpaper-picker-title">${preset.name}</span>`;
+                if (preset.description) {
+                    detailsHTML += `<p class="wallpaper-picker-description">${preset.description}</p>`;
+                }
+                if (preset.artist) {
+                    detailsHTML += `<p class="wallpaper-picker-artist">By ${preset.artist}</p>`;
+                }
+
+                let linksHTML = '';
+                if (preset.variants) {
+                    const hasTheme = preset.variants.theme || ('light' in preset.variants) || ('dark' in preset.variants);
+                    const hasTime = preset.variants.timeOfDay || ('night' in preset.variants) || ('noon' in preset.variants) || ('morning/evening' in preset.variants) || ('morning' in preset.variants) || ('evening' in preset.variants);
+                    
+                    if (hasTheme && hasTime) {
+                        linksHTML += `<span class="wallpaper-picker-badge dynamic-badge"><span class="material-symbols-rounded">routine</span>Dynamic</span>`;
+                    } else if (hasTheme) {
+                        linksHTML += `<span class="wallpaper-picker-badge dynamic-badge"><span class="material-symbols-rounded">contrast</span>Theme</span>`;
+                    } else if (hasTime) {
+                        linksHTML += `<span class="wallpaper-picker-badge dynamic-badge"><span class="material-symbols-rounded">schedule</span>Time of Day</span>`;
+                    }
+                }
+
+                if (preset.sourceUrl) {
+                    linksHTML += `<a href="${preset.sourceUrl}" target="_blank" class="wallpaper-picker-badge" onclick="event.stopPropagation()">Source<span class="material-symbols-rounded">arrow_outward</span></a>`;
+                }
+                if (preset.license) {
+                    linksHTML += `<span class="wallpaper-picker-badge">${preset.license}</span>`;
+                }
+                if (linksHTML) {
+                    detailsHTML += `<div class="wallpaper-picker-links">${linksHTML}</div>`;
+                }
+
+                item.innerHTML = `
+                    <div class="wallpaper-picker-thumbnail">
+                        <div class="wallpaper-thumb-bg" style="background-image: url('${wallpaperImgUrl}'); ${filterStyle ? `filter: ${filterStyle};` : ''}"></div>
+                        ${generateClockPreviewHTML(clockStyles)}
+                    </div>
+                    <div class="wallpaper-picker-details">
+                        ${detailsHTML}
+                    </div>
+                `;
+                grid.appendChild(item);
+            });
+        });
     }
 
-    // 3. Create and append items for each shuffled preset
-    shuffledPresets.forEach(preset => {
+    function createCreationCard(iconName, title, desc, onClick) {
         const item = document.createElement('div');
-        item.className = 'wallpaper-picker-item';
-        item.addEventListener('click', () => applyPresetWallpaper(preset));
-
-        let detailsHTML = `<span class="wallpaper-picker-title">${preset.name}</span>`;
-
-        if (preset.description) {
-            detailsHTML += `<p class="wallpaper-picker-description">${preset.description}</p>`;
-        }
-        if (preset.artist) {
-            detailsHTML += `<p class="wallpaper-picker-artist">By ${preset.artist}</p>`;
-        }
-
-        let linksHTML = '';
-        if (preset.sourceUrl) {
-            linksHTML += `<a href="${preset.sourceUrl}" target="_blank" class="wallpaper-picker-badge" onclick="event.stopPropagation()">Source<span class="material-symbols-rounded">arrow_outward</span></a>`;
-        }
-        if (preset.license) {
-            linksHTML += `<span class="wallpaper-picker-badge">${preset.license}</span>`;
-        }
-        if (linksHTML) {
-            detailsHTML += `<div class="wallpaper-picker-links">${linksHTML}</div>`;
-        }
-
+        item.className = 'wallpaper-picker-item upload-item';
         item.innerHTML = `
-            <div class="wallpaper-picker-thumbnail" style="background-image: url('${preset.thumbnailUrl}')"></div>
+            <div class="wallpaper-picker-thumbnail">
+                <span class="material-symbols-rounded">${iconName}</span>
+            </div>
             <div class="wallpaper-picker-details">
-                ${detailsHTML}
+                <span class="wallpaper-picker-title">${title}</span>
+                <p class="wallpaper-picker-description">${desc}</p>
             </div>
         `;
-        grid.appendChild(item);
-    });
+        item.addEventListener('click', onClick);
+        return item;
+    }
+
+    renderPickerContent();
 
     drawer.style.display = 'flex';
     setTimeout(() => {
@@ -965,7 +1804,7 @@ function extractVideoFrame(file) {
     });
 }
 
-async function saveWallpaper(file, customStyles = null) {
+async function saveWallpaper(file, customStyles = null, options = {}) {
     try {
         const wallpaperId = `wallpaper_${Date.now()}`;
 
@@ -1023,7 +1862,10 @@ async function saveWallpaper(file, customStyles = null) {
                 clockStyles: stylesToApply,
                 widgetLayout: [],
                 dominantColor: dominantColor,
-                firstFrameDataUrl: firstFrame
+                firstFrameDataUrl: firstFrame,
+                presetName: options.presetName || null,
+                variants: options.variants || null,
+                activeVariantKey: options.activeVariantKey || null
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
@@ -1032,7 +1874,10 @@ async function saveWallpaper(file, customStyles = null) {
                 timestamp: Date.now(),
                 clockStyles: stylesToApply,
                 widgetLayout: [],
-                dominantColor: dominantColor
+                dominantColor: dominantColor,
+                presetName: options.presetName || null,
+                variants: options.variants || null,
+                activeVariantKey: options.activeVariantKey || null
             });
         } else if (file.type === 'image/gif' || file.type === 'image/webp') {
             firstFrame = await extractFirstFrame(file);
@@ -1044,7 +1889,10 @@ async function saveWallpaper(file, customStyles = null) {
                 firstFrameDataUrl: firstFrame,
                 clockStyles: stylesToApply,
                 widgetLayout: [],
-                dominantColor: dominantColor
+                dominantColor: dominantColor,
+                presetName: options.presetName || null,
+                variants: options.variants || null,
+                activeVariantKey: options.activeVariantKey || null
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
@@ -1053,7 +1901,10 @@ async function saveWallpaper(file, customStyles = null) {
                 timestamp: Date.now(),
                 clockStyles: stylesToApply,
                 widgetLayout: [],
-                dominantColor: dominantColor
+                dominantColor: dominantColor,
+                presetName: options.presetName || null,
+                variants: options.variants || null,
+                activeVariantKey: options.activeVariantKey || null
             });
         } else {
             // Standard Image
@@ -1065,7 +1916,10 @@ async function saveWallpaper(file, customStyles = null) {
                 type: file.type,
                 clockStyles: stylesToApply,
                 widgetLayout: [],
-                dominantColor: dominantColor
+                dominantColor: dominantColor,
+                presetName: options.presetName || null,
+                variants: options.variants || null,
+                activeVariantKey: options.activeVariantKey || null
             });
             recentWallpapers.unshift({
                 id: wallpaperId,
@@ -1074,7 +1928,10 @@ async function saveWallpaper(file, customStyles = null) {
                 timestamp: Date.now(),
                 clockStyles: stylesToApply,
                 widgetLayout: [],
-                dominantColor: dominantColor
+                dominantColor: dominantColor,
+                presetName: options.presetName || null,
+                variants: options.variants || null,
+                activeVariantKey: options.activeVariantKey || null
             });
         }
         
@@ -1917,7 +2774,21 @@ function renderSwitcherCards(container, isInitialOpen = false) {
         const card = document.createElement('div');
         card.className = `switcher-card ${index === currentWallpaperPosition ? 'active' : ''}`;
         
-        // Background preview
+        // Background preview container
+        const bgEl = document.createElement('div');
+        bgEl.className = 'wallpaper-thumb-bg';
+        
+        // Compute theme-dependent wallpaper effects filter
+        const theme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+        const effects = wp.clockStyles?.wallpaperEffects?.[theme];
+        if (effects) {
+            const b = effects.brightness !== undefined ? `brightness(${effects.brightness}%)` : '';
+            const c = effects.contrast !== undefined ? `contrast(${effects.contrast}%)` : '';
+            const f = [b, c].filter(Boolean).join(' ');s
+            if (f) bgEl.style.filter = f;
+        }
+        card.appendChild(bgEl);
+
         let previewId = wp.id;
         let isVid = wp.isVideo;
 
@@ -1933,9 +2804,18 @@ function renderSwitcherCards(container, isInitialOpen = false) {
                     const src = data.dataUrl || (data.blob ? URL.createObjectURL(data.blob) : '');
                     // Ideally use firstFrameDataUrl for video
                     const bgSrc = (isVid && data.firstFrameDataUrl) ? data.firstFrameDataUrl : src;
-                    card.style.backgroundImage = `url('${bgSrc}')`;
+                    bgEl.style.backgroundImage = `url('${bgSrc}')`;
                 }
             });
+        }
+
+        // Automatic clock preview overlay
+        if (wp.clockStyles) {
+            const clockPreviewWrapper = document.createElement('div');
+            clockPreviewWrapper.innerHTML = generateClockPreviewHTML(wp.clockStyles);
+            if (clockPreviewWrapper.firstElementChild) {
+                card.appendChild(clockPreviewWrapper.firstElementChild);
+            }
         }
 
         // Edit Button
@@ -3098,6 +3978,9 @@ async function initializeAndApplyWallpaper() {
         
         // Apply the wallpaper image/video
         await applyWallpaper();
+        if (typeof checkAndApplyWallpaperVariant === 'function') {
+            checkAndApplyWallpaperVariant();
+        }
     } else {
         // No wallpapers available, set to default
         isSlideshow = false;

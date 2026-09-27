@@ -365,6 +365,15 @@ function startSynchronizedClockAndDate() {
     }
     
     const now = new Date();
+    
+    // Check for time-of-day wallpaper variant transitions on minute boundaries
+    if (window._lastWallpaperVariantCheckMinute !== now.getMinutes()) {
+        window._lastWallpaperVariantCheckMinute = now.getMinutes();
+        if (typeof window.checkAndApplyWallpaperVariant === 'function') {
+            window.checkAndApplyWallpaperVariant();
+        }
+    }
+    
     let delay;
     
     // IDLE OPTIMIZATION: If we aren't showing seconds, or tab is hidden, or app is open, or blackout is active,

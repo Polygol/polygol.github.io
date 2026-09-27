@@ -1,12 +1,15 @@
 [
     {
         "name": "Sprayed Glass",
-        "description": "A grid of our icon set overlayed with Dynamic Glass",
+        "description": "A grid of our icon set overlayed with Dynamic Glass.",
         "artist": "",
         "sourceUrl": "",
         "license": "",
-        "thumbnailUrl": "/assets/img/wallpapers/thumb_sg1.png",
-        "fullUrl": "/assets/img/wallpapers/Sprayed%20Glass.png",
+        "fullUrl": "/assets/img/wallpapers/Default/Sprayed%20Glass/Sprayed%20Glass.png",
+        "variants": {
+            "light": "/assets/img/wallpapers/Default/Sprayed%20Glass/Sprayed%20Glass%20(Light).png",
+            "dark": "/assets/img/wallpapers/Default/Sprayed%20Glass/Sprayed%20Glass%20(Dark).png"
+        },
         "clockStyles": {
             "font": "Inter",
             "weight": "1000",
@@ -18,19 +21,31 @@
             "glassEnabled": true,
             "roundness": "1",
             "wallpaperEffects": {
-                "light": { "blur": "0", "brightness": "100", "contrast": "100" },
-                "dark": { "blur": "0", "brightness": "50", "contrast": "150" }
+                "light": {
+                    "blur": "0",
+                    "brightness": "100",
+                    "contrast": "100"
+                },
+                "dark": {
+                    "blur": "0",
+                    "brightness": "50",
+                    "contrast": "150"
+                }
             }
-        }
+        },
+        "collection": "Default"
     },
     {
         "name": "Polyhills",
-        "description": "The classic Polygol background",
+        "description": "The classic Polygol background.",
         "artist": "",
         "sourceUrl": "",
         "license": "",
-        "thumbnailUrl": "/assets/img/wallpapers/thumb_p1.png",
-        "fullUrl": "/assets/img/wallpapers/Polyhills.png",
+        "fullUrl": "/assets/img/wallpapers/Default/Polyhills/Polyhills.png",
+        "variants": {
+            "light": "/assets/img/wallpapers/Default/Polyhills/Polyhills%20(Light).png",
+            "dark": "/assets/img/wallpapers/Default/Polyhills/Polyhills%20(Dark).png"
+        },
         "clockStyles": {
             "font": "Inter",
             "weight": "700",
@@ -42,19 +57,32 @@
             "glassEnabled": false,
             "roundness": "100",
             "wallpaperEffects": {
-                "light": { "blur": "0", "brightness": "100", "contrast": "100" },
-                "dark": { "blur": "0", "brightness": "75", "contrast": "125" }
+                "light": {
+                    "blur": "0",
+                    "brightness": "100",
+                    "contrast": "100"
+                },
+                "dark": {
+                    "blur": "0",
+                    "brightness": "75",
+                    "contrast": "125"
+                }
             }
-        }
+        },
+        "collection": "Default"
     },
     {
         "name": "Clouds",
-        "description": "Illuminated clouds on a clear day",
+        "description": "Illuminated clouds that change as the day goes by.",
         "artist": "",
         "sourceUrl": "",
         "license": "",
-        "thumbnailUrl": "/assets/img/wallpapers/thumb_c1.png",
-        "fullUrl": "/assets/img/wallpapers/Clouds.png",
+        "fullUrl": "/assets/img/wallpapers/Default/Clouds/Clouds.png",
+        "variants": {
+            "noon": "/assets/img/wallpapers/Default/Clouds/Clouds%20(Noon).png",
+            "morning/evening": "/assets/img/wallpapers/Default/Clouds/Clouds%20(Morning-Evening).png",
+            "night": "/assets/img/wallpapers/Default/Clouds/Clouds%20(Night).png"
+        },
         "clockStyles": {
             "font": "Climate Crisis",
             "weight": "700",
@@ -66,10 +94,200 @@
             "glassEnabled": true,
             "roundness": "0",
             "wallpaperEffects": {
-                "light": { "blur": "0", "brightness": "100", "contrast": "100" },
-                "dark": { "blur": "0", "brightness": "50", "contrast": "150" }
+                "light": {
+                    "blur": "0",
+                    "brightness": "100",
+                    "contrast": "100"
+                },
+                "dark": {
+                    "blur": "0",
+                    "brightness": "50",
+                    "contrast": "150"
+                }
             }
-        }
+        },
+        "collection": "Default"
+    },
+    {
+        "name": "Polysprils",
+        "description": "Default wallpaper.",
+        "artist": "",
+        "sourceUrl": "",
+        "license": "",
+        "fullUrl": "/assets/img/wallpapers/Default/Polysprils/01a.png",
+        "variants": {
+            "light": "/assets/img/wallpapers/Default/Polysprils/01a.png",
+            "dark": "/assets/img/wallpapers/Default/Polysprils/01b.png"
+        },
+        "clockStyles": {
+            "font": "Inter",
+            "weight": "700",
+            "colorEnabled": false,
+            "stackEnabled": false,
+            "alignment": "center",
+            "shadowEnabled": false,
+            "gradientEnabled": false,
+            "glassEnabled": false,
+            "roundness": "0",
+            "wallpaperEffects": {
+                "light": {
+                    "blur": "0",
+                    "brightness": "100",
+                    "contrast": "100"
+                },
+                "dark": {
+                    "blur": "0",
+                    "brightness": "75",
+                    "contrast": "125"
+                }
+            }
+        },
+        "collection": "Default"
+    },
+    {
+        "name": "Daycube",
+        "description": "Reflect your life with cube.",
+        "artist": "",
+        "sourceUrl": "",
+        "license": "",
+        "fullUrl": "/assets/img/wallpapers/Default/Daycube/02a.png",
+        "variants": {
+            "noon": "/assets/img/wallpapers/Default/Daycube/02b.png",
+            "morning/evening": "/assets/img/wallpapers/Default/Daycube/02a.png",
+            "night": "/assets/img/wallpapers/Default/Daycube/02c.png"
+        },
+        "clockStyles": {
+            "font": "Inter",
+            "weight": "700",
+            "colorEnabled": false,
+            "stackEnabled": false,
+            "alignment": "center",
+            "shadowEnabled": false,
+            "gradientEnabled": false,
+            "glassEnabled": false,
+            "roundness": "0",
+            "wallpaperEffects": {
+                "light": {
+                    "blur": "0",
+                    "brightness": "100",
+                    "contrast": "100"
+                },
+                "dark": {
+                    "blur": "0",
+                    "brightness": "75",
+                    "contrast": "125"
+                }
+            }
+        },
+        "collection": "Default"
+    },
+    {
+        "name": "Halohill",
+        "description": "Hills that glow.",
+        "artist": "",
+        "sourceUrl": "",
+        "license": "",
+        "fullUrl": "/assets/img/wallpapers/Default/Halohill/03a.png",
+        "variants": {
+            "light": "/assets/img/wallpapers/Default/Halohill/03a.png",
+            "dark": "/assets/img/wallpapers/Default/Halohill/03b.png"
+        },
+        "clockStyles": {
+            "font": "Inter",
+            "weight": "700",
+            "colorEnabled": false,
+            "stackEnabled": false,
+            "alignment": "center",
+            "shadowEnabled": false,
+            "gradientEnabled": false,
+            "glassEnabled": false,
+            "roundness": "0",
+            "wallpaperEffects": {
+                "light": {
+                    "blur": "0",
+                    "brightness": "100",
+                    "contrast": "100"
+                },
+                "dark": {
+                    "blur": "0",
+                    "brightness": "75",
+                    "contrast": "125"
+                }
+            }
+        },
+        "collection": "Default"
+    },
+    {
+        "name": "Waternatic",
+        "description": "Explode the water, causing big splashes.",
+        "artist": "",
+        "sourceUrl": "",
+        "license": "",
+        "fullUrl": "/assets/img/wallpapers/Default/Waternatic/04a.png",
+        "variants": {
+            "light": "/assets/img/wallpapers/Default/Waternatic/04a.png",
+            "dark": "/assets/img/wallpapers/Default/Waternatic/04b.png"
+        },
+        "clockStyles": {
+            "font": "Inter",
+            "weight": "700",
+            "colorEnabled": false,
+            "stackEnabled": false,
+            "alignment": "center",
+            "shadowEnabled": false,
+            "gradientEnabled": false,
+            "glassEnabled": false,
+            "roundness": "0",
+            "wallpaperEffects": {
+                "light": {
+                    "blur": "0",
+                    "brightness": "100",
+                    "contrast": "100"
+                },
+                "dark": {
+                    "blur": "0",
+                    "brightness": "75",
+                    "contrast": "125"
+                }
+            }
+        },
+        "collection": "Default"
+    },
+    {
+        "name": "Vallinious",
+        "description": "A smooth landscape.",
+        "artist": "",
+        "sourceUrl": "",
+        "license": "",
+        "fullUrl": "/assets/img/wallpapers/Default/Vallinious/05a.png",
+        "variants": {
+            "light": "/assets/img/wallpapers/Default/Vallinious/05a.png",
+            "dark": "/assets/img/wallpapers/Default/Vallinious/05b.png"
+        },
+        "clockStyles": {
+            "font": "Inter",
+            "weight": "700",
+            "colorEnabled": false,
+            "stackEnabled": false,
+            "alignment": "center",
+            "shadowEnabled": false,
+            "gradientEnabled": false,
+            "glassEnabled": false,
+            "roundness": "0",
+            "wallpaperEffects": {
+                "light": {
+                    "blur": "0",
+                    "brightness": "100",
+                    "contrast": "100"
+                },
+                "dark": {
+                    "blur": "0",
+                    "brightness": "75",
+                    "contrast": "125"
+                }
+            }
+        },
+        "collection": "Default"
     },
     {
         "name": "Broadway Top",
@@ -77,8 +295,7 @@
         "artist": "",
         "sourceUrl": "",
         "license": "",
-        "thumbnailUrl": "/assets/img/wallpapers/thumb_bt1.png",
-        "fullUrl": "/assets/img/wallpapers/Broadway%20Top.png",
+        "fullUrl": "/assets/img/wallpapers/Photography/Broadway%20Top/Broadway%20Top.png",
         "clockStyles": {
             "font": "Domine",
             "weight": "700",
@@ -91,10 +308,19 @@
             "glassEnabled": false,
             "roundness": "0",
             "wallpaperEffects": {
-                "light": { "blur": "0", "brightness": "100", "contrast": "100" },
-                "dark": { "blur": "0", "brightness": "75", "contrast": "125" }
+                "light": {
+                    "blur": "0",
+                    "brightness": "100",
+                    "contrast": "100"
+                },
+                "dark": {
+                    "blur": "0",
+                    "brightness": "75",
+                    "contrast": "125"
+                }
             }
-        }
+        },
+        "collection": "Photography"
     },
     {
         "name": "Castelo de Óbidos",
@@ -102,8 +328,7 @@
         "artist": "",
         "sourceUrl": "",
         "license": "",
-        "thumbnailUrl": "/assets/img/wallpapers/thumb_cdo1.png",
-        "fullUrl": "/assets/img/wallpapers/Castelo%20de%20Óbidos.png",
+        "fullUrl": "/assets/img/wallpapers/Photography/Castelo%20de%20Obidos/Castelo%20de%20Óbidos.png",
         "clockStyles": {
             "font": "Bricolage Grotesque",
             "weight": "200",
@@ -116,9 +341,18 @@
             "glassEnabled": false,
             "roundness": "0",
             "wallpaperEffects": {
-                "light": { "blur": "0", "brightness": "100", "contrast": "100" },
-                "dark": { "blur": "0", "brightness": "75", "contrast": "125" }
+                "light": {
+                    "blur": "0",
+                    "brightness": "100",
+                    "contrast": "100"
+                },
+                "dark": {
+                    "blur": "0",
+                    "brightness": "75",
+                    "contrast": "125"
+                }
             }
-        }
+        },
+        "collection": "Photography"
     }
 ]

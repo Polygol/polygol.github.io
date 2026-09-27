@@ -626,6 +626,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 	        applyWallpaperEffects();
 	        syncUiStates();
 	    }
+
+        if (typeof window.checkAndApplyWallpaperVariant === 'function') {
+            window.checkAndApplyWallpaperVariant({ theme: newTheme });
+        }
 	});
 	
     // Event listener for minimal mode control
@@ -1352,6 +1356,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (activeDialog.type === 'prompt') cancelValue = null;
                 closeDialog(cancelValue); // Close any type of dialog
                 return; 
+            }
+
+            // Priority 1.5: Close wallpaper creator modal if open.
+            const creatorModal = document.getElementById('wallpaper-creator-modal');
+            if (creatorModal && creatorModal.classList.contains('show')) {
+                if (typeof closeWallpaperCreator === 'function') {
+                    closeWallpaperCreator();
+                }
+                return;
             }
 
             // Priority 2: Close open drawers.
