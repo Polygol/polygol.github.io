@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>SoundModuTest - Audio System Diagnostics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="SoundModuTest">
+    <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #4caf50;">graphic_eq</span>
+                SoundModuTest (Audio Diagnostics)
+            </h1>
+        </div>
+
+        <!-- System FX Library -->
+        <div class="setting-section">
+            <h2 class="section-title">Polygol System Sound Library</h2>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                <button class="action-btn" onclick="playSysSound('click')">click</button>
+                <button class="action-btn" onclick="playSysSound('type')">type</button>
+                <button class="action-btn" onclick="playSysSound('launch')">launch</button>
+                <button class="action-btn" onclick="playSysSound('close')">close</button>
+                <button class="action-btn" onclick="playSysSound('dock')">dock</button>
+                <button class="action-btn" onclick="playSysSound('notify')">notify</button>
+                <button class="action-btn" onclick="playSysSound('alert')">alert</button>
+                <button class="action-btn" onclick="playSysSound('volume')">volume</button>
+                <button class="action-btn" onclick="playSysSound('sos')">sos</button>
+            </div>
+        </div>
+
+        <!-- Frequency Tone Generator -->
+        <div class="setting-section">
+            <h2 class="section-title">Precision Tone Generator</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Frequency (Hz)</span>
+                    <span class="setting-description" id="freq-display">440 Hz (Concert A)</span>
+                </div>
+                <input type="range" min="20" max="15000" step="10" value="440" class="styled-slider" id="tone-freq-slider" style="width: 140px;">
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Waveform</span>
+                    <select class="styled-select" id="tone-waveform">
+                        <option value="sine">Sine</option>
+                        <option value="square">Square</option>
+                        <option value="sawtooth">Sawtooth</option>
+                        <option value="triangle">Triangle</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="action-btn" id="btn-toggle-tone" style="background:#4caf50; color:#fff; border:none;">Start Tone</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stereo Separation Test -->
+        <div class="setting-section">
+            <h2 class="section-title">Stereo Balance & Channels</h2>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                <button class="action-btn" onclick="playPannedBurst(-1)">Left Only</button>
+                <button class="action-btn" onclick="playPannedBurst(0)">Center</button>
+                <button class="action-btn" onclick="playPannedBurst(1)">Right Only</button>
+            </div>
+        </div>
+
+        <!-- Latency & Speech Synthesis -->
+        <div class="setting-section">
+            <h2 class="section-title">Hardware Audio Latency & TTS</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Web Audio Context Latency</span>
+                    <span class="setting-description" id="latency-readout">Measuring buffer timing...</span>
+                </div>
+                <button class="action-btn" onclick="measureLatency()">Measure</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Text-to-Speech Engine</span>
+                    <input type="text" id="tts-input" class="form-input" value="Polygol audio synthesis operational." style="margin-top: 6px;">
+                </div>
+                <button class="action-btn" onclick="speakInput()">Speak</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function playSysSound(type) {
+            if (window.Gurasuraisu && Gurasuraisu.playSound) {
+                Gurasuraisu.playSound(type);
+            } else {
+                // Fallback synth
+                playPannedBurst(0);
+            }
+        }
+
+        // Tone Generator
+        let audioCtx = null;
+        let toneOsc = null;
+        let toneGain = null;
+        let isTonePlaying = false;
+
+        function getAudioContext() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
+        const freqSlider = document.getElementById('tone-freq-slider');
+        freqSlider.oninput = (e) => {
+            const f = Number(e.target.value);
+            document.getElementById('freq-display').textContent = `${f} Hz`;
+            if (toneOsc) toneOsc.frequency.setValueAtTime(f, audioCtx.currentTime);
+        };
+
+        document.getElementById('btn-toggle-tone').onclick = () => {
+            const ctx = getAudioContext();
+            const btn = document.getElementById('btn-toggle-tone');
+
+            if (!isTonePlaying) {
+                isTonePlaying = true;
+                toneOsc = ctx.createOscillator();
+                toneGain = ctx.createGain();
+                toneOsc.type = document.getElementById('tone-waveform').value;
+                toneOsc.frequency.setValueAtTime(Number(freqSlider.value), ctx.currentTime);
+                toneGain.gain.setValueAtTime(0.2, ctx.currentTime);
+
+                toneOsc.connect(toneGain);
+                toneGain.connect(ctx.destination);
+                toneOsc.start();
+
+                btn.textContent = 'Stop Tone';
+                btn.style.background = '#ff5252';
+            } else {
+                isTonePlaying = false;
+                if (toneOsc) {
+                    toneOsc.stop();
+                    toneOsc.disconnect();
+                    toneOsc = null;
+                }
+                btn.textContent = 'Start Tone';
+                btn.style.background = '#4caf50';
+            }
+        };
+
+        function playPannedBurst(panVal) {
+            const ctx = getAudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const panner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(panVal < 0 ? 800 : (panVal > 0 ? 1200 : 1000), ctx.currentTime);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+
+            if (panner) {
+                panner.pan.setValueAtTime(panVal, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(panner);
+                panner.connect(ctx.destination);
+            } else {
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+            }
+
+            osc.start();
+            osc.stop(ctx.currentTime + 0.4);
+        }
+
+        function measureLatency() {
+            const ctx = getAudioContext();
+            const baseLatency = ctx.baseLatency || (128 / ctx.sampleRate);
+            const outputLatency = ctx.outputLatency || 0;
+            const totalMs = ((baseLatency + outputLatency) * 1000).toFixed(1);
+            document.getElementById('latency-readout').textContent =
+                `Base: ${(baseLatency*1000).toFixed(1)}ms | Output: ${(outputLatency*1000).toFixed(1)}ms | Total: ${totalMs}ms`;
+        }
+        measureLatency();
+
+        function speakInput() {
+            const text = document.getElementById('tts-input').value.trim();
+            if (!text) return;
+            if (window.Gurasuraisu && Gurasuraisu.speak) {
+                Gurasuraisu.speak(text);
+            } else if (window.speechSynthesis) {
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+            }
+        }
+    </script>
+</body>
+</html>

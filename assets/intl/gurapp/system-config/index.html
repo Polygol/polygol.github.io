@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>System Config - OS Registry & State Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="System Config">
+    <div class="container" style="max-width: 780px; width: 100%; margin: 0 auto; padding-bottom: 60px;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #607d8b;">build</span>
+                System Config
+            </h1>
+        </div>
+
+        <!-- Telemetry & Hardware Status Bar -->
+        <div class="setting-section" style="padding: 16px 20px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 13px; font-weight: 700; font-family: monospace; color: var(--accent);">RUNTIME TELEMETRY</span>
+                <div style="display: flex; gap: 8px;">
+                    <button class="action-btn" id="btn-sync-all" style="padding: 4px 12px; font-size: 12px;">Sync All</button>
+                    <button class="action-btn" id="btn-reboot" style="padding: 4px 12px; font-size: 12px; color: #ff5252;">Reboot OS</button>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; font-family: monospace; font-size: 11px;">
+                <div style="background: var(--search-background); padding: 8px; border-radius: 8px;">
+                    <div style="opacity: 0.6;">VERSION</div>
+                    <div id="stat-version" style="font-weight: 700;">--</div>
+                </div>
+                <div style="background: var(--search-background); padding: 8px; border-radius: 8px;">
+                    <div style="opacity: 0.6;">ACTIVE APP</div>
+                    <div id="stat-active-app" style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">--</div>
+                </div>
+                <div style="background: var(--search-background); padding: 8px; border-radius: 8px;">
+                    <div style="opacity: 0.6;">ECO TIER</div>
+                    <div id="stat-eco-tier" style="font-weight: 700;">--</div>
+                </div>
+                <div style="background: var(--search-background); padding: 8px; border-radius: 8px;">
+                    <div style="opacity: 0.6;">WINDOW VIEWPORT</div>
+                    <div id="stat-viewport" style="font-weight: 700;">--</div>
+                </div>
+                <div style="background: var(--search-background); padding: 8px; border-radius: 8px;">
+                    <div style="opacity: 0.6;">PERF SCORE</div>
+                    <div id="stat-perf-score" style="font-weight: 700;">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subsystem Quick Navigation -->
+        <div style="display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 12px; scrollbar-width: none;">
+            <button class="action-btn subnav-btn" data-target="sec-core" style="font-size: 11px; padding: 6px 12px; white-space: nowrap;">Core & System</button>
+            <button class="action-btn subnav-btn" data-target="sec-display" style="font-size: 11px; padding: 6px 12px; white-space: nowrap;">Display & Compositor</button>
+            <button class="action-btn subnav-btn" data-target="sec-wallpaper" style="font-size: 11px; padding: 6px 12px; white-space: nowrap;">Wallpaper & FX</button>
+            <button class="action-btn subnav-btn" data-target="sec-power" style="font-size: 11px; padding: 6px 12px; white-space: nowrap;">Power & Sleep</button>
+            <button class="action-btn subnav-btn" data-target="sec-audio" style="font-size: 11px; padding: 6px 12px; white-space: nowrap;">Audio & Haptics</button>
+            <button class="action-btn subnav-btn" data-target="sec-ui" style="font-size: 11px; padding: 6px 12px; white-space: nowrap;">UI & Navigation</button>
+            <button class="action-btn subnav-btn" data-target="sec-clock" style="font-size: 11px; padding: 6px 12px; white-space: nowrap;">Clock & Typography</button>
+            <button class="action-btn subnav-btn" data-target="sec-security" style="font-size: 11px; padding: 6px 12px; white-space: nowrap;">Security & Network</button>
+            <button class="action-btn subnav-btn" data-target="sec-ai" style="font-size: 11px; padding: 6px 12px; white-space: nowrap;">Assistant (kirbAI)</button>
+            <button class="action-btn subnav-btn" data-target="sec-experimental" style="font-size: 11px; padding: 6px 12px; white-space: nowrap;">Experimental</button>
+            <button class="action-btn subnav-btn" data-target="sec-raw-reg" style="font-size: 11px; padding: 6px 12px; white-space: nowrap; color: #ff9800;">Raw Registry</button>
+        </div>
+
+        <!-- 1. Core & System Parameters -->
+        <div class="setting-section" id="sec-core">
+            <h2 class="section-title">Core & System Parameters</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">system_device_name</span>
+                </div>
+                <div class="setting-control"><input type="text" class="form-input sys-input" data-key="system_device_name" style="width: 170px;"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">systemPerformanceScore [1-5]</span>
+                </div>
+                <div class="setting-control"><input type="number" min="1" max="5" class="form-input sys-input" data-key="systemPerformanceScore" style="width: 80px;"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">ecoTier [0-3]</span>
+                </div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="currentEcoTier">
+                        <option value="0">0 - Max Performance</option>
+                        <option value="1">1 - Moderate Throttling</option>
+                        <option value="2">2 - Heavy Throttling</option>
+                        <option value="3">3 - Emergency Eco</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">aggressiveGC</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="aggressiveGC"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">resourceManagerEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="resourceManagerEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">telemetryEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="telemetryEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">updatesEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="updatesEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">hasVisitedBefore</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="hasVisitedBefore"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">clearTempCacheOnClose</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="clearTempCacheOnClose"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">customStartupScript</span></div>
+                <div class="setting-control"><input type="text" class="form-input sys-input" data-key="customStartupScript" placeholder="console.log('boot');" style="width: 220px;"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">disabledSystemComponents</span></div>
+                <div class="setting-control"><input type="text" class="form-input sys-input" data-key="disabledSystemComponents" placeholder="[]" style="width: 220px;"></div>
+            </div>
+        </div>
+
+        <!-- 2. Display & Compositor -->
+        <div class="setting-section" id="sec-display">
+            <h2 class="section-title">Display & Compositor</h2>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">theme ['dark' / 'light']</span></div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="theme">
+                        <option value="dark">dark</option>
+                        <option value="light">light</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">page_brightness [0-100]</span><span id="val-page_brightness" style="font-family:monospace; font-size:12px;">100</span></div>
+                <input type="range" min="10" max="100" class="styled-slider sys-slider" data-key="page_brightness">
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">autoBrightness</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="autoBrightness"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">animationsEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="animationsEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">highContrast</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="highContrast"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">blueLightReduction</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="blueLightReduction"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">oledBurnInProtection</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="oledBurnInProtection"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">depthEffectEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="depthEffectEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">glassEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="glassEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">glassEffectsMode</span></div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="glassEffectsMode">
+                        <option value="off">off</option>
+                        <option value="1">1 (Minimal)</option>
+                        <option value="5">5 (Balanced)</option>
+                        <option value="10">10 (Extreme Blur)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">tintEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="tintEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">colorFilter</span></div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="colorFilter">
+                        <option value="none">none</option>
+                        <option value="grayscale">grayscale</option>
+                        <option value="invert">invert</option>
+                        <option value="sepia">sepia</option>
+                        <option value="deuteranopia">deuteranopia</option>
+                        <option value="protanopia">protanopia</option>
+                        <option value="tritanopia">tritanopia</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">roundness [0-50]</span><span id="val-roundness" style="font-family:monospace; font-size:12px;">35</span></div>
+                <input type="range" min="0" max="50" class="styled-slider sys-slider" data-key="roundness">
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">screenCurve [0-50]</span><span id="val-screenCurve" style="font-family:monospace; font-size:12px;">0</span></div>
+                <input type="range" min="0" max="50" class="styled-slider sys-slider" data-key="screenCurve">
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">display_temperature (Kelvin)</span></div>
+                <div class="setting-control"><input type="number" class="form-input sys-input" data-key="display_temperature" style="width: 100px;"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">override_lux</span></div>
+                <div class="setting-control"><input type="number" class="form-input sys-input" data-key="override_lux" style="width: 100px;"></div>
+            </div>
+        </div>
+
+        <!-- 3. Wallpaper & Canvas FX -->
+        <div class="setting-section" id="sec-wallpaper">
+            <h2 class="section-title">Wallpaper & Canvas FX</h2>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">wallpaperType</span></div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="wallpaperType">
+                        <option value="canvas">canvas (Interactive)</option>
+                        <option value="image">image</option>
+                        <option value="slideshow">slideshow</option>
+                        <option value="color">color</option>
+                        <option value="waves">waves</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">liveEnvironmentEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="liveEnvironmentEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">focusDimWallpaper</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="focusDimWallpaper"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">customWallpaper URL</span></div>
+                <div class="setting-control"><input type="text" class="form-input sys-input" data-key="customWallpaper" style="width: 220px;"></div>
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">wallpaperBlur [0-50]</span><span id="val-wallpaperBlur" style="font-family:monospace; font-size:12px;">0</span></div>
+                <input type="range" min="0" max="50" class="styled-slider sys-slider" data-key="wallpaperBlur">
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">wallpaperBrightness [0-200]</span><span id="val-wallpaperBrightness" style="font-family:monospace; font-size:12px;">100</span></div>
+                <input type="range" min="0" max="200" class="styled-slider sys-slider" data-key="wallpaperBrightness">
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">wallpaperContrast [0-200]</span><span id="val-wallpaperContrast" style="font-family:monospace; font-size:12px;">100</span></div>
+                <input type="range" min="0" max="200" class="styled-slider sys-slider" data-key="wallpaperContrast">
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">wallpaperHue [0-360]</span><span id="val-wallpaperHue" style="font-family:monospace; font-size:12px;">0</span></div>
+                <input type="range" min="0" max="360" class="styled-slider sys-slider" data-key="wallpaperHue">
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">wallpaperSaturate [0-200]</span><span id="val-wallpaperSaturate" style="font-family:monospace; font-size:12px;">100</span></div>
+                <input type="range" min="0" max="200" class="styled-slider sys-slider" data-key="wallpaperSaturate">
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">wallpaperVignette [0-100]</span><span id="val-wallpaperVignette" style="font-family:monospace; font-size:12px;">0</span></div>
+                <input type="range" min="0" max="100" class="styled-slider sys-slider" data-key="wallpaperVignette">
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">slideshowInterval (ms)</span></div>
+                <div class="setting-control"><input type="number" class="form-input sys-input" data-key="slideshowInterval" style="width: 100px;"></div>
+            </div>
+        </div>
+
+        <!-- 4. Power & Sleep Management -->
+        <div class="setting-section" id="sec-power">
+            <h2 class="section-title">Power & Sleep Management</h2>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">adaptiveBatterySaver</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="adaptiveBatterySaver"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">doubleTapToSleep</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="doubleTapToSleep"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">wakeOnMotion</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="wakeOnMotion"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">wakeLockMode</span></div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="wakeLockMode">
+                        <option value="screen">screen</option>
+                        <option value="system">system</option>
+                        <option value="disabled">disabled</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">autoSleepDuration (sec)</span></div>
+                <div class="setting-control"><input type="number" class="form-input sys-input" data-key="autoSleepDuration" style="width: 100px;"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">nightMode</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="nightMode"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">nightStandEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="nightStandEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">nightStandStart [HH:MM]</span></div>
+                <div class="setting-control"><input type="text" class="form-input sys-input" data-key="nightStandStart" style="width: 100px;"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">nightStandEnd [HH:MM]</span></div>
+                <div class="setting-control"><input type="text" class="form-input sys-input" data-key="nightStandEnd" style="width: 100px;"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">nightStandBrightness [0-100]</span></div>
+                <div class="setting-control"><input type="number" min="0" max="100" class="form-input sys-input" data-key="nightStandBrightness" style="width: 80px;"></div>
+            </div>
+        </div>
+
+        <!-- 5. Audio & Haptics Subsystem -->
+        <div class="setting-section" id="sec-audio">
+            <h2 class="section-title">Audio & Haptics Subsystem</h2>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">master_volume [0-100]</span><span id="val-master_volume" style="font-family:monospace; font-size:12px;">80</span></div>
+                <input type="range" min="0" max="100" class="styled-slider sys-slider" data-key="master_volume">
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">sfxVolume [0-100]</span><span id="val-sfxVolume" style="font-family:monospace; font-size:12px;">100</span></div>
+                <input type="range" min="0" max="100" class="styled-slider sys-slider" data-key="sfxVolume">
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">silentMode</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="silentMode"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">hapticsEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="hapticsEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">gurappSoundsEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="gurappSoundsEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">adaptiveVolume</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="adaptiveVolume"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">uiSoundMode</span></div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="uiSoundMode">
+                        <option value="default">default</option>
+                        <option value="subtle">subtle</option>
+                        <option value="mechanical">mechanical</option>
+                        <option value="off">off</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">ambientMusicEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="ambientMusicEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">isMediaSmartEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="isMediaSmartEnabled"></div>
+            </div>
+        </div>
+
+        <!-- 6. UI, Dock & Navigation -->
+        <div class="setting-section" id="sec-ui">
+            <h2 class="section-title">UI, Dock & Navigation</h2>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">minimalMode</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="minimalMode"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">dockPinned</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="dockPinned"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">oneButtonNavEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="oneButtonNavEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">keyboardNavEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="keyboardNavEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">hideHomeAppNames</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="hideHomeAppNames"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">showAppNamesAppDrawer</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="showAppNamesAppDrawer"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">lockHomeLayout</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="lockHomeLayout"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">persistentPageIndicator</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="persistentPageIndicator"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">appBadgesEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="appBadgesEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">homeActivitiesEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="homeActivitiesEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">homeActivityPos</span></div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="homeActivityPos">
+                        <option value="island">island (Top Island)</option>
+                        <option value="top">top</option>
+                        <option value="bottom">bottom</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Clock & Typography Configuration -->
+        <div class="setting-section" id="sec-clock">
+            <h2 class="section-title">Clock & Typography Configuration</h2>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">clockFont</span></div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="clockFont">
+                        <option value="Open Runde">Open Runde</option>
+                        <option value="Inter">Inter</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Bricolage Grotesque">Bricolage Grotesque</option>
+                        <option value="DynaPuff">DynaPuff</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">weight [100-900]</span><span id="val-weight" style="font-family:monospace; font-size:12px;">700</span></div>
+                <input type="range" min="100" max="900" step="100" class="styled-slider sys-slider" data-key="weight">
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">clockSize [20-180]</span><span id="val-clockSize" style="font-family:monospace; font-size:12px;">80</span></div>
+                <input type="range" min="20" max="180" class="styled-slider sys-slider" data-key="clockSize">
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">clockPosX [0-100%]</span><span id="val-clockPosX" style="font-family:monospace; font-size:12px;">50</span></div>
+                <input type="range" min="0" max="100" class="styled-slider sys-slider" data-key="clockPosX">
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">clockPosY [0-100%]</span><span id="val-clockPosY" style="font-family:monospace; font-size:12px;">30</span></div>
+                <input type="range" min="0" max="100" class="styled-slider sys-slider" data-key="clockPosY">
+            </div>
+            <div class="setting-item slider-item">
+                <div style="display:flex; justify-content:space-between;"><span class="setting-label">letterSpacing [-10 to 30]</span><span id="val-letterSpacing" style="font-family:monospace; font-size:12px;">0</span></div>
+                <input type="range" min="-10" max="30" class="styled-slider sys-slider" data-key="letterSpacing">
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">clockFormat</span></div>
+                <div class="setting-control"><input type="text" class="form-input sys-input" data-key="clockFormat" style="width: 140px;"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">use12HourFormat</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="use12HourFormat"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">showSeconds</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="showSeconds"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">showTimezoneLabel</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="showTimezoneLabel"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">showWeather</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="showWeather"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">clockItalic</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="clockItalic"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">stackEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="stackEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">shadowEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="shadowEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">gradientEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="gradientEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">clockColor</span></div>
+                <div class="setting-control"><input type="color" class="sys-color" data-key="clockColor" style="width: 44px; height: 32px; border:none; background:transparent; cursor:pointer;"></div>
+            </div>
+        </div>
+
+        <!-- 8. Security & Network -->
+        <div class="setting-section" id="sec-security">
+            <h2 class="section-title">Security & Network Subsystem</h2>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">bypassPermissions (Root Bypass)</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="bypassPermissions"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">wifiEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="wifiEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">simulateOffline</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="simulateOffline"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">networkDnsMode</span></div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="networkDnsMode">
+                        <option value="default">default</option>
+                        <option value="doh">doh (DNS-over-HTTPS)</option>
+                        <option value="cloudflare">cloudflare (1.1.1.1)</option>
+                        <option value="quad9">quad9 (9.9.9.9)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">locationPermissionMode</span></div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="locationPermissionMode">
+                        <option value="prompt">prompt</option>
+                        <option value="grant">grant</option>
+                        <option value="deny">deny</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">clipboardAccessMode</span></div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="clipboardAccessMode">
+                        <option value="prompt">prompt</option>
+                        <option value="grant">grant</option>
+                        <option value="deny">deny</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">waves_discovery_enabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="waves_discovery_enabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">autoClearNotificationsOnSleep</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="autoClearNotificationsOnSleep"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">notificationPreviewLevel</span></div>
+                <div class="setting-control">
+                    <select class="styled-select sys-select" data-key="notificationPreviewLevel">
+                        <option value="full">full</option>
+                        <option value="sender_only">sender_only</option>
+                        <option value="hidden">hidden</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. AI Assistant (kirbAI) -->
+        <div class="setting-section" id="sec-ai">
+            <h2 class="section-title">AI Assistant (kirbAI)</h2>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">aiAssistantEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="aiAssistantEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">assistantWakeWord</span></div>
+                <div class="setting-control"><input type="text" class="form-input sys-input" data-key="assistantWakeWord" style="width: 140px;"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">assistantLang</span></div>
+                <div class="setting-control"><input type="text" class="form-input sys-input" data-key="assistantLang" style="width: 100px;"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">assistantVoicePitch [0.5-2.0]</span></div>
+                <div class="setting-control"><input type="number" step="0.1" min="0.5" max="2.0" class="form-input sys-input" data-key="assistantVoicePitch" style="width: 80px;"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">isTimeGreetingSmartEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="isTimeGreetingSmartEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">isPersonalGreetingSmartEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="isPersonalGreetingSmartEnabled"></div>
+            </div>
+        </div>
+
+        <!-- 10. Experimental & Engineering Flags -->
+        <div class="setting-section" id="sec-experimental">
+            <h2 class="section-title">Experimental & Engine</h2>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">experimentalWebGL</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="experimentalWebGL"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">experimentalGpuAccelerate</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="experimentalGpuAccelerate"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">predictivePreload</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="predictivePreload"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">dataSaverEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="dataSaverEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">debugOverlayEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="debugOverlayEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">developerConsoleEnabled</span></div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch sys-toggle" data-key="developerConsoleEnabled"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info"><span class="setting-label">integrationWebhookUrl</span></div>
+                <div class="setting-control"><input type="text" class="form-input sys-input" data-key="integrationWebhookUrl" style="width: 220px;"></div>
+            </div>
+        </div>
+
+        <!-- 11. Raw Registry & Search (Complete Storage Table) -->
+        <div class="setting-section" id="sec-raw-reg">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h2 class="section-title" style="margin: 0; color: #ff9800;">Raw Storage Registry</h2>
+                <div style="display:flex; gap:6px;">
+                    <button class="action-btn" id="btn-export-storage" style="font-size: 11px; padding: 4px 8px;">Export JSON</button>
+                    <button class="action-btn" id="btn-add-reg-key" style="font-size: 11px; padding: 4px 8px; background: var(--accent); color: #fff; border:none;">+ Add Key</button>
+                </div>
+            </div>
+            <div class="setting-item" style="padding: 8px 12px; background: var(--search-background); border-radius: 12px; margin-bottom: 8px;">
+                <input type="text" id="reg-search" class="form-input" placeholder="Search 170+ registry keys..." style="border:none; background:transparent; width:100%; padding:0;">
+            </div>
+            <div id="registry-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 450px; overflow-y: auto;">
+                <!-- Dynamically generated rows -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Smooth scroll subnav
+        document.querySelectorAll('.subnav-btn').forEach(btn => {
+            btn.onclick = () => {
+                const target = document.getElementById(btn.dataset.target);
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
+            };
+        });
+
+        // Telemetry updater
+        async function updateTelemetry() {
+            if (window.RootAPI) {
+                const state = await window.RootAPI.getSystemState();
+                document.getElementById('stat-version').textContent = state.version || (window.parent && window.parent.systemVersion) || 'Astatine 17';
+                document.getElementById('stat-active-app').textContent = state.activeAppUrl || 'None';
+                document.getElementById('stat-eco-tier').textContent = `Tier ${state.ecoTier !== undefined ? state.ecoTier : 0}`;
+                document.getElementById('stat-viewport').textContent = `${window.innerWidth}x${window.innerHeight}`;
+                const perf = localStorage.getItem('systemPerformanceScore') || (window.parent && window.parent.localStorage.getItem('systemPerformanceScore')) || '4';
+                document.getElementById('stat-perf-score').textContent = `${perf} / 5`;
+            }
+        }
+
+        // Live variable setter & synchronization
+        function setSystemValue(key, value) {
+            localStorage.setItem(key, String(value));
+            try {
+                if (window.parent && window.parent.localStorage) {
+                    window.parent.localStorage.setItem(key, String(value));
+                }
+            } catch(e) {}
+
+            // Post to parent internal engine
+            window.parent.postMessage({ action: 'setInternalVariable', key: key, value: value }, '*');
+            window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'setLocalStorageItem', args: [key, String(value)] }, '*');
+
+            // Update raw registry if key exists
+            const regRow = document.querySelector(`.reg-row[data-key="${key}"] .reg-val`);
+            if (regRow) {
+                let preview = String(value);
+                if (preview.length > 50) preview = preview.substring(0, 50) + '...';
+                regRow.textContent = preview;
+            }
+        }
+
+        // Load and bind all designated system inputs
+        function initControls() {
+            // Toggles
+            document.querySelectorAll('.sys-toggle').forEach(el => {
+                const k = el.dataset.key;
+                const stored = (window.parent ? window.parent.localStorage.getItem(k) : null) || localStorage.getItem(k);
+                el.checked = stored === 'true';
+                el.onchange = () => setSystemValue(k, el.checked);
+            });
+
+            // Sliders
+            document.querySelectorAll('.sys-slider').forEach(el => {
+                const k = el.dataset.key;
+                const stored = (window.parent ? window.parent.localStorage.getItem(k) : null) || localStorage.getItem(k);
+                if (stored !== null && !isNaN(stored)) el.value = stored;
+                const valDisplay = document.getElementById(`val-${k}`);
+                if (valDisplay) valDisplay.textContent = el.value;
+                el.oninput = () => {
+                    if (valDisplay) valDisplay.textContent = el.value;
+                    setSystemValue(k, el.value);
+                };
+            });
+
+            // Selects
+            document.querySelectorAll('.sys-select').forEach(el => {
+                const k = el.dataset.key;
+                const stored = (window.parent ? window.parent.localStorage.getItem(k) : null) || localStorage.getItem(k);
+                if (stored !== null) el.value = stored;
+                el.onchange = () => setSystemValue(k, el.value);
+            });
+
+            // Text / Number inputs
+            document.querySelectorAll('.sys-input').forEach(el => {
+                const k = el.dataset.key;
+                const stored = (window.parent ? window.parent.localStorage.getItem(k) : null) || localStorage.getItem(k);
+                if (stored !== null) el.value = stored;
+                el.onchange = () => setSystemValue(k, el.value);
+            });
+
+            // Color inputs
+            document.querySelectorAll('.sys-color').forEach(el => {
+                const k = el.dataset.key;
+                const stored = (window.parent ? window.parent.localStorage.getItem(k) : null) || localStorage.getItem(k);
+                if (stored && stored.startsWith('#')) el.value = stored;
+                el.onchange = () => setSystemValue(k, el.value);
+            });
+        }
+
+        // Raw Storage Registry Loader
+        function loadRegistry() {
+            const container = document.getElementById('registry-list');
+            container.innerHTML = '';
+
+            const keys = new Set();
+            for (let i = 0; i < localStorage.length; i++) keys.add(localStorage.key(i));
+            try {
+                if (window.parent && window.parent.localStorage) {
+                    for (let i = 0; i < window.parent.localStorage.length; i++) {
+                        keys.add(window.parent.localStorage.key(i));
+                    }
+                }
+            } catch(e) {}
+
+            Array.from(keys).sort().forEach(k => {
+                const val = (window.parent && window.parent.localStorage) ? window.parent.localStorage.getItem(k) : localStorage.getItem(k);
+                const row = document.createElement('div');
+                row.className = 'setting-item reg-row';
+                row.dataset.key = k;
+                row.style.cssText = 'padding: 8px 12px; display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); border-radius:10px;';
+
+                let preview = String(val !== null ? val : '');
+                if (preview.length > 55) preview = preview.substring(0, 55) + '...';
+
+                row.innerHTML = `
+                    <div style="display:flex; flex-direction:column; max-width: 72%;">
+                        <span style="font-weight:700; font-family:monospace; font-size:12px; color:var(--text-color);">${k}</span>
+                        <span class="reg-val" style="font-size:11px; opacity:0.65; font-family:monospace; word-break:break-all;">${preview}</span>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="action-btn" style="padding: 3px 8px; font-size: 11px;" onclick="editKey('${k}')">Edit</button>
+                        <button class="action-btn" style="padding: 3px 8px; font-size: 11px; color: #ff5252;" onclick="delKey('${k}')">Del</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        window.editKey = async (k) => {
+            const cur = (window.parent && window.parent.localStorage) ? window.parent.localStorage.getItem(k) : localStorage.getItem(k);
+            let newVal;
+            if (window.Gurasuraisu && Gurasuraisu.showPrompt) {
+                newVal = await Gurasuraisu.showPrompt(`Value for [${k}]:`, `Edit Registry Key`, cur || '');
+            } else {
+                newVal = prompt(`Value for [${k}]:`, cur || '');
+            }
+            if (newVal !== null) {
+                setSystemValue(k, newVal);
+                loadRegistry();
+                initControls();
+            }
+        };
+
+        window.delKey = (k) => {
+            if (confirm(`Purge key [${k}] from Polygol storage?`)) {
+                localStorage.removeItem(k);
+                try {
+                    if (window.parent && window.parent.localStorage) window.parent.localStorage.removeItem(k);
+                } catch(e) {}
+                window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'removeLocalStorageItem', args: [k] }, '*');
+                loadRegistry();
+                initControls();
+            }
+        };
+
+        document.getElementById('btn-add-reg-key').onclick = async () => {
+            const k = prompt("New Key Identifier (e.g. customFlag):");
+            if (!k) return;
+            const v = prompt(`Value for [${k}]:`, "");
+            setSystemValue(k, v || "");
+            loadRegistry();
+            initControls();
+        };
+
+        document.getElementById('btn-export-storage').onclick = () => {
+            const dump = {};
+            const keys = new Set();
+            for (let i = 0; i < localStorage.length; i++) keys.add(localStorage.key(i));
+            try {
+                if (window.parent && window.parent.localStorage) {
+                    for (let i = 0; i < window.parent.localStorage.length; i++) keys.add(window.parent.localStorage.key(i));
+                }
+            } catch(e) {}
+            keys.forEach(k => {
+                dump[k] = (window.parent && window.parent.localStorage) ? window.parent.localStorage.getItem(k) : localStorage.getItem(k);
+            });
+            const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `polygol-storage-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        document.getElementById('reg-search').oninput = (e) => {
+            const q = e.target.value.toLowerCase();
+            document.querySelectorAll('.reg-row').forEach(row => {
+                row.style.display = row.dataset.key.toLowerCase().includes(q) ? 'flex' : 'none';
+            });
+        };
+
+        document.getElementById('btn-sync-all').onclick = () => {
+            initControls();
+            loadRegistry();
+            updateTelemetry();
+            if (window.Gurasuraisu && Gurasuraisu.showPopup) Gurasuraisu.showPopup('Telemetry & variables synchronized');
+        };
+
+        document.getElementById('btn-reboot').onclick = () => {
+            if (confirm("Execute reboot of Polygol?")) {
+                if (window.RootAPI) window.RootAPI.reboot();
+                else window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'rebootGurasuraisu', args: [] }, '*');
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initControls();
+            loadRegistry();
+            updateTelemetry();
+            setInterval(updateTelemetry, 5000);
+        });
+    </script>
+</body>
+</html>

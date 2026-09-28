@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Utah 730hr test - Polygol Internal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body data-app-name="Utah 730hr test">
+    <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #ff9800;">coffee</span>
+                Utah 730hr test
+            </h1>
+        </div>
+
+        <!-- 3D Viewport -->
+        <div class="setting-section" style="padding: 0; overflow: hidden; position: relative; border-radius: 16px; background: #000;">
+            <div id="three-container" style="width: 100%; height: 260px;"></div>
+            <div style="position: absolute; top: 12px; left: 14px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-family: monospace; color: #fff;">
+                TARGET: 730.00 HOURS
+            </div>
+            <div id="live-fps" style="position: absolute; top: 12px; right: 14px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-family: monospace; color: #4caf50;">
+                60 FPS
+            </div>
+        </div>
+
+        <!-- Progress Counter -->
+        <div class="setting-section">
+            <h2 class="section-title">Endurance Progress</h2>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px;">
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Elapsed Time</div>
+                    <div id="elapsed-display" style="font-size: 20px; font-weight: 700; color: #ff9800; font-family: monospace;">00:00:00</div>
+                </div>
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Total Frames</div>
+                    <div id="frames-display" style="font-size: 20px; font-weight: 700; color: #03a9f4; font-family: monospace;">0</div>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Progress Bar (to 730 hrs)</span>
+                    <span class="setting-description" id="percent-display">0.000% completed</span>
+                </div>
+                <div style="width: 120px; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow:hidden;">
+                    <div id="progress-bar-fill" style="width: 0%; height: 100%; background: #ff9800; transition: width 0.3s;"></div>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Persistent Session</span>
+                    <span class="setting-description">Progress is preserved across reboots</span>
+                </div>
+                <button class="action-btn" id="btn-reset-utah" style="color: #ff5252;">Reset</button>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="setting-section">
+            <h2 class="section-title">Rendering Controls</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Wireframe Mesh</span>
+                    <span class="setting-description">Inspect polygon tessellation</span>
+                </div>
+                <div class="setting-control">
+                    <input type="checkbox" class="toggle-switch" id="toggle-wireframe">
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Rotation Speed</span>
+                    <span class="setting-description">Spin velocity multiplier</span>
+                </div>
+                <input type="range" min="1" max="10" value="3" class="styled-slider" id="speed-slider" style="width: 140px;">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Setup Three.js scene
+        const container = document.getElementById('three-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(0, 5, 14);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xff9800, 1.2);
+        dirLight.position.set(5, 10, 7);
+        scene.add(dirLight);
+
+        const backLight = new THREE.DirectionalLight(0x03a9f4, 0.8);
+        backLight.position.set(-5, -5, -5);
+        scene.add(backLight);
+
+        // Construct Utah Teapot geometry approximation with TorusKnot + Torus + Cylinder
+        const teapotGroup = new THREE.Group();
+
+        const bodyGeo = new THREE.SphereGeometry(3, 32, 24);
+        bodyGeo.scale(1.2, 0.9, 1.2);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0xe68a00,
+            roughness: 0.2,
+            metalness: 0.6
+        });
+        const bodyMesh = new THREE.Mesh(bodyGeo, material);
+        teapotGroup.add(bodyMesh);
+
+        // Spout
+        const spoutGeo = new THREE.CylinderGeometry(0.4, 0.8, 3, 16);
+        spoutGeo.rotateZ(-Math.PI / 4);
+        spoutGeo.translate(3.2, 0.5, 0);
+        const spoutMesh = new THREE.Mesh(spoutGeo, material);
+        teapotGroup.add(spoutMesh);
+
+        // Handle
+        const handleGeo = new THREE.TorusGeometry(2, 0.4, 16, 32, Math.PI);
+        handleGeo.rotateZ(Math.PI / 2);
+        handleGeo.translate(-3.2, 0, 0);
+        const handleMesh = new THREE.Mesh(handleGeo, material);
+        teapotGroup.add(handleMesh);
+
+        // Lid knob
+        const knobGeo = new THREE.SphereGeometry(0.5, 16, 16);
+        knobGeo.translate(0, 3.2, 0);
+        const knobMesh = new THREE.Mesh(knobGeo, material);
+        teapotGroup.add(knobMesh);
+
+        scene.add(teapotGroup);
+
+        // Elapsed time persistence
+        const TARGET_SECONDS = 730 * 3600;
+        let storedSeconds = parseFloat(localStorage.getItem('utah_elapsed_seconds') || '0');
+        let totalFrames = parseInt(localStorage.getItem('utah_frames_rendered') || '0', 10);
+        let lastTimestamp = performance.now();
+        let fpsFrames = 0;
+        let fpsLastTime = performance.now();
+        let rotSpeed = 0.015;
+
+        document.getElementById('toggle-wireframe').onchange = (e) => {
+            material.wireframe = e.target.checked;
+        };
+
+        document.getElementById('speed-slider').oninput = (e) => {
+            rotSpeed = Number(e.target.value) * 0.005;
+        };
+
+        document.getElementById('btn-reset-utah').onclick = () => {
+            if (confirm("Reset the 730-hour Utah test timer?")) {
+                storedSeconds = 0;
+                totalFrames = 0;
+                localStorage.setItem('utah_elapsed_seconds', '0');
+                localStorage.setItem('utah_frames_rendered', '0');
+            }
+        };
+
+        function formatTime(totalSecs) {
+            const hrs = Math.floor(totalSecs / 3600);
+            const mins = Math.floor((totalSecs % 3600) / 60);
+            const secs = Math.floor(totalSecs % 60);
+            return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function animate(now) {
+            requestAnimationFrame(animate);
+
+            const dt = (now - lastTimestamp) / 1000;
+            lastTimestamp = now;
+
+            storedSeconds += dt;
+            totalFrames++;
+            fpsFrames++;
+
+            if (now - fpsLastTime >= 500) {
+                const fps = Math.round((fpsFrames * 1000) / (now - fpsLastTime));
+                document.getElementById('live-fps').textContent = `${fps} FPS`;
+                fpsFrames = 0;
+                fpsLastTime = now;
+
+                // Update UI and save
+                document.getElementById('elapsed-display').textContent = formatTime(storedSeconds);
+                document.getElementById('frames-display').textContent = totalFrames.toLocaleString();
+
+                const pct = ((storedSeconds / TARGET_SECONDS) * 100).toFixed(4);
+                document.getElementById('percent-display').textContent = `${pct}% completed`;
+                document.getElementById('progress-bar-fill').style.width = `${Math.min(100, pct)}%`;
+
+                localStorage.setItem('utah_elapsed_seconds', storedSeconds.toFixed(2));
+                localStorage.setItem('utah_frames_rendered', totalFrames.toString());
+            }
+
+            teapotGroup.rotation.y += rotSpeed;
+            teapotGroup.rotation.x = Math.sin(now * 0.001) * 0.2;
+
+            renderer.render(scene, camera);
+        }
+
+        requestAnimationFrame(animate);
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Videoman - Camera Diagnostics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="Videoman">
+    <div class="container" style="max-width: 760px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #e91e63;">videocam</span>
+                Videoman (Camera Diagnostics)
+            </h1>
+        </div>
+
+        <!-- Video Viewport -->
+        <div class="setting-section" style="padding: 0; overflow:hidden; border-radius:16px; background: #000; position: relative;">
+            <video id="camera-feed" autoplay playsinline style="width: 100%; height: 260px; object-fit: cover; display: block;"></video>
+            <div id="video-stream-overlay" style="position: absolute; bottom: 10px; left: 14px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-family: monospace; color: #fff;">
+                Camera Standby
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="setting-section">
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <button class="action-btn" id="btn-start-camera" style="flex: 1; background: #e91e63; color: #fff; border:none;">Start Camera</button>
+                <button class="action-btn" id="btn-stop-camera" style="flex: 1;">Stop</button>
+                <button class="action-btn" id="btn-take-snapshot" style="flex: 1;">Snapshot</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Optical Video Device</span>
+                </div>
+                <select class="styled-select" id="select-camera-device" style="width: 200px;">
+                    <option value="">Default Camera</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Requested Resolution</span>
+                </div>
+                <select class="styled-select" id="select-resolution" style="width: 160px;">
+                    <option value="480">480p SD</option>
+                    <option value="720" selected>720p HD</option>
+                    <option value="1080">1080p FHD</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Real-time Shader Filter</span>
+                </div>
+                <select class="styled-select" id="select-filter" style="width: 160px;">
+                    <option value="none">Normal</option>
+                    <option value="grayscale(100%)">Grayscale</option>
+                    <option value="invert(100%)">Invert</option>
+                    <option value="sepia(100%)">Sepia</option>
+                    <option value="contrast(200%)">High Contrast</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('camera-feed');
+        const overlay = document.getElementById('video-stream-overlay');
+        const deviceSelect = document.getElementById('select-camera-device');
+        const resSelect = document.getElementById('select-resolution');
+        const filterSelect = document.getElementById('select-filter');
+        let currentStream = null;
+
+        async function enumerateCameras() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                deviceSelect.innerHTML = '<option value="">Default Camera</option>';
+                devices.filter(d => d.kind === 'videoinput').forEach((d, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = d.deviceId;
+                    opt.textContent = d.label || `Camera ${i + 1}`;
+                    deviceSelect.appendChild(opt);
+                });
+            } catch(e) {}
+        }
+        enumerateCameras();
+
+        async function startCamera() {
+            stopCamera();
+            const deviceId = deviceSelect.value ? { exact: deviceSelect.value } : undefined;
+            const h = Number(resSelect.value);
+
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        deviceId: deviceId,
+                        width: { ideal: Math.round(h * (16/9)) },
+                        height: { ideal: h }
+                    }
+                });
+                video.srcObject = currentStream;
+                video.onloadedmetadata = () => {
+                    overlay.textContent = `Live: ${video.videoWidth}x${video.videoHeight}px @ 30fps`;
+                    enumerateCameras();
+                };
+            } catch(e) {
+                overlay.textContent = `Error: ${e.message}`;
+            }
+        }
+
+        function stopCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(t => t.stop());
+                currentStream = null;
+                video.srcObject = null;
+                overlay.textContent = 'Camera Stopped';
+            }
+        }
+
+        document.getElementById('btn-start-camera').onclick = startCamera;
+        document.getElementById('btn-stop-camera').onclick = stopCamera;
+
+        filterSelect.onchange = () => {
+            video.style.filter = filterSelect.value;
+        };
+
+        document.getElementById('btn-take-snapshot').onclick = () => {
+            if (!currentStream) return alert('Start camera first');
+            const c = document.createElement('canvas');
+            c.width = video.videoWidth;
+            c.height = video.videoHeight;
+            const ctx = c.getContext('2d');
+            if (filterSelect.value !== 'none') ctx.filter = filterSelect.value;
+            ctx.drawImage(video, 0, 0);
+
+            const dataUrl = c.toDataURL('image/png');
+            if (window.Gurasuraisu && Gurasuraisu.downloadFile) {
+                Gurasuraisu.downloadFile(`snapshot-${Date.now()}.png`, dataUrl);
+            } else {
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = `snapshot-${Date.now()}.png`;
+                a.click();
+            }
+        };
+    </script>
+</body>
+</html>

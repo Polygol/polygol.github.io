@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Sysinfo - System Architecture & Metrics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="Sysinfo">
+    <div class="container" style="max-width: 760px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #03a9f4;">info</span>
+                Sysinfo (System Specifications)
+            </h1>
+        </div>
+
+        <!-- OS & Platform -->
+        <div class="setting-section">
+            <h2 class="section-title">Operating System & Kernel</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">OS Distribution</span>
+                    <span class="setting-description" id="sys-os-ver">Polygol (Astatine 17)</span>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Browser Platform & Engine</span>
+                    <span class="setting-description" id="sys-platform" style="word-break: break-all; font-family: monospace; font-size: 11px;">Loading...</span>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Runtime Language</span>
+                    <span class="setting-description" id="sys-lang">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hardware Specs -->
+        <div class="setting-section">
+            <h2 class="section-title">Hardware Architecture</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">CPU Logical Concurrency</span>
+                    <span class="setting-description" id="sys-cpu">-- cores</span>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Device RAM Memory</span>
+                    <span class="setting-description" id="sys-ram">-- GB approx</span>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Display Resolution & DPR</span>
+                    <span class="setting-description" id="sys-screen">--</span>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Graphics Renderer (GPU)</span>
+                    <span class="setting-description" id="sys-gpu">Detecting GPU...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Battery & Network -->
+        <div class="setting-section">
+            <h2 class="section-title">Power & Connectivity</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Battery Level & State</span>
+                    <span class="setting-description" id="sys-battery">Reading battery API...</span>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Network Connection</span>
+                    <span class="setting-description" id="sys-network">Reading network interface...</span>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Storage Quota</span>
+                    <span class="setting-description" id="sys-storage">Calculating storage usage...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('sys-platform').textContent = navigator.userAgent;
+        document.getElementById('sys-lang').textContent = `${navigator.language} (${navigator.languages.join(', ')})`;
+        document.getElementById('sys-cpu').textContent = `${navigator.hardwareConcurrency || 'N/A'} logical cores`;
+        document.getElementById('sys-ram').textContent = `${navigator.deviceMemory ? navigator.deviceMemory + ' GB RAM' : 'Unavailable (Privacy Sandbox)'}`;
+        document.getElementById('sys-screen').textContent = `${window.screen.width}x${window.screen.height} @ ${window.devicePixelRatio}x DPR (${window.screen.colorDepth}-bit color)`;
+
+        // GPU
+        try {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl');
+            if (gl) {
+                const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+                const renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+                document.getElementById('sys-gpu').textContent = renderer || 'Standard WebGL';
+            }
+        } catch(e) {
+            document.getElementById('sys-gpu').textContent = 'Software Rasterizer';
+        }
+
+        // Battery
+        if (navigator.getBattery) {
+            navigator.getBattery().then(b => {
+                const updateBat = () => {
+                    const pct = Math.round(b.level * 100);
+                    const state = b.charging ? 'Charging (AC Connected)' : 'Discharging';
+                    document.getElementById('sys-battery').textContent = `${pct}% — ${state}`;
+                };
+                updateBat();
+                b.addEventListener('levelchange', updateBat);
+                b.addEventListener('chargingchange', updateBat);
+            }).catch(() => {
+                document.getElementById('sys-battery').textContent = 'Battery API Blocked / Unavailable';
+            });
+        } else {
+            document.getElementById('sys-battery').textContent = 'Battery API Not Supported';
+        }
+
+        // Network
+        const updateNet = () => {
+            const online = navigator.onLine ? 'Online' : 'Offline';
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            let detail = online;
+            if (conn) {
+                detail += ` | Type: ${conn.effectiveType || 'N/A'} | Downlink: ${conn.downlink || 'N/A'} Mbps | RTT: ${conn.rtt || 'N/A'}ms`;
+            }
+            document.getElementById('sys-network').textContent = detail;
+        };
+        updateNet();
+        window.addEventListener('online', updateNet);
+        window.addEventListener('offline', updateNet);
+
+        // Storage
+        if (navigator.storage && navigator.storage.estimate) {
+            navigator.storage.estimate().then(est => {
+                const usedMb = (est.usage / (1024 * 1024)).toFixed(1);
+                const totalMb = (est.quota / (1024 * 1024)).toFixed(1);
+                document.getElementById('sys-storage').textContent = `${usedMb} MB used of ${totalMb} MB allocated quota`;
+            });
+        }
+    </script>
+</body>
+</html>

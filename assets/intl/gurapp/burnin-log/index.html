@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>BurninLog - Code Logic Torture</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="BurninLog">
+    <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #ff9800;">code_blocks</span>
+                BurninLog (Code Logic Stress)
+            </h1>
+        </div>
+
+        <div class="setting-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 class="section-title" style="margin-bottom: 4px;">Algorithmic Stress Engine</h2>
+                    <span id="log-engine-status" style="font-size: 13px; color: #ff9800;">READY</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="action-btn" id="btn-run-all" style="background: #4caf50; color: #fff; border:none;">Run All Tests</button>
+                    <button class="action-btn" id="btn-stop-all" style="display:none; background: #ff5252; color: #fff; border:none;">Stop</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Metrics -->
+        <div class="setting-section">
+            <h2 class="section-title">Throughput Metrics</h2>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px;">
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Iterations Done</div>
+                    <div id="stat-iters" style="font-size: 24px; font-weight: 700; color: #ff9800; font-family: monospace;">0</div>
+                </div>
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Ops / Second</div>
+                    <div id="stat-ops" style="font-size: 24px; font-weight: 700; color: #03a9f4; font-family: monospace;">0</div>
+                </div>
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Heap Memory</div>
+                    <div id="stat-heap" style="font-size: 24px; font-weight: 700; color: #4caf50; font-family: monospace;">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Individual Module Tests -->
+        <div class="setting-section">
+            <h2 class="section-title">Modular Logic Tests</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">1. Recursive Fibonacci & Stack Stress</span>
+                    <span class="setting-description" id="res-fib">Fib(36) call stack depth test</span>
+                </div>
+                <button class="action-btn" onclick="runFibTest()">Run</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">2. JSON Tree Churn & Parse</span>
+                    <span class="setting-description" id="res-json">Serialize / deserialize 100,000 node trees</span>
+                </div>
+                <button class="action-btn" onclick="runJsonTest()">Run</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">3. Array Quicksort & Garbage Churn</span>
+                    <span class="setting-description" id="res-sort">Allocate and sort 500,000 random integers</span>
+                </div>
+                <button class="action-btn" onclick="runSortTest()">Run</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">4. Complex RegEx Pattern Stress</span>
+                    <span class="setting-description" id="res-regex">Evaluate heavy backtrack patterns</span>
+                </div>
+                <button class="action-btn" onclick="runRegexTest()">Run</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">5. Microtask Queue Flooding</span>
+                    <span class="setting-description" id="res-micro">Dispatch 10,000 chained Promise microtasks</span>
+                </div>
+                <button class="action-btn" onclick="runMicrotaskTest()">Run</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLooping = false;
+        let iters = 0;
+        let loopTimer = null;
+        let lastIters = 0;
+        let opsTimer = null;
+
+        function updateHeap() {
+            if (performance.memory) {
+                const mb = (performance.memory.usedJSHeapSize / (1024 * 1024)).toFixed(1);
+                document.getElementById('stat-heap').textContent = `${mb}MB`;
+            } else {
+                document.getElementById('stat-heap').textContent = 'N/A';
+            }
+        }
+        setInterval(updateHeap, 1000);
+
+        // 1. Fib
+        function fib(n) {
+            if (n <= 1) return n;
+            return fib(n - 1) + fib(n - 2);
+        }
+        function runFibTest() {
+            const t0 = performance.now();
+            const res = fib(34);
+            const dt = (performance.now() - t0).toFixed(1);
+            document.getElementById('res-fib').textContent = `Result: ${res} in ${dt}ms`;
+            iters++;
+            document.getElementById('stat-iters').textContent = iters;
+        }
+
+        // 2. JSON
+        function runJsonTest() {
+            const t0 = performance.now();
+            const obj = {};
+            for (let i = 0; i < 50000; i++) {
+                obj['k_' + i] = { id: i, name: 'Stress Node ' + i, tags: [1, 2, 3] };
+            }
+            const str = JSON.stringify(obj);
+            const parsed = JSON.parse(str);
+            const dt = (performance.now() - t0).toFixed(1);
+            document.getElementById('res-json').textContent = `${(str.length / 1024).toFixed(0)}KB processed in ${dt}ms`;
+            iters++;
+            document.getElementById('stat-iters').textContent = iters;
+        }
+
+        // 3. Sort
+        function runSortTest() {
+            const t0 = performance.now();
+            const arr = new Float64Array(300000);
+            for (let i = 0; i < arr.length; i++) arr[i] = Math.random();
+            arr.sort();
+            const dt = (performance.now() - t0).toFixed(1);
+            document.getElementById('res-sort').textContent = `Sorted 300,000 floats in ${dt}ms`;
+            iters++;
+            document.getElementById('stat-iters').textContent = iters;
+        }
+
+        // 4. RegEx
+        function runRegexTest() {
+            const t0 = performance.now();
+            const text = "A".repeat(10000) + "B";
+            const re = /A*A*A*A*A*B/;
+            const match = re.test(text);
+            const dt = (performance.now() - t0).toFixed(1);
+            document.getElementById('res-regex').textContent = `Evaluated in ${dt}ms (Match: ${match})`;
+            iters++;
+            document.getElementById('stat-iters').textContent = iters;
+        }
+
+        // 5. Microtask
+        function runMicrotaskTest() {
+            const t0 = performance.now();
+            let count = 0;
+            const target = 10000;
+            function step() {
+                count++;
+                if (count < target) {
+                    Promise.resolve().then(step);
+                } else {
+                    const dt = (performance.now() - t0).toFixed(1);
+                    document.getElementById('res-micro').textContent = `10k microtasks drained in ${dt}ms`;
+                    iters++;
+                    document.getElementById('stat-iters').textContent = iters;
+                }
+            }
+            step();
+        }
+
+        // Run All Continuous Loop
+        document.getElementById('btn-run-all').onclick = () => {
+            isLooping = true;
+            document.getElementById('log-engine-status').textContent = 'BURNING CODE LOGIC';
+            document.getElementById('log-engine-status').style.color = '#ff5252';
+            document.getElementById('btn-run-all').style.display = 'none';
+            document.getElementById('btn-stop-all').style.display = 'inline-block';
+
+            opsTimer = setInterval(() => {
+                const diff = iters - lastIters;
+                lastIters = iters;
+                document.getElementById('stat-ops').textContent = diff;
+            }, 1000);
+
+            function loop() {
+                if (!isLooping) return;
+                runSortTest();
+                runJsonTest();
+                runFibTest();
+                setTimeout(loop, 20);
+            }
+            loop();
+        };
+
+        document.getElementById('btn-stop-all').onclick = () => {
+            isLooping = false;
+            clearInterval(opsTimer);
+            document.getElementById('log-engine-status').textContent = 'READY (STOPPED)';
+            document.getElementById('log-engine-status').style.color = '#ff9800';
+            document.getElementById('btn-run-all').style.display = 'inline-block';
+            document.getElementById('btn-stop-all').style.display = 'none';
+        };
+    </script>
+</body>
+</html>

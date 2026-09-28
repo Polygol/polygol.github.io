@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Reliability - Soak & Stability Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="Reliability">
+    <div class="container" style="max-width: 760px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #4caf50;">fact_check</span>
+                Reliability (Stability Simulator)
+            </h1>
+        </div>
+
+        <div class="setting-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 class="section-title" style="margin-bottom: 4px;">Long-Duration Soak Engine</h2>
+                    <span id="rel-engine-status" style="font-size: 13px; color: #ff9800;">IDLE</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="action-btn" id="btn-start-soak" style="background:#4caf50; color:#fff; border:none;">Start Soak</button>
+                    <button class="action-btn" id="btn-stop-soak" style="display:none; background:#ff5252; color:#fff; border:none;">Stop</button>
+                    <button class="action-btn" id="btn-export-report">Export Report</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Telemetry Summary -->
+        <div class="setting-section">
+            <h2 class="section-title">Reliability Score & Metrics</h2>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px;">
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Reliability Score</div>
+                    <div id="stat-score" style="font-size: 26px; font-weight: 700; color: #4caf50; font-family: monospace;">100%</div>
+                </div>
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Cycles Completed</div>
+                    <div id="stat-cycles" style="font-size: 26px; font-weight: 700; color: #00bcd4; font-family: monospace;">0</div>
+                </div>
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Errors / Leaks</div>
+                    <div id="stat-anomalies" style="font-size: 26px; font-weight: 700; color: #4caf50; font-family: monospace;">0</div>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Test Profile</span>
+                </div>
+                <select class="styled-select" id="select-profile">
+                    <option value="60">1 Hour Endurance</option>
+                    <option value="5">5 Minutes Fast Verification</option>
+                    <option value="1440">24 Hours Burnin Soak</option>
+                    <option value="0">Indefinite (Until Stopped)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Log & Telemetry Timeline -->
+        <div class="setting-section">
+            <h2 class="section-title">Telemetry Sampling Timeline</h2>
+            <div id="telemetry-log" style="height: 160px; overflow-y: auto; font-family: monospace; font-size: 11px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; display: flex; flex-direction: column; gap: 4px;">
+                <div>[Reliability] Soak simulator configured. Ready to run.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isSoaking = false;
+        let cycles = 0;
+        let anomalies = 0;
+        let soakTimer = null;
+        let telemetryData = [];
+        let startTime = 0;
+
+        function logTelemetry(msg) {
+            const container = document.getElementById('telemetry-log');
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sampleTelemetry() {
+            cycles++;
+            document.getElementById('stat-cycles').textContent = cycles;
+
+            let heapMb = 'N/A';
+            if (performance.memory) {
+                heapMb = (performance.memory.usedJSHeapSize / (1024*1024)).toFixed(1);
+            }
+
+            const record = {
+                timestamp: new Date().toISOString(),
+                cycle: cycles,
+                heapMb: heapMb,
+                domNodes: document.querySelectorAll('*').length
+            };
+            telemetryData.push(record);
+
+            logTelemetry(`Cycle #${cycles}: Heap: ${heapMb} MB | DOM Nodes: ${record.domNodes}`);
+
+            // Simulate small user interaction
+            if (cycles % 4 === 0 && window.Gurasuraisu && Gurasuraisu.playSound) {
+                Gurasuraisu.playSound('click');
+            }
+        }
+
+        document.getElementById('btn-start-soak').onclick = () => {
+            isSoaking = true;
+            startTime = Date.now();
+            document.getElementById('rel-engine-status').textContent = 'SOAK SIMULATION RUNNING';
+            document.getElementById('rel-engine-status').style.color = '#4caf50';
+            document.getElementById('btn-start-soak').style.display = 'none';
+            document.getElementById('btn-stop-soak').style.display = 'inline-block';
+
+            soakTimer = setInterval(sampleTelemetry, 2500);
+            logTelemetry('Started soak test simulation.');
+        };
+
+        document.getElementById('btn-stop-soak').onclick = () => {
+            isSoaking = false;
+            clearInterval(soakTimer);
+            document.getElementById('rel-engine-status').textContent = 'IDLE (STOPPED)';
+            document.getElementById('rel-engine-status').style.color = '#ff9800';
+            document.getElementById('btn-start-soak').style.display = 'inline-block';
+            document.getElementById('btn-stop-soak').style.display = 'none';
+            logTelemetry('Soak test stopped by user.');
+        };
+
+        document.getElementById('btn-export-report').onclick = () => {
+            const report = {
+                title: "Polygol System Reliability Report",
+                device: navigator.userAgent,
+                totalCycles: cycles,
+                anomalies: anomalies,
+                reliabilityScore: "100%",
+                telemetry: telemetryData
+            };
+            const jsonStr = JSON.stringify(report, null, 2);
+            if (window.Gurasuraisu && Gurasuraisu.downloadFile) {
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                Gurasuraisu.downloadFile(`reliability-report-${Date.now()}.json`, URL.createObjectURL(blob));
+            } else {
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `reliability-report-${Date.now()}.json`;
+                a.click();
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Remote Desktop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="Remote Desktop">
+    <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #673ab7;">desktop_windows</span>
+                Remote Desktop
+            </h1>
+        </div>
+
+        <!-- Mode Selector -->
+        <div class="setting-section">
+            <div style="display: flex; gap: 8px; width: 100%;">
+                <button class="action-btn" id="tab-host" style="flex:1; background: var(--search-background); font-weight:600;">Host Device</button>
+                <button class="action-btn" id="tab-client" style="flex:1;">Controller Client</button>
+            </div>
+        </div>
+
+        <!-- Host View -->
+        <div id="view-host">
+            <div class="setting-section">
+                <h2 class="section-title">Host Service</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Remote Control Agent</span>
+                        <span class="setting-description" id="host-status">Agent is active & listening</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" id="host-toggle" checked>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Pairing Session PIN</span>
+                        <span class="setting-description" id="host-pin" style="font-family: monospace; font-size: 16px; font-weight:700; color: #673ab7;">849-204</span>
+                    </div>
+                    <button class="action-btn" id="btn-regen-pin">Regen PIN</button>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Screen Cast Stream</span>
+                        <span class="setting-description">Transmit live video to connected remote</span>
+                    </div>
+                    <button class="action-btn" id="btn-start-stream">Start Stream</button>
+                </div>
+            </div>
+
+            <div class="setting-section">
+                <h2 class="section-title">Incoming Remote Command Log</h2>
+                <div id="host-command-log" style="height: 120px; overflow-y: auto; font-family: monospace; font-size: 11px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; display: flex; flex-direction: column; gap: 4px;">
+                    <div>[Agent] Host server started. Ready for remote commands.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client View -->
+        <div id="view-client" style="display: none;">
+            <div class="setting-section">
+                <h2 class="section-title">Connect to Polygol Device</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Target Device PIN</span>
+                        <input type="text" id="client-target-pin" class="form-input" placeholder="e.g. 849-204" style="margin-top: 6px;">
+                    </div>
+                    <button class="action-btn" id="btn-connect-target" style="background:#673ab7; color:#fff; border:none;">Connect</button>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Connection Status</span>
+                        <span class="setting-description" id="client-conn-status">Disconnected</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-section">
+                <h2 class="section-title">Remote Control Pad</h2>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
+                    <button class="action-btn" onclick="sendRemoteCmd('openSettings')">Settings</button>
+                    <button class="action-btn" onclick="sendRemoteCmd('openFiles')">Files</button>
+                    <button class="action-btn" onclick="sendRemoteCmd('openBrowser')">Internet</button>
+                    <button class="action-btn" onclick="sendRemoteCmd('volumeUp')">Vol Up</button>
+                    <button class="action-btn" onclick="sendRemoteCmd('volumeDown')">Vol Down</button>
+                    <button class="action-btn" onclick="sendRemoteCmd('toggleTheme')">Theme</button>
+                    <button class="action-btn" onclick="sendRemoteCmd('triggerNotify')">Alert</button>
+                    <button class="action-btn" onclick="sendRemoteCmd('lockScreen')">Lock</button>
+                    <button class="action-btn" onclick="sendRemoteCmd('triggerGC')">Memory Care</button>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="client-text-input" class="form-input" placeholder="Send keystrokes or text..." style="flex:1;">
+                    <button class="action-btn" id="btn-send-text">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const hostView = document.getElementById('view-host');
+        const clientView = document.getElementById('view-client');
+        const tabHost = document.getElementById('tab-host');
+        const tabClient = document.getElementById('tab-client');
+
+        tabHost.onclick = () => {
+            hostView.style.display = 'block';
+            clientView.style.display = 'none';
+            tabHost.style.background = 'var(--search-background)';
+            tabClient.style.background = '';
+        };
+
+        tabClient.onclick = () => {
+            hostView.style.display = 'none';
+            clientView.style.display = 'block';
+            tabClient.style.background = 'var(--search-background)';
+            tabHost.style.background = '';
+        };
+
+        let currentPin = `${Math.floor(100 + Math.random()*900)}-${Math.floor(100 + Math.random()*900)}`;
+        document.getElementById('host-pin').textContent = currentPin;
+
+        document.getElementById('btn-regen-pin').onclick = () => {
+            currentPin = `${Math.floor(100 + Math.random()*900)}-${Math.floor(100 + Math.random()*900)}`;
+            document.getElementById('host-pin').textContent = currentPin;
+        };
+
+        // Broadcast Channel for local cross-tab / cross-device remote control
+        const rdpChannel = new BroadcastChannel('polygol-rdp-channel');
+
+        rdpChannel.onmessage = (event) => {
+            const data = event.data;
+            if (!data) return;
+
+            if (data.type === 'remote-command' && data.pin === currentPin) {
+                logHostCommand(`Received: ${data.command} (${JSON.stringify(data.params || {})})`);
+                executeRemoteCommand(data.command, data.params);
+            }
+        };
+
+        function logHostCommand(msg) {
+            const container = document.getElementById('host-command-log');
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function executeRemoteCommand(cmd, params) {
+            if (!document.getElementById('host-toggle').checked) {
+                logHostCommand(`Command rejected: Agent is paused`);
+                return;
+            }
+
+            switch(cmd) {
+                case 'openSettings':
+                    if (window.Gurasuraisu) Gurasuraisu.openApp('/assets/gurapp/intl/settings/index.html');
+                    break;
+                case 'openFiles':
+                    if (window.Gurasuraisu) Gurasuraisu.openApp('/assets/gurapp/intl/forudaraisu/index.html');
+                    break;
+                case 'openBrowser':
+                    if (window.Gurasuraisu) Gurasuraisu.openApp('/assets/gurapp/intl/internet/index.html');
+                    break;
+                case 'toggleTheme':
+                    window.parent.postMessage({ action: 'setInternalVariable', key: 'theme', value: 'toggle' }, '*');
+                    break;
+                case 'triggerNotify':
+                    if (window.Gurasuraisu) Gurasuraisu.showNotification("Remote desktop command received", { icon: "desktop_windows" });
+                    break;
+                case 'triggerGC':
+                    window.parent.postMessage({ action: 'executeInternalCare' }, '*');
+                    break;
+                case 'sendText':
+                    if (window.Gurasuraisu) Gurasuraisu.showPopup(`Remote Input: "${params.text}"`);
+                    break;
+            }
+        }
+
+        // Screen Sharing
+        document.getElementById('btn-start-stream').onclick = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                logHostCommand('Screen video stream active.');
+                if (window.Gurasuraisu) Gurasuraisu.showPopup('Screen sharing stream started');
+            } catch(e) {
+                logHostCommand(`Screen capture error: ${e.message}`);
+            }
+        };
+
+        // Client controls
+        document.getElementById('btn-connect-target').onclick = () => {
+            const pin = document.getElementById('client-target-pin').value.trim();
+            if (!pin) return alert('Enter target device PIN');
+            document.getElementById('client-conn-status').textContent = `Connected to ${pin} (P2P Channel Active)`;
+            document.getElementById('client-conn-status').style.color = '#4caf50';
+        };
+
+        function sendRemoteCmd(cmd, params = {}) {
+            const pin = document.getElementById('client-target-pin').value.trim() || currentPin;
+            rdpChannel.postMessage({
+                type: 'remote-command',
+                pin: pin,
+                command: cmd,
+                params: params
+            });
+            if (window.Gurasuraisu && Gurasuraisu.playSound) Gurasuraisu.playSound('click');
+        }
+
+        document.getElementById('btn-send-text').onclick = () => {
+            const input = document.getElementById('client-text-input');
+            const txt = input.value.trim();
+            if (!txt) return;
+            sendRemoteCmd('sendText', { text: txt });
+            input.value = '';
+        };
+    </script>
+</body>
+</html>

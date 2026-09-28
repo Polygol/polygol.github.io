@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Sammysapp - GurappAPI Component Testbed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="Sammysapp">
+    <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #ff9800;">developer_mode</span>
+                Sammysapp (GurappAPI Showcase)
+            </h1>
+        </div>
+
+        <div class="setting-section">
+            <h2 class="section-title">Dialogs & User Prompts</h2>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                <button class="action-btn" onclick="testAlert()">showAlert()</button>
+                <button class="action-btn" onclick="testConfirm()">showConfirm()</button>
+                <button class="action-btn" onclick="testPrompt()">showPrompt()</button>
+                <button class="action-btn" onclick="testPopup()">showPopup()</button>
+            </div>
+        </div>
+
+        <div class="setting-section">
+            <h2 class="section-title">Notifications & Live Activities</h2>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                <button class="action-btn" onclick="testNotify()">showNotification()</button>
+                <button class="action-btn" onclick="startActivity()">Start Activity</button>
+                <button class="action-btn" onclick="updateActivity()">Update Activity</button>
+                <button class="action-btn" onclick="stopActivity()">Stop Activity</button>
+            </div>
+        </div>
+
+        <div class="setting-section">
+            <h2 class="section-title">Media Session Controls</h2>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                <button class="action-btn" onclick="regMedia()">Register Media</button>
+                <button class="action-btn" onclick="clearMedia()">Clear Media</button>
+            </div>
+        </div>
+
+        <div class="setting-section">
+            <h2 class="section-title">System Features & OSK Input</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Virtual Keyboard (OSK) Test</span>
+                </div>
+                <input type="text" class="form-input" placeholder="Tap to focus OSK..." style="width: 200px;">
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Immersive Mode Toggle</span>
+                </div>
+                <button class="action-btn" onclick="toggleImmersive()">Toggle Immersive</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let activityId = 'sammy_act_' + Date.now();
+        let isImmersive = false;
+
+        async function testAlert() {
+            if (window.Gurasuraisu && Gurasuraisu.showAlert) {
+                await Gurasuraisu.showAlert("Hello from Sammysapp! GurappAPI component alert functioning.", "Sammysapp Alert");
+            } else {
+                alert("Hello from Sammysapp!");
+            }
+        }
+
+        async function testConfirm() {
+            if (window.Gurasuraisu && Gurasuraisu.showConfirm) {
+                const res = await Gurasuraisu.showConfirm("Do you like testing GurappAPI components?", "Confirm Test");
+                if (Gurasuraisu.showPopup) Gurasuraisu.showPopup(`Result: ${res ? 'Yes' : 'No'}`);
+            } else {
+                confirm("Do you like testing GurappAPI components?");
+            }
+        }
+
+        async function testPrompt() {
+            if (window.Gurasuraisu && Gurasuraisu.showPrompt) {
+                const res = await Gurasuraisu.showPrompt("Enter component test name:", "Prompt Test", "TestComponent");
+                if (Gurasuraisu.showPopup) Gurasuraisu.showPopup(`Input was: ${res}`);
+            } else {
+                prompt("Enter component test name:");
+            }
+        }
+
+        function testPopup() {
+            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
+                Gurasuraisu.showPopup("Toast notification popup working!");
+            }
+        }
+
+        function testNotify() {
+            if (window.Gurasuraisu && Gurasuraisu.showNotification) {
+                Gurasuraisu.showNotification("Sammysapp component notification payload", {
+                    icon: "developer_mode"
+                });
+            }
+        }
+
+        function startActivity() {
+            if (window.Gurasuraisu && Gurasuraisu.liveActivity) {
+                Gurasuraisu.liveActivity.start({
+                    id: activityId,
+                    title: "Sammysapp Test Activity",
+                    subtitle: "Component execution active",
+                    icon: "developer_mode"
+                });
+                if (Gurasuraisu.showPopup) Gurasuraisu.showPopup("Live Activity started");
+            }
+        }
+
+        function updateActivity() {
+            if (window.Gurasuraisu && Gurasuraisu.liveActivity) {
+                Gurasuraisu.liveActivity.update(activityId, {
+                    subtitle: "Progress updated: " + Math.round(Math.random() * 100) + "%"
+                });
+                if (Gurasuraisu.showPopup) Gurasuraisu.showPopup("Live Activity updated");
+            }
+        }
+
+        function stopActivity() {
+            if (window.Gurasuraisu && Gurasuraisu.liveActivity) {
+                Gurasuraisu.liveActivity.stop(activityId);
+                if (Gurasuraisu.showPopup) Gurasuraisu.showPopup("Live Activity stopped");
+            }
+        }
+
+        function regMedia() {
+            if (window.Gurasuraisu && Gurasuraisu.registerMediaSession) {
+                Gurasuraisu.registerMediaSession({
+                    title: "Sammysapp Synthesis Track",
+                    artist: "GurappAPI Engine",
+                    album: "Internal Diagnostics"
+                }, ['playPause', 'nextTrack', 'previousTrack']);
+                if (Gurasuraisu.showPopup) Gurasuraisu.showPopup("Media session registered in Polygol");
+            }
+        }
+
+        function clearMedia() {
+            if (window.Gurasuraisu && Gurasuraisu.clearMediaSession) {
+                Gurasuraisu.clearMediaSession();
+                if (Gurasuraisu.showPopup) Gurasuraisu.showPopup("Media session cleared");
+            }
+        }
+
+        function toggleImmersive() {
+            isImmersive = !isImmersive;
+            if (window.Gurasuraisu && Gurasuraisu.setImmersiveMode) {
+                Gurasuraisu.setImmersiveMode(isImmersive);
+            }
+        }
+    </script>
+</body>
+</html>

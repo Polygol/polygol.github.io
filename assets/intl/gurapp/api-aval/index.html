@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>APIAval - API Overrides & Fuzzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="APIAval">
+    <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #ff9800;">api</span>
+                APIAval (GurappAPI Override & Fuzzer)
+            </h1>
+        </div>
+
+        <div class="setting-section">
+            <h2 class="section-title">Manual API Invoker</h2>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">API Target Method</span>
+                    </div>
+                    <select class="styled-select" id="api-target-method">
+                        <option value="showNotification">showNotification(msg, options)</option>
+                        <option value="showPopup">showPopup(msg)</option>
+                        <option value="playSound">playSound(type)</option>
+                        <option value="speak">speak(text)</option>
+                        <option value="setImmersiveMode">setImmersiveMode(bool)</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Payload Argument</span>
+                    </div>
+                    <input type="text" id="api-payload-arg" class="form-input" value="APIAval Test Trigger" style="width: 200px;">
+                </div>
+                <button class="action-btn" id="btn-fire-api" style="align-self: flex-start; background: #ff9800; color: #fff; border:none;">Fire Call</button>
+            </div>
+        </div>
+
+        <!-- Overrides / Interceptors -->
+        <div class="setting-section">
+            <h2 class="section-title">Active API Overrides</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Silence System Notifications</span>
+                    <span class="setting-description">Intercept and drop all showNotification calls</span>
+                </div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch" id="ovr-notify"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Mute System Sounds</span>
+                    <span class="setting-description">Block all playSound execution</span>
+                </div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch" id="ovr-sound"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Force Immersive Lockdown</span>
+                    <span class="setting-description">Reject attempts by apps to exit immersive mode</span>
+                </div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch" id="ovr-immersive"></div>
+            </div>
+        </div>
+
+        <!-- Invocation Log -->
+        <div class="setting-section">
+            <h2 class="section-title">API Execution Log</h2>
+            <div id="api-log-box" style="height: 140px; overflow-y: auto; font-family: monospace; font-size: 11px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; display: flex; flex-direction: column; gap: 4px;">
+                <div>[APIAval] Interceptor ready.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function logApi(msg) {
+            const box = document.getElementById('api-log-box');
+            const row = document.createElement('div');
+            row.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            box.appendChild(row);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        document.getElementById('btn-fire-api').onclick = () => {
+            const method = document.getElementById('api-target-method').value;
+            const arg = document.getElementById('api-payload-arg').value;
+
+            logApi(`Invoking Gurasuraisu.${method}("${arg}")`);
+
+            if (window.Gurasuraisu && typeof Gurasuraisu[method] === 'function') {
+                try {
+                    Gurasuraisu[method](arg);
+                    logApi(`-> Call dispatched successfully`);
+                } catch(e) {
+                    logApi(`-> Error: ${e.message}`);
+                }
+            } else {
+                logApi(`-> Fallback: function not present in standalone iframe`);
+            }
+        };
+
+        // Wire override checkboxes
+        document.getElementById('ovr-notify').onchange = (e) => {
+            window.parent.postMessage({ action: 'setInternalVariable', key: 'mockSilenceNotifications', value: e.target.checked }, '*');
+            logApi(`Override Notifications: ${e.target.checked}`);
+        };
+        document.getElementById('ovr-sound').onchange = (e) => {
+            window.parent.postMessage({ action: 'setInternalVariable', key: 'gurappSoundsEnabled', value: !e.target.checked }, '*');
+            logApi(`Override Sounds: ${e.target.checked}`);
+        };
+        document.getElementById('ovr-immersive').onchange = (e) => {
+            window.parent.postMessage({ action: 'setInternalVariable', key: 'lockImmersive', value: e.target.checked }, '*');
+            logApi(`Override Immersive Lockdown: ${e.target.checked}`);
+        };
+    </script>
+</body>
+</html>

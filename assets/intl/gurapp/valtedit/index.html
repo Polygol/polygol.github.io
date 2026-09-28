@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Valtedit - Cache & Vault Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="Valtedit">
+    <div class="container" style="max-width: 760px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #607d8b;">lock</span>
+                Valtedit (Cache & Vault Manager)
+            </h1>
+        </div>
+
+        <!-- CacheStorage Section -->
+        <div class="setting-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h2 class="section-title" style="margin: 0;">System Cache Storage</h2>
+                <button class="action-btn" id="btn-refresh-cache">Scan Caches</button>
+            </div>
+            <div id="cache-buckets-list" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Cache buckets -->
+            </div>
+        </div>
+
+        <!-- Secure Vault Keys -->
+        <div class="setting-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h2 class="section-title" style="margin: 0;">Polygol Security Vault</h2>
+                <button class="action-btn" id="btn-add-vault-entry">Add Secret</button>
+            </div>
+            <div id="vault-entries-list" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Injected secrets -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadCaches() {
+            const container = document.getElementById('cache-buckets-list');
+            container.innerHTML = '<div style="font-size:12px; opacity:0.6;">Scanning CacheStorage buckets...</div>';
+
+            if (!('caches' in window)) {
+                container.innerHTML = '<div style="font-size:12px; color:#ff5252;">CacheStorage not supported.</div>';
+                return;
+            }
+
+            try {
+                const keys = await caches.keys();
+                container.innerHTML = '';
+                if (keys.length === 0) {
+                    container.innerHTML = '<div style="font-size:12px; opacity:0.6;">No active cache buckets.</div>';
+                    return;
+                }
+
+                for (const bucketName of keys) {
+                    const cache = await caches.open(bucketName);
+                    const requests = await cache.keys();
+
+                    const card = document.createElement('div');
+                    card.className = 'setting-item';
+                    card.style.cssText = 'flex-direction: column; align-items: stretch; padding: 12px; gap: 8px;';
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display:flex; align-items:center; gap: 8px;">
+                                <span class="material-symbols-rounded" style="color: #607d8b;">folder_zip</span>
+                                <span style="font-weight: 600; font-family: monospace;">${bucketName}</span>
+                                <span style="font-size: 11px; opacity: 0.6;">(${requests.length} items)</span>
+                            </div>
+                            <button class="action-btn" style="color: #ff5252;" onclick="purgeBucket('${bucketName}')">Purge Bucket</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                }
+            } catch(e) {
+                container.innerHTML = `<div style="font-size:12px; color:#ff5252;">Error: ${e.message}</div>`;
+            }
+        }
+
+        window.purgeBucket = async (name) => {
+            if (confirm(`Purge cache bucket ${name}?`)) {
+                await caches.delete(name);
+                loadCaches();
+                if (window.Gurasuraisu && Gurasuraisu.showPopup) Gurasuraisu.showPopup(`Purged ${name}`);
+            }
+        };
+
+        // Vault Keys
+        function loadVault() {
+            const container = document.getElementById('vault-entries-list');
+            container.innerHTML = '';
+
+            const vaultKeys = ['waves_pairing_token', 'waves_auth_challenge', 'appPermissions', 'integrationWebhookUrl', 'emergencyContacts'];
+            vaultKeys.forEach(k => {
+                const val = (window.parent ? window.parent.localStorage.getItem(k) : localStorage.getItem(k)) || 'Not Set';
+                const row = document.createElement('div');
+                row.className = 'setting-item';
+                row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px 14px;';
+
+                let preview = String(val);
+                if (preview.length > 30) preview = preview.substring(0, 30) + '...';
+
+                row.innerHTML = `
+                    <div style="display:flex; flex-direction:column; max-width:70%;">
+                        <span style="font-weight:600; font-family:monospace; font-size:13px;">${k}</span>
+                        <span style="font-size:11px; opacity:0.7; font-family:monospace;">${preview}</span>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="action-btn" onclick="editVaultKey('${k}')">Edit</button>
+                        <button class="action-btn" onclick="clearVaultKey('${k}')" style="color:#ff5252;">Clear</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        window.editVaultKey = async (k) => {
+            const cur = (window.parent ? window.parent.localStorage.getItem(k) : localStorage.getItem(k)) || '';
+            const newVal = prompt(`Edit Vault Key "${k}":`, cur);
+            if (newVal !== null) {
+                localStorage.setItem(k, newVal);
+                if (window.parent && window.parent.localStorage) window.parent.localStorage.setItem(k, newVal);
+                loadVault();
+            }
+        };
+
+        window.clearVaultKey = (k) => {
+            if (confirm(`Clear secret ${k}?`)) {
+                localStorage.removeItem(k);
+                if (window.parent && window.parent.localStorage) window.parent.localStorage.removeItem(k);
+                loadVault();
+            }
+        };
+
+        document.getElementById('btn-add-vault-entry').onclick = () => {
+            const k = prompt("Vault Secret Name:");
+            if (!k) return;
+            const v = prompt(`Secret Value for "${k}":`, "");
+            localStorage.setItem(k, v || "");
+            if (window.parent && window.parent.localStorage) window.parent.localStorage.setItem(k, v || "");
+            loadVault();
+        };
+
+        document.getElementById('btn-refresh-cache').onclick = loadCaches;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadCaches();
+            loadVault();
+        });
+    </script>
+</body>
+</html>

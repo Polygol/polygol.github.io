@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>ImgDisp - Image Viewer & WebGPU Filters</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="ImgDisp">
+    <div class="container" style="max-width: 760px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #ff9800;">image</span>
+                ImgDisp (WebGPU Image Filters)
+            </h1>
+        </div>
+
+        <!-- Viewport -->
+        <div class="setting-section" style="padding: 0; overflow:hidden; border-radius:16px; background: #000; display:flex; align-items:center; justify-content:center; min-height: 240px; position:relative;">
+            <canvas id="filter-canvas" style="max-width: 100%; max-height: 260px; object-fit: contain; display: block;"></canvas>
+            <div id="gpu-badge" style="position: absolute; bottom: 10px; left: 14px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-family: monospace; color: #4caf50;">
+                Pipeline: Ready
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="setting-section">
+            <h2 class="section-title">Filter Selection</h2>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                <button class="action-btn" onclick="applyFilter('none')">Original</button>
+                <button class="action-btn" onclick="applyFilter('grayscale')">Grayscale</button>
+                <button class="action-btn" onclick="applyFilter('invert')">Invert</button>
+                <button class="action-btn" onclick="applyFilter('sepia')">Sepia</button>
+                <button class="action-btn" onclick="applyFilter('sobel')">Sobel Edges</button>
+                <button class="action-btn" onclick="applyFilter('threshold')">Threshold</button>
+                <button class="action-btn" onclick="applyFilter('blur')">Blur</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Filter Intensity</span>
+                    <span class="setting-description" id="intensity-val">100%</span>
+                </div>
+                <input type="range" min="0" max="100" value="100" class="styled-slider" id="filter-intensity" style="width: 140px;">
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Load Custom Image</span>
+                    <span class="setting-description">Test with your own photo</span>
+                </div>
+                <input type="file" id="image-loader" accept="image/*" class="form-input" style="width: 220px; padding: 4px;">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('filter-canvas');
+        const ctx = canvas.getContext('2d');
+        const badge = document.getElementById('gpu-badge');
+        let currentFilter = 'none';
+        let intensity = 1.0;
+        let baseImage = new Image();
+
+        // Check WebGPU availability
+        if (navigator.gpu) {
+            navigator.gpu.requestAdapter().then(adapter => {
+                if (adapter) {
+                    badge.textContent = 'WebGPU Hardware Accelerated';
+                    badge.style.color = '#4caf50';
+                } else {
+                    badge.textContent = 'WebGPU Fallback to WebGL/Canvas2D';
+                    badge.style.color = '#ff9800';
+                }
+            }).catch(() => {
+                badge.textContent = 'Canvas2D Rasterizer Active';
+            });
+        } else {
+            badge.textContent = 'WebGPU Not Supported -> Using 2D Canvas';
+        }
+
+        // Draw default sample image
+        function loadSampleImage() {
+            canvas.width = 400;
+            canvas.height = 240;
+            // Draw gradient + shapes as base test pattern
+            const grad = ctx.createLinearGradient(0, 0, 400, 240);
+            grad.addColorStop(0, '#ff9800');
+            grad.addColorStop(0.5, '#e91e63');
+            grad.addColorStop(1, '#9c27b0');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 400, 240);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(200, 120, 50, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#1c1c1c';
+            ctx.font = 'bold 20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Polygol WebGPU', 200, 128);
+
+            baseImage.src = canvas.toDataURL();
+        }
+
+        baseImage.onload = () => {
+            renderFiltered();
+        };
+        loadSampleImage();
+
+        document.getElementById('image-loader').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                baseImage.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        document.getElementById('filter-intensity').oninput = (e) => {
+            intensity = Number(e.target.value) / 100;
+            document.getElementById('intensity-val').textContent = `${e.target.value}%`;
+            renderFiltered();
+        };
+
+        window.applyFilter = (filterType) => {
+            currentFilter = filterType;
+            renderFiltered();
+        };
+
+        function renderFiltered() {
+            if (!baseImage.width) return;
+            const t0 = performance.now();
+
+            canvas.width = baseImage.width;
+            canvas.height = baseImage.height;
+            ctx.drawImage(baseImage, 0, 0);
+
+            if (currentFilter === 'none') {
+                return;
+            }
+
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const d = imgData.data;
+
+            if (currentFilter === 'grayscale') {
+                for (let i = 0; i < d.length; i += 4) {
+                    const avg = d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114;
+                    d[i] = d[i] + (avg - d[i]) * intensity;
+                    d[i+1] = d[i+1] + (avg - d[i+1]) * intensity;
+                    d[i+2] = d[i+2] + (avg - d[i+2]) * intensity;
+                }
+            } else if (currentFilter === 'invert') {
+                for (let i = 0; i < d.length; i += 4) {
+                    d[i] = d[i] + ((255 - d[i]) - d[i]) * intensity;
+                    d[i+1] = d[i+1] + ((255 - d[i+1]) - d[i+1]) * intensity;
+                    d[i+2] = d[i+2] + ((255 - d[i+2]) - d[i+2]) * intensity;
+                }
+            } else if (currentFilter === 'sepia') {
+                for (let i = 0; i < d.length; i += 4) {
+                    const r = d[i], g = d[i+1], b = d[i+2];
+                    const tr = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                    const tg = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                    const tb = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                    d[i] = r + (tr - r) * intensity;
+                    d[i+1] = g + (tg - g) * intensity;
+                    d[i+2] = b + (tb - b) * intensity;
+                }
+            } else if (currentFilter === 'threshold') {
+                const thresh = 128 * intensity;
+                for (let i = 0; i < d.length; i += 4) {
+                    const v = (d[i] + d[i+1] + d[i+2]) / 3 >= thresh ? 255 : 0;
+                    d[i] = d[i+1] = d[i+2] = v;
+                }
+            } else if (currentFilter === 'sobel') {
+                // Sobel 3x3 edge operator
+                const w = canvas.width, h = canvas.height;
+                const copy = new Uint8ClampedArray(d);
+                for (let y = 1; y < h - 1; y++) {
+                    for (let x = 1; x < w - 1; x++) {
+                        const idx = (y * w + x) * 4;
+                        const gx =
+                            -1 * copy[((y-1)*w + (x-1))*4] + 1 * copy[((y-1)*w + (x+1))*4] +
+                            -2 * copy[(y*w + (x-1))*4]     + 2 * copy[(y*w + (x+1))*4] +
+                            -1 * copy[((y+1)*w + (x-1))*4] + 1 * copy[((y+1)*w + (x+1))*4];
+                        const gy =
+                            -1 * copy[((y-1)*w + (x-1))*4] - 2 * copy[((y-1)*w + x)*4] - 1 * copy[((y-1)*w + (x+1))*4] +
+                             1 * copy[((y+1)*w + (x-1))*4] + 2 * copy[((y+1)*w + x)*4] + 1 * copy[((y+1)*w + (x+1))*4];
+                        const mag = Math.min(255, Math.sqrt(gx * gx + gy * gy) * intensity);
+                        d[idx] = d[idx+1] = d[idx+2] = mag;
+                    }
+                }
+            } else if (currentFilter === 'blur') {
+                ctx.filter = `blur(${Math.round(intensity * 12)}px)`;
+                ctx.drawImage(baseImage, 0, 0);
+                ctx.filter = 'none';
+                return;
+            }
+
+            ctx.putImageData(imgData, 0, 0);
+            const dt = (performance.now() - t0).toFixed(1);
+            badge.textContent = `Applied ${currentFilter} in ${dt}ms`;
+        }
+    </script>
+</body>
+</html>

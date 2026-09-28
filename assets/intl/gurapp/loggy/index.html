@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Loggy - Event Viewer & Log Saver</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="Loggy">
+    <div class="container" style="max-width: 780px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #2196f3;">receipt_long</span>
+                Loggy (System Event Viewer)
+            </h1>
+        </div>
+
+        <div class="setting-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display:flex; gap: 8px;">
+                    <select class="styled-select" id="log-filter-level" style="padding: 6px 10px;">
+                        <option value="all">All Levels</option>
+                        <option value="info">Info</option>
+                        <option value="warn">Warnings</option>
+                        <option value="error">Errors</option>
+                    </select>
+                    <input type="text" id="log-search-query" class="form-input" placeholder="Search logs..." style="width: 160px; padding: 6px 10px;">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="action-btn" id="btn-save-logs" style="background:#2196f3; color:#fff; border:none;">Save Logs</button>
+                    <button class="action-btn" id="btn-clear-logs" style="color:#ff5252;">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Stream Viewer -->
+        <div class="setting-section" style="padding: 0; overflow:hidden; border-radius:16px;">
+            <div id="loggy-container" style="height: 380px; overflow-y: auto; font-family: monospace; font-size: 11px; padding: 14px; background: #000; color: #f0f0f0; display:flex; flex-direction:column; gap:4px; line-height: 1.4;">
+                <div style="color: #888;">[Loggy] Streaming system logs...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let logs = [];
+        const container = document.getElementById('loggy-container');
+        const filterLevel = document.getElementById('log-filter-level');
+        const searchQuery = document.getElementById('log-search-query');
+
+        function renderLogs() {
+            container.innerHTML = '';
+            const lvl = filterLevel.value;
+            const q = searchQuery.value.toLowerCase();
+
+            const filtered = logs.filter(item => {
+                if (lvl !== 'all' && item.type !== lvl) return false;
+                if (q && !item.message.toLowerCase().includes(q)) return false;
+                return true;
+            });
+
+            filtered.forEach(item => {
+                const row = document.createElement('div');
+                let col = '#ddd';
+                if (item.type === 'warn') col = '#ff9800';
+                else if (item.type === 'error') col = '#f44336';
+                else if (item.type === 'info') col = '#03a9f4';
+
+                const time = item.time ? item.time.split('T')[1].replace('Z','') : '';
+                row.innerHTML = `<span style="color:#888;">[${time}]</span> <span style="color:${col}; font-weight:600;">[${item.type.toUpperCase()}]</span> <span>${escapeHtml(item.message)}</span>`;
+                container.appendChild(row);
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // Request initial logs from parent internal patch
+        window.parent.postMessage({ action: 'getInternalLogs' }, '*');
+
+        window.addEventListener('message', (e) => {
+            const data = e.data;
+            if (data && data.type === 'internalLogsResponse' && Array.isArray(data.logs)) {
+                logs = data.logs;
+                renderLogs();
+            }
+        });
+
+        // Realtime logs event
+        window.addEventListener('polygol-internal-log', (e) => {
+            if (e.detail) {
+                logs.push(e.detail);
+                renderLogs();
+            }
+        });
+
+        filterLevel.onchange = renderLogs;
+        searchQuery.oninput = renderLogs;
+
+        document.getElementById('btn-clear-logs').onclick = () => {
+            logs = [];
+            renderLogs();
+            window.parent.postMessage({ action: 'clearInternalLogs' }, '*');
+        };
+
+        document.getElementById('btn-save-logs').onclick = () => {
+            const content = logs.map(l => `[${l.time}] [${l.type.toUpperCase()}] ${l.message}`).join('\n');
+            if (window.Gurasuraisu && Gurasuraisu.downloadFile) {
+                const blob = new Blob([content], { type: 'text/plain' });
+                Gurasuraisu.downloadFile(`polygol-log-${Date.now()}.txt`, URL.createObjectURL(blob));
+            } else {
+                const blob = new Blob([content], { type: 'text/plain' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `polygol-log-${Date.now()}.txt`;
+                a.click();
+            }
+        };
+
+        // Periodic refresh in case of background events
+        setInterval(() => {
+            window.parent.postMessage({ action: 'getInternalLogs' }, '*');
+        }, 3000);
+    </script>
+</body>
+</html>

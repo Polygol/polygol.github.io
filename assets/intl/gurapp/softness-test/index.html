@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>softness test - Rendering Benchmark</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="softness test">
+    <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #00bcd4;">blur_on</span>
+                softness test (Rendering Benchmark)
+            </h1>
+        </div>
+
+        <!-- Real-time Render Metrics -->
+        <div class="setting-section">
+            <h2 class="section-title">Compositor Performance</h2>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px;">
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">FPS</div>
+                    <div id="render-fps" style="font-size: 28px; font-weight: 700; color: #00bcd4; font-family: monospace;">60</div>
+                </div>
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Frame Time</div>
+                    <div id="render-frametime" style="font-size: 28px; font-weight: 700; color: #4caf50; font-family: monospace;">16.6ms</div>
+                </div>
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Softness Score</div>
+                    <div id="render-score" style="font-size: 28px; font-weight: 700; color: #ff9800; font-family: monospace;">--</div>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">GPU Hardware Info</span>
+                    <span class="setting-description" id="gpu-info">Detecting WebGL renderer...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Blur / Glass Stress Matrix -->
+        <div class="setting-section">
+            <h2 class="section-title">Backdrop-Filter Fill-Rate Stress</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Layered Blur Radius</span>
+                    <span class="setting-description" id="blur-radius-desc">Radius: 24px (Stress Mode)</span>
+                </div>
+                <input type="range" min="0" max="64" value="24" class="styled-slider" id="blur-slider" style="width: 140px;">
+            </div>
+            <div style="position: relative; height: 140px; overflow: hidden; border-radius: 16px; margin: 12px 0; background: linear-gradient(45deg, #f44336, #e91e63, #9c27b0, #673ab7, #3f51b5, #2196f3, #00bcd4);">
+                <div id="animated-bg" style="position: absolute; width: 60px; height: 60px; background: #fff; border-radius: 50%; box-shadow: 0 0 20px #fff;"></div>
+                <!-- Layered Backdrop Blur Sheets -->
+                <div class="blur-sheet" style="position: absolute; inset: 10px; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; display:flex; align-items:center; justify-content:center; color:white; font-weight:600;">
+                    Layer 1 Backdrop Blur
+                </div>
+                <div class="blur-sheet" style="position: absolute; inset: 25px; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; display:flex; align-items:center; justify-content:center; color:white; font-size:12px;">
+                    Layer 2 Composite
+                </div>
+            </div>
+        </div>
+
+        <!-- Draw Call Stress Canvas -->
+        <div class="setting-section">
+            <h2 class="section-title">2D Canvas Particle Fill Rate</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Active Particle Swarm</span>
+                    <span class="setting-description" id="particle-count-desc">1,500 particles</span>
+                </div>
+                <input type="range" min="500" max="8000" step="500" value="1500" class="styled-slider" id="particle-slider" style="width: 140px;">
+            </div>
+            <canvas id="stress-canvas" style="width: 100%; height: 160px; border-radius: 14px; background: #000; margin-top: 8px;"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // GPU info
+        try {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (gl) {
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+                document.getElementById('gpu-info').textContent = renderer || 'Standard WebGL Canvas';
+            }
+        } catch(e) {
+            document.getElementById('gpu-info').textContent = 'Generic Compositor';
+        }
+
+        // Animated BG orb
+        const orb = document.getElementById('animated-bg');
+        let orbAngle = 0;
+
+        // Particle Canvas
+        const canvas = document.getElementById('stress-canvas');
+        const ctx = canvas.getContext('2d');
+        let numParticles = 1500;
+        let particles = [];
+
+        function initParticles() {
+            canvas.width = canvas.clientWidth * window.devicePixelRatio;
+            canvas.height = canvas.clientHeight * window.devicePixelRatio;
+            particles = [];
+            for (let i = 0; i < numParticles; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    r: Math.random() * 3 + 1,
+                    hue: Math.random() * 360
+                });
+            }
+        }
+        initParticles();
+
+        document.getElementById('particle-slider').oninput = (e) => {
+            numParticles = Number(e.target.value);
+            document.getElementById('particle-count-desc').textContent = `${numParticles.toLocaleString()} particles`;
+            initParticles();
+        };
+
+        document.getElementById('blur-slider').oninput = (e) => {
+            const val = e.target.value;
+            document.getElementById('blur-radius-desc').textContent = `Radius: ${val}px`;
+            document.querySelectorAll('.blur-sheet').forEach(sheet => {
+                sheet.style.backdropFilter = `blur(${val}px)`;
+                sheet.style.webkitBackdropFilter = `blur(${val}px)`;
+            });
+        };
+
+        // Framerate & frame time benchmark loop
+        let lastTime = performance.now();
+        let frameCount = 0;
+        let fpsTimer = performance.now();
+        let lastFrameDuration = 16.6;
+
+        function renderLoop(now) {
+            const delta = now - lastTime;
+            lastTime = now;
+            lastFrameDuration = delta;
+            frameCount++;
+
+            if (now - fpsTimer >= 500) {
+                const currentFps = Math.round((frameCount * 1000) / (now - fpsTimer));
+                document.getElementById('render-fps').textContent = currentFps;
+                document.getElementById('render-frametime').textContent = `${delta.toFixed(1)}ms`;
+
+                // Calculate Softness Score
+                const score = Math.min(100, Math.max(0, Math.round((currentFps / 60) * 100)));
+                document.getElementById('render-score').textContent = `${score}/100`;
+
+                frameCount = 0;
+                fpsTimer = now;
+            }
+
+            // Animate orb
+            orbAngle += 0.05;
+            const w = 240, h = 80;
+            orb.style.left = `${50 + Math.cos(orbAngle) * 40}%`;
+            orb.style.top = `${50 + Math.sin(orbAngle * 1.5) * 30}%`;
+
+            // Draw particles
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                ctx.fillStyle = `hsl(${p.hue}, 80%, 60%)`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            requestAnimationFrame(renderLoop);
+        }
+        requestAnimationFrame(renderLoop);
+    </script>
+</body>
+</html>

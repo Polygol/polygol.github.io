@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>ShekaShake - Sensor Diagnostics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="ShekaShake">
+    <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #e91e63;">vibration</span>
+                ShekaShake (Sensor Diagnostics)
+            </h1>
+        </div>
+
+        <!-- 3D Orientation Visualizer -->
+        <div class="setting-section" style="display:flex; flex-direction:column; align-items:center; padding: 24px;">
+            <div style="perspective: 600px; width: 120px; height: 120px; margin-bottom: 16px;">
+                <div id="sensor-cube" style="width: 100%; height: 100%; background: linear-gradient(135deg, #e91e63, #9c27b0); border-radius: 20px; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; transform-style: preserve-3d; transition: transform 0.05s ease-out; box-shadow: 0 10px 30px rgba(233, 30, 99, 0.4);">
+                    <span class="material-symbols-rounded" style="font-size: 48px;">screen_rotation</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 20px; font-family: monospace; font-size: 13px;">
+                <span>Alpha (Yaw): <b id="val-alpha">0°</b></span>
+                <span>Beta (Pitch): <b id="val-beta">0°</b></span>
+                <span>Gamma (Roll): <b id="val-gamma">0°</b></span>
+            </div>
+        </div>
+
+        <!-- Shake Detector -->
+        <div class="setting-section">
+            <h2 class="section-title">Shake Detection Engine</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Shake Counter</span>
+                    <span class="setting-description">Physically shake device or tap trigger to test</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span id="shake-counter" style="font-size: 24px; font-weight: 700; color: #e91e63; font-family: monospace;">0</span>
+                    <button class="action-btn" onclick="triggerSimulatedShake()">Simulate Shake</button>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Shake Sensitivity Threshold</span>
+                    <span class="setting-description" id="thresh-val">15 m/s²</span>
+                </div>
+                <input type="range" min="5" max="35" value="15" class="styled-slider" id="shake-threshold" style="width: 140px;">
+            </div>
+        </div>
+
+        <!-- Accelerometer Motion Readouts -->
+        <div class="setting-section">
+            <h2 class="section-title">Linear Acceleration (m/s²)</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Axis X</span>
+                    <span class="setting-description" id="accel-x">0.00</span>
+                </div>
+                <div class="setting-info">
+                    <span class="setting-label">Axis Y</span>
+                    <span class="setting-description" id="accel-y">0.00</span>
+                </div>
+                <div class="setting-info">
+                    <span class="setting-label">Axis Z</span>
+                    <span class="setting-description" id="accel-z">0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Geolocation -->
+        <div class="setting-section">
+            <h2 class="section-title">GPS & Geolocation</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Coordinates</span>
+                    <span class="setting-description" id="geo-coords">Acquiring satellite fix...</span>
+                </div>
+                <button class="action-btn" id="btn-get-geo">Refresh GPS</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cube = document.getElementById('sensor-cube');
+        const valAlpha = document.getElementById('val-alpha');
+        const valBeta = document.getElementById('val-beta');
+        const valGamma = document.getElementById('val-gamma');
+
+        window.addEventListener('deviceorientation', (e) => {
+            const a = Math.round(e.alpha || 0);
+            const b = Math.round(e.beta || 0);
+            const g = Math.round(e.gamma || 0);
+
+            valAlpha.textContent = `${a}°`;
+            valBeta.textContent = `${b}°`;
+            valGamma.textContent = `${g}°`;
+
+            cube.style.transform = `rotateX(${-b}deg) rotateY(${g}deg) rotateZ(${a}deg)`;
+        });
+
+        // Shake detection
+        let lastX = 0, lastY = 0, lastZ = 0;
+        let shakeCount = 0;
+        let lastShakeTime = 0;
+        let threshold = 15;
+
+        document.getElementById('shake-threshold').oninput = (e) => {
+            threshold = Number(e.target.value);
+            document.getElementById('thresh-val').textContent = `${threshold} m/s²`;
+        };
+
+        window.addEventListener('devicemotion', (e) => {
+            const acc = e.accelerationIncludingGravity || e.acceleration;
+            if (!acc) return;
+
+            const x = acc.x || 0;
+            const y = acc.y || 0;
+            const z = acc.z || 0;
+
+            document.getElementById('accel-x').textContent = x.toFixed(2);
+            document.getElementById('accel-y').textContent = y.toFixed(2);
+            document.getElementById('accel-z').textContent = z.toFixed(2);
+
+            const deltaX = Math.abs(x - lastX);
+            const deltaY = Math.abs(y - lastY);
+            const deltaZ = Math.abs(z - lastZ);
+
+            if ((deltaX > threshold && deltaY > threshold) || (deltaX > threshold && deltaZ > threshold) || (deltaY > threshold && deltaZ > threshold)) {
+                const now = Date.now();
+                if (now - lastShakeTime > 400) {
+                    lastShakeTime = now;
+                    handleShakeEvent();
+                }
+            }
+
+            lastX = x;
+            lastY = y;
+            lastZ = z;
+        });
+
+        function handleShakeEvent() {
+            shakeCount++;
+            document.getElementById('shake-counter').textContent = shakeCount;
+            cube.style.transform = 'scale(1.25) rotate(15deg)';
+            setTimeout(() => { cube.style.transform = ''; }, 150);
+
+            if (navigator.vibrate) navigator.vibrate(80);
+            if (window.Gurasuraisu && Gurasuraisu.playSound) Gurasuraisu.playSound('click');
+        }
+
+        function triggerSimulatedShake() {
+            handleShakeEvent();
+        }
+
+        // GPS
+        function refreshGeo() {
+            if (!navigator.geolocation) {
+                document.getElementById('geo-coords').textContent = 'Geolocation not supported';
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude.toFixed(5);
+                    const lon = pos.coords.longitude.toFixed(5);
+                    const acc = pos.coords.accuracy.toFixed(1);
+                    document.getElementById('geo-coords').textContent = `Lat: ${lat}°, Lon: ${lon}° (±${acc}m)`;
+                },
+                (err) => {
+                    document.getElementById('geo-coords').textContent = `Error: ${err.message}`;
+                },
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        }
+
+        document.getElementById('btn-get-geo').onclick = refreshGeo;
+        refreshGeo();
+    </script>
+</body>
+</html>
