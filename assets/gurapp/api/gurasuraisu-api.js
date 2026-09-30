@@ -14,6 +14,8 @@ const _dialogCallbacks = {}; // For handling dialog responses
 const _aiCallbacks = {};     // For handling kirbAI (System LLM) responses
 let _dialogRequestId = 0;   // For tracking dialog requests
 const _myActiveActivities = new Set(); // Tracks this app's active activities
+let _perfInterval = null;
+let _isSuspended = false;
 
 // Inject the shared threaded fx-filter logic automatically into Gurapps
 (function () {
@@ -2366,8 +2368,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
     // --- Performance Reporting ---
-    let _perfInterval = null;
-    let _isSuspended = true; // Apps start suspended until system focuses them
+    _perfInterval = null;
+    _isSuspended = true; // Apps start suspended until system focuses them
 
     function reportPerformance() {
         if (_isSuspended) return;

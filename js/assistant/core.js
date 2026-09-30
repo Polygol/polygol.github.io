@@ -651,9 +651,12 @@ class AssistantCore {
             await this.tts.speak("Executing task.");
         }
 
+        const closeDelay = (actionType === 'info' || action.responseText)
+            ? Math.max(4000, Math.min(10000, (action.responseText || '').length * 60))
+            : 1200;
         setTimeout(() => {
             this.close();
-        }, 1200);
+        }, closeDelay);
     }
 
     async handleCommand(text) {

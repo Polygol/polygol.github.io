@@ -50,7 +50,8 @@ self.onmessage = async (e) => {
             const res = await generator(prompt, {
                 max_new_tokens: options?.max_new_tokens || 80,
                 temperature: options?.temperature || 0.3,
-                repetition_penalty: options?.repetition_penalty || 1.1
+                repetition_penalty: options?.repetition_penalty || 1.1,
+                return_full_text: false
             });
             self.postMessage({ id, success: true, result: res[0]?.generated_text });
         } catch (err) {
@@ -132,16 +133,50 @@ export class LocalLLM {
         });
     }
 
-    _extractAssistantResponse(text) {
+    _extractAssistantResponse(text, prompt = '') {
         if (!text) return "";
-        const assistantTag = '<|im_start|>assistant';
-        const index = text.lastIndexOf(assistantTag);
-        let res = (index !== -1) ? text.slice(index + assistantTag.length) : text;
-        const endTag = '<|im_end|>';
-        const endIndex = res.indexOf(endTag);
-        if (endIndex !== -1) {
-            res = res.slice(0, endIndex);
+        let res = text;
+
+        // 1. If text starts with prompt (in case return_full_text was true or echoed), strip it
+        if (prompt && res.startsWith(prompt)) {
+            res = res.slice(prompt.length);
         }
+
+        // 2. ChatML assistant tags with delimiters
+        const imStart = '<|im_start|>assistant';
+        const imIdx = res.lastIndexOf(imStart);
+        if (imIdx !== -1) {
+            res = res.slice(imIdx + imStart.length);
+        }
+
+        // 3. If tokenizer decoded without special tokens (e.g. "assistant\n..." or "assistant:\n...")
+        const asstLineMatch = res.match(/(?:^|\n)assistant\s*[:\n]\s*([\s\S]*)$/i);
+        if (asstLineMatch) {
+            res = asstLineMatch[1];
+        } else if (/^(?:system|System)\s+/i.test(res) || res.includes('\nuser\n') || res.includes('user ')) {
+            // Strip prompt remnants if special tokens were completely stripped
+            const lastUser = res.lastIndexOf('user');
+            if (lastUser !== -1) {
+                const afterUser = res.slice(lastUser + 4).trim();
+                const asstMatch = afterUser.match(/^(?:assistant|Assistant):?\s*([\s\S]*)$/i);
+                if (asstMatch) {
+                    res = asstMatch[1];
+                } else {
+                    const nl = afterUser.indexOf('\n');
+                    if (nl !== -1) res = afterUser.slice(nl + 1);
+                }
+            }
+        }
+
+        // 4. Strip end tokens
+        const endTags = ['<|im_end|>', '<|endoftext|>', '<|end_of_text|>', '<|eot_id|>', '</s>'];
+        for (const endTag of endTags) {
+            const endIdx = res.indexOf(endTag);
+            if (endIdx !== -1) {
+                res = res.slice(0, endIdx);
+            }
+        }
+
         return res.trim();
     }
 
@@ -167,7 +202,7 @@ export class LocalLLM {
             try {
                 const formattedPrompt = `<|im_start|>system\nYou are kirbAI, the intelligent system assistant for Polygol OS. Be concise, direct, and helpful.<|im_end|>\n<|im_start|>user\n${promptText}<|im_end|>\n<|im_start|>assistant\n`;
                 const raw = await this._callWorker('generate', { prompt: formattedPrompt, options }, 9000);
-                const text = this._extractAssistantResponse(raw);
+                const text = this._extractAssistantResponse(raw, formattedPrompt);
 
                 let json = null;
                 try {
@@ -204,10 +239,19 @@ export class LocalLLM {
 
                 const prompt = `<|im_start|>system\nYou are kirbAI in Polygol OS. Suggest 4 short, distinct actions for the user based on context. Return ONLY a JSON array of objects with keys: "label" (string under 25 chars), "action" (openApp, weather, sleep, mediaToggle, ecoMode, nightStand), "payload" (string or null). No conversational text.\nContext: Time ${timeStr}, Battery ${batteryStr}, Weather ${weatherStr}.<|im_end|>\n<|im_start|>user\nSuggest actions.<|im_end|>\n<|im_start|>assistant\n`;
                 const raw = await this._callWorker('generate', { prompt, options: { max_new_tokens: 100, temperature: 0.2 } }, 5000);
-                const out = this._extractAssistantResponse(raw);
-                const jsonMatch = out.match(/\[\s*\{[\s\S]*?\}\s*\]/);
-                if (jsonMatch) {
-                    const parsed = JSON.parse(jsonMatch[0]);
+                const out = this._extractAssistantResponse(raw, prompt);
+                const firstBracket = out.indexOf('[');
+                const lastBracket = out.lastIndexOf(']');
+                if (firstBracket !== -1 && lastBracket > firstBracket) {
+                    let parsed = null;
+                    const candidate = out.slice(firstBracket, lastBracket + 1);
+                    try {
+                        parsed = JSON.parse(candidate);
+                    } catch (_) {
+                        try {
+                            parsed = JSON.parse(candidate.replace(/,\s*([}\]])/g, '$1'));
+                        } catch (_) {}
+                    }
                     if (Array.isArray(parsed) && parsed.length > 0) {
                         return this._enrichSuggestions(parsed);
                     }
@@ -325,12 +369,21 @@ export class LocalLLM {
                 const intentsList = (context.customIntents || []).map(i => i.intentName).join(', ');
                 const appsList = (context.apps || []).join(', ');
 
-                const prompt = `<|im_start|>system\nYou are a command parser for Polygol OS. Map the command to a JSON object: {"action": "openApp"|"sleep"|"weather"|"mediaToggle"|"ecoMode"|"nightStand"|"customIntent"|"info", "payload": string|null, "appId": string|null, "responseText": string|null}.\nApps: ${appsList}\nIntents: ${intentsList}\nRespond ONLY with JSON.<|im_end|>\n<|im_start|>user\nCommand: ${text}<|im_end|>\n<|im_start|>assistant\n`;
-                const raw = await this._callWorker('generate', { prompt, options: { max_new_tokens: 35, temperature: 0.1 } }, 7000);
-                const out = this._extractAssistantResponse(raw);
-                const jsonMatch = out.match(/\{[^}]+\}/);
-                if (jsonMatch) {
-                    const parsed = JSON.parse(jsonMatch[0]);
+                const prompt = `<|im_start|>system\nYou are a command parser for Polygol OS. Return a JSON object with keys: "action" ("openApp", "sleep", "weather", "mediaToggle", "ecoMode", "nightStand", "customIntent", or "info"), "payload" (string or null), "appId" (string or null), "responseText" (string or null).\nApps: ${appsList}\nIntents: ${intentsList}\nExample: {"action": "openApp", "appId": "settings", "payload": null, "responseText": null}\nRespond ONLY with JSON.<|im_end|>\n<|im_start|>user\nCommand: ${text}<|im_end|>\n<|im_start|>assistant\n`;
+                const raw = await this._callWorker('generate', { prompt, options: { max_new_tokens: 75, temperature: 0.1 } }, 7000);
+                const out = this._extractAssistantResponse(raw, prompt);
+                const firstBrace = out.indexOf('{');
+                const lastBrace = out.lastIndexOf('}');
+                if (firstBrace !== -1 && lastBrace > firstBrace) {
+                    let parsed = null;
+                    const candidate = out.slice(firstBrace, lastBrace + 1);
+                    try {
+                        parsed = JSON.parse(candidate);
+                    } catch (_) {
+                        try {
+                            parsed = JSON.parse(candidate.replace(/,\s*([}\]])/g, '$1'));
+                        } catch (_) {}
+                    }
                     if (parsed && (parsed.action || parsed.systemAction)) {
                         return {
                             action: parsed.action || parsed.systemAction,
