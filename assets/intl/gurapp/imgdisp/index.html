@@ -81,29 +81,8 @@
             badge.textContent = 'WebGPU Not Supported -> Using 2D Canvas';
         }
 
-        // Draw default sample image
         function loadSampleImage() {
-            canvas.width = 400;
-            canvas.height = 240;
-            // Draw gradient + shapes as base test pattern
-            const grad = ctx.createLinearGradient(0, 0, 400, 240);
-            grad.addColorStop(0, '#ff9800');
-            grad.addColorStop(0.5, '#e91e63');
-            grad.addColorStop(1, '#9c27b0');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, 400, 240);
-
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(200, 120, 50, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#1c1c1c';
-            ctx.font = 'bold 20px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('Polygol WebGPU', 200, 128);
-
-            baseImage.src = canvas.toDataURL();
+            baseImage.src = './image.png';
         }
 
         baseImage.onload = () => {
