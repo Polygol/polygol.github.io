@@ -1,4 +1,4 @@
-const CORE_CACHE_VERSION = 'Astatine 2027 (27.2026.9.D)';
+const CORE_CACHE_VERSION = 'Astatine 27.1';
 const CORE_CACHE_NAME = `polcore${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polapps';
 
@@ -29,6 +29,7 @@ const ASSETS_TO_CACHE = [
   '/css/ui/osd.css',
   '/css/ui/osk.css',
   '/css/ui/wallpaper.css',
+  '/css/ui/home-menu.css',
   '/css/apps/app-switcher.css',
   '/css/apps/assistant.css',
   '/css/apps/live-activities.css',
@@ -60,6 +61,7 @@ const ASSETS_TO_CACHE = [
   '/js/ui/environment.js',
   '/js/ui/wallpaper.js',
   '/js/ui/widgets.js',
+  '/js/ui/home-menu.js',
   '/js/ui/dock-drawer.js',
   '/js/ui/settings.js',
   '/js/ui/physical-keyboard.js',

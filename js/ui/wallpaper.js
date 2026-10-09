@@ -2792,6 +2792,7 @@ function setupWallpaperInteraction() {
     let isPressing = false;
     let isGesturing = false;
     let wallpaperPressTimer = null;
+    let longPressFired = false;
     let lastTouchTime = 0;
     let lastBgTap = 0;
 
@@ -2803,7 +2804,10 @@ function setupWallpaperInteraction() {
             t.id === 'environment-layer' ||
             t.id === 'time-of-day-overlay' ||
             t.id === 'widget-grid' ||
-            t.classList.contains('container');
+            t.id === 'home-menu-container' ||
+            (t.closest && !!t.closest('#home-menu-container')) ||
+            t.classList.contains('container') ||
+            (t.closest && !!t.closest('.container'));
     };
 
     const isGhostMouse = (e) => {
@@ -2823,6 +2827,7 @@ function setupWallpaperInteraction() {
 
         isPressing = true;
         isGesturing = true;
+        longPressFired = false;
 
         const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
@@ -2832,8 +2837,27 @@ function setupWallpaperInteraction() {
 
         clearTimeout(wallpaperPressTimer);
         wallpaperPressTimer = setTimeout(() => {
-            if (isPressing && !document.body.classList.contains('edit-mode-active')) {
-                openWallpaperSwitcher();
+            if (!isPressing) return;
+
+            // 1. Beginnings idle state ONLY: Tap and hold opens wallpaper carousel overlay
+            if (document.body.classList.contains('beginnings-active') && !document.body.classList.contains('edit-mode-active')) {
+                longPressFired = true;
+                if (navigator.vibrate) {
+                    try { navigator.vibrate(50); } catch (err) {}
+                }
+                if (typeof openWallpaperSwitcher === 'function') {
+                    openWallpaperSwitcher();
+                }
+            }
+            // 2. Home screen: Tap and hold on empty space triggers Home edit mode (jiggle/rearrange)
+            else if (document.body.classList.contains('home-screen-active') && !document.body.classList.contains('beginnings-active')) {
+                longPressFired = true;
+                if (navigator.vibrate) {
+                    try { navigator.vibrate(40); } catch (err) {}
+                }
+                if (typeof window.toggleHomeEditMode === 'function') {
+                    window.toggleHomeEditMode(true);
+                }
             }
         }, 500);
     };
@@ -2881,33 +2905,55 @@ function setupWallpaperInteraction() {
         const drawer = document.getElementById('app-drawer');
         const isDrawerOpen = drawer && drawer.classList.contains('open');
 
-        // Vertical swipe
+        // Gestures on Home Screen / Beginnings (Astatine 27.1)
         if (!isAppOpen && !isControlsOpen && !isDrawerOpen) {
-            if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
-                if (typeof switchWallpaper === 'function') {
-                    switchWallpaper(deltaY < 0 ? 'up' : 'down');
+            // Swipe down from top to access control center & notifications
+            if (deltaY > 45 && startY < 140 && Math.abs(deltaY) > Math.abs(deltaX)) {
+                if (typeof openControls === 'function') {
+                    openControls();
                 }
                 return;
             }
 
-            // Horizontal swipe
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-                if (deltaX > 0) {
-                    if (document.body.classList.contains('photo-frame-active')) {
-                        document.body.classList.remove('photo-frame-active');
-                        document.querySelectorAll('.container, .widget-grid').forEach(el => {
-                            el.classList.remove('force-hide');
-                        });
-                    } else if (typeof openDonburi === 'function') {
-                        openDonburi();
+            // Swipe up and down to scroll through more pages of home screen (UP/DOWN ONLY)
+            if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
+                if (document.body.classList.contains('edit-mode-active') ||
+                    document.getElementById('wallpaper-switcher-overlay')?.classList.contains('show') ||
+                    document.getElementById('wallpaper-picker-drawer')?.classList.contains('open') ||
+                    document.getElementById('edit-mode-ui')?.style.display === 'block') {
+                    return; // Prevent home screen from being opened when editing wallpaper
+                }
+
+                if (document.body.classList.contains('beginnings-active')) {
+                    if (deltaY < 0 && typeof window.exitBeginningsState === 'function') {
+                        window.exitBeginningsState();
+                        return;
                     }
                 } else {
-                    if (!document.body.classList.contains('photo-frame-active')) {
-                        document.body.classList.add('photo-frame-active');
-                        document.querySelectorAll('.container, .widget-grid').forEach(el => {
-                            el.classList.add('force-hide');
-                        });
-                        showPopup('Photo frame mode');
+                    if (typeof window.scrollHomePage === 'function') {
+                        window.scrollHomePage(deltaY < 0 ? 'next' : 'prev');
+                        return;
+                    }
+                }
+                return;
+            }
+
+            // Swipe left or right to switch apps (LEFT/RIGHT ALWAYS FOR APP SWITCHING)
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                if (document.body.classList.contains('edit-mode-active') ||
+                    document.getElementById('wallpaper-switcher-overlay')?.classList.contains('show') ||
+                    document.getElementById('wallpaper-picker-drawer')?.classList.contains('open') ||
+                    document.getElementById('edit-mode-ui')?.style.display === 'block') {
+                    return; // Prevent switching apps while editing wallpaper
+                }
+
+                if (deltaX < 0) {
+                    if (typeof window.switchToNextApp === 'function') {
+                        window.switchToNextApp();
+                    }
+                } else {
+                    if (typeof window.switchToPrevApp === 'function') {
+                        window.switchToPrevApp();
                     }
                 }
                 return;
@@ -2918,6 +2964,26 @@ function setupWallpaperInteraction() {
         const dist = Math.hypot(deltaX, deltaY);
 
         if (dist <= 10) {
+            if (longPressFired) {
+                longPressFired = false;
+                return;
+            }
+
+            // In Beginnings state: tap to enter Home screen
+            if (document.body.classList.contains('beginnings-active')) {
+                if (document.body.classList.contains('edit-mode-active') ||
+                    document.getElementById('wallpaper-switcher-overlay')?.classList.contains('show') ||
+                    document.getElementById('wallpaper-picker-drawer')?.classList.contains('open') ||
+                    document.getElementById('edit-mode-ui')?.style.display === 'block') {
+                    return; // Prevent home screen from being opened when editing wallpaper
+                }
+
+                if (typeof window.exitBeginningsState === 'function') {
+                    window.exitBeginningsState();
+                    return;
+                }
+            }
+
             const now = Date.now();
 
             if (now - lastBgTap < 300) {

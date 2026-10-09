@@ -200,47 +200,7 @@ class AssistantCore {
         const SWIPE_THRESHOLD = 35;  // Distance required to trigger swipe
         let suppressClickUntil = 0;
 
-        // 1. Helper: Forward click through the handle to underlying content (identical to Quick Menu)
-        const forwardClick = (clientX, clientY) => {
-            const handles = document.querySelectorAll('.kirbai-edge-handle');
-            handles.forEach(h => h.style.pointerEvents = 'none');
-
-            const passthrough = document.querySelectorAll('.fullscreen-embed, iframe');
-            const original = new Map();
-            passthrough.forEach(el => {
-                original.set(el, el.style.pointerEvents);
-                el.style.pointerEvents = 'auto';
-            });
-
-            const target = document.elementFromPoint(clientX, clientY);
-
-            if (target) {
-                if (target.tagName === 'IFRAME') {
-                    const rect = target.getBoundingClientRect();
-                    const zoom = (parseFloat(document.body.style.zoom) || 100) / 100;
-                    target.contentWindow?.postMessage({
-                        type: 'forward-click',
-                        x: (clientX - rect.left) / zoom,
-                        y: (clientY - rect.top) / zoom
-                    }, '*');
-                } else {
-                    target.dispatchEvent(new MouseEvent('click', {
-                        view: window,
-                        bubbles: true,
-                        cancelable: true,
-                        clientX,
-                        clientY
-                    }));
-                }
-            }
-
-            handles.forEach(h => {
-                if (!this.isOpen) h.style.pointerEvents = 'auto';
-            });
-            passthrough.forEach(el => el.style.pointerEvents = original.get(el));
-        };
-
-        // 2. Global capture-phase click suppressor to prevent actions when swiped
+        // Global capture-phase click suppressor to prevent actions when swiped
         window.addEventListener('click', (e) => {
             if (Date.now() < suppressClickUntil) {
                 e.preventDefault();
@@ -249,7 +209,7 @@ class AssistantCore {
             }
         }, true);
 
-        // 3. Create Edge Handles for Top, Left, and Right (Bottom removed as requested)
+        // Create Edge Handles for Top, Left, and Right
         const createHandle = (id, styles, edgeName) => {
             let handle = document.getElementById(id);
             if (!handle) {
@@ -301,16 +261,22 @@ class AssistantCore {
                     suppressClickUntil = Date.now() + 400;
                     if (e && e.cancelable) e.preventDefault();
                     if (typeof closeQuickMenu === 'function') closeQuickMenu();
-                    this.trigger();
+                    if (edgeName === 'top') {
+                        if (typeof openControls === 'function') openControls();
+                    } else {
+                        this.trigger();
+                    }
                 }
             };
 
             const onEnd = (clientX, clientY) => {
                 if (isDragging) {
                     isDragging = false;
-                    // If not swiped, forward the tap to whatever was underneath
+                    // If not swiped, forward the tap to whatever was underneath using central forwardClick
                     if (!hasSwiped && !this.isOpen) {
-                        forwardClick(clientX, clientY);
+                        if (typeof window.forwardClick === 'function') {
+                            window.forwardClick(clientX, clientY);
+                        }
                     }
                 }
             };

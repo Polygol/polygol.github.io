@@ -50,6 +50,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                 el.style.opacity = '';
                 el.style.scale = '';
             });
+            if (typeof window.initHomeMenu === 'function') {
+                window.initHomeMenu();
+            } else if (typeof window.enterBeginningsState === 'function') {
+                window.enterBeginningsState();
+            }
         }, 150);
     }, 400);
 

@@ -249,6 +249,8 @@ function listCommonSettings() {
 		'keyboardNavEnabled': localStorage.getItem('keyboardNavEnabled'),
 		'sfxVolume': localStorage.getItem('sfxVolume'),
         'telemetryEnabled': localStorage.getItem('telemetryEnabled'),
+        'navigationMode': localStorage.getItem('navigationMode') || 'gestures',
+        'quickMenuEnabled': (localStorage.getItem('navigationMode') === 'quickmenu' || localStorage.getItem('quickMenuEnabled') === 'true').toString(),
     };
 }
 
@@ -541,12 +543,22 @@ function setControlValueAndDispatch(key, value) {
         'screenTimeBreakTimer', 'blueLightReduction', 'profilyUserName', 'profilyUserAvatar',
         'profilySyncStatus', 'emergencySosHotkey', 'emergencySleepScreen', 'emergencyContacts',
         'locationPermissionMode', 'clipboardAccessMode', 'clearTempCacheOnClose', 'integrationWebhookUrl',
-        'syncWidgetsExternalScreen', 'smartHomePairingMode', 'developerConsoleEnabled', 'colorPalette'
+        'syncWidgetsExternalScreen', 'smartHomePairingMode', 'developerConsoleEnabled', 'colorPalette',
+        'navigationMode', 'quickMenuEnabled'
     ];
     
     if (settingsWithoutDirectControl.includes(key)) {
         localStorage.setItem(key, value);
         broadcastSettingUpdate(key, value);
+
+        if (key === 'navigationMode' || key === 'quickMenuEnabled') {
+            const isQm = (key === 'navigationMode' && value === 'quickmenu') || (key === 'quickMenuEnabled' && value === 'true');
+            localStorage.setItem('navigationMode', isQm ? 'quickmenu' : 'gestures');
+            localStorage.setItem('quickMenuEnabled', isQm ? 'true' : 'false');
+            if (typeof window.updateNavigationModeUI === 'function') {
+                window.updateNavigationModeUI();
+            }
+        }
 
         if (key === 'telemetryEnabled') {
             if (value === 'true') {
@@ -1025,6 +1037,17 @@ window.addEventListener('message', async (event) => { // Make listener async
         closeSheet: () => {
             if (typeof closeSheetUI === 'function') {
                 closeSheetUI();
+            }
+        },
+        performAppSwipe: (direction) => {
+            if (direction === 'next') {
+                if (typeof window.switchToNextApp === 'function') window.switchToNextApp();
+            } else if (direction === 'prev') {
+                if (typeof window.switchToPrevApp === 'function') window.switchToPrevApp();
+            } else if (direction === 'down') {
+                if (typeof openControls === 'function') openControls();
+            } else if (direction === 'up') {
+                if (typeof minimizeFullscreenEmbed === 'function') minimizeFullscreenEmbed();
             }
         },
         sheetMessageToApp: (payload) => {

@@ -236,6 +236,7 @@
     <link rel="stylesheet" href="css/ui/osk.css">
     <link rel="stylesheet" href="css/ui/wallpaper.css">
     <link rel="stylesheet" href="css/ui/widgets.css">
+    <link rel="stylesheet" href="css/ui/home-menu.css">
 
     <!-- Apps -->
     <link rel="stylesheet" href="css/apps/app-switcher.css">
@@ -289,7 +290,9 @@
         <div id="status-indicator"></div>
     </div>
 
-    <div id="control-gesture-pane"></div>
+    <div id="home-gesture-bar" class="home-gesture-bar">
+        <div class="home-indicator-pill"></div>
+    </div>
 
     <div id="depth-layer"></div>
     
@@ -507,6 +510,24 @@
     </div>
 
     <div id="widget-grid" class="widget-grid" style="opacity: 0; scale: 0.9;"></div>
+    
+    <!-- iOS-Style Widget & App Home Menu Grid (Astatine 27.1) -->
+    <div id="home-menu-container" class="home-menu-container">
+        <!-- iPadOS-style Edit Mode Header (Add Widget & Done buttons) -->
+        <div id="home-edit-header" class="home-edit-header">
+            <button id="home-edit-add-btn" class="home-edit-header-btn home-edit-add-btn" title="Add Widget">
+                <span class="material-symbols-rounded">add</span>
+            </button>
+            <button id="home-edit-done-btn" class="home-edit-header-btn home-edit-done-btn">Done</button>
+        </div>
+        <div class="home-pages-viewport" id="home-pages-viewport">
+            <div class="home-pages-track" id="home-pages-track"></div>
+        </div>
+        <div class="home-page-indicators" id="home-page-indicators"></div>
+    </div>
+    
+    <!-- 500ms App Gesture Window Barrier (Astatine 27.1) -->
+    <div id="app-gesture-barrier" class="app-gesture-barrier"></div>
     
     <div id="donburi-container" class="system-overlay" style="display: none; transform: translateY(-100%);">
         <iframe src="/assets/gurapp/intl/donburi/index.html" data-gurasuraisu-iframe="true" data-app-id="Donburi"></iframe>
@@ -1012,6 +1033,11 @@
         <input type="checkbox" id="hour-switch">
         <input type="checkbox" id="ai-switch">
         <input type="checkbox" id="one-button-nav-switch">
+        <select id="navigation-mode-select" data-key="navigationMode" style="display: none;">
+            <option value="gestures">Gestures</option>
+            <option value="quickmenu">Quick Menu</option>
+        </select>
+        <input type="checkbox" id="quickmenu-switch" style="display: none;">
         <input type="checkbox" id="persistent-indicator-switch">
         <input type="checkbox" id="dock-pinned-switch">
         <select id="wake-lock-mode-select">
@@ -1099,6 +1125,7 @@
     <script src="js/ui/wallpaper.js"></script>
     <script src="js/ui/wallpaper/wallpaper-manage.js"></script>
     <script src="js/ui/widgets.js"></script>
+    <script src="js/ui/home-menu.js"></script>
     <script src="js/ui/dock-drawer.js"></script>
     <script src="js/ui/settings.js"></script>
     <script src="js/ui/osk.js"></script>

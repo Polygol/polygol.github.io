@@ -669,6 +669,18 @@
                                data-key="gurappsEnabled">
                     </div>
                 </div>
+            <div class="setting-section">
+                <h2 class="section-title">Navigation</h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Navigation Style</span>
+                        <span class="setting-description">Switch between Gesture Navigation (Default) and the Quick Menu</span>
+                    </div>
+                    <select class="styled-select" data-key="navigationMode">
+                        <option value="gestures">Gestures (Default)</option>
+                        <option value="quickmenu">Quick Menu</option>
+                    </select>
+                </div>
             </div>
         </div>
         <!-- Accessibility Page -->
@@ -1020,6 +1032,19 @@
                         <span class="setting-description">Makes wallpaper switching more accessible</span>
                     </div>
                     <input type="checkbox" class="toggle-switch" data-key="persistentPageIndicator">
+                </div>
+            </div>
+            <div class="setting-section">
+                <h2 class="section-title">Navigation</h2>
+                <div class="setting-item" id="setting-navigationMode">
+                    <div class="setting-info">
+                        <span class="setting-label">Navigation Style</span>
+                        <span class="setting-description">Switch between Gesture Navigation (Default) and the Quick Menu</span>
+                    </div>
+                    <select class="styled-select" data-key="navigationMode" id="settings-navigation-mode-select">
+                        <option value="gestures">Gestures (Default)</option>
+                        <option value="quickmenu">Quick Menu</option>
+                    </select>
                 </div>
             </div>
             <div class="setting-section">

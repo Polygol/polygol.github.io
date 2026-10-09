@@ -848,6 +848,41 @@ let _isSuspended = false;
         document.addEventListener('keyup', (e) => {
             if (e.key === 'Tab') isTabKeyDown = false;
         });
+
+        // --- Astatine 27.1 In-App Gesture Navigation ---
+        let _guraTouchStartX = 0, _guraTouchStartY = 0, _guraTouchStartTime = 0;
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches.length === 1) {
+                _guraTouchStartX = e.touches[0].clientX;
+                _guraTouchStartY = e.touches[0].clientY;
+                _guraTouchStartTime = Date.now();
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', (e) => {
+            if (e.changedTouches && e.changedTouches.length === 1) {
+                const deltaX = e.changedTouches[0].clientX - _guraTouchStartX;
+                const deltaY = e.changedTouches[0].clientY - _guraTouchStartY;
+                const duration = Date.now() - _guraTouchStartTime;
+                const absX = Math.abs(deltaX);
+                const absY = Math.abs(deltaY);
+
+                if (duration < 650) {
+                    // 1. Swipe anywhere left or right to switch apps
+                    if (absX > 60 && absX > absY * 1.25) {
+                        Gurasuraisu._call('performAppSwipe', [deltaX < 0 ? 'next' : 'prev']);
+                    }
+                    // 2. Swipe down from top to access control center & notifications
+                    else if (deltaY > 50 && absY > absX * 1.25 && _guraTouchStartY < 120) {
+                        Gurasuraisu._call('performAppSwipe', ['down']);
+                    }
+                    // 3. Swipe up from bottom to go to home screen
+                    else if (deltaY < -50 && absY > absX * 1.25 && _guraTouchStartY > (window.innerHeight - 120)) {
+                        Gurasuraisu._call('performAppSwipe', ['up']);
+                    }
+                }
+            }
+        }, { passive: true });
     }
 
     // --- Switch Control (Keyboard Navigation) ---

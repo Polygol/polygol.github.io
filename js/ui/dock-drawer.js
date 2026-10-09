@@ -23,7 +23,60 @@ function updateQMClock() {
     qmClockTimer = setTimeout(updateQMClock, delay);
 }
 
+function isQuickMenuEnabled() {
+    const navMode = localStorage.getItem('navigationMode');
+    if (navMode) return navMode === 'quickmenu';
+    return localStorage.getItem('quickMenuEnabled') === 'true';
+}
+
+function setNavigationMode(mode) {
+    const isQm = mode === 'quickmenu';
+    localStorage.setItem('navigationMode', isQm ? 'quickmenu' : 'gestures');
+    localStorage.setItem('quickMenuEnabled', isQm ? 'true' : 'false');
+    updateNavigationModeUI();
+    if (typeof broadcastSettingUpdate === 'function') {
+        broadcastSettingUpdate('navigationMode', isQm ? 'quickmenu' : 'gestures');
+        broadcastSettingUpdate('quickMenuEnabled', isQm ? 'true' : 'false');
+    }
+}
+
+function toggleNavigationMode() {
+    const currentlyQm = isQuickMenuEnabled();
+    const newMode = currentlyQm ? 'gestures' : 'quickmenu';
+    setNavigationMode(newMode);
+    if (typeof showPopup === 'function') {
+        showPopup(newMode === 'quickmenu' ? (currentLanguage.NAV_QUICKMENU_ACTIVE || 'Navigation: Quick Menu') : (currentLanguage.NAV_GESTURES_ACTIVE || 'Navigation: Gestures'));
+    }
+    return newMode;
+}
+
+function updateNavigationModeUI() {
+    const isQm = isQuickMenuEnabled();
+    document.body.classList.toggle('nav-quickmenu-active', isQm);
+    document.body.classList.toggle('nav-gestures-active', !isQm);
+
+    if (!isQm && isQuickMenuOpen) {
+        closeQuickMenu();
+    }
+
+    const navSelect = document.getElementById('navigation-mode-select');
+    if (navSelect && navSelect.value !== (isQm ? 'quickmenu' : 'gestures')) {
+        navSelect.value = isQm ? 'quickmenu' : 'gestures';
+    }
+
+    const qmSwitch = document.getElementById('quickmenu-switch');
+    if (qmSwitch && qmSwitch.checked !== isQm) {
+        qmSwitch.checked = isQm;
+    }
+}
+
+window.isQuickMenuEnabled = isQuickMenuEnabled;
+window.setNavigationMode = setNavigationMode;
+window.toggleNavigationMode = toggleNavigationMode;
+window.updateNavigationModeUI = updateNavigationModeUI;
+
 function openQuickMenu() {
+    if (!isQuickMenuEnabled()) return;
     if (isQuickMenuOpen) return;
     isQuickMenuOpen = true;
     const qm = document.getElementById('quick-menu');
@@ -528,6 +581,73 @@ function closeSearch() {
 function setupDrawerInteractions() {
     const drawerHandle = document.querySelector('.drawer-handle');
     
+    // --- Astatine 27.1 Gesture Controls ---
+    // Bottom Gesture Bar: Swipe up -> Instantly return to Home screen
+    // Swipe left/right -> Switch apps
+    // Touch only: Taps do NOT activate swipe actions
+    const homeBar = document.getElementById('home-gesture-bar');
+    if (homeBar) {
+        let hbStartY = 0, hbStartX = 0, hbSwiped = false;
+        homeBar.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches.length === 1) {
+                hbStartY = e.touches[0].clientY;
+                hbStartX = e.touches[0].clientX;
+                hbSwiped = false;
+            }
+        }, { passive: true });
+
+        homeBar.addEventListener('touchmove', (e) => {
+            if (e.touches && e.touches.length === 1 && !hbSwiped) {
+                const dy = hbStartY - e.touches[0].clientY;
+                const dx = e.touches[0].clientX - hbStartX;
+                const absX = Math.abs(dx);
+                const absY = Math.abs(dy);
+
+                // Swipe up to return home (requires clear upward drag > 35px)
+                if (dy > 35 && absY > absX) {
+                    hbSwiped = true;
+                    const customizeModal = document.getElementById('customizeModal');
+                    if (customizeModal && customizeModal.classList.contains('show')) {
+                        if (typeof closeControls === 'function') closeControls();
+                    }
+                    if (isQuickMenuOpen && typeof closeQuickMenu === 'function') {
+                        closeQuickMenu();
+                    }
+                    if (typeof minimizeFullscreenEmbed === 'function') {
+                        minimizeFullscreenEmbed();
+                    }
+                }
+                // Swipe left/right to switch apps (requires clear horizontal drag > 45px)
+                else if (absX > 45 && absX > absY) {
+                    hbSwiped = true;
+                    if (dx < 0) {
+                        if (typeof window.switchToNextApp === 'function') window.switchToNextApp();
+                    } else {
+                        if (typeof window.switchToPrevApp === 'function') window.switchToPrevApp();
+                    }
+                }
+            }
+        }, { passive: true });
+    }
+
+    // 3. Navigation Mode Sync Listeners (from Settings)
+    const navModeSelect = document.getElementById('navigation-mode-select');
+    if (navModeSelect) {
+        navModeSelect.addEventListener('change', (e) => {
+            setNavigationMode(e.target.value);
+        });
+    }
+
+    const qmSwitch = document.getElementById('quickmenu-switch');
+    if (qmSwitch) {
+        qmSwitch.addEventListener('change', (e) => {
+            setNavigationMode(e.target.checked ? 'quickmenu' : 'gestures');
+        });
+    }
+
+    // Initialize Navigation Mode UI state
+    updateNavigationModeUI();
+
     // 1. Setup Swipe Overlay (from dock-drawer.js)
     // This allows capturing gestures even when an iframe is in the foreground
     let swipeOverlay = document.getElementById('swipe-overlay');
@@ -563,50 +683,6 @@ function setupDrawerInteractions() {
         });
     }
 
-    // Helper: Forward clicks through the handle/overlay to underlying content
-    function forwardClick(clientX, clientY) {
-        const handlePE = drawerHandle ? drawerHandle.style.pointerEvents : "";
-        const overlayPE = swipeOverlay.style.pointerEvents;
-
-        if (drawerHandle) drawerHandle.style.pointerEvents = "none";
-        swipeOverlay.style.pointerEvents = "none";
-
-        const passthrough = document.querySelectorAll(".fullscreen-embed, iframe");
-        const original = new Map();
-
-        passthrough.forEach(el => {
-            original.set(el, el.style.pointerEvents);
-            el.style.pointerEvents = "auto";
-        });
-
-        const target = document.elementFromPoint(clientX, clientY);
-
-        if (target) {
-            if (target.tagName === "IFRAME") {
-                const rect = target.getBoundingClientRect();
-                const zoom = (parseFloat(document.body.style.zoom) || 100) / 100;
-
-                target.contentWindow?.postMessage({
-                    type: "forward-click",
-                    x: (clientX - rect.left) / zoom,
-                    y: (clientY - rect.top) / zoom
-                }, "*");
-            } else {
-                target.dispatchEvent(new MouseEvent("click", {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true,
-                    clientX,
-                    clientY
-                }));
-            }
-        }
-
-        if (drawerHandle) drawerHandle.style.pointerEvents = handlePE;
-        swipeOverlay.style.pointerEvents = overlayPE;
-        passthrough.forEach(el => el.style.pointerEvents = original.get(el));
-    }
-
     // 3. Gesture Logic (Disabled if mouse-only button is present)
     if (drawerHandle) {
         let handleStartY = 0;
@@ -632,7 +708,9 @@ function setupDrawerInteractions() {
 
         drawerHandle.addEventListener('touchend', (e) => {
             if (!handleSwiped && e.changedTouches.length) {
-                forwardClick(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+                if (typeof window.forwardClick === 'function') {
+                    window.forwardClick(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+                }
             }
             handleDragging = false;
         });
@@ -651,7 +729,9 @@ function setupDrawerInteractions() {
 
         const onDrawerMouseUp = (e) => {
             if (handleDragging && !handleSwiped) {
-                forwardClick(e.clientX, e.clientY);
+                if (typeof window.forwardClick === 'function') {
+                    window.forwardClick(e.clientX, e.clientY);
+                }
             }
             handleDragging = false;
             cleanupDrawerMouse();
@@ -825,25 +905,8 @@ function setupDrawerInteractions() {
     if (btnApps) {
         btnApps.addEventListener('click', () => {
             closeQuickMenu();
-            const appDrawer = document.getElementById('app-drawer');
-            if (!appDrawer) return;
-            appDrawer.style.display = 'flex';
-            requestAnimationFrame(() => {
-                appDrawer.classList.add('open');
-                appDrawer.style.zIndex = '1005';
-                appDrawer.style.bottom = '0%';
-                appDrawer.style.opacity = '1';
-                if (typeof createAppIcons === 'function') createAppIcons();
-            });
-            document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
-                if (!el.dataset.originalDisplay) el.dataset.originalDisplay = window.getComputedStyle(el).display;
-                el.style.opacity = '0';
-                setTimeout(() => el.classList.add('force-hide'), 300);
-            });
-            const interactionBlocker = document.getElementById('interaction-blocker');
-            if(interactionBlocker) {
-                interactionBlocker.style.display = 'block';
-                interactionBlocker.style.pointerEvents = 'auto';
+            if (typeof window.switchToNextApp === 'function') {
+                window.switchToNextApp();
             }
         });
     }
@@ -977,48 +1040,8 @@ function setupOneButtonNav() {
 
     const handleDoubleClick = () => {
         if (isAppOpen()) return; // Don't do anything if an app is open
-
-        if (isDrawerOpen()) {
-            // Close app drawer
-            appDrawer.classList.remove('open');
-            setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
-            document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
-                el.classList.remove('force-hide');
-                el.style.removeProperty('content-visibility'); // OPTIMIZATION
-                el.style.opacity = '1';
-            });
-			resetIndicatorTimeout();
-        } else {
-            // Open App Drawer
-            if (dock.classList.contains('show')) {
-                dock.classList.remove('show');
-                setTimeout(() => { if (!dock.classList.contains('show')) { dock.style.display = 'none'; } }, 300);
-            }
-            
-            // **FIX:** Clear inline styles that might be left over from gesture interactions
-            appDrawer.style.display = 'flex';
-            appDrawer.style.bottom = '';
-            appDrawer.style.opacity = '';
-            
-            requestAnimationFrame(() => {
-                appDrawer.classList.add('open'); // Now the CSS class will take effect
-            });
-            
-            document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
-                if (!el.dataset.originalDisplay) {
-                    el.dataset.originalDisplay = window.getComputedStyle(el).display;
-                }
-                el.style.opacity = '0';
-                setTimeout(() => { 
-                    el.classList.add('force-hide'); 
-                    el.style.contentVisibility = 'hidden'; // OPTIMIZATION
-                }, 300);
-            });
-            
-            // Hide Home Activities
-            HomeActivityManager.updateVisibility();
-
-			resetIndicatorTimeout();
+        if (typeof window.switchToNextApp === 'function') {
+            window.switchToNextApp();
         }
     };
 

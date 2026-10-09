@@ -1,12 +1,25 @@
 const closeModal = document.getElementById('closeModal');
 const blurOverlay = document.getElementById('blurOverlay');
 
+const isWallpaperEditingActive = () => {
+    return document.body.classList.contains('edit-mode-active') ||
+           document.getElementById('wallpaper-switcher-overlay')?.classList.contains('show') ||
+           document.getElementById('wallpaper-picker-drawer')?.classList.contains('open') ||
+           document.getElementById('edit-mode-ui')?.style.display === 'block';
+};
+
 const __clockElement = document.getElementById('clock');
 if (__clockElement) {
     __clockElement.addEventListener('click', (e) => {
         if (document.body.classList.contains('edit-mode-active')) {
             e.stopPropagation();
             if (typeof openEditSheet === 'function') openEditSheet('clock');
+            return;
+        }
+        if (isWallpaperEditingActive()) return;
+        if (document.body.classList.contains('beginnings-active')) {
+            e.stopPropagation();
+            if (typeof window.exitBeginningsState === 'function') window.exitBeginningsState();
             return;
         }
         if (typeof window.gurappsEnabled !== 'undefined' && !window.gurappsEnabled) return;
@@ -23,6 +36,12 @@ if (__weatherWidget) {
             if (typeof openEditSheet === 'function') openEditSheet('background');
             return;
         }
+        if (isWallpaperEditingActive()) return;
+        if (document.body.classList.contains('beginnings-active')) {
+            e.stopPropagation();
+            if (typeof window.exitBeginningsState === 'function') window.exitBeginningsState();
+            return;
+        }
         if (typeof window.gurappsEnabled !== 'undefined' && !window.gurappsEnabled) return;
         if (typeof gurappsEnabled !== 'undefined' && !gurappsEnabled) return;
         createFullscreenEmbed('https://polygol.github.io/weather/index.html');
@@ -37,9 +56,26 @@ if (__dateElement) {
             if (typeof openEditSheet === 'function') openEditSheet('date');
             return;
         }
+        if (isWallpaperEditingActive()) return;
+        if (document.body.classList.contains('beginnings-active')) {
+            e.stopPropagation();
+            if (typeof window.exitBeginningsState === 'function') window.exitBeginningsState();
+            return;
+        }
         if (typeof window.gurappsEnabled !== 'undefined' && !window.gurappsEnabled) return;
         if (typeof gurappsEnabled !== 'undefined' && !gurappsEnabled) return;
         createFullscreenEmbed('https://polygol.github.io/fantaskical/index.html');
+    });
+}
+
+const __containerElement = document.querySelector('.container');
+if (__containerElement) {
+    __containerElement.addEventListener('click', (e) => {
+        if (document.body.classList.contains('edit-mode-active') || isWallpaperEditingActive()) return;
+        if (document.body.classList.contains('beginnings-active')) {
+            e.stopPropagation();
+            if (typeof window.exitBeginningsState === 'function') window.exitBeginningsState();
+        }
     });
 }
 

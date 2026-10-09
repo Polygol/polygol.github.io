@@ -133,6 +133,16 @@ function loadWidgets() {
 }
 
 function addWidget(widgetData, isTransparent = false) {
+    if (typeof window.addHomeItem === 'function') {
+        window.addHomeItem(window.currentHomePageIndex || 0, {
+            type: 'widget',
+            widgetId: widgetData.widgetId,
+            appName: widgetData.appName,
+            title: widgetData.title,
+            size: widgetData.defaultSize ? (widgetData.defaultSize[0] >= 2 ? 'medium' : 'small') : 'small'
+        });
+    }
+
     const baseUnit = 200; // The size of a 1x1 widget block
     const gridW = widgetData.defaultSize ? widgetData.defaultSize[0] : 1;
     const gridH = widgetData.defaultSize ? widgetData.defaultSize[1] : 1;
@@ -153,8 +163,38 @@ function addWidget(widgetData, isTransparent = false) {
     saveWidgets();
 }
 
+function addAppShortcut(appName, appDetails) {
+    if (!appDetails) appDetails = apps[appName];
+    if (!appDetails) return;
+
+    if (typeof window.addHomeItem === 'function') {
+        window.addHomeItem(window.currentHomePageIndex || 0, {
+            type: 'app',
+            appName: appName
+        });
+    }
+
+    activeWidgets.push({
+        type: 'app-shortcut',
+        appName: appName,
+        url: appDetails.url,
+        icon: appDetails.icon,
+        w: 120,
+        h: 120,
+        x: 40,
+        y: 40
+    });
+    renderWidgets();
+    saveWidgets();
+    if (typeof showPopup === 'function') {
+        showPopup(`${appName} shortcut added`);
+    }
+}
+
 async function removeWidget(index) {
-    if (await showCustomConfirm('Remove this widget?')) {
+    const item = activeWidgets[index];
+    const label = item?.type === 'app-shortcut' ? `${item.appName} shortcut` : 'this widget';
+    if (await showCustomConfirm(`Remove ${label}?`)) {
         activeWidgets.splice(index, 1);
         
 		// CLEANUP: Free base64 string from memory and Swap cache
@@ -221,6 +261,32 @@ function renderWidgets() {
             }
             
             instance.appendChild(img);
+
+        } else if (widget.type === 'app-shortcut') {
+            // --- APP SHORTCUT LOGIC (Astatine 27.1) ---
+            instance.classList.add('app-shortcut-widget');
+            
+            const iconContainer = document.createElement('div');
+            iconContainer.className = 'app-shortcut-icon';
+            const img = document.createElement('img');
+            let iconSrc = widget.icon;
+            if (iconSrc && (iconSrc.startsWith('http') || iconSrc.startsWith('/') || iconSrc.startsWith('data:'))) {
+                img.src = iconSrc;
+            } else if (iconSrc) {
+                img.src = `/assets/appicon/${iconSrc}`;
+            } else {
+                img.src = '/assets/img/icon.svg';
+            }
+            img.alt = widget.appName || 'App';
+            img.onerror = () => { img.src = '/assets/img/icon.svg'; };
+            iconContainer.appendChild(img);
+            
+            const nameLabel = document.createElement('span');
+            nameLabel.className = 'app-shortcut-name';
+            nameLabel.textContent = widget.appName || 'App';
+            
+            instance.appendChild(iconContainer);
+            instance.appendChild(nameLabel);
 
         } else {
             // --- STANDARD APP WIDGET LOGIC ---
@@ -551,6 +617,17 @@ function renderWidgets() {
                 }
                 lastWidgetTapTime = Date.now();
 
+                // Handle App Shortcut taps (Astatine 27.1)
+                if (activeWidgets[index]?.type === 'app-shortcut') {
+                    const shortcut = activeWidgets[index];
+                    const appUrl = shortcut.url || (apps[shortcut.appName] && apps[shortcut.appName].url);
+                    if (appUrl) {
+                        createFullscreenEmbed(appUrl);
+                    }
+                    isDragging = false;
+                    return;
+                }
+
                 const widgetData = availableWidgets[activeWidgets[index].appName]?.find(w => w.widgetId === activeWidgets[index].widgetId);
                 if (!widgetData) return;
 
@@ -703,9 +780,67 @@ function openWidgetPicker() {
     const transparentSwitch = document.getElementById('widget-transparent-switch');
     if (transparentSwitch) transparentSwitch.checked = false;
 
+    // Section 1: App Shortcuts (Astatine 27.1)
+    if (typeof apps === 'object' && Object.keys(apps).length > 0) {
+        const shortcutTitle = document.createElement('div');
+        shortcutTitle.className = 'widget-picker-section-title';
+        shortcutTitle.textContent = 'App Shortcuts';
+        grid.appendChild(shortcutTitle);
+
+        Object.entries(apps)
+            .filter(([name]) => name !== 'Apps')
+            .forEach(([appName, appDetails]) => {
+                const item = document.createElement('div');
+                item.className = 'app-shortcut-picker-item';
+                
+                let iconSrc = appDetails.icon;
+                if (iconSrc && !(iconSrc.startsWith('http') || iconSrc.startsWith('/') || iconSrc.startsWith('data:'))) {
+                    iconSrc = `/assets/appicon/${iconSrc}`;
+                }
+                item.innerHTML = `
+                    <img src="${iconSrc || '/assets/img/icon.svg'}" alt="${appName}">
+                    <span>${appName}</span>
+                `;
+                item.onclick = () => {
+                    addAppShortcut(appName, appDetails);
+                    closeWidgetPicker();
+                };
+                grid.appendChild(item);
+            });
+    }
+
+    // Section 2: Quick Widgets
+    const widgetSectionTitle = document.createElement('div');
+    widgetSectionTitle.className = 'widget-picker-section-title';
+    widgetSectionTitle.textContent = 'Quick Widgets';
+    grid.appendChild(widgetSectionTitle);
+
+    // Weather widget item
+    const weatherItem = document.createElement('div');
+    weatherItem.className = 'widget-picker-item';
+    weatherItem.innerHTML = `
+        <div class="widget-picker-preview" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border-radius:18px;">
+            <span class="material-symbols-rounded" style="font-size:42px;color:var(--text-color);">partly_cloudy_day</span>
+        </div>
+        <span class="widget-picker-title">Weather</span>
+    `;
+    weatherItem.addEventListener('click', () => {
+        if (typeof window.addHomeItem === 'function') {
+            window.addHomeItem(window.currentHomePageIndex || 0, {
+                type: 'widget-weather',
+                size: 'small'
+            });
+        }
+        closeWidgetPicker();
+    });
+    grid.appendChild(weatherItem);
+
     // Check if there are any available widgets
     if (Object.keys(availableWidgets).length === 0) {
-        grid.innerHTML = `<p style="text-align: center; opacity: 0.7;">No widgets available. Install apps that provide widgets.</p>`;
+        const emptyMsg = document.createElement('p');
+        emptyMsg.style.cssText = 'text-align: center; opacity: 0.7; grid-column: 1 / -1;';
+        emptyMsg.textContent = 'No extra widgets available.';
+        grid.appendChild(emptyMsg);
     } else {
         for (const appName in availableWidgets) {
             availableWidgets[appName].forEach(widgetData => {
@@ -755,6 +890,12 @@ function openWidgetPicker() {
         }
     }
     
+    const blurOverlay = document.getElementById('blurOverlay');
+    if (blurOverlay) {
+        blurOverlay.style.display = 'block';
+        requestAnimationFrame(() => blurOverlay.classList.add('show'));
+    }
+
     drawer.style.display = 'flex';
     setTimeout(() => {
         drawer.classList.add('open');
@@ -764,6 +905,14 @@ function openWidgetPicker() {
 function closeWidgetPicker() {
     const drawer = document.getElementById('widget-picker-drawer');
     if (!drawer) return;
+
+    const blurOverlay = document.getElementById('blurOverlay');
+    if (blurOverlay) {
+        blurOverlay.classList.remove('show');
+        setTimeout(() => {
+            if (!blurOverlay.classList.contains('show')) blurOverlay.style.display = 'none';
+        }, 300);
+    }
 
     drawer.classList.remove('open');
     setTimeout(() => {

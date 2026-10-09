@@ -258,6 +258,10 @@ function applyLanguage(language) {
     // Update checkWords and closeWords
     window.checkWords = language.CHECK_WORDS;
     window.closeWords = language.CLOSE_WORDS;
+
+    if (typeof window.updateNavigationModeUI === 'function') {
+        window.updateNavigationModeUI();
+    }
 }
 
 function selectLanguage(languageCode) {
@@ -365,4 +369,69 @@ window.getSystemStatus = function() {
         wifi: navigator.onLine, // Legacy support
         context: context
     };
+};
+
+/**
+ * Central Click Passthrough Function
+ * Forwards clicks/taps through overlay handles (edge handles, gesture barrier, drawer handle, etc.)
+ * directly to whatever element or app iframe is underneath.
+ */
+function forwardClick(clientX, clientY) {
+    // 1. Temporarily disable pointer events on gesture overlays and edge handles
+    const overlays = document.querySelectorAll('.kirbai-edge-handle, .drawer-handle, #home-gesture-bar, #swipe-overlay, .app-gesture-barrier, #app-gesture-barrier');
+    const prevOverlayEvents = new Map();
+    overlays.forEach(h => {
+        prevOverlayEvents.set(h, h.style.pointerEvents);
+        h.style.pointerEvents = 'none';
+    });
+
+    // 2. Ensure fullscreen embeds and iframes are targetable
+    const passthrough = document.querySelectorAll('.fullscreen-embed, iframe');
+    const originalEvents = new Map();
+    passthrough.forEach(el => {
+        originalEvents.set(el, el.style.pointerEvents);
+        el.style.pointerEvents = 'auto';
+    });
+
+    // 3. Find element beneath the touch point
+    const target = document.elementFromPoint(clientX, clientY);
+
+    if (target) {
+        const iframe = target.tagName === 'IFRAME' ? target : target.querySelector?.('iframe');
+        if (iframe && iframe.contentWindow) {
+            const rect = iframe.getBoundingClientRect();
+            const zoom = (parseFloat(document.body.style.zoom) || 100) / 100;
+            iframe.contentWindow.postMessage({
+                type: 'forward-click',
+                x: (clientX - rect.left) / zoom,
+                y: (clientY - rect.top) / zoom
+            }, '*');
+        } else {
+            target.dispatchEvent(new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: true,
+                clientX,
+                clientY
+            }));
+        }
+    }
+
+    // 4. Restore original pointer events
+    overlays.forEach(h => {
+        h.style.pointerEvents = prevOverlayEvents.get(h) || '';
+    });
+    passthrough.forEach(el => {
+        el.style.pointerEvents = originalEvents.get(el) || '';
+    });
+}
+
+window.forwardClick = forwardClick;
+window.forwardClickToActiveApp = forwardClick; // Central alias
+
+window.isWallpaperEditingActive = function() {
+    return document.body.classList.contains('edit-mode-active') ||
+           document.getElementById('wallpaper-switcher-overlay')?.classList.contains('show') ||
+           document.getElementById('wallpaper-picker-drawer')?.classList.contains('open') ||
+           document.getElementById('edit-mode-ui')?.style.display === 'block';
 };

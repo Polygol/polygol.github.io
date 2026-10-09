@@ -103,7 +103,11 @@ function blackoutScreen() {
     setControlValueAndDispatch('animationsEnabled', 'false');
 
     const sleepStyle = localStorage.getItem('sleepModeStyle') || 'dim-show';
-    document.body.classList.add('blackout-active', `blackout-style-${sleepStyle}`);
+    document.body.classList.add('blackout-active', 'idle-screen-active', `blackout-style-${sleepStyle}`);
+
+    if (typeof window.enterBeginningsState === 'function') {
+        window.enterBeginningsState();
+    }
 
     // Start OLED Pixel Cleaning sequence
     runPixelCleaningCycle();
@@ -150,24 +154,23 @@ function blackoutScreen() {
             blocker.addEventListener('click', exitBlackoutMode, { once: true });
             blocker.addEventListener('touchstart', exitBlackoutMode, { once: true });
 
-            if (localStorage.getItem('wakeOnMotion') === 'true') {
-                const handleMotion = () => {
-                    exitBlackoutMode();
-                    blocker.removeEventListener('mousemove', handleMotion);
-                    window.removeEventListener('devicemotion', handleDeviceMotion);
-                };
-                const handleDeviceMotion = (event) => {
-                    const acc = event.accelerationIncludingGravity;
-                    if (acc) {
-                        const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
-                        if (total > 15) {
-                            handleMotion();
-                        }
+            // Look at display (motion) or manually tap to enter Home screen (Astatine 27.1)
+            const handleLookAtDisplay = () => {
+                exitBlackoutMode();
+                blocker.removeEventListener('mousemove', handleLookAtDisplay);
+                window.removeEventListener('devicemotion', handleDeviceMotion);
+            };
+            const handleDeviceMotion = (event) => {
+                const acc = event.accelerationIncludingGravity;
+                if (acc) {
+                    const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
+                    if (total > 12) {
+                        handleLookAtDisplay();
                     }
-                };
-                blocker.addEventListener('mousemove', handleMotion);
-                window.addEventListener('devicemotion', handleDeviceMotion);
-            }
+                }
+            };
+            blocker.addEventListener('mousemove', handleLookAtDisplay, { once: true });
+            window.addEventListener('devicemotion', handleDeviceMotion, { passive: true });
         }
     }, 200);
 }
@@ -186,7 +189,11 @@ function exitBlackoutMode() {
     // Restore previous settings
     setControlValueAndDispatch('animationsEnabled', previousBlackoutSettings.animationsEnabled || 'true');
 
-    document.body.classList.remove('blackout-active', 'blackout-style-dim-show', 'blackout-style-dim-hide', 'blackout-style-hide-show', 'blackout-style-off');
+    document.body.classList.remove('blackout-active', 'idle-screen-active', 'blackout-style-dim-show', 'blackout-style-dim-hide', 'blackout-style-hide-show', 'blackout-style-off');
+
+    if (typeof window.enterBeginningsState === 'function') {
+        window.enterBeginningsState();
+    }
 
 	resumeAllAnimations(); // Resume animations on wake
 
