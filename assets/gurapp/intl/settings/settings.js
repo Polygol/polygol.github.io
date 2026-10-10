@@ -324,6 +324,14 @@ function initializeSettingsApp() {
             }
         }
 
+        // Handle Quick Menu Pinned option visibility based on navigationMode
+        if (key === 'navigationMode') {
+            const isQm = (value === 'quickmenu');
+            document.querySelectorAll('.qm-only-setting').forEach(el => {
+                el.style.display = isQm ? 'flex' : 'none';
+            });
+        }
+
         // Handle Night Stand Config Visibility
         if (key === 'nightStandEnabled') {
             const configContainer = document.getElementById('night-stand-config');
@@ -1171,6 +1179,8 @@ function initializeSettingsApp() {
         window.parent.postMessage({ type: 'gurapp-ready' }, window.location.origin);
         Gurasuraisu.getLocalStorageItem('displayScale');
         Gurasuraisu.getLocalStorageItem('smartDisplayZoom');
+        Gurasuraisu.getLocalStorageItem('navigationMode');
+        Gurasuraisu.getLocalStorageItem('quickMenuPinned');
     }
 }
 

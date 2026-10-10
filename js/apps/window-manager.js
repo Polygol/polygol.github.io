@@ -649,7 +649,7 @@ async function createFullscreenEmbed(url, options = {}) {
                         minimizedEmbeds[embed.dataset.embedUrl] = embed;
                     }
                     if (slideDirection && (embed.style.display === 'block' || embed.style.display === '')) {
-                        embed.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.3s ease';
+                        embed.style.transition = 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.35s ease';
                         embed.style.transform = slideDirection === 'next' ? 'translateX(-100%) scale(0.92)' : 'translateX(100%) scale(0.92)';
                         embed.style.opacity = '0';
                         embed.style.pointerEvents = 'none';
@@ -660,7 +660,7 @@ async function createFullscreenEmbed(url, options = {}) {
                                 outgoing.style.contentVisibility = 'hidden';
                                 outgoing.style.zIndex = '0';
                             }
-                        }, 300);
+                        }, 350);
                     } else {
                         embed.style.display = 'none'; // Hide immediately
                         embed.style.contentVisibility = 'hidden'; // OPTIMIZATION
@@ -864,7 +864,7 @@ async function createFullscreenEmbed(url, options = {}) {
         // Set initial state with rounded corners
         if (slideDirection) {
             embedContainer.style.transform = slideDirection === 'next' ? 'translateX(100%) scale(0.92)' : 'translateX(-100%) scale(0.92)';
-            embedContainer.style.opacity = '0';
+            embedContainer.style.opacity = '1';
             embedContainer.style.filter = 'none';
             embedContainer.style.borderRadius = `${window.systemScreenCurve || 0}px`;
             embedContainer.style.border = 'none';
@@ -897,28 +897,29 @@ async function createFullscreenEmbed(url, options = {}) {
         
         // Force reflow to apply the immediate style changes
         void embedContainer.offsetWidth;
-        
-        // Add transition for all properties (removed filter)
-		embedContainer.style.transition = slideDirection
-            ? 'transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.3s ease'
-            : 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
 
         // Pause background animations (Video and Animated Images)
         pauseAllAnimations();
 		
 	    // Clear background blur and trigger the animation
-	    setTimeout(() => {
-            const frame = embedContainer.querySelector('iframe');
-            if (frame && frame.contentWindow) {
-                frame.contentWindow.postMessage({ type: 'visibilityUpdate', visible: true }, '*');
-            }
-	        embedContainer.style.transform = 'translateX(0) scale(1)';
-	        embedContainer.style.opacity = '1';
-	        embedContainer.style.filter = 'none';
-	        embedContainer.style.borderRadius = `${window.systemScreenCurve || 0}px`;
-			embedContainer.style.cornerShape = 'superellipse(1.5)';
-			embedContainer.style.border = 'none';
-	    }, 10);
+	    requestAnimationFrame(() => {
+            embedContainer.style.transition = slideDirection
+                ? 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.35s ease'
+                : 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+
+            requestAnimationFrame(() => {
+                const frame = embedContainer.querySelector('iframe');
+                if (frame && frame.contentWindow) {
+                    frame.contentWindow.postMessage({ type: 'visibilityUpdate', visible: true }, '*');
+                }
+                embedContainer.style.transform = 'translateX(0) scale(1)';
+                embedContainer.style.opacity = '1';
+                embedContainer.style.filter = 'none';
+                embedContainer.style.borderRadius = `${window.systemScreenCurve || 0}px`;
+                embedContainer.style.cornerShape = 'superellipse(1.5)';
+                embedContainer.style.border = 'none';
+            });
+	    });
         
         // Hide all main UI elements
         document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
@@ -1015,9 +1016,10 @@ async function createFullscreenEmbed(url, options = {}) {
     }
     
     // Set initial styles BEFORE adding to DOM
+    embedContainer.style.transition = 'none';
     if (slideDirection) {
         embedContainer.style.transform = slideDirection === 'next' ? 'translateX(100%) scale(0.92)' : 'translateX(-100%) scale(0.92)';
-        embedContainer.style.opacity = '0';
+        embedContainer.style.opacity = '1';
         embedContainer.style.filter = 'none';
         embedContainer.style.borderRadius = `${window.systemScreenCurve || 0}px`;
         embedContainer.style.border = 'none';
@@ -1168,26 +1170,24 @@ async function createFullscreenEmbed(url, options = {}) {
 	
     pauseAllAnimations();
     
-    // Force reflow to ensure the initial styles are applied
+    // Force reflow to ensure the initial styles are applied with transition: none
     void embedContainer.offsetWidth;
     
-    // Now add the transition AFTER the element is in the DOM (removed filter)
-    embedContainer.style.transition = slideDirection
-        ? 'transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.3s ease'
-        : 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+    // Clear background blur and trigger the animation via double rAF
+    requestAnimationFrame(() => {
+        embedContainer.style.transition = slideDirection
+            ? 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.35s ease'
+            : 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
 
-    // Pause background animations
-    await pauseAllAnimations();
-    
-    // Clear background blur and trigger the animation
-    setTimeout(() => {
-        embedContainer.style.transform = 'translateX(0) scale(1)';
-        embedContainer.style.opacity = '1';
-        embedContainer.style.filter = 'none';
-        embedContainer.style.borderRadius = `${window.systemScreenCurve || 0}px`;
-		embedContainer.style.cornerShape = 'superellipse(1.5)';
-		embedContainer.style.border = 'none';
-    }, 10);
+        requestAnimationFrame(() => {
+            embedContainer.style.transform = 'translateX(0) scale(1)';
+            embedContainer.style.opacity = '1';
+            embedContainer.style.filter = 'none';
+            embedContainer.style.borderRadius = `${window.systemScreenCurve || 0}px`;
+            embedContainer.style.cornerShape = 'superellipse(1.5)';
+            embedContainer.style.border = 'none';
+        });
+    });
     
     // Activate 500ms gesture window (swipes L/R anywhere, swipe up to go home)
     if (typeof activateAppGestureBarrier === 'function') {
@@ -1770,7 +1770,6 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 	// --- Standard Single App Minimize Logic ---
     isAppOpen = false;
     window.currentActiveAppUrl = null; // Clear global state
-    currentAppCarouselIndex = -1;
 	SoundManager.play('close'); 
 	
 	const embedContainer = urlToMinimize 
@@ -1977,117 +1976,12 @@ function initPredictivePreload() {
     }, 50000);
 }
 
-// --- Astatine 27.1 App Experience & Fast App Switching (Wraparound Navigation) ---
-let currentAppCarouselIndex = -1;
-
-function getSwitchableAppsList() {
-    const list = [];
-    const addedUrls = new Set();
-
-    // 1. Prioritize apps in Home Screen arrangement order
-    try {
-        const saved = localStorage.getItem('astatine_home_pages');
-        const pages = saved ? JSON.parse(saved) : null;
-        if (Array.isArray(pages)) {
-            pages.forEach(page => {
-                if (Array.isArray(page)) {
-                    page.forEach(item => {
-                        if (item.type === 'app' && item.appName && apps[item.appName] && apps[item.appName].url) {
-                            const u = apps[item.appName].url;
-                            if (!addedUrls.has(u)) {
-                                list.push({ name: item.appName, url: u });
-                                addedUrls.add(u);
-                            }
-                        }
-                    });
-                }
-            });
-        }
-    } catch (e) {}
-
-    // 2. Include any remaining installed apps
-    Object.entries(apps)
-        .filter(([name, data]) => name.toLowerCase() !== 'apps' && data && data.url)
-        .forEach(([name, data]) => {
-            if (!addedUrls.has(data.url)) {
-                list.push({ name, url: data.url });
-                addedUrls.add(data.url);
-            }
-        });
-
-    return list;
-}
-
-function switchToAdjacentApp(direction = 'next') {
-    const list = getSwitchableAppsList();
-    if (list.length === 0) return;
-
-    // Detect currently open app URL
-    const activeEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
-    const currentUrl = window.currentActiveAppUrl || (activeEmbed && activeEmbed.dataset.embedUrl);
-
-    const normalizeUrlPath = (u) => {
-        if (!u) return '';
-        try { return new URL(u, window.location.origin).pathname; }
-        catch(e) { return u; }
-    };
-
-    let currentIndex = -1;
-    if (currentUrl) {
-        currentIndex = list.findIndex(a => 
-            a.url === currentUrl || 
-            normalizeUrlPath(a.url) === normalizeUrlPath(currentUrl) ||
-            (a.url && currentUrl && (a.url.endsWith(currentUrl) || currentUrl.endsWith(a.url)))
-        );
-    }
-    if (currentIndex === -1 && currentAppCarouselIndex >= 0 && currentAppCarouselIndex < list.length) {
-        currentIndex = currentAppCarouselIndex;
-    }
-
-    let targetIndex = 0;
-    if (currentIndex === -1) {
-        // Entering from home screen:
-        // Swiping next (left swipe) starts at the first app (0).
-        // Swiping prev (right swipe) wraps around to the last app (list.length - 1).
-        targetIndex = direction === 'next' ? 0 : list.length - 1;
-    } else {
-        if (direction === 'next') {
-            // Forward wraparound: 0 -> 1 -> 2 -> ... -> N-1 -> 0
-            targetIndex = (currentIndex + 1) % list.length;
-        } else {
-            // Backward wraparound: 0 -> N-1 -> N-2 -> ... -> 0
-            targetIndex = (currentIndex - 1 + list.length) % list.length;
-        }
-    }
-
-    currentAppCarouselIndex = targetIndex;
-    const targetApp = list[targetIndex];
-    if (!targetApp) return;
-
-    window.currentActiveAppUrl = targetApp.url;
-    createFullscreenEmbed(targetApp.url, { slideDirection: direction });
-}
-
-function switchToNextApp() {
-    switchToAdjacentApp('next');
-}
-
-function switchToPrevApp() {
-    switchToAdjacentApp('prev');
-}
-
-window.switchToNextApp = switchToNextApp;
-window.switchToPrevApp = switchToPrevApp;
-window.switchToAdjacentApp = switchToAdjacentApp;
-
 // Global listener for app gesture messages
 window.addEventListener('message', (event) => {
     if (!event.data) return;
     if (event.data.type === 'appGestureSwipe') {
         const dir = event.data.direction;
-        if (dir === 'next') switchToNextApp();
-        else if (dir === 'prev') switchToPrevApp();
-        else if (dir === 'down') { if (typeof openControls === 'function') openControls(); }
+        if (dir === 'down') { if (typeof openControls === 'function') openControls(); }
         else if (dir === 'up') { if (typeof minimizeFullscreenEmbed === 'function') minimizeFullscreenEmbed(); }
     }
 });
@@ -2097,6 +1991,10 @@ let appGestureBarrierTimer = null;
 let appGestureBarrierEl = null;
 
 function activateAppGestureBarrier(duration = 500) {
+    if (typeof isQuickMenuEnabled === 'function' && isQuickMenuEnabled()) {
+        return; // In Quick menu mode, do not activate gesture system
+    }
+
     if (!appGestureBarrierEl) {
         appGestureBarrierEl = document.getElementById('app-gesture-barrier');
         if (!appGestureBarrierEl) {
@@ -2146,23 +2044,13 @@ function setupAppGestureBarrierListeners(barrier) {
 
         // Distinct Swipe Gestures (require significant drag > 45px)
         if (elapsed < 650) {
-            // 1. Swipe L / R anywhere to switch apps
-            if (absX >= 45 && absX > absY * 1.15) {
-                deactivateAppGestureBarrier();
-                if (deltaX < 0) {
-                    switchToNextApp();
-                } else {
-                    switchToPrevApp();
-                }
-                return;
-            }
-            // 2. Swipe Up anywhere to return home
-            else if (deltaY <= -45 && absY > absX * 1.15) {
+            // 1. Swipe Up anywhere to return home
+            if (deltaY <= -45 && absY > absX * 1.15) {
                 deactivateAppGestureBarrier();
                 minimizeFullscreenEmbed();
                 return;
             }
-            // 3. Swipe Down from top for Controls
+            // 2. Swipe Down from top for Controls
             else if (deltaY >= 45 && startY < 140 && absY > absX * 1.15) {
                 deactivateAppGestureBarrier();
                 if (typeof openControls === 'function') openControls();

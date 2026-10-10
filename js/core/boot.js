@@ -1613,6 +1613,196 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Persistent Clock & Quick Actions (from 3cba470) ---
+    const persistentClock = document.querySelector('.persistent-clock');
+    const quickActions = document.getElementById('persistent-clock-quick-actions');
+    let hideActionsTimeout, longPressTimeout, quickActionsInactivityTimeout;
+    let isLongPress = false;
+
+    const showQuickActions = (isTouch = false) => {
+        const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+        if (appIsOpen && quickActions) {
+            clearTimeout(hideActionsTimeout);
+            clearTimeout(quickActionsInactivityTimeout);
+
+            quickActions.style.display = 'flex';
+            if (interactionBlocker) {
+                interactionBlocker.style.display = 'block';
+                interactionBlocker.style.pointerEvents = 'auto';
+                interactionBlocker.style.zIndex = '9994';
+            }
+            if (dynamicArea) dynamicArea.style.opacity = '0';
+
+            const qcControlsBtn = document.getElementById('quick-action-controls');
+            if (qcControlsBtn) qcControlsBtn.style.display = isTouch ? 'none' : 'flex';
+
+            setTimeout(() => {
+                quickActions.classList.add('show');
+            }, 10);
+
+            if (isTouch) {
+                quickActionsInactivityTimeout = setTimeout(hideQuickActions, 5000);
+            }
+        }
+    };
+
+    const hideQuickActions = () => {
+        clearTimeout(quickActionsInactivityTimeout);
+        const delay = isLongPress ? 0 : 100;
+        clearTimeout(hideActionsTimeout);
+        hideActionsTimeout = setTimeout(() => {
+            if (quickActions) quickActions.classList.remove('show');
+            if (interactionBlocker) {
+                interactionBlocker.style.display = 'none';
+                interactionBlocker.style.zIndex = '999';
+            }
+            if (dynamicArea) dynamicArea.style.opacity = '1';
+            setTimeout(() => {
+                if (quickActions && !quickActions.classList.contains('show')) {
+                    quickActions.style.display = 'none';
+                }
+            }, 200);
+        }, delay);
+    };
+
+    if (persistentClock) {
+        let lastTouchTime = 0;
+        document.addEventListener('touchstart', () => { lastTouchTime = Date.now(); }, { passive: true, capture: true });
+
+        if (dynamicArea) {
+            dynamicArea.addEventListener('mouseenter', () => {
+                if (Date.now() - lastTouchTime < 500) return;
+                const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+                if (appIsOpen) showQuickActions(false);
+            });
+        }
+
+        if (quickActions) {
+            quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
+            quickActions.addEventListener('mouseleave', hideQuickActions);
+        }
+        persistentClock.addEventListener('mouseleave', hideQuickActions);
+        if (interactionBlocker) {
+            interactionBlocker.addEventListener('click', hideQuickActions);
+            interactionBlocker.addEventListener('touchend', hideQuickActions);
+        }
+
+        // Touch Long-Press Logic
+        persistentClock.addEventListener('touchstart', (e) => {
+            isLongPress = false;
+            const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+            if (!appIsOpen) return;
+
+            clearTimeout(longPressTimeout);
+            longPressTimeout = setTimeout(() => {
+                isLongPress = true;
+                showQuickActions(true);
+            }, 500);
+        }, { passive: true });
+
+        persistentClock.addEventListener('touchmove', () => {
+            clearTimeout(longPressTimeout);
+        });
+
+        persistentClock.addEventListener('touchend', (e) => {
+            clearTimeout(longPressTimeout);
+            if (!isLongPress) {
+                window.openControls();
+            }
+            isLongPress = false;
+        });
+
+        persistentClock.addEventListener('click', () => {
+            clearTimeout(hideActionsTimeout);
+            window.openControls();
+        });
+    }
+
+    const qaMin = document.getElementById('quick-action-minimize');
+    if (qaMin) {
+        qaMin.addEventListener('click', (e) => {
+            e.stopPropagation();
+            minimizeFullscreenEmbed();
+            hideQuickActions();
+        });
+    }
+
+    const qaClose = document.getElementById('quick-action-close');
+    if (qaClose) {
+        qaClose.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeFullscreenEmbed();
+            hideQuickActions();
+        });
+    }
+
+    const qaControls = document.getElementById('quick-action-controls');
+    if (qaControls) {
+        qaControls.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.openControls();
+            hideQuickActions();
+        });
+    }
+
+    function updatePersistentClock() {
+        if (!persistentClock) return;
+        const isModalOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+        const hasActivities = (typeof activeIslands !== 'undefined' && activeIslands.length > 0);
+
+        if (isModalOpen) {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = String(now.getMinutes()).padStart(2, '0');
+            let displayHours;
+            const use12HourFormat = localStorage.getItem('use12HourFormat') === 'true';
+            if (use12HourFormat) {
+                displayHours = hours % 12 || 12;
+            } else {
+                displayHours = String(hours).padStart(2, '0');
+            }
+            persistentClock.innerHTML = `<span class="persistent-clock-digit">${displayHours}</span><span class="persistent-colon">:</span><span class="persistent-clock-digit">${minutes}</span>`;
+            persistentClock.style.display = 'flex';
+        } else {
+            if (hasActivities) {
+                persistentClock.innerHTML = '<span class="material-symbols-rounded">keyboard_arrow_down</span>';
+            } else {
+                const hideIndicator = localStorage.getItem('hideClockIndicator') === 'true';
+                if (hideIndicator) {
+                    persistentClock.innerHTML = '<span class="material-symbols-rounded"><br></span>';
+                    persistentClock.style.opacity = '0';
+                } else {
+                    persistentClock.innerHTML = '<span class="material-symbols-rounded">maximize</span>';
+                    persistentClock.style.opacity = '1';
+                }
+            }
+        }
+    }
+    window.updatePersistentClock = updatePersistentClock;
+
+    function synchronizePersistentClock() {
+        updatePersistentClock();
+        const now = new Date();
+        const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+        setTimeout(synchronizePersistentClock, msUntilNextMinute);
+    }
+    synchronizePersistentClock();
+
+    // Setup observer to watch for embed visibility changes to update clock immediately
+    const embedObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'style' &&
+                (mutation.target.classList.contains('fullscreen-embed') ||
+                 mutation.target.matches('#app-drawer'))) {
+                updatePersistentClock();
+            }
+        });
+    });
+
+    document.querySelectorAll('.fullscreen-embed').forEach(embed => {
+        embedObserver.observe(embed, { attributes: true });
+    });
+
     // Watch for new embed elements being added
     const bodyObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
@@ -1622,6 +1812,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (node.nodeType === 1 &&
                         node.classList &&
                         node.classList.contains('fullscreen-embed')) {
+                        embedObserver.observe(node, { attributes: true });
                         changed = true;
                     }
                 });
@@ -1632,6 +1823,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         changed = true;
                     }
                 });
+                if (changed) {
+                    updatePersistentClock();
+                }
             }
         });
     });

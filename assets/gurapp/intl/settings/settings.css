@@ -224,6 +224,10 @@ body {
     position: relative;
 }
 
+.qm-only-setting {
+    display: none;
+}
+
 .setting-item:not(:last-child)::after {
     content: "";
     position: absolute;

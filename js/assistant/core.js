@@ -243,6 +243,7 @@ class AssistantCore {
 
             const onMove = (clientX, clientY, e) => {
                 if (!isDragging || hasSwiped || this.isOpen) return;
+                if (typeof isQuickMenuEnabled === 'function' && isQuickMenuEnabled()) return;
                 const deltaX = clientX - startX;
                 const deltaY = clientY - startY;
 

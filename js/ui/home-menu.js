@@ -1,6 +1,7 @@
 /**
- * Astatine 27.1 - iOS-Style Widget & App Home Menu Grid & Beginnings State Manager
- * Abolishes app drawer metaphors, placing apps and quick widgets directly on paginated home pages.
+ * Astatine 27.1 - iPadOS-Style Fluid Widget, Folder & App Home Menu
+ * Custom absolute positioning layout engine with smooth iOS rearranging,
+ * touch-driven widget resizing, folders, and Cards deck integration.
  */
 
 (function () {
@@ -8,31 +9,16 @@
     let homePages = [];
     let lastScrollTime = 0;
     let motionWakeAttached = false;
+    let activeFolderContext = null;
 
-    // Default home pages structure:
-    // Page 0: System Media Widget (from availableWidgets), Weather Widget (from home screen), and core apps
-    const DEFAULT_PAGES = [
-        [
-            { type: 'widget', appName: 'System', widgetId: 'system-media', size: 'small' },
-            { type: 'widget-weather', size: 'small' },
-            { type: 'app', appName: 'Internet' },
-            { type: 'app', appName: 'Files' },
-            { type: 'app', appName: 'kirbStore' },
-            { type: 'app', appName: 'Settings' },
-            { type: 'app', appName: 'Assistant' },
-            { type: 'app', appName: 'Feedback' }
-        ],
-        []
-    ];
-
-    // --- Standard Grid Auto-Adaptation Presets (6x5, 4x6, 8x12, etc.) ---
+    // --- Standard Grid Auto-Adaptation Presets (6x5, 4x6, 8x12, 8x6, 4x5, 6x6) ---
     const STANDARD_GRIDS = {
-        '4x6': { cols: 4, rows: 6, maxW: 480, maxH: 720, rowH: 92 },
-        '6x5': { cols: 6, rows: 5, maxW: 840, maxH: 640, rowH: 90 },
-        '8x12': { cols: 8, rows: 12, maxW: 1200, maxH: 88, rowH: 86 },
-        '8x6': { cols: 8, rows: 6, maxW: 1200, maxH: 680, rowH: 88 },
-        '4x5': { cols: 4, rows: 5, maxW: 460, maxH: 560, rowH: 84 },
-        '6x6': { cols: 6, rows: 6, maxW: 820, maxH: 760, rowH: 88 }
+        '6x5': { cols: 6, rows: 5, maxW: 1380, maxH: 820 },
+        '4x6': { cols: 4, rows: 6, maxW: 620, maxH: 900 },
+        '8x12': { cols: 8, rows: 12, maxW: 1400, maxH: 920 },
+        '8x6': { cols: 8, rows: 6, maxW: 1400, maxH: 820 },
+        '4x5': { cols: 4, rows: 5, maxW: 560, maxH: 740 },
+        '6x6': { cols: 6, rows: 6, maxW: 1200, maxH: 880 }
     };
 
     function detectOptimalGridSize() {
@@ -40,48 +26,24 @@
         const h = window.innerHeight;
         const isPortrait = h > w;
 
-        // 1. Large Displays / Desktop / Ultrawide / 4K (w >= 1150px)
-        if (w >= 1150) {
-            if (h >= 850) {
-                return '8x12'; // Standard large desktop display
-            } else if (h >= 620) {
-                return '8x12'; // Standard widescreen 8x12 with smooth vertical scrolling
-            } else {
-                return '8x6';  // Shorter widescreen
-            }
+        if (isPortrait) {
+            return h >= 740 ? '4x6' : '4x5';
         }
 
-        // 2. Medium Displays / Tablets / Landscape (600px <= w < 1150px, or landscape w >= 550px)
-        if (w >= 600 || (!isPortrait && w >= 550)) {
-            if (!isPortrait || w >= 740) {
-                return '6x5'; // Standard tablet / landscape grid
-            } else {
-                return h >= 800 ? '6x6' : '4x6'; // Tablet portrait
-            }
+        // Landscape / Tablet / Desktop
+        if (w >= 1200) {
+            return h >= 850 ? '8x6' : '6x5';
         }
-
-        // 3. Compact / Mobile Screens (w < 600px)
-        if (h >= 640) {
-            return '4x6'; // Standard phone portrait grid
-        } else {
-            return '4x5'; // Compact short phone grid
-        }
+        return '6x5';
     }
 
     function applyGridSize(gridName) {
-        const config = STANDARD_GRIDS[gridName] || STANDARD_GRIDS['4x6'];
+        const config = STANDARD_GRIDS[gridName] || STANDARD_GRIDS['6x5'];
         const container = document.getElementById('home-menu-container');
         if (container) {
             container.dataset.grid = gridName;
             container.style.setProperty('--home-grid-cols', config.cols);
             container.style.setProperty('--home-grid-rows', config.rows);
-            container.style.setProperty('--home-viewport-max-width', `${config.maxW}px`);
-            if (gridName === '8x12') {
-                container.style.setProperty('--home-viewport-max-height', '88vh');
-            } else {
-                container.style.setProperty('--home-viewport-max-height', `${config.maxH}px`);
-            }
-            container.style.setProperty('--home-grid-row-height', `${config.rowH}px`);
         }
 
         Object.keys(STANDARD_GRIDS).forEach(name => {
@@ -97,27 +59,58 @@
         applyGridSize(optimal);
     }
 
-    // --- State Persistence ---
+    // --- State Persistence & A-Z App Ordering ---
+    function getInstalledAppsListAZ() {
+        if (typeof apps === 'undefined') return [];
+        return Object.keys(apps)
+            .filter(name => name.toLowerCase() !== 'apps')
+            .sort((a, b) => a.localeCompare(b));
+    }
+
     function loadHomePages() {
         try {
             const saved = localStorage.getItem('astatine_home_pages');
             if (saved) {
                 homePages = JSON.parse(saved);
             } else {
-                homePages = JSON.parse(JSON.stringify(DEFAULT_PAGES));
+                buildDefaultPages();
             }
         } catch (e) {
             console.error('[HomeMenu] Error loading pages:', e);
-            homePages = JSON.parse(JSON.stringify(DEFAULT_PAGES));
+            buildDefaultPages();
         }
 
-        // Auto-discover all installed apps to ensure grandmothers and fathers never lose an app
         ensureAllAppsPresent();
+    }
+
+    function buildDefaultPages() {
+        const allAZ = getInstalledAppsListAZ();
+        const grid = window.currentHomeGrid || { cols: 6, rows: 5 };
+        const capacity = Math.max(12, grid.cols * grid.rows - 6);
+
+        // Page 0: System Media Widget + Weather Widget + first batch of A-Z apps
+        const page0 = [
+            { type: 'widget', appName: 'System', widgetId: 'system-media', size: 'small' },
+            { type: 'widget-weather', size: 'small' }
+        ];
+
+        let curPage = page0;
+        homePages = [curPage];
+
+        allAZ.forEach(appName => {
+            if (curPage.length >= capacity) {
+                curPage = [];
+                homePages.push(curPage);
+            }
+            curPage.push({ type: 'app', appName: appName });
+        });
     }
 
     function saveHomePages() {
         try {
             localStorage.setItem('astatine_home_pages', JSON.stringify(homePages));
+            const azList = getInstalledAppsListAZ();
+            localStorage.setItem('astatine_app_list_az', JSON.stringify(azList));
         } catch (e) {
             console.error('[HomeMenu] Error saving pages:', e);
         }
@@ -126,21 +119,25 @@
     function ensureAllAppsPresent() {
         if (typeof apps === 'undefined') return;
 
-        const allInstalledNames = Object.keys(apps).filter(name => name.toLowerCase() !== 'apps');
-        const presentNames = new Set();
+        const allAZ = getInstalledAppsListAZ();
+        const present = new Set();
 
         homePages.forEach(page => {
             page.forEach(item => {
                 if (item.type === 'app' && item.appName) {
-                    presentNames.add(item.appName);
+                    present.add(item.appName);
+                } else if (item.type === 'folder' && Array.isArray(item.items)) {
+                    item.items.forEach(sub => {
+                        if (sub.appName) present.add(sub.appName);
+                    });
                 }
             });
         });
 
-        const missing = allInstalledNames.filter(name => !presentNames.has(name));
+        const missing = allAZ.filter(name => !present.has(name));
         if (missing.length > 0) {
-            const grid = window.currentHomeGrid || { cols: 4, rows: 6 };
-            const pageCapacity = Math.max(16, (grid.cols * grid.rows) - 6);
+            const grid = window.currentHomeGrid || { cols: 6, rows: 5 };
+            const pageCapacity = Math.max(14, grid.cols * grid.rows - 4);
             let targetPage = homePages[homePages.length - 1];
             if (!targetPage || targetPage.length >= pageCapacity) {
                 targetPage = [];
@@ -158,14 +155,6 @@
     }
 
     // --- Beginnings State (Idle Start State) ---
-    function enterBeginningsState() {
-        document.body.classList.add('beginnings-active');
-        document.body.classList.remove('home-screen-active', 'home-edit-active');
-
-        // Motion detection ("Look at display") wakes to Home Screen
-        attachMotionWakeListener();
-    }
-
     function isWallpaperEditingActive() {
         return document.body.classList.contains('edit-mode-active') ||
             document.getElementById('wallpaper-switcher-overlay')?.classList.contains('show') ||
@@ -173,13 +162,18 @@
             document.getElementById('edit-mode-ui')?.style.display === 'block';
     }
 
+    function enterBeginningsState() {
+        document.body.classList.add('beginnings-active');
+        document.body.classList.remove('home-screen-active', 'home-edit-active');
+        attachMotionWakeListener();
+    }
+
     function exitBeginningsState() {
         if (!document.body.classList.contains('beginnings-active')) return;
-        if (isWallpaperEditingActive()) return; // Prevent home screen from being opened when editing wallpaper
+        if (isWallpaperEditingActive()) return;
 
         document.body.classList.remove('beginnings-active');
         document.body.classList.add('home-screen-active');
-
         detachMotionWakeListener();
 
         if (navigator.vibrate) {
@@ -191,7 +185,7 @@
     }
 
     function enterHomeScreen() {
-        if (isWallpaperEditingActive()) return; // Prevent home screen from being opened when editing wallpaper
+        if (isWallpaperEditingActive()) return;
         exitBeginningsState();
         document.body.classList.add('home-screen-active');
     }
@@ -205,7 +199,7 @@
                 detachMotionWakeListener();
                 return;
             }
-            if (isWallpaperEditingActive()) return; // Do not wake if editing wallpaper
+            if (isWallpaperEditingActive()) return;
 
             const acc = event.accelerationIncludingGravity;
             if (acc) {
@@ -229,13 +223,13 @@
         }
     }
 
-    // --- App Icon Resolution ---
+    // --- App Info Resolution ---
     function resolveAppInfo(appName) {
         if (typeof apps !== 'undefined' && apps[appName]) {
             const data = apps[appName];
             let iconSrc = data.icon;
             if (iconSrc && (iconSrc.startsWith('http') || iconSrc.startsWith('/') || iconSrc.startsWith('data:'))) {
-                // Keep as is
+                // As is
             } else if (iconSrc) {
                 iconSrc = `/assets/appicon/${iconSrc}`;
             } else {
@@ -254,28 +248,112 @@
         };
     }
 
-    function updateGridUnitSize() {
-        const viewport = document.getElementById('home-pages-viewport');
-        if (!viewport) return;
-        const vpWidth = viewport.clientWidth || viewport.offsetWidth || 400;
-        const grid = window.currentHomeGrid || { cols: 4, rows: 6 };
-        const cols = grid.cols;
-        const gap = 16;
-        const padding = 16;
-        const availableWidth = vpWidth - padding - (cols - 1) * gap;
-        const unitSize = Math.max(50, Math.floor(availableWidth / cols));
+    // --- Custom 2D Packing Positioning Engine (iPadOS Spacing) ---
+    function computePageLayout(items, cols, rows, W, H) {
+        const occupied = Array.from({ length: rows }, () => Array(cols).fill(false));
+        const layout = [];
 
-        const container = document.getElementById('home-menu-container');
-        if (container) {
-            container.style.setProperty('--home-grid-unit-size', `${unitSize}px`);
-            container.style.setProperty('--home-grid-gap', `${gap}px`);
+        const padX = Math.max(16, Math.floor(W * 0.03));
+        const padY = Math.max(16, Math.floor(H * 0.03));
+        const availW = W - 2 * padX;
+        const availH = H - 2 * padY;
+
+        const cellW = Math.floor(availW / cols);
+        const cellH = Math.floor(availH / rows);
+
+        const gapX = Math.max(12, Math.floor(cellW * 0.12));
+        const gapY = Math.max(12, Math.floor(cellH * 0.14));
+
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            let spanCols = 1;
+            let spanRows = 1;
+
+            if (item.type === 'widget' || item.type === 'widget-weather') {
+                const sz = item.size || 'small';
+                if (sz === 'small') {
+                    spanCols = Math.min(2, cols);
+                    spanRows = Math.min(2, rows);
+                } else if (sz === 'medium') {
+                    spanCols = Math.min(4, cols);
+                    spanRows = Math.min(2, rows);
+                } else if (sz === 'large') {
+                    spanCols = Math.min(4, cols);
+                    spanRows = Math.min(4, rows);
+                }
+            }
+
+            let placedR = -1;
+            let placedC = -1;
+
+            for (let r = 0; r <= rows - spanRows; r++) {
+                for (let c = 0; c <= cols - spanCols; c++) {
+                    let fits = true;
+                    for (let dr = 0; dr < spanRows; dr++) {
+                        for (let dc = 0; dc < spanCols; dc++) {
+                            if (occupied[r + dr][c + dc]) {
+                                fits = false;
+                                break;
+                            }
+                        }
+                        if (!fits) break;
+                    }
+                    if (fits) {
+                        placedR = r;
+                        placedC = c;
+                        break;
+                    }
+                }
+                if (placedR !== -1) break;
+            }
+
+            if (placedR !== -1) {
+                for (let dr = 0; dr < spanRows; dr++) {
+                    for (let dc = 0; dc < spanCols; dc++) {
+                        occupied[placedR + dr][placedC + dc] = true;
+                    }
+                }
+
+                const x = padX + placedC * cellW + Math.floor(gapX / 2);
+                const y = padY + placedR * cellH + Math.floor(gapY / 2);
+                const w = spanCols * cellW - gapX;
+                const h = spanRows * cellH - gapY;
+
+                layout.push({
+                    item,
+                    index: i,
+                    r: placedR,
+                    c: placedC,
+                    spanCols,
+                    spanRows,
+                    x,
+                    y,
+                    w,
+                    h,
+                    overflow: false
+                });
+            } else {
+                layout.push({
+                    item,
+                    index: i,
+                    r: 0,
+                    c: 0,
+                    spanCols: 1,
+                    spanRows: 1,
+                    x: 0,
+                    y: 0,
+                    w: cellW - gapX,
+                    h: cellH - gapY,
+                    overflow: true
+                });
+            }
         }
+
+        return { layout, cellW, cellH, gapX, gapY, padX, padY };
     }
 
-    // --- Rendering Home Menu Grid ---
+    // --- Rendering Home Menu Pages ---
     function renderHomePages() {
-        updateGridUnitSize();
-
         const viewport = document.getElementById('home-pages-viewport');
         if (!viewport) return;
 
@@ -288,14 +366,33 @@
         }
         track.innerHTML = '';
 
+        const grid = window.currentHomeGrid || { cols: 6, rows: 5 };
+        const vpW = viewport.clientWidth || 800;
+        const vpH = viewport.clientHeight || 600;
+
         homePages.forEach((pageItems, pageIdx) => {
             const pageEl = document.createElement('div');
             pageEl.className = 'home-page';
             pageEl.dataset.pageIndex = pageIdx;
 
-            pageItems.forEach((item, itemIdx) => {
-                const itemEl = createGridItemElement(item, pageIdx, itemIdx);
-                if (itemEl) pageEl.appendChild(itemEl);
+            const { layout } = computePageLayout(pageItems, grid.cols, grid.rows, vpW, vpH);
+
+            layout.forEach(entry => {
+                if (entry.overflow) return;
+                const itemEl = createItemElement(entry.item, pageIdx, entry.index);
+                if (itemEl) {
+                    itemEl.classList.add('home-grid-item');
+                    itemEl.style.width = `${entry.w}px`;
+                    itemEl.style.height = `${entry.h}px`;
+                    itemEl.style.transform = `translate3d(${entry.x}px, ${entry.y}px, 0)`;
+                    itemEl.dataset.origX = entry.x;
+                    itemEl.dataset.origY = entry.y;
+                    itemEl.dataset.origW = entry.w;
+                    itemEl.dataset.origH = entry.h;
+                    itemEl.dataset.pageIndex = pageIdx;
+                    itemEl.dataset.itemIndex = entry.index;
+                    pageEl.appendChild(itemEl);
+                }
             });
 
             track.appendChild(pageEl);
@@ -305,256 +402,300 @@
         updateTrackTransform();
     }
 
-    function createGridItemElement(item, pageIdx, itemIdx) {
-        // App Shortcut: MUST use user's CSS classes (<div class="app-icon"><div class="app-icon-img"><img ...></div><span>...</span></div>)
+    function createItemElement(item, pageIdx, itemIdx) {
         if (item.type === 'app') {
-            const info = resolveAppInfo(item.appName);
-
-            const appIcon = document.createElement('div');
-            appIcon.className = 'app-icon';
-            appIcon.dataset.app = item.appName;
-            appIcon.dataset.pageIndex = pageIdx;
-            appIcon.dataset.itemIndex = itemIdx;
-
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'home-item-remove-btn';
-            removeBtn.innerHTML = '✕';
-            removeBtn.title = 'Remove';
-            removeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                removeHomeItem(pageIdx, itemIdx);
-            });
-            appIcon.appendChild(removeBtn);
-
-            const imgContainer = document.createElement('div');
-            imgContainer.className = 'app-icon-img';
-
-            const img = document.createElement('img');
-            img.src = info.icon;
-            img.alt = info.name;
-            img.onerror = () => { img.src = '/assets/img/icon.svg'; };
-            imgContainer.appendChild(img);
-            appIcon.appendChild(imgContainer);
-
-            const label = document.createElement('span');
-            label.textContent = info.name;
-            appIcon.appendChild(label);
-
-            appIcon.addEventListener('click', (e) => {
-                if (document.body.classList.contains('home-edit-active')) return;
-                e.preventDefault();
-                e.stopPropagation();
-                if (typeof createFullscreenEmbed === 'function') {
-                    createFullscreenEmbed(info.url);
-                }
-            });
-
-            setupItemLongPress(appIcon);
-            setupItemDragAndDrop(appIcon, pageIdx, itemIdx, item);
-            return appIcon;
+            return createAppItemElement(item, pageIdx, itemIdx);
         }
-
-        // Home Screen Weather Widget (from existing home screen weather component)
+        if (item.type === 'folder') {
+            return createFolderItemElement(item, pageIdx, itemIdx);
+        }
         if (item.type === 'widget-weather') {
-            const instance = document.createElement('div');
-            instance.className = 'widget-instance weather-widget-instance';
-            const size = item.size || 'small';
-            instance.dataset.size = size;
-            instance.classList.add(size === 'large' ? 'size-large' : (size === 'medium' ? 'size-medium' : 'size-small'));
-            instance.dataset.pageIndex = pageIdx;
-            instance.dataset.itemIndex = itemIdx;
-
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'home-item-remove-btn';
-            removeBtn.innerHTML = '✕';
-            removeBtn.title = 'Remove';
-            removeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                removeHomeItem(pageIdx, itemIdx);
-            });
-            instance.appendChild(removeBtn);
-
-            const resizeBtn = document.createElement('button');
-            resizeBtn.className = 'home-item-resize-btn';
-            resizeBtn.innerHTML = '<span class="material-symbols-rounded">aspect_ratio</span>';
-            resizeBtn.title = 'Resize Widget';
-            resizeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                cycleWidgetSize(pageIdx, itemIdx);
-            });
-            instance.appendChild(resizeBtn);
-
-            const resizeHandle = document.createElement('div');
-            resizeHandle.className = 'home-widget-resize-handle';
-            resizeHandle.title = 'Drag to Resize';
-            setupWidgetResizeHandle(resizeHandle, instance, pageIdx, itemIdx);
-            instance.appendChild(resizeHandle);
-
-            const tempEl = document.getElementById('temperature');
-            const currentTemp = tempEl ? tempEl.textContent.trim() : '21°';
-            const iconEl = document.getElementById('weather-icon');
-            const iconHtml = iconEl ? iconEl.innerHTML : '<span class="material-symbols-rounded">partly_cloudy_day</span>';
-
-            const content = document.createElement('div');
-            content.className = 'weather-widget-content';
-            content.innerHTML = `
-                <div class="weather-top-row">
-                    <span class="weather-title" data-lang-key="WEATHER">Weather</span>
-                    <span class="weather-icon" id="home-grid-weather-icon">${iconHtml}</span>
-                </div>
-                <div class="temperature" id="home-grid-weather-temp">${currentTemp || '21°'}</div>
-                <span class="weather-subtext">Current</span>
-            `;
-            instance.appendChild(content);
-
-            const overlay = document.createElement('div');
-            overlay.className = 'widget-instance-overlay';
-            instance.appendChild(overlay);
-
-            instance.addEventListener('click', (e) => {
-                if (document.body.classList.contains('home-edit-active')) return;
-                e.stopPropagation();
-                if (typeof createFullscreenEmbed === 'function') {
-                    createFullscreenEmbed('https://polygol.github.io/weather/index.html');
-                }
-            });
-
-            setupItemLongPress(instance);
-            setupItemDragAndDrop(instance, pageIdx, itemIdx, item);
-            return instance;
+            return createWeatherWidgetElement(item, pageIdx, itemIdx);
         }
-
-        // Widgets from Polygol's Widget API (availableWidgets / registerWidget)
         if (item.type === 'widget') {
-            const widgetDef = (typeof availableWidgets !== 'undefined')
-                ? availableWidgets[item.appName]?.find(w => w.widgetId === item.widgetId)
-                : null;
-
-            if (!widgetDef) return null;
-
-            const instance = document.createElement('div');
-            instance.className = 'widget-instance';
-            const size = item.size || 'small';
-            instance.dataset.size = size;
-            instance.classList.add(size === 'large' ? 'size-large' : (size === 'medium' ? 'size-medium' : 'size-small'));
-            instance.dataset.widgetId = item.widgetId;
-            instance.dataset.appName = item.appName;
-            instance.dataset.pageIndex = pageIdx;
-            instance.dataset.itemIndex = itemIdx;
-
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'home-item-remove-btn';
-            removeBtn.innerHTML = '✕';
-            removeBtn.title = 'Remove';
-            removeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                removeHomeItem(pageIdx, itemIdx);
-            });
-            instance.appendChild(removeBtn);
-
-            const resizeBtn = document.createElement('button');
-            resizeBtn.className = 'home-item-resize-btn';
-            resizeBtn.innerHTML = '<span class="material-symbols-rounded">aspect_ratio</span>';
-            resizeBtn.title = 'Resize Widget';
-            resizeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                cycleWidgetSize(pageIdx, itemIdx);
-            });
-            instance.appendChild(resizeBtn);
-
-            const resizeHandle = document.createElement('div');
-            resizeHandle.className = 'home-widget-resize-handle';
-            resizeHandle.title = 'Drag to Resize';
-            setupWidgetResizeHandle(resizeHandle, instance, pageIdx, itemIdx);
-            instance.appendChild(resizeHandle);
-
-            const iframe = document.createElement('iframe');
-            iframe.src = widgetDef.url;
-            iframe.setAttribute('data-gurasuraisu-iframe', 'true');
-            iframe.scrolling = 'no';
-            instance.appendChild(iframe);
-
-            const overlay = document.createElement('div');
-            overlay.className = 'widget-instance-overlay';
-            instance.appendChild(overlay);
-
-            instance.addEventListener('click', (e) => {
-                if (document.body.classList.contains('home-edit-active')) return;
-                e.stopPropagation();
-                if (widgetDef.openUrl) {
-                    if (widgetDef.openUrl === '#open-last-media-app') {
-                        if (typeof activeMediaSessionApp !== 'undefined' && activeMediaSessionApp && apps[activeMediaSessionApp]) {
-                            createFullscreenEmbed(apps[activeMediaSessionApp].url);
-                        } else {
-                            createFullscreenEmbed('/music/index.html');
-                        }
-                    } else if (typeof createFullscreenEmbed === 'function') {
-                        createFullscreenEmbed(widgetDef.openUrl);
-                    }
-                }
-            });
-
-            setupItemLongPress(instance);
-            setupItemDragAndDrop(instance, pageIdx, itemIdx, item);
-            return instance;
+            return createSystemWidgetElement(item, pageIdx, itemIdx);
         }
-
         return null;
     }
 
-    // --- iPadOS Widget Resize Functionality ---
-    function cycleWidgetSize(pageIdx, itemIdx) {
-        if (!homePages[pageIdx] || !homePages[pageIdx][itemIdx]) return;
-        const item = homePages[pageIdx][itemIdx];
-        const currentSize = item.size || 'small';
-        let nextSize = 'small';
-        if (currentSize === 'small') {
-            nextSize = 'medium';
-        } else if (currentSize === 'medium') {
-            nextSize = 'large';
-        } else {
-            nextSize = 'small';
-        }
-        item.size = nextSize;
-        saveHomePages();
-        renderHomePages();
-        if (navigator.vibrate) try { navigator.vibrate(30); } catch (e) {}
+    // --- App Icon Item (Strictly using user's CSS classes) ---
+    function createAppItemElement(item, pageIdx, itemIdx) {
+        const info = resolveAppInfo(item.appName);
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'home-grid-item app-grid-item';
+        wrapper.dataset.app = item.appName;
+
+        // Material Symbol Remove Button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'home-item-remove-btn';
+        removeBtn.title = 'Remove';
+        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeHomeItem(pageIdx, itemIdx);
+        });
+        wrapper.appendChild(removeBtn);
+
+        // Required app-icon markup
+        const appIcon = document.createElement('div');
+        appIcon.className = 'app-icon';
+        appIcon.dataset.app = item.appName;
+
+        const imgContainer = document.createElement('div');
+        imgContainer.className = 'app-icon-img';
+
+        const img = document.createElement('img');
+        img.src = info.icon;
+        img.alt = info.name;
+        img.onerror = () => { img.src = '/assets/img/icon.svg'; };
+        imgContainer.appendChild(img);
+        appIcon.appendChild(imgContainer);
+
+        const label = document.createElement('span');
+        label.textContent = info.name;
+        appIcon.appendChild(label);
+
+        wrapper.appendChild(appIcon);
+
+        wrapper.addEventListener('click', (e) => {
+            if (document.body.classList.contains('home-edit-active')) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof createFullscreenEmbed === 'function') {
+                createFullscreenEmbed(info.url);
+            }
+        });
+
+        setupItemLongPress(wrapper);
+        setupItemDragAndDrop(wrapper, pageIdx, itemIdx, item);
+        return wrapper;
     }
 
+    // --- Folder Item ---
+    function createFolderItemElement(item, pageIdx, itemIdx) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'home-grid-item folder-grid-item';
+
+        // Material Symbol Remove Button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'home-item-remove-btn';
+        removeBtn.title = 'Remove';
+        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeHomeItem(pageIdx, itemIdx);
+        });
+        wrapper.appendChild(removeBtn);
+
+        const folderIcon = document.createElement('div');
+        folderIcon.className = 'folder-icon-item';
+
+        const previewBox = document.createElement('div');
+        previewBox.className = 'folder-preview-box';
+
+        const subItems = Array.isArray(item.items) ? item.items.slice(0, 4) : [];
+        subItems.forEach(sub => {
+            const subInfo = resolveAppInfo(sub.appName);
+            const miniImg = document.createElement('img');
+            miniImg.className = 'folder-preview-mini-img';
+            miniImg.src = subInfo.icon;
+            miniImg.alt = subInfo.name;
+            miniImg.onerror = () => { miniImg.src = '/assets/img/icon.svg'; };
+            previewBox.appendChild(miniImg);
+        });
+
+        folderIcon.appendChild(previewBox);
+
+        const label = document.createElement('span');
+        label.className = 'folder-label';
+        label.textContent = item.name || 'Folder';
+        folderIcon.appendChild(label);
+
+        wrapper.appendChild(folderIcon);
+
+        wrapper.addEventListener('click', (e) => {
+            if (document.body.classList.contains('home-edit-active')) return;
+            e.stopPropagation();
+            openFolder(item, pageIdx, itemIdx);
+        });
+
+        setupItemLongPress(wrapper);
+        setupItemDragAndDrop(wrapper, pageIdx, itemIdx, item);
+        return wrapper;
+    }
+
+    // --- Weather Widget Element ---
+    function createWeatherWidgetElement(item, pageIdx, itemIdx) {
+        const instance = document.createElement('div');
+        instance.className = 'home-grid-item widget-grid-item widget-instance weather-widget-instance';
+        const size = item.size || 'small';
+        instance.dataset.size = size;
+        instance.classList.add(size === 'large' ? 'size-large' : (size === 'medium' ? 'size-medium' : 'size-small'));
+
+        // Material Symbol Remove Button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'home-item-remove-btn';
+        removeBtn.title = 'Remove';
+        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeHomeItem(pageIdx, itemIdx);
+        });
+        instance.appendChild(removeBtn);
+
+        // Touch-Driven Resize Handle (NO BUTTONS!)
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'home-widget-resize-handle';
+        resizeHandle.title = 'Drag to Resize';
+        resizeHandle.innerHTML = '<span class="material-symbols-rounded">drag_pan</span>';
+        setupWidgetResizeHandle(resizeHandle, instance, pageIdx, itemIdx);
+        instance.appendChild(resizeHandle);
+
+        const tempEl = document.getElementById('temperature');
+        const currentTemp = tempEl ? tempEl.textContent.trim() : '21°';
+        const iconEl = document.getElementById('weather-icon');
+        const iconHtml = iconEl ? iconEl.innerHTML : '<span class="material-symbols-rounded">partly_cloudy_day</span>';
+
+        const content = document.createElement('div');
+        content.className = 'weather-widget-content';
+        content.innerHTML = `
+            <div class="weather-top-row">
+                <span class="weather-title" data-lang-key="WEATHER">Weather</span>
+                <span class="weather-icon" id="home-grid-weather-icon">${iconHtml}</span>
+            </div>
+            <div class="temperature" id="home-grid-weather-temp">${currentTemp || '21°'}</div>
+            <span class="weather-subtext">Current</span>
+        `;
+        instance.appendChild(content);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'widget-instance-overlay';
+        instance.appendChild(overlay);
+
+        instance.addEventListener('click', (e) => {
+            if (document.body.classList.contains('home-edit-active')) return;
+            e.stopPropagation();
+            if (typeof createFullscreenEmbed === 'function') {
+                createFullscreenEmbed('https://polygol.github.io/weather/index.html');
+            }
+        });
+
+        setupItemLongPress(instance);
+        setupItemDragAndDrop(instance, pageIdx, itemIdx, item);
+        return instance;
+    }
+
+    // --- System / Gurasuraisu Widget Element ---
+    function createSystemWidgetElement(item, pageIdx, itemIdx) {
+        const widgetDef = (typeof availableWidgets !== 'undefined')
+            ? availableWidgets[item.appName]?.find(w => w.widgetId === item.widgetId)
+            : null;
+
+        if (!widgetDef) return null;
+
+        const instance = document.createElement('div');
+        instance.className = 'home-grid-item widget-grid-item widget-instance';
+        const size = item.size || 'small';
+        instance.dataset.size = size;
+        instance.classList.add(size === 'large' ? 'size-large' : (size === 'medium' ? 'size-medium' : 'size-small'));
+        instance.dataset.widgetId = item.widgetId;
+        instance.dataset.appName = item.appName;
+
+        // Material Symbol Remove Button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'home-item-remove-btn';
+        removeBtn.title = 'Remove';
+        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeHomeItem(pageIdx, itemIdx);
+        });
+        instance.appendChild(removeBtn);
+
+        // Touch-Driven Resize Handle (NO BUTTONS!)
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'home-widget-resize-handle';
+        resizeHandle.title = 'Drag to Resize';
+        resizeHandle.innerHTML = '<span class="material-symbols-rounded">drag_pan</span>';
+        setupWidgetResizeHandle(resizeHandle, instance, pageIdx, itemIdx);
+        instance.appendChild(resizeHandle);
+
+        const iframe = document.createElement('iframe');
+        iframe.src = widgetDef.url;
+        iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+        iframe.scrolling = 'no';
+        instance.appendChild(iframe);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'widget-instance-overlay';
+        instance.appendChild(overlay);
+
+        instance.addEventListener('click', (e) => {
+            if (document.body.classList.contains('home-edit-active')) return;
+            e.stopPropagation();
+            if (widgetDef.openUrl) {
+                if (widgetDef.openUrl === '#open-last-media-app') {
+                    if (typeof activeMediaSessionApp !== 'undefined' && activeMediaSessionApp && apps[activeMediaSessionApp]) {
+                        createFullscreenEmbed(apps[activeMediaSessionApp].url);
+                    } else {
+                        createFullscreenEmbed('/music/index.html');
+                    }
+                } else if (typeof createFullscreenEmbed === 'function') {
+                    createFullscreenEmbed(widgetDef.openUrl);
+                }
+            }
+        });
+
+        setupItemLongPress(instance);
+        setupItemDragAndDrop(instance, pageIdx, itemIdx, item);
+        return instance;
+    }
+
+    // --- Touch-Only Smooth Widget Resizing (NO BUTTONS) ---
     function setupWidgetResizeHandle(handle, instance, pageIdx, itemIdx) {
         let startX = 0, startY = 0;
+        let startW = 0, startH = 0;
         let isResizing = false;
 
         const onTouchStart = (e) => {
             if (!document.body.classList.contains('home-edit-active')) return;
             if (e.touches.length !== 1) return;
             e.stopPropagation();
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
+
+            const t = e.touches[0];
+            startX = t.clientX;
+            startY = t.clientY;
+            startW = instance.offsetWidth;
+            startH = instance.offsetHeight;
             isResizing = true;
+
+            instance.classList.add('widget-resizing-live');
+            if (navigator.vibrate) try { navigator.vibrate(20); } catch (err) {}
         };
 
         const onTouchMove = (e) => {
             if (!isResizing || e.touches.length !== 1) return;
             e.stopPropagation();
             if (e.cancelable) e.preventDefault();
-            const dx = e.touches[0].clientX - startX;
-            const dy = e.touches[0].clientY - startY;
 
-            if (dx > 40 || dy > 40) {
-                instance.style.transform = 'scale(1.04)';
-            } else if (dx < -40 || dy < -40) {
-                instance.style.transform = 'scale(0.96)';
-            } else {
-                instance.style.transform = '';
-            }
+            const t = e.touches[0];
+            const dx = t.clientX - startX;
+            const dy = t.clientY - startY;
+
+            const liveW = Math.max(100, startW + dx);
+            const liveH = Math.max(100, startH + dy);
+
+            instance.style.width = `${liveW}px`;
+            instance.style.height = `${liveH}px`;
         };
 
         const onTouchEnd = (e) => {
             if (!isResizing) return;
             isResizing = false;
-            instance.style.transform = '';
             e.stopPropagation();
+
+            instance.classList.remove('widget-resizing-live');
 
             const endTouch = e.changedTouches ? e.changedTouches[0] : null;
             const dx = endTouch ? endTouch.clientX - startX : 0;
@@ -566,10 +707,10 @@
             const currentSize = item.size || 'small';
             let targetSize = currentSize;
 
-            if (dx > 40 || dy > 40) {
+            if (dx > 60 || dy > 60) {
                 if (currentSize === 'small') targetSize = 'medium';
                 else if (currentSize === 'medium') targetSize = 'large';
-            } else if (dx < -40 || dy < -40) {
+            } else if (dx < -60 || dy < -60) {
                 if (currentSize === 'large') targetSize = 'medium';
                 else if (currentSize === 'medium') targetSize = 'small';
             }
@@ -579,6 +720,8 @@
                 saveHomePages();
                 renderHomePages();
                 if (navigator.vibrate) try { navigator.vibrate(35); } catch (err) {}
+            } else {
+                renderHomePages();
             }
         };
 
@@ -588,32 +731,19 @@
         handle.addEventListener('touchcancel', onTouchEnd, { passive: false });
     }
 
-    // --- iPadOS Drag & Drop Rearranging (Touch-First & Fluid) ---
+    // --- Smooth iOS-Style Drag & Drop Rearranging (Touch-First & Fluid) ---
     function setupItemDragAndDrop(itemEl, pageIdx, itemIdx, itemObj) {
         let startX = 0, startY = 0;
+        let origX = 0, origY = 0;
         let isDragging = false;
-        let placeholder = null;
-        let currentDropTargetIdx = itemIdx;
-        let slotCache = [];
-
-        function measureSlots() {
-            const pageEl = itemEl.parentNode;
-            if (!pageEl) return [];
-            const cards = Array.from(pageEl.querySelectorAll('.app-icon, .widget-instance'));
-            return cards.map((card, idx) => {
-                const rect = card.getBoundingClientRect();
-                return {
-                    element: card,
-                    index: idx,
-                    cx: rect.left + rect.width / 2,
-                    cy: rect.top + rect.height / 2
-                };
-            });
-        }
+        let currentDropIdx = itemIdx;
+        let folderHoverTarget = null;
+        let folderHoverTimer = null;
+        let currentOrder = [];
 
         const onTouchStart = (e) => {
             if (!document.body.classList.contains('home-edit-active')) return;
-            if (e.target.closest('.home-item-remove-btn') || e.target.closest('.home-item-resize-btn') || e.target.closest('.home-widget-resize-handle')) {
+            if (e.target.closest('.home-item-remove-btn') || e.target.closest('.home-widget-resize-handle')) {
                 return;
             }
             if (e.touches.length !== 1) return;
@@ -621,8 +751,11 @@
             const t = e.touches[0];
             startX = t.clientX;
             startY = t.clientY;
+            origX = parseFloat(itemEl.dataset.origX || 0);
+            origY = parseFloat(itemEl.dataset.origY || 0);
             isDragging = false;
-            currentDropTargetIdx = itemIdx;
+            currentDropIdx = itemIdx;
+            currentOrder = [...(homePages[pageIdx] || [])];
         };
 
         const onTouchMove = (e) => {
@@ -634,55 +767,106 @@
             const dy = t.clientY - startY;
             const dist = Math.hypot(dx, dy);
 
-            // Drag Threshold: must move at least 10px to initiate rearranging
             if (!isDragging && dist > 10) {
                 isDragging = true;
                 itemEl.classList.add('is-dragging');
-
-                placeholder = document.createElement('div');
-                placeholder.className = 'home-grid-placeholder';
-                if (itemEl.classList.contains('size-small')) placeholder.classList.add('size-small');
-                else if (itemEl.classList.contains('size-medium')) placeholder.classList.add('size-medium');
-                else if (itemEl.classList.contains('size-large')) placeholder.classList.add('size-large');
-
-                itemEl.parentNode.insertBefore(placeholder, itemEl.nextSibling);
-                slotCache = measureSlots();
                 if (navigator.vibrate) try { navigator.vibrate(25); } catch (err) {}
             }
 
-            if (isDragging) {
-                if (e.cancelable) e.preventDefault();
-                itemEl.style.transform = `translate(${dx}px, ${dy}px) scale(1.08)`;
+            if (!isDragging) return;
+            if (e.cancelable) e.preventDefault();
 
-                // Compute closest slot mathematically with zero reflow thrashing
-                let closestSlot = null;
-                let minDist = Infinity;
+            // Dragged item moves immediately with finger
+            itemEl.style.transform = `translate3d(${origX + dx}px, ${origY + dy}px, 0) scale(1.08)`;
 
-                for (let i = 0; i < slotCache.length; i++) {
-                    const slot = slotCache[i];
-                    const d = Math.hypot(slot.cx - t.clientX, slot.cy - t.clientY);
-                    if (d < minDist) {
-                        minDist = d;
-                        closestSlot = slot;
+            const pageEl = itemEl.parentNode;
+            if (!pageEl) return;
+
+            const otherCards = Array.from(pageEl.querySelectorAll('.home-grid-item')).filter(el => el !== itemEl);
+
+            // 1. Detect if hovering over another app to create folder
+            let candidateFolderTarget = null;
+            if (itemObj.type === 'app') {
+                for (let i = 0; i < otherCards.length; i++) {
+                    const card = otherCards[i];
+                    const rect = card.getBoundingClientRect();
+                    const cx = rect.left + rect.width / 2;
+                    const cy = rect.top + rect.height / 2;
+                    const distToCenter = Math.hypot(cx - t.clientX, cy - t.clientY);
+
+                    if (distToCenter < Math.min(rect.width, rect.height) * 0.45) {
+                        const targetItem = homePages[pageIdx]?.[parseInt(card.dataset.itemIndex)];
+                        if (targetItem && (targetItem.type === 'app' || targetItem.type === 'folder')) {
+                            candidateFolderTarget = card;
+                            break;
+                        }
                     }
                 }
+            }
 
-                if (closestSlot && closestSlot.index !== currentDropTargetIdx && minDist < 120) {
-                    currentDropTargetIdx = closestSlot.index;
-                    const pageEl = itemEl.parentNode;
-                    if (pageEl && placeholder) {
-                        const allChildren = Array.from(pageEl.children);
-                        const placeholderPos = allChildren.indexOf(placeholder);
-                        const targetPos = allChildren.indexOf(closestSlot.element);
-
-                        if (targetPos > placeholderPos) {
-                            closestSlot.element.after(placeholder);
-                        } else {
-                            closestSlot.element.before(placeholder);
+            if (candidateFolderTarget) {
+                if (folderHoverTarget !== candidateFolderTarget) {
+                    clearTimeout(folderHoverTimer);
+                    if (folderHoverTarget) folderHoverTarget.classList.remove('folder-target-hover');
+                    folderHoverTarget = candidateFolderTarget;
+                    folderHoverTimer = setTimeout(() => {
+                        if (isDragging && folderHoverTarget === candidateFolderTarget) {
+                            folderHoverTarget.classList.add('folder-target-hover');
+                            if (navigator.vibrate) try { navigator.vibrate(20); } catch (err) {}
                         }
-                        slotCache = measureSlots();
-                        if (navigator.vibrate) try { navigator.vibrate(15); } catch (err) {}
-                    }
+                    }, 350);
+                }
+                return;
+            } else {
+                if (folderHoverTarget) {
+                    clearTimeout(folderHoverTimer);
+                    folderHoverTarget.classList.remove('folder-target-hover');
+                    folderHoverTarget = null;
+                }
+            }
+
+            // 2. Smoothly rearrange items in real time
+            let closestIdx = itemIdx;
+            let minDist = Infinity;
+
+            otherCards.forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const d = Math.hypot(cx - t.clientX, cy - t.clientY);
+                if (d < minDist) {
+                    minDist = d;
+                    closestIdx = parseInt(card.dataset.itemIndex);
+                }
+            });
+
+            if (closestIdx !== currentDropIdx && minDist < 140) {
+                currentDropIdx = closestIdx;
+
+                // Recompute prospective positions for other cards
+                const tempOrder = [...(homePages[pageIdx] || [])];
+                const from = tempOrder.indexOf(itemObj);
+                if (from !== -1 && currentDropIdx >= 0 && currentDropIdx < tempOrder.length) {
+                    const [moved] = tempOrder.splice(from, 1);
+                    tempOrder.splice(currentDropIdx, 0, moved);
+
+                    const grid = window.currentHomeGrid || { cols: 6, rows: 5 };
+                    const vp = document.getElementById('home-pages-viewport');
+                    const vpW = vp ? vp.clientWidth : 800;
+                    const vpH = vp ? vp.clientHeight : 600;
+
+                    const { layout } = computePageLayout(tempOrder, grid.cols, grid.rows, vpW, vpH);
+
+                    // Animate other items smoothly to shifted coordinates
+                    otherCards.forEach(card => {
+                        const targetObj = homePages[pageIdx]?.[parseInt(card.dataset.itemIndex)];
+                        const newEntry = layout.find(entry => entry.item === targetObj);
+                        if (newEntry && !newEntry.overflow) {
+                            card.style.transform = `translate3d(${newEntry.x}px, ${newEntry.y}px, 0)`;
+                        }
+                    });
+
+                    if (navigator.vibrate) try { navigator.vibrate(15); } catch (err) {}
                 }
             }
         };
@@ -691,26 +875,52 @@
             if (!isDragging) return;
             isDragging = false;
             itemEl.classList.remove('is-dragging');
-            itemEl.style.transform = '';
+            clearTimeout(folderHoverTimer);
 
-            if (placeholder && placeholder.parentNode) {
-                placeholder.remove();
-            }
-
-            if (homePages[pageIdx]) {
+            // Handle Folder Creation / Merging
+            if (folderHoverTarget && folderHoverTarget.classList.contains('folder-target-hover')) {
+                folderHoverTarget.classList.remove('folder-target-hover');
+                const targetIdx = parseInt(folderHoverTarget.dataset.itemIndex);
                 const page = homePages[pageIdx];
-                const fromIdx = itemObj ? page.indexOf(itemObj) : itemIdx;
-                const actualFrom = fromIdx !== -1 ? fromIdx : itemIdx;
 
-                if (actualFrom !== currentDropTargetIdx && currentDropTargetIdx >= 0 && currentDropTargetIdx < page.length) {
-                    const [movedItem] = page.splice(actualFrom, 1);
-                    if (movedItem) {
-                        page.splice(currentDropTargetIdx, 0, movedItem);
+                if (page && page[targetIdx]) {
+                    const targetItem = page[targetIdx];
+                    const fromIdx = page.indexOf(itemObj);
+
+                    if (fromIdx !== -1) {
+                        const [draggedApp] = page.splice(fromIdx, 1);
+                        if (targetItem.type === 'app') {
+                            const newFolder = {
+                                type: 'folder',
+                                name: 'Folder',
+                                items: [
+                                    { type: 'app', appName: targetItem.appName },
+                                    { type: 'app', appName: draggedApp.appName }
+                                ]
+                            };
+                            const insertAt = page.indexOf(targetItem);
+                            page.splice(insertAt, 1, newFolder);
+                        } else if (targetItem.type === 'folder') {
+                            if (!Array.isArray(targetItem.items)) targetItem.items = [];
+                            targetItem.items.push({ type: 'app', appName: draggedApp.appName });
+                        }
                         saveHomePages();
                         renderHomePages();
-                        if (navigator.vibrate) try { navigator.vibrate(35); } catch (err) {}
+                        if (navigator.vibrate) try { navigator.vibrate(40); } catch (err) {}
                         return;
                     }
+                }
+            }
+
+            // Normal Rearranging
+            const page = homePages[pageIdx];
+            if (page) {
+                const fromIdx = page.indexOf(itemObj);
+                if (fromIdx !== -1 && currentDropIdx !== fromIdx && currentDropIdx >= 0 && currentDropIdx < page.length) {
+                    const [moved] = page.splice(fromIdx, 1);
+                    page.splice(currentDropIdx, 0, moved);
+                    saveHomePages();
+                    if (navigator.vibrate) try { navigator.vibrate(30); } catch (err) {}
                 }
             }
 
@@ -761,6 +971,111 @@
         el.addEventListener('touchcancel', cancel, { passive: true });
     }
 
+    // --- Folder Overlay Modal ---
+    function openFolder(folderItem, pageIdx, itemIdx) {
+        if (document.body.classList.contains('home-edit-active')) return;
+
+        let overlay = document.getElementById('home-folder-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'home-folder-overlay';
+            overlay.className = 'home-folder-overlay';
+            overlay.innerHTML = `
+                <div class="home-folder-modal" id="home-folder-modal">
+                    <div class="home-folder-header">
+                        <input type="text" class="home-folder-title-input" id="home-folder-title-input" value="Folder" placeholder="Folder Name" />
+                    </div>
+                    <div class="home-folder-grid" id="home-folder-grid"></div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        activeFolderContext = { folderItem, pageIdx, itemIdx };
+
+        const titleInput = overlay.querySelector('#home-folder-title-input');
+        if (titleInput) {
+            titleInput.value = folderItem.name || 'Folder';
+            titleInput.oninput = () => {
+                folderItem.name = titleInput.value.trim() || 'Folder';
+                saveHomePages();
+                renderHomePages();
+            };
+        }
+
+        const grid = overlay.querySelector('#home-folder-grid');
+        if (grid) {
+            grid.innerHTML = '';
+            (folderItem.items || []).forEach((appItem, appIdx) => {
+                const info = resolveAppInfo(appItem.appName);
+
+                const icon = document.createElement('div');
+                icon.className = 'app-icon';
+                icon.dataset.app = appItem.appName;
+
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'app-icon-img';
+                const img = document.createElement('img');
+                img.src = info.icon;
+                img.alt = info.name;
+                img.onerror = () => { img.src = '/assets/img/icon.svg'; };
+                imgContainer.appendChild(img);
+                icon.appendChild(imgContainer);
+
+                const label = document.createElement('span');
+                label.textContent = info.name;
+                icon.appendChild(label);
+
+                icon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    closeFolder();
+                    if (typeof createFullscreenEmbed === 'function') {
+                        createFullscreenEmbed(info.url);
+                    }
+                });
+
+                grid.appendChild(icon);
+            });
+        }
+
+        overlay.onclick = (e) => {
+            if (e.target === overlay) closeFolder();
+        };
+
+        overlay.classList.add('show');
+    }
+
+    function closeFolder() {
+        const overlay = document.getElementById('home-folder-overlay');
+        if (overlay) {
+            overlay.classList.remove('show');
+        }
+
+        if (activeFolderContext) {
+            const { folderItem, pageIdx } = activeFolderContext;
+            // If folder has only 1 item remaining, unpack it into a single app
+            if (folderItem.items && folderItem.items.length === 1) {
+                const page = homePages[pageIdx];
+                const idx = page ? page.indexOf(folderItem) : -1;
+                if (idx !== -1) {
+                    page.splice(idx, 1, { type: 'app', appName: folderItem.items[0].appName });
+                    saveHomePages();
+                    renderHomePages();
+                }
+            } else if (folderItem.items && folderItem.items.length === 0) {
+                // If folder is empty, remove it
+                const page = homePages[pageIdx];
+                const idx = page ? page.indexOf(folderItem) : -1;
+                if (idx !== -1) {
+                    page.splice(idx, 1);
+                    saveHomePages();
+                    renderHomePages();
+                }
+            }
+        }
+        activeFolderContext = null;
+    }
+
     // --- Page Dots Indicators ---
     function renderPageIndicators() {
         const indicators = document.getElementById('home-page-indicators');
@@ -769,7 +1084,7 @@
 
         homePages.forEach((_, idx) => {
             const dot = document.createElement('div');
-            dot.className = 'home-page-dot' + (idx === currentHomePageIndex ? ' active' : '');
+            dot.className = `home-page-dot${idx === currentHomePageIndex ? ' active' : ''}`;
             dot.addEventListener('click', (e) => {
                 e.stopPropagation();
                 goToHomePage(idx);
@@ -810,7 +1125,6 @@
         }
     }
 
-    // UP / DOWN swipes strictly scroll home screen pages
     function scrollHomePage(direction) {
         const now = Date.now();
         if (now - lastScrollTime < 280) return;
@@ -879,7 +1193,7 @@
         setInterval(syncWeather, 3000);
     }
 
-    // --- Gesture Handling on Home Container ---
+    // --- Gesture Handling on Home Container & Cards Deck Integration ---
     function setupHomeContainerGestures() {
         const container = document.getElementById('home-menu-container');
         if (!container) return;
@@ -898,6 +1212,10 @@
         container.addEventListener('touchend', (e) => {
             if (!isTouch) return;
             isTouch = false;
+
+            if (document.body.classList.contains('home-edit-active') || document.body.classList.contains('edit-mode-active')) {
+                return;
+            }
 
             const endX = e.changedTouches[0].clientX;
             const endY = e.changedTouches[0].clientY;
@@ -925,12 +1243,21 @@
                     }
                 }
             }
-            // LEFT/RIGHT: App Switching ALWAYS (Astatine 27.1 fast app switching)
+            // LEFT/RIGHT: Cards Deck API (Interactive full-screen widgets)
             else if (absX >= 45 && absX > absY * 1.15) {
-                if (deltaX < 0) {
-                    if (typeof window.switchToNextApp === 'function') window.switchToNextApp();
-                } else {
-                    if (typeof window.switchToPrevApp === 'function') window.switchToPrevApp();
+                // Strictly guard: DO NOT allow Cards to be swiped on Beginning screen
+                if (document.body.classList.contains('beginnings-active')) {
+                    return;
+                }
+
+                // If Quick menu mode is enabled, gestures are disabled
+                if (typeof isQuickMenuEnabled === 'function' && isQuickMenuEnabled()) {
+                    return;
+                }
+
+                // Open Cards Deck API
+                if (window.CardsManager && typeof window.CardsManager.openCardsDeck === 'function') {
+                    window.CardsManager.openCardsDeck();
                 }
             }
         }, { passive: true });
@@ -938,14 +1265,14 @@
         // Tap on empty space dismisses edit mode
         container.addEventListener('click', (e) => {
             if (document.body.classList.contains('home-edit-active')) {
-                if (!e.target.closest('.home-item-remove-btn') && !e.target.closest('.app-icon') && !e.target.closest('.widget-instance')) {
+                if (!e.target.closest('.home-item-remove-btn') && !e.target.closest('.app-icon') && !e.target.closest('.widget-instance') && !e.target.closest('.folder-icon-item')) {
                     toggleHomeEditMode(false);
                 }
             }
         });
     }
 
-    // --- iPadOS Edit Mode Header Controls ---
+    // --- iPadOS Edit Mode Header Controls (Material Symbols Only) ---
     function setupEditModeHeader() {
         const addBtn = document.getElementById('home-edit-add-btn');
         if (addBtn && !addBtn.dataset.bound) {
@@ -977,19 +1304,18 @@
         setupEditModeHeader();
         startRealTimeSync();
 
-        // Auto-adapt grid listeners on screen resize and orientation change
         let gridResizeTimer = null;
         window.addEventListener('resize', () => {
             clearTimeout(gridResizeTimer);
             gridResizeTimer = setTimeout(() => {
                 autoAdaptGridSize();
-                updateGridUnitSize();
+                renderHomePages();
             }, 100);
         });
         window.addEventListener('orientationchange', () => {
             setTimeout(() => {
                 autoAdaptGridSize();
-                updateGridUnitSize();
+                renderHomePages();
             }, 150);
         });
 
@@ -997,7 +1323,7 @@
         enterBeginningsState();
     }
 
-    // Export to global scope
+    // Global Exposure
     window.initHomeMenu = initHomeMenu;
     window.enterBeginningsState = enterBeginningsState;
     window.exitBeginningsState = exitBeginningsState;
@@ -1011,9 +1337,12 @@
     window.toggleHomeEditMode = toggleHomeEditMode;
     window.autoAdaptGridSize = autoAdaptGridSize;
     window.detectOptimalGridSize = detectOptimalGridSize;
+    window.openFolder = openFolder;
+    window.closeFolder = closeFolder;
     window.setHomeGridSize = (name) => {
         if (STANDARD_GRIDS[name]) {
             applyGridSize(name);
+            renderHomePages();
             return true;
         }
         return false;

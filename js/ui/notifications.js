@@ -74,8 +74,9 @@ function showPopup(message) {
         popup.style.backgroundColor = 'var(--accent)';
         
         const fullscreenBtn = document.createElement('button');
-        fullscreenBtn.style.width = '100vw';
-        fullscreenBtn.style.height = '20vh';
+        fullscreenBtn.style.width = 'auto';
+        fullscreenBtn.style.height = 'auto';
+        fullscreenBtn.style.padding = '20px 24px';
         fullscreenBtn.style.pointerEvents = 'auto';
         fullscreenBtn.style.borderRadius = '500px';
         fullscreenBtn.style.backgroundColor = 'transparent';
@@ -85,9 +86,9 @@ function showPopup(message) {
         fullscreenBtn.style.display = 'flex';
         fullscreenBtn.style.alignItems = 'center';
         fullscreenBtn.style.justifyContent = 'center';
-        fullscreenBtn.style.gap = '20px';
+        fullscreenBtn.style.gap = '10px';
         fullscreenBtn.style.fontFamily = '"Open Runde", sans-serif';
-        fullscreenBtn.style.fontSize = '60px';
+        fullscreenBtn.style.fontSize = '32px';
         fullscreenBtn.style.fontWeight = 'bold';
         fullscreenBtn.style.zIndex = '9999'; // keep above other content
         
@@ -96,7 +97,7 @@ function showPopup(message) {
         icon.className = 'material-symbols-rounded';
         icon.textContent = 'expand_content';
         icon.style.fontFamily = 'Material Symbols Rounded';
-        icon.style.fontSize = '80px';
+        icon.style.fontSize = '40px';
         icon.style.lineHeight = '1'; // Helps with vertical alignment
         icon.style.display = 'flex'; // Makes the icon behave better for alignment
         icon.style.alignItems = 'center';

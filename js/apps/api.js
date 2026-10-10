@@ -251,6 +251,7 @@ function listCommonSettings() {
         'telemetryEnabled': localStorage.getItem('telemetryEnabled'),
         'navigationMode': localStorage.getItem('navigationMode') || 'gestures',
         'quickMenuEnabled': (localStorage.getItem('navigationMode') === 'quickmenu' || localStorage.getItem('quickMenuEnabled') === 'true').toString(),
+        'quickMenuPinned': (localStorage.getItem('quickMenuPinned') === 'true').toString(),
     };
 }
 
@@ -544,7 +545,7 @@ function setControlValueAndDispatch(key, value) {
         'profilySyncStatus', 'emergencySosHotkey', 'emergencySleepScreen', 'emergencyContacts',
         'locationPermissionMode', 'clipboardAccessMode', 'clearTempCacheOnClose', 'integrationWebhookUrl',
         'syncWidgetsExternalScreen', 'smartHomePairingMode', 'developerConsoleEnabled', 'colorPalette',
-        'navigationMode', 'quickMenuEnabled'
+        'navigationMode', 'quickMenuEnabled', 'quickMenuPinned'
     ];
     
     if (settingsWithoutDirectControl.includes(key)) {
@@ -555,6 +556,13 @@ function setControlValueAndDispatch(key, value) {
             const isQm = (key === 'navigationMode' && value === 'quickmenu') || (key === 'quickMenuEnabled' && value === 'true');
             localStorage.setItem('navigationMode', isQm ? 'quickmenu' : 'gestures');
             localStorage.setItem('quickMenuEnabled', isQm ? 'true' : 'false');
+            if (typeof window.updateNavigationModeUI === 'function') {
+                window.updateNavigationModeUI();
+            }
+        }
+
+        if (key === 'quickMenuPinned') {
+            localStorage.setItem('quickMenuPinned', value);
             if (typeof window.updateNavigationModeUI === 'function') {
                 window.updateNavigationModeUI();
             }
@@ -1039,12 +1047,16 @@ window.addEventListener('message', async (event) => { // Make listener async
                 closeSheetUI();
             }
         },
+        cards: {
+            register: (cardConfig) => window.CardsManager?.registerCard(cardConfig),
+            unregister: (cardId) => window.CardsManager?.unregisterCard(cardId),
+            open: (cardIndex) => window.CardsManager?.openCardsDeck(cardIndex),
+            close: () => window.CardsManager?.closeCardsDeck()
+        },
+        registerCard: (cardConfig) => window.CardsManager?.registerCard(cardConfig),
+        unregisterCard: (cardId) => window.CardsManager?.unregisterCard(cardId),
         performAppSwipe: (direction) => {
-            if (direction === 'next') {
-                if (typeof window.switchToNextApp === 'function') window.switchToNextApp();
-            } else if (direction === 'prev') {
-                if (typeof window.switchToPrevApp === 'function') window.switchToPrevApp();
-            } else if (direction === 'down') {
+            if (direction === 'down') {
                 if (typeof openControls === 'function') openControls();
             } else if (direction === 'up') {
                 if (typeof minimizeFullscreenEmbed === 'function') minimizeFullscreenEmbed();

@@ -207,6 +207,13 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 }
 
 /* --- Home Screen Activities --- */
+body.home-screen-active #home-activity-container,
+body:not(.beginnings-active):not(.app-active) #home-activity-container {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
 #home-activity-container {
     position: fixed;
     z-index: 49;

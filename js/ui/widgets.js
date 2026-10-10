@@ -780,36 +780,7 @@ function openWidgetPicker() {
     const transparentSwitch = document.getElementById('widget-transparent-switch');
     if (transparentSwitch) transparentSwitch.checked = false;
 
-    // Section 1: App Shortcuts (Astatine 27.1)
-    if (typeof apps === 'object' && Object.keys(apps).length > 0) {
-        const shortcutTitle = document.createElement('div');
-        shortcutTitle.className = 'widget-picker-section-title';
-        shortcutTitle.textContent = 'App Shortcuts';
-        grid.appendChild(shortcutTitle);
-
-        Object.entries(apps)
-            .filter(([name]) => name !== 'Apps')
-            .forEach(([appName, appDetails]) => {
-                const item = document.createElement('div');
-                item.className = 'app-shortcut-picker-item';
-                
-                let iconSrc = appDetails.icon;
-                if (iconSrc && !(iconSrc.startsWith('http') || iconSrc.startsWith('/') || iconSrc.startsWith('data:'))) {
-                    iconSrc = `/assets/appicon/${iconSrc}`;
-                }
-                item.innerHTML = `
-                    <img src="${iconSrc || '/assets/img/icon.svg'}" alt="${appName}">
-                    <span>${appName}</span>
-                `;
-                item.onclick = () => {
-                    addAppShortcut(appName, appDetails);
-                    closeWidgetPicker();
-                };
-                grid.appendChild(item);
-            });
-    }
-
-    // Section 2: Quick Widgets
+    // Quick Widgets Only (Apps automatically reside on the home screen like iOS)
     const widgetSectionTitle = document.createElement('div');
     widgetSectionTitle.className = 'widget-picker-section-title';
     widgetSectionTitle.textContent = 'Quick Widgets';

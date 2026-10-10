@@ -237,6 +237,7 @@
     <link rel="stylesheet" href="css/ui/wallpaper.css">
     <link rel="stylesheet" href="css/ui/widgets.css">
     <link rel="stylesheet" href="css/ui/home-menu.css">
+    <link rel="stylesheet" href="css/ui/cards.css">
 
     <!-- Apps -->
     <link rel="stylesheet" href="css/apps/app-switcher.css">
@@ -282,16 +283,26 @@
     
     <div class="drawer-handle">
         <div class="drawer-pill">
+            <div class="nav-pill"></div>
         </div>
     </div>
 
     <div id="dynamic-area" style="opacity: 0; scale: 0.9;">
         <div id="activity-island"></div>
+        <div id="persistent-clock" class="persistent-clock"></div>
         <div id="status-indicator"></div>
     </div>
-
-    <div id="home-gesture-bar" class="home-gesture-bar">
-        <div class="home-indicator-pill"></div>
+    
+    <div id="persistent-clock-quick-actions" class="persistent-clock-actions" style="display: none;">
+        <button id="quick-action-close" class="btn-qc">
+            <span class="material-symbols-rounded" style="font-size: 18px;">close</span>
+        </button>
+        <button id="quick-action-minimize" class="btn-qc">
+            <span class="material-symbols-rounded" style="font-size: 18px;">hide</span>
+        </button>
+        <button id="quick-action-controls" class="btn-qc">
+            <span class="material-symbols-rounded" style="font-size: 18px;">keyboard_arrow_down</span>
+        </button>
     </div>
 
     <div id="depth-layer"></div>
@@ -511,7 +522,7 @@
 
     <div id="widget-grid" class="widget-grid" style="opacity: 0; scale: 0.9;"></div>
     
-    <!-- iOS-Style Widget & App Home Menu Grid (Astatine 27.1) -->
+    <!-- iOS-Style Widget & App Home Menu Grid-->
     <div id="home-menu-container" class="home-menu-container">
         <!-- iPadOS-style Edit Mode Header (Add Widget & Done buttons) -->
         <div id="home-edit-header" class="home-edit-header">
@@ -525,8 +536,18 @@
         </div>
         <div class="home-page-indicators" id="home-page-indicators"></div>
     </div>
+
+    <!-- Home Screen Folder Overlay Modal-->
+    <div id="home-folder-overlay" class="home-folder-overlay">
+        <div class="home-folder-modal" id="home-folder-modal">
+            <div class="home-folder-header">
+                <input type="text" class="home-folder-title-input" id="home-folder-title-input" value="Folder" placeholder="Folder Name" />
+            </div>
+            <div class="home-folder-grid" id="home-folder-grid"></div>
+        </div>
+    </div>
     
-    <!-- 500ms App Gesture Window Barrier (Astatine 27.1) -->
+    <!-- 500ms App Gesture Window Barrier-->
     <div id="app-gesture-barrier" class="app-gesture-barrier"></div>
     
     <div id="donburi-container" class="system-overlay" style="display: none; transform: translateY(-100%);">
@@ -773,15 +794,21 @@
     <div id="quick-menu" class="quick-menu-overlay">
         <div id="qm-clock" class="qm-floating-clock"></div>
         <div class="quick-menu-content">
-            <div class="quick-menu-content-section" style="border-radius: 50px; corner-shape: superellipse(1.5); background-color: var(--accent);">
-                <div class="qm-buttons">
-                    <button id="qm-btn-assistant">
-                        <span class="material-symbols-rounded" style="color: var(--background-color);"><svg width="32" height="32" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="6.25" cy="7.5" r="2" fill="currentColor" .=""></circle><circle cx="13.75" cy="7.5" r="2" fill="currentColor" .=""></circle><path d="M3.75 12.5q6.25 5 12.5 0" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" .=""></path></svg></span>
-                    </button>
-                </div>
-            </div> 
             <div class="quick-menu-content-section">
                 <div class="qm-buttons">
+                    <button id="qm-btn-bright-down">
+                        <span class="material-symbols-rounded" style="font-variation-settings: 'FILL' 0, 'wght' 700, 'GRAD' 0, 'opsz' 24;">wb_sunny</span>
+                    </button>
+                    <button id="qm-btn-bright-up">
+                        <span class="material-symbols-rounded">sunny</span>
+                    </button>
+                </div>
+            </div>
+            <div class="quick-menu-content-section">
+                <div class="qm-buttons">
+                    <button id="qm-btn-assistant">
+                        <span class="material-symbols-rounded">mic</span>
+                    </button>
                     <button id="qm-btn-home">
                         <span class="material-symbols-rounded">home</span>
                     </button>
@@ -795,12 +822,6 @@
             </div> 
             <div class="quick-menu-content-section">
                 <div class="qm-buttons">
-                    <button id="qm-btn-bright-down">
-                        <span class="material-symbols-rounded" style="font-variation-settings: 'FILL' 0, 'wght' 700, 'GRAD' 0, 'opsz' 24;">wb_sunny</span>
-                    </button>
-                    <button id="qm-btn-bright-up">
-                        <span class="material-symbols-rounded">sunny</span>
-                    </button>
                     <button id="qm-btn-vol-down">
                         <span class="material-symbols-rounded">volume_down</span>
                     </button>
@@ -1147,6 +1168,7 @@
     <script src="js/apps/window-manager.js"></script>
     <script src="js/apps/media-session.js"></script>
     <script src="js/apps/live-activities.js"></script>
+    <script src="js/apps/cards-manager.js"></script>
     <script src="js/apps/api.js"></script>
     <script src="js/dev/internal-patch.js"></script>
     <!-- Assistant (kirbAI) -->

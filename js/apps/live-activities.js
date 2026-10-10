@@ -151,6 +151,19 @@ const IslandManager = {
 	            else if (item.data.url) createFullscreenEmbed(item.data.url);
 	        };
 	    });
+
+        // 3. Update Persistent Clock Styling based on Island State (from 3cba470)
+        const persistentClock = document.querySelector('.persistent-clock');
+        if (persistentClock) {
+            if (toShow.length > 0) {
+                persistentClock.classList.add('island-active');
+            } else {
+                persistentClock.classList.remove('island-active');
+            }
+        }
+        if (typeof window.updatePersistentClock === 'function') {
+            window.updatePersistentClock();
+        }
     }
 };
 
@@ -309,10 +322,11 @@ const HomeActivityManager = {
 	updateVisibility() {
         const hasItems = this.items.length > 0;
         const appOpen = document.body.classList.contains('app-active');
-        const drawerOpen = document.getElementById('app-drawer').classList.contains('open');
+        const drawerOpen = document.getElementById('app-drawer')?.classList.contains('open');
         const donburiOpen = document.getElementById('donburi-container')?.classList.contains('open');
+        const isHomeScreen = !document.body.classList.contains('beginnings-active') && !appOpen;
         
-        if (this.enabled && hasItems && !appOpen && !drawerOpen && !donburiOpen && !document.body.classList.contains('blackout-active')) {
+        if (this.enabled && hasItems && !appOpen && !drawerOpen && !donburiOpen && !isHomeScreen && !document.body.classList.contains('blackout-active')) {
             this.container.style.display = 'flex';
             document.body.classList.add('home-activities-visible');
             // Slight delay to allow display:flex to apply before opacity transition

@@ -22,9 +22,6 @@ if (__clockElement) {
             if (typeof window.exitBeginningsState === 'function') window.exitBeginningsState();
             return;
         }
-        if (typeof window.gurappsEnabled !== 'undefined' && !window.gurappsEnabled) return;
-        if (typeof gurappsEnabled !== 'undefined' && !gurappsEnabled) return;
-        createFullscreenEmbed('https://polygol.github.io/chronos/index.html');
     });
 }
 
@@ -42,9 +39,6 @@ if (__weatherWidget) {
             if (typeof window.exitBeginningsState === 'function') window.exitBeginningsState();
             return;
         }
-        if (typeof window.gurappsEnabled !== 'undefined' && !window.gurappsEnabled) return;
-        if (typeof gurappsEnabled !== 'undefined' && !gurappsEnabled) return;
-        createFullscreenEmbed('https://polygol.github.io/weather/index.html');
     });
 }
 
@@ -62,9 +56,6 @@ if (__dateElement) {
             if (typeof window.exitBeginningsState === 'function') window.exitBeginningsState();
             return;
         }
-        if (typeof window.gurappsEnabled !== 'undefined' && !window.gurappsEnabled) return;
-        if (typeof gurappsEnabled !== 'undefined' && !gurappsEnabled) return;
-        createFullscreenEmbed('https://polygol.github.io/fantaskical/index.html');
     });
 }
 

@@ -1,7 +1,3 @@
-/* ==========================================================================
-   Astatine 27.1 - iOS-Style Widget & App Home Menu Grid & Beginnings State
-   ========================================================================== */
-
 /* --- Beginnings State (Idle Start Screen) --- */
 body.beginnings-active .container {
     opacity: 1 !important;
@@ -24,13 +20,6 @@ body.beginnings-active #home-menu-container {
 
 body.beginnings-active .widget-grid {
     opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-/* Abolish dock on Home Screen and Beginnings */
-body.home-screen-active #dock,
-body.beginnings-active #dock {
-    display: none !important;
     pointer-events: none !important;
 }
 
@@ -58,137 +47,6 @@ body:has(#wallpaper-switcher-overlay.show) #home-menu-container {
     transform: scale(0.94) !important;
 }
 
-/* --- Standard Grid Size Presets & Custom Properties (4x6, 6x5, 8x12, etc.) --- */
-:root {
-    --home-grid-cols: 4;
-    --home-grid-rows: 6;
-    --home-viewport-max-width: 480px;
-    --home-viewport-max-height: 720px;
-    --home-grid-row-height: 92px;
-    --home-grid-gap-row: 20px;
-    --home-grid-gap-col: 14px;
-    --home-app-icon-size: 62px;
-    --home-app-icon-font-size: 0.88rem;
-}
-
-/* 4x6: Standard Mobile Portrait */
-.home-menu-container[data-grid="4x6"],
-body.home-grid-4x6 .home-menu-container {
-    --home-grid-cols: 4;
-    --home-grid-rows: 6;
-    --home-viewport-max-width: 480px;
-    --home-viewport-max-height: 720px;
-    --home-grid-row-height: 92px;
-    --home-grid-gap-row: 20px;
-    --home-grid-gap-col: 14px;
-    --home-app-icon-size: 62px;
-    --home-app-icon-font-size: 0.88rem;
-}
-
-/* 6x5: Standard Tablet / Landscape / Mid-width */
-.home-menu-container[data-grid="6x5"],
-body.home-grid-6x5 .home-menu-container {
-    --home-grid-cols: 6;
-    --home-grid-rows: 5;
-    --home-viewport-max-width: 840px;
-    --home-viewport-max-height: 640px;
-    --home-grid-row-height: 90px;
-    --home-grid-gap-row: 20px;
-    --home-grid-gap-col: 16px;
-    --home-app-icon-size: 58px;
-    --home-app-icon-font-size: 0.85rem;
-}
-
-/* 8x12: Standard Large Screen / Desktop / Tall High-Res */
-.home-menu-container[data-grid="8x12"],
-body.home-grid-8x12 .home-menu-container {
-    --home-grid-cols: 8;
-    --home-grid-rows: 12;
-    --home-viewport-max-width: 1200px;
-    --home-viewport-max-height: 88vh;
-    --home-grid-row-height: 86px;
-    --home-grid-gap-row: 18px;
-    --home-grid-gap-col: 14px;
-    --home-app-icon-size: 54px;
-    --home-app-icon-font-size: 0.82rem;
-}
-
-/* 8x6: Standard 16:9 Desktop Widescreen */
-.home-menu-container[data-grid="8x6"],
-body.home-grid-8x6 .home-menu-container {
-    --home-grid-cols: 8;
-    --home-grid-rows: 6;
-    --home-viewport-max-width: 1200px;
-    --home-viewport-max-height: 680px;
-    --home-grid-row-height: 88px;
-    --home-grid-gap-row: 18px;
-    --home-grid-gap-col: 14px;
-    --home-app-icon-size: 56px;
-    --home-app-icon-font-size: 0.84rem;
-}
-
-/* 4x5: Compact Short Screen */
-.home-menu-container[data-grid="4x5"],
-body.home-grid-4x5 .home-menu-container {
-    --home-grid-cols: 4;
-    --home-grid-rows: 5;
-    --home-viewport-max-width: 460px;
-    --home-viewport-max-height: 560px;
-    --home-grid-row-height: 84px;
-    --home-grid-gap-row: 14px;
-    --home-grid-gap-col: 12px;
-    --home-app-icon-size: 56px;
-    --home-app-icon-font-size: 0.82rem;
-}
-
-/* 6x6: Square / Tablet Portrait */
-.home-menu-container[data-grid="6x6"],
-body.home-grid-6x6 .home-menu-container {
-    --home-grid-cols: 6;
-    --home-grid-rows: 6;
-    --home-viewport-max-width: 820px;
-    --home-viewport-max-height: 760px;
-    --home-grid-row-height: 88px;
-    --home-grid-gap-row: 18px;
-    --home-grid-gap-col: 14px;
-    --home-app-icon-size: 56px;
-    --home-app-icon-font-size: 0.84rem;
-}
-
-/* Responsive media query fallbacks */
-@media (min-width: 1150px) {
-    :root:not([data-grid-override]) {
-        --home-grid-cols: 8;
-        --home-grid-rows: 12;
-        --home-viewport-max-width: 1200px;
-        --home-viewport-max-height: 88vh;
-        --home-grid-row-height: 86px;
-        --home-app-icon-size: 54px;
-    }
-}
-
-@media (min-width: 600px) and (max-width: 1149px) {
-    :root:not([data-grid-override]) {
-        --home-grid-cols: 6;
-        --home-grid-rows: 5;
-        --home-viewport-max-width: 840px;
-        --home-viewport-max-height: 640px;
-        --home-grid-row-height: 90px;
-        --home-app-icon-size: 58px;
-    }
-}
-
-@media (max-width: 599px) {
-    :root:not([data-grid-override]) {
-        --home-grid-cols: 4;
-        --home-grid-rows: 6;
-        --home-viewport-max-width: 480px;
-        --home-viewport-max-height: 720px;
-        --home-grid-row-height: 92px;
-        --home-app-icon-size: 62px;
-    }
-}
-
 /* --- Main Home Menu Container --- */
 .home-menu-container {
     position: fixed;
@@ -201,7 +59,7 @@ body.home-grid-6x6 .home-menu-container {
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
-    padding: calc(env(safe-area-inset-top, 20px) + 20px) 16px calc(env(safe-area-inset-bottom, 20px) + 30px);
+    padding: calc(env(safe-area-inset-top, 20px) + 16px) 20px calc(env(safe-area-inset-bottom, 20px) + 24px);
     pointer-events: none;
     opacity: 0;
     transform: scale(0.95);
@@ -210,18 +68,17 @@ body.home-grid-6x6 .home-menu-container {
     -webkit-user-select: none;
 }
 
-/* --- Home Pages Viewport (Vertical Paging) --- */
+/* --- Home Pages Viewport (Fluid iPadOS Spacing) --- */
 .home-pages-viewport {
     width: 100%;
-    max-width: var(--home-viewport-max-width, 480px);
-    height: 82vh;
-    max-height: var(--home-viewport-max-height, 700px);
+    max-width: min(94vw, 1380px);
+    height: calc(100vh - 90px);
+    max-height: calc(100vh - 90px);
     overflow: hidden;
     position: relative;
     box-sizing: border-box;
     display: flex;
     justify-content: center;
-    transition: max-width 0.3s ease, max-height 0.3s ease;
 }
 
 .home-pages-track {
@@ -233,68 +90,203 @@ body.home-grid-6x6 .home-menu-container {
     will-change: transform;
 }
 
-/* --- Individual Home Page Grid --- */
+/* --- Individual Home Page (Custom Positioned Container) --- */
 .home-page {
     flex: 0 0 100%;
     width: 100%;
     height: 100%;
     box-sizing: border-box;
-    display: grid;
-    grid-template-columns: repeat(var(--home-grid-cols, 4), minmax(0, 1fr));
-    grid-auto-rows: var(--home-grid-unit-size, 88px);
-    gap: var(--home-grid-gap, 16px);
-    align-content: start;
-    justify-items: center;
-    padding: 16px 8px;
-    overflow-y: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    position: relative;
+    overflow: hidden;
 }
 
-.home-page::-webkit-scrollbar {
-    display: none;
+/* Base style for absolutely positioned items */
+.home-page .home-grid-item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1), width 0.28s ease, height 0.28s ease;
+    will-change: transform;
 }
 
-/* --- App Icons Inside Home Grid (1:1 Aspect Ratio) --- */
+/* --- App Icons (1:1 Aspect Ratio) --- */
 .home-page .app-icon {
-    grid-column: span 1;
-    grid-row: span 1;
     width: 100%;
     height: 100%;
-    aspect-ratio: 1 / 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     position: relative;
     box-sizing: border-box;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: none;
+    cursor: pointer;
 }
 
 .home-page .app-icon .app-icon-img {
-    width: min(calc(100% - 16px), var(--home-app-icon-size, 62px));
-    height: min(calc(100% - 16px), var(--home-app-icon-size, 62px));
+    width: min(72px, 72%);
+    height: min(72px, 72%);
     aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease;
 }
 
-.home-page .app-icon span {
-    font-size: var(--home-app-icon-font-size, 0.85rem);
-    margin-top: 6px;
+.home-page .app-icon .app-icon-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    corner-shape: inherit;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
+}
+
+.home-page .app-icon span, .folder-label {
+    font-size: 0.9rem;
+    margin-top: 16px;
     text-align: center;
-    max-width: 90%;
+    color: var(--text-color);
+    font-weight: 500;
+    max-width: 100px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-shadow: 0 0 5px var(--background-color-tr);
+}
+
+/* --- Folders on Home Screen --- */
+.home-page .folder-icon-item {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.folder-preview-box {
+    width: min(72px, 72%);
+    height: min(72px, 72%);
+    aspect-ratio: 1 / 1;
+    background-color: var(--overlay-color);
+    border-radius: 35%;
+    corner-shape: superellipse(1.25);
+    border: 1px solid var(--glass-border);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
+    box-shadow: var(--sun-shadow);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 6px;
+    padding: 10px;
+    box-sizing: border-box;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.home-page .folder-icon-item:active .folder-preview-box {
+    transform: scale(0.92);
+}
+
+.folder-preview-mini-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 40%;
+    corner-shape: superellipse(1.25);
+    object-fit: cover;
+}
+
+/* Target hover effect when dragging an app over another app to create folder */
+.folder-target-hover .app-icon-img,
+.folder-target-hover .folder-preview-box {
+    transform: scale(1.18) !important;
+    box-shadow: 0 0 0 4px var(--accent, #64B5F6), 0 10px 24px rgba(0, 0, 0, 0.5) !important;
+    animation: folder-pulse 0.6s infinite alternate !important;
+}
+
+@keyframes folder-pulse {
+    from { transform: scale(1.14); }
+    to { transform: scale(1.22); }
+}
+
+/* --- Folder View Overlay Modal --- */
+.home-folder-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    background: var(--overlay-color);
+    backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.28s ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.home-folder-overlay.show {
+    display: flex;
+    opacity: 1;
+}
+
+.home-folder-modal {
+    width: min(520px, 92vw);
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    transform: scale(0.9);
+    transition: transform 0.28s cubic-bezier(0.2, 1.15, 0.4, 1);
+}
+
+.home-folder-overlay.show .home-folder-modal {
+    transform: scale(1);
+}
+
+.home-folder-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
+
+.home-folder-title-input {
+    font-size: 1.6rem;
+    font-weight: 700;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: 'Open Runde', 'Inter', sans-serif;
+    width: 100%;
+    cursor: text;
+}
+
+.home-folder-title-input:focus {
+    border-bottom: 2px solid var(--accent);
+}
+
+.home-folder-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 50px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 55vh;
+    padding: 0;
+    justify-items: center;
 }
 
 /* --- Widgets Inside Home Grid (Widget API) --- */
 .home-page .widget-instance {
-    position: relative;
-    top: auto !important;
-    left: auto !important;
-    transform: none !important;
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -308,39 +300,9 @@ body.home-grid-6x6 .home-menu-container {
     overflow: hidden;
     touch-action: none;
     pointer-events: auto;
+    position: relative;
     user-select: none;
     -webkit-user-select: none;
-    transition: transform 0.2s cubic-bezier(0.2, 1.2, 0.4, 1), box-shadow 0.2s ease;
-}
-
-/* Small Widget: 2x2 = PERFECT SQUARE (1:1 Aspect Ratio) */
-.home-page .widget-instance.size-small,
-.home-page .widget-instance[data-size="small"] {
-    grid-column: span 2;
-    grid-row: span 2;
-    aspect-ratio: 1 / 1;
-    width: 100%;
-    height: 100%;
-}
-
-/* Medium Widget: 4x2 (2:1 Aspect Ratio) */
-.home-page .widget-instance.size-medium,
-.home-page .widget-instance[data-size="medium"] {
-    grid-column: span 4;
-    grid-row: span 2;
-    aspect-ratio: 2 / 1;
-    width: 100%;
-    height: 100%;
-}
-
-/* Large Widget: 4x4 = PERFECT SQUARE (1:1 Aspect Ratio) */
-.home-page .widget-instance.size-large,
-.home-page .widget-instance[data-size="large"] {
-    grid-column: span 4;
-    grid-row: span 4;
-    aspect-ratio: 1 / 1;
-    width: 100%;
-    height: 100%;
 }
 
 .home-page .widget-instance iframe {
@@ -361,9 +323,9 @@ body.home-grid-6x6 .home-menu-container {
     corner-shape: inherit;
 }
 
-/* Home Weather Widget in Grid */
+/* Weather Widget Content */
 .home-page .weather-widget-instance {
-    padding: 18px;
+    padding: 20px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -388,19 +350,14 @@ body.home-grid-6x6 .home-menu-container {
 }
 
 .home-page .weather-widget-instance .weather-title {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     font-family: 'Open Runde', sans-serif;
     opacity: 0.9;
 }
 
-.home-page .weather-widget-instance .weather-icon svg {
-    width: 34px;
-    height: 34px;
-}
-
 .home-page .weather-widget-instance .temperature {
-    font-size: 40px;
+    font-size: 44px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -408,59 +365,64 @@ body.home-grid-6x6 .home-menu-container {
 }
 
 .home-page .weather-widget-instance .weather-subtext {
-    font-size: 11px;
+    font-size: 12px;
     opacity: 0.75;
 }
 
-/* --- Remove Badge & Edit Mode (iOS Jiggle Animation) --- */
+/* --- Remove Button & Edit Mode (Material Icons Only) --- */
 .home-item-remove-btn {
     position: absolute;
-    top: -5px;
-    left: -5px;
-    width: 22px;
-    height: 22px;
+    top: -6px;
+    left: -6px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     background: #ff3b30;
     color: #ffffff;
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    font-size: 11px;
-    font-weight: 800;
+    border: none;
     display: none;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 50;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-    line-height: 1;
+    z-index: 60;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
     padding: 0;
+    line-height: 1;
+    transition: transform 0.15s ease;
+}
+
+.home-item-remove-btn .material-symbols-rounded {
+    font-size: 16px;
+    font-weight: 700;
 }
 
 body.home-edit-active .home-item-remove-btn {
     display: flex !important;
 }
 
+/* iOS Jiggle Animation during Edit Mode */
 @keyframes ios-jiggle {
-    0% { transform: rotate(-1.2deg); }
-    50% { transform: rotate(1.2deg); }
-    100% { transform: rotate(-1.2deg); }
+    0% { transform: rotate(-1.3deg); }
+    50% { transform: rotate(1.3deg); }
+    100% { transform: rotate(-1.3deg); }
 }
 
 body.home-edit-active .home-page .app-icon,
+body.home-edit-active .home-page .folder-icon-item,
 body.home-edit-active .home-page .widget-instance {
-    animation: ios-jiggle 0.28s ease-in-out infinite alternate !important;
+    animation: ios-jiggle 0.3s ease-in-out infinite alternate !important;
 }
 
-body.home-edit-active .home-page .app-icon:nth-child(2n),
-body.home-edit-active .home-page .widget-instance:nth-child(2n) {
-    animation-delay: 0.08s !important;
+body.home-edit-active .home-page .home-grid-item:nth-child(2n) {
+    animation-delay: 0.09s !important;
 }
 
-/* --- iPadOS Edit Mode Header (+ and Done buttons) --- */
+/* --- Edit Mode Header (+ and Done) --- */
 .home-edit-header {
     position: absolute;
-    top: calc(env(safe-area-inset-top, 20px) + 8px);
-    left: 20px;
-    right: 20px;
+    bottom: 20px;
+    left: 24px;
+    right: 24px;
     display: none;
     justify-content: space-between;
     align-items: center;
@@ -476,10 +438,10 @@ body.home-edit-active .home-edit-header {
     background: var(--search-background);
     color: var(--text-color);
     border: 1px solid var(--glass-border);
-    box-shadow: var(--sun-shadow), 0 4px 14px rgba(0, 0, 0, 0.18);
+    box-shadow: var(--sun-shadow);
     border-radius: 99px;
-    height: 38px;
-    padding: 0 16px;
+    height: 40px;
+    padding: 0 18px;
     font-size: 14px;
     font-weight: 600;
     font-family: 'Open Runde', 'Inter', sans-serif;
@@ -488,145 +450,83 @@ body.home-edit-active .home-edit-header {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     transition: transform 0.15s ease, background-color 0.2s ease;
     user-select: none;
     -webkit-user-select: none;
 }
 
 .home-edit-add-btn {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     padding: 0;
     border-radius: 50%;
 }
 
 .home-edit-add-btn .material-symbols-rounded {
-    font-size: 22px;
+    font-size: 24px;
 }
 
 .home-edit-done-btn {
-    padding: 0 18px;
+    padding: 0 16px;
     font-weight: 700;
 }
 
-.home-edit-header-btn:active {
-    transform: scale(0.92);
-}
-
-/* --- iPadOS Widget Resize Badge (Top-Right) --- */
-.home-item-resize-btn {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: var(--accent, #007aff);
-    color: #ffffff;
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    font-size: 12px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 55;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-    line-height: 1;
-    padding: 0;
-    transition: transform 0.15s ease;
-}
-
-body.home-edit-active .home-item-resize-btn {
-    display: flex !important;
-}
-
-.home-item-resize-btn:active {
-    transform: scale(0.85);
-}
-
-.home-item-resize-btn .material-symbols-rounded {
-    font-size: 14px;
-}
-
-/* --- Drag to Resize Handle (Bottom-Right) --- */
+/* --- Touch-Driven Widget Resize Handle (Bottom-Right, NO BUTTONS) --- */
 .home-widget-resize-handle {
     position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 24px;
-    height: 24px;
-    cursor: nwse-resize;
-    z-index: 50;
+    bottom: 2px;
+    right: 2px;
+    width: 32px;
+    height: 32px;
+    z-index: 55;
     display: none;
     touch-action: none;
+    cursor: nwse-resize;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.home-widget-resize-handle .material-symbols-rounded {
+    font-size: 18px;
 }
 
 body.home-edit-active .home-widget-resize-handle {
-    display: block !important;
+    display: flex !important;
 }
 
-.home-widget-resize-handle::after {
-    content: '';
-    position: absolute;
-    bottom: 6px;
-    right: 6px;
-    width: 10px;
-    height: 10px;
-    border-right: 2.5px solid var(--text-color);
-    border-bottom: 2.5px solid var(--text-color);
-    border-radius: 2px;
-    opacity: 0.65;
+/* Visual Outline during Live Resize Drag */
+.widget-resizing-live {
+    box-shadow: 0 0 0 3px var(--accent), 0 16px 38px rgba(0, 0, 0, 0.5) !important;
+    z-index: 500 !important;
+    transition: none !important;
 }
 
-/* --- iPadOS Drag & Drop Rearranging Styles --- */
+/* --- Dragging Item State (Smooth iOS Floating) --- */
 .home-page > .is-dragging {
     z-index: 1000 !important;
-    transform: scale(1.08) !important;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45) !important;
-    opacity: 0.88 !important;
+    transform: scale(1.09) !important;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5) !important;
+    opacity: 0.92 !important;
     pointer-events: none !important;
     animation: none !important;
     transition: none !important;
 }
 
-.home-grid-placeholder {
-    border: 2px dashed var(--accent, rgba(255, 255, 255, 0.5));
-    border-radius: 30px;
-    background: rgba(255, 255, 255, 0.08);
-    box-sizing: border-box;
-    transition: all 0.2s cubic-bezier(0.2, 1.2, 0.4, 1);
-}
-
-/* --- 500ms App Gesture Window Barrier --- */
-.app-gesture-barrier {
-    position: fixed;
-    inset: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 10005;
-    background: transparent;
-    display: none;
-    pointer-events: none;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-.app-gesture-barrier.active {
-    display: block !important;
-    pointer-events: auto !important;
-}
-
-/* --- Page Dots Indicators --- */
+/* Page Indicator Dots */
 .home-page-indicators {
     display: flex;
+    flex-direction: column;
     gap: 8px;
     align-items: center;
     justify-content: center;
-    margin-top: 14px;
     z-index: 25;
+    position: fixed;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .home-page-dot {
@@ -634,30 +534,12 @@ body.home-edit-active .home-widget-resize-handle {
     height: 8px;
     border-radius: 50%;
     background: var(--text-color);
-    opacity: 0.3;
-    transition: opacity 0.3s ease, transform 0.3s ease, width 0.3s ease;
+    opacity: 0.35;
+    transition: opacity 0.3s ease, transform 0.3s ease, height 0.3s ease;
     cursor: pointer;
 }
 
 .home-page-dot.active {
     opacity: 1;
     background: var(--accent);
-    width: 18px;
-    border-radius: 9px;
-    transform: scale(1.08);
-}
-
-@media (max-width: 440px) {
-    .home-page {
-        grid-auto-rows: 86px;
-        gap: 16px 10px;
-        padding: 12px 6px;
-    }
-    .home-page .app-icon .app-icon-img {
-        width: 56px;
-        height: 56px;
-    }
-    .home-page .app-icon span {
-        font-size: 0.8rem;
-    }
 }
