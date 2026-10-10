@@ -223,6 +223,9 @@ async function installApp(appData) {
 	await cacheAppIconColors(); // Re-analyze icon colors
     createAppIcons();
     populateDock();
+    if (typeof window.syncHomePagesWithApps === 'function') {
+        window.syncHomePagesWithApps();
+    }
 }
 
 async function deleteApp(appName) {
@@ -304,6 +307,9 @@ async function deleteApp(appName) {
         // Refresh the app drawer and dock
         createAppIcons();
         populateDock();
+        if (typeof window.syncHomePagesWithApps === 'function') {
+            window.syncHomePagesWithApps();
+        }
         showPopup(currentLanguage.GURAPP_DELETED.replace('{appName}', appName));
     } else {
 		showDialog({ 
@@ -2086,4 +2092,4 @@ function setupAppGestureBarrierListeners(barrier) {
 }
 
 window.activateAppGestureBarrier = activateAppGestureBarrier;
-window.deactivateAppGestureBarrier = deactivateAppGestureBarrier;
+window.deactivateAppGestureBarrier = deactivateAppGestureBarrier;

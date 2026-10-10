@@ -658,7 +658,7 @@ let _isSuspended = false;
             flex-direction: row;
             padding: 4px;
             position: fixed;
-            top: 17.5px;
+            top: 28px;
             left: 20px;
             z-index: 1000;
             transition: top 0.3s ease;

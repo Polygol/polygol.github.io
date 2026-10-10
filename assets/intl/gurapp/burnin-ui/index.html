@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>BurninUI - UI Stress Tester</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="BurninUI">
+    <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #ff5722;">touch_app</span>
+                BurninUI (UI Stress Monkey)
+            </h1>
+        </div>
+
+        <!-- Stress Engine State -->
+        <div class="setting-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 class="section-title" style="margin-bottom: 4px;">Monkey Engine</h2>
+                    <span id="burnin-status" style="font-size: 13px; color: #ff9800;">IDLE</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="action-btn" id="btn-start-burnin" style="background: #4caf50; color: #fff; border:none;">Start Stress</button>
+                    <button class="action-btn" id="btn-stop-burnin" style="display:none; background: #ff5252; color: #fff; border:none;">Stop</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Metrics -->
+        <div class="setting-section">
+            <h2 class="section-title">Stress Metrics</h2>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px;">
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Actions Executed</div>
+                    <div id="stat-actions" style="font-size: 24px; font-weight: 700; color: #ff5722; font-family: monospace;">0</div>
+                </div>
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Errors Trapped</div>
+                    <div id="stat-errors" style="font-size: 24px; font-weight: 700; color: #4caf50; font-family: monospace;">0</div>
+                </div>
+                <div style="background: var(--search-background); padding: 14px; border-radius: 14px; text-align: center;">
+                    <div style="font-size: 11px; opacity: 0.7;">Uptime</div>
+                    <div id="stat-uptime" style="font-size: 24px; font-weight: 700; color: #03a9f4; font-family: monospace;">0s</div>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Cycle Delay</span>
+                    <span class="setting-description" id="speed-desc">150ms per action (Stress)</span>
+                </div>
+                <input type="range" min="50" max="1000" step="50" value="150" class="styled-slider" id="speed-slider" style="width: 140px;">
+            </div>
+        </div>
+
+        <!-- Active Patterns -->
+        <div class="setting-section">
+            <h2 class="section-title">Enabled Patterns</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Rapid Sound FX Synthesis</span>
+                    <span class="setting-description">Spam audio trigger channels</span>
+                </div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch" id="pat-sound" checked></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Notification Flooding</span>
+                    <span class="setting-description">Post & dismiss notification banner bursts</span>
+                </div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch" id="pat-notify" checked></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Live Activity Thrashing</span>
+                    <span class="setting-description">Start, update, stop live activities in rapid cycles</span>
+                </div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch" id="pat-liveact" checked></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Theme & Glass Switching</span>
+                    <span class="setting-description">Oscillate between light and dark themes rapidly</span>
+                </div>
+                <div class="setting-control"><input type="checkbox" class="toggle-switch" id="pat-theme" checked></div>
+            </div>
+        </div>
+
+        <!-- Action Log -->
+        <div class="setting-section">
+            <h2 class="section-title">Stress Action Log</h2>
+            <div id="burnin-log" style="height: 120px; overflow-y: auto; font-family: monospace; font-size: 11px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; display: flex; flex-direction: column; gap: 4px;">
+                <div>[BurninUI] Ready to start stress run.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isRunning = false;
+        let actionCount = 0;
+        let errorCount = 0;
+        let startTime = 0;
+        let timer = null;
+        let uptimeTimer = null;
+        let cycleDelay = 150;
+
+        const sounds = ['click', 'type', 'launch', 'close', 'dock', 'notify'];
+        let activeActivityId = null;
+
+        document.getElementById('speed-slider').oninput = (e) => {
+            cycleDelay = Number(e.target.value);
+            document.getElementById('speed-desc').textContent = `${cycleDelay}ms per action`;
+            if (isRunning) {
+                clearInterval(timer);
+                timer = setInterval(stressTick, cycleDelay);
+            }
+        };
+
+        document.getElementById('btn-start-burnin').onclick = () => {
+            isRunning = true;
+            startTime = Date.now();
+            document.getElementById('burnin-status').textContent = 'ACTIVE (STRESS RUNNING)';
+            document.getElementById('burnin-status').style.color = '#ff5252';
+            document.getElementById('btn-start-burnin').style.display = 'none';
+            document.getElementById('btn-stop-burnin').style.display = 'inline-block';
+
+            timer = setInterval(stressTick, cycleDelay);
+            uptimeTimer = setInterval(() => {
+                const s = Math.floor((Date.now() - startTime) / 1000);
+                document.getElementById('stat-uptime').textContent = `${s}s`;
+            }, 1000);
+        };
+
+        document.getElementById('btn-stop-burnin').onclick = () => {
+            isRunning = false;
+            clearInterval(timer);
+            clearInterval(uptimeTimer);
+            document.getElementById('burnin-status').textContent = 'IDLE (STOPPED)';
+            document.getElementById('burnin-status').style.color = '#ff9800';
+            document.getElementById('btn-start-burnin').style.display = 'inline-block';
+            document.getElementById('btn-stop-burnin').style.display = 'none';
+        };
+
+        function logAction(msg) {
+            const container = document.getElementById('burnin-log');
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function stressTick() {
+            actionCount++;
+            document.getElementById('stat-actions').textContent = actionCount.toLocaleString();
+
+            const pat = Math.floor(Math.random() * 4);
+
+            try {
+                if (pat === 0 && document.getElementById('pat-sound').checked) {
+                    const s = sounds[Math.floor(Math.random() * sounds.length)];
+                    if (window.Gurasuraisu && Gurasuraisu.playSound) {
+                        Gurasuraisu.playSound(s);
+                        logAction(`Dispatched audio: ${s}`);
+                    }
+                } else if (pat === 1 && document.getElementById('pat-notify').checked) {
+                    if (window.Gurasuraisu && Gurasuraisu.showNotification) {
+                        Gurasuraisu.showNotification(`Stress Burst #${actionCount}`, { icon: 'warning' });
+                        logAction(`Dispatched notification #${actionCount}`);
+                    }
+                } else if (pat === 2 && document.getElementById('pat-liveact').checked) {
+                    if (window.Gurasuraisu && Gurasuraisu.liveActivity) {
+                        if (!activeActivityId) {
+                            activeActivityId = 'burnin_act_' + Date.now();
+                            Gurasuraisu.liveActivity.start({
+                                id: activeActivityId,
+                                title: `Stress Run ${actionCount}`,
+                                icon: 'touch_app'
+                            });
+                            logAction(`Started Live Activity: ${activeActivityId}`);
+                        } else {
+                            Gurasuraisu.liveActivity.update(activeActivityId, { progress: Math.random() });
+                            logAction(`Updated Live Activity: ${activeActivityId}`);
+                            if (Math.random() > 0.7) {
+                                Gurasuraisu.liveActivity.stop(activeActivityId);
+                                activeActivityId = null;
+                                logAction(`Stopped Live Activity`);
+                            }
+                        }
+                    }
+                } else if (pat === 3 && document.getElementById('pat-theme').checked) {
+                    window.parent.postMessage({
+                        action: 'setInternalVariable',
+                        key: 'theme',
+                        value: (actionCount % 2 === 0) ? 'dark' : 'light'
+                    }, '*');
+                    logAction(`Toggled Theme: ${(actionCount % 2 === 0) ? 'dark' : 'light'}`);
+                }
+            } catch(e) {
+                errorCount++;
+                document.getElementById('stat-errors').textContent = errorCount;
+                document.getElementById('stat-errors').style.color = '#ff5252';
+                logAction(`ERROR: ${e.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

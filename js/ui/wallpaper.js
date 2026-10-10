@@ -2907,21 +2907,29 @@ function setupWallpaperInteraction() {
 
         // Gestures on Home Screen / Beginnings (Astatine 27.1)
         if (!isAppOpen && !isControlsOpen && !isDrawerOpen) {
-            // Swipe down from top to access control center & notifications
-            if (deltaY > 45 && startY < 140 && Math.abs(deltaY) > Math.abs(deltaX)) {
+
+            // Only allow swipe down from the top on Beginnings
+            if (
+                document.body.classList.contains('beginnings-active') &&
+                deltaY > 45 &&
+                startY < 140 &&
+                Math.abs(deltaY) > Math.abs(deltaX)
+            ) {
                 if (typeof openControls === 'function') {
                     openControls();
                 }
                 return;
             }
 
-            // Swipe up and down to scroll through more pages of home screen (UP/DOWN ONLY)
+            // On Beginnings idle screen: swipe up wakes to Home screen
             if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
-                if (document.body.classList.contains('edit-mode-active') ||
+                if (
+                    document.body.classList.contains('edit-mode-active') ||
                     document.getElementById('wallpaper-switcher-overlay')?.classList.contains('show') ||
                     document.getElementById('wallpaper-picker-drawer')?.classList.contains('open') ||
-                    document.getElementById('edit-mode-ui')?.style.display === 'block') {
-                    return; // Prevent home screen from being opened when editing wallpaper
+                    document.getElementById('edit-mode-ui')?.style.display === 'block'
+                ) {
+                    return;
                 }
 
                 if (document.body.classList.contains('beginnings-active')) {
@@ -2929,33 +2937,8 @@ function setupWallpaperInteraction() {
                         window.exitBeginningsState();
                         return;
                     }
-                } else {
-                    if (typeof window.scrollHomePage === 'function') {
-                        window.scrollHomePage(deltaY < 0 ? 'next' : 'prev');
-                        return;
-                    }
-                }
-                return;
-            }
-
-            // Swipe left or right to switch apps (LEFT/RIGHT ALWAYS FOR APP SWITCHING)
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-                if (document.body.classList.contains('edit-mode-active') ||
-                    document.getElementById('wallpaper-switcher-overlay')?.classList.contains('show') ||
-                    document.getElementById('wallpaper-picker-drawer')?.classList.contains('open') ||
-                    document.getElementById('edit-mode-ui')?.style.display === 'block') {
-                    return; // Prevent switching apps while editing wallpaper
                 }
 
-                if (deltaX < 0) {
-                    if (typeof window.switchToNextApp === 'function') {
-                        window.switchToNextApp();
-                    }
-                } else {
-                    if (typeof window.switchToPrevApp === 'function') {
-                        window.switchToPrevApp();
-                    }
-                }
                 return;
             }
         }

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Onabilify - Feature Flags Switchboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="Onabilify">
+    <div class="container" style="max-width: 760px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #4caf50;">toggle_on</span>
+                Onabilify (Feature Flags)
+            </h1>
+        </div>
+
+        <div class="setting-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 class="section-title" style="margin-bottom: 4px;">System Feature Flags</h2>
+                    <span style="font-size: 13px; color: #4caf50;">Live toggle Polygol experimental features</span>
+                </div>
+                <button class="action-btn" id="btn-reset-flags">Reset Defaults</button>
+            </div>
+        </div>
+
+        <div class="setting-section" id="flags-container">
+            <!-- Dynamic flag toggles -->
+        </div>
+    </div>
+
+    <script>
+        const FEATURE_FLAGS = [
+            { key: 'experimentalWebGL', name: 'Experimental WebGL Acceleration', desc: 'Enable advanced WebGL GPU rendering paths in wallpaper and canvas', defaultVal: true },
+            { key: 'experimentalGpuAccelerate', name: 'Hardware Compositing Layers', desc: 'Force hardware GPU acceleration on all DOM containers', defaultVal: true },
+            { key: 'predictivePreload', name: 'Predictive App Preloading', desc: 'Preload apps based on hourly user habits and frequency', defaultVal: true },
+            { key: 'aggressiveGC', name: 'Aggressive Garbage Collector', desc: 'Run memory care sweep every 60 seconds automatically', defaultVal: false },
+            { key: 'oledBurnInProtection', name: 'OLED Burn-in Pixel Shifting', desc: 'Subtly shift clock and widgets by 1px periodically', defaultVal: false },
+            { key: 'adaptiveBatterySaver', name: 'Adaptive Battery Saver', desc: 'Reduce animations and background processing on low battery', defaultVal: false },
+            { key: 'dataSaverEnabled', name: 'Data Saver Protocol', desc: 'Reduce image quality and throttle background fetch', defaultVal: false },
+            { key: 'hapticsEnabled', name: 'Haptic Feedback Actuators', desc: 'Vibrate device on navigation, gestures, and button taps', defaultVal: true },
+            { key: 'ambientMusicEnabled', name: 'Ambient System Music', desc: 'Play procedural background soundscapes on desktop', defaultVal: false },
+            { key: 'aiAssistantEnabled', name: 'kirbAI Assistant Core', desc: 'Enable system-level AI natural language assistant', defaultVal: true },
+            { key: 'oneButtonNavEnabled', name: 'One-Button Navigation Pill', desc: 'Replace navigation bar with single gesture swipe pill', defaultVal: false },
+            { key: 'liveEnvironmentEnabled', name: 'Live Environment Engine', desc: 'Dynamic day/night sun cycle and weather background lighting', defaultVal: true },
+            { key: 'developerConsoleEnabled', name: 'Floating Dev Console Overlay', desc: 'Always-on-top console output window', defaultVal: false },
+            { key: 'debugOverlayEnabled', name: 'FPS & App Diagnostic Overlay', desc: 'Render green telemetry badge in top-left corner', defaultVal: false }
+        ];
+
+        function loadFlags() {
+            const container = document.getElementById('flags-container');
+            container.innerHTML = '';
+
+            FEATURE_FLAGS.forEach(flag => {
+                const stored = window.parent ? window.parent.localStorage.getItem(flag.key) : localStorage.getItem(flag.key);
+                const isChecked = stored !== null ? (stored === 'true') : flag.defaultVal;
+
+                const row = document.createElement('div');
+                row.className = 'setting-item';
+                row.innerHTML = `
+                    <div class="setting-info">
+                        <span class="setting-label">${flag.name}</span>
+                        <span class="setting-description">${flag.desc}</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" class="toggle-switch" id="flag-${flag.key}" ${isChecked ? 'checked' : ''}>
+                    </div>
+                `;
+
+                row.querySelector('input').addEventListener('change', (e) => {
+                    const val = e.target.checked;
+                    localStorage.setItem(flag.key, String(val));
+                    if (window.parent && window.parent.localStorage) {
+                        window.parent.localStorage.setItem(flag.key, String(val));
+                    }
+                    window.parent.postMessage({ action: 'setInternalVariable', key: flag.key, value: val }, '*');
+                    if (window.Gurasuraisu && Gurasuraisu.showPopup) {
+                        Gurasuraisu.showPopup(`${flag.name}: ${val ? 'Enabled' : 'Disabled'}`);
+                    }
+                });
+
+                container.appendChild(row);
+            });
+        }
+
+        document.getElementById('btn-reset-flags').onclick = () => {
+            FEATURE_FLAGS.forEach(flag => {
+                localStorage.setItem(flag.key, String(flag.defaultVal));
+                if (window.parent && window.parent.localStorage) {
+                    window.parent.localStorage.setItem(flag.key, String(flag.defaultVal));
+                }
+                window.parent.postMessage({ action: 'setInternalVariable', key: flag.key, value: flag.defaultVal }, '*');
+            });
+            loadFlags();
+            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
+                Gurasuraisu.showPopup('Reset all feature flags to factory defaults');
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', loadFlags);
+    </script>
+</body>
+</html>

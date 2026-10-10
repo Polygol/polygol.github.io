@@ -1,16 +1,14 @@
 #dynamic-area {
     translate: 0 0;
     position: fixed;
-    top: 16.5px;
-    right: 14px;
-    height: 48px;
+    top: 0;
+    right: auto;
+    height: 28px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    /* Space between segments */
+    gap: 8px;
     z-index: 9995;
     pointer-events: none;
-    /* Let clicks pass through, children will re-enable */
 }
 
 body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area {
@@ -25,8 +23,8 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 
 .activity-capsule {
     position: relative;
-    height: 26px;
-    border-radius: 10px;
+    height: 18px;
+    border-radius: 8px;
     corner-shape: superellipse(1.5);
     display: flex;
     align-items: center;
@@ -98,10 +96,7 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    backdrop-filter: invert(1) grayscale(1) contrast(50) blur(10px);
-    position: fixed;
-    top: 0;
-    right: 4px;
+    backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
 }
 
 #status-indicator .material-symbols-rounded {
@@ -111,7 +106,7 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 
 .persistent-clock {
     pointer-events: auto;
-    font-size: 1.2rem;
+    font-size: 16px;
     color: var(--text-color);
     background-color: transparent;
     opacity: 1;

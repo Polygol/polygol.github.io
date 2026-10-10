@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Dump - Instant System State Dump</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="Dump">
+    <div class="container" style="max-width: 780px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #009688;">output</span>
+                Dump (System State Snapshot)
+            </h1>
+        </div>
+
+        <div class="setting-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 class="section-title" style="margin-bottom: 4px;">State Snapshot</h2>
+                    <span id="dump-status" style="font-size: 13px; color: #4caf50;">Captured Ready</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="action-btn" id="btn-refresh-dump">Dump Now</button>
+                    <button class="action-btn" id="btn-copy-dump">Copy</button>
+                    <button class="action-btn" id="btn-download-dump" style="background:#009688; color:#fff; border:none;">Download JSON</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- JSON Dump Preview -->
+        <div class="setting-section" style="padding: 0; overflow:hidden; border-radius:16px;">
+            <pre id="dump-json-view" style="height: 380px; overflow-y: auto; font-family: monospace; font-size: 11px; padding: 14px; background: #000; color: #a5d6a7; margin:0; line-height: 1.4; white-space: pre-wrap; word-break: break-all;">Collecting system data...</pre>
+        </div>
+    </div>
+
+    <script>
+        let currentDumpObj = {};
+
+        async function generateDump() {
+            document.getElementById('dump-status').textContent = 'Gathering telemetry...';
+
+            const lsData = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                lsData[k] = localStorage.getItem(k);
+            }
+
+            let parentLs = {};
+            try {
+                if (window.parent && window.parent.localStorage) {
+                    for (let i = 0; i < window.parent.localStorage.length; i++) {
+                        const k = window.parent.localStorage.key(i);
+                        parentLs[k] = window.parent.localStorage.getItem(k);
+                    }
+                }
+            } catch(e) {}
+
+            let batteryInfo = null;
+            if (navigator.getBattery) {
+                try {
+                    const b = await navigator.getBattery();
+                    batteryInfo = { level: b.level, charging: b.charging, chargingTime: b.chargingTime };
+                } catch(e) {}
+            }
+
+            currentDumpObj = {
+                timestamp: new Date().toISOString(),
+                polygolVersion: (window.parent && window.parent.systemVersion) || 'Astatine 17',
+                environment: {
+                    userAgent: navigator.userAgent,
+                    language: navigator.language,
+                    hardwareConcurrency: navigator.hardwareConcurrency,
+                    deviceMemory: navigator.deviceMemory || 'unknown',
+                    screen: {
+                        width: window.screen.width,
+                        height: window.screen.height,
+                        colorDepth: window.screen.colorDepth,
+                        dpr: window.devicePixelRatio
+                    },
+                    online: navigator.onLine,
+                    battery: batteryInfo
+                },
+                installedApps: parentLs['userInstalledApps'] ? JSON.parse(parentLs['userInstalledApps']) : {},
+                permissions: parentLs['appPermissions'] ? JSON.parse(parentLs['appPermissions']) : {},
+                localStorageDump: Object.assign({}, lsData, parentLs)
+            };
+
+            const jsonStr = JSON.stringify(currentDumpObj, null, 2);
+            document.getElementById('dump-json-view').textContent = jsonStr;
+            document.getElementById('dump-status').textContent = `Captured ${Object.keys(currentDumpObj.localStorageDump).length} variables`;
+        }
+
+        document.getElementById('btn-refresh-dump').onclick = generateDump;
+
+        document.getElementById('btn-copy-dump').onclick = () => {
+            const str = JSON.stringify(currentDumpObj, null, 2);
+            navigator.clipboard.writeText(str).then(() => {
+                if (window.Gurasuraisu && Gurasuraisu.showPopup) {
+                    Gurasuraisu.showPopup('System dump copied to clipboard');
+                } else {
+                    alert('Copied to clipboard');
+                }
+            });
+        };
+
+        document.getElementById('btn-download-dump').onclick = () => {
+            const str = JSON.stringify(currentDumpObj, null, 2);
+            const filename = `polygol-dump-${Date.now()}.json`;
+            if (window.Gurasuraisu && Gurasuraisu.downloadFile) {
+                const blob = new Blob([str], { type: 'application/json' });
+                Gurasuraisu.downloadFile(filename, URL.createObjectURL(blob));
+            } else {
+                const blob = new Blob([str], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                a.click();
+            }
+        };
+
+        generateDump();
+    </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Gaty - App & Permission Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="Gaty">
+    <div class="container" style="max-width: 760px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #3f51b5;">security</span>
+                Gaty (App & Permissions)
+            </h1>
+        </div>
+
+        <div class="setting-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title" style="margin: 0;">Installed & System Apps</h2>
+                <button class="action-btn" id="btn-refresh-gaty">Refresh</button>
+            </div>
+            <div id="gaty-apps-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
+                <!-- Dynamically generated app cards -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PERMISSIONS = [
+            { id: 'system-admin', name: 'Root Admin' },
+            { id: 'notifications', name: 'Notifications' },
+            { id: 'live-activity', name: 'Live Activity' },
+            { id: 'file-upload', name: 'Files Access' },
+            { id: 'tts', name: 'Text-to-Speech' },
+            { id: 'media-session', name: 'Media Controls' },
+            { id: 'ui-sounds', name: 'Audio FX' }
+        ];
+
+        function loadApps() {
+            const container = document.getElementById('gaty-apps-list');
+            container.innerHTML = '';
+
+            let appsObj = {};
+            try {
+                if (window.parent && window.parent.apps) {
+                    appsObj = window.parent.apps;
+                }
+            } catch(e) {}
+
+            let perms = {};
+            try {
+                const stored = window.parent ? window.parent.localStorage.getItem('appPermissions') : localStorage.getItem('appPermissions');
+                if (stored) perms = JSON.parse(stored);
+            } catch(e) {}
+
+            for (const [appName, appData] of Object.entries(appsObj)) {
+                const card = document.createElement('div');
+                card.className = 'setting-item';
+                card.style.cssText = 'flex-direction: column; align-items: stretch; padding: 14px; gap: 12px;';
+
+                const appPerms = perms[appName] || {};
+
+                let iconSrc = appData.icon;
+                if (!iconSrc || !(iconSrc.startsWith('/') || iconSrc.startsWith('http'))) {
+                    iconSrc = `/assets/appicon/${iconSrc || 'default.png'}`;
+                }
+
+                let permsHtml = '';
+                PERMISSIONS.forEach(p => {
+                    const isGranted = appPerms[p.id] === 'granted';
+                    permsHtml += `
+                        <label style="display:flex; align-items:center; gap:6px; font-size:11px; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:6px; cursor:pointer;">
+                            <input type="checkbox" ${isGranted ? 'checked' : ''} onchange="toggleAppPerm('${appName}', '${p.id}', this.checked)">
+                            ${p.name}
+                        </label>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img src="${iconSrc}" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover;" onerror="this.src='/assets/appicon/default.png';">
+                            <div>
+                                <div style="font-weight: 700; font-size: 14px;">${appName}</div>
+                                <div style="font-size: 11px; opacity: 0.6; font-family: monospace;">${appData.url}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <button class="action-btn" onclick="launchApp('${appData.url}')">Open</button>
+                            <button class="action-btn" onclick="forceStopApp('${appName}')" style="color: #ff9800;">Stop</button>
+                            <button class="action-btn" onclick="clearAppData('${appName}')" style="color: #ff5252;">Clear</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; font-weight: 600; margin-bottom: 6px; opacity: 0.8;">Permissions:</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            ${permsHtml}
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            }
+        }
+
+        window.toggleAppPerm = (appName, permId, allowed) => {
+            let perms = {};
+            try {
+                const stored = window.parent ? window.parent.localStorage.getItem('appPermissions') : localStorage.getItem('appPermissions');
+                if (stored) perms = JSON.parse(stored);
+            } catch(e) {}
+
+            if (!perms[appName]) perms[appName] = {};
+            perms[appName][permId] = allowed ? 'granted' : 'denied';
+
+            const str = JSON.stringify(perms);
+            localStorage.setItem('appPermissions', str);
+            if (window.parent && window.parent.localStorage) {
+                window.parent.localStorage.setItem('appPermissions', str);
+            }
+            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
+                Gurasuraisu.showPopup(`Permission ${permId} ${allowed ? 'granted' : 'denied'}`);
+            }
+        };
+
+        window.launchApp = (url) => {
+            if (window.Gurasuraisu && Gurasuraisu.openApp) {
+                Gurasuraisu.openApp(url);
+            } else {
+                window.open(url, '_blank');
+            }
+        };
+
+        window.forceStopApp = (appName) => {
+            window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'forceCloseAppByName', args: [appName] }, '*');
+            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
+                Gurasuraisu.showPopup(`Force stopped ${appName}`);
+            }
+        };
+
+        window.clearAppData = (appName) => {
+            if (confirm(`Clear all storage data for ${appName}?`)) {
+                window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'clearAppData', args: [appName] }, '*');
+                if (window.Gurasuraisu && Gurasuraisu.showPopup) {
+                    Gurasuraisu.showPopup(`Cleared data for ${appName}`);
+                }
+            }
+        };
+
+        document.getElementById('btn-refresh-gaty').onclick = loadApps;
+        window.addEventListener('DOMContentLoaded', loadApps);
+    </script>
+</body>
+</html>

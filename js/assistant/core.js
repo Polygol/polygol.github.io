@@ -196,8 +196,8 @@ class AssistantCore {
     }
 
     _initEdgeSwipeListener() {
-        const HANDLE_THICKNESS = 28; // Thickness of edge gesture capture zone in px
-        const SWIPE_THRESHOLD = 35;  // Distance required to trigger swipe
+        const HANDLE_THICKNESS = 20; // Thickness of edge gesture capture zone in px
+        const SWIPE_THRESHOLD = 50;  // Distance required to trigger swipe
         let suppressClickUntil = 0;
 
         // Global capture-phase click suppressor to prevent actions when swiped

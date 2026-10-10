@@ -885,15 +885,11 @@ function setupDrawerInteractions() {
                 if (dynArea) dynArea.style.opacity = '1';
             }
         } else {
-            // No app open: on Beginnings or Home screen
+            // No app open: on Beginnings
             if (movementPercentage > 10 || isFlickUp) {
                 if (document.body.classList.contains('beginnings-active')) {
                     if (typeof window.exitBeginningsState === 'function') window.exitBeginningsState();
-                } else {
-                    if (typeof window.scrollHomePage === 'function') window.scrollHomePage('next');
                 }
-            } else if (movementPercentage < -10 || isFlickDown) {
-                if (typeof window.scrollHomePage === 'function') window.scrollHomePage('prev');
             }
         }
 

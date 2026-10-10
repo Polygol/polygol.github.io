@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>AiNany - AI Subsystem Testing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="AiNany">
+    <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #673ab7;">psychology</span>
+                AiNany (AI Test Harness)
+            </h1>
+        </div>
+
+        <div class="setting-section">
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">kirbAI Assistant Service</span>
+                    <span class="setting-description" id="ai-engine-status">Engine active</span>
+                </div>
+                <div class="setting-control">
+                    <input type="checkbox" class="toggle-switch" id="toggle-ai-engine" checked>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Mock Fallback Mode</span>
+                    <span class="setting-description">Return instant mock responses for offline testing</span>
+                </div>
+                <div class="setting-control">
+                    <input type="checkbox" class="toggle-switch" id="toggle-ai-mock">
+                </div>
+            </div>
+        </div>
+
+        <!-- Direct Prompt Harness -->
+        <div class="setting-section">
+            <h2 class="section-title">Prompt Test Harness</h2>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                <textarea id="ai-prompt-input" class="form-input" style="height: 70px; resize: vertical; padding: 10px;" placeholder="Enter prompt for kirbAI...">Give me a quick 1-sentence Polygol tip.</textarea>
+                <div style="display: flex; gap: 8px;">
+                    <button class="action-btn" id="btn-run-prompt" style="background:#673ab7; color:#fff; border:none; flex:1;">Run Prompt</button>
+                    <button class="action-btn" id="btn-run-summarize">Summarize</button>
+                    <button class="action-btn" id="btn-run-suggest">Suggest</button>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Response Time</span>
+                    <span class="setting-description" id="ai-latency">0ms</span>
+                </div>
+            </div>
+            <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 14px; min-height: 80px; font-family: sans-serif; font-size: 13px; line-height: 1.5;" id="ai-response-box">
+                Awaiting response...
+            </div>
+        </div>
+
+        <!-- System Prompt Customization -->
+        <div class="setting-section">
+            <h2 class="section-title">System Persona Directive</h2>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <textarea id="ai-sys-prompt" class="form-input" style="height: 60px; font-size: 12px; font-family: monospace;">You are kirbAI, the personal smart home and OS companion for Polygol.</textarea>
+                <button class="action-btn" id="btn-save-sysprompt" style="align-self: flex-start;">Save Directive</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const promptInput = document.getElementById('ai-prompt-input');
+        const responseBox = document.getElementById('ai-response-box');
+        const latencyEl = document.getElementById('ai-latency');
+
+        async function executeAiTask(action) {
+            const promptText = promptInput.value.trim();
+            if (!promptText) return;
+
+            responseBox.textContent = 'Generating response from kirbAI...';
+            const t0 = performance.now();
+
+            if (document.getElementById('toggle-ai-mock').checked) {
+                // Instant Mock
+                setTimeout(() => {
+                    const dt = Math.round(performance.now() - t0);
+                    latencyEl.textContent = `${dt}ms (Mock)`;
+                    responseBox.textContent = `[Mock kirbAI]: Polygol tip: customize your dock in Settings under Customize! (Executed ${action})`;
+                }, 150);
+                return;
+            }
+
+            try {
+                let res;
+                if (window.Gurasuraisu && Gurasuraisu.ai) {
+                    if (action === 'summarize') {
+                        res = await Gurasuraisu.ai.summarize(promptText);
+                    } else if (action === 'suggest') {
+                        const suggestions = await Gurasuraisu.ai.suggest({ context: promptText });
+                        res = JSON.stringify(suggestions, null, 2);
+                    } else {
+                        res = await Gurasuraisu.ai.generate(promptText);
+                    }
+                } else {
+                    res = `[Fallback AI]: kirbAI response generated for: "${promptText}"`;
+                }
+
+                const dt = Math.round(performance.now() - t0);
+                latencyEl.textContent = `${dt}ms`;
+                responseBox.textContent = res;
+            } catch(e) {
+                const dt = Math.round(performance.now() - t0);
+                latencyEl.textContent = `${dt}ms (Error)`;
+                responseBox.textContent = `Error calling AI API: ${e.message}`;
+            }
+        }
+
+        document.getElementById('btn-run-prompt').onclick = () => executeAiTask('generate');
+        document.getElementById('btn-run-summarize').onclick = () => executeAiTask('summarize');
+        document.getElementById('btn-run-suggest').onclick = () => executeAiTask('suggest');
+
+        document.getElementById('btn-save-sysprompt').onclick = () => {
+            const val = document.getElementById('ai-sys-prompt').value;
+            localStorage.setItem('kirb_ai_system_prompt', val);
+            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
+                Gurasuraisu.showPopup('System prompt updated');
+            }
+        };
+    </script>
+</body>
+</html>

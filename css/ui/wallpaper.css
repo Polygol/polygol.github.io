@@ -122,7 +122,7 @@ body.app-active .page-indicator {
     opacity: 0;
     filter: blur(10px);
     transition: opacity 0.3s ease, filter 0.3s;
-    backdrop-filter: blur(1px);
+    backdrop-filter: blur(5px);
     background-color: var(--overlay-color);
     transform: scale(1.2);
 }

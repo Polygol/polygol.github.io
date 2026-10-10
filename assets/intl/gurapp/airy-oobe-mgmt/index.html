@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Airy OOBE Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
+    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
+    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+</head>
+<body data-app-name="Airy OOBE Management">
+    <div class="container" style="max-width: 680px; width: 100%; margin: 0 auto;">
+        <div class="header">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded" style="color: #4caf50;">flight_takeoff</span>
+                Airy OOBE Management
+            </h1>
+        </div>
+
+        <div class="setting-section">
+            <h2 class="section-title">OOBE Status</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">hasVisitedBefore Status</span>
+                    <span class="setting-description" id="oobe-status-desc">Reading state...</span>
+                </div>
+                <span class="material-symbols-rounded" id="oobe-status-icon">help</span>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Selected Language</span>
+                    <span class="setting-description" id="oobe-lang-desc">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="setting-section">
+            <h2 class="section-title">Lifecycle Actions</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Launch Airy App</span>
+                    <span class="setting-description">Open the standalone Airy OOBE walkthrough</span>
+                </div>
+                <button class="action-btn" id="btn-launch-airy">Launch</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Reset Setup (Force OOBE)</span>
+                    <span class="setting-description">Clears hasVisitedBefore to trigger setup on reboot</span>
+                </div>
+                <button class="action-btn" id="btn-reset-oobe" style="color: #ff9800;">Reset</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Mark Setup Completed</span>
+                    <span class="setting-description">Sets hasVisitedBefore = true (skip setup)</span>
+                </div>
+                <button class="action-btn" id="btn-skip-oobe">Mark Done</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Reboot Polygol into OOBE</span>
+                    <span class="setting-description">Navigates to /?s=oobe</span>
+                </div>
+                <button class="action-btn" id="btn-reboot-oobe">Reboot to OOBE</button>
+            </div>
+        </div>
+
+        <div class="setting-section">
+            <h2 class="section-title">Test Individual Airy Docs</h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Welcome Module</span>
+                    <span class="setting-description">/assets/gurapp/intl/airy/docs/welcome</span>
+                </div>
+                <button class="action-btn" onclick="openDoc('welcome')">Preview</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Gestures Module</span>
+                    <span class="setting-description">/assets/gurapp/intl/airy/docs/gestures</span>
+                </div>
+                <button class="action-btn" onclick="openDoc('gestures')">Preview</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Controls Module</span>
+                    <span class="setting-description">/assets/gurapp/intl/airy/docs/controls</span>
+                </div>
+                <button class="action-btn" onclick="openDoc('controls')">Preview</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Customization Module</span>
+                    <span class="setting-description">/assets/gurapp/intl/airy/docs/customization</span>
+                </div>
+                <button class="action-btn" onclick="openDoc('customization')">Preview</button>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <span class="setting-label">Finish Module</span>
+                    <span class="setting-description">/assets/gurapp/intl/airy/docs/finish</span>
+                </div>
+                <button class="action-btn" onclick="openDoc('finish')">Preview</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus() {
+            let visited = 'false';
+            try {
+                visited = (window.parent && window.parent.localStorage) ?
+                    window.parent.localStorage.getItem('hasVisitedBefore') :
+                    localStorage.getItem('hasVisitedBefore');
+            } catch(e) {}
+
+            const statusEl = document.getElementById('oobe-status-desc');
+            const iconEl = document.getElementById('oobe-status-icon');
+            if (visited === 'true') {
+                statusEl.textContent = 'Completed (Normal Boot)';
+                statusEl.style.color = '#4caf50';
+                iconEl.textContent = 'check_circle';
+                iconEl.style.color = '#4caf50';
+            } else {
+                statusEl.textContent = 'Pending (Next boot triggers OOBE)';
+                statusEl.style.color = '#ff9800';
+                iconEl.textContent = 'pending';
+                iconEl.style.color = '#ff9800';
+            }
+
+            const lang = localStorage.getItem('selectedLanguage') || 'en';
+            document.getElementById('oobe-lang-desc').textContent = lang.toUpperCase();
+        }
+
+        document.getElementById('btn-launch-airy').onclick = () => {
+            if (window.Gurasuraisu && Gurasuraisu.openApp) {
+                Gurasuraisu.openApp('/assets/gurapp/intl/airy/index.html');
+            } else {
+                window.location.href = '/assets/gurapp/intl/airy/index.html';
+            }
+        };
+
+        document.getElementById('btn-reset-oobe').onclick = () => {
+            try {
+                if (window.parent && window.parent.localStorage) {
+                    window.parent.localStorage.removeItem('hasVisitedBefore');
+                }
+                localStorage.removeItem('hasVisitedBefore');
+            } catch(e) {}
+            updateStatus();
+            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
+                Gurasuraisu.showPopup('OOBE reset. Setup will trigger on boot.');
+            }
+        };
+
+        document.getElementById('btn-skip-oobe').onclick = () => {
+            try {
+                if (window.parent && window.parent.localStorage) {
+                    window.parent.localStorage.setItem('hasVisitedBefore', 'true');
+                }
+                localStorage.setItem('hasVisitedBefore', 'true');
+            } catch(e) {}
+            updateStatus();
+            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
+                Gurasuraisu.showPopup('OOBE marked as completed.');
+            }
+        };
+
+        document.getElementById('btn-reboot-oobe').onclick = () => {
+            if (window.top) window.top.location.href = '/?s=oobe';
+        };
+
+        function openDoc(docName) {
+            const url = `/assets/gurapp/intl/airy/docs/${docName}`;
+            if (window.Gurasuraisu && Gurasuraisu.showSheet) {
+                Gurasuraisu.showSheet({ url: url, height: '80%' });
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', updateStatus);
+    </script>
+</body>
+</html>
