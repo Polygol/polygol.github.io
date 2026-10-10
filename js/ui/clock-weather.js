@@ -351,6 +351,13 @@ function updateClockAndDate() {
         dateElement._lastText = formattedDate;
         if (modalTitle) modalTitle.textContent = formattedDate;
     }
+
+    if (typeof window.updateDynamicDate === 'function') {
+        window.updateDynamicDate();
+    }
+    if (typeof window.updatePersistentClock === 'function') {
+        window.updatePersistentClock();
+    }
 }
 
 function startSynchronizedClockAndDate() {

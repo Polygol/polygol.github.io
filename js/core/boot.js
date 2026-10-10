@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     initAppDraw(); // Now this will use the fully populated 'apps' object
     initializeCustomization(); // Now reads correct styles and applies them to DOM
     setupWeatherToggle();
-    initializePageIndicator();
+    // initializePageIndicator();
 	loadWidgets(); // Now renders into a correctly styled layout
     checkWallpaperState();
     updateGurappsVisibility();
@@ -1747,10 +1747,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updatePersistentClock() {
         if (!persistentClock) return;
-        const isModalOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-        const hasActivities = (typeof activeIslands !== 'undefined' && activeIslands.length > 0);
+        const isBeginnings = document.body.classList.contains('beginnings-active');
+        const activityIsland = document.getElementById('activity-island');
+        const dynamicDate = document.getElementById('dynamic-date');
+        const statusIndicator = document.getElementById('status-indicator');
 
-        if (isModalOpen) {
+        if (isBeginnings) {
+            persistentClock.innerHTML = '<span class="material-symbols-rounded"><br></span>';
+            persistentClock.style.display = 'none';
+            persistentClock.style.opacity = '0';
+            if (dynamicDate) {
+                dynamicDate.style.display = 'none';
+                dynamicDate.style.opacity = '0';
+            }
+            if (activityIsland) {
+                activityIsland.style.display = 'none';
+                activityIsland.style.opacity = '0';
+            }
+            if (statusIndicator) {
+                statusIndicator.style.display = 'flex';
+                statusIndicator.style.opacity = '1';
+            }
+        } else {
             const now = new Date();
             let hours = now.getHours();
             let minutes = String(now.getMinutes()).padStart(2, '0');
@@ -1763,30 +1781,90 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             persistentClock.innerHTML = `<span class="persistent-clock-digit">${displayHours}</span><span class="persistent-colon">:</span><span class="persistent-clock-digit">${minutes}</span>`;
             persistentClock.style.display = 'flex';
-        } else {
-            if (hasActivities) {
-                persistentClock.innerHTML = '<span class="material-symbols-rounded">keyboard_arrow_down</span>';
-            } else {
-                const hideIndicator = localStorage.getItem('hideClockIndicator') === 'true';
-                if (hideIndicator) {
-                    persistentClock.innerHTML = '<span class="material-symbols-rounded"><br></span>';
-                    persistentClock.style.opacity = '0';
-                } else {
-                    persistentClock.innerHTML = '<span class="material-symbols-rounded">maximize</span>';
-                    persistentClock.style.opacity = '1';
-                }
+            persistentClock.style.opacity = '1';
+            if (dynamicDate) {
+                dynamicDate.style.display = 'flex';
+                dynamicDate.style.opacity = '1';
+                dynamicDate.textContent = getFormattedDynamicDate();
+            }
+            if (activityIsland) {
+                activityIsland.style.display = 'flex';
+                activityIsland.style.opacity = '1';
+            }
+            if (statusIndicator) {
+                statusIndicator.style.display = 'flex';
+                statusIndicator.style.opacity = '1';
             }
         }
     }
     window.updatePersistentClock = updatePersistentClock;
 
+    function getFormattedDynamicDate() {
+        const lang = localStorage.getItem('selectedLanguage') || undefined;
+        const now = new Date();
+        try {
+            return now.toLocaleDateString(lang, { weekday: 'short', month: 'short', day: 'numeric' });
+        } catch (e) {
+            return now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+    }
+
+    function setupDynamicDateEvents(el) {
+        if (!el || el.dataset.bound) return;
+        el.dataset.bound = 'true';
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (typeof window.gurappsEnabled !== 'undefined' && !window.gurappsEnabled) return;
+            if (typeof gurappsEnabled !== 'undefined' && !gurappsEnabled) return;
+            if (typeof createFullscreenEmbed === 'function') {
+                createFullscreenEmbed('https://polygol.github.io/fantaskical/index.html');
+            }
+        });
+    }
+
+    function updateDynamicDate() {
+        let dynamicDate = document.getElementById('dynamic-date');
+        if (!dynamicDate) {
+            const dynArea = document.getElementById('dynamic-area');
+            if (dynArea) {
+                dynamicDate = document.createElement('div');
+                dynamicDate.id = 'dynamic-date';
+                dynamicDate.className = 'dynamic-date';
+                const persistentClk = document.getElementById('persistent-clock');
+                if (persistentClk) {
+                    dynArea.insertBefore(dynamicDate, persistentClk);
+                } else {
+                    dynArea.appendChild(dynamicDate);
+                }
+            }
+        }
+        if (dynamicDate) {
+            setupDynamicDateEvents(dynamicDate);
+            const text = getFormattedDynamicDate();
+            if (dynamicDate.textContent !== text) {
+                dynamicDate.textContent = text;
+            }
+            const isBeginnings = document.body.classList.contains('beginnings-active');
+            if (isBeginnings) {
+                dynamicDate.style.display = 'none';
+                dynamicDate.style.opacity = '0';
+            } else {
+                dynamicDate.style.display = 'flex';
+                dynamicDate.style.opacity = '1';
+            }
+        }
+    }
+    window.updateDynamicDate = updateDynamicDate;
+
     function synchronizePersistentClock() {
         updatePersistentClock();
+        updateDynamicDate();
         const now = new Date();
         const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
         setTimeout(synchronizePersistentClock, msUntilNextMinute);
     }
     synchronizePersistentClock();
+    updateDynamicDate();
 
     // Setup observer to watch for embed visibility changes to update clock immediately
     const embedObserver = new MutationObserver((mutations) => {

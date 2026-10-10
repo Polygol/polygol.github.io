@@ -80,7 +80,7 @@
 
     function loadHomePages() {
         try {
-            const saved = localStorage.getItem('astatine_home_pages');
+            const saved = localStorage.getItem('minihompy');
             if (saved) {
                 homePages = JSON.parse(saved);
                 if (!Array.isArray(homePages) || homePages.length === 0) {
@@ -119,9 +119,9 @@
 
     function saveHomePages() {
         try {
-            localStorage.setItem('astatine_home_pages', JSON.stringify(homePages));
+            localStorage.setItem('minihompy', JSON.stringify(homePages));
             const azList = getInstalledAppsListAZ();
-            localStorage.setItem('astatine_app_list_az', JSON.stringify(azList));
+            localStorage.setItem('app_az', JSON.stringify(azList));
         } catch (e) {
             console.error('[HomeMenu] Error saving pages:', e);
         }
@@ -281,6 +281,12 @@
         document.body.classList.add('beginnings-active');
         document.body.classList.remove('home-screen-active', 'home-edit-active');
         attachMotionWakeListener();
+        if (typeof window.updatePersistentClock === 'function') {
+            window.updatePersistentClock();
+        }
+        if (typeof window.updateDynamicDate === 'function') {
+            window.updateDynamicDate();
+        }
     }
 
     function exitBeginningsState() {
@@ -297,12 +303,24 @@
         if (window.SoundManager && typeof window.SoundManager.play === 'function') {
             try { window.SoundManager.play('open'); } catch (e) {}
         }
+        if (typeof window.updatePersistentClock === 'function') {
+            window.updatePersistentClock();
+        }
+        if (typeof window.updateDynamicDate === 'function') {
+            window.updateDynamicDate();
+        }
     }
 
     function enterHomeScreen() {
         if (isWallpaperEditingActive()) return;
         exitBeginningsState();
         document.body.classList.add('home-screen-active');
+        if (typeof window.updatePersistentClock === 'function') {
+            window.updatePersistentClock();
+        }
+        if (typeof window.updateDynamicDate === 'function') {
+            window.updateDynamicDate();
+        }
     }
 
     function attachMotionWakeListener() {

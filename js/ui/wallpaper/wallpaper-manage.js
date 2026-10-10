@@ -172,7 +172,7 @@ window.addEventListener('message', async (event) => {
 
             saveRecentWallpapers();
             saveCurrentPosition();
-            updatePageIndicatorDots(true);
+            // updatePageIndicatorDots (true);
             refreshWallpaperManagerUI();
 
         } else if (action === 'delete') {

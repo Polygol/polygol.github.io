@@ -199,7 +199,6 @@ function populateDock() {
 function updateDockVisibility() {
     const dock = document.getElementById('dock');
     const drawerPill = document.querySelector('.drawer-pill');
-    const pageIndicator = document.getElementById('page-indicator');
     
     if (!dock) return;
 
@@ -223,11 +222,6 @@ function updateDockVisibility() {
         });
         
         if (drawerPill) drawerPill.style.opacity = '0';
-
-        // Move Page Indicator UP
-        if (pageIndicator) {
-            pageIndicator.classList.add('shifted-up');
-        }
     } 
     // ELSE: Hide Dock (Default behavior, or if App/Drawer is open)
     else {
@@ -243,11 +237,6 @@ function updateDockVisibility() {
                     dock.style.display = 'none';
                 }
             }, 300);
-        }
-
-        // Move Page Indicator DOWN
-        if (pageIndicator) {
-            pageIndicator.classList.remove('shifted-up');
         }
     }
 }

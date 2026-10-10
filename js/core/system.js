@@ -281,6 +281,9 @@ function selectLanguage(languageCode) {
 
         localStorage.setItem('selectedLanguage', languageCode);
         applyLanguage(currentLanguage);
+        if (typeof window.updateDynamicDate === 'function') {
+            window.updateDynamicDate();
+        }
 
         const languageSwitcher = document.getElementById('language-switcher');
         if (languageSwitcher) {

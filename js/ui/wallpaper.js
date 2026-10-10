@@ -3376,7 +3376,7 @@ async function duplicateWallpaper(index) {
     
     saveRecentWallpapers();
     saveCurrentPosition();
-    updatePageIndicatorDots(true);
+    // updatePageIndicatorDots (true);
 }
 
 // --- Edit Mode Logic ---
@@ -3534,7 +3534,7 @@ function initializeWallpaperTracking() {
 }
 
 // Create the page indicator once and update it as needed
-function initializePageIndicator() {
+/* function initializePageIndicator() {
   // Create indicator only if it doesn't exist
   if (!document.getElementById('page-indicator')) {
     const pageIndicator = document.createElement('div');
@@ -3549,17 +3549,17 @@ function initializePageIndicator() {
     document.body.appendChild(pageIndicator);
     
     // Initial creation of dots
-    updatePageIndicatorDots(true);
+    // updatePageIndicatorDots (true);
   } else {
     // Just update dot states
-    updatePageIndicatorDots(false);
+    // updatePageIndicatorDots (false);
   }
   
   resetIndicatorTimeout();
 }
 
 // Update only the contents of the indicator
-function updatePageIndicatorDots(forceRecreate = false) {
+function // updatePageIndicatorDots (forceRecreate = false) {
   const pageIndicator = document.getElementById('page-indicator');
   const track = document.getElementById('page-indicator-track');
   if (!pageIndicator || !track) return;
@@ -3682,7 +3682,7 @@ function updatePageIndicatorDots(forceRecreate = false) {
     
 function updatePageIndicator() {
   initializePageIndicator();
-}
+} */
 
 function saveCurrentPosition() {
   localStorage.setItem('wallpaperOrder', JSON.stringify({
@@ -3822,7 +3822,7 @@ async function removeWallpaper(index) {
         localStorage.setItem("wallpaperType", "default");
         applyWallpaper();
         showPopup(currentLanguage.ALL_WALLPAPER_REMOVE);
-        updatePageIndicatorDots(true);
+        // updatePageIndicatorDots (true);
         return;
     }
     
@@ -3837,7 +3837,7 @@ async function removeWallpaper(index) {
     }
     
     showPopup(currentLanguage.WALLPAPER_REMOVE);
-    updatePageIndicatorDots(true);
+    // updatePageIndicatorDots (true);
     resetIndicatorTimeout();
     syncUiStates();
 }
@@ -3979,7 +3979,7 @@ function handleDotDragEnd(e) {
     saveCurrentPosition();
     
     // Force recreate the dots due to reordering
-    updatePageIndicatorDots(true);
+    // updatePageIndicatorDots (true);
   } else {
     // Clean up any dragging visual states
     const draggedDot = document.querySelector(`.indicator-dot[data-index="${dragIndex}"]`);
@@ -3994,7 +3994,7 @@ function handleDotDragEnd(e) {
     });
     
     // Update active state
-    updatePageIndicatorDots(false);
+    // updatePageIndicatorDots (false);
   }
   
   // Clean up
@@ -4159,7 +4159,7 @@ async function jumpToWallpaper(index) {
     // Re-render the widgets for the new wallpaper
     renderWidgets();
     
-    updatePageIndicatorDots(false);
+    // updatePageIndicatorDots (false);
     resetIndicatorTimeout();
 }
 
@@ -4348,7 +4348,7 @@ function switchWallpaper(direction, skipSave = false) {
     // Re-render the widgets for the new wallpaper
     renderWidgets();
     
-    updatePageIndicatorDots(false);
+    // updatePageIndicatorDots (false);
     resetIndicatorTimeout();
     syncUiStates();
 }

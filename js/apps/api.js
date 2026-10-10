@@ -293,7 +293,7 @@ async function clearAllWallpapers() {
                 currentWallpaperPosition = 0;
                 localStorage.setItem("wallpaperType", "default");
                 applyWallpaper();
-                updatePageIndicatorDots(true);
+                // updatePageIndicatorDots (true);
                 syncUiStates();
                 resolve('All custom wallpapers cleared. Resetting to default.');
             };
