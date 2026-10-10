@@ -38,14 +38,33 @@
         const isPortrait = h > w;
 
         if (isPortrait) {
-            return h >= 740 ? '4x6' : '4x5';
+            // Large tablet portrait (iPad 768x1024 or larger)
+            if (w >= 650 && h >= 780) {
+                return '6x6';
+            }
+            // Standard phone portrait (iPhone, etc.)
+            if (h >= 640) {
+                return '4x6';
+            }
+            // Compact portrait
+            return '4x5';
         }
 
         // Landscape / Tablet / Desktop
-        if (w >= 1200) {
-            return h >= 850 ? '8x6' : '6x5';
+        // Ultra-large display / 4K monitor
+        if (w >= 1350 && h >= 880) {
+            return '8x12';
         }
-        return '6x5';
+        // Wide desktop / high-res landscape
+        if (w >= 1150 && h >= 680) {
+            return '8x6';
+        }
+        // Standard iPad / tablet landscape
+        if (w >= 780 && h >= 580) {
+            return '6x5';
+        }
+        // Compact landscape / short viewport / zoomed landscape (e.g. 928x548 screen where zoomed h is < 580)
+        return '4x5';
     }
 
     function applyGridSize(gridName) {
@@ -55,6 +74,14 @@
             container.dataset.grid = gridName;
             container.style.setProperty('--home-grid-cols', config.cols);
             container.style.setProperty('--home-grid-rows', config.rows);
+            container.style.setProperty('--home-viewport-max-width', `${config.maxW}px`);
+            container.style.setProperty('--home-viewport-max-height', `${config.maxH}px`);
+        }
+
+        const viewport = document.getElementById('home-pages-viewport');
+        if (viewport) {
+            viewport.style.maxWidth = `${config.maxW}px`;
+            viewport.style.maxHeight = `${config.maxH}px`;
         }
 
         Object.keys(STANDARD_GRIDS).forEach(name => {
@@ -63,6 +90,22 @@
         document.body.classList.add(`home-grid-${gridName}`);
 
         window.currentHomeGrid = { name: gridName, ...config };
+    }
+
+    function getViewportDimensions(grid) {
+        const zoom = getZoomFactor();
+        const activeGrid = grid || window.currentHomeGrid || STANDARD_GRIDS['6x5'];
+        const viewport = document.getElementById('home-pages-viewport');
+        const maxAvailW = Math.max(300, Math.floor((window.innerWidth / zoom) - 48));
+        const maxAvailH = Math.max(300, Math.floor((window.innerHeight / zoom) - 90));
+
+        let vpW = viewport && viewport.clientWidth > 0 ? viewport.clientWidth : maxAvailW;
+        let vpH = viewport && viewport.clientHeight > 0 ? viewport.clientHeight : maxAvailH;
+
+        if (activeGrid.maxW) vpW = Math.min(vpW, activeGrid.maxW);
+        if (activeGrid.maxH) vpH = Math.min(vpH, activeGrid.maxH);
+
+        return { vpW, vpH, zoom };
     }
 
     function autoAdaptGridSize() {
@@ -206,11 +249,8 @@
 
     // --- Multi-Page Automatic Empty Space Reflow Engine ---
     function reflowHomePages() {
-        const zoom = getZoomFactor();
-        const grid = window.currentHomeGrid || { cols: 6, rows: 5 };
-        const vp = document.getElementById('home-pages-viewport');
-        const vpW = vp ? vp.clientWidth : (window.innerWidth / zoom >= 1200 ? 1200 : 800);
-        const vpH = vp ? vp.clientHeight : (window.innerHeight / zoom - 90);
+        const grid = window.currentHomeGrid || STANDARD_GRIDS['6x5'];
+        const { vpW, vpH } = getViewportDimensions(grid);
 
         // 1. Remove empty pages at the end
         while (homePages.length > 1 && homePages[homePages.length - 1].length === 0) {
@@ -315,6 +355,8 @@
         if (isWallpaperEditingActive()) return;
         exitBeginningsState();
         document.body.classList.add('home-screen-active');
+        autoAdaptGridSize();
+        renderHomePages();
         if (typeof window.updatePersistentClock === 'function') {
             window.updatePersistentClock();
         }
@@ -394,8 +436,13 @@
         const cellW = Math.floor(availW / cols);
         const cellH = Math.floor(availH / rows);
 
-        const gapX = Math.max(12, Math.floor(cellW * 0.12));
-        const gapY = Math.max(12, Math.floor(cellH * 0.14));
+        const gapX = Math.max(8, Math.min(18, Math.floor(cellW * 0.12)));
+        const gapY = Math.max(8, Math.min(18, Math.floor(cellH * 0.12)));
+
+        const extraX = Math.floor((availW - (cols * cellW)) / 2);
+        const extraY = Math.floor((availH - (rows * cellH)) / 2);
+        const startX = padX + extraX;
+        const startY = padY + extraY;
 
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
@@ -447,8 +494,8 @@
                     }
                 }
 
-                const x = padX + placedC * cellW + Math.floor(gapX / 2);
-                const y = padY + placedR * cellH + Math.floor(gapY / 2);
+                const x = startX + placedC * cellW + Math.floor(gapX / 2);
+                const y = startY + placedR * cellH + Math.floor(gapY / 2);
                 const w = spanCols * cellW - gapX;
                 const h = spanRows * cellH - gapY;
 
@@ -473,8 +520,8 @@
                     c: 0,
                     spanCols: 1,
                     spanRows: 1,
-                    x: 0,
-                    y: 0,
+                    x: startX,
+                    y: startY,
                     w: cellW - gapX,
                     h: cellH - gapY,
                     overflow: true
@@ -499,10 +546,8 @@
         }
         track.innerHTML = '';
 
-        const zoom = getZoomFactor();
-        const grid = window.currentHomeGrid || { cols: 6, rows: 5 };
-        const vpW = viewport.clientWidth || (window.innerWidth / zoom >= 1200 ? 1200 : 800);
-        const vpH = viewport.clientHeight || (window.innerHeight / zoom - 90);
+        const grid = window.currentHomeGrid || STANDARD_GRIDS['6x5'];
+        const { vpW, vpH } = getViewportDimensions(grid);
 
         homePages.forEach((pageItems, pageIdx) => {
             const pageEl = document.createElement('div');
@@ -513,7 +558,7 @@
 
             layout.forEach(entry => {
                 if (entry.overflow) return;
-                const itemEl = createItemElement(entry.item, pageIdx, entry.index);
+                const itemEl = createItemElement(entry.item, pageIdx, entry.index, entry);
                 if (itemEl) {
                     itemEl.classList.add('home-grid-item');
                     itemEl.style.width = `${entry.w}px`;
@@ -536,12 +581,12 @@
         updateTrackTransform();
     }
 
-    function createItemElement(item, pageIdx, itemIdx) {
+    function createItemElement(item, pageIdx, itemIdx, entry) {
         if (item.type === 'app') {
-            return createAppItemElement(item, pageIdx, itemIdx);
+            return createAppItemElement(item, pageIdx, itemIdx, entry);
         }
         if (item.type === 'folder') {
-            return createFolderItemElement(item, pageIdx, itemIdx);
+            return createFolderItemElement(item, pageIdx, itemIdx, entry);
         }
         if (item.type === 'widget-weather') {
             return createWeatherWidgetElement(item, pageIdx, itemIdx);
@@ -552,8 +597,8 @@
         return null;
     }
 
-    // --- App Icon Item (Strictly using user's CSS classes) ---
-    function createAppItemElement(item, pageIdx, itemIdx) {
+    // --- App Icon Item (Strictly using user's CSS classes, never squished) ---
+    function createAppItemElement(item, pageIdx, itemIdx, entry) {
         const info = resolveAppInfo(item.appName);
 
         const wrapper = document.createElement('div');
@@ -582,18 +627,48 @@
         appIcon.className = 'app-icon';
         appIcon.dataset.app = item.appName;
 
+        const cellW = entry ? entry.w : 120;
+        const cellH = entry ? entry.h : 85;
+
+        // Label occupies font-size plus margin-top. Adapt margin and font so they never crowd out the icon.
+        const labelGap = Math.max(4, Math.min(14, Math.floor(cellH * 0.08)));
+        const approxLabelH = cellH < 75 ? 16 : 20;
+        const availH = Math.max(30, cellH - approxLabelH - labelGap);
+        const availW = Math.max(30, Math.floor(cellW * 0.72));
+
+        // App Icon MUST ALWAYS be 1:1 square, clamped to max 72px (iOS standard)
+        const iconSize = Math.min(72, availW, availH);
+
         const imgContainer = document.createElement('div');
         imgContainer.className = 'app-icon-img';
+        imgContainer.style.width = `${iconSize}px`;
+        imgContainer.style.height = `${iconSize}px`;
+        imgContainer.style.minWidth = `${iconSize}px`;
+        imgContainer.style.minHeight = `${iconSize}px`;
+        imgContainer.style.maxWidth = `${iconSize}px`;
+        imgContainer.style.maxHeight = `${iconSize}px`;
+        imgContainer.style.flexShrink = '0';
+        imgContainer.style.aspectRatio = '1 / 1';
 
         const img = document.createElement('img');
         img.src = info.icon;
         img.alt = info.name;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.aspectRatio = '1 / 1';
         img.onerror = () => { img.src = '/assets/img/icon.svg'; };
         imgContainer.appendChild(img);
         appIcon.appendChild(imgContainer);
 
         const label = document.createElement('span');
         label.textContent = info.name;
+        label.style.marginTop = `${labelGap}px`;
+        if (cellH < 75) {
+            label.style.fontSize = '0.76rem';
+        } else if (cellH < 95) {
+            label.style.fontSize = '0.82rem';
+        }
         appIcon.appendChild(label);
 
         wrapper.appendChild(appIcon);
@@ -613,7 +688,7 @@
     }
 
     // --- Folder Item ---
-    function createFolderItemElement(item, pageIdx, itemIdx) {
+    function createFolderItemElement(item, pageIdx, itemIdx, entry) {
         const wrapper = document.createElement('div');
         wrapper.className = 'home-grid-item folder-grid-item';
 
@@ -631,8 +706,25 @@
         const folderIcon = document.createElement('div');
         folderIcon.className = 'folder-icon-item';
 
+        const cellW = entry ? entry.w : 120;
+        const cellH = entry ? entry.h : 85;
+
+        const labelGap = Math.max(4, Math.min(14, Math.floor(cellH * 0.08)));
+        const approxLabelH = cellH < 75 ? 16 : 20;
+        const availH = Math.max(30, cellH - approxLabelH - labelGap);
+        const availW = Math.max(30, Math.floor(cellW * 0.72));
+        const iconSize = Math.min(72, availW, availH);
+
         const previewBox = document.createElement('div');
         previewBox.className = 'folder-preview-box';
+        previewBox.style.width = `${iconSize}px`;
+        previewBox.style.height = `${iconSize}px`;
+        previewBox.style.minWidth = `${iconSize}px`;
+        previewBox.style.minHeight = `${iconSize}px`;
+        previewBox.style.maxWidth = `${iconSize}px`;
+        previewBox.style.maxHeight = `${iconSize}px`;
+        previewBox.style.flexShrink = '0';
+        previewBox.style.aspectRatio = '1 / 1';
 
         const subItems = Array.isArray(item.items) ? item.items.slice(0, 4) : [];
         subItems.forEach(sub => {
@@ -650,6 +742,12 @@
         const label = document.createElement('span');
         label.className = 'folder-label';
         label.textContent = item.name || 'Folder';
+        label.style.marginTop = `${labelGap}px`;
+        if (cellH < 75) {
+            label.style.fontSize = '0.76rem';
+        } else if (cellH < 95) {
+            label.style.fontSize = '0.82rem';
+        }
         folderIcon.appendChild(label);
 
         wrapper.appendChild(folderIcon);
@@ -1377,9 +1475,22 @@
 
             const imgContainer = document.createElement('div');
             imgContainer.className = 'app-icon-img';
+            imgContainer.style.width = '60px';
+            imgContainer.style.height = '60px';
+            imgContainer.style.minWidth = '60px';
+            imgContainer.style.minHeight = '60px';
+            imgContainer.style.maxWidth = '60px';
+            imgContainer.style.maxHeight = '60px';
+            imgContainer.style.flexShrink = '0';
+            imgContainer.style.aspectRatio = '1 / 1';
+
             const img = document.createElement('img');
             img.src = info.icon;
             img.alt = info.name;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.aspectRatio = '1 / 1';
             img.onerror = () => { img.src = '/assets/img/icon.svg'; };
             imgContainer.appendChild(img);
             icon.appendChild(imgContainer);
@@ -2125,21 +2236,27 @@
         startRealTimeSync();
 
         let gridResizeTimer = null;
-        window.addEventListener('resize', () => {
+        const handleResize = () => {
             clearTimeout(gridResizeTimer);
             gridResizeTimer = setTimeout(() => {
                 autoAdaptGridSize();
                 reflowHomePages();
                 renderHomePages();
-            }, 100);
-        });
+            }, 80);
+        };
+
+        window.addEventListener('resize', handleResize);
         window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                autoAdaptGridSize();
-                reflowHomePages();
-                renderHomePages();
-            }, 150);
+            setTimeout(handleResize, 100);
         });
+
+        const vpEl = document.getElementById('home-pages-viewport');
+        if (vpEl && typeof ResizeObserver !== 'undefined') {
+            const ro = new ResizeObserver(() => {
+                handleResize();
+            });
+            ro.observe(vpEl);
+        }
 
         // Boot into Beginnings (idle start state)
         enterBeginningsState();

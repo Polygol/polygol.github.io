@@ -635,9 +635,11 @@
     transition: background-color 0.2s, transform 0.1s;
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
-    background-color: var(--background-color);
+    background-color: var(--search-background);
     border-radius: 32px;
     position: fixed;
     bottom: 25px;
     gap: 18px;
+    z-index: 10;
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
 }

@@ -37,18 +37,18 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 }
 
 .activity-capsule.has-text {
-    background-color: var(--search-background);
-    padding: 4px 8px;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--sun-shadow);
-    border-radius: 50px;
-    --fx-filter: var(--blur1) glass(0.6, 8, 0);
+    background-color: transparent;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    --fx-filter: none;
     display: flex;
     flex-direction: row;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 600;
     gap: 4px;
     font-variant-numeric: tabular-nums;
-    height: 16px;
     corner-shape: round;
 }
 
@@ -73,16 +73,15 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 
 .activity-capsule .material-symbols-rounded {
     font-size: 20px;
-    color: var(--text-color);
 }
 
 .activity-capsule.has-text .material-symbols-rounded {
-    font-size: 12px;
+    font-size: 14px;
 }
 
 #status-indicator {
-    width: 8px;
-    height: 8px;
+    width: auto;
+    height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -159,7 +158,8 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 
 @supports (-webkit-mask-clip: text) {
     body:not(.high-contrast) .persistent-clock,
-    body:not(.high-contrast) .dynamic-date {
+    body:not(.high-contrast) .dynamic-date,
+    body:not(.high-contrast) .activity-capsule.has-text {
         color: transparent;
     }
 
@@ -167,13 +167,14 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
     body:not(.high-contrast) .persistent-clock .persistent-clock-digit,
     body:not(.high-contrast) .persistent-clock .material-symbols-rounded,
     body:not(.high-contrast) .dynamic-date,
-    body:not(.high-contrast) #status-indicator .material-symbols-rounded {
+    body:not(.high-contrast) #status-indicator .material-symbols-rounded,
+    body:not(.high-contrast) .activity-capsule.has-text {
         -webkit-mask-image: linear-gradient(black, black);
         -webkit-mask-clip: text;
         -webkit-mask-composite: source-in;
         mask-image: linear-gradient(black, black);
         mask-composite: source-in;
-        backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
+        backdrop-filter: invert(1) grayscale(1) contrast(50) blur(50px);
     }
 
     body:not(.high-contrast) .qm-trigger-btn {

@@ -175,6 +175,7 @@
     gap: 14px;
     align-items: center;
     justify-content: space-between;
+    z-index: 1;
 }
 
 .media-widget-controls button {

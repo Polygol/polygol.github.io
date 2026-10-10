@@ -1809,19 +1809,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function setupDynamicDateEvents(el) {
-        if (!el || el.dataset.bound) return;
-        el.dataset.bound = 'true';
-        el.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (typeof window.gurappsEnabled !== 'undefined' && !window.gurappsEnabled) return;
-            if (typeof gurappsEnabled !== 'undefined' && !gurappsEnabled) return;
-            if (typeof createFullscreenEmbed === 'function') {
-                createFullscreenEmbed('https://polygol.github.io/fantaskical/index.html');
-            }
-        });
-    }
-
     function updateDynamicDate() {
         let dynamicDate = document.getElementById('dynamic-date');
         if (!dynamicDate) {
@@ -1839,7 +1826,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         if (dynamicDate) {
-            setupDynamicDateEvents(dynamicDate);
             const text = getFormattedDynamicDate();
             if (dynamicDate.textContent !== text) {
                 dynamicDate.textContent = text;
