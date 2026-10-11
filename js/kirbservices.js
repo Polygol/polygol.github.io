@@ -311,6 +311,26 @@ async function initAdsService() {
     }
 }
 
+function getAdVariant(ad) {
+    if (!Array.isArray(ad.variants) || ad.variants.length === 0) {
+        return ad;
+    }
+
+    const variant = ad.variants[
+        Math.floor(Math.random() * ad.variants.length)
+    ];
+
+    return {
+        ...ad,
+        ...variant,
+        id: ad.id,
+        icon: ad.icon,
+        image: ad.image,
+        url: ad.url,
+        variants: ad.variants
+    };
+}
+
 function shuffleQueue() {
     for (let i = adQueue.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -322,7 +342,7 @@ function renderCurrentAd() {
     const container = document.getElementById('kirbindustries-ads-service');
     if (!container || adQueue.length === 0) return;
 
-    const ad = adQueue[0];
+    const ad = getAdVariant(adQueue[0]);
 
     // Get Elements
     const imgEl = container.querySelector('#kirbindustries-ads-service-img img');
