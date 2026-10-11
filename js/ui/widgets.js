@@ -789,31 +789,10 @@ function openWidgetPicker() {
     const transparentSwitch = document.getElementById('widget-transparent-switch');
     if (transparentSwitch) transparentSwitch.checked = false;
 
-    // Quick Widgets Only (Apps automatically reside on the home screen like iOS)
     const widgetSectionTitle = document.createElement('div');
     widgetSectionTitle.className = 'widget-picker-section-title';
     widgetSectionTitle.textContent = window.t('QUICK_WIDGETS');
     grid.appendChild(widgetSectionTitle);
-
-    // Weather widget item
-    const weatherItem = document.createElement('div');
-    weatherItem.className = 'widget-picker-item';
-    weatherItem.innerHTML = `
-        <div class="widget-picker-preview" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border-radius:18px;">
-            <span class="material-symbols-rounded" style="font-size:42px;color:var(--text-color);">partly_cloudy_day</span>
-        </div>
-        <span class="widget-picker-title">${window.t('WEATHER')}</span>
-    `;
-    weatherItem.addEventListener('click', () => {
-        if (typeof window.addHomeItem === 'function') {
-            window.addHomeItem(window.currentHomePageIndex || 0, {
-                type: 'widget-weather',
-                size: 'small'
-            });
-        }
-        closeWidgetPicker();
-    });
-    grid.appendChild(weatherItem);
 
     // Check if there are any available widgets
     if (Object.keys(availableWidgets).length === 0) {

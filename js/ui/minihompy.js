@@ -145,13 +145,11 @@
     function buildDefaultPages() {
         const allAZ = getInstalledAppsListAZ();
 
-        // Page 0: System Media Widget + Weather Widget
         const page0 = [
             { type: 'widget', appName: 'System', widgetId: 'system-media', size: 'small' },
-            { type: 'widget-weather', size: 'small' }
         ];
 
-        homePages = [page0];
+        // homePages = [page0];
 
         allAZ.forEach(appName => {
             page0.push({ type: 'app', appName: appName });
