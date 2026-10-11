@@ -1,6 +1,20 @@
 :root {
     --sun-shadow: 0 0 0 0 transparent;
 
+    /* System Screen Padding & Insets */
+    --top-screen-padding: 80px;
+    --bottom-screen-padding: 80px;
+    --side-screen-padding: 16px;
+    --left-screen-padding: var(--side-screen-padding);
+    --right-screen-padding: var(--side-screen-padding);
+    --safe-area-inset-top: var(--top-screen-padding);
+    --safe-area-inset-bottom: var(--bottom-screen-padding);
+    --safe-area-inset-left: var(--left-screen-padding);
+    --safe-area-inset-right: var(--right-screen-padding);
+    --status-bar-height: 80px;
+    --dock-height: 80px;
+    --screen-curve: 0px;
+
     /* Dark Theme (Default) Variables */
     --background-mono-dark: #3a3a3a;
     --background-pure-dark: #000000;

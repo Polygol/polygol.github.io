@@ -6,6 +6,7 @@
     <title>Polygol - Recovery Mode</title>
     <link rel="icon" href="/assets/appicon/system.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" rel="stylesheet">
+    <script src="/js/lang.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <style>
         :root {
@@ -173,48 +174,48 @@
 </head>
 <body>
     <div class="actions">
-        <button id="return-home" class="btn-safe" data-lang-key="return_button_text">Done</button>
+        <button id="return-home" class="btn-safe" data-lang-key="DONE">Done</button>
     </div>
 
     <div class="container">
         <img src="/assets/img/text-about-banner-transparent.png" style="width: 400px; margin-bottom: 25px;">
-        <h1 data-lang-key="header">Recovery Mode</h1>
-        <p data-lang-key="description">Your Polygol instance may be corrupted or broken. Use these tools to perform a factory reset.</p>
+        <h1 data-lang-key="RECOVERY_MODE">Recovery Mode</h1>
+        <p data-lang-key="RECOVERY_MODE_DESC">Your Polygol instance may be corrupted or broken. Use these tools to perform a factory reset.</p>
 
         <div style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); text-align: left;">
             <div class="card">
                 <span class="material-symbols-rounded" style="font-size: 32px;">info</span>
-                <h2>Information</h2>
-                <p>Recovery mode will not affect your device.<br>These actions are irreversible.<br>Back up your data at polygol.github.io/transfer</p>
+                <h2 data-lang-key="INFORMATION">Information</h2>
+                <p data-lang-key="RECOVERY_INFO_DESC">Recovery mode will not affect your device.<br>These actions are irreversible.<br>Back up your data at polygol.github.io/transfer</p>
             </div>
 
             <div class="card">
                 <span class="material-symbols-rounded" style="font-size: 32px;">build</span>
-                <h2>System data</h2>
-                <p>Fix issues without losing data.</p>
+                <h2 data-lang-key="SYSTEM_DATA">System data</h2>
+                <p data-lang-key="SYSTEM_DATA_DESC">Fix issues without losing data.</p>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
-                    <button id="btn-clear-offline" class="btn-action">Clear offline data or cache</button>
-                    <button id="btn-del-script" class="btn-action">Remove startup script</button>
-                    <button id="btn-reset-waves" class="btn-action">Reset Waves</button>
+                    <button id="btn-clear-offline" class="btn-action" data-lang-key="CLEAR_OFFLINE_DATA">Clear offline data or cache</button>
+                    <button id="btn-del-script" class="btn-action" data-lang-key="REMOVE_STARTUP_SCRIPT">Remove startup script</button>
+                    <button id="btn-reset-waves" class="btn-action" data-lang-key="RESET_WAVES">Reset Waves</button>
                 </div>
             </div>
 
             <div class="card">
                 <span class="material-symbols-rounded" style="font-size: 32px;">account_circle</span>
-                <h2>User data</h2>
-                <p>Fix issues with apps or customization.</p>
+                <h2 data-lang-key="USER_DATA">User data</h2>
+                <p data-lang-key="USER_DATA_DESC">Fix issues with apps or customization.</p>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
-                    <button id="btn-repair-wp" class="btn-action">Repair wallpapers</button>
-                    <button id="btn-clear-apps" class="btn-destructive">Clear app data</button>
+                    <button id="btn-repair-wp" class="btn-action" data-lang-key="REPAIR_WALLPAPERS">Repair wallpapers</button>
+                    <button id="btn-clear-apps" class="btn-destructive" data-lang-key="CLEAR_APP_DATA">Clear app data</button>
                 </div>
             </div>
 
             <div class="card">
                 <span class="material-symbols-rounded" style="font-size: 32px;">delete_forever</span>
-                <h2>Factory Reset</h2>
-                <p>Deletes all your settings, wallpapers and app data and restores them to factory settings.<br>This will delete all current data on this device.</p>
+                <h2 data-lang-key="FACTORY_RESET">Factory Reset</h2>
+                <p data-lang-key="FACTORY_RESET_DESC">Deletes all your settings, wallpapers and app data and restores them to factory settings.<br>This will delete all current data on this device.</p>
                 <div style="display: flex;gap: 14px;">
-                    <button id="full-reset" class="btn-destructive">Erase everything</button>
+                    <button id="full-reset" class="btn-destructive" data-lang-key="ERASE_EVERYTHING">Erase everything</button>
                 </div>
             </div>
         </div>
@@ -231,13 +232,44 @@
                     // Lock is held by another tab. Stop execution and show error.
                     document.documentElement.innerHTML = '';
                     document.body.style.cssText = "margin:0;padding:0;display:flex;height:100vh;justify-content:center;align-items:center;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;";
-                    document.body.innerHTML = "<div style='text-align:center;'><h1>Polygol is running</h1><p>To use this tool, close Polygol.</p></div>";
+                    document.body.innerHTML = "<div style='text-align:center;'><h1>" + t('POLYGOL_IS_RUNNING') + "</h1><p>" + t('CLOSE_POLYGOL_TO_USE_TOOL') + "</p></div>";
                     throw new Error("Cannot open this system tool while system is active");
                 }
                 // Hold the lock for the lifetime of this tab
                 return new Promise(() => {}); 
             });
         }
+
+        
+        const selectedLang = (localStorage.getItem('selectedLanguage') || 'EN').toUpperCase();
+        const normLang = (selectedLang === 'JP' || selectedLang === 'JA') ? 'JP' : (['KO', 'ZH'].includes(selectedLang) ? selectedLang : 'EN');
+        const currentLangDict = window['LANG_' + normLang] || window.LANG_EN || {};
+
+        function t(key, params = {}) {
+            let str = currentLangDict[key] || (window.LANG_EN && window.LANG_EN[key]) || key;
+            if (params && typeof params === 'object') {
+                Object.keys(params).forEach(p => {
+                    str = str.replace(new RegExp('\\{' + p + '\\}', 'g'), params[p]);
+                });
+            }
+            return str;
+        }
+
+        function applyRecoveryTranslations() {
+            document.documentElement.lang = normLang === 'JP' ? 'ja' : (normLang === 'KO' ? 'ko' : (normLang === 'ZH' ? 'zh-CN' : 'en'));
+            document.querySelectorAll('[data-lang-key]').forEach(el => {
+                const k = el.getAttribute('data-lang-key');
+                const translation = t(k);
+                if (translation && translation !== k) {
+                    if (translation.includes('<br>')) {
+                        el.innerHTML = translation;
+                    } else {
+                        el.textContent = translation;
+                    }
+                }
+            });
+        }
+        applyRecoveryTranslations();
 
         const btnClearCache = document.getElementById('btn-clear-offline');
         const btnDelScript = document.getElementById('btn-del-script');
@@ -272,7 +304,7 @@
 
                 const handler = (e) => {
                     if (e.source !== iframe.contentWindow) return;
-                    if (e.data.type === 'gurapp-ready' || e.data.type === 'gurasuraisu-api-present') {
+                    if (e.data.type === 'polygolapp-ready' || e.data.type === 'polygol-api-present') {
                         iframe.contentWindow.postMessage({ type: 'admin-wipe' }, '*');
                     }
                     if (e.data.type === 'admin-action-complete') {
@@ -286,7 +318,7 @@
 
         // Action: Clear Cache & Swap
         btnClearCache.addEventListener('click', async () => {
-            if (!confirm('Clear offline data? This will redownload the latest version of Polygol from the internet.')) return;
+            if (!confirm(t('RECOVERY_CLEAR_CACHE_CONFIRM'))) return;
             try {
                 if ('serviceWorker' in navigator) {
                     const registrations = await navigator.serviceWorker.getRegistrations();
@@ -304,9 +336,9 @@
                         req.onblocked = resolve;
                     });
                 }
-                logStatus('Offline data cleared.');
+                logStatus(t('RECOVERY_OFFLINE_CLEARED'));
             } catch (e) {
-                logStatus(`Failed to clear cache: ${e.message}`, true);
+                logStatus(t('RECOVERY_CACHE_CLEAR_FAILED', { error: e.message }), true);
             }
         });
 
@@ -314,9 +346,9 @@
         btnDelScript.addEventListener('click', () => {
             if (localStorage.getItem('customStartupScript')) {
                 localStorage.removeItem('customStartupScript');
-                logStatus('Startup script removed.');
+                logStatus(t('RECOVERY_STARTUP_REMOVED'));
             } else {
-                logStatus('No startup script found.');
+                logStatus(t('RECOVERY_NO_STARTUP'));
             }
         });
 
@@ -325,14 +357,14 @@
             localStorage.removeItem('waves_host_config');
             localStorage.removeItem('waves_known_devices');
             localStorage.removeItem('waves_discovery_enabled');
-            logStatus('Waves pairings reset.');
+            logStatus(t('RECOVERY_WAVES_RESET'));
         });
 
         // Action: Repair Wallpapers
         btnRepairWp.addEventListener('click', () => {
             const wps = localStorage.getItem('recentWallpapers');
             if (!wps) {
-                logStatus('No wallpapers found to repair.');
+                logStatus(t('RECOVERY_NO_WALLPAPERS'));
                 return;
             }
 
@@ -387,15 +419,15 @@
                 });
 
                 localStorage.setItem('recentWallpapers', JSON.stringify(parsed));
-                logStatus('Wallpapers repaired.');
+                logStatus(t('RECOVERY_WALLPAPERS_REPAIRED'));
             } catch (e) {
-                alert('Could not repair wallpapers, as their structures are critically corrupted. Back up your data and perform a factory reset.', true);
+                alert(t('RECOVERY_WALLPAPERS_CORRUPT'));
             }
         });
 
         async function secureConfirmation(actionName, warningText) {
             for (let i = 1; i <= 4; i++) {
-                const confirmed = confirm(`${warningText}\n\nStep ${i} of 5: Press OK to continue.`);
+                const confirmed = confirm(warningText + "\n\n" + t('RECOVERY_CONFIRM_STEP', { current: i }));
                 if (!confirmed) return false;
             }
 
@@ -412,11 +444,11 @@
 
         // Action: Clear App Data
         btnClearApps.addEventListener('click', async () => {
-            const warning = 'CLEAR APP DATA: This clears all in-app data and permissions. This cannot be undone.';
+            const warning = t('RECOVERY_CLEAR_APPS_WARNING');
             const isVerified = await secureConfirmation("App Data Deletion", warning);
 
             if (isVerified) {
-                logStatus('Deleting data from apps...');
+                logStatus(t('RECOVERY_DELETING_APP_DATA'));
                 const appsJson = localStorage.getItem('userInstalledApps');
                 if (appsJson) {
                     const apps = JSON.parse(appsJson);
@@ -432,22 +464,22 @@
                 localStorage.removeItem('appUsageHourly');
                 localStorage.removeItem('registeredOSKs');
                 
-                logStatus('App data cleared.');
-                alert('App data cleared.');
+                logStatus(t('RECOVERY_APPS_CLEARED'));
+                alert(t('RECOVERY_APPS_CLEARED'));
             } else {
-                logStatus('App data deletion cancelled.');
+                logStatus(t('RECOVERY_APPS_CANCELLED'));
             }
         });
 
         async function performFullReset() {
-            const warning = 'FACTORY RESET: This erases EVERY setting and app. This cannot be undone.';
+            const warning = t('RECOVERY_RESET_WARNING');
             const isVerified = await secureConfirmation("Factory Reset", warning);
 
             if (isVerified) {
-                logStatus('All confirmations accepted. Proceeding with reset...');
+                logStatus(t('RECOVERY_RESET_PROCEEDING'));
                 try {
                     // 0. Wipe External Apps
-                    logStatus('Deleting data from apps...');
+                    logStatus(t('RECOVERY_DELETING_APP_DATA'));
                     const appsJson = localStorage.getItem('userInstalledApps');
                     if (appsJson) {
                         const apps = JSON.parse(appsJson);
@@ -458,7 +490,7 @@
                     }
 
                     // 1. Clear All Storage
-                    logStatus('Deleting LocalStorage...');
+                    logStatus(t('RECOVERY_RESET_DELETING_STORAGE'));
                     localStorage.clear();
                     sessionStorage.clear();
 
@@ -481,19 +513,19 @@
                         })));
                     }
 
-                    logStatus('Factory reset complete.', false);
-                    alert('System restored to factory settings.');
+                    logStatus(t('RECOVERY_RESET_COMPLETE'), false);
+                    alert(t('RECOVERY_SYSTEM_RESTORED'));
                 } catch (err) {
-                    logStatus(`Reset failed: ${err.message}`, true);
+                    logStatus(t('RECOVERY_RESET_FAILED', { error: err.message }), true);
                 }
             } else {
-                logStatus('Reset cancelled.');
+                logStatus(t('RECOVERY_RESET_CANCELLED'));
             }
         }
 
         fullResetBtn.addEventListener('click', performFullReset);
         returnHomeBtn.addEventListener('click', () => {
-            logStatus('Closing');
+            logStatus(t('RECOVERY_CLOSING'));
             window.location.href = '/';
         });
 

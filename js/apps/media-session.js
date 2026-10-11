@@ -26,8 +26,8 @@ function showMediaWidget(metadata) {
 
 	// Fallback
     document.getElementById('media-widget-art').src = metadata.artwork[0]?.src || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-    document.getElementById('media-widget-title').textContent = metadata.title || 'Unknown Title';
-    document.getElementById('media-widget-artist').textContent = metadata.artist || 'Unknown Artist';
+    document.getElementById('media-widget-title').textContent = metadata.title || window.t('UNKNOWN_TITLE');
+    document.getElementById('media-widget-artist').textContent = metadata.artist || window.t('UNKNOWN_ARTIST');
     
     widget.style.display = 'flex';
     // Use a timeout to allow the display property to apply before animating opacity/transform
@@ -245,7 +245,7 @@ function updateMediaWidgetState(playbackState) {
     }
 }
 
-// This is the new function that Gurapps will call
+// This is the new function that APPs will call
 function registerMediaSession(appName, metadata, supportedActions = []) {
     if (!appName) return;
 
@@ -290,7 +290,7 @@ function clearMediaSession(appName) {
     }
 }
 
-// A function for the Gurapp to update the parent's state
+// A function for the APP to update the parent's state
 function updateMediaPlaybackState(appName, state) {
     const canonicalName = Object.keys(apps).find(key => key.toLowerCase() === appName.toLowerCase());
     
@@ -327,13 +327,13 @@ function updateMediaPlaybackState(appName, state) {
 // Add listeners for the new widget's buttons
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('media-widget-play-pause').addEventListener('click', () => {
-        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'playPause');
+        if (activeMediaSessionApp) Polygol.callApp(activeMediaSessionApp, 'playPause');
     });
     document.getElementById('media-widget-next').addEventListener('click', () => {
-        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'next');
+        if (activeMediaSessionApp) Polygol.callApp(activeMediaSessionApp, 'next');
     });
     document.getElementById('media-widget-prev').addEventListener('click', () => {
-        if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'prev');
+        if (activeMediaSessionApp) Polygol.callApp(activeMediaSessionApp, 'prev');
     });
 });
 

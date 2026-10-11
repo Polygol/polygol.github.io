@@ -6,16 +6,16 @@
     <title>APIAval - API Overrides & Fuzzer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
-    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
-    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <link rel="stylesheet" href="/assets/polygolapp/intl/settings/settings.css">
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="/assets/intl/polygolapp/internal-app-api.js" defer></script>
 </head>
 <body data-app-name="APIAval">
     <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
         <div class="header">
             <h1 class="page-title">
                 <span class="material-symbols-rounded" style="color: #ff9800;">api</span>
-                APIAval (GurappAPI Override & Fuzzer)
+                APIAval (APPAPI Override & Fuzzer)
             </h1>
         </div>
 
@@ -92,11 +92,11 @@
             const method = document.getElementById('api-target-method').value;
             const arg = document.getElementById('api-payload-arg').value;
 
-            logApi(`Invoking Gurasuraisu.${method}("${arg}")`);
+            logApi(`Invoking Polygol.${method}("${arg}")`);
 
-            if (window.Gurasuraisu && typeof Gurasuraisu[method] === 'function') {
+            if (window.Polygol && typeof Polygol[method] === 'function') {
                 try {
-                    Gurasuraisu[method](arg);
+                    Polygol[method](arg);
                     logApi(`-> Call dispatched successfully`);
                 } catch(e) {
                     logApi(`-> Error: ${e.message}`);
@@ -112,7 +112,7 @@
             logApi(`Override Notifications: ${e.target.checked}`);
         };
         document.getElementById('ovr-sound').onchange = (e) => {
-            window.parent.postMessage({ action: 'setInternalVariable', key: 'gurappSoundsEnabled', value: !e.target.checked }, '*');
+            window.parent.postMessage({ action: 'setInternalVariable', key: 'polygolappSoundsEnabled', value: !e.target.checked }, '*');
             logApi(`Override Sounds: ${e.target.checked}`);
         };
         document.getElementById('ovr-immersive').onchange = (e) => {

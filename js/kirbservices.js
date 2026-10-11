@@ -382,7 +382,7 @@ async function confirmBlockAd(container) {
 
     let confirmed = false;
     if (typeof showCustomConfirm === 'function') {
-        confirmed = await showCustomConfirm(`Hide ads for ${adToBlock.name}?`);
+        confirmed = await showCustomConfirm(window.t ? window.t('HIDE_ADS_CONFIRM', { name: adToBlock.name }) : `Hide ads for ${adToBlock.name}?`);
     }
 
     if (confirmed) {

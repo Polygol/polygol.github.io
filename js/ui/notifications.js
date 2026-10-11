@@ -197,7 +197,7 @@ function showNotification(message, options = {}) {
     const privacy = localStorage.getItem('notificationPreviewLevel') || 'all';
     let processedMessage = message;
     if (privacy === 'hide') {
-        processedMessage = 'Content hidden.';
+        processedMessage = window.t ? window.t('CONTENT_HIDDEN') : 'Content hidden.';
     } else if (privacy === 'none') {
         processedMessage = '';
     }
@@ -210,7 +210,7 @@ function showNotification(message, options = {}) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 event: 'notification',
-                heading: options.heading || 'Notification',
+                heading: options.heading || window.t('NOTIFICATION'),
                 message: processedMessage,
                 timestamp: Date.now()
             })
@@ -431,42 +431,42 @@ function createOnScreenPopup(message, options = {}, onClosed) {
 		actionButton.style.fontFamily = 'Inter, sans-serif';
 		actionButton.style.fontWeight = '500';
         
-        // Handle local action or Gurapp-specific action
+        // Handle local action or APP-specific action
         if (options.buttonAction && typeof options.buttonAction === 'function') {
             actionButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 options.buttonAction();
                 closeMe(); // FIX: Call the local close function
             });
-        } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) {
+        } else if (options.polygolappAction && options.polygolappAction.appName && options.polygolappAction.functionName) {
             actionButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const { appName, functionName, args } = options.gurappAction;
+                const { appName, functionName, args } = options.polygolappAction;
 
                 // FIX: Case-insensitive iframe lookup
-                let gurappIframe = null;
+                let polygolappIframe = null;
                 const allIframes = document.querySelectorAll('iframe[data-app-id]');
                 for (const iframe of allIframes) {
                     if (iframe.dataset.appId.toLowerCase() === appName.toLowerCase()) {
-                        gurappIframe = iframe;
+                        polygolappIframe = iframe;
                         break;
                     }
                 }
 
-                if (gurappIframe && gurappIframe.contentWindow) {
-                    const targetOrigin = getOriginFromUrl(gurappIframe.src);
-                    gurappIframe.contentWindow.postMessage({
-                        type: 'gurapp-action-request',
+                if (polygolappIframe && polygolappIframe.contentWindow) {
+                    const targetOrigin = getOriginFromUrl(polygolappIframe.src);
+                    polygolappIframe.contentWindow.postMessage({
+                        type: 'polygolapp-action-request',
                         functionName: functionName,
                         args: args || []
                     }, targetOrigin);
-                    console.log(`[Polygol] Sent action '${functionName}' to Gurapp '${appName}'.`);
+                    console.log(`[Polygol] Sent action '${functionName}' to APP '${appName}'.`);
                 } else {
-                    console.warn(`[Polygol] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
+                    console.warn(`[Polygol] Could not find APP iframe for '${appName}' to send action '${functionName}'.`);
 					showDialog({ 
 					    type: 'alert', 
-					    title: 'Notification Action Error', 
-					    message: `Could not perform action for ${appName}.`
+					    title: window.t('NOTIF_ACTION_ERROR'), 
+					    message: window.t('NOTIF_ACTION_FAIL', { appName })
 					});
                 }
                 closeMe(); // FIX: Call the local close function
@@ -643,7 +643,7 @@ function addToNotificationShade(message, options = {}) {
 
         const iframe = document.createElement('iframe');
         iframe.src = options.liveActivityUrl;
-        iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+        iframe.setAttribute('data-polygol-iframe', 'true');
         iframe.style.width = '100%';
         iframe.style.height = options.height || '60px'; // Default height
         iframe.style.border = 'none';
@@ -797,42 +797,42 @@ function addToNotificationShade(message, options = {}) {
 	        actionButton.style.transition = 'background-color 0.2s';
 			actionButton.style.boxShadow = 'var(--sun-shadow)';
 	        
-	        // Handle local action or Gurapp-specific action
+	        // Handle local action or APP-specific action
 	        if (options.buttonAction && typeof options.buttonAction === 'function') { // For parent-local actions
 	            actionButton.addEventListener('click', (e) => {
 	                e.stopPropagation();
 	                options.buttonAction();
 	                closeNotification(notification);
 	            });
-	        } else if (options.gurappAction && options.gurappAction.appName && options.gurappAction.functionName) {
+	        } else if (options.polygolappAction && options.polygolappAction.appName && options.polygolappAction.functionName) {
 	            actionButton.addEventListener('click', (e) => {
 	                e.stopPropagation();
-	                const { appName, functionName, args } = options.gurappAction;
+	                const { appName, functionName, args } = options.polygolappAction;
 	
 	                // FIX: Case-insensitive iframe lookup
-	                let gurappIframe = null;
+	                let polygolappIframe = null;
 	                const allIframes = document.querySelectorAll('iframe[data-app-id]');
 	                for (const iframe of allIframes) {
 	                    if (iframe.dataset.appId.toLowerCase() === appName.toLowerCase()) {
-	                        gurappIframe = iframe;
+	                        polygolappIframe = iframe;
 	                        break;
 	                    }
 	                }
 	
-	                if (gurappIframe && gurappIframe.contentWindow) {
-	                    const targetOrigin = getOriginFromUrl(gurappIframe.src);
-	                    gurappIframe.contentWindow.postMessage({
-	                        type: 'gurapp-action-request',
+	                if (polygolappIframe && polygolappIframe.contentWindow) {
+	                    const targetOrigin = getOriginFromUrl(polygolappIframe.src);
+	                    polygolappIframe.contentWindow.postMessage({
+	                        type: 'polygolapp-action-request',
 	                        functionName: functionName,
 	                        args: args || []
 	                    }, targetOrigin);
-	                    console.log(`[Polygol] Sent action '${functionName}' to Gurapp '${appName}'.`);
+	                    console.log(`[Polygol] Sent action '${functionName}' to APP '${appName}'.`);
 	                } else {
-	                    console.warn(`[Polygol] Could not find Gurapp iframe for '${appName}' to send action '${functionName}'.`);
+	                    console.warn(`[Polygol] Could not find APP iframe for '${appName}' to send action '${functionName}'.`);
 						showDialog({ 
 						    type: 'alert', 
-						    title: 'Notification Action Error', 
-						    message: `Could not perform action for ${appName}.`
+						    title: window.t('NOTIF_ACTION_ERROR'), 
+						    message: window.t('NOTIF_ACTION_FAIL', { appName })
 						});
 					}
 	                closeNotification(notification); // Close the notification after click

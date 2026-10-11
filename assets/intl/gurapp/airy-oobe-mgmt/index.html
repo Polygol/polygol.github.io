@@ -6,9 +6,9 @@
     <title>Airy OOBE Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
-    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
-    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <link rel="stylesheet" href="/assets/polygolapp/intl/settings/settings.css">
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="/assets/intl/polygolapp/internal-app-api.js" defer></script>
 </head>
 <body data-app-name="Airy OOBE Management">
     <div class="container" style="max-width: 680px; width: 100%; margin: 0 auto;">
@@ -73,35 +73,35 @@
             <div class="setting-item">
                 <div class="setting-info">
                     <span class="setting-label">Welcome Module</span>
-                    <span class="setting-description">/assets/gurapp/intl/airy/docs/welcome</span>
+                    <span class="setting-description">/assets/polygolapp/intl/airy/docs/welcome</span>
                 </div>
                 <button class="action-btn" onclick="openDoc('welcome')">Preview</button>
             </div>
             <div class="setting-item">
                 <div class="setting-info">
                     <span class="setting-label">Gestures Module</span>
-                    <span class="setting-description">/assets/gurapp/intl/airy/docs/gestures</span>
+                    <span class="setting-description">/assets/polygolapp/intl/airy/docs/gestures</span>
                 </div>
                 <button class="action-btn" onclick="openDoc('gestures')">Preview</button>
             </div>
             <div class="setting-item">
                 <div class="setting-info">
                     <span class="setting-label">Controls Module</span>
-                    <span class="setting-description">/assets/gurapp/intl/airy/docs/controls</span>
+                    <span class="setting-description">/assets/polygolapp/intl/airy/docs/controls</span>
                 </div>
                 <button class="action-btn" onclick="openDoc('controls')">Preview</button>
             </div>
             <div class="setting-item">
                 <div class="setting-info">
                     <span class="setting-label">Customization Module</span>
-                    <span class="setting-description">/assets/gurapp/intl/airy/docs/customization</span>
+                    <span class="setting-description">/assets/polygolapp/intl/airy/docs/customization</span>
                 </div>
                 <button class="action-btn" onclick="openDoc('customization')">Preview</button>
             </div>
             <div class="setting-item">
                 <div class="setting-info">
                     <span class="setting-label">Finish Module</span>
-                    <span class="setting-description">/assets/gurapp/intl/airy/docs/finish</span>
+                    <span class="setting-description">/assets/polygolapp/intl/airy/docs/finish</span>
                 </div>
                 <button class="action-btn" onclick="openDoc('finish')">Preview</button>
             </div>
@@ -136,10 +136,10 @@
         }
 
         document.getElementById('btn-launch-airy').onclick = () => {
-            if (window.Gurasuraisu && Gurasuraisu.openApp) {
-                Gurasuraisu.openApp('/assets/gurapp/intl/airy/index.html');
+            if (window.Polygol && Polygol.openApp) {
+                Polygol.openApp('/assets/polygolapp/intl/airy/index.html');
             } else {
-                window.location.href = '/assets/gurapp/intl/airy/index.html';
+                window.location.href = '/assets/polygolapp/intl/airy/index.html';
             }
         };
 
@@ -151,8 +151,8 @@
                 localStorage.removeItem('hasVisitedBefore');
             } catch(e) {}
             updateStatus();
-            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                Gurasuraisu.showPopup('OOBE reset. Setup will trigger on boot.');
+            if (window.Polygol && Polygol.showPopup) {
+                Polygol.showPopup('OOBE reset. Setup will trigger on boot.');
             }
         };
 
@@ -164,8 +164,8 @@
                 localStorage.setItem('hasVisitedBefore', 'true');
             } catch(e) {}
             updateStatus();
-            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                Gurasuraisu.showPopup('OOBE marked as completed.');
+            if (window.Polygol && Polygol.showPopup) {
+                Polygol.showPopup('OOBE marked as completed.');
             }
         };
 
@@ -174,9 +174,9 @@
         };
 
         function openDoc(docName) {
-            const url = `/assets/gurapp/intl/airy/docs/${docName}`;
-            if (window.Gurasuraisu && Gurasuraisu.showSheet) {
-                Gurasuraisu.showSheet({ url: url, height: '80%' });
+            const url = `/assets/polygolapp/intl/airy/docs/${docName}`;
+            if (window.Polygol && Polygol.showSheet) {
+                Polygol.showSheet({ url: url, height: '80%' });
             } else {
                 window.open(url, '_blank');
             }

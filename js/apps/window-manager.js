@@ -5,11 +5,11 @@ var apps = {
         icon: "appstore.png"
 	},
     "Files": {
-        url: "/assets/gurapp/intl/forudaraisu/index.html",
+        url: "/assets/polygolapp/intl/forudaraisu/index.html",
         icon: "files.png"
 	},
     "Internet": {
-        url: "/assets/gurapp/intl/internet/index.html",
+        url: "/assets/polygolapp/intl/internet/index.html",
         icon: "internet.png"
 	},
     "Assistant": {
@@ -21,7 +21,7 @@ var apps = {
         icon: "feedback.png"
 	},
     "Settings": {
-        url: "/assets/gurapp/intl/settings/index.html",
+        url: "/assets/polygolapp/intl/settings/index.html",
         icon: "settings.png"
 	}
 };
@@ -55,7 +55,7 @@ function updateVolumeMixerUI() {
     sysItem.style.cssText = 'display:flex; flex-direction:column; gap:4px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--glass-border);';
     sysItem.innerHTML = `
         <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:500;">
-            <span>System</span>
+            <span>${window.t('SYSTEM_CHANNEL')}</span>
             <span>${sysVol}%</span>
         </div>
         <input type="range" min="0" max="100" value="${sysVol}" class="thermostat-slider">
@@ -74,7 +74,7 @@ function updateVolumeMixerUI() {
     if (activeApps.length === 0) {
         const msg = document.createElement('p');
         msg.style.cssText = 'font-size:11px; opacity:0.5; text-align:center; margin: 10px 0;';
-        msg.textContent = 'No running apps';
+        msg.textContent = window.t('NO_RUNNING_APPS');
         list.appendChild(msg);
     }
 
@@ -167,7 +167,7 @@ async function installApp(appData) {
     
     if (reservedNames.includes(normalizedName)) {
         console.error(`[Security] Blocked installation of protected system app: ${appData.name}`);
-        showDialog({ type: 'alert', title: 'App installation blocked', message: `Cannot install or overwrite protected system app ${appData.name}`, icon: 'do_not_touch'});
+        showDialog({ type: 'alert', title: window.t('APP_INSTALL_BLOCKED'), message: window.t('APP_INSTALL_BLOCKED_MSG', { appName: appData.name }), icon: 'do_not_touch'});
         return;
     }
 	
@@ -234,7 +234,7 @@ async function deleteApp(appName) {
     if (
         appToDelete && 
         (appToDelete.url.includes('/kirbstore/index.html') ||
-         appToDelete.url.includes('/assets/gurapp/intl/settings/'))
+         appToDelete.url.includes('/assets/polygolapp/intl/settings/'))
     ) {
         showDialog({ 
             type: 'alert', 
@@ -373,7 +373,7 @@ function initiateSplitScreen(sideForNewApp) {
     });
     createAppIcons();
     
-    showPopup("Select an app for the other side");
+    showPopup(window.t('SELECT_APP_SPLIT'));
 }
 
 async function finalizeSplitScreen(secondAppUrl) {
@@ -719,9 +719,9 @@ async function createFullscreenEmbed(url, options = {}) {
     // Also clear global one just in case
     clearTimeout(minimizeCleanupTimeout);
 
-	// 1. Check if Gurapps are disabled entirely
-    // This uses the 'gurappsEnabled' variable you already have.
-    if (!gurappsEnabled) {
+	// 1. Check if APPs are disabled entirely
+    // This uses the 'polygolappsEnabled' variable you already have.
+    if (!polygolappsEnabled) {
         showPopup(currentLanguage.GURAPP_OFF);
         return; // Stop execution immediately
     }
@@ -753,7 +753,7 @@ async function createFullscreenEmbed(url, options = {}) {
     ];
 	
 	const isInternalTool = internalToolUrls.some(t => url.includes(t));
-    const isSystemApp = url.includes('/assets/gurapp/intl');
+    const isSystemApp = url.includes('/assets/polygolapp/intl');
 
     // --- Fuzzy Matching for Unknown URLs ---
     let isFuzzyMatch = false;
@@ -1005,7 +1005,7 @@ async function createFullscreenEmbed(url, options = {}) {
     }
 
     iframe.src = finalUrl;
-    iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+    iframe.setAttribute('data-polygol-iframe', 'true');
     const appId = Object.keys(apps).find(k => apps[k].url === url);
     iframe.dataset.appId = appId;
     iframe.setAttribute('frameborder', '0');
@@ -1081,20 +1081,27 @@ async function createFullscreenEmbed(url, options = {}) {
         setTimeout(() => { if (spinner.parentNode) spinner.remove(); }, 300);
         embedContainer.style.backgroundColor = '';
 
-	    // If iframe loaded successfully, send language to iframe
-	    const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
+	    // If iframe loaded successfully, send initial locale & layout variables to iframe
 	    if (iframe.contentWindow) {
-	        iframe.contentWindow.postMessage({
-	            type: 'languageUpdate',
-	            languageCode: currentLang
-	        }, '*');
+	        if (typeof window.getSystemLocalePayload === 'function') {
+	            const loc = window.getSystemLocalePayload();
+	            iframe.contentWindow.postMessage({ type: 'localeUpdate', ...loc }, '*');
+	            iframe.contentWindow.postMessage({ type: 'languageUpdate', languageCode: loc.languageCode }, '*');
+	            iframe.contentWindow.postMessage({ type: 'dateFormatUpdate', dateFormat: loc.dateFormat }, '*');
+	        } else {
+	            const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
+	            iframe.contentWindow.postMessage({ type: 'languageUpdate', languageCode: currentLang }, '*');
+	        }
+	        if (typeof window.getSystemLayoutVariables === 'function') {
+	            iframe.contentWindow.postMessage({ type: 'systemLayoutUpdate', variables: window.getSystemLayoutVariables() }, '*');
+	        }
 	    }
 
     	// Set a timeout to apply legacy mode if the app doesn't announce its API
         setTimeout(() => {
             // Check if the embed still exists and hasn't received an API handshake
             if (document.body.contains(embedContainer) && !embedContainer.dataset.hasApi) {
-                console.log(`Gurapp at ${url} did not announce API. Applying legacy mode.`);
+                console.log(`APP at ${url} did not announce API. Applying legacy mode.`);
                 
                 // Create and prepend the legacy header
                 const legacyHeader = document.createElement('div');
@@ -1385,7 +1392,7 @@ async function createBackgroundEmbed(url) {
     } catch(e) {}
 
     iframe.src = finalUrl;
-    iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+    iframe.setAttribute('data-polygol-iframe', 'true');
     if (appName) iframe.dataset.appId = appName;
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allowfullscreen', '');
@@ -1397,12 +1404,19 @@ async function createBackgroundEmbed(url) {
         // Set initial volume based on current Master and App settings
         syncAppVolume(iframe);
         
-        const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
         if (iframe.contentWindow) {
-            iframe.contentWindow.postMessage({
-                type: 'languageUpdate',
-                languageCode: currentLang
-            }, '*');
+            if (typeof window.getSystemLocalePayload === 'function') {
+                const loc = window.getSystemLocalePayload();
+                iframe.contentWindow.postMessage({ type: 'localeUpdate', ...loc }, '*');
+                iframe.contentWindow.postMessage({ type: 'languageUpdate', languageCode: loc.languageCode }, '*');
+                iframe.contentWindow.postMessage({ type: 'dateFormatUpdate', dateFormat: loc.dateFormat }, '*');
+            } else {
+                const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
+                iframe.contentWindow.postMessage({ type: 'languageUpdate', languageCode: currentLang }, '*');
+            }
+            if (typeof window.getSystemLayoutVariables === 'function') {
+                iframe.contentWindow.postMessage({ type: 'systemLayoutUpdate', variables: window.getSystemLayoutVariables() }, '*');
+            }
         }
     });
 
@@ -1867,7 +1881,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
 
 /**
  * Creates a composite screenshot of the main body and an active iframe.
- * This works by asking the iframe (via gurasuraisu-api.js) to provide its own screenshot.
+ * This works by asking the iframe (via polygol-api.js) to provide its own screenshot.
  * @returns {Promise<string>} A promise that resolves with the dataURL of the composite image.
  */
 function createCompositeScreenshot() {

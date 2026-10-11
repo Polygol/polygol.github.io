@@ -6,9 +6,9 @@
     <title>SoundModuTest - Audio System Diagnostics</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
-    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
-    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <link rel="stylesheet" href="/assets/polygolapp/intl/settings/settings.css">
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="/assets/intl/polygolapp/internal-app-api.js" defer></script>
 </head>
 <body data-app-name="SoundModuTest">
     <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
@@ -93,8 +93,8 @@
 
     <script>
         function playSysSound(type) {
-            if (window.Gurasuraisu && Gurasuraisu.playSound) {
-                Gurasuraisu.playSound(type);
+            if (window.Polygol && Polygol.playSound) {
+                Polygol.playSound(type);
             } else {
                 // Fallback synth
                 playPannedBurst(0);
@@ -188,8 +188,8 @@
         function speakInput() {
             const text = document.getElementById('tts-input').value.trim();
             if (!text) return;
-            if (window.Gurasuraisu && Gurasuraisu.speak) {
-                Gurasuraisu.speak(text);
+            if (window.Polygol && Polygol.speak) {
+                Polygol.speak(text);
             } else if (window.speechSynthesis) {
                 window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
             }

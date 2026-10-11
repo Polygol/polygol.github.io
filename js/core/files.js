@@ -3,7 +3,7 @@ const FileUploadManager = {
     pendingRequests: {}, // Map requestId -> callback(files)
     activeSystemRequest: null, // 'wallpaper' | 'sticker' | null
 
-    // Register a request from a Gurapp
+    // Register a request from a APP
     registerAppRequest(requestId, sourceAppId, callback) {
         this.pendingRequests[requestId] = {
             appId: sourceAppId,
@@ -14,7 +14,7 @@ const FileUploadManager = {
     // Trigger the unified flow (Local + Remote)
     trigger(accept, multiple, contextId = null) {
         if (localStorage.getItem('wifiEnabled') === 'false') {
-            showPopup("Wi-Fi is disabled.");
+            showPopup(window.t('WIFI_DISABLED'));
             return;
         }
         // 1. Open Local Input
@@ -64,7 +64,7 @@ const FileUploadManager = {
         } else if (contextId === 'sticker') {
             processStickerFiles(fileArray);
         } else if (this.pendingRequests[contextId]) {
-            // It's a Gurapp request
+            // It's a APP request
             const req = this.pendingRequests[contextId];
             
             const filePromises = fileArray.map(async (f) => {
@@ -105,5 +105,5 @@ window.handleRemoteFileUpload = function(data, peerId) {
     // Route it
     FileUploadManager.handleFiles([file], requestId);
 
-    showPopup(`Received ${name}`);
+    showPopup(window.t ? window.t('RECEIVED_FILE', { name }) : `Received ${name}`);
 };

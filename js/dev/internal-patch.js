@@ -12,142 +12,142 @@
 
     const INTERNAL_APPS = {
         "Airy OOBE Management": {
-            url: "/assets/intl/gurapp/airy-oobe-mgmt/index.html",
+            url: "/assets/intl/polygolapp/airy-oobe-mgmt/index.html",
             icon: "airy.png",
             description: "Manage the Airy OOBE setup process and states"
         },
         "Airy": {
-            url: "/assets/gurapp/intl/airy/index.html",
+            url: "/assets/polygolapp/intl/airy/index.html",
             icon: "airy.png",
             description: "Polygol Out-of-box Experience and system tutorial"
         },
         "CITMode": {
-            url: "/assets/intl/gurapp/citmode/index.html",
+            url: "/assets/intl/polygolapp/citmode/index.html",
             icon: "system.png",
             description: "Factory hardware test and component inspection"
         },
         "Remote Desktop": {
-            url: "/assets/intl/gurapp/remote-desktop/index.html",
+            url: "/assets/intl/polygolapp/remote-desktop/index.html",
             icon: "transfer.png",
             description: "Complete remote control and screen mirroring"
         },
         "ShekaShake": {
-            url: "/assets/intl/gurapp/shekashake/index.html",
+            url: "/assets/intl/polygolapp/shekashake/index.html",
             icon: "default.png",
             description: "Sensor diagnostics, orientation, motion and shake test"
         },
         "softness test": {
-            url: "/assets/intl/gurapp/softness-test/index.html",
+            url: "/assets/intl/polygolapp/softness-test/index.html",
             icon: "settings.png",
             description: "Rendering performance, compositor latency and GPU blur benchmark"
         },
         "Utah 730hr test": {
-            url: "/assets/intl/gurapp/utah-730hr/index.html",
+            url: "/assets/intl/polygolapp/utah-730hr/index.html",
             icon: "default.png",
             description: "Continuous 730-hour Utah Teapot 3D rendering stress test"
         },
         "BurninUI": {
-            url: "/assets/intl/gurapp/burnin-ui/index.html",
+            url: "/assets/intl/polygolapp/burnin-ui/index.html",
             icon: "system.png",
             description: "UI monkey stress tester rapidly exercising interface patterns"
         },
         "BurninLog": {
-            url: "/assets/intl/gurapp/burnin-log/index.html",
+            url: "/assets/intl/polygolapp/burnin-log/index.html",
             icon: "system.png",
             description: "Code logic, algorithmic stress, and memory churn benchmark"
         },
         "BurninDvc": {
-            url: "/assets/intl/gurapp/burnin-dvc/index.html",
+            url: "/assets/intl/polygolapp/burnin-dvc/index.html",
             icon: "system.png",
             description: "Full device hardware and thermal stress test"
         },
         "SoundModuTest": {
-            url: "/assets/intl/gurapp/sound-modu-test/index.html",
+            url: "/assets/intl/polygolapp/sound-modu-test/index.html",
             icon: "tips.png",
             description: "Audio subsystem, frequency sweeps, channels and sound effects test"
         },
         "Rideset": {
-            url: "/assets/intl/gurapp/rideset/index.html",
+            url: "/assets/intl/polygolapp/rideset/index.html",
             icon: "settings.png",
             description: "System UI metric overrides and fine-grained visual customization"
         },
         "System Config": {
-            url: "/assets/intl/gurapp/system-config/index.html",
+            url: "/assets/intl/polygolapp/system-config/index.html",
             icon: "system.png",
             description: "Low-level system state manipulation, registry, and storage viewer"
         },
         "AiNany": {
-            url: "/assets/intl/gurapp/ai-nany/index.html",
+            url: "/assets/intl/polygolapp/ai-nany/index.html",
             icon: "assistant.png",
             description: "kirbAI system LLM diagnostic, prompt testing, and override tools"
         },
         "APIAval": {
-            url: "/assets/intl/gurapp/api-aval/index.html",
+            url: "/assets/intl/polygolapp/api-aval/index.html",
             icon: "system.png",
-            description: "GurappAPI and SystemAPI override, fuzzing, and mock harness"
+            description: "APPAPI and SystemAPI override, fuzzing, and mock harness"
         },
         "Loggy": {
-            url: "/assets/intl/gurapp/loggy/index.html",
+            url: "/assets/intl/polygolapp/loggy/index.html",
             icon: "feedback.png",
             description: "Real-time system event viewer, console interceptor, and log saver"
         },
         "Dump": {
-            url: "/assets/intl/gurapp/dump/index.html",
+            url: "/assets/intl/polygolapp/dump/index.html",
             icon: "files.png",
             description: "Instant full system state, storage, and diagnostic dump utility"
         },
         "Gaty": {
-            url: "/assets/intl/gurapp/gaty/index.html",
+            url: "/assets/intl/polygolapp/gaty/index.html",
             icon: "appstore.png",
             description: "Advanced application lifecycle and permissions manager"
         },
         "Sammysapp": {
-            url: "/assets/intl/gurapp/sammysapp/index.html",
+            url: "/assets/intl/polygolapp/sammysapp/index.html",
             icon: "default.png",
-            description: "Reference GurappAPI component testing showcase"
+            description: "Reference APPAPI component testing showcase"
         },
         "Valtedit": {
-            url: "/assets/intl/gurapp/valtedit/index.html",
+            url: "/assets/intl/polygolapp/valtedit/index.html",
             icon: "system.png",
             description: "CacheStorage inspector, asset cache purger, and vault editor"
         },
         "TEXTY": {
-            url: "/assets/intl/gurapp/texty/index.html",
+            url: "/assets/intl/polygolapp/texty/index.html",
             icon: "files.png",
             description: "Lightweight text and code editor with file system access"
         },
         "intlStore": {
-            url: "/assets/intl/gurapp/intl-store/index.html",
+            url: "/assets/intl/polygolapp/intl-store/index.html",
             icon: "appstore.png",
             description: "App updater, catalog, and management for internal tools"
         },
         "Sysinfo": {
-            url: "/assets/intl/gurapp/sysinfo/index.html",
+            url: "/assets/intl/polygolapp/sysinfo/index.html",
             icon: "settings.png",
             description: "Hardware specifications, system architecture, and runtime metrics"
         },
         "Onabilify": {
-            url: "/assets/intl/gurapp/onabilify/index.html",
+            url: "/assets/intl/polygolapp/onabilify/index.html",
             icon: "system.png",
             description: "Master switchboard for experimental system feature flags"
         },
         "Videoman": {
-            url: "/assets/intl/gurapp/videoman/index.html",
+            url: "/assets/intl/polygolapp/videoman/index.html",
             icon: "default.png",
             description: "Camera device diagnostic, resolution test, and sensor feed"
         },
         "Signals": {
-            url: "/assets/intl/gurapp/signals/index.html",
+            url: "/assets/intl/polygolapp/signals/index.html",
             icon: "transfer.png",
             description: "WiFi, Cellular, Bluetooth, GPS, and peripheral diagnostic"
         },
         "Reliability": {
-            url: "/assets/intl/gurapp/reliability/index.html",
+            url: "/assets/intl/polygolapp/reliability/index.html",
             icon: "system.png",
             description: "Long-term user activity simulation and system stability analysis"
         },
         "ImgDisp": {
-            url: "/assets/intl/gurapp/imgdisp/index.html",
+            url: "/assets/intl/polygolapp/imgdisp/index.html",
             icon: "default.png",
             description: "Image viewer with WebGPU and WebGL compute shader filters"
         }
@@ -224,8 +224,8 @@
             developerConsoleEnabled: false,
             aiAssistantEnabled: true,
             ambientMusicEnabled: false,
-            gurappsEnabled: true,
-            gurappSoundsEnabled: true,
+            polygolappsEnabled: true,
+            polygolappSoundsEnabled: true,
             hapticsEnabled: true,
             highContrast: false,
             liveEnvironmentEnabled: true,
@@ -295,7 +295,7 @@
             this.applyVariableSideEffect(key, value);
 
             // Notify iframes
-            document.querySelectorAll('iframe[data-gurasuraisu-iframe], .fullscreen-embed').forEach(frame => {
+            document.querySelectorAll('iframe[data-polygol-iframe], .fullscreen-embed').forEach(frame => {
                 if (frame.contentWindow) {
                     frame.contentWindow.postMessage({
                         type: 'internalVariableChange',
@@ -386,7 +386,7 @@
             if (typeof window.normalizeUrlPath === 'function') {
                 const origNormalize = window.normalizeUrlPath;
                 window.normalizeUrlPath = function (url) {
-                    if (url && url.includes('/assets/intl/gurapp/')) return url;
+                    if (url && url.includes('/assets/intl/polygolapp/')) return url;
                     return origNormalize(url);
                 };
             }
@@ -421,9 +421,9 @@
                 window.checkAppPermission = async function (sourceAppId, targetAction, origin) {
                     if (window.InternalPatch && window.InternalPatch.isApplied) {
                         const isInternalApp = INTERNAL_APPS[sourceAppId] ||
-                            (origin && (origin.includes('/assets/intl/gurapp/') || origin.includes('/assets/gurapp/intl/'))) ||
+                            (origin && (origin.includes('/assets/intl/polygolapp/') || origin.includes('/assets/polygolapp/intl/'))) ||
                             Array.from(document.querySelectorAll('iframe')).some(f =>
-                                (f.src && (f.src.includes('/assets/intl/gurapp/') || f.src.includes('/assets/gurapp/intl/'))) &&
+                                (f.src && (f.src.includes('/assets/intl/polygolapp/') || f.src.includes('/assets/polygolapp/intl/'))) &&
                                 f.contentWindow === window.event?.source
                             );
                         if (isInternalApp) {

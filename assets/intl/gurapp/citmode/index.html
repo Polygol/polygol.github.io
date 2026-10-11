@@ -6,9 +6,9 @@
     <title>CITMode - Factory Testing</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
-    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
-    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <link rel="stylesheet" href="/assets/polygolapp/intl/settings/settings.css">
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="/assets/intl/polygolapp/internal-app-api.js" defer></script>
 </head>
 <body data-app-name="CITMode">
     <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
@@ -77,7 +77,7 @@
                     <span class="setting-description">Polygol audio synthesis check</span>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                    <button class="action-btn" onclick="if(window.Gurasuraisu) Gurasuraisu.playSound('notify');">Test FX</button>
+                    <button class="action-btn" onclick="if(window.Polygol) Polygol.playSound('notify');">Test FX</button>
                     <button class="action-btn" id="cit-res-audio" onclick="toggleResult('audio')">Pass?</button>
                 </div>
             </div>
@@ -282,8 +282,8 @@
             if (navigator.vibrate) {
                 navigator.vibrate([100, 50, 100, 50, 200]);
             }
-            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                Gurasuraisu.showPopup('Vibration triggered');
+            if (window.Polygol && Polygol.showPopup) {
+                Polygol.showPopup('Vibration triggered');
             }
         }
 
@@ -302,8 +302,8 @@
         function testCameraModal() {
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(stream => {
-                    if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                        Gurasuraisu.showPopup('Camera sensor accessible: PASS');
+                    if (window.Polygol && Polygol.showPopup) {
+                        Polygol.showPopup('Camera sensor accessible: PASS');
                     }
                     testResults.camera = true;
                     const btn = document.getElementById('cit-res-camera');
@@ -326,9 +326,9 @@
                 passRate: `${Math.round((Object.values(testResults).filter(v => v === true).length / Object.keys(testResults).length) * 100)}%`
             };
             const jsonStr = JSON.stringify(report, null, 2);
-            if (window.Gurasuraisu && Gurasuraisu.downloadFile) {
+            if (window.Polygol && Polygol.downloadFile) {
                 const blob = new Blob([jsonStr], { type: 'application/json' });
-                Gurasuraisu.downloadFile(`CIT-Report-${Date.now()}.json`, URL.createObjectURL(blob));
+                Polygol.downloadFile(`CIT-Report-${Date.now()}.json`, URL.createObjectURL(blob));
             } else {
                 alert(jsonStr);
             }

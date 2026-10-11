@@ -81,13 +81,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
-    const gurappSoundSwitch = document.getElementById('gurapp-sounds-switch');
-    if (gurappSoundSwitch) {
-        const val = localStorage.getItem('gurappSoundsEnabled');
-        gurappSoundSwitch.checked = val === null ? true : val === 'true'; // Default true
-        gurappSoundSwitch.addEventListener('change', function() {
-            localStorage.setItem('gurappSoundsEnabled', this.checked);
-            broadcastSettingUpdate('gurappSoundsEnabled', this.checked.toString());
+    const polygolappSoundSwitch = document.getElementById('polygolapp-sounds-switch');
+    if (polygolappSoundSwitch) {
+        const val = localStorage.getItem('polygolappSoundsEnabled');
+        polygolappSoundSwitch.checked = val === null ? true : val === 'true'; // Default true
+        polygolappSoundSwitch.addEventListener('change', function() {
+            localStorage.setItem('polygolappSoundsEnabled', this.checked);
+            broadcastSettingUpdate('polygolappSoundsEnabled', this.checked.toString());
         });
     }
 
@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // initializePageIndicator();
 	loadWidgets(); // Now renders into a correctly styled layout
     checkWallpaperState();
-    updateGurappsVisibility();
+    updateAPPsVisibility();
 	updateMinimalMode();
     updateNightMode();
     syncUiStates();
@@ -604,7 +604,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
 
         // Inform all iframes of the specific theme update
-        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+        const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
         iframes.forEach((iframe) => {
             if (iframe.contentWindow) {
 				const targetOrigin = getOriginFromUrl(iframe.src);
@@ -1008,13 +1008,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (hasUserData) {
             // User exists: Demand confirmation
             proceed = await showCustomConfirm(
-                "An external configuration script is requesting to be imported. Unknown scripts can harm the device and your data. Allow this to control Polygol?",
+                window.t('EXTERNAL_CONFIG_CONFIRM')
             );
         }
 
         if (proceed) {
             try {
-                showNotification('Importing configuration...', { icon: 'cloud_download' });
+                showNotification(window.t('IMPORTING_CONFIG'), { icon: 'cloud_download' });
                 const response = await fetch(window.pendingManageUrl);
                 if (response.ok) {
                     const scriptContent = await response.text();
@@ -1027,11 +1027,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                     window.location.reload();
                     return; 
                 } else {
-                    showDialog({ type: 'alert', title: 'Import Failed', message: `HTTP Error: ${response.status}` });
+                    showDialog({ type: 'alert', title: window.t('IMPORT_FAILED'), message: `HTTP Error: ${response.status}` });
                 }
             } catch (e) {
                 console.error("Manage Import Error:", e);
-                showDialog({ type: 'alert', title: 'Import Error', message: e.message });
+                showDialog({ type: 'alert', title: window.t('IMPORT_ERROR'), message: e.message });
             }
         }
     }
@@ -1052,7 +1052,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.warn(`[System] Requested boot app '${window.pendingBootApp}' not found.`);
             // Only show notification if UI is actually ready
             setTimeout(() => {
-                showNotification(`App '${window.pendingBootApp}' not found`, { icon: 'error' });
+                showNotification(window.t('APP_NOT_FOUND', { appName: window.pendingBootApp }), { icon: 'error' });
             }, 1000);
         }
         window.pendingBootApp = null; // Clear
@@ -1189,7 +1189,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const labelElement = gridItem.querySelector('.setting-label');
                 const label = labelElement ? labelElement.textContent : 'this setting';
                 
-                if (await showCustomConfirm(`Reset ${label}?`)) {
+                if (await showCustomConfirm(window.t('RESET_ITEM_CONFIRM', { label }))) {
                     // Gather all inputs connected to this grid item
                     const controlsToReset = popup 
                         ? Array.from(popup.querySelectorAll('input, select'))
@@ -1260,7 +1260,7 @@ document.addEventListener('DOMContentLoaded', () => {
     connectGridItem('setting-seconds', 'seconds-switch');
     connectGridItem('setting-clock-stack', 'clock-stack-switch');
     connectGridItem('setting-weather', 'weather-switch');
-    connectGridItem('setting-gurapps', 'gurapps-switch');
+    connectGridItem('setting-polygolapps', 'polygolapps-switch');
     connectGridItem('setting-animation', 'animation-switch');
     connectGridItem('setting-contrast', 'contrast-switch');
     connectGridItem('setting-hour-format', 'hour-switch');
@@ -1434,7 +1434,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const cancelBlackoutHold = () => {
         if (blackoutHoldTimer) { // If the timer is still active, it was a short tap
-            showPopup("Tap and hold to enter sleep mode");
+            showPopup(window.t('SLEEP_HOLD_PROMPT'));
         }
         clearTimeout(blackoutHoldTimer);
         blackoutHoldTimer = null; // Ensure it's nullified
@@ -1800,10 +1800,45 @@ document.addEventListener('DOMContentLoaded', () => {
     window.updatePersistentClock = updatePersistentClock;
 
     function getFormattedDynamicDate() {
-        const lang = localStorage.getItem('selectedLanguage') || undefined;
+        const lang = localStorage.getItem('selectedLanguage') || 'EN';
+        const locale = (typeof window.getBcp47Locale === 'function') 
+            ? window.getBcp47Locale(lang)
+            : ((lang === 'JP' || lang === 'JA') ? 'ja-JP' : (lang === 'KO' ? 'ko-KR' : (lang === 'ZH' ? 'zh-CN' : 'en-US')));
+        const dateFormat = localStorage.getItem('systemDateFormat') || 'auto';
         const now = new Date();
+
+        if (dateFormat === 'YYYY-MM-DD') {
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        } else if (dateFormat === 'DD/MM/YYYY') {
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            return `${d}/${m}/${y}`;
+        } else if (dateFormat === 'MM/DD/YYYY') {
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            return `${m}/${d}/${y}`;
+        } else if (dateFormat === 'long') {
+            try {
+                return now.toLocaleDateString(locale, { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' });
+            } catch(e) {
+                return now.toLocaleDateString(locale);
+            }
+        } else if (dateFormat === 'medium') {
+            try {
+                return now.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
+            } catch(e) {
+                return now.toLocaleDateString(locale);
+            }
+        }
+
+        // 'auto' default
         try {
-            return now.toLocaleDateString(lang, { weekday: 'short', month: 'short', day: 'numeric' });
+            return now.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' });
         } catch (e) {
             return now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
         }
@@ -1908,7 +1943,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 })();
             } catch (e) {
                 console.error("[System] Startup Script Error:", e);
-                showNotification("Startup script failed", { icon: 'terminal' });
+                showNotification(window.t('STARTUP_SCRIPT_FAILED'), { icon: 'terminal' });
             }
         }, 1000); // 1s delay to ensure DOM is fully settled
     }

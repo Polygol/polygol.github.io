@@ -142,7 +142,7 @@ function blackoutScreen() {
             padding: 8px 16px; border-radius: 35px; corner-shape: superellipse(1.5);
             border: 4px solid rgba(255,0,0,0.5);
         `;
-        iceLabel.innerHTML = `Emergency Contacts:<br>${iceContacts}`;
+        iceLabel.innerHTML = `${window.t ? window.t('EMERGENCY_CONTACTS') : 'Emergency Contacts'}:<br>${iceContacts}`;
         document.body.appendChild(iceLabel);
     }
 
@@ -283,8 +283,8 @@ function initBattery() {
                         if (targetTier === 3) {
                             document.body.classList.add('eco-critical', 'reduce-animations');
                             if (window.currentEcoTier < 3) {
-                                showNotification(`Eco mode enabled`, {
-                                    heading: `Low battery`,
+                                showNotification(window.t('ECO_MODE_ENABLED'), {
+                                    heading: window.t('LOW_BATTERY'),
                                     icon: 'battery_android_1',
                                     system: true
                                 });
@@ -296,7 +296,7 @@ function initBattery() {
                         if (localStorage.getItem('animationsEnabled') !== 'false') {
                             document.body.classList.remove('reduce-animations');
                         }
-                        if (window.currentEcoTier > 0) showPopup('Eco mode disabled');
+                        if (window.currentEcoTier > 0) showPopup(window.t('ECO_MODE_DISABLED'));
                     }
                     window.currentEcoTier = targetTier;
                 }

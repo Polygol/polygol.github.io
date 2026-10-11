@@ -75,7 +75,7 @@
             }, 1800);
 
             if (tapCount === 1 || tapCount === 2) {
-                if (window.Gurasuraisu && Gurasuraisu.playSound) Gurasuraisu.playSound('click');
+                if (window.Polygol && Polygol.playSound) Polygol.playSound('click');
             } else if (tapCount >= 3) {
                 tapCount = 0;
                 handleThreeTapsTrigger();
@@ -88,13 +88,28 @@
     function handleThreeTapsTrigger() {
         const alreadyActive = isInternalModeEnabled();
 
+        function t(key, fallback) {
+            if (typeof APPAPI !== 'undefined' && APPAPI.t) {
+                const res = APPAPI.t(key);
+                if (res && res !== key) return res;
+            }
+            if (window.parent && typeof window.parent.t === 'function') {
+                const res = window.parent.t(key);
+                if (res && res !== key) return res;
+            }
+            const lang = localStorage.getItem('language') || 'EN';
+            const dict = window[`LANG_${lang}_APP`] || (window.parent && window.parent[`LANG_${lang}`]);
+            if (dict && dict[key]) return dict[key];
+            return fallback;
+        }
+
         if (!alreadyActive) {
             setInternalMode(true);
             injectInternalSectionAndPage();
 
-            if (window.Gurasuraisu) {
-                if (Gurasuraisu.playSound) Gurasuraisu.playSound('notify');
-                if (Gurasuraisu.showPopup) Gurasuraisu.showPopup('INTERNAL mode activated');
+            if (window.Polygol) {
+                if (Polygol.playSound) Polygol.playSound('notify');
+                if (Polygol.showPopup) Polygol.showPopup(t('INTERNAL_MODE_ACTIVATED', 'INTERNAL mode activated'));
             }
 
             // Navigate directly to the newly unlocked page
@@ -103,8 +118,8 @@
                 if (navItem) navItem.click();
             }, 300);
         } else {
-            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                Gurasuraisu.showPopup('INTERNAL mode is active');
+            if (window.Polygol && Polygol.showPopup) {
+                Polygol.showPopup(t('INTERNAL_MODE_ACTIVE', 'INTERNAL mode is active'));
             }
         }
     }
@@ -178,14 +193,14 @@
                             <span class="setting-label">Factory Hardware Test (CIT)</span>
                             <span class="setting-description">Run full factory inspection suite</span>
                         </div>
-                        <button class="action-btn" onclick="if(window.Gurasuraisu) Gurasuraisu.openApp('/assets/intl/gurapp/citmode/index.html');">Launch</button>
+                        <button class="action-btn" onclick="if(window.Polygol) Polygol.openApp('/assets/intl/polygolapp/citmode/index.html');">Launch</button>
                     </div>
                     <div class="setting-item">
                         <div class="setting-info">
                             <span class="setting-label">Instant System Dump</span>
                             <span class="setting-description">Capture full environment, storage, and metrics</span>
                         </div>
-                        <button class="action-btn" onclick="if(window.Gurasuraisu) Gurasuraisu.openApp('/assets/intl/gurapp/dump/index.html');">Dump</button>
+                        <button class="action-btn" onclick="if(window.Polygol) Polygol.openApp('/assets/intl/polygolapp/dump/index.html');">Dump</button>
                     </div>
                     <div class="setting-item">
                         <div class="setting-info">
@@ -199,7 +214,7 @@
                             <span class="setting-label">Event & Console Viewer (Loggy)</span>
                             <span class="setting-description">Inspect captured logs and save to file</span>
                         </div>
-                        <button class="action-btn" onclick="if(window.Gurasuraisu) Gurasuraisu.openApp('/assets/intl/gurapp/loggy/index.html');">Open</button>
+                        <button class="action-btn" onclick="if(window.Polygol) Polygol.openApp('/assets/intl/polygolapp/loggy/index.html');">Open</button>
                     </div>
                 </div>
 
@@ -310,16 +325,31 @@
     }
 
     function bindInternalPageEvents(page) {
+        function t(key, fallback) {
+            if (typeof APPAPI !== 'undefined' && APPAPI.t) {
+                const res = APPAPI.t(key);
+                if (res && res !== key) return res;
+            }
+            if (window.parent && typeof window.parent.t === 'function') {
+                const res = window.parent.t(key);
+                if (res && res !== key) return res;
+            }
+            const lang = localStorage.getItem('language') || 'EN';
+            const dict = window[`LANG_${lang}_APP`] || (window.parent && window.parent[`LANG_${lang}`]);
+            if (dict && dict[key]) return dict[key];
+            return fallback;
+        }
+
         // Turn Off Buttons
         const turnOffAction = async () => {
-            if (window.Gurasuraisu && Gurasuraisu.showConfirm) {
-                const confirmed = await Gurasuraisu.showConfirm("Are you sure you want to exit INTERNAL mode? Internal apps will be hidden.", "Exit INTERNAL Mode");
+            if (window.Polygol && Polygol.showConfirm) {
+                const confirmed = await Polygol.showConfirm(t('INTERNAL_MODE_EXIT_CONFIRM', 'Are you sure you want to exit INTERNAL mode? Internal apps will be hidden.'), t('EXIT_INTERNAL_MODE', 'Exit INTERNAL Mode'));
                 if (!confirmed) return;
             }
             setInternalMode(false);
             removeInternalSectionAndPage();
-            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                Gurasuraisu.showPopup('INTERNAL mode disabled');
+            if (window.Polygol && Polygol.showPopup) {
+                Polygol.showPopup(t('INTERNAL_MODE_DISABLED', 'INTERNAL mode disabled'));
             }
         };
 
@@ -334,8 +364,8 @@
         if (careBtn) {
             careBtn.onclick = () => {
                 window.parent.postMessage({ action: 'executeInternalCare' }, '*');
-                if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                    Gurasuraisu.showPopup('Memory Care GC executed');
+                if (window.Polygol && Polygol.showPopup) {
+                    Polygol.showPopup(t('MEMORY_CARE_GC_EXECUTED', 'Memory Care GC executed'));
                 }
             };
         }
@@ -389,34 +419,34 @@
     }
 
     const ALL_INTERNAL_APPS = [
-        { name: "Airy OOBE Management", desc: "Manage the Airy app and OOBE setup", url: "/assets/intl/gurapp/airy-oobe-mgmt/index.html", icon: "airy.png" },
-        { name: "Airy", desc: "Polygol Out-of-box experience tutorial", url: "/assets/gurapp/intl/airy/index.html", icon: "airy.png" },
-        { name: "CITMode", desc: "Factory testing & component inspection test", url: "/assets/intl/gurapp/citmode/index.html", icon: "system.png" },
-        { name: "Remote Desktop", desc: "Allow complete control of device remotely", url: "/assets/intl/gurapp/remote-desktop/index.html", icon: "transfer.png" },
-        { name: "ShekaShake", desc: "Sensor info, orientation and shake testing", url: "/assets/intl/gurapp/shekashake/index.html", icon: "default.png" },
-        { name: "softness test", desc: "Rendering info, blur benchmark and testing", url: "/assets/intl/gurapp/softness-test/index.html", icon: "settings.png" },
-        { name: "Utah 730hr test", desc: "Render the Utah teapot for 730 hrs", url: "/assets/intl/gurapp/utah-730hr/index.html", icon: "default.png" },
-        { name: "BurninUI", desc: "Stress test system with rapid user-like patterns", url: "/assets/intl/gurapp/burnin-ui/index.html", icon: "system.png" },
-        { name: "BurninLog", desc: "Stress test system by code logic and churn", url: "/assets/intl/gurapp/burnin-log/index.html", icon: "system.png" },
-        { name: "BurninDvc", desc: "Stress test device CPU, GPU and hardware", url: "/assets/intl/gurapp/burnin-dvc/index.html", icon: "system.png" },
-        { name: "SoundModuTest", desc: "Test sound system, frequencies and effects", url: "/assets/intl/gurapp/sound-modu-test/index.html", icon: "tips.png" },
-        { name: "Rideset", desc: "Configure system UI with custom values", url: "/assets/intl/gurapp/rideset/index.html", icon: "settings.png" },
-        { name: "System Config", desc: "Advanced UI settings, registry and state config", url: "/assets/intl/gurapp/system-config/index.html", icon: "system.png" },
-        { name: "AiNany", desc: "Testing and configuration of kirbAI", url: "/assets/intl/gurapp/ai-nany/index.html", icon: "assistant.png" },
-        { name: "APIAval", desc: "Manually configure & override GurappAPI/SystemAPI", url: "/assets/intl/gurapp/api-aval/index.html", icon: "system.png" },
-        { name: "Loggy", desc: "Event viewer and console log saver", url: "/assets/intl/gurapp/loggy/index.html", icon: "feedback.png" },
-        { name: "Dump", desc: "Dump the system state right now", url: "/assets/intl/gurapp/dump/index.html", icon: "files.png" },
-        { name: "Gaty", desc: "Advanced app and permission manager", url: "/assets/intl/gurapp/gaty/index.html", icon: "appstore.png" },
-        { name: "Sammysapp", desc: "Example GurappAPI app testing components", url: "/assets/intl/gurapp/sammysapp/index.html", icon: "default.png" },
-        { name: "Valtedit", desc: "Edit system cache and storage vault", url: "/assets/intl/gurapp/valtedit/index.html", icon: "system.png" },
-        { name: "TEXTY", desc: "Clean text and code editor", url: "/assets/intl/gurapp/texty/index.html", icon: "files.png" },
-        { name: "intlStore", desc: "App updater & management for internal apps", url: "/assets/intl/gurapp/intl-store/index.html", icon: "appstore.png" },
-        { name: "Sysinfo", desc: "General information about system and OS", url: "/assets/intl/gurapp/sysinfo/index.html", icon: "settings.png" },
-        { name: "Onabilify", desc: "Enable and disable system feature flags", url: "/assets/intl/gurapp/onabilify/index.html", icon: "system.png" },
-        { name: "Videoman", desc: "Camera and media device diagnostic", url: "/assets/intl/gurapp/videoman/index.html", icon: "default.png" },
-        { name: "Signals", desc: "WiFi, Bluetooth, GPS, and NFC diagnostic", url: "/assets/intl/gurapp/signals/index.html", icon: "transfer.png" },
-        { name: "Reliability", desc: "Simulate user activity over time and report", url: "/assets/intl/gurapp/reliability/index.html", icon: "system.png" },
-        { name: "ImgDisp", desc: "Display image and apply WebGPU filters", url: "/assets/intl/gurapp/imgdisp/index.html", icon: "default.png" }
+        { name: "Airy OOBE Management", desc: "Manage the Airy app and OOBE setup", url: "/assets/intl/polygolapp/airy-oobe-mgmt/index.html", icon: "airy.png" },
+        { name: "Airy", desc: "Polygol Out-of-box experience tutorial", url: "/assets/polygolapp/intl/airy/index.html", icon: "airy.png" },
+        { name: "CITMode", desc: "Factory testing & component inspection test", url: "/assets/intl/polygolapp/citmode/index.html", icon: "system.png" },
+        { name: "Remote Desktop", desc: "Allow complete control of device remotely", url: "/assets/intl/polygolapp/remote-desktop/index.html", icon: "transfer.png" },
+        { name: "ShekaShake", desc: "Sensor info, orientation and shake testing", url: "/assets/intl/polygolapp/shekashake/index.html", icon: "default.png" },
+        { name: "softness test", desc: "Rendering info, blur benchmark and testing", url: "/assets/intl/polygolapp/softness-test/index.html", icon: "settings.png" },
+        { name: "Utah 730hr test", desc: "Render the Utah teapot for 730 hrs", url: "/assets/intl/polygolapp/utah-730hr/index.html", icon: "default.png" },
+        { name: "BurninUI", desc: "Stress test system with rapid user-like patterns", url: "/assets/intl/polygolapp/burnin-ui/index.html", icon: "system.png" },
+        { name: "BurninLog", desc: "Stress test system by code logic and churn", url: "/assets/intl/polygolapp/burnin-log/index.html", icon: "system.png" },
+        { name: "BurninDvc", desc: "Stress test device CPU, GPU and hardware", url: "/assets/intl/polygolapp/burnin-dvc/index.html", icon: "system.png" },
+        { name: "SoundModuTest", desc: "Test sound system, frequencies and effects", url: "/assets/intl/polygolapp/sound-modu-test/index.html", icon: "tips.png" },
+        { name: "Rideset", desc: "Configure system UI with custom values", url: "/assets/intl/polygolapp/rideset/index.html", icon: "settings.png" },
+        { name: "System Config", desc: "Advanced UI settings, registry and state config", url: "/assets/intl/polygolapp/system-config/index.html", icon: "system.png" },
+        { name: "AiNany", desc: "Testing and configuration of kirbAI", url: "/assets/intl/polygolapp/ai-nany/index.html", icon: "assistant.png" },
+        { name: "APIAval", desc: "Manually configure & override APPAPI/SystemAPI", url: "/assets/intl/polygolapp/api-aval/index.html", icon: "system.png" },
+        { name: "Loggy", desc: "Event viewer and console log saver", url: "/assets/intl/polygolapp/loggy/index.html", icon: "feedback.png" },
+        { name: "Dump", desc: "Dump the system state right now", url: "/assets/intl/polygolapp/dump/index.html", icon: "files.png" },
+        { name: "Gaty", desc: "Advanced app and permission manager", url: "/assets/intl/polygolapp/gaty/index.html", icon: "appstore.png" },
+        { name: "Sammysapp", desc: "Example APPAPI app testing components", url: "/assets/intl/polygolapp/sammysapp/index.html", icon: "default.png" },
+        { name: "Valtedit", desc: "Edit system cache and storage vault", url: "/assets/intl/polygolapp/valtedit/index.html", icon: "system.png" },
+        { name: "TEXTY", desc: "Clean text and code editor", url: "/assets/intl/polygolapp/texty/index.html", icon: "files.png" },
+        { name: "intlStore", desc: "App updater & management for internal apps", url: "/assets/intl/polygolapp/intl-store/index.html", icon: "appstore.png" },
+        { name: "Sysinfo", desc: "General information about system and OS", url: "/assets/intl/polygolapp/sysinfo/index.html", icon: "settings.png" },
+        { name: "Onabilify", desc: "Enable and disable system feature flags", url: "/assets/intl/polygolapp/onabilify/index.html", icon: "system.png" },
+        { name: "Videoman", desc: "Camera and media device diagnostic", url: "/assets/intl/polygolapp/videoman/index.html", icon: "default.png" },
+        { name: "Signals", desc: "WiFi, Bluetooth, GPS, and NFC diagnostic", url: "/assets/intl/polygolapp/signals/index.html", icon: "transfer.png" },
+        { name: "Reliability", desc: "Simulate user activity over time and report", url: "/assets/intl/polygolapp/reliability/index.html", icon: "system.png" },
+        { name: "ImgDisp", desc: "Display image and apply WebGPU filters", url: "/assets/intl/polygolapp/imgdisp/index.html", icon: "default.png" }
     ];
 
     function populateInternalAppsList(page) {
@@ -445,8 +475,8 @@
             `;
 
             card.querySelector('button').onclick = () => {
-                if (window.Gurasuraisu && Gurasuraisu.openApp) {
-                    Gurasuraisu.openApp(app.url);
+                if (window.Polygol && Polygol.openApp) {
+                    Polygol.openApp(app.url);
                 } else {
                     window.open(app.url, '_blank');
                 }

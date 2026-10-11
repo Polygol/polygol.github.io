@@ -1,0 +1,651 @@
+/* --- Beginnings State (Idle Start Screen) --- */
+body.beginnings-active .container {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.2, 1.2, 0.64, 1) !important;
+    z-index: 10 !important;
+    cursor: pointer;
+}
+
+body.beginnings-active .container .clock {
+    cursor: pointer;
+}
+
+body.beginnings-active #minihompy-container {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: scale(0.92) translateY(20px) !important;
+}
+
+body.beginnings-active .widget-grid {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* --- Home Screen Active State --- */
+body.home-screen-active:not(.beginnings-active) .container {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translate(-50%, -55%) scale(0.92) !important;
+    transition: opacity 0.35s ease, transform 0.35s ease !important;
+}
+
+body.home-screen-active:not(.beginnings-active):not(.blackout-active):not(.app-active):not(.edit-mode-active) #minihompy-container {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: scale(1) translateY(0) !important;
+}
+
+/* Hide Minihompy during App execution, Blackout, Screen sleep, or Wallpaper editing */
+body.app-active #minihompy-container,
+body.blackout-active #minihompy-container,
+body.edit-mode-active #minihompy-container,
+body:has(#wallpaper-switcher-overlay.show) #minihompy-container {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: scale(0.94) !important;
+}
+
+/* --- Main Minihompy Container --- */
+.minihompy-container {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 24px;
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.35s cubic-bezier(0.2, 0.9, 0.4, 1), transform 0.35s cubic-bezier(0.2, 1.2, 0.64, 1);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+/* --- Home Pages Viewport (Fluid iPadOS Spacing) --- */
+.home-pages-viewport {
+    width: 100%;
+    max-width: min(94vw, 1380px);
+    height: calc(100vh - 90px);
+    max-height: calc(100vh - 90px);
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    touch-action: none;
+}
+
+.home-pages-track {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.42s cubic-bezier(0.2, 1.15, 0.4, 1);
+    will-change: transform;
+    touch-action: none;
+}
+
+/* --- Individual Home Page (Custom Positioned Container) --- */
+.home-page {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+    touch-action: none;
+}
+
+/* Base style for absolutely positioned items */
+.home-page .home-grid-item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1), width 0.28s ease, height 0.28s ease;
+    will-change: transform;
+}
+
+/* --- App Icons (1:1 Aspect Ratio) --- */
+.home-page .app-icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.home-page .app-icon .app-icon-img {
+    width: min(72px, 72%);
+    height: min(72px, 72%);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease;
+}
+
+.home-page .app-icon .app-icon-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    corner-shape: inherit;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
+}
+
+.home-page .app-icon span, .folder-label, .widget-label {
+    font-size: 0.9rem;
+    text-align: center;
+    color: var(--text-color);
+    font-weight: 500;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-shadow: 0 0 5px var(--background-color-tr);
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+}
+
+.home-page .app-icon span, .folder-label {
+    margin-top: 16px;
+}
+
+.widget-label {
+    margin-top: 6px;
+    height: 20px;
+    line-height: 20px;
+    flex-shrink: 0;
+    max-width: 90% !important;
+}
+
+/* --- Folders on Home Screen --- */
+.home-page .folder-icon-item {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.folder-preview-box {
+    width: min(72px, 72%);
+    height: min(72px, 72%);
+    aspect-ratio: 1 / 1;
+    background-color: var(--overlay-color);
+    border-radius: 35%;
+    corner-shape: superellipse(1.25);
+    border: 1px solid var(--glass-border);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
+    box-shadow: var(--sun-shadow);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 6px;
+    padding: 10px;
+    box-sizing: border-box;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.home-page .folder-icon-item:active .folder-preview-box {
+    filter: brightness(1.5);
+    transform: scale(1.2);
+}
+
+body.home-edit-active .home-page .folder-icon-item:active .folder-preview-box {
+    transform: none;
+    filter: none;
+}
+
+.folder-preview-mini-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 40%;
+    corner-shape: superellipse(1.25);
+    object-fit: cover;
+}
+
+/* Target hover effect when dragging an app over another app to create folder */
+.folder-target-hover .app-icon-img,
+.folder-target-hover .folder-preview-box {
+    transform: scale(1.18) !important;
+    box-shadow: 0 0 0 4px var(--accent), 0 10px 24px rgba(0, 0, 0, 0.5) !important;
+    animation: folder-pulse 0.6s infinite alternate !important;
+}
+
+@keyframes folder-pulse {
+    from { transform: scale(1.14); }
+    to { transform: scale(1.22); }
+}
+
+/* --- Folder View Overlay Modal --- */
+.home-folder-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    background: var(--overlay-color);
+    backdrop-filter: blur(0px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                backdrop-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                -webkit-backdrop-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.home-folder-overlay.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    backdrop-filter: blur(10px);
+}
+
+.home-folder-modal {
+    width: min(520px, 92vw);
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    transform: scale(0.82);
+    opacity: 0;
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.home-folder-overlay.show .home-folder-modal {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+.home-folder-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
+
+.home-folder-title-input {
+    font-size: 1.6rem;
+    font-weight: 700;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: 'Open Runde', 'Inter', sans-serif;
+    width: 100%;
+    cursor: text;
+}
+
+.home-folder-title-input:focus {
+    border-bottom: 2px solid var(--accent);
+}
+
+.home-folder-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px 18px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 55vh;
+    padding: 10px 0;
+    justify-items: center;
+    touch-action: none;
+}
+
+.folder-grid-cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.folder-grid-cell .app-icon {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+body.home-edit-active .folder-grid-cell .app-icon {
+    animation: ios-jiggle 0.3s ease-in-out infinite alternate !important;
+}
+
+body.home-edit-active .folder-grid-cell .home-item-remove-btn {
+    display: flex !important;
+}
+
+.folder-grid-cell.is-dragging {
+    position: fixed !important;
+    z-index: 999999 !important;
+    pointer-events: none !important;
+    opacity: 0.5 !important;
+    animation: none !important;
+    transition: none !important;
+}
+
+.folder-grid-cell.is-dragging .app-icon {
+    animation: none !important;
+}
+
+/* --- Widgets Inside Home Grid (Widget API) --- */
+.home-page .widget-grid-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.home-page .widget-instance {
+    width: 100%;
+    height: calc(100% - 26px);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 35px;
+    corner-shape: superellipse(1.5);
+    background: var(--search-background);
+    border: 1px solid var(--glass-border);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
+    box-shadow: var(--sun-shadow);
+    overflow: hidden;
+    touch-action: none;
+    pointer-events: auto;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.home-page .widget-instance iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    pointer-events: none;
+    border-radius: inherit;
+    corner-shape: inherit;
+}
+
+.home-page .widget-instance-overlay {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    z-index: 2;
+    border-radius: inherit;
+    corner-shape: inherit;
+}
+
+/* Weather Widget Content */
+.home-page .weather-widget-instance {
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    color: var(--text-color);
+}
+
+.home-page .weather-widget-instance .weather-widget-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    width: 100%;
+}
+
+.home-page .weather-widget-instance .weather-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.home-page .weather-widget-instance .weather-title {
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Open Runde', sans-serif;
+    opacity: 0.9;
+}
+
+.home-page .weather-widget-instance .temperature {
+    font-size: 44px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin: 8px 0;
+}
+
+.home-page .weather-widget-instance .weather-subtext {
+    font-size: 12px;
+    opacity: 0.75;
+}
+
+/* --- Remove Button & Edit Mode (Material Icons Only) --- */
+.home-item-remove-btn {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ff3b30;
+    color: #ffffff;
+    border: none;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 60;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+    padding: 0;
+    line-height: 1;
+    transition: transform 0.15s ease;
+}
+
+.home-item-remove-btn .material-symbols-rounded {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+body.home-edit-active .home-item-remove-btn {
+    display: flex !important;
+}
+
+/* iOS Jiggle Animation during Edit Mode */
+@keyframes ios-jiggle {
+    0% { transform: rotate(-1.3deg); }
+    50% { transform: rotate(1.3deg); }
+    100% { transform: rotate(-1.3deg); }
+}
+
+body.home-edit-active .home-page .app-icon,
+body.home-edit-active .home-page .folder-icon-item,
+body.home-edit-active .home-page .widget-grid-item .widget-instance {
+    animation: ios-jiggle 0.3s ease-in-out infinite alternate !important;
+}
+
+body.home-edit-active .home-page .home-grid-item:nth-child(2n) {
+    animation-delay: 0.09s !important;
+}
+
+/* --- Edit Mode Header (+ and Done) --- */
+.home-edit-header {
+    position: absolute;
+    bottom: 20px;
+    left: 24px;
+    right: 24px;
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    pointer-events: auto;
+}
+
+body.home-edit-active .home-edit-header {
+    display: flex !important;
+}
+
+.home-edit-header-btn {
+    background: var(--search-background);
+    color: var(--text-color);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+    border-radius: 99px;
+    height: 40px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Open Runde', 'Inter', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
+    transition: transform 0.15s ease, background-color 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.home-edit-add-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+}
+
+.home-edit-add-btn .material-symbols-rounded {
+    font-size: 24px;
+}
+
+.home-edit-done-btn {
+    padding: 0 16px;
+    font-weight: 700;
+}
+
+/* --- Touch-Driven Widget Resize Handle (Bottom-Right, NO BUTTONS) --- */
+.home-widget-resize-handle {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 32px;
+    height: 32px;
+    z-index: 55;
+    display: none;
+    touch-action: none;
+    cursor: nwse-resize;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.home-widget-resize-handle .material-symbols-rounded {
+    font-size: 18px;
+}
+
+body.home-edit-active .home-widget-resize-handle {
+    display: flex !important;
+}
+
+/* Visual Outline during Live Resize Drag */
+.widget-resizing-live {
+    box-shadow: 0 0 0 3px var(--accent), 0 16px 38px rgba(0, 0, 0, 0.5) !important;
+    z-index: 500 !important;
+    transition: none !important;
+}
+
+/* --- Dragging Item State (Smooth iOS Floating) --- */
+.home-page .is-dragging,
+.home-grid-item.is-dragging {
+    position: fixed !important;
+    z-index: 99999 !important;
+    pointer-events: none !important;
+    opacity: 0.95 !important;
+    animation: none !important;
+    transition: none !important;
+}
+
+.home-page .is-dragging .widget-instance,
+.home-page .is-dragging .app-icon,
+.home-page .is-dragging .folder-icon-item {
+    animation: none !important;
+    transform: none !important;
+    opacity: 0.5 !important;
+}
+
+/* Slot preview placeholder during drag */
+.home-grid-placeholder {
+    position: absolute;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px dashed rgba(255, 255, 255, 0.28);
+    pointer-events: none;
+    box-sizing: border-box;
+    transition: transform 0.26s cubic-bezier(0.2, 0.9, 0.3, 1), width 0.24s ease, height 0.24s ease;
+    z-index: 5;
+}
+
+/* Page Indicator Dots */
+.home-page-indicators {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    z-index: 25;
+    position: fixed;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.home-page-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-color);
+    opacity: 0.35;
+    transition: opacity 0.3s ease, transform 0.3s ease, height 0.3s ease;
+    cursor: pointer;
+}
+
+.home-page-dot.active {
+    opacity: 1;
+    background: var(--accent);
+}

@@ -6,9 +6,9 @@
     <title>BurninUI - UI Stress Tester</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
-    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
-    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <link rel="stylesheet" href="/assets/polygolapp/intl/settings/settings.css">
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="/assets/intl/polygolapp/internal-app-api.js" defer></script>
 </head>
 <body data-app-name="BurninUI">
     <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
@@ -164,30 +164,30 @@
             try {
                 if (pat === 0 && document.getElementById('pat-sound').checked) {
                     const s = sounds[Math.floor(Math.random() * sounds.length)];
-                    if (window.Gurasuraisu && Gurasuraisu.playSound) {
-                        Gurasuraisu.playSound(s);
+                    if (window.Polygol && Polygol.playSound) {
+                        Polygol.playSound(s);
                         logAction(`Dispatched audio: ${s}`);
                     }
                 } else if (pat === 1 && document.getElementById('pat-notify').checked) {
-                    if (window.Gurasuraisu && Gurasuraisu.showNotification) {
-                        Gurasuraisu.showNotification(`Stress Burst #${actionCount}`, { icon: 'warning' });
+                    if (window.Polygol && Polygol.showNotification) {
+                        Polygol.showNotification(`Stress Burst #${actionCount}`, { icon: 'warning' });
                         logAction(`Dispatched notification #${actionCount}`);
                     }
                 } else if (pat === 2 && document.getElementById('pat-liveact').checked) {
-                    if (window.Gurasuraisu && Gurasuraisu.liveActivity) {
+                    if (window.Polygol && Polygol.liveActivity) {
                         if (!activeActivityId) {
                             activeActivityId = 'burnin_act_' + Date.now();
-                            Gurasuraisu.liveActivity.start({
+                            Polygol.liveActivity.start({
                                 id: activeActivityId,
                                 title: `Stress Run ${actionCount}`,
                                 icon: 'touch_app'
                             });
                             logAction(`Started Live Activity: ${activeActivityId}`);
                         } else {
-                            Gurasuraisu.liveActivity.update(activeActivityId, { progress: Math.random() });
+                            Polygol.liveActivity.update(activeActivityId, { progress: Math.random() });
                             logAction(`Updated Live Activity: ${activeActivityId}`);
                             if (Math.random() > 0.7) {
-                                Gurasuraisu.liveActivity.stop(activeActivityId);
+                                Polygol.liveActivity.stop(activeActivityId);
                                 activeActivityId = null;
                                 logAction(`Stopped Live Activity`);
                             }

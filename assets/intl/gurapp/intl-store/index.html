@@ -6,9 +6,9 @@
     <title>intlStore - Internal App Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
-    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
-    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <link rel="stylesheet" href="/assets/polygolapp/intl/settings/settings.css">
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="/assets/intl/polygolapp/internal-app-api.js" defer></script>
 </head>
 <body data-app-name="intlStore">
     <div class="container" style="max-width: 780px; width: 100%; margin: 0 auto;">
@@ -45,34 +45,34 @@
 
     <script>
         const INTERNAL_STORE_APPS = [
-            { id: "airy-oobe-mgmt", name: "Airy OOBE Management", version: "1.4.0", desc: "Manage Airy setup state and preview OOBE documentation modules", path: "/assets/intl/gurapp/airy-oobe-mgmt/index.html", icon: "airy.png" },
-            { id: "airy", name: "Airy", version: "2.1.0", desc: "Polygol Out-of-box Experience tutorial", path: "/assets/gurapp/intl/airy/index.html", icon: "airy.png" },
-            { id: "citmode", name: "CITMode", version: "3.0.1", desc: "Hardware Component Inspection and Factory Calibration Test", path: "/assets/intl/gurapp/citmode/index.html", icon: "system.png" },
-            { id: "remote-desktop", name: "Remote Desktop", version: "1.2.0", desc: "Complete P2P remote control and screen mirroring agent", path: "/assets/intl/gurapp/remote-desktop/index.html", icon: "transfer.png" },
-            { id: "shekashake", name: "ShekaShake", version: "2.0.0", desc: "Sensor diagnostics, orientation box, motion, and shake tester", path: "/assets/intl/gurapp/shekashake/index.html", icon: "default.png" },
-            { id: "softness-test", name: "softness test", version: "1.8.4", desc: "Compositor FPS, frame times, and GPU blur fill-rate benchmark", path: "/assets/intl/gurapp/softness-test/index.html", icon: "settings.png" },
-            { id: "utah-730hr", name: "Utah 730hr test", version: "1.0.0", desc: "730-hour continuous Utah Teapot 3D WebGL endurance test", path: "/assets/intl/gurapp/utah-730hr/index.html", icon: "default.png" },
-            { id: "burnin-ui", name: "BurninUI", version: "2.2.0", desc: "UI monkey testing engine rapidly spamming interface patterns", path: "/assets/intl/gurapp/burnin-ui/index.html", icon: "system.png" },
-            { id: "burnin-log", name: "BurninLog", version: "2.1.0", desc: "Code logic, recursion, JSON tree, and memory stress benchmark", path: "/assets/intl/gurapp/burnin-log/index.html", icon: "system.png" },
-            { id: "burnin-dvc", name: "BurninDvc", version: "3.0.0", desc: "Multi-core CPU, WebGL fragment shader, and hardware torture test", path: "/assets/intl/gurapp/burnin-dvc/index.html", icon: "system.png" },
-            { id: "sound-modu-test", name: "SoundModuTest", version: "1.5.0", desc: "System sound effects, tone generator, channels and TTS diagnostic", path: "/assets/intl/gurapp/sound-modu-test/index.html", icon: "tips.png" },
-            { id: "rideset", name: "Rideset", version: "2.0.0", desc: "Runtime system UI geometry, scale, and border radius overrides", path: "/assets/intl/gurapp/rideset/index.html", icon: "settings.png" },
-            { id: "system-config", name: "System Config", version: "2.5.0", desc: "Operating states manipulator, eco tiers, and registry editor", path: "/assets/intl/gurapp/system-config/index.html", icon: "system.png" },
-            { id: "ai-nany", name: "AiNany", version: "1.9.0", desc: "kirbAI prompt testing harness, latency timer, and directive editor", path: "/assets/intl/gurapp/ai-nany/index.html", icon: "assistant.png" },
-            { id: "api-aval", name: "APIAval", version: "1.3.0", desc: "GurappAPI method fuzzer, override toggles, and execution log", path: "/assets/intl/gurapp/api-aval/index.html", icon: "system.png" },
-            { id: "loggy", name: "Loggy", version: "2.4.0", desc: "Real-time system event and console log viewer with text export", path: "/assets/intl/gurapp/loggy/index.html", icon: "feedback.png" },
-            { id: "dump", name: "Dump", version: "1.6.0", desc: "Instant complete system state and storage JSON snapshot utility", path: "/assets/intl/gurapp/dump/index.html", icon: "files.png" },
-            { id: "gaty", name: "Gaty", version: "2.8.0", desc: "Advanced application lifecycle and permissions management matrix", path: "/assets/intl/gurapp/gaty/index.html", icon: "appstore.png" },
-            { id: "sammysapp", name: "Sammysapp", version: "1.1.0", desc: "Reference implementation and component testbed for GurappAPI", path: "/assets/intl/gurapp/sammysapp/index.html", icon: "default.png" },
-            { id: "valtedit", name: "Valtedit", version: "1.7.0", desc: "CacheStorage bucket inspector and system secret vault editor", path: "/assets/intl/gurapp/valtedit/index.html", icon: "system.png" },
-            { id: "texty", name: "TEXTY", version: "2.0.0", desc: "Lightweight text and code editor with file system access", path: "/assets/intl/gurapp/texty/index.html", icon: "files.png" },
-            { id: "intl-store", name: "intlStore", version: "2.0.0", desc: "Package manager and update orchestrator for internal tools", path: "/assets/intl/gurapp/intl-store/index.html", icon: "appstore.png" },
-            { id: "sysinfo", name: "Sysinfo", version: "1.5.0", desc: "Hardware specifications, system architecture, and runtime metrics", path: "/assets/intl/gurapp/sysinfo/index.html", icon: "settings.png" },
-            { id: "onabilify", name: "Onabilify", version: "2.1.0", desc: "Master switchboard for experimental system feature flags", path: "/assets/intl/gurapp/onabilify/index.html", icon: "system.png" },
-            { id: "videoman", name: "Videoman", version: "1.4.0", desc: "Camera resolution test, live optical feed, and media diagnostic", path: "/assets/intl/gurapp/videoman/index.html", icon: "default.png" },
-            { id: "signals", name: "Signals", version: "1.3.0", desc: "WiFi, Cellular, Bluetooth, GPS, and peripheral diagnostic", path: "/assets/intl/gurapp/signals/index.html", icon: "transfer.png" },
-            { id: "reliability", name: "Reliability", version: "2.0.0", desc: "Long-term user activity simulation and system stability analysis", path: "/assets/intl/gurapp/reliability/index.html", icon: "system.png" },
-            { id: "imgdisp", name: "ImgDisp", version: "1.2.0", desc: "Image viewer with WebGPU compute shader filter pipeline", path: "/assets/intl/gurapp/imgdisp/index.html", icon: "default.png" }
+            { id: "airy-oobe-mgmt", name: "Airy OOBE Management", version: "1.4.0", desc: "Manage Airy setup state and preview OOBE documentation modules", path: "/assets/intl/polygolapp/airy-oobe-mgmt/index.html", icon: "airy.png" },
+            { id: "airy", name: "Airy", version: "2.1.0", desc: "Polygol Out-of-box Experience tutorial", path: "/assets/polygolapp/intl/airy/index.html", icon: "airy.png" },
+            { id: "citmode", name: "CITMode", version: "3.0.1", desc: "Hardware Component Inspection and Factory Calibration Test", path: "/assets/intl/polygolapp/citmode/index.html", icon: "system.png" },
+            { id: "remote-desktop", name: "Remote Desktop", version: "1.2.0", desc: "Complete P2P remote control and screen mirroring agent", path: "/assets/intl/polygolapp/remote-desktop/index.html", icon: "transfer.png" },
+            { id: "shekashake", name: "ShekaShake", version: "2.0.0", desc: "Sensor diagnostics, orientation box, motion, and shake tester", path: "/assets/intl/polygolapp/shekashake/index.html", icon: "default.png" },
+            { id: "softness-test", name: "softness test", version: "1.8.4", desc: "Compositor FPS, frame times, and GPU blur fill-rate benchmark", path: "/assets/intl/polygolapp/softness-test/index.html", icon: "settings.png" },
+            { id: "utah-730hr", name: "Utah 730hr test", version: "1.0.0", desc: "730-hour continuous Utah Teapot 3D WebGL endurance test", path: "/assets/intl/polygolapp/utah-730hr/index.html", icon: "default.png" },
+            { id: "burnin-ui", name: "BurninUI", version: "2.2.0", desc: "UI monkey testing engine rapidly spamming interface patterns", path: "/assets/intl/polygolapp/burnin-ui/index.html", icon: "system.png" },
+            { id: "burnin-log", name: "BurninLog", version: "2.1.0", desc: "Code logic, recursion, JSON tree, and memory stress benchmark", path: "/assets/intl/polygolapp/burnin-log/index.html", icon: "system.png" },
+            { id: "burnin-dvc", name: "BurninDvc", version: "3.0.0", desc: "Multi-core CPU, WebGL fragment shader, and hardware torture test", path: "/assets/intl/polygolapp/burnin-dvc/index.html", icon: "system.png" },
+            { id: "sound-modu-test", name: "SoundModuTest", version: "1.5.0", desc: "System sound effects, tone generator, channels and TTS diagnostic", path: "/assets/intl/polygolapp/sound-modu-test/index.html", icon: "tips.png" },
+            { id: "rideset", name: "Rideset", version: "2.0.0", desc: "Runtime system UI geometry, scale, and border radius overrides", path: "/assets/intl/polygolapp/rideset/index.html", icon: "settings.png" },
+            { id: "system-config", name: "System Config", version: "2.5.0", desc: "Operating states manipulator, eco tiers, and registry editor", path: "/assets/intl/polygolapp/system-config/index.html", icon: "system.png" },
+            { id: "ai-nany", name: "AiNany", version: "1.9.0", desc: "kirbAI prompt testing harness, latency timer, and directive editor", path: "/assets/intl/polygolapp/ai-nany/index.html", icon: "assistant.png" },
+            { id: "api-aval", name: "APIAval", version: "1.3.0", desc: "APPAPI method fuzzer, override toggles, and execution log", path: "/assets/intl/polygolapp/api-aval/index.html", icon: "system.png" },
+            { id: "loggy", name: "Loggy", version: "2.4.0", desc: "Real-time system event and console log viewer with text export", path: "/assets/intl/polygolapp/loggy/index.html", icon: "feedback.png" },
+            { id: "dump", name: "Dump", version: "1.6.0", desc: "Instant complete system state and storage JSON snapshot utility", path: "/assets/intl/polygolapp/dump/index.html", icon: "files.png" },
+            { id: "gaty", name: "Gaty", version: "2.8.0", desc: "Advanced application lifecycle and permissions management matrix", path: "/assets/intl/polygolapp/gaty/index.html", icon: "appstore.png" },
+            { id: "sammysapp", name: "Sammysapp", version: "1.1.0", desc: "Reference implementation and component testbed for APPAPI", path: "/assets/intl/polygolapp/sammysapp/index.html", icon: "default.png" },
+            { id: "valtedit", name: "Valtedit", version: "1.7.0", desc: "CacheStorage bucket inspector and system secret vault editor", path: "/assets/intl/polygolapp/valtedit/index.html", icon: "system.png" },
+            { id: "texty", name: "TEXTY", version: "2.0.0", desc: "Lightweight text and code editor with file system access", path: "/assets/intl/polygolapp/texty/index.html", icon: "files.png" },
+            { id: "intl-store", name: "intlStore", version: "2.0.0", desc: "Package manager and update orchestrator for internal tools", path: "/assets/intl/polygolapp/intl-store/index.html", icon: "appstore.png" },
+            { id: "sysinfo", name: "Sysinfo", version: "1.5.0", desc: "Hardware specifications, system architecture, and runtime metrics", path: "/assets/intl/polygolapp/sysinfo/index.html", icon: "settings.png" },
+            { id: "onabilify", name: "Onabilify", version: "2.1.0", desc: "Master switchboard for experimental system feature flags", path: "/assets/intl/polygolapp/onabilify/index.html", icon: "system.png" },
+            { id: "videoman", name: "Videoman", version: "1.4.0", desc: "Camera resolution test, live optical feed, and media diagnostic", path: "/assets/intl/polygolapp/videoman/index.html", icon: "default.png" },
+            { id: "signals", name: "Signals", version: "1.3.0", desc: "WiFi, Cellular, Bluetooth, GPS, and peripheral diagnostic", path: "/assets/intl/polygolapp/signals/index.html", icon: "transfer.png" },
+            { id: "reliability", name: "Reliability", version: "2.0.0", desc: "Long-term user activity simulation and system stability analysis", path: "/assets/intl/polygolapp/reliability/index.html", icon: "system.png" },
+            { id: "imgdisp", name: "ImgDisp", version: "1.2.0", desc: "Image viewer with WebGPU compute shader filter pipeline", path: "/assets/intl/polygolapp/imgdisp/index.html", icon: "default.png" }
         ];
 
         function renderStore() {
@@ -107,8 +107,8 @@
         }
 
         window.openApp = (path) => {
-            if (window.Gurasuraisu && Gurasuraisu.openApp) {
-                Gurasuraisu.openApp(path);
+            if (window.Polygol && Polygol.openApp) {
+                Polygol.openApp(path);
             } else {
                 window.open(path, '_blank');
             }
@@ -120,8 +120,8 @@
             document.getElementById('store-status-desc').textContent = 'Checking internal manifest updates...';
             setTimeout(() => {
                 document.getElementById('store-status-desc').textContent = 'All 28 internal packages up to date.';
-                if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                    Gurasuraisu.showPopup('Internal apps verified: Latest version installed');
+                if (window.Polygol && Polygol.showPopup) {
+                    Polygol.showPopup('Internal apps verified: Latest version installed');
                 }
             }, 600);
         };
@@ -130,8 +130,8 @@
             if (window.parent && window.parent.InternalPatch) {
                 window.parent.InternalPatch.apply();
             }
-            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                Gurasuraisu.showPopup('Refreshed all internal packages and app drawer icons');
+            if (window.Polygol && Polygol.showPopup) {
+                Polygol.showPopup('Refreshed all internal packages and app drawer icons');
             }
         };
 

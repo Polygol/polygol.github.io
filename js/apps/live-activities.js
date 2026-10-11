@@ -201,15 +201,15 @@ const HomeActivityManager = {
         // Bind media buttons
         document.getElementById('home-media-prev')?.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'prev');
+            if (activeMediaSessionApp) Polygol.callApp(activeMediaSessionApp, 'prev');
         });
         document.getElementById('home-media-play-pause')?.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'playPause');
+            if (activeMediaSessionApp) Polygol.callApp(activeMediaSessionApp, 'playPause');
         });
         document.getElementById('home-media-next')?.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (activeMediaSessionApp) Gurasuraisu.callApp(activeMediaSessionApp, 'next');
+            if (activeMediaSessionApp) Polygol.callApp(activeMediaSessionApp, 'next');
         });
         document.getElementById('home-media-art')?.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -495,7 +495,7 @@ function startLiveActivity(appName, options) {
         // Create Iframe for Home Activity
         const iframe = document.createElement('iframe');
         iframe.src = options.url;
-        iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+        iframe.setAttribute('data-polygol-iframe', 'true');
         iframe.style.cssText = "width: 100%; padding: 20px 25px; overflow: hidden;";
         iframe.className = 'home-activity-item';
         

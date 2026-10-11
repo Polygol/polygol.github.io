@@ -23,18 +23,33 @@ const initialFaviconLink = document.querySelector("link[rel='icon']") || documen
 if (initialFaviconLink) {
     originalFaviconUrl = initialFaviconLink.href;
 }
-let currentLanguage = LANG_EN; // Default to English
+let currentLanguage = (typeof LANG_EN !== 'undefined' ? LANG_EN : {}); // Default to English
+if (typeof window !== 'undefined') {
+    window.currentLanguage = currentLanguage;
+    window.language = currentLanguage;
+    window.t = function(key, params = {}) {
+        const dict = window.currentLanguage || currentLanguage || (typeof LANG_EN !== 'undefined' ? LANG_EN : {});
+        let str = dict[key] || (typeof LANG_EN !== 'undefined' && LANG_EN[key]) || key;
+        if (params && typeof params === 'object') {
+            Object.keys(params).forEach(p => {
+                str = str.replace(new RegExp(`\\{${p}\\}`, 'g'), params[p]);
+            });
+        }
+        return str;
+    };
+    window.getString = window.t;
+}
 let allowPageLeave = false; // Global flag to bypass beforeunload prompt
 let blackoutHoldTimer = null;
 let previousBlackoutSettings = {};
 let autoSleepTimer = null;
 
 /**
- * Sends a message to all active Gurapp iframes to update their cursor state.
+ * Sends a message to all active APP iframes to update their cursor state.
  * @param {boolean} isVisible - True to show the cursor, false to hide it.
  */
 function broadcastCursorState(isVisible) {
-    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
     iframes.forEach(iframe => {
         if (iframe.contentWindow) {
             const targetOrigin = getOriginFromUrl(iframe.src);
@@ -132,11 +147,11 @@ async function setupServiceWorkerUpdateListener() {
             const newV = await fetchSystemVersion();
 
 			const showUpdateNotification = () => {
-                showNotification(`System update is available to install.`, {
+                showNotification(window.t('SYSTEM_UPDATE_AVAILABLE'), {
 					header: `Polygol ${newV}`,
                     icon: 'update',
                     system: true,
-                    buttonText: 'Restart and Install',
+                    buttonText: window.t('RESTART_INSTALL'),
                     buttonAction: () => {
                         worker.postMessage({ action: 'skipWaiting' });
                     }
@@ -186,13 +201,13 @@ async function setupServiceWorkerUpdateListener() {
 // Force Update: Triggered by Settings
 async function forceUpdatePolygol() {
     if (!('serviceWorker' in navigator)) {
-        showNotification('Service Worker not supported', { icon: 'error', system: true });
+        showNotification(window.t('SERVICE_WORKER_NOT_SUPPORTED'), { icon: 'error', system: true });
         return;
     }
     
     try {
         const reg = await navigator.serviceWorker.getRegistration();
-        if (!reg) { showNotification('No registration', {icon:'error'}); return; }
+        if (!reg) { showNotification(window.t('NO_REGISTRATION'), {icon:'error'}); return; }
         
         await reg.update();
         
@@ -201,8 +216,8 @@ async function forceUpdatePolygol() {
             if (!reg.installing && !reg.waiting) {
                  showDialog({ 
 				    type: 'alert', 
-				    title: 'System is up to date', 
-				    message: `Polygol ${window.systemVersion} is the latest version.` 
+				    title: window.t('SYSTEM_UP_TO_DATE'), 
+				    message: window.t('SYSTEM_UP_TO_DATE_MSG', { version: window.systemVersion })
 				});
             }
         }, 1000);
@@ -212,20 +227,77 @@ async function forceUpdatePolygol() {
 }
 
 function applyLanguage(language) {
+    currentLanguage = language;
+    if (typeof window !== 'undefined') {
+        window.currentLanguage = language;
+        window.language = language;
+    }
     console.log('Applying language:', language);
-    document.querySelector('.modal-content h3').innerText = language.CONTROLS;
-    document.querySelector('#silent_switch_qc .qc-label').innerText = language.SILENT;
-    document.querySelector('#temp_control_qc .qc-label').innerText = language.TONE;
-    document.querySelector('#minimal_mode_qc .qc-label').innerText = language.MINIMAL;
-    document.querySelector('#light_mode_qc .qc-label').innerText = language.DAYLIGHT;
 
-    // Dynamically update labels in the grid
-    document.querySelectorAll('.setting-label[data-lang-key]').forEach(label => {
+    const storedCode = (localStorage.getItem('selectedLanguage') || 'EN').toUpperCase();
+    const normCode = (language === (window.LANG_JP || window.LANG_JA)) ? 'JP' :
+                     (language === window.LANG_KO ? 'KO' :
+                     (language === window.LANG_ZH ? 'ZH' :
+                     (['JP', 'JA', 'KO', 'ZH'].includes(storedCode) ? (storedCode === 'JA' ? 'JP' : storedCode) : 'EN')));
+
+    if (document.documentElement) {
+        document.documentElement.lang = getBcp47Locale(normCode);
+        document.documentElement.style.setProperty('--no-notifications-text', JSON.stringify(language.NO_NOTIFICATIONS || 'No notifications'));
+    }
+
+    if (typeof moment !== 'undefined') {
+        const momentLoc = (normCode === 'JP' || normCode === 'JA') ? 'ja' : (normCode === 'KO' ? 'ko' : (normCode === 'ZH' ? 'zh-cn' : 'en'));
+        try {
+            if (typeof ensureMomentLocales === 'function') ensureMomentLocales();
+            moment.locale(momentLoc);
+        } catch (e) {
+            console.warn('[System] moment.locale error:', e);
+        }
+    }
+
+    const controlsTitle = document.querySelector('.modal-content h3');
+    if (controlsTitle && language.CONTROLS) controlsTitle.innerText = language.CONTROLS;
+    const silentLabel = document.querySelector('#silent_switch_qc .qc-label');
+    if (silentLabel && language.SILENT) silentLabel.innerText = language.SILENT;
+    const toneLabel = document.querySelector('#temp_control_qc .qc-label');
+    if (toneLabel && language.TONE) toneLabel.innerText = language.TONE;
+    const minimalLabel = document.querySelector('#minimal_mode_qc .qc-label');
+    if (minimalLabel && language.MINIMAL) minimalLabel.innerText = language.MINIMAL;
+    const daylightLabel = document.querySelector('#light_mode_qc .qc-label');
+    if (daylightLabel && language.DAYLIGHT) daylightLabel.innerText = language.DAYLIGHT;
+
+    // Dynamically update elements with data-lang-key
+    document.querySelectorAll('[data-lang-key]').forEach(label => {
         const key = label.getAttribute('data-lang-key');
         if (language[key]) {
-            label.innerText = language[key];
+            if (label.tagName === 'INPUT' || label.tagName === 'TEXTAREA') {
+                label.value = language[key];
+            } else {
+                label.textContent = language[key];
+            }
         }
     });
+
+    // Dynamically update placeholders, titles and aria labels
+    document.querySelectorAll('[data-lang-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-lang-placeholder');
+        if (language[key]) el.placeholder = language[key];
+    });
+
+    document.querySelectorAll('[data-lang-title]').forEach(el => {
+        const key = el.getAttribute('data-lang-title');
+        if (language[key]) el.title = language[key];
+    });
+
+    document.querySelectorAll('[data-lang-aria-label]').forEach(el => {
+        const key = el.getAttribute('data-lang-aria-label');
+        if (language[key]) el.setAttribute('aria-label', language[key]);
+    });
+
+    const resetBtn = document.getElementById('resetButton');
+    if (resetBtn && language.RESET_BTN) {
+        resetBtn.innerText = language.RESET_BTN;
+    }
 
     // Safely update font dropdown options
     const fontSelect = document.getElementById('font-select');
@@ -237,7 +309,7 @@ function applyLanguage(language) {
         };
         for (const [value, langKey] of Object.entries(options)) {
             const optionEl = fontSelect.querySelector(`option[value="${value}"]`);
-            if (optionEl) optionEl.textContent = language[langKey];
+            if (optionEl && language[langKey]) optionEl.textContent = language[langKey];
         }
     }
 
@@ -246,12 +318,12 @@ function applyLanguage(language) {
         const options = { "center": "ALIGN_CENTER", "left": "ALIGN_LEFT", "right": "ALIGN_RIGHT" };
         for (const [value, langKey] of Object.entries(options)) {
             const optionEl = alignmentSelect.querySelector(`option[value="${value}"]`);
-            if (optionEl) optionEl.textContent = language[langKey];
+            if (optionEl && language[langKey]) optionEl.textContent = language[langKey];
         }
     }
 
     const adjustLabel = document.querySelector('#thermostat-popup .adjust-label');
-    if (adjustLabel) {
+    if (adjustLabel && language.ADJUST) {
         adjustLabel.textContent = language.ADJUST;
     }
 
@@ -262,45 +334,163 @@ function applyLanguage(language) {
     if (typeof window.updateNavigationModeUI === 'function') {
         window.updateNavigationModeUI();
     }
+
+    if (typeof updateClockAndDate === 'function') {
+        updateClockAndDate();
+    }
+
+    broadcastLocaleUpdate();
 }
+
+function getBcp47Locale(langCode) {
+    const code = (langCode || localStorage.getItem('selectedLanguage') || 'EN').toUpperCase();
+    switch (code) {
+        case 'JP':
+        case 'JA':
+            return 'ja-JP';
+        case 'KO':
+            return 'ko-KR';
+        case 'ZH':
+            return 'zh-CN';
+        case 'EN':
+        default:
+            return 'en-US';
+    }
+}
+
+function getSystemLocalePayload() {
+    const langCode = localStorage.getItem('selectedLanguage') || 'EN';
+    const normCode = (langCode === 'JA' || langCode === 'JP') ? 'JP' : (['KO', 'ZH'].includes(langCode) ? langCode : 'EN');
+    return {
+        languageCode: normCode,
+        locale: getBcp47Locale(normCode),
+        dateFormat: localStorage.getItem('systemDateFormat') || 'auto',
+        use12HourFormat: localStorage.getItem('use12HourFormat') === 'true',
+        timeZone: localStorage.getItem('timeZoneSelection') || 'auto'
+    };
+}
+
+function broadcastLocaleUpdate() {
+    const payload = getSystemLocalePayload();
+    document.documentElement.lang = payload.locale;
+
+    const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
+    iframes.forEach(iframe => {
+        if (iframe.contentWindow) {
+            const targetOrigin = getOriginFromUrl(iframe.src);
+            iframe.contentWindow.postMessage({
+                type: 'localeUpdate',
+                ...payload
+            }, targetOrigin);
+            iframe.contentWindow.postMessage({
+                type: 'languageUpdate',
+                languageCode: payload.languageCode
+            }, targetOrigin);
+            iframe.contentWindow.postMessage({
+                type: 'dateFormatUpdate',
+                dateFormat: payload.dateFormat
+            }, targetOrigin);
+        }
+    });
+}
+
+function getSystemDateFormat() {
+    return localStorage.getItem('systemDateFormat') || 'auto';
+}
+
+function setSystemDateFormat(format) {
+    const valid = ['auto', 'YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY', 'medium', 'long'].includes(format) ? format : 'auto';
+    localStorage.setItem('systemDateFormat', valid);
+    broadcastLocaleUpdate();
+    if (typeof window.updateDynamicDate === 'function') {
+        window.updateDynamicDate();
+    }
+    // Sync any select in DOM
+    const el = document.getElementById('system-date-format-select');
+    if (el) el.value = valid;
+    return `System date format updated to '${valid}'`;
+}
+
+function getSystemLayoutVariables() {
+    const isImmersive = document.body.classList.contains('immersive-active');
+    const isMinimal = document.body.classList.contains('minimal-active');
+    const navMode = localStorage.getItem('navigationMode') || 'gestures';
+    const dockPinned = localStorage.getItem('dockPinned') === 'true';
+    const screenCurve = parseInt(localStorage.getItem('screenCurve') || '0', 10);
+    
+    let topPadding = isImmersive ? 0 : (isMinimal ? 0 : 80);
+    let bottomPadding = isImmersive ? 0 : (dockPinned ? 80 : (navMode === 'quickmenu' ? 40 : 16));
+    let sidePadding = Math.max(16, Math.round(screenCurve * 0.4));
+    
+    return {
+        '--top-screen-padding': `${topPadding}px`,
+        '--bottom-screen-padding': `${bottomPadding}px`,
+        '--side-screen-padding': `${sidePadding}px`,
+        '--left-screen-padding': `${sidePadding}px`,
+        '--right-screen-padding': `${sidePadding}px`,
+        '--safe-area-inset-top': `${topPadding}px`,
+        '--safe-area-inset-bottom': `${bottomPadding}px`,
+        '--safe-area-inset-left': `${sidePadding}px`,
+        '--safe-area-inset-right': `${sidePadding}px`,
+        '--status-bar-height': `${topPadding}px`,
+        '--dock-height': '80px',
+        '--screen-curve': `${screenCurve}px`
+    };
+}
+
+function broadcastSystemLayoutUpdate() {
+    const vars = getSystemLayoutVariables();
+    Object.entries(vars).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+    
+    const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
+    iframes.forEach(iframe => {
+        if (iframe.contentWindow) {
+            const targetOrigin = getOriginFromUrl(iframe.src);
+            iframe.contentWindow.postMessage({
+                type: 'systemLayoutUpdate',
+                variables: vars
+            }, targetOrigin);
+        }
+    });
+}
+
+window.getBcp47Locale = getBcp47Locale;
+window.getSystemLocalePayload = getSystemLocalePayload;
+window.broadcastLocaleUpdate = broadcastLocaleUpdate;
+window.getSystemDateFormat = getSystemDateFormat;
+window.setSystemDateFormat = setSystemDateFormat;
+window.getSystemLayoutVariables = getSystemLayoutVariables;
+window.broadcastSystemLayoutUpdate = broadcastSystemLayoutUpdate;
 
 function selectLanguage(languageCode) {
     return new Promise(resolve => {
         const languageMap = {
             'EN': LANG_EN,
             'JP': LANG_JP,
-            'DE': LANG_DE,
-            'ES': LANG_ES,
+            'JA': LANG_JP,
             'KO': LANG_KO,
             'ZH': LANG_ZH
         };
 
-        currentLanguage = languageMap[languageCode] || LANG_EN;
-        console.log('Selected language code:', languageCode);
-        console.log('Current language object:', currentLanguage);
+        const normCode = (languageCode === 'JA' || languageCode === 'JP') ? 'JP' : (['KO', 'ZH'].includes(languageCode) ? languageCode : 'EN');
+        currentLanguage = languageMap[normCode] || LANG_EN;
+        console.log('Selected language code:', normCode);
 
-        localStorage.setItem('selectedLanguage', languageCode);
+        localStorage.setItem('selectedLanguage', normCode);
+        document.documentElement.lang = getBcp47Locale(normCode);
         applyLanguage(currentLanguage);
+
         if (typeof window.updateDynamicDate === 'function') {
             window.updateDynamicDate();
         }
 
         const languageSwitcher = document.getElementById('language-switcher');
         if (languageSwitcher) {
-            languageSwitcher.value = languageCode;
+            languageSwitcher.value = normCode;
         }
 
-        // Broadcast the language change to all Gurapp iframes
-        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
-        iframes.forEach(iframe => {
-            if (iframe.contentWindow) {
-                const targetOrigin = getOriginFromUrl(iframe.src);
-                iframe.contentWindow.postMessage({
-                    type: 'languageUpdate',
-                    languageCode: languageCode
-                }, targetOrigin);
-            }
-        });
+        // Broadcast locale and language change to all APP iframes
+        broadcastLocaleUpdate();
 
         resolve(); // Let async functions await this
     });
@@ -346,7 +536,7 @@ window.getSystemStatus = function() {
     // Context Logic
     const context = {
         theme: document.body.classList.contains('light-theme') ? 'light' : 'dark',
-        highContrast: document.documentElement.classList.contains('gurasuraisu-high-contrast'),
+        highContrast: document.documentElement.classList.contains('polygol-high-contrast'),
         reduceMotion: document.body.classList.contains('reduce-animations')
     };
 

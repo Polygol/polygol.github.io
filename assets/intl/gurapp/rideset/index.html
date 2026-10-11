@@ -6,9 +6,9 @@
     <title>Rideset - UI Geometry & Metrics</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
-    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
-    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <link rel="stylesheet" href="/assets/polygolapp/intl/settings/settings.css">
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="/assets/intl/polygolapp/internal-app-api.js" defer></script>
 </head>
 <body data-app-name="Rideset">
     <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
@@ -148,8 +148,8 @@
                 value: b
             }, '*');
 
-            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                Gurasuraisu.showPopup('UI overrides applied to system');
+            if (window.Polygol && Polygol.showPopup) {
+                Polygol.showPopup('UI overrides applied to system');
             }
         };
 
@@ -165,8 +165,8 @@
             window.parent.postMessage({ action: 'setInternalVariable', key: 'borderRadiusOverride', value: null }, '*');
             window.parent.postMessage({ action: 'setInternalVariable', key: 'blurStrengthOverride', value: null }, '*');
 
-            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                Gurasuraisu.showPopup('Reset UI metrics to defaults');
+            if (window.Polygol && Polygol.showPopup) {
+                Polygol.showPopup('Reset UI metrics to defaults');
             }
         };
 

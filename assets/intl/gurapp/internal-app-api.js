@@ -28,7 +28,7 @@
                 window.addEventListener('message', handler);
 
                 window.parent.postMessage({
-                    action: 'callGurasuraisuFunc',
+                    action: 'callPolygolFunc',
                     functionName: 'executeParentJS',
                     args: [code]
                 }, '*');
@@ -56,7 +56,7 @@
                 window.addEventListener('message', handler);
 
                 window.parent.postMessage({
-                    action: 'callGurasuraisuFunc',
+                    action: 'callPolygolFunc',
                     functionName: 'getLocalStorageItem',
                     args: [key]
                 }, '*');
@@ -75,7 +75,7 @@
          */
         setStorage: function (key, value) {
             window.parent.postMessage({
-                action: 'callGurasuraisuFunc',
+                action: 'callPolygolFunc',
                 functionName: 'setLocalStorageItem',
                 args: [key, String(value)]
             }, '*');
@@ -87,7 +87,7 @@
          */
         removeStorage: function (key) {
             window.parent.postMessage({
-                action: 'callGurasuraisuFunc',
+                action: 'callPolygolFunc',
                 functionName: 'removeLocalStorageItem',
                 args: [key]
             }, '*');
@@ -108,7 +108,7 @@
                 window.addEventListener('message', handler);
 
                 window.parent.postMessage({
-                    action: 'callGurasuraisuFunc',
+                    action: 'callPolygolFunc',
                     functionName: 'getLocalStorageAll',
                     args: []
                 }, '*');
@@ -125,8 +125,8 @@
          */
         reboot: function () {
             window.parent.postMessage({
-                action: 'callGurasuraisuFunc',
-                functionName: 'rebootGurasuraisu',
+                action: 'callPolygolFunc',
+                functionName: 'rebootPolygol',
                 args: []
             }, '*');
         },
@@ -137,7 +137,7 @@
          */
         forceCloseApp: function (appName) {
             window.parent.postMessage({
-                action: 'callGurasuraisuFunc',
+                action: 'callPolygolFunc',
                 functionName: 'forceCloseAppByName',
                 args: [appName]
             }, '*');
@@ -149,7 +149,7 @@
          */
         clearAppData: function (appName) {
             window.parent.postMessage({
-                action: 'callGurasuraisuFunc',
+                action: 'callPolygolFunc',
                 functionName: 'clearAppData',
                 args: [appName]
             }, '*');
@@ -160,7 +160,7 @@
          */
         clearAllNotifications: function () {
             window.parent.postMessage({
-                action: 'callGurasuraisuFunc',
+                action: 'callPolygolFunc',
                 functionName: 'clearAllNotifications',
                 args: []
             }, '*');
@@ -193,11 +193,11 @@
          * @param {string} url
          */
         launchApp: function (url) {
-            if (window.Gurasuraisu && Gurasuraisu.openApp) {
-                Gurasuraisu.openApp(url);
+            if (window.Polygol && Polygol.openApp) {
+                Polygol.openApp(url);
             } else {
                 window.parent.postMessage({
-                    action: 'callGurasuraisuFunc',
+                    action: 'callPolygolFunc',
                     functionName: 'createFullscreenEmbed',
                     args: [url]
                 }, '*');
@@ -226,12 +226,12 @@
 
     window.RootAPI = RootAPI;
 
-    // Extend Gurasuraisu when available
-    if (window.Gurasuraisu) {
-        window.Gurasuraisu.root = RootAPI;
+    // Extend Polygol when available
+    if (window.Polygol) {
+        window.Polygol.root = RootAPI;
     } else {
-        window.addEventListener('GurasuraisuReady', () => {
-            if (window.Gurasuraisu) window.Gurasuraisu.root = RootAPI;
+        window.addEventListener('PolygolReady', () => {
+            if (window.Polygol) window.Polygol.root = RootAPI;
         });
     }
 

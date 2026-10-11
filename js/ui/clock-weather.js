@@ -48,6 +48,78 @@ function getCachedElement(id, selector = false) {
     return clockCache.elements[id];
 }
 
+function ensureMomentLocales() {
+    if (typeof moment === 'undefined' || !moment.locales) return;
+    const locales = moment.locales();
+    if (!locales.includes('ja')) {
+        moment.defineLocale('ja', {
+            months: '1月_2月_3月_4月_5月_6月_7月_8月_9月_10月_11月_12月'.split('_'),
+            monthsShort: '1月_2月_3月_4月_5月_6月_7月_8月_9月_10月_11月_12月'.split('_'),
+            weekdays: '日曜日_月曜日_火曜日_水曜日_木曜日_金曜日_土曜日'.split('_'),
+            weekdaysShort: '日_月_火_水_木_金_土'.split('_'),
+            weekdaysMin: '日_月_火_水_木_金_土'.split('_'),
+            longDateFormat: {
+                LT: 'HH:mm',
+                LTS: 'HH:mm:ss',
+                L: 'YYYY/MM/DD',
+                LL: 'YYYY年M月D日',
+                LLL: 'YYYY年M月D日 HH:mm',
+                LLLL: 'YYYY年M月D日 dddd HH:mm'
+            },
+            meridiemParse: /午前|午後/i,
+            isPM: function (input) { return input === '午後'; },
+            meridiem: function (hour, minute, isLower) { return hour < 12 ? '午前' : '午後'; }
+        });
+    }
+    if (!locales.includes('ko')) {
+        moment.defineLocale('ko', {
+            months: '1월_2월_3월_4월_5월_6월_7월_8월_9월_10월_11월_12월'.split('_'),
+            monthsShort: '1월_2월_3월_4월_5월_6월_7월_8월_9월_10월_11월_12월'.split('_'),
+            weekdays: '일요일_월요일_화요일_수요일_목요일_금요일_토요일'.split('_'),
+            weekdaysShort: '일_월_화_수_목_금_토'.split('_'),
+            weekdaysMin: '일_월_화_수_목_금_토'.split('_'),
+            longDateFormat: {
+                LT: 'A h:mm',
+                LTS: 'A h:mm:ss',
+                L: 'YYYY.MM.DD.',
+                LL: 'YYYY년 M월 D일',
+                LLL: 'YYYY년 M월 D일 A h:mm',
+                LLLL: 'YYYY년 M월 D일 dddd A h:mm'
+            },
+            meridiemParse: /오전|오후/i,
+            isPM: function (token) { return token === '오후'; },
+            meridiem: function (hour, minute, isUpper) { return hour < 12 ? '오전' : '오후'; }
+        });
+    }
+    if (!locales.includes('zh-cn')) {
+        moment.defineLocale('zh-cn', {
+            months: '一月_二月_三月_四月_五月_六月_七月_八月_九月_十月_十一月_十二月'.split('_'),
+            monthsShort: '1月_2月_3月_4月_5月_6月_7月_8月_9月_10月_11月_12月'.split('_'),
+            weekdays: '星期日_星期一_星期二_星期三_星期四_星期五_星期六'.split('_'),
+            weekdaysShort: '周日_周一_周二_周三_周四_周五_周六'.split('_'),
+            weekdaysMin: '日_一_二_三_四_五_六'.split('_'),
+            longDateFormat: {
+                LT: 'HH:mm',
+                LTS: 'HH:mm:ss',
+                L: 'YYYY/MM/DD',
+                LL: 'YYYY年M月D日',
+                LLL: 'YYYY年M月D日Ah点mm分',
+                LLLL: 'YYYY年M月D日ddddAh点mm分'
+            },
+            meridiemParse: /凌晨|早上|上午|中午|下午|晚上/i,
+            meridiem: function (hour, minute, isLower) {
+                const hm = hour * 100 + minute;
+                if (hm < 600) return '凌晨';
+                if (hm < 900) return '早上';
+                if (hm < 1130) return '上午';
+                if (hm < 1230) return '中午';
+                if (hm < 1800) return '下午';
+                return '晚上';
+            }
+        });
+    }
+}
+
 function updateClockAndDate() {
     const clockElement = getCachedElement('clock');
     const dateElement = getCachedElement('date');
@@ -60,7 +132,13 @@ function updateClockAndDate() {
     const clockFormatInput = getCachedElement('clock-format-input');
     const dateFormatInput = getCachedElement('date-format-input');
 
-	const now = moment();
+    ensureMomentLocales();
+    const selectedLang = (localStorage.getItem('selectedLanguage') || 'EN').toUpperCase();
+    const momentLoc = (selectedLang === 'JP' || selectedLang === 'JA') ? 'ja' : (selectedLang === 'KO' ? 'ko' : (selectedLang === 'ZH' ? 'zh-cn' : 'en'));
+    const now = moment();
+    if (typeof now.locale === 'function') {
+        now.locale(momentLoc);
+    }
     
     // Apply Timezone selection
     const tzMode = localStorage.getItem('timeZoneSelection') || 'auto';
@@ -68,9 +146,44 @@ function updateClockAndDate() {
         now.utc();
     }
 
+    let defaultDateFormat = 'ddd MMM D $(separator.dot)$ $(smart)50$';
+    if (selectedLang === 'JP' || selectedLang === 'JA') {
+        defaultDateFormat = 'M月D日(ddd) $(separator.dot)$ $(smart)50$';
+    } else if (selectedLang === 'KO') {
+        defaultDateFormat = 'M월 D일 (ddd) $(separator.dot)$ $(smart)50$';
+    } else if (selectedLang === 'ZH') {
+        defaultDateFormat = 'M月D日 ddd $(separator.dot)$ $(smart)50$';
+    }
+
+    const sysDateFormat = localStorage.getItem('systemDateFormat') || 'auto';
+    if (sysDateFormat && sysDateFormat !== 'auto') {
+        let sysDatePattern = 'ddd MMM D';
+        if (sysDateFormat === 'YYYY-MM-DD') sysDatePattern = 'YYYY-MM-DD';
+        else if (sysDateFormat === 'DD/MM/YYYY') sysDatePattern = 'DD/MM/YYYY';
+        else if (sysDateFormat === 'MM/DD/YYYY') sysDatePattern = 'MM/DD/YYYY';
+        else if (sysDateFormat === 'medium') {
+            sysDatePattern = (selectedLang === 'JP' || selectedLang === 'JA' || selectedLang === 'ZH') ? 'YYYY年M月D日' : (selectedLang === 'KO' ? 'YYYY년 M월 D일' : 'MMM D, YYYY');
+        } else if (sysDateFormat === 'long') {
+            sysDatePattern = (selectedLang === 'JP' || selectedLang === 'JA') ? 'YYYY年M月D日(dddd)' : (selectedLang === 'ZH' ? 'YYYY年M月D日 dddd' : (selectedLang === 'KO' ? 'YYYY년 M월 D일 dddd' : 'dddd, MMMM D, YYYY'));
+        }
+        defaultDateFormat = `${sysDatePattern} $(separator.dot)$ $(smart)50$`;
+    }
+
+    const savedDateFormat = localStorage.getItem('dateFormat');
+    const isDefaultFormat = !savedDateFormat || 
+        ['ddd MMM D $(separator.dot)$ $(smart)50$', 'M月D日(ddd) $(separator.dot)$ $(smart)50$', 'M월 D일 (ddd) $(separator.dot)$ $(smart)50$', 'M月D日 ddd $(separator.dot)$ $(smart)50$'].includes(savedDateFormat);
+
     // Prevent empty strings from causing ISO date flashes during boot
-    let clockFormat = (clockFormatInput && clockFormatInput.value) ? clockFormatInput.value : (localStorage.getItem('use12HourFormat') === 'true' ? 'h:mm:ss A' : 'HH:mm:ss');
-    let dateFormat = (dateFormatInput && dateFormatInput.value) ? dateFormatInput.value : (localStorage.getItem('dateFormat') || 'ddd MMM D $(separator.dot)$ $(smart)50$');
+    let defaultClockFormat = 'HH:mm:ss';
+    if (localStorage.getItem('use12HourFormat') === 'true') {
+        if (selectedLang === 'JP' || selectedLang === 'JA' || selectedLang === 'KO' || selectedLang === 'ZH') {
+            defaultClockFormat = 'A h:mm:ss';
+        } else {
+            defaultClockFormat = 'h:mm:ss A';
+        }
+    }
+    let clockFormat = (clockFormatInput && clockFormatInput.value) ? clockFormatInput.value : defaultClockFormat;
+    let dateFormat = (dateFormatInput && dateFormatInput.value) ? dateFormatInput.value : (isDefaultFormat ? defaultDateFormat : savedDateFormat);
 
     // Apply Timezone label formatting
     if (localStorage.getItem('showTimezoneLabel') === 'true') {
@@ -113,9 +226,9 @@ function updateClockAndDate() {
     }
 
     const h = now.hours();
-    let timeGreeting = 'Good evening';
-    if (h >= 5 && h < 12) timeGreeting = 'Good morning';
-    else if (h >= 12 && h < 17) timeGreeting = 'Good afternoon';
+    let timeGreeting = window.t ? window.t('GREETING_EVENING') : 'Good evening';
+    if (h >= 5 && h < 12) timeGreeting = window.t ? window.t('GREETING_MORNING') : 'Good morning';
+    else if (h >= 12 && h < 17) timeGreeting = window.t ? window.t('GREETING_AFTERNOON') : 'Good afternoon';
     
     // --- Hourly Greeting Logic ---
     const updateGreetings = () => {
@@ -129,7 +242,11 @@ function updateClockAndDate() {
     };
 
     if (!window.currentPersonalGreeting) {
-        window.personalGreetingsList = ["Welcome back", "Hello there", "You've got this"];
+        window.personalGreetingsList = [
+            window.t ? window.t('GREETING_WELCOME_BACK') : "Welcome back",
+            window.t ? window.t('GREETING_HELLO') : "Hello there",
+            window.t ? window.t('GREETING_YOU_GOT_THIS') : "You've got this"
+        ];
         window.currentPersonalGreeting = window.personalGreetingsList[0];
         window.lastGreetingHour = new Date().getHours();
 
@@ -276,15 +393,32 @@ function updateClockAndDate() {
     }
 
     function wrapTime(fullTimeStr) {
-        const amPmMatch = fullTimeStr.match(/\s?(am|pm)$/i);
-        const timeOnly = amPmMatch ? fullTimeStr.substring(0, amPmMatch.index) : fullTimeStr;
-        const period = amPmMatch ? amPmMatch[0] : '';
-        
+        const meridiemRegexEnd = /\s*(am|pm|午前|午後|오전|오후|凌晨|早上|上午|中午|下午|晚上)$/i;
+        const meridiemRegexStart = /^(am|pm|午前|午後|오전|오후|凌晨|早上|上午|中午|下午|晚上)\s*/i;
+
+        let period = '';
+        let timeOnly = fullTimeStr;
+        let isPrefix = false;
+
+        const endMatch = fullTimeStr.match(meridiemRegexEnd);
+        if (endMatch) {
+            period = endMatch[0].trim();
+            timeOnly = fullTimeStr.substring(0, endMatch.index).trim();
+        } else {
+            const startMatch = fullTimeStr.match(meridiemRegexStart);
+            if (startMatch) {
+                period = startMatch[0].trim();
+                timeOnly = fullTimeStr.substring(startMatch[0].length).trim();
+                isPrefix = true;
+            }
+        }
+
         let wrappedTime = wrapDigits(timeOnly);
 
         if (period) {
             const periodStyle = useOpenRundeForAmPm ? `style="font-family: 'Open Runde', sans-serif; font-variation-settings: normal; transition: transform 0.3s cubic-bezier(.3,1.2,.64,1), filter 0.3s cubic-bezier(.3,1.2,.64,1), font-size 0.3s cubic-bezier(.3,1.2,.64,1) !important;"` : '';
-            wrappedTime += `<span class="period"${periodStyle}>${period}</span>`;
+            const periodHTML = `<span class="period"${periodStyle}>${period}</span>`;
+            wrappedTime = isPrefix ? `${periodHTML} ${wrappedTime}` : `${wrappedTime} ${periodHTML}`;
         }
         return wrappedTime;
     }
@@ -466,7 +600,7 @@ async function fetchLocationAndWeather() {
             // Resolve with cached data if available, to gracefully fail without throwing
             SwapManager.get('lastWeatherData').then(cached => {
                 if (cached) resolve(cached);
-                else reject(new Error('Location Component Disabled'));
+                else reject(new Error(window.t ? window.t('LOCATION_DISABLED') : 'Location Component Disabled'));
             });
             return;
         }
@@ -484,7 +618,7 @@ async function fetchLocationAndWeather() {
                 }
 
                 // --- Geocoding with Caching (Nominatim Policy Compliance) ---
-                let city = 'Unknown Location';
+                let city = window.t ? window.t('LOCATION_UNKNOWN') : 'Unknown Location';
                 let country = '';
                 
                 // Retrieve cached geocoding data
@@ -515,7 +649,7 @@ async function fetchLocationAndWeather() {
                         // Handle 425 (Too Early) or 429 (Too Many Requests) gracefully
                         if (geocodingResponse.status === 425 || geocodingResponse.status === 429) {
                             console.warn("[Weather] Geocoding throttled. Using fallback data.");
-                            city = cachedGeo.city || 'Unknown Location';
+                            city = cachedGeo.city || (window.t ? window.t('LOCATION_UNKNOWN') : 'Unknown Location');
                             country = cachedGeo.country || '';
                         } else if (!geocodingResponse.ok) {
                             throw new Error("Geocoding API error");
@@ -524,7 +658,7 @@ async function fetchLocationAndWeather() {
                             city = geocodingData.address.city ||
                                 geocodingData.address.town ||
                                 geocodingData.address.village ||
-                                'Unknown Location';
+                                (window.t ? window.t('LOCATION_UNKNOWN') : 'Unknown Location');
                             country = geocodingData.address.country || '';
 
                             // Update cache
@@ -572,7 +706,7 @@ async function fetchLocationAndWeather() {
                     current: currentWeatherData.current_weather,
                     dailyForecast: dailyForecastData.daily,
                     hourlyForecast: hourlyForecastData.hourly,
-                    attribution: "Weather data by Open-Meteo.com, Geocoding by OpenStreetMap"
+                    attribution: window.t ? window.t('WEATHER_ATTRIBUTION') : "Weather data by Open-Meteo.com, Geocoding by OpenStreetMap"
                 };
  
 				SwapManager.set('lastWeatherData', weatherData);
@@ -607,12 +741,17 @@ async function fetchLocationAndWeather() {
 
 function getDayOfWeek(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { weekday: 'long' });
+    const lang = localStorage.getItem('selectedLanguage') || 'EN';
+    const locale = (typeof window.getBcp47Locale === 'function') 
+        ? window.getBcp47Locale(lang)
+        : ((lang === 'JP' || lang === 'JA') ? 'ja-JP' : (lang === 'KO' ? 'ko-KR' : (lang === 'ZH' ? 'zh-CN' : 'en-US')));
+    return date.toLocaleDateString(locale, { weekday: 'long' });
 }
 
 function getHourString(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const use12 = localStorage.getItem('use12HourFormat') === 'true';
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: use12 });
 }
 
 async function updateSmallWeather() {
@@ -627,11 +766,11 @@ async function updateSmallWeather() {
     
     try {
         const weatherData = await fetchLocationAndWeather();
-        if (!weatherData) throw new Error('Weather data not available');
+        if (!weatherData) throw new Error(window.t ? window.t('WEATHER_UNAVAILABLE') : 'Weather data not available');
         
         const temperatureElement = document.getElementById('temperature');
         const weatherIconElement = document.getElementById('weather-icon');
-        const weatherInfo = weatherConditions[weatherData.current.weathercode] || { description: 'Unknown', icon: () => '❓' };
+        const weatherInfo = weatherConditions[weatherData.current.weathercode] || { description: (window.t ? window.t('UNKNOWN') : 'Unknown'), icon: () => '❓' };
         
         document.getElementById('weather').style.display = showWeather ? 'block' : 'none';
         
@@ -667,139 +806,176 @@ function isDaytimeForHour(timeString) {
     return hour >= 6 && hour <= 18;
 }
 
+function getWeatherConditionDescription(code) {
+    const keyMap = {
+        0: 'WEATHER_CLEAR_SKY',
+        1: 'WEATHER_MAINLY_CLEAR',
+        2: 'WEATHER_PARTLY_CLOUDY',
+        3: 'WEATHER_OVERCAST',
+        45: 'WEATHER_FOG',
+        48: 'WEATHER_RIME_FOG',
+        51: 'WEATHER_LIGHT_DRIZZLE',
+        53: 'WEATHER_MODERATE_DRIZZLE',
+        55: 'WEATHER_DENSE_DRIZZLE',
+        56: 'WEATHER_LIGHT_FREEZING_DRIZZLE',
+        57: 'WEATHER_DENSE_FREEZING_DRIZZLE',
+        61: 'WEATHER_SLIGHT_RAIN',
+        63: 'WEATHER_MODERATE_RAIN',
+        65: 'WEATHER_HEAVY_RAIN',
+        66: 'WEATHER_LIGHT_FREEZING_RAIN',
+        67: 'WEATHER_HEAVY_FREEZING_RAIN',
+        71: 'WEATHER_SLIGHT_SNOW',
+        73: 'WEATHER_MODERATE_SNOW',
+        75: 'WEATHER_HEAVY_SNOW',
+        77: 'WEATHER_SNOW_GRAINS',
+        80: 'WEATHER_SLIGHT_SHOWERS',
+        81: 'WEATHER_MODERATE_SHOWERS',
+        82: 'WEATHER_VIOLENT_SHOWERS',
+        85: 'WEATHER_SLIGHT_SNOW_SHOWERS',
+        86: 'WEATHER_HEAVY_SNOW_SHOWERS',
+        95: 'WEATHER_THUNDERSTORM',
+        96: 'WEATHER_THUNDERSTORM_HAIL',
+        99: 'WEATHER_HEAVY_THUNDERSTORM_HAIL'
+    };
+    const key = keyMap[code];
+    if (key && window.t) return window.t(key);
+    return 'Clear Sky';
+}
+
 // Title weather conditions using emojis
 const weatherConditionsForTitle = {
-    0: { description: 'Clear Sky', icon: '☀️' },
-    1: { description: 'Mainly Clear', icon: '🌤️' },
-    2: { description: 'Partly Cloudy', icon: '⛅' },
-    3: { description: 'Overcast', icon: '☁️' },
-    45: { description: 'Fog', icon: '🌫️' },
-    48: { description: 'Depositing Rime Fog', icon: '🌫️' },
-    51: { description: 'Light Drizzle', icon: '🌦️' },
-    53: { description: 'Moderate Drizzle', icon: '🌦️' },
-    55: { description: 'Dense Drizzle', icon: '🌧️' },
-    56: { description: 'Light Freezing Drizzle', icon: '🌧️' },
-    57: { description: 'Dense Freezing Drizzle', icon: '🌧️' },
-    61: { description: 'Slight Rain', icon: '🌧️' },
-    63: { description: 'Moderate Rain', icon: '🌧️' },
-    65: { description: 'Heavy Rain', icon: '🌧️' },
-    66: { description: 'Light Freezing Rain', icon: '🌧️' },
-    67: { description: 'Heavy Freezing Rain', icon: '🌧️' },
-    71: { description: 'Slight Snow', icon: '🌨️' },
-    73: { description: 'Moderate Snow', icon: '❄️' },
-    75: { description: 'Heavy Snow', icon: '❄️' },
-    77: { description: 'Snow Grains', icon: '❄️' },
-    80: { description: 'Slight Showers', icon: '🌦️' },
-    81: { description: 'Moderate Showers', icon: '🌧️' },
-    82: { description: 'Violent Showers', icon: '⛈️' },
-    85: { description: 'Slight Snow Showers', icon: '🌨️' },
-    86: { description: 'Heavy Snow Showers', icon: '❄️' },
-    95: { description: 'Thunderstorm', icon: '⛈️' },
-    96: { description: 'Thunderstorm with Hail', icon: '⛈️' },
-    99: { description: 'Heavy Thunderstorm with Hail', icon: '🌩️' }
+    0: { get description() { return getWeatherConditionDescription(0); }, icon: '☀️' },
+    1: { get description() { return getWeatherConditionDescription(1); }, icon: '🌤️' },
+    2: { get description() { return getWeatherConditionDescription(2); }, icon: '⛅' },
+    3: { get description() { return getWeatherConditionDescription(3); }, icon: '☁️' },
+    45: { get description() { return getWeatherConditionDescription(45); }, icon: '🌫️' },
+    48: { get description() { return getWeatherConditionDescription(48); }, icon: '🌫️' },
+    51: { get description() { return getWeatherConditionDescription(51); }, icon: '🌦️' },
+    53: { get description() { return getWeatherConditionDescription(53); }, icon: '🌦️' },
+    55: { get description() { return getWeatherConditionDescription(55); }, icon: '🌧️' },
+    56: { get description() { return getWeatherConditionDescription(56); }, icon: '🌧️' },
+    57: { get description() { return getWeatherConditionDescription(57); }, icon: '🌧️' },
+    61: { get description() { return getWeatherConditionDescription(61); }, icon: '🌧️' },
+    63: { get description() { return getWeatherConditionDescription(63); }, icon: '🌧️' },
+    65: { get description() { return getWeatherConditionDescription(65); }, icon: '🌧️' },
+    66: { get description() { return getWeatherConditionDescription(66); }, icon: '🌧️' },
+    67: { get description() { return getWeatherConditionDescription(67); }, icon: '🌧️' },
+    71: { get description() { return getWeatherConditionDescription(71); }, icon: '🌨️' },
+    73: { get description() { return getWeatherConditionDescription(73); }, icon: '❄️' },
+    75: { get description() { return getWeatherConditionDescription(75); }, icon: '❄️' },
+    77: { get description() { return getWeatherConditionDescription(77); }, icon: '❄️' },
+    80: { get description() { return getWeatherConditionDescription(80); }, icon: '🌦️' },
+    81: { get description() { return getWeatherConditionDescription(81); }, icon: '🌧️' },
+    82: { get description() { return getWeatherConditionDescription(82); }, icon: '⛈️' },
+    85: { get description() { return getWeatherConditionDescription(85); }, icon: '🌨️' },
+    86: { get description() { return getWeatherConditionDescription(86); }, icon: '❄️' },
+    95: { get description() { return getWeatherConditionDescription(95); }, icon: '⛈️' },
+    96: { get description() { return getWeatherConditionDescription(96); }, icon: '⛈️' },
+    99: { get description() { return getWeatherConditionDescription(99); }, icon: '🌩️' }
 };
 
 const weatherConditions = {
     0: { 
-        description: 'Clear Sky', 
+        get description() { return getWeatherConditionDescription(0); }, 
         icon: () => isDaytime() ? 'clear_day' : 'clear_night'
     },
     1: { 
-        description: 'Mainly Clear', 
+        get description() { return getWeatherConditionDescription(1); }, 
         icon: () => isDaytime() ? 'partly_cloudy_day' : 'partly_cloudy_night'
     },
     2: { 
-        description: 'Partly Cloudy', 
+        get description() { return getWeatherConditionDescription(2); }, 
         icon: () => isDaytime() ? 'partly_cloudy_day' : 'partly_cloudy_night'
     },
-    3: { description: 'Overcast', icon: () => 'cloudy' },
-    45: { description: 'Fog', icon: () => 'foggy' },
-    48: { description: 'Depositing Rime Fog', icon: () => 'foggy' },
+    3: { get description() { return getWeatherConditionDescription(3); }, icon: () => 'cloudy' },
+    45: { get description() { return getWeatherConditionDescription(45); }, icon: () => 'foggy' },
+    48: { get description() { return getWeatherConditionDescription(48); }, icon: () => 'foggy' },
     51: { 
-        description: 'Light Drizzle', 
+        get description() { return getWeatherConditionDescription(51); }, 
         icon: () => isDaytime() ? 'rainy_light' : 'rainy_light'
     },
     53: { 
-        description: 'Moderate Drizzle', 
+        get description() { return getWeatherConditionDescription(53); }, 
         icon: () => isDaytime() ? 'rainy' : 'rainy'
     },
     55: { 
-        description: 'Dense Drizzle', 
+        get description() { return getWeatherConditionDescription(55); }, 
         icon: () => isDaytime() ? 'rainy' : 'rainy'
     },
     56: { 
-        description: 'Light Freezing Drizzle', 
+        get description() { return getWeatherConditionDescription(56); }, 
         icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
     },
     57: { 
-        description: 'Dense Freezing Drizzle', 
+        get description() { return getWeatherConditionDescription(57); }, 
         icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
     },
     61: { 
-        description: 'Slight Rain', 
+        get description() { return getWeatherConditionDescription(61); }, 
         icon: () => isDaytime() ? 'rainy_light' : 'rainy_light'
     },
     63: { 
-        description: 'Moderate Rain', 
+        get description() { return getWeatherConditionDescription(63); }, 
         icon: () => isDaytime() ? 'rainy' : 'rainy'
     },
     65: { 
-        description: 'Heavy Rain', 
+        get description() { return getWeatherConditionDescription(65); }, 
         icon: () => isDaytime() ? 'rainy' : 'rainy'
     },
     66: { 
-        description: 'Light Freezing Rain', 
+        get description() { return getWeatherConditionDescription(66); }, 
         icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
     },
     67: { 
-        description: 'Heavy Freezing Rain', 
+        get description() { return getWeatherConditionDescription(67); }, 
         icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
     },
     71: { 
-        description: 'Slight Snow', 
+        get description() { return getWeatherConditionDescription(71); }, 
         icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
     },
     73: { 
-        description: 'Moderate Snow', 
+        get description() { return getWeatherConditionDescription(73); }, 
         icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
     },
     75: { 
-        description: 'Heavy Snow', 
+        get description() { return getWeatherConditionDescription(75); }, 
         icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
     },
     77: { 
-        description: 'Snow Grains', 
+        get description() { return getWeatherConditionDescription(77); }, 
         icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
     }, 
     80: { 
-        description: 'Slight Showers', 
+        get description() { return getWeatherConditionDescription(80); }, 
         icon: () => isDaytime() ? 'rainy_light' : 'rainy_light'
     },
     81: { 
-        description: 'Moderate Showers', 
+        get description() { return getWeatherConditionDescription(81); }, 
         icon: () => isDaytime() ? 'rainy' : 'rainy'
     },
     82: { 
-        description: 'Violent Showers', 
+        get description() { return getWeatherConditionDescription(82); }, 
         icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
     },
     85: { 
-        description: 'Slight Snow Showers', 
+        get description() { return getWeatherConditionDescription(85); }, 
         icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
     },
     86: { 
-        description: 'Heavy Snow Showers', 
+        get description() { return getWeatherConditionDescription(86); }, 
         icon: () => isDaytime() ? 'cloudy_snowing' : 'cloudy_snowing'
     },
     95: { 
-        description: 'Thunderstorm', 
+        get description() { return getWeatherConditionDescription(95); }, 
         icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
     },
     96: { 
+        get description() { return getWeatherConditionDescription(96); },
         icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
     },
     99: { 
-        description: 'Heavy Thunderstorm with Hail', 
+        get description() { return getWeatherConditionDescription(99); }, 
         icon: () => isDaytime() ? 'thunderstorm' : 'thunderstorm'
     }
 };
@@ -892,13 +1068,13 @@ const WeatherAlertManager = {
                 const code = forecastSlice[nextBadIndex];
                 event = 'incoming';
                 icon = isStorm(code) ? 'thunderstorm' : 'rainy';
-                title = isStorm(code) ? 'Storm coming' : 'Rain coming';
-                text = `Expected in ${nextBadIndex}h`;
+                title = isStorm(code) ? window.t('STORM_COMING') : window.t('RAIN_COMING');
+                text = window.t('EXPECTED_IN_HOURS', { hours: nextBadIndex });
             } else if (!isCloudy(currentCode) && nextCloudIndex !== -1) {
                 event = 'incoming';
                 icon = 'cloud';
-                title = 'Clouds coming';
-                text = `Skies changing in ${nextCloudIndex}h`;
+                title = window.t('CLOUDS_COMING');
+                text = window.t('SKIES_CHANGING_IN_HOURS', { hours: nextCloudIndex });
             }
         } 
         // 2. Check for clearing events
@@ -907,8 +1083,8 @@ const WeatherAlertManager = {
             if (nextClearIndex !== -1) {
                 event = 'clearing';
                 icon = 'wb_sunny';
-                title = 'Clearing soon';
-                text = `Conditions improving in ${nextClearIndex}h`;
+                title = window.t('CLEARING_SOON');
+                text = window.t('CONDITIONS_IMPROVING_IN_HOURS', { hours: nextClearIndex });
             }
         }
 
@@ -925,7 +1101,7 @@ const WeatherAlertManager = {
 
         const options = {
             activityId: this.activityId,
-            url: '/assets/gurapp/intl/liveactivity/weather-alert.html',
+            url: '/assets/polygolapp/intl/liveactivity/weather-alert.html',
             openUrl: 'https://polygol.github.io/weather/index.html',
             homescreen: true,
             icon: icon,

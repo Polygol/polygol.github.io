@@ -163,7 +163,7 @@
     }
 
     .modal-right-pane:has(.notification-shade:empty)::before {
-        content: 'No notifications';
+        content: var(--no-notifications-text, 'No notifications');
         display: flex;
         justify-content: center;
         align-items: center;
@@ -173,6 +173,24 @@
         font-family: 'Open Runde', 'Inter', sans-serif;
         font-size: 1.1rem;
         opacity: 0.7;
+    }
+
+    :lang(ja) .modal-right-pane:has(.notification-shade:empty)::before,
+    [lang="ja"] .modal-right-pane:has(.notification-shade:empty)::before,
+    [lang="JP"] .modal-right-pane:has(.notification-shade:empty)::before {
+        content: var(--no-notifications-text, '通知はありません');
+    }
+
+    :lang(ko) .modal-right-pane:has(.notification-shade:empty)::before,
+    [lang="ko"] .modal-right-pane:has(.notification-shade:empty)::before,
+    [lang="KO"] .modal-right-pane:has(.notification-shade:empty)::before {
+        content: var(--no-notifications-text, '알림 없음');
+    }
+
+    :lang(zh) .modal-right-pane:has(.notification-shade:empty)::before,
+    [lang="zh"] .modal-right-pane:has(.notification-shade:empty)::before,
+    [lang="ZH"] .modal-right-pane:has(.notification-shade:empty)::before {
+        content: var(--no-notifications-text, '无通知');
     }
 }
 

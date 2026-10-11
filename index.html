@@ -201,7 +201,7 @@
                     // Lock is held by another tab. Stop execution and show error.
                     document.documentElement.innerHTML = '';
                     document.body.style.cssText = "margin:0;padding:0;display:flex;height:100vh;justify-content:center;align-items:center;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;";
-                    document.body.innerHTML = "<div style='text-align:center;'><h1>Polygol is running</h1><p>Please use the existing tab.</p></div>";
+                    document.body.innerHTML = "<div style='text-align:center;'><h1 data-lang-key="POLYGOL_IS_RUNNING">Polygol is running</h1><p data-lang-key="USE_EXISTING_TAB">Please use the existing tab.</p></div>";
                     throw new Error("Polygol is already running in another tab.");
                 }
                 // Hold the lock for the lifetime of this tab
@@ -236,7 +236,7 @@
     <link rel="stylesheet" href="css/ui/osk.css">
     <link rel="stylesheet" href="css/ui/wallpaper.css">
     <link rel="stylesheet" href="css/ui/widgets.css">
-    <link rel="stylesheet" href="css/ui/home-menu.css">
+    <link rel="stylesheet" href="css/ui/minihompy.css">
     <link rel="stylesheet" href="css/ui/cards.css">
 
     <!-- Apps -->
@@ -279,7 +279,7 @@
         </filter>
     </svg>
 
-    <noscript>You need to enable JavaScript to run Polygol.<br>Polygolを実行するにはJavaScriptを有効にする必要があります。<br>Sie müssen JavaScript aktivieren, um Polygol auszuführen.<br>Necesitas habilitar JavaScript para ejecutar Polygol.<br>Polygol를 실행하려면 JavaScript를 활성화해야 합니다.<br>您需要启用JavaScript才能运行Polygol。</noscript>
+    <noscript>You need to enable JavaScript to run Polygol.<br>Polygolを実行するにはJavaScriptを有効にする必要があります。<br>Polygol을 실행하려면 JavaScript를 활성화해야 합니다.<br>您需要启用JavaScript才能运行Polygol。</noscript>
     
     <div class="drawer-handle">
         <div class="drawer-pill">
@@ -320,8 +320,8 @@
         </div>
         <div style="display: flex; flex-direction: row; gap: 12px;">
             <button id="switcher-add-btn" class="switcher-bottom-btn">
-                <span class="material-symbols-rounded">add</span> Add
-            </button>
+            <span class="material-symbols-rounded">add</span> <span data-lang-key="ADD">Add</span>
+        </button>
             <button id="switcher-manage-btn" class="switcher-bottom-btn" style="padding: 8px;">
                 <span class="material-symbols-rounded">more_horiz</span>
             </button>
@@ -331,21 +331,21 @@
     <!-- Dedicated Edit Mode UI -->
     <div id="edit-mode-ui" style="display: none; opacity: 0; transition: opacity 0.3s ease; position: fixed; inset: 0; z-index: 9998; pointer-events: none;">
         <div class="edit-top-bar" style="position: absolute; top: 25px; left: 25px; right: 25px; pointer-events: auto; display: flex; justify-content: space-between; align-items: center; z-index: 9999;">
-            <div style="margin-left: 10px; font-weight: 600; font-family: 'Open Runde', sans-serif; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Edit home screen</div>
+            <div data-lang-key="EDIT_HOME_SCREEN" style="margin-left: 10px; font-weight: 600; font-family: 'Open Runde', sans-serif; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Edit home screen</div>
             <div style="display: flex; gap: 10px;">
                 <button id="wallpaper-export-btn" class="btn-qc" style="width: auto; padding: 0 14px; border-radius: 30px; font-weight: 500; font-size: 14px;">
-                    <span class="material-symbols-rounded" style="font-size: 18px; margin-right: 6px;">ios_share</span> Share
+                    <span class="material-symbols-rounded" style="font-size: 18px; margin-right: 6px;">ios_share</span> <span data-lang-key="SHARE">Share</span>
                 </button>
                 <button id="edit-replace-bg-btn" class="btn-qc" style="width: auto; padding: 0 14px; border-radius: 30px; font-weight: 500; font-size: 14px;">
-                    <span class="material-symbols-rounded" style="font-size: 18px; margin-right: 6px;">filter_vintage</span> Replace photo
+                    <span class="material-symbols-rounded" style="font-size: 18px; margin-right: 6px;">filter_vintage</span> <span data-lang-key="REPLACE_PHOTO">Replace photo</span>
                 </button>
-                <button id="edit-done-btn" class="btn-qc" style="width: auto; padding: 0 14px; border-radius: 30px; background: var(--accent); color: var(--background-color); font-weight: 600; font-size: 14px;">Done</button>
+                <button id="edit-done-btn" data-lang-key="DONE" class="btn-qc" style="width: auto; padding: 0 14px; border-radius: 30px; background: var(--accent); color: var(--background-color); font-weight: 600; font-size: 14px;">Done</button>
             </div>
         </div>
 
         <div id="edit-bottom-sheet" class="sheet-container" style="pointer-events: auto; height: auto; max-height: 60%; transition: transform 0.4s cubic-bezier(0.2, 1.3, 0.64, 1); transform: translateY(100%) translateX(-50%); bottom: 0; left: 50%; width: 100%; max-width: 800px; position: absolute;">
             <div class="sheet-handle" id="edit-sheet-handle"></div>
-            <h3 id="edit-sheet-title" style="margin: 0 0 15px 0; text-align: center; font-family: 'Open Runde', sans-serif; font-weight: 600;">Settings</h3>
+            <h3 id="edit-sheet-title" data-lang-key="SETTINGS" style="margin: 0 0 15px 0; text-align: center; font-family: 'Open Runde', sans-serif; font-weight: 600;">Settings</h3>
             <div id="edit-sheet-content" style="overflow-y: auto; padding: 0 20px 20px; display: flex; flex-direction: column; gap: 20px; scrollbar-width: none;">
                 
                 <div id="edit-group-clock" style="display: none;">
@@ -368,19 +368,19 @@
                         </div>
                         <div class="setting-item active" id="setting-roundness">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">circles</span></div>
-                            <span class="setting-label">Roundness</span>
+                            <span class="setting-label" data-lang-key="ROUNDNESS">Roundness</span>
                         </div>
                         <div class="setting-item" id="setting-clock-stroke">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">border_color</span></div>
-                            <span class="setting-label">Outline</span>
+                            <span class="setting-label" data-lang-key="OUTLINE">Outline</span>
                         </div>
                         <div class="setting-item" id="setting-italic">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">format_italic</span></div>
-                            <span class="setting-label">Italic</span>
+                            <span class="setting-label" data-lang-key="ITALIC">Italic</span>
                         </div>
                         <div class="setting-item" id="setting-blend-mode">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">difference</span></div>
-                            <span class="setting-label">Blend Mode</span>
+                            <span class="setting-label" data-lang-key="BLEND_MODE">Blend Mode</span>
                         </div>
                         <div class="setting-item active" id="setting-clock-stack">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">farsight_digital</span></div>
@@ -392,11 +392,11 @@
                         </div>
                         <div class="setting-item active" id="setting-clock-spacing">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">space_bar</span></div>
-                            <span class="setting-label">Spacing</span>
+                            <span class="setting-label" data-lang-key="SPACING">Spacing</span>
                         </div>
                         <div class="setting-item active" id="setting-size">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">measuring_tape</span></div>
-                            <span class="setting-label">Clock Size</span>
+                            <span class="setting-label" data-lang-key="CLOCK_SIZE">Clock Size</span>
                         </div>
                         <div class="setting-item" id="setting-seconds">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">timer_10_select</span></div>
@@ -409,15 +409,15 @@
                     <div class="settings-grid">
                         <div class="setting-item active" id="setting-date-size">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">calendar_view_day</span></div>
-                            <span class="setting-label">Date Size</span>
+                            <span class="setting-label" data-lang-key="DATE_SIZE">Date Size</span>
                         </div>
                         <div class="setting-item" id="setting-text-case">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">text_fields</span></div>
-                            <span class="setting-label">Case</span>
+                            <span class="setting-label" data-lang-key="CASE">Case</span>
                         </div>
                         <div class="setting-item" id="setting-date-offset">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">vertical_align_center</span></div>
-                            <span class="setting-label">Date Offset</span>
+                            <span class="setting-label" data-lang-key="DATE_OFFSET">Date Offset</span>
                         </div>
                         <div class="setting-item" id="setting-format">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">edit_calendar</span></div>
@@ -427,7 +427,7 @@
                 </div>
 
                 <div id="edit-group-background" style="display: none;">
-                    <h4 style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.7;">Atmosphere</h4>
+                    <h4 data-lang-key="ATMOSPHERE" style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.7;">Atmosphere</h4>
                     <div class="settings-grid">
                         <div class="setting-item" id="setting-wallpaper-blur">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">motion_mode</span></div>
@@ -443,30 +443,30 @@
                         </div>
                         <div class="setting-item" id="setting-wallpaper-saturate">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">tonality</span></div>
-                            <span class="setting-label">Saturation</span>
+                            <span class="setting-label" data-lang-key="SATURATION">Saturation</span>
                         </div>
                         <div class="setting-item" id="setting-wallpaper-hue">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">palette</span></div>
-                            <span class="setting-label">Hue</span>
+                            <span class="setting-label" data-lang-key="HUE">Hue</span>
                         </div>
                         <div class="setting-item" id="setting-wallpaper-vignette">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">lens_blur</span></div>
-                            <span class="setting-label">Vignette</span>
+                            <span class="setting-label" data-lang-key="VIGNETTE">Vignette</span>
                         </div>
                         <div class="setting-item" id="setting-live-environment">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">routine</span></div>
-                            <span class="setting-label">Live Scene</span>
+                            <span class="setting-label" data-lang-key="LIVE_SCENE">Live Scene</span>
                         </div>
                     </div>
-                    <h4 style="margin: 15px 0 10px 0; font-size: 14px; opacity: 0.7;">Other</h4>
+                    <h4 data-lang-key="OTHER" style="margin: 15px 0 10px 0; font-size: 14px; opacity: 0.7;">Other</h4>
                     <div class="settings-grid">
                         <div class="setting-item" id="setting-widgets">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">widget_menu</span></div>
                             <span class="setting-label" data-lang-key="WIDGETS">Widgets</span>
                         </div>
-                        <div class="setting-item active" id="setting-gurapps">
+                        <div class="setting-item active" id="setting-polygolapps">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">grid_view</span></div>
-                            <span class="setting-label" data-lang-key="GURAPPS">Gurapps</span>
+                            <span class="setting-label" data-lang-key="GURAPPS">APPs</span>
                         </div>
                         <div class="setting-item" id="setting-weather">
                             <div class="setting-icon-bg"><span class="material-symbols-rounded">partly_cloudy_day</span></div>
@@ -523,14 +523,14 @@
 
     <div id="widget-grid" class="widget-grid" style="opacity: 0; scale: 0.9;"></div>
     
-    <!-- iOS-Style Widget & App Home Menu Grid-->
-    <div id="home-menu-container" class="home-menu-container">
+    <!-- iOS-Style Widget & App Minihompy Grid-->
+    <div id="minihompy-container" class="minihompy-container">
         <!-- iPadOS-style Edit Mode Header (Add Widget & Done buttons) -->
         <div id="home-edit-header" class="home-edit-header">
-            <button id="home-edit-add-btn" class="home-edit-header-btn home-edit-add-btn" title="Add Widget">
+            <button id="home-edit-add-btn" class="home-edit-header-btn home-edit-add-btn" title="Add Widget" data-lang-title="ADD_WIDGET">
                 <span class="material-symbols-rounded">add</span>
             </button>
-            <button id="home-edit-done-btn" class="home-edit-header-btn home-edit-done-btn">Done</button>
+            <button id="home-edit-done-btn" data-lang-key="DONE" class="home-edit-header-btn home-edit-done-btn">Done</button>
         </div>
         <div class="home-pages-viewport" id="home-pages-viewport">
             <div class="home-pages-track" id="home-pages-track"></div>
@@ -542,7 +542,7 @@
     <div id="home-folder-overlay" class="home-folder-overlay">
         <div class="home-folder-modal" id="home-folder-modal">
             <div class="home-folder-header">
-                <input type="text" class="home-folder-title-input" id="home-folder-title-input" value="Folder" placeholder="Folder Name" />
+                <input type="text" class="home-folder-title-input" id="home-folder-title-input" value="Folder" placeholder="Folder Name" data-lang-placeholder="FOLDER_NAME" />
             </div>
             <div class="home-folder-grid" id="home-folder-grid"></div>
         </div>
@@ -552,7 +552,7 @@
     <div id="app-gesture-barrier" class="app-gesture-barrier"></div>
     
     <div id="donburi-container" class="system-overlay" style="display: none; transform: translateY(-100%);">
-        <iframe src="/assets/gurapp/intl/donburi/index.html" data-gurasuraisu-iframe="true" data-app-id="Donburi"></iframe>
+        <iframe src="/assets/polygolapp/intl/donburi/index.html" data-polygol-iframe="true" data-app-id="Donburi"></iframe>
     </div>
 
     <div id="system-osd">
@@ -566,7 +566,7 @@
         <div id="customizeModalContent" class="modal-content modal-split-layout">
             <div class="modal-left-pane">
                 <div class="controls-container">
-                    <h3 style="margin: 0;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;max-width: calc(clamp(280px, 90%, 500px) - 30px);">LANG_CONTROLS</h3>
+                    <h3 data-lang-key="CONTROLS" style="margin: 0;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;max-width: calc(clamp(280px, 90%, 500px) - 30px);">Controls</h3>
                     <div style="display: flex; gap: 12px;">
                         <!-- Network Status Indicator -->
                         <div id="network-status-indicator" class="status-qc">
@@ -589,13 +589,13 @@
                 <div class="quick-controls">
                     <div class="qcontrol-item" id="silent_switch_qc">
                         <span class="material-symbols-rounded">notifications_off</span>
-                        <span class="qc-label">LANG_SILENT</span>
+                        <span class="qc-label" data-lang-key="SILENT">Silent</span>
                         <input type="checkbox" id="silent_switch" class="qc-switch" hidden>
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <div class="qcontrol-item" id="temp_control_qc">
                             <span class="material-symbols-rounded" style="margin: 0;">thermometer</span>
-                            <span class="qc-label">LANG_TONE</span>
+                            <span class="qc-label" data-lang-key="TONE">Tone</span>
                             <span id="thermostat-value" style="display: none;">0</span>
                         </div>
                         <div class="qcontrol-item" id="night-mode-qc">
@@ -604,12 +604,12 @@
                     </div>
                     <div class="qcontrol-item" id="minimal_mode_qc">
                         <span class="material-symbols-rounded">filter_tilt_shift</span>
-                        <span class="qc-label">LANG_MINIMAL</span>
+                        <span class="qc-label" data-lang-key="MINIMAL">Focus</span>
                         <input type="checkbox" id="focus-switch" class="qc-switch" hidden>
                     </div>
                     <div class="qcontrol-item" id="light_mode_qc">
                         <span class="material-symbols-rounded">contrast</span>
-                        <span class="qc-label">LANG_DAYLIGHT</span>
+                        <span class="qc-label" data-lang-key="DAYLIGHT">Daylight</span>
                         <input type="checkbox" id="theme-switch" class="qc-switch" hidden>
                     </div>
                 </div>
@@ -640,7 +640,7 @@
                     </div>
                     <div class="media-widget-device">
                         <span class="material-symbols-rounded">volume_up</span>
-                        <span>This device</span>
+                        <span data-lang-key="THIS_DEVICE">This device</span>
                     </div>
                     <div class="media-widget-info">
                         <div id="media-widget-title" class="title"></div>
@@ -675,7 +675,7 @@
                     </div>
                     <div class="setting-item" id="setting-hour-format">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">schedule</span></div>
-                        <span class="setting-label">12hr</span>
+                        <span class="setting-label" data-lang-key="HOURS_12_SHORT">12hr</span>
                     </div>
                     <div class="setting-item" id="setting-language">
                         <div class="setting-icon-bg"><span class="material-symbols-rounded">language</span></div>
@@ -689,14 +689,14 @@
                     </div>
                     <div style="display: flex;flex-direction: column;gap: 4px;">
                         <div style="display: flex;align-items: center;gap: 6px;">
-                            <span style="font-size: 12px;background: var(--accent);color: var(--background-color);padding: 2px 6px;border-radius: 12px;">Suggested</span>
+                            <span data-lang-key="SUGGESTED" style="font-size: 12px;background: var(--accent);color: var(--background-color);padding: 2px 6px;border-radius: 12px;">Suggested</span>
                             <span id="kirbindustries-ads-service-icon" class="material-symbols-rounded" style="font-size: 18px;">question_mark</span>
                             <span id="kirbindustries-ads-service-header" style="font-weight: 500;font-family: 'Open Runde', 'Inter';">???</span>
                         </div>
                         <span id="kirbindustries-ads-service-description">???</span>
                     </div>
                     <button id="kirbindustries-ads-service-cta" class="controls-footer-button" style="margin-left: auto;padding: 10px 12px 10px 15px;display: flex;gap: 4px;">
-                        Open
+                        <span data-lang-key="OPEN">Open</span>
                         <span class="material-symbols-rounded" style="font-size: 18px;">arrow_outward</span>
                     </button>
                 </div>
@@ -710,7 +710,7 @@
         <div id="app-management-info" class="app-management-info" style="display: none;">
             <label class="cust-label" id="current-app-label">
                 <img src="" alt="App Icon" style="width: 32px; height: 32px; border-radius: 35%; corner-shape: superellipse(1.25); object-fit: cover;">
-                <span>App Name</span>
+                <span data-lang-key="APP_NAME">App Name</span>
             </label>
             <div style="display: flex; gap: 12px;">
                 <button id="app-close-btn" class="btn-qc">
@@ -730,13 +730,13 @@
             </div>
         </div>
         <div class="widget-drawer-header">
-            <h2>Add Widget</h2>
+            <h2 data-lang-key="ADD_WIDGET">Add Widget</h2>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <button id="add-sticker-btn" class="drawer-header-button">
                     <span class="material-symbols-rounded">sticker</span>
-                    Sticker
+                    <span data-lang-key="STICKER">Sticker</span>
                 </button>
-                <label for="widget-transparent-switch" style="font-size: 14px; color: var(--text-color); cursor: pointer;">Transparency</label>
+                <label for="widget-transparent-switch" data-lang-key="TRANSPARENCY" style="font-size: 14px; color: var(--text-color); cursor: pointer;">Transparency</label>
                 <input type="checkbox" id="widget-transparent-switch">
             </div>
         </div>
@@ -758,7 +758,7 @@
             <div style="display: flex; gap: 15px;">
                 <button id="wallpaper-submit-btn" class="drawer-header-button">
                     <span class="material-symbols-rounded">person_raised_hand</span>
-                    Request
+                    <span data-lang-key="REQUEST">Request</span>
                 </button>
             </div>
         </div>
@@ -772,7 +772,7 @@
     <div id="volume-mixer-popup" class="thermostat-popup">
         <div class="thermostat-popup-content">
             <div class="thermostat-popup-header">
-                <span class="adjust-label">App volume</span>
+                <span class="adjust-label" data-lang-key="APP_VOLUME">App volume</span>
             </div>
             <div id="volume-mixer-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 250px; overflow-y: auto; overflow-x: hidden; padding-right: 4px;">
                 <!-- App sliders injected here -->
@@ -783,7 +783,7 @@
     <div id="thermostat-popup" class="thermostat-popup">
         <div class="thermostat-popup-content">
             <div class="thermostat-popup-header">
-                <span class="adjust-label">LANG_ADJUST</span>
+                <span class="adjust-label" data-lang-key="ADJUST">Adjust</span>
             </div>
             <div class="thermostat-slider-container">
                 <input type="range" min="-10" max="10" value="0" class="thermostat-slider" id="thermostat-control">
@@ -844,13 +844,13 @@
         <div class="app-drawer-handle">
             <div class="app-search-container"">
                 <span class="material-symbols-rounded">search</span>
-                <input type="text" id="app-search-input" placeholder="Search">
+                <input type="text" id="app-search-input" placeholder="Search" data-lang-placeholder="SEARCH">
             </div>
             <div class="drawer-top-btn" id="sort-app-btn"><span class="material-symbols-rounded">sort</span></div>
         </div>
         <div class="app-drawer-content">
             <div class="app-drawer-grid" id="app-grid">
-                <div style="display: flex;justify-content: center;grid-column: span 6;"><button class="get-app-btn">Download apps</button></div>
+                <div style="display: flex;justify-content: center;grid-column: span 6;"><button class="get-app-btn" data-lang-key="DOWNLOAD_APPS">Download apps</button></div>
             </div>
         </div>
     </div>
@@ -877,7 +877,7 @@
     <div id="assistant-overlay" class="assistant-overlay">
         <div class="assistant-edge-glow"></div>
         <div id="assistant-decision-panel" class="assistant-decision-panel">
-            <div class="assistant-decision-header">Suggested &bull; Say a number</div>
+            <div class="assistant-decision-header" data-lang-key="ASSISTANT_SUGGESTED_HINT">Suggested &bull; Say a number</div>
             <div id="assistant-cards-container" class="assistant-cards-container">
                 <!-- Cards injected dynamically -->
             </div>
@@ -896,11 +896,11 @@
             </div>
             <div id="assistant-transcript" class="assistant-transcript"></div>
             <div id="assistant-input-bar" class="assistant-input-bar" style="display: none;">
-                <input type="text" id="assistant-text-input" placeholder="Type a command or ask..." autocomplete="off">
-                <button id="assistant-mic-btn" class="assistant-icon-btn" title="Speak">
+                <input type="text" id="assistant-text-input" placeholder="Type a command or ask..." data-lang-placeholder="ASSISTANT_INPUT_PLACEHOLDER" autocomplete="off">
+                <button id="assistant-mic-btn" class="assistant-icon-btn" title="Speak" data-lang-title="SPEAK">
                     <span class="material-symbols-rounded">mic</span>
                 </button>
-                <button id="assistant-send-btn" class="assistant-icon-btn" title="Send">
+                <button id="assistant-send-btn" class="assistant-icon-btn" title="Send" data-lang-title="SEND">
                     <span class="material-symbols-rounded">arrow_upward</span>
                 </button>
             </div>
@@ -922,8 +922,8 @@
     </div>
     <div id="hidden-controls-container" style="display: none; content-visibility: hidden;">
         <input type="range" id="screen-curve-slider" min="0" max="50">
-        <input type="file" id="wallpaperInput" accept=".png, .jpeg, .jpg, .webp, .gif, .mp4, .guraatmos" multiple>
-        <button id="uploadButton">Add</button>
+        <input type="file" id="wallpaperInput" accept=".png, .jpeg, .jpg, .webp, .gif, .mp4, .polyacf" multiple>
+        <button id="uploadButton" data-lang-key="ADD">Add</button>
         <input type="range" min="0" max="20" value="0" class="wallpaper-effect-slider" id="wallpaper-blur-slider">
         <input type="range" min="50" max="150" value="100" class="wallpaper-effect-slider" id="wallpaper-brightness-slider">
         <input type="range" min="50" max="150" value="100" class="wallpaper-effect-slider" id="wallpaper-contrast-slider">
@@ -932,10 +932,10 @@
         <input type="range" min="-50" max="500" value="0" id="clock-size-slider">
         <input type="range" min="-5" max="50" value="0" id="clock-spacing-slider">
         <select id="text-case-select">
-            <option value="none">Normal</option>
-            <option value="uppercase">UPPERCASE</option>
-            <option value="lowercase">lowercase</option>
-            <option value="capitalize">Capitalize</option>
+            <option value="none" data-lang-key="CASE_NORMAL">Normal</option>
+            <option value="uppercase" data-lang-key="CASE_UPPER">UPPERCASE</option>
+            <option value="lowercase" data-lang-key="CASE_LOWER">lowercase</option>
+            <option value="capitalize" data-lang-key="CASE_CAPITALIZE">Capitalize</option>
         </select>
         <input type="range" min="50" max="500" value="100" id="date-size-slider">
         <input type="range" min="-50" max="100" value="0" id="date-offset-slider">
@@ -949,7 +949,7 @@
                 <input type="range" min="0" max="100" value="50" id="clock-pos-y-slider">
             </div>
             <div class="popup-control-row">
-                 <label for="alignment-select">Preset</label>
+                 <label for="alignment-select" data-lang-key="PRESET">Preset</label>
                  <select id="alignment-select">
                     <option value="center" data-lang-key="ALIGN_CENTER">Center</option>
                     <option value="left" data-lang-key="ALIGN_LEFT">Left</option>
@@ -960,62 +960,62 @@
         <div id="clock-color-popup" class="control-popup-content">
             <div class="popup-control-row">
                 <input type="radio" id="clock-off-switch" name="clock-fill-mode">
-                <label for="clock-off-switch">Off</label>
+                <label for="clock-off-switch" data-lang-key="FILL_OFF">Off</label>
             </div>
             <div class="popup-control-row">
                 <input type="radio" id="clock-color-switch" name="clock-fill-mode">
-                <label for="clock-color-switch">Solid Color</label>
+                <label for="clock-color-switch" data-lang-key="SOLID_COLOR">Solid Color</label>
                 <input type="color" id="clock-color-picker">
             </div>
             <div class="popup-control-row">
                 <input type="radio" id="clock-gradient-switch" name="clock-fill-mode">
-                <label for="clock-gradient-switch">Gradient</label>
+                <label for="clock-gradient-switch" data-lang-key="GRADIENT">Gradient</label>
                 <input type="color" id="clock-gradient-color-picker">
             </div>
             <div class="popup-control-row">
                 <input type="radio" id="clock-glass-switch" name="clock-fill-mode">
-                <label for="clock-glass-switch">Glass</label>
+                <label for="clock-glass-switch" data-lang-key="GLASS">Glass</label>
             </div>
             <div class="popup-control-row">
                 <input type="radio" id="clock-dynamicfill-switch" name="clock-fill-mode">
-                <label for="clock-dynamicfill-switch">Dynamic</label>
+                <label for="clock-dynamicfill-switch" data-lang-key="DYNAMIC">Dynamic</label>
             </div>
         </div>
         <div id="shadow-controls-popup" class="control-popup-content">
             <div class="popup-control-row">
-                <label for="clock-shadow-switch">Shadow</label>
+                <label for="clock-shadow-switch" data-lang-key="SHADOW">Shadow</label>
                 <input type="checkbox" id="clock-shadow-switch">
             </div>
             <div class="popup-control-row">
-                <label for="clock-shadow-blur-slider">Blur</label>
+                <label for="clock-shadow-blur-slider" data-lang-key="BLUR">Blur</label>
                 <input type="range" min="0" max="50" value="10" id="clock-shadow-blur-slider">
             </div>
             <div class="popup-control-row">
-                <label for="clock-shadow-color-picker">Color</label>
+                <label for="clock-shadow-color-picker" data-lang-key="COLOR">Color</label>
                 <input type="color" id="clock-shadow-color-picker">
             </div>
         </div>
         <div id="stroke-controls-popup" class="control-popup-content">
             <div class="popup-control-row">
-                <label>Width</label>
+                <label data-lang-key="WIDTH">Width</label>
                 <input type="range" id="clock-stroke-width-slider" min="0" max="10" value="0">
             </div>
             <div class="popup-control-row">
-                <label>Color</label>
+                <label data-lang-key="COLOR">Color</label>
                 <input type="color" id="clock-stroke-color-picker" value="#000000">
             </div>
         </div>
         <div id="format-popup" class="control-popup-content">
             <div class="popup-control-row" style="flex-direction: column; align-items: flex-start; gap: 5px;">
                 <label for="date-format-input" data-lang-key="DATE_FORMAT">Date Format</label>
-                <input type="text" id="date-format-input" placeholder="e.g., dddd, MMMM D" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 12px; background: var(--transparent-color); border: 1px solid var(--glass-border); color: var(--text-color);">
+                <input type="text" id="date-format-input" placeholder="e.g., dddd, MMMM D" data-lang-placeholder="DATE_FORMAT_PLACEHOLDER" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 12px; background: var(--transparent-color); border: 1px solid var(--glass-border); color: var(--text-color);">
             </div>
             <div class="popup-control-row" style="flex-direction: column; align-items: flex-start; gap: 5px;">
                 <label for="clock-format-input" data-lang-key="CLOCK_FORMAT">Clock Format</label>
-                <input type="text" id="clock-format-input" placeholder="e.g., HH:mm:ss" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 12px; background: var(--transparent-color); border: 1px solid var(--glass-border); color: var(--text-color);">
+                <input type="text" id="clock-format-input" placeholder="e.g., HH:mm:ss" data-lang-placeholder="CLOCK_FORMAT_PLACEHOLDER" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 12px; background: var(--transparent-color); border: 1px solid var(--glass-border); color: var(--text-color);">
             </div>
             <div style="font-size: 11px; color: var(--secondary-text-color); margin-top: 5px; line-height: 1.4;">
-                <b>Variables:</b> $(media.title)$, $(media.artist)$, $(weather.degrees)$, $(weather.icon)$, $(separator.pipe)$, $(separator.dot)$, $(greeting.time)$, $(greeting.personal)$, $(smart)$<br>
+                <b data-lang-key="VARIABLES_LABEL">Variables:</b> $(media.title)$, $(media.artist)$, $(weather.degrees)$, $(weather.icon)$, $(separator.pipe)$, $(separator.dot)$, $(greeting.time)$, $(greeting.personal)$, $(smart)$<br>
             </div>
         </div>
         <input type="checkbox" id="seconds-switch" checked>
@@ -1024,30 +1024,30 @@
         <input type="checkbox" id="live-environment-switch">
         <input type="checkbox" id="clock-italic-switch">
         <select id="clock-blend-mode-select">
-            <option value="normal">Normal</option>
-            <option value="overlay">Overlay</option>
-            <option value="difference">Difference</option>
-            <option value="exclusion">Exclusion</option>
-            <option value="color-dodge">Color Dodge</option>
+            <option value="normal" data-lang-key="BLEND_NORMAL">Normal</option>
+            <option value="overlay" data-lang-key="BLEND_OVERLAY">Overlay</option>
+            <option value="difference" data-lang-key="BLEND_DIFFERENCE">Difference</option>
+            <option value="exclusion" data-lang-key="BLEND_EXCLUSION">Exclusion</option>
+            <option value="color-dodge" data-lang-key="BLEND_COLOR_DODGE">Color Dodge</option>
         </select>
         <input type="range" class="wallpaper-effect-slider" id="wallpaper-saturate-slider" min="0" max="300" value="100">
         <input type="range" class="wallpaper-effect-slider" id="wallpaper-hue-slider" min="-180" max="180" value="0">
         <input type="range" class="wallpaper-effect-slider" id="wallpaper-vignette-slider" min="0" max="100" value="0">
         <select id="font-select">
-            <option value="Inter" data-lang="Default">LANG_DEFAULT</option>
-            <option value="Bricolage Grotesque" data-lang="Work">LANG_WORK</option>
-            <option value="DynaPuff" data-lang="Puffy">LANG_PUFFY</option>
-            <option value="Domine" data-lang="Classic">LANG_CLASSIC</option>
-            <option value="Climate Crisis" data-lang="Strokes">LANG_STROKES</option>
-            <option value="JetBrains Mono" data-lang="Mono">LANG_MONO</option>
-            <option value="DotGothic16" data-lang="Pixel">LANG_PIXEL</option>
-            <option value="Playpen Sans" data-lang="Written">LANG_WRITTEN</option>
-            <option value="Jaro" data-lang="Raised">LANG_RAISED</option>
-            <option value="Doto" data-lang="Dot">LANG_DOT</option>
-            <option value="Nunito" data-lang="Round">LANG_ROUND</option>
+            <option value="Inter" data-lang-key="DEFAULT">Default</option>
+            <option value="Bricolage Grotesque" data-lang-key="WORK">Work</option>
+            <option value="DynaPuff" data-lang-key="PUFFY">Puffy</option>
+            <option value="Domine" data-lang-key="CLASSIC">Classic</option>
+            <option value="Climate Crisis" data-lang-key="STROKES">Strokes</option>
+            <option value="JetBrains Mono" data-lang-key="MONO">Mono</option>
+            <option value="DotGothic16" data-lang-key="PIXEL">Pixel</option>
+            <option value="Playpen Sans" data-lang-key="WRITTEN">Written</option>
+            <option value="Jaro" data-lang-key="RAISED">Raised</option>
+            <option value="Doto" data-lang-key="DOT">Dot</option>
+            <option value="Nunito" data-lang-key="ROUND">Round</option>
         </select>
         <input type="checkbox" id="weather-switch" checked>
-        <input type="checkbox" id="gurapps-switch" checked>
+        <input type="checkbox" id="polygolapps-switch" checked>
         <input type="checkbox" id="tint-colors-switch" checked>
         <input type="checkbox" id="animation-switch" checked>
         <input type="checkbox" id="contrast-switch">
@@ -1056,58 +1056,55 @@
         <input type="checkbox" id="ai-switch">
         <input type="checkbox" id="one-button-nav-switch">
         <select id="navigation-mode-select" data-key="navigationMode" style="display: none;">
-            <option value="gestures">Gestures</option>
-            <option value="quickmenu">Quick Menu</option>
+            <option value="gestures" data-lang-key="NAV_GESTURES">Gestures</option>
+            <option value="quickmenu" data-lang-key="NAV_QUICKMENU">Quick Menu</option>
         </select>
         <input type="checkbox" id="quickmenu-switch" style="display: none;">
         <input type="checkbox" id="persistent-indicator-switch">
         <input type="checkbox" id="dock-pinned-switch">
         <select id="wake-lock-mode-select">
-            <option value="modern">Modern</option>
-            <option value="legacy">Legacy</option>
-            <option value="disabled">Disabled</option>
+            <option value="modern" data-lang-key="WAKELOCK_MODERN">Modern</option>
+            <option value="legacy" data-lang-key="WAKELOCK_LEGACY">Legacy</option>
+            <option value="disabled" data-lang-key="WAKELOCK_DISABLED">Disabled</option>
         </select>
         <select id="language-switcher">
             <option value="EN">English</option>
             <option value="JP">日本語</option>
-            <option value="DE">Deutsch</option>
-            <option value="ES">Español</option>
             <option value="KO">한국어</option>
             <option value="ZH">中文</option>
         </select>
         <select id="ui-sound-mode">
-            <option value="silent_off">Off when Silent (Default)</option>
-            <option value="always_off">Always Off</option>
-            <option value="always_on">Always On</option>
+            <option value="silent_off" data-lang-key="SOUND_SILENT_OFF">Off when Silent (Default)</option>
+            <option value="always_off" data-lang-key="SOUND_ALWAYS_OFF">Always Off</option>
+            <option value="always_on" data-lang-key="SOUND_ALWAYS_ON">Always On</option>
         </select>
-        <input type="checkbox" id="gurapp-sounds-switch" checked> 
-        <button id="resetButton">RESET_BTN</button>
+        <input type="checkbox" id="polygolapp-sounds-switch" checked> 
+        <button id="resetButton" data-lang-key="RESET_BTN">Reset</button>
         <div id="sticker-settings-popup" class="control-popup-content">
-            <h4 style="margin: 0 0 10px 0; text-align: center;">New Sticker</h4>
+            <h4 data-lang-key="NEW_STICKER" style="margin: 0 0 10px 0; text-align: center;">New Sticker</h4>
             
             <input type="file" id="sticker-file-input" accept="image/png, image/jpeg, image/webp, image/gif" style="display: none;">
-            <button id="sticker-select-file-btn" class="button-dialog" style="margin-bottom: 10px;">Photo</button>
+            <button id="sticker-select-file-btn" data-lang-key="PHOTO" class="button-dialog" style="margin-bottom: 10px;">Photo</button>
             
             <div class="popup-control-row">
-                <label for="sticker-border-switch">Border</label>
+                <label for="sticker-border-switch" data-lang-key="BORDER">Border</label>
                 <input type="checkbox" id="sticker-border-switch">
             </div>
             
             <div id="sticker-border-options" style="display: none; flex-direction: column; gap: 10px;">
                 <div class="popup-control-row">
-                    <label>Color</label>
+                    <label data-lang-key="COLOR">Color</label>
                     <input type="color" id="sticker-border-color" value="#ffffff">
                 </div>
                 <div class="popup-control-row">
-                    <label>Width</label>
+                    <label data-lang-key="WIDTH">Width</label>
                     <input type="range" id="sticker-border-width" min="1" max="10" value="3">
                 </div>
             </div>
     
-            <button id="sticker-create-btn" class="button-dialog primary" style="margin-top: 10px;">Create Sticker</button>
+            <button id="sticker-create-btn" data-lang-key="CREATE_STICKER" class="button-dialog primary" style="margin-top: 10px;">Create Sticker</button>
         </div>
     </div>
-
     <div id="screen-curve-overlay"></div>
 
     <div id="app-switcher-ui" class="wallpaper-switcher-overlay">
@@ -1119,7 +1116,7 @@
     <!-- JAVASCRIPT -->
     <!-- Libraries & Utilities -->
     <script src="js/lang.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
@@ -1147,7 +1144,7 @@
     <script src="js/ui/wallpaper.js"></script>
     <script src="js/ui/wallpaper/wallpaper-manage.js"></script>
     <script src="js/ui/widgets.js"></script>
-    <script src="js/ui/home-menu.js"></script>
+    <script src="js/ui/minihompy.js"></script>
     <script src="js/ui/dock-drawer.js"></script>
     <script src="js/ui/settings.js"></script>
     <script src="js/ui/osk.js"></script>

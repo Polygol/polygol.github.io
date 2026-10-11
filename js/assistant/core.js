@@ -441,7 +441,7 @@ class AssistantCore {
 
         // 1. Setup smart contextual decisions immediately
         this.activeDecisions = await this.generateSmartSuggestions();
-        AssistantUI.setDecisions('Suggested &bull; Tap or say a number', this.activeDecisions);
+        AssistantUI.setDecisions(window.t ? window.t('SUGGESTED_TAP_OR_SAY') : 'Suggested &bull; Tap or say a number', this.activeDecisions);
 
         // 2. Clear transcript and set animated SVG character to listening state
         AssistantUI.clearTranscript();
@@ -554,14 +554,14 @@ class AssistantCore {
             }
 
             AssistantUI.setState('speaking');
-            AssistantUI.setTranscript(`Opening ${displayName}...`);
+            AssistantUI.setTranscript(window.t ? window.t('ASSISTANT_OPENING', { name: displayName }) : `Opening ${displayName}...`);
             openEmbed(targetUrl);
-            await this.tts.speak(`Opening ${displayName}`);
+            await this.tts.speak(window.t ? window.t('ASSISTANT_OPENING', { name: displayName }) : `Opening ${displayName}`);
 
         } else if (actionType === 'sleep') {
             AssistantUI.setState('speaking');
-            AssistantUI.setTranscript("Going to sleep...");
-            await this.tts.speak("Goodnight.");
+            AssistantUI.setTranscript(window.t ? window.t('ASSISTANT_GOODNIGHT') : "Going to sleep...");
+            await this.tts.speak(window.t ? window.t('ASSISTANT_GOODNIGHT') : "Goodnight.");
             if (typeof window.blackoutScreen === 'function') {
                 window.blackoutScreen();
             } else if (typeof blackoutScreen === 'function') {
@@ -570,52 +570,52 @@ class AssistantCore {
 
         } else if (actionType === 'weather') {
             AssistantUI.setState('speaking');
-            AssistantUI.setTranscript("Checking the weather...");
+            AssistantUI.setTranscript(window.t ? window.t('ASSISTANT_WEATHER') : "Checking the weather...");
             const weatherUrl = window.apps?.['Weather']?.url || 'https://polygol.github.io/weather/index.html';
             openEmbed(weatherUrl);
-            await this.tts.speak("Here is the weather forecast.");
+            await this.tts.speak(window.t ? window.t('ASSISTANT_WEATHER') : "Here is the weather forecast.");
 
         } else if (actionType === 'mediaToggle') {
             AssistantUI.setState('speaking');
-            AssistantUI.setTranscript("Controlling media...");
-            if (window.Gurasuraisu && typeof window.Gurasuraisu.callApp === 'function') {
-                window.Gurasuraisu.callApp(action.payload || 'Music', 'playPause');
+            AssistantUI.setTranscript(window.t ? window.t('ASSISTANT_DONE') : "Controlling media...");
+            if (window.Polygol && typeof window.Polygol.callApp === 'function') {
+                window.Polygol.callApp(action.payload || 'Music', 'playPause');
             }
-            await this.tts.speak("Done.");
+            await this.tts.speak(window.t ? window.t('ASSISTANT_DONE') : "Done.");
 
         } else if (actionType === 'nightStand') {
             AssistantUI.setState('speaking');
-            AssistantUI.setTranscript("Activating Night Stand...");
+            AssistantUI.setTranscript(window.t ? window.t('ASSISTANT_NIGHT_STAND') : "Activating Night Stand...");
             if (typeof window.setControlValueAndDispatch === 'function') {
                 window.setControlValueAndDispatch('nightStandEnabled', 'true');
             } else if (typeof setControlValueAndDispatch === 'function') {
                 setControlValueAndDispatch('nightStandEnabled', 'true');
             }
-            await this.tts.speak("Night Stand activated.");
+            await this.tts.speak(window.t ? window.t('ASSISTANT_NIGHT_STAND') : "Night Stand activated.");
 
         } else if (actionType === 'ecoMode') {
             AssistantUI.setState('speaking');
-            AssistantUI.setTranscript("Activating Eco Mode...");
+            AssistantUI.setTranscript(window.t ? window.t('ASSISTANT_ECO_MODE') : "Activating Eco Mode...");
             if (typeof window.setControlValueAndDispatch === 'function') {
                 window.setControlValueAndDispatch('adaptiveBatterySaver', 'true');
             } else if (typeof setControlValueAndDispatch === 'function') {
                 setControlValueAndDispatch('adaptiveBatterySaver', 'true');
             }
-            await this.tts.speak("Eco Mode activated.");
+            await this.tts.speak(window.t ? window.t('ASSISTANT_ECO_MODE') : "Eco Mode activated.");
 
         } else if (actionType === 'info' || action.responseText) {
-            const resp = action.responseText || "Done.";
+            const resp = action.responseText || (window.t ? window.t('ASSISTANT_DONE') : "Done.");
             AssistantUI.setState('speaking');
             AssistantUI.setTranscript(resp);
             await this.tts.speak(resp);
 
         } else if (action.appId && (action.intentName || action.payload)) {
             AssistantUI.setState('speaking');
-            AssistantUI.setTranscript(`Executing task...`);
+            AssistantUI.setTranscript(window.t ? window.t('ASSISTANT_TASK') : `Executing task...`);
             if (typeof window.triggerActivityIntent === 'function') {
                 window.triggerActivityIntent(action.appId, action.intentName || action.payload, action.parameters);
             }
-            await this.tts.speak("Executing task.");
+            await this.tts.speak(window.t ? window.t('ASSISTANT_TASK') : "Executing task.");
         }
 
         const closeDelay = (actionType === 'info' || action.responseText)
@@ -693,14 +693,14 @@ class AssistantCore {
         AssistantUI.clearTranscript();
         AssistantUI.setState('dont_understand');
         try {
-            await this.tts.speak("Sorry, I don't understand.");
+            await this.tts.speak(window.t ? window.t('ASSISTANT_UNKNOWN') : "Sorry, I don't understand.");
         } catch (e) {}
 
         setTimeout(() => {
             if (this.isOpen) {
                 AssistantUI.setState('listening');
                 AssistantUI.clearTranscript();
-                AssistantUI.setDecisions('Suggested &bull; Tap or say a number', this.activeDecisions);
+                AssistantUI.setDecisions(window.t ? window.t('SUGGESTED_TAP_OR_SAY') : 'Suggested &bull; Tap or say a number', this.activeDecisions);
                 this.resetInactivityTimer();
             }
         }, 2200);

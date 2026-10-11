@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Donburi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: transparent;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            padding-top: 80px;
+            user-select: none;
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        .material-symbols-rounded {
+            vertical-align: middle;
+        }
+
+        /* don-navbar / Tabs */
+        .don-navbar {
+            height: 42px;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            flex-direction: row;
+            padding: 4px;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            transition: top 0.3s ease;
+            width: max-content;
+            flex-wrap: wrap;
+            background-color: var(--search-background);
+            border-radius: 35px;
+            corner-shape: round;
+            border: 1px solid var(--glass-border);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0);
+            box-shadow: var(--sun-shadow);
+        }
+
+        .don-nav-btn {
+            border: 1px solid transparent;
+            background-color: transparent;
+            color: var(--secondary-text-color);
+            border-radius: 35px;
+            corner-shape: round;
+            padding: 8px 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+        }
+
+        .don-nav-btn.active {
+            background-color: var(--transparent-color);
+            color: var(--text-color);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            font-weight: bold;
+            font-family: 'Open Runde', sans-serif;
+        }
+
+        .don-nav-btn:active {
+            transform: scale(1.1);
+            filter: brightness(1.5);
+        }
+
+        .don-nav-btn.active:active {
+            padding: 14px 18px;
+            margin: 0 -4px;
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+        }
+
+        #don-persistent-clock {
+            height: 42px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            font-family: 'Inter Numeric', sans-serif;
+            font-variation-settings: 'RDNS' 1;
+            font-variant-numeric: tabular-nums;
+            color: var(--background-color);
+            z-index: 1000;
+            background-color: var(--accent);
+            border-radius: 35px;
+            corner-shape: round;
+            border: 1px solid var(--glass-border);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0);
+            box-shadow: var(--sun-shadow);
+        }
+
+        /* Bento Grid */
+        .tab-content {
+            display: none;
+            flex-grow: 1;
+            height: 100%;
+        }
+        .tab-content.active {
+            display: grid;
+        }
+
+        .bento-grid {
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-rows: repeat(auto-fit, minmax(160px, 1fr));
+            grid-auto-flow: row;
+            gap: 20px;
+            height: calc(100vh - 80px);
+            overflow-y: scroll;
+            overflow-x: hidden;
+            scrollbar-width: none;
+            padding: 0 20px 20px 20px;
+            width: 100%;
+        }
+        .bento-grid::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Bento Items */
+        .bento-item {
+            background-color: var(--search-background);
+            border-radius: 50px;
+            corner-shape: superellipse(1.5);
+            border: 1px solid var(--glass-border);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0);
+            box-shadow: var(--sun-shadow);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s cubic-bezier(.2, 1.3, .64, 1), filter 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bento-item:active {
+            transform: scale(1.1);
+            filter: brightness(1.5);
+        }
+
+        .reduce-animations .bento-item:active {
+            transform: scale(1) !important;
+        }
+
+        #bento-smart {
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+        }
+        
+        .smart-activity-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .smart-event-urgent {
+            color: #ff8a80;
+        }
+
+        /* Grid Spans */
+        .span-3x2 { grid-column: span 2; grid-row: span 3; min-height: 480px; }
+        .span-2x2 { grid-column: span 2; grid-row: span 2; min-height: 315px; }
+        .span-2x1 { grid-column: span 1; grid-row: span 2; min-height: 315px; }
+        .span-1x2 { grid-column: span 2; grid-row: span 1; min-height: 150px; }
+        .span-1x1 { grid-column: span 1; grid-row: span 1; min-height: 150px; }
+        
+        /* Typography inside cards */
+        .item-card-title {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--secondary-text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 4px;
+            flex-shrink: 0;
+        }
+
+        .item-card-title .material-symbols-rounded {
+            font-size: 18px; 
+        }
+
+        .item-card-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .item-card-big-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-family: 'Inter Numeric', 'Open Runde', 'Inter', sans-serif;
+            margin: auto 0;
+            font-variation-settings: 'RDNS' 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* UI Controls inside Bento */
+        input {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 34px;
+            background: var(--search-background);
+            color: var(--text-color);
+            border-radius: 34px;
+            padding: 0 8px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            margin-top: auto;
+        }
+        input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: var(--sun-shadow);
+        }
+
+        .toggle-switch {
+            width: 56px;
+            height: 32px;
+            background-color: var(--search-background);
+            border-radius: 16px;
+            position: relative;
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            appearance: none;
+            transition: all 0.3s;
+            margin-top: auto;
+        }
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            top: 50%;
+            left: 6.5px;
+            transform: translateY(-50%);
+            transition: all 0.3s;
+        }
+        .toggle-switch:checked {
+            background-color: var(--accent);
+        }
+        .toggle-switch:checked::before {
+            background-color: var(--tonal);
+            left: 28px;
+        }
+
+        /* Media Player Specifics */
+        .media-widget {
+            display: flex;
+            align-items: stretch;
+        	flex-direction: column;
+            padding: 10px 10px 20px 10px;
+            border-radius: inherit;
+        	corner-shape: inherit;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        	height: inherit;
+        }
+        
+        .media-widget[style*="display: none"] {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        	height: 0;
+        }
+        
+        .media-widget .app-icon-img {
+            position: absolute;
+            bottom: 200px;
+            left: 40px;
+            width: 40px;
+            height: 40px;
+            border-radius: 35%;
+            z-index: 2;
+            mix-blend-mode: luminosity;
+            pointer-events: none;
+            box-shadow: none;
+            corner-shape: superellipse(1.25);
+        }
+
+        .app-icon-img {
+            border: 1px solid var(--glass-border);
+            aspect-ratio: 1 / 1;
+            corner-shape: superellipse(1.25);
+            border-radius: 35%;
+            overflow: hidden;
+        	position: relative;
+        	box-shadow: var(--sun-shadow), 0px 2px 10px 0px rgb(90 90 90 / 25%);
+        }
+        
+        .app-icon-img img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        	corner-shape: inherit;
+            border-radius: inherit;
+            transform: scale(1.15);
+        }
+        
+        .app-icon-img::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            right: 0; bottom: 0;
+            box-shadow: var(--sun-shadow-strong);
+            pointer-events: none; /* so clicks pass through */
+        	corner-shape: inherit;
+            border-radius: inherit;
+            z-index: 1;
+            border: 1px solid var(--glass-border);
+        }
+
+        .media-widget-device {
+        	background: var(--search-background);
+            z-index: 1;
+            width: fit-content;
+            padding: 4px 10px 4px 8px;
+            border-radius: 20px;
+            --fx-filter: var(--blur1) glass(0.6, 8, 0);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            position: absolute;
+            bottom: 190px;
+            right: 32px;
+            font-size: 0.7em;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+        }
+        
+        .media-widget-device .material-symbols-rounded {
+        	font-size: 16px;
+        }
+        
+        #media-widget-art {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+        	left: 0;
+            top: 0;
+            object-fit: cover;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
+            border-radius: inherit;
+            corner-shape: inherit;
+        }
+        
+        .media-widget::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: inherit;
+            backdrop-filter: blur(10px);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 1) 100%);
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 1) 100%);
+        }
+        
+        #media-widget-art:active {
+            transform: scale(1.04);
+            transition: transform 0.1s cubic-bezier(.2, 1.3, .64, 1);
+            filter: brightness(1.5);
+        }
+        
+        .media-widget-info {
+            flex-grow: 1;
+            min-width: 0;
+            display: flex;
+            gap: 6px;
+            flex-direction: column;
+            margin: 0 90px 0 8px;
+            z-index: 1;
+            pointer-events: none;
+            justify-content: flex-end;
+            font-size: 1.5rem;
+        }
+        
+        .media-widget-info .title {
+            font-weight: bold;
+        	font-family: 'Open Runde';
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        	padding-left: 4px;
+        	line-height: 1.25;
+        }
+        
+        .media-widget-info .artist {
+            font-family: 'Inter';
+            font-weight: 500;
+            color: var(--secondary-text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        	padding-left: 4px;
+        	line-height: 1.25;
+        }
+        
+        .media-widget-progress-container {
+            display: flex;
+            align-items: center;
+            padding: 0 110px;
+            z-index: 1;
+            box-sizing: border-box;
+            position: fixed;
+            bottom: 24px;
+            pointer-events: none;
+            justify-content: space-between;
+            width: 100%;
+            left: 0;
+        }
+        
+        .media-widget-time {
+            font-size: 10px;
+            font-variant-numeric: tabular-nums;
+            color: var(--secondary-text-color);
+        }
+        
+        #media-widget-progress-bar {
+            border-radius: 0;
+            overflow: visible;
+            margin: 0;
+            box-shadow: none;
+            border: none;
+            flex-grow: 1;
+        	z-index: 1;
+        }
+        
+        #media-widget-progress {
+            width: 0%;
+            height: 100%;
+            background-color: var(--text-color);
+            border-radius: 0;
+            transition: width 0.2s ease;
+            --wave: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0,5 Q5,10 10,5 T20,5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' /%3E%3C/svg%3E);
+            -webkit-mask-image: var(--wave);
+            mask-image: var(--wave);
+            -webkit-mask-size: 20px 100%;
+            mask-size: 20px 100%;
+            -webkit-mask-repeat: repeat-x;
+            mask-repeat: repeat-x;
+            -webkit-mask-position: 0 center;
+            mask-position: 0 center;
+            animation: wave-move 1s linear infinite;
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0;
+        }
+        
+        @keyframes wave-move {
+            0% { -webkit-mask-position: 0 center; mask-position: 0 center; }
+            100% { -webkit-mask-position: -20px center; mask-position: -20px center; }
+        }
+        
+        .media-widget-controls {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        	justify-content: space-between;
+            z-index: 1;
+        }
+        
+        .media-widget-controls button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .media-widget-controls button .material-symbols-rounded {
+            font-size: 36px;
+        }
+        
+        #media-widget-play-pause {
+            background: var(--overlay-color);
+            box-shadow: var(--sun-shadow);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0);
+            border: 1px solid var(--glass-border);
+            width: 64px;
+            height: 64px;
+            border-radius: 35px;
+            corner-shape: superellipse(1.5);
+            color: var(--text-color);
+            position: fixed;
+            right: 32px;
+            bottom: 100px;
+            z-index: 1;
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+        }
+
+        #mini-media-play-pause {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            border-radius: 25px;
+            background: var(--overlay-color);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--sun-shadow);
+            corner-shape: superellipse(1.5);
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+        .list-item span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Settings */
+        .settings-overlay {
+            position: fixed;
+            top: 0; right: 0; width: auto; height: 100%;
+            background: var(--background-color-tr);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            transition: opacity 0.3s;
+            overflow-y: auto;
+        }
+        .settings-overlay.show {
+            display: flex;
+        }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .settings-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: var(--search-background);
+            border-radius: 35px;
+            corner-shape: superellipse(1.5);
+            box-shadow: var(--sun-shadow);
+            border: 1px solid var(--glass-border);
+            margin-bottom: 10px;
+        }
+        .settings-row select { width: auto; margin: 0; }
+        .settings-row button {
+            background: var(--search-background);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow);
+            color: var(--text-color);
+            border-radius: 50%;
+            width: 36px; height: 36px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .settings-row button:active { 
+            filter: brightness(1.5);
+         }
+    </style>
+</head>
+<body data-app-name="Donburi">
+    <div id="don-persistent-clock" onclick="openSettings()" style="cursor: pointer;" title="Customize Layout" data-lang-title="CUSTOMIZE_LAYOUT">--:--</div>
+    
+    <div class="don-navbar" id="donburi-tabs">
+        <button class="don-nav-btn active" data-tab="tab-day" id="greeting-tab" data-lang-key="YOUR_DAY">
+            Your day
+        </button>
+        <button class="don-nav-btn" data-tab="tab-upcoming" data-lang-key="UPCOMING">
+            Upcoming
+        </button>
+        <button class="don-nav-btn" data-tab="tab-home" data-lang-key="CONTROL">
+            Control
+        </button>
+        <button class="don-nav-btn" data-tab="tab-media" data-lang-key="MEDIA">
+            Media
+        </button>
+        <button class="don-nav-btn" data-tab="tab-social" data-lang-key="SOCIAL">
+            Social
+        </button>
+        <button class="don-nav-btn" data-tab="tab-discover" data-lang-key="DISCOVER">
+            Discover
+        </button>
+    </div>
+
+    <!-- Your Day Tab -->
+    <div class="tab-content bento-grid active" id="tab-day">
+        <div class="bento-item span-2x2" id="bento-smart">
+            <!-- Content dynamically managed by SmartManager -->
+            <div id="smart-fallback-clock" style="height: 100%; display: flex; flex-direction: column;">
+                <div class="item-card-title" style="item-card-title"><span class="material-symbols-rounded">schedule</span><span id="greeting-text">Good morning</span></div>
+                <div class="item-card-subtitle" id="bento-date" style="font-weight: 600; font-size: 1.1rem;">Monday, Jan 1</div>
+                <div class="item-card-big-text" id="bento-time" style="font-family: 'Inter Numeric', sans-serif; font-size: clamp(6rem, 12%, 12rem); text-align: center; font-variation-settings: 'RDNS' 1; font-variant-numeric: tabular-nums;">00:00</div>
+            </div>
+            <div id="smart-activity-container" style="display: none; height: 100%; width: 100%;"></div>
+            <div id="smart-event-container" style="display: none; margin: auto 0;"></div>
+        </div>
+
+        <div class="bento-item span-2x1" id="bento-weather" onclick="Polygol.openApp('https://polygol.github.io/weather/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">cloud</span><span data-lang-key="WEATHER">Weather</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; height: 100%;">
+                <div class="item-card-big-text" id="weather-temp"><svg class="loading-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="currentColor" stroke="none" class="loading-spinner-ind" /></svg></div>
+                <div style="text-align: right; display: flex; flex-direction: column; gap: 10px;">
+                    <div id="weather-city" style="font-weight: 600;"></div>
+                    <span id="weather-desc-icon" class="material-symbols-rounded" style="font-size: 24px;"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bento-item span-2x1" id="bento-next-event" onclick="Polygol.openApp('https://polygol.github.io/fantaskical/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">event</span><span data-lang-key="CALENDAR">Calendar</span></div>
+            <div id="next-event-content" style="margin: auto 0; gap: 10px; display: flex; flex-direction: column;">
+                <div style="font-weight: 600; font-size: 1.1rem;" data-lang-key="NO_UPCOMING_EVENTS">No upcoming events</div>
+            </div>
+        </div>
+
+        <div class="bento-item span-2x1" id="bento-mini-media">
+            <div class="item-card-title"><span class="material-symbols-rounded">play_circle</span><span data-lang-key="MEDIA">Media</span></div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-top: auto;">
+                <div style="margin-left: 4px; gap: 4px; overflow: hidden; white-space: nowrap; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="mini-media-title" style="font-family: 'Open Runde', 'Inter'; font-weight: 600; font-size: 1.2rem; text-overflow: ellipsis; overflow: hidden;" data-lang-key="NOT_PLAYING">Not playing</div>
+                    <div id="mini-media-artist" class="item-card-subtitle" style="font-size: 1.2rem; text-overflow: ellipsis; overflow: hidden;"></div>
+                </div>
+                <button id="mini-media-prev" style="color: var(--text-color);border: none;background-color: transparent;width: 42px;height: 42px;"><span class="material-symbols-rounded">skip_previous</span></button>
+                <button id="mini-media-play-pause"><span class="material-symbols-rounded">play_arrow</span></button>
+                <button id="mini-media-next" style="color: var(--text-color);border: none;background-color: transparent;width: 42px;height: 42px;"><span class="material-symbols-rounded">skip_next</span></button>
+            </div>
+        </div>
+
+        <div class="bento-item span-2x1" id="bento-quote" onclick="searchQuote()">
+            <div class="item-card-title"><span class="material-symbols-rounded">format_quote</span>Quote of the Day</div>
+            <div style="margin: auto 0;" id="quote-text"><svg class="loading-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="currentColor" stroke="none" class="loading-spinner-ind" /></svg></div>
+            <div style="text-align: right; font-size: 0.8rem; color: var(--secondary-text-color);" id="quote-author"></div>
+        </div>
+
+        <div class="bento-item span-1x1" id="bento-battery" onclick="Polygol.openApp('/assets/polygolapp/intl/settings/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">battery_android_0</span>Battery</div>
+            <div class="item-card-big-text" id="battery-level">--%</div>
+            <div class="item-card-subtitle" id="battery-status"></div>
+        </div>
+
+        <div class="bento-item span-1x1" id="bento-beta" onclick="window.open('https://github.com/Polygol/polygol.github.io/issues/new', '_blank');">
+            <div class="item-card-title"><span class="material-symbols-rounded">error</span>Beta</div>
+            <div style="margin: auto 0; gap: 10px; display: flex; flex-direction: column;">
+                <div style="font-weight: 600; font-size: 1.1rem;">Donburi is in beta</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Tab -->
+    <div class="tab-content bento-grid" id="tab-upcoming">
+        <div class="bento-item span-2x2" id="bento-agenda" onclick="Polygol.openApp('https://polygol.github.io/fantaskical/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">calendar_month</span>Agenda</div>
+            <div id="agenda-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; overflow-y: auto;">
+                <div class="item-card-subtitle">No events today</div>
+            </div>
+        </div>
+
+        <div class="bento-item span-2x2" id="bento-tasks" onclick="Polygol.openApp('https://polygol.github.io/fantaskical/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">task_alt</span>Active Tasks</div>
+            <div id="task-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; overflow-y: auto;">
+                <div class="item-card-subtitle">All caught up!</div>
+            </div>
+        </div>
+
+        <div class="bento-item span-2x1" id="bento-alarms" onclick="Polygol.openApp('https://polygol.github.io/chronos/index.html')">
+            <div class="item-card-title"><span class="material-symbols-rounded">alarm</span>Alarms</div>
+            <div id="alarm-list" style="margin: auto 0; font-size: 1.5rem; font-weight: 600;">
+                No alarms set
+            </div>
+        </div>
+    </div>
+
+    <!-- Home Control Tab -->
+    <div class="tab-content bento-grid" id="tab-home">
+        <div class="bento-item span-2x1" id="bento-brightness">
+            <div class="item-card-title"><span class="material-symbols-rounded">light_mode</span>Brightness</div>
+            <input type="range" id="brightness-slider" min="20" max="100" value="100">
+        </div>
+
+        <div class="bento-item span-1x1" id="bento-darkmode">
+            <div class="item-card-title"><span class="material-symbols-rounded">radio_button_checked</span>Daylight</div>
+            <input type="checkbox" class="toggle-switch" id="theme-toggle">
+        </div>
+
+        <div class="bento-item span-1x1" id="bento-silent">
+            <div class="item-card-title"><span class="material-symbols-rounded">notifications_off</span>Silent</div>
+            <input type="checkbox" class="toggle-switch" id="silent-toggle">
+        </div>
+
+        <div class="bento-item span-2x1" id="bento-tone">
+            <div class="item-card-title"><span class="material-symbols-rounded">thermometer</span>Tone</div>
+            <input type="range" id="temp-slider" min="-10" max="10" value="0">
+        </div>
+    </div>
+
+    <!-- Media Tab -->
+    <div class="tab-content bento-grid" id="tab-media">
+        <div id="media-session-widget" class="media-widget">
+            <img id="media-widget-art" src="" alt="Album Art">
+            <div style="background: linear-gradient(0deg,var(--background-color-tr) 15%, transparent 50%);border-radius: inherit;corner-shape: inherit;width: 100%;height: 100%;position: fixed;left: 0;top: 0;"></div>
+            <div class="app-icon-img">
+                <img id="media-widget-app-icon" src="" class="media-widget-app-icon" style="display: none;" />
+            </div>
+            <div class="media-widget-device">
+                <span class="material-symbols-rounded">volume_up</span>
+                <span>This device</span>
+            </div>
+            <div class="media-widget-info">
+                <h2 id="media-widget-title" class="title"></h2>
+                <h2 id="media-widget-artist" class="artist"></h2>
+            </div>
+            <button id="media-widget-play-pause"><span class="material-symbols-rounded" style="font-size: 36px; font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 48;">play_arrow</span></button>
+            <div class="media-widget-progress-container">
+                <span id="media-widget-current-time" class="media-widget-time">0:00</span>
+                <span id="media-widget-duration" class="media-widget-time">0:00</span>
+            </div>
+            <div class="media-widget-controls">
+                <button id="media-widget-prev"><span class="material-symbols-rounded">skip_previous</span></button>
+                <div id="media-widget-progress-bar">
+                    <div style="display: flex;flex-direction: row;height: 24px;align-items: center;">
+                        <div id="media-widget-progress"></div>
+                        <div style="z-index: 4;width: 8px;background-color: var(--text-color);border-radius: 20px;margin-right: 4px;flex-shrink: 0;height: 20px;margin-left: -8px;"></div>
+                        <div style="background: var(--overlay-color);width: 100%;height: 10px;border-radius: 10px;--fx-filter: var(--blur1) glass(0.6, 8, 0);box-shadow: var(--sun-shadow);border: 1px solid var(--glass-border);"></div>
+                    </div>
+                </div>
+                <button id="media-widget-next"><span class="material-symbols-rounded">skip_next</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Social -->
+    <div class="tab-content bento-grid" id="tab-social">
+        <div class="bento-item span-2x2" id="bento-social">
+            <div class="item-card-title"><span class="material-symbols-rounded">forum</span>Communicate</div>
+            <div style="margin: auto; text-align: center; color: var(--secondary-text-color);">
+                No active communication widgets
+            </div>
+        </div>
+    </div>
+
+    <!-- Discover -->
+    <div class="tab-content bento-grid" id="tab-discover">
+        <div class="bento-item span-3x2" id="bento-rss" style="overflow-y: auto;">
+            <div class="item-card-title" id="rss-widget-title" style="position: sticky;top: 0;z-index: 10;flex-shrink: 0;background: var(--modal-background);border: 1px solid var(--glass-border);box-shadow: var(--sun-shadow);width: max-content;padding: 4px 10px;border-radius: 50px;"><span class="material-symbols-rounded" style="font-size: 14px;">rss_feed</span>News Feed</div>
+            <div id="rss-feed-list" style="display: grid;grid-auto-columns: auto;gap: 12px;grid-template-rows: repeat(2, 1fr);grid-template-columns: repeat(4, 1fr);">
+                <svg class="loading-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100%" height="100%" fill="currentColor" stroke="none" class="loading-spinner-ind" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Overlay -->
+    <div id="donburi-settings" class="settings-overlay">
+        <div class="settings-header">
+            <h2>Donburi Settings</h2>
+            <button onclick="closeSettings()" style="background:transparent;border:none;color:var(--text-color);cursor:pointer;"><span class="material-symbols-rounded">cancel</span></button>
+        </div>
+        
+        <div id="settings-items-list" style="margin-bottom: 20px;"></div>
+        
+        <div class="settings-section">
+            <h3 style="margin: 0 0 15px;">Data Sources</h3>
+            <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                <label style="font-size: 0.85rem; font-weight: 500;">RSS Feed</label>
+                <input type="text" id="setting-rss-url" placeholder="Enter an URL" onchange="saveDataSources()">
+            </div>
+            <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                <label style="font-size: 0.85rem; font-weight: 500;">Quotes API</label>
+                <input type="text" id="setting-quote-url" placeholder="https://dummyjson.com/quotes/random" onchange="saveDataSources()">
+            </div>
+        </div>
+    </div>
+
+    <script>
+// --- Swipe up to close Donburi ---
+        let touchStartX = 0;
+        let isDragging = false;
+
+        document.body.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+        
+        document.body.addEventListener('touchend', (e) => {
+            // Do not close if settings overlay is open
+            if (document.getElementById('donburi-settings').classList.contains('show')) return;
+
+            let endX = e.changedTouches[0].clientX;
+            if (touchStartX - endX > 50) { // Swipe left
+                window.parent.postMessage({ type: 'donburi-close' }, '*');
+            }
+        });
+
+        document.body.addEventListener('mousedown', (e) => {
+            // FIX: Do not start drag logic if settings overlay is open
+            if (document.getElementById('donburi-settings').classList.contains('show')) return;
+            
+            touchStartX = e.clientX;
+            isDragging = true;
+        });
+
+        document.body.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            if (touchStartX - e.clientX > 50) {
+                window.parent.postMessage({ type: 'donburi-close' }, '*');
+            }
+        });
+
+        // --- Tabs Logic ---
+        const tabBtns = document.querySelectorAll('.don-nav-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // --- Dynamic Content Population ---
+        function updateTimeAndGreeting() {
+            const now = new Date();
+            const hour = now.getHours();
+            let greetingKey = 'GOOD_NIGHT';
+            let icon = 'bedtime';
+
+            if (hour >= 5 && hour < 12) { greetingKey = 'GOOD_MORNING'; icon = 'wb_sunny'; }
+            else if (hour >= 12 && hour < 18) { greetingKey = 'GOOD_AFTERNOON'; icon = 'sunny'; }
+            else if (hour >= 18 && hour < 22) { greetingKey = 'GOOD_EVENING'; icon = 'clear_night'; }
+
+            const greetingTab = document.getElementById('greeting-tab');
+            if (greetingTab) {
+                greetingTab.textContent = (typeof Polygol !== 'undefined' && Polygol.t) ? Polygol.t('YOUR_DAY') : 'Your day';
+            }
+            
+            const greetingText = document.getElementById('greeting-text');
+            if (greetingText) {
+                greetingText.textContent = (typeof Polygol !== 'undefined' && Polygol.t) ? Polygol.t(greetingKey) : 'Good morning';
+            }
+
+            // Time & Date
+            const timeEl = document.getElementById('bento-time');
+            const dateEl = document.getElementById('bento-date');
+            
+            const curLang = (typeof Polygol !== 'undefined' && Polygol.getLanguage ? Polygol.getLanguage() : (localStorage.getItem('selectedLanguage') || localStorage.getItem('language') || 'EN')).toUpperCase();
+            const bcpLocaleMap = { 'EN': 'en-US', 'JP': 'ja-JP', 'JA': 'ja-JP', 'KO': 'ko-KR', 'ZH': 'zh-CN' };
+            const bcpLocale = bcpLocaleMap[curLang] || 'en-US';
+
+            const use12Hour = localStorage.getItem('use12HourFormat') === 'true';
+            let timeString;
+            try {
+                timeString = now.toLocaleTimeString(bcpLocale, {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: use12Hour
+                });
+            } catch (e) {
+                let hours = now.getHours();
+                let ampm = '';
+                if (use12Hour) {
+                    ampm = hours >= 12 ? (curLang === 'JP' || curLang === 'JA' ? ' 午後' : curLang === 'KO' ? ' 오후' : curLang === 'ZH' ? ' 下午' : ' PM') : (curLang === 'JP' || curLang === 'JA' ? ' 午前' : curLang === 'KO' ? ' 오전' : curLang === 'ZH' ? ' 上午' : ' AM');
+                    hours = hours % 12 || 12;
+                }
+                hours = String(hours).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                timeString = `${hours}:${minutes}${ampm}`;
+            }
+            
+            if (timeEl) timeEl.textContent = timeString;
+
+            const sysDateFormat = localStorage.getItem('systemDateFormat') || 'auto';
+            if (dateEl) {
+                if (sysDateFormat === 'YYYY-MM-DD') {
+                    const y = now.getFullYear();
+                    const m = String(now.getMonth() + 1).padStart(2, '0');
+                    const d = String(now.getDate()).padStart(2, '0');
+                    dateEl.textContent = `${y}-${m}-${d}`;
+                } else if (sysDateFormat === 'DD/MM/YYYY') {
+                    const y = now.getFullYear();
+                    const m = String(now.getMonth() + 1).padStart(2, '0');
+                    const d = String(now.getDate()).padStart(2, '0');
+                    dateEl.textContent = `${d}/${m}/${y}`;
+                } else if (sysDateFormat === 'MM/DD/YYYY') {
+                    const y = now.getFullYear();
+                    const m = String(now.getMonth() + 1).padStart(2, '0');
+                    const d = String(now.getDate()).padStart(2, '0');
+                    dateEl.textContent = `${m}/${d}/${y}`;
+                } else {
+                    dateEl.textContent = now.toLocaleDateString(bcpLocale, { weekday: 'long', month: 'short', day: 'numeric' });
+                }
+            }
+            
+            const persistClock = document.getElementById('don-persistent-clock');
+            if (persistClock) persistClock.textContent = timeString;
+        }
+
+        /**
+         * SmartManager: Controls the 'bento-smart' tile.
+         * Priorities: 1. Live Activities -> 2. Urgent Events (< 60m) -> 3. Standard Clock
+         */
+        const SmartManager = {
+            liveActivities: {},
+            urgentEvent: null,
+
+            init() {
+                // Listen for Live Activity commands from the parent OS
+                window.addEventListener('message', (e) => {
+                    if (e.data.type === 'system-live-activity-start') {
+                        this.addLiveActivity(e.data.options.activityId, e.data.appName, e.data.options);
+                    } else if (e.data.type === 'system-live-activity-update') {
+                        this.updateLiveActivity(e.data.activityId, e.data.data);
+                    } else if (e.data.type === 'system-live-activity-stop') {
+                        this.removeLiveActivity(e.data.activityId);
+                    }
+                });
+            },
+
+            addLiveActivity(id, appName, options) {
+                if (!id || appName === 'Donburi' || this.liveActivities[id]) return;
+                
+                // Create iframe to host the Live Activity widget
+                const iframe = document.createElement('iframe');
+                iframe.src = options.url;
+                iframe.className = 'smart-activity-frame';
+                iframe.dataset.id = id;
+                // Add security/sandbox attributes matching the system
+                iframe.setAttribute('data-polygol-iframe', 'true');
+                
+                this.liveActivities[id] = { appName, iframe, lastUpdated: Date.now() };
+                document.getElementById('smart-activity-container').appendChild(iframe);
+                this.evaluate();
+            },
+
+            updateLiveActivity(id, data) {
+                if (this.liveActivities[id]) {
+                    this.liveActivities[id].lastUpdated = Date.now();
+                    const iframe = this.liveActivities[id].iframe;
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({ type: 'live-activity-update', ...data }, '*');
+                    }
+                    this.evaluate();
+                }
+            },
+
+            removeLiveActivity(id) {
+                if (this.liveActivities[id]) {
+                    this.liveActivities[id].iframe.remove();
+                    delete this.liveActivities[id];
+                    this.evaluate();
+                }
+            },
+
+            broadcastToActivities(message) {
+                Object.values(this.liveActivities).forEach(act => {
+                    if (act.iframe && act.iframe.contentWindow) {
+                        act.iframe.contentWindow.postMessage(message, '*');
+                    }
+                });
+            },
+
+            checkUrgentEvents() {
+                const eventsStr = localStorage.getItem('events');
+                if (!eventsStr) return null;
+                try {
+                    const events = JSON.parse(eventsStr);
+                    const now = moment();
+                    const todayStr = now.format('YYYY-MM-DD');
+                    
+                    // Find events today that have a set start time
+                    const upcoming = events.filter(e => e.date === todayStr && e.startTime).sort((a,b) => a.startTime.localeCompare(b.startTime));
+                    
+                    for (const e of upcoming) {
+                        const eventTime = moment(`${e.date} ${e.startTime}`, 'YYYY-MM-DD HH:mm');
+                        const diffMins = eventTime.diff(now, 'minutes');
+                        
+                        // If event is in the next 60 minutes or started within the last 30 minutes
+                        if (diffMins <= 60 && diffMins >= -30) {
+                            e.diffMins = diffMins; // Inject for rendering
+                            return e;
+                        }
+                    }
+                } catch(e) {}
+                return null;
+            },
+
+            evaluate() {
+                this.urgentEvent = this.checkUrgentEvents();
+                const activityIds = Object.keys(this.liveActivities);
+                
+                const fallbackEl = document.getElementById('smart-fallback-clock');
+                const activityEl = document.getElementById('smart-activity-container');
+                const eventEl = document.getElementById('smart-event-container');
+                
+                if (!fallbackEl || !activityEl || !eventEl) return;
+
+                // Priority 1: Live Activities
+                if (activityIds.length > 0) {
+                    // Sort to show the most recently updated activity
+                    const activeId = activityIds.sort((a,b) => this.liveActivities[b].lastUpdated - this.liveActivities[a].lastUpdated)[0];
+                    
+                    // Hide all iframes except the active one
+                    Object.values(this.liveActivities).forEach(act => act.iframe.style.display = 'none');
+                    this.liveActivities[activeId].iframe.style.display = 'block';
+                    
+                    fallbackEl.style.display = 'none';
+                    eventEl.style.display = 'none';
+                    activityEl.style.display = 'block';
+                } 
+                // Priority 2: Urgent Calendar Event
+                else if (this.urgentEvent) {
+                    const e = this.urgentEvent;
+                    let timeText = '';
+                    if (e.diffMins > 0) timeText = `in ${e.diffMins} min`;
+                    else if (e.diffMins === 0) timeText = 'Starting now';
+                    else timeText = `started ${Math.abs(e.diffMins)} min ago`;
+
+                    eventEl.innerHTML = `
+                        <div class="item-card-title"><span class="material-symbols-rounded">notifications_active</span>Upcoming</div>
+                        <div style="font-weight: 700; font-size: 1.5rem; line-height: 1.2; margin-top: 10px;" class="smart-event-urgent">${timeText}</div>
+                        <div style="font-weight: 500; font-size: 1.1rem; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${e.title}</div>
+                    `;
+                    
+                    fallbackEl.style.display = 'none';
+                    activityEl.style.display = 'none';
+                    eventEl.style.display = 'block';
+                } 
+                // Priority 3: Fallback (Time & Date)
+                else {
+                    activityEl.style.display = 'none';
+                    eventEl.style.display = 'none';
+                    fallbackEl.style.display = 'flex'; // Uses flex for internal column layout
+                }
+            }
+        };
+
+        function updateWeather() {
+            // Request data from parent
+            window.parent.postMessage({ type: 'get-system-weather' }, '*');
+        }
+
+        function renderWeatherData(data) {
+            if (!data) return;
+            
+            const tempEl = document.getElementById('weather-temp');
+            const cityEl = document.getElementById('weather-city');
+            const iconEl = document.getElementById('weather-desc-icon');
+
+            if (tempEl) tempEl.textContent = `${data.temp}${data.unit}`;
+            if (cityEl) cityEl.textContent = data.city;
+            if (iconEl) iconEl.textContent = data.icon;
+        }
+        
+        function updateUpcoming() {
+            // Events
+            const eventsStr = localStorage.getItem('events');
+            const agendaList = document.getElementById('agenda-list');
+            const nextEventContent = document.getElementById('next-event-content');
+
+            if (eventsStr) {
+                try {
+                    const events = JSON.parse(eventsStr);
+                    const todayStr = new Date().toISOString().split('T');
+                    
+                    // Filter upcoming
+                    const upcoming = events.filter(e => e.date >= todayStr).sort((a,b) => {
+                        if (a.date !== b.date) return a.date.localeCompare(b.date);
+                        if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
+                        return 0;
+                    });
+
+                    if (upcoming.length > 0) {
+                        // Next Event Card
+                        // FIX: Access the first element of the sorted array [0]
+                        const next = upcoming[0];
+                        
+                        // FIX: Use moment for robust date parsing and comparison
+                        const eventMoment = moment(next.date);
+                        const isToday = next.date === moment().format('YYYY-MM-DD');
+                        const dayStr = isToday ? ((typeof Polygol !== 'undefined' && Polygol.t) ? Polygol.t('TODAY') : 'Today') : eventMoment.format('MMM D');
+                        const timeStr = next.startTime ? next.startTime : ((typeof Polygol !== 'undefined' && Polygol.t) ? Polygol.t('ALL') : 'All day');
+
+                        if (nextEventContent) {
+                            nextEventContent.innerHTML = `
+                                <div style="font-weight: 600; font-size: 1.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${next.title}</div>
+                                <div class="item-card-subtitle" style="color: var(--secondary-text-color);">${dayStr} • ${timeStr}</div>
+                            `;
+                        }
+
+                        // Agenda List
+                        if (agendaList) {
+                            agendaList.innerHTML = upcoming.slice(0, 4).map(e => `
+                                <div class="list-item">
+                                    <span class="material-symbols-rounded" style="font-size: 18px; color: var(--accent);">event</span>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <span style="font-weight: 500;">${e.title}</span>
+                                        <span style="font-size: 0.8rem; color: var(--secondary-text-color);">${e.date === todayStr ? 'Today' : e.date} ${e.startTime ? e.startTime : ''}</span>
+                                    </div>
+                                </div>
+                            `).join('');
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // Tasks
+            const tasksStr = localStorage.getItem('tasks');
+            const taskList = document.getElementById('task-list');
+            if (tasksStr && taskList) {
+                try {
+                    const tasks = JSON.parse(tasksStr).filter(t => !t.completed);
+                    if (tasks.length > 0) {
+                        taskList.innerHTML = tasks.slice(0, 4).map(t => `
+                            <div class="list-item">
+                                <span class="material-symbols-rounded" style="font-size: 18px;">radio_button_unchecked</span>
+                                <span>${t.text}</span>
+                            </div>
+                        `).join('');
+                    }
+                } catch(e) {}
+            }
+
+            // Alarms
+            const alarmsStr = localStorage.getItem('alarms');
+            const alarmList = document.getElementById('alarm-list');
+            if (alarmsStr && alarmList) {
+                try {
+                    const alarms = JSON.parse(alarmsStr);
+                    if (alarms.length > 0) {
+                        alarmList.innerHTML = alarms.map(a => `<div>${a.time}</div>`).join('');
+                    } else {
+                        alarmList.innerHTML = 'No alarms set';
+                    }
+                } catch(e) {}
+            }
+        }
+
+        function updateMedia(data = null) {
+            // If data is provided via message, use it; otherwise, fall back to storage
+            const metadata = data ? data.metadata : JSON.parse(localStorage.getItem('lastMediaMetadata'));
+            const appName = data ? data.appName : localStorage.getItem('lastMediaSessionApp');
+            const state = data ? data.playbackState : 'paused';
+            
+            if (metadata && appName) {
+                document.getElementById('media-widget-title').textContent = metadata.title || ((typeof Polygol !== 'undefined' && Polygol.t) ? Polygol.t('NOT_PLAYING') : 'Not Playing');
+                document.getElementById('media-widget-artist').textContent = metadata.artist || '---';
+                
+                const artEl = document.getElementById('media-widget-art');
+                if (metadata.artwork && metadata.artwork.length > 0) {
+                    artEl.src = metadata.artwork[0].src;
+                }
+
+                const appIconEl = document.getElementById('media-widget-app-icon');
+                const userApps = JSON.parse(localStorage.getItem('userInstalledApps') || '{}');
+                if (userApps[appName] && userApps[appName].icon) {
+                    let iconUrl = userApps[appName].icon;
+                    if (!iconUrl.startsWith('http') && !iconUrl.startsWith('/') && !iconUrl.startsWith('data:')) {
+                        iconUrl = `/assets/appicon/${iconUrl}`;
+                    }
+                    appIconEl.src = iconUrl;
+                    appIconEl.style.display = 'block';
+                }
+                
+                // Update play/pause icon
+                const icon = document.querySelector('#media-widget-play-pause .material-symbols-rounded');
+                if (icon) icon.textContent = state === 'playing' ? 'pause' : 'play_arrow';
+
+                // Update Mini Media Player
+                const miniTitle = document.getElementById('mini-media-title');
+                const miniArtist = document.getElementById('mini-media-artist');
+                const miniIcon = document.querySelector('#mini-media-play-pause .material-symbols-rounded');
+
+                if (miniTitle) miniTitle.textContent = metadata.title || ((typeof Polygol !== 'undefined' && Polygol.t) ? Polygol.t('NOT_PLAYING') : 'Not Playing');
+                if (miniArtist) miniArtist.textContent = metadata.artist || '---';
+                if (miniIcon) miniIcon.textContent = state === 'playing' ? 'pause' : 'play_arrow';
+            }
+        }
+        
+        function updateHomeControls(data = {}) {
+            // Priority: provided data (from message), then current UI value
+            const brightness = data.page_brightness || document.getElementById('brightness-slider').value;
+            const temp = data.display_temperature || document.getElementById('temp-slider').value;
+            const theme = data.theme || (document.getElementById('theme-toggle').checked ? 'light' : 'dark');
+            const silent = data.silentMode || document.getElementById('silent-toggle').checked.toString();
+
+            if (data.page_brightness) document.getElementById('brightness-slider').value = brightness;
+            if (data.display_temperature) document.getElementById('temp-slider').value = temp;
+            if (data.theme) document.getElementById('theme-toggle').checked = theme === 'light';
+            if (data.silentMode) document.getElementById('silent-toggle').checked = silent === 'true';
+        }
+
+        // --- Controls Listeners using APPAPI ---
+        document.getElementById('brightness-slider').addEventListener('input', (e) => {
+            Polygol.setSettingValue('page_brightness', e.target.value);
+        });
+
+        document.getElementById('temp-slider').addEventListener('input', (e) => {
+            Polygol.setSettingValue('display_temperature', e.target.value);
+        });
+
+        document.getElementById('theme-toggle').addEventListener('change', (e) => {
+            const theme = e.target.checked ? 'light' : 'dark';
+            Polygol.setSettingValue('theme', theme);
+        });
+
+        document.getElementById('silent-toggle').addEventListener('change', (e) => {
+            Polygol.setSettingValue('silentMode', e.target.checked.toString());
+        });
+
+        // Media Controls
+        const mediaApp = () => localStorage.getItem('lastMediaSessionApp');
+        
+        const togglePlay = (e) => {
+            e.stopPropagation();
+            if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'playPause', type: 'media-control'}, '*');
+        };
+
+        const prevMedia = (e) => {
+            e.stopPropagation();
+            if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'prev', type: 'media-control'}, '*');
+        };
+
+        const nextMedia = (e) => {
+            e.stopPropagation();
+            if (mediaApp()) window.parent.postMessage({targetApp: mediaApp(), action: 'next', type: 'media-control'}, '*');
+        };
+
+        document.getElementById('media-widget-play-pause').addEventListener('click', togglePlay);
+        document.getElementById('media-widget-prev').addEventListener('click', prevMedia);
+        document.getElementById('media-widget-next').addEventListener('click', nextMedia);
+        
+        // Mini media widget interactions
+        const miniPlayBtn = document.getElementById('mini-media-play-pause');
+        const miniPrevBtn = document.getElementById('mini-media-prev');
+        const miniNextBtn = document.getElementById('mini-media-next');
+        if (miniPlayBtn) miniPlayBtn.addEventListener('click', togglePlay);
+        if (miniPrevBtn) miniPrevBtn.addEventListener('click', prevMedia);
+        if (miniNextBtn) miniNextBtn.addEventListener('click', nextMedia);
+
+        const miniWidget = document.getElementById('bento-mini-media');
+        if (miniWidget) {
+            miniWidget.addEventListener('click', () => {
+                // Switch to the main Media tab
+                const mediaTabBtn = document.querySelector('.don-nav-btn[data-tab="tab-media"]');
+                if (mediaTabBtn) mediaTabBtn.click();
+            });
+        }
+
+        // Battery Check
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(battery => {
+                const updateBattery = () => {
+                    document.getElementById('battery-level').textContent = `${Math.round(battery.level * 100)}%`;
+                    document.getElementById('battery-status').textContent = battery.charging ? 'Charging' : '';
+                };
+                updateBattery();
+                battery.addEventListener('levelchange', updateBattery);
+                battery.addEventListener('chargingchange', updateBattery);
+            });
+        }
+
+        // Real-time synchronization for changes pushed from parent
+        window.addEventListener('message', (event) => {
+            const data = event.data;
+
+            // Metadata / Active Session Change
+            if (data.type === 'mediaUpdate') {
+                updateMedia(data);
+            }
+
+            // Play/Pause Toggle
+            if (data.type === 'playback-state' || data.type === 'mediaUpdate') {
+                const playbackState = data.type === 'playback-state' ? data.state : data.playbackState;
+                const cPanelBtn = document.getElementById('media-widget-play-pause');
+                const cPanelIcon = cPanelBtn?.querySelector('.material-symbols-rounded');
+
+                // --- Update Main Button & Icon ---
+                if (cPanelIcon && cPanelBtn) {
+                    if (playbackState === 'playing') {
+                        cPanelIcon.textContent = 'pause';
+                        cPanelBtn.style.borderRadius = '35px';
+                        cPanelBtn.style.cornerShape = 'superellipse(1.5)';
+                    } else {
+                        cPanelIcon.textContent = 'play_arrow';
+                        cPanelBtn.style.borderRadius = '50%';
+                        cPanelBtn.style.cornerShape = 'round';
+                    }
+                }
+
+                // --- Update Mini Button & Icon ---
+                const miniBtn = document.getElementById('mini-media-play-pause');
+                const miniIcon = miniBtn?.querySelector('.material-symbols-rounded');
+
+                if (miniBtn && miniIcon) {
+                    if (playbackState === 'playing') {
+                        miniIcon.textContent = 'pause';
+                        miniBtn.style.borderRadius = '25px';
+                        miniBtn.style.cornerShape = 'superellipse(1.5)';
+                    } else {
+                        miniIcon.textContent = 'play_arrow';
+                        miniBtn.style.borderRadius = '50%';
+                        miniBtn.style.cornerShape = 'round';
+                    }
+                }
+                
+                // --- Update Progress Bar Visuals (Wave/Straight) ---
+                const bar = document.getElementById('media-widget-progress');
+                if (bar) {
+                    const WAVE_SVG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0,5 Q5,10 10,5 T20,5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' /%3E%3C/svg%3E\")";
+                    const LINE_SVG = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M0,5 L20,5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' /%3E%3C/svg%3E\")";
+
+                    if (playbackState === 'playing') {
+                        bar.style.setProperty('--wave', WAVE_SVG);
+                        bar.style.animation = 'wave-move 1s linear infinite';
+                    } else {
+                        bar.style.setProperty('--wave', LINE_SVG);
+                        bar.style.animation = 'none';
+                    }
+                }
+            }
+
+            // Progress & Timers
+            if (data.type === 'mediaProgress') {
+                const progressEl = document.getElementById('media-widget-progress');
+                const currentEl = document.getElementById('media-widget-current-time');
+                const durationEl = document.getElementById('media-widget-duration');
+                
+                if (data.duration > 0) {
+                    const percent = (data.currentTime / data.duration) * 100;
+                    if (progressEl) progressEl.style.width = `${percent}%`;
+                    
+                    const formatTime = (s) => {
+                        const m = Math.floor(s / 60);
+                        const sec = Math.floor(s % 60).toString().padStart(2, '0');
+                        return `${m}:${sec}`;
+                    };
+                    if (currentEl) currentEl.textContent = formatTime(data.currentTime);
+                    if (durationEl) durationEl.textContent = formatTime(data.duration);
+                }
+            }
+            
+            if (data.type === 'themeUpdate') {
+                updateHomeControls({ theme: data.theme });
+            }
+
+            if (data.type === 'localStorageItemValue' || data.type === 'settingUpdate') {
+                const update = {};
+                update[data.key] = data.value;
+                updateHomeControls(update);
+            }
+            if (data.type === 'system-weather-response') {
+                renderWeatherData(data);
+            }
+            if (data.type === 'system-live-activity-start') {
+                SmartManager.addLiveActivity(data.options.activityId, data.appName, data.options);
+            }
+            if (data.type === 'system-live-activity-update') {
+                SmartManager.updateLiveActivity(data.activityId, data.data);
+            }
+            if (data.type === 'system-live-activity-stop') {
+                SmartManager.removeLiveActivity(data.activityId);
+            }
+            if (['themeUpdate', 'animationsUpdate', 'contrastUpdate', 'glassEffectsUpdate', 'themeVariablesUpdate', 'sunUpdate'].includes(data.type)) {
+                SmartManager.broadcastToActivities(data);
+            }
+            
+            // Detect if message is coming from one of our internal smart activity iframes
+            const activityIds = Object.keys(SmartManager.liveActivities);
+            const isFromChild = activityIds.some(id => SmartManager.liveActivities[id].iframe.contentWindow === event.source);
+
+            if (isFromChild) {
+                // Relay everything to parent system exactly as received
+                window.parent.postMessage(data, '*');
+            }
+        });
+
+        // --- Custom Feeds (Quotes & RSS) ---
+        let currentQuoteText = "";
+
+        async function fetchQuote() {
+            const url = localStorage.getItem('donburi_quote_url') || 'https://dummyjson.com/quotes/random';
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                const item = Array.isArray(data) ? data[0] : data;
+                const text = item.quote || item.content || item.text || "No quote text";
+                const author = item.author || item.from || "Unknown";
+                
+                currentQuoteText = text; // Save for Google Search
+
+                // FIX: Added null checks to prevent "Cannot set properties of null"
+                const textEl = document.getElementById('quote-text');
+                const authorEl = document.getElementById('quote-author');
+                
+                if (textEl) textEl.textContent = `"${text}"`;
+                if (authorEl) authorEl.textContent = `- ${author}`;
+            } catch (e) {
+                console.error(e);
+                const textEl = document.getElementById('quote-text');
+                if (textEl) textEl.textContent = "No quote for today";
+            }
+        }
+
+        function searchQuote() {
+            if (!currentQuoteText) return;
+            const query = encodeURIComponent(currentQuoteText);
+            const googleUrl = `https://www.google.com/search?q=${query}&igu=1&udm=50`;
+            Polygol.openApp(googleUrl);
+        }
+
+        async function fetchRSS() {
+            const url = localStorage.getItem('donburi_rss_url') || 'http://feeds.bbci.co.uk/news/world/rss.xml';
+            try {
+                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`);
+                const data = await res.json();
+                
+                if (data.status !== 'ok') throw new Error('RSS Error');
+
+                // Update Widget Title
+                if (data.feed && data.feed.title) {
+                    const titleEl = document.getElementById('rss-widget-title');
+                    if (titleEl) titleEl.innerHTML = `<span class="material-symbols-rounded">rss_feed</span>${data.feed.title}`;
+                }
+
+                const list = document.getElementById('rss-feed-list');
+                list.innerHTML = data.items.slice(0, 10).map(item => {
+                    const query = encodeURIComponent(item.title);
+                    const googleUrl = `https://www.google.com/search?q=${query}&igu=1&udm=50`;
+                    return `
+                    <div class="list-item" style="flex-direction:column;align-items:flex-start;cursor:pointer;background: var(--search-background);padding: 10px 14px;border: 1px solid var(--glass-border);border-radius: 20px;corner-shape: superellipse(1.5);box-shadow: var(--sun-shadow);margin: 0;" onclick="Polygol.openApp('${googleUrl}')">
+                        <span style="font-weight:600; white-space:normal; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; width: 100%;">${item.title}</span>
+                        <span style="font-size:0.8rem; color:var(--secondary-text-color); opacity: 0.5;">${new Date(item.pubDate).toLocaleDateString()}</span>
+                    </div>
+                `}).join('');
+            } catch(e) {
+                document.getElementById('rss-feed-list').innerHTML = `<div style="padding:10px;">Cannot load feed</div>`;
+            }
+        }
+
+        function saveDataSources() {
+            const rss = document.getElementById('setting-rss-url').value;
+            const quote = document.getElementById('setting-quote-url').value;
+            
+            if (rss) localStorage.setItem('donburi_rss_url', rss);
+            if (quote) localStorage.setItem('donburi_quote_url', quote);
+            
+            // Refresh content immediately
+            fetchRSS();
+            fetchQuote();
+        }
+
+        function loadDataSources() {
+            document.getElementById('setting-rss-url').value = localStorage.getItem('donburi_rss_url') || '';
+            document.getElementById('setting-quote-url').value = localStorage.getItem('donburi_quote_url') || '';
+        }
+
+        // --- Settings / Layout Manager ---
+        function loadBentoLayout() {
+            const layoutStr = localStorage.getItem('donburi_bento_layout');
+            if (!layoutStr) return;
+            try {
+                const layout = JSON.parse(layoutStr);
+                Object.keys(layout).forEach(tabId => {
+                    const tab = document.getElementById(tabId);
+                    if (!tab) return;
+                    
+                    const itemsData = layout[tabId];
+                    
+                    if (Array.isArray(itemsData)) {
+                        itemsData.sort((a, b) => a.order - b.order); // Ensure correct order
+                        
+                        itemsData.forEach(data => {
+                            const item = document.getElementById(data.id);
+                            if (item) {
+                                tab.appendChild(item); // Reorders DOM nodes
+                                item.classList.remove('span-1x1', 'span-2x1', 'span-1x2', 'span-2x2', 'span-3x2');
+                                if (data.size) item.classList.add(data.size);
+                                item.style.display = data.visible ? '' : 'none';
+                            }
+                        });
+                    }
+                });
+            } catch(e) { console.error("Failed to load layout", e); }
+        }
+
+        function saveBentoLayout() {
+            const layout = {};
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                // Assign array to specific key (tab.id) instead of overwriting the const variable
+                layout[tab.id] = Array.from(tab.children).map((item, index) => {
+                    if (!item.id) return null;
+                    const sizeClass = Array.from(item.classList).find(c => c.startsWith('span-'));
+                    return {
+                        id: item.id,
+                        order: index,
+                        size: sizeClass,
+                        visible: item.style.display !== 'none'
+                    };
+                }).filter(Boolean);
+            });
+            localStorage.setItem('donburi_bento_layout', JSON.stringify(layout));
+        }
+
+        function openSettings() {
+            document.getElementById('donburi-settings').classList.add('show');
+            loadDataSources(); // Pre-fill inputs
+            renderSettingsList();
+        }
+
+        function closeSettings() {
+            document.getElementById('donburi-settings').classList.remove('show');
+        }
+
+        function renderSettingsList() {
+            const list = document.getElementById('settings-items-list');
+            list.innerHTML = '';
+            
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                const navBtn = document.querySelector(`.don-nav-btn`);
+                if (!navBtn) return;
+                
+                const tabTitle = navBtn.textContent.trim();
+                const group = document.createElement('div');
+                group.innerHTML = `<h3 style="margin: 20px 0 10px;">${tabTitle}</h3>`;
+                
+                const itemsContainer = document.createElement('div');
+                itemsContainer.style.display = 'flex';
+                itemsContainer.style.flexDirection = 'column';
+
+                Array.from(tab.children).forEach((item) => {
+                    if (!item.classList.contains('bento-item') || !item.id) return;
+                    
+                    // Extract title correctly by ignoring the icon span text
+                    const titleEl = item.querySelector('.item-card-title');
+                    let title = 'Widget';
+                    if (titleEl) {
+                        const clone = titleEl.cloneNode(true);
+                        const icon = clone.querySelector('.material-symbols-rounded');
+                        if (icon) icon.remove();
+                        title = clone.textContent.trim();
+                    }
+                    
+                    const row = document.createElement('div');
+                    row.className = 'settings-row';
+                    
+                    // Size Select
+                    const sizeSelect = document.createElement('select');
+                    ['span-1x1', 'span-2x1', 'span-1x2', 'span-2x2', 'span-3x2'].forEach(sz => {
+                        const opt = document.createElement('option');
+                        opt.value = sz;
+                        opt.textContent = sz;
+                        if(item.classList.contains(sz)) opt.selected = true;
+                        sizeSelect.appendChild(opt);
+                    });
+                    sizeSelect.onchange = (e) => {
+                        item.classList.remove('span-1x1', 'span-2x1', 'span-1x2', 'span-2x2', 'span-3x2');
+                        item.classList.add(e.target.value);
+                        saveBentoLayout();
+                    };
+
+                    // Move Up
+                    const moveUp = document.createElement('button');
+                    moveUp.innerHTML = '<span class="material-symbols-rounded">arrow_upward</span>';
+                    moveUp.onclick = () => {
+                        if (item.previousElementSibling) {
+                            tab.insertBefore(item, item.previousElementSibling);
+                            renderSettingsList();
+                            saveBentoLayout();
+                        }
+                    };
+
+                    // Move Down
+                    const moveDown = document.createElement('button');
+                    moveDown.innerHTML = '<span class="material-symbols-rounded">arrow_downward</span>';
+                    moveDown.onclick = () => {
+                        if (item.nextElementSibling) {
+                            tab.insertBefore(item.nextElementSibling, item);
+                            renderSettingsList();
+                            saveBentoLayout();
+                        }
+                    };
+
+                    // Visibility
+                    const visToggle = document.createElement('input');
+                    visToggle.type = 'checkbox';
+                    visToggle.className = 'toggle-switch';
+                    visToggle.checked = item.style.display !== 'none';
+                    visToggle.onchange = (e) => {
+                        item.style.display = e.target.checked ? '' : 'none';
+                        saveBentoLayout();
+                    };
+
+                    row.innerHTML = `<div style="flex-grow:1; font-weight:500;">${title}</div>`;
+                    row.appendChild(sizeSelect);
+                    row.appendChild(moveUp);
+                    row.appendChild(moveDown);
+                    row.appendChild(visToggle);
+                    
+                    itemsContainer.appendChild(row);
+                });
+                
+                group.appendChild(itemsContainer);
+                list.appendChild(group);
+            });
+        }
+
+        // Apply Layout immediately on boot
+        loadBentoLayout();
+
+        /**
+         * Synchronized Clock Utility
+         * Updates immediately, then syncs to fire exactly at the turn of every minute.
+         */
+        function startMinuteSyncClock() {
+            updateTimeAndGreeting();
+        window.addEventListener('polygolLocaleChange', () => updateTimeAndGreeting());
+        window.addEventListener('message', (e) => {
+            if (e.data && (e.data.type === 'localeUpdate' || e.data.type === 'languageUpdate' || e.data.type === 'dateFormatUpdate')) {
+                updateTimeAndGreeting();
+            }
+        }); 
+
+            const now = new Date();
+            const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+
+            // Use recursive setTimeout to prevent long-term browser timer drift
+            setTimeout(startMinuteSyncClock, msUntilNextMinute);
+        }
+
+        /**
+         * Donburi Live Refresh Engine
+         * Handles staggered updates for long-term persistence.
+         */
+        const RefreshEngine = {
+            intervals: {
+                fast: 30000,      // 30s (Tasks, Events, Alarms)
+                medium: 600000,   // 10m (Weather, Data Sources Sync)
+                slow: 3600000,    // 1h  (RSS, Quotes)
+            },
+            
+            init() {
+                // Initialize SmartManager listeners
+                SmartManager.init();
+
+                // 1. Initial Load
+                startMinuteSyncClock();
+                this.refreshAll();
+
+                // 2. Setup Staggered Intervals
+                setInterval(() => updateUpcoming(), this.intervals.fast);
+                setInterval(() => {
+                    updateWeather();
+                    updateHomeControls();
+                    loadBentoLayout(); // Check if layout was changed in another instance
+                }, this.intervals.medium);
+                setInterval(() => {
+                    fetchRSS();
+                    fetchQuote();
+                }, this.intervals.slow);
+
+                Polygol.onVisibilityChange((visible) => {
+                    if (visible) {
+                        console.log('[Donburi] Resumed. Syncing live elements...');
+                        this.refreshAll();
+                    }
+                });
+
+                // 4. Real-time Storage Sync (Cross-app updates)
+                window.addEventListener('storage', (e) => {
+                    if (['tasks', 'events', 'alarms'].includes(e.key)) updateUpcoming();
+                    if (e.key === 'lastWeatherData') updateWeather();
+                    if (e.key.startsWith('donburi_')) this.refreshAll(); // Source URL changes
+                });
+            },
+
+            refreshAll() {
+                updateTimeAndGreeting();
+                updateWeather();
+                updateUpcoming();
+                updateMedia();
+                updateHomeControls();
+                fetchQuote();
+                fetchRSS();
+                loadBentoLayout();
+                SmartManager.evaluate();
+            }
+        };
+
+        // Initialize the engine
+        RefreshEngine.init();
+
+    </script>
+</body>
+</html>

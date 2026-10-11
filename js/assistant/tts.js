@@ -28,7 +28,9 @@ export class LocalTTS {
                 utterance.pitch = Math.max(0.5, Math.min(2.0, parseInt(pitchStr, 10) / 100));
                 utterance.rate = 1.0;
 
-                const lang = localStorage.getItem('assistantLang') || localStorage.getItem('polygol_language') || 'en-US';
+                const langMap = { 'EN': 'en-US', 'JP': 'ja-JP', 'JA': 'ja-JP', 'KO': 'ko-KR', 'ZH': 'zh-CN', 'en': 'en-US', 'jp': 'ja-JP', 'ja': 'ja-JP', 'ko': 'ko-KR', 'zh': 'zh-CN' };
+                const rawLang = localStorage.getItem('assistantLang') || localStorage.getItem('polygol_language') || localStorage.getItem('selectedLanguage') || 'en-US';
+                const lang = langMap[rawLang] || rawLang;
                 utterance.lang = lang;
 
                 utterance.onstart = () => {

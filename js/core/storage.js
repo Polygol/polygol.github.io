@@ -192,7 +192,7 @@ async function createAutomaticBackup() {
         });
     }
 
-    showPopup(currentLanguage.BACKUP_STARTED || 'Starting automatic backup');
+    showPopup(window.t ? window.t('AUTO_BACKUP_STARTING') : (currentLanguage.BACKUP_STARTED || 'Starting automatic backup'));
     
     try {
         const zipData = {};
@@ -281,21 +281,21 @@ async function createAutomaticBackup() {
         fflate.zip(zipData, { level: 1 }, (err, data) => {
             if (err) {
                 console.error(err);
-                showPopup("Backup failed during compression.");
+                showPopup(window.t('BACKUP_FAILED'));
                 return;
             }
             
             const backupBlob = new Blob([data], { type: 'application/zip' });
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const fileName = `polygol_backup_${timestamp}.guradata`;
+            const fileName = `polygol_backup_${timestamp}.polygoldata`;
             
             localStorage.setItem('lastBackupTimestamp', Date.now().toString());
             
             // Notify user
             showDialog({ 
                 type: 'confirm', 
-                title: 'Backup Ready', 
-                message: currentLanguage.BACKUP_READY || 'Weekly backup is ready. Download now?' 
+                title: window.t('BACKUP_READY_TITLE'), 
+                message: window.t ? window.t('WEEKLY_BACKUP_READY') : (currentLanguage.BACKUP_READY || 'Weekly backup is ready. Download now?') 
             }).then((result) => {
                 if (result) downloadBackupFile(backupBlob, fileName);
             });

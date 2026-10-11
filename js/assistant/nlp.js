@@ -21,7 +21,7 @@ export class AssistantNLP {
         if (!text || typeof text !== 'string') return null;
         const lowerText = text.trim().toLowerCase();
 
-        // 1. Check registered 3rd party Gurapp Intents
+        // 1. Check registered 3rd party APP Intents
         const intents = (typeof window !== 'undefined' && window.ActivityIntents) || [];
         for (const intent of intents) {
             if (intent.keywords && Array.isArray(intent.keywords)) {
@@ -68,19 +68,19 @@ export class AssistantNLP {
         // 7. Time & Date
         if (/\b(what time is it|current time|what's the time|tell me the time)\b/.test(lowerText)) {
             const timeStr = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-            return { systemAction: 'info', responseText: `It's ${timeStr}.` };
+            return { systemAction: 'info', responseText: (typeof window !== 'undefined' && window.t) ? window.t('ASSISTANT_TIME', { time: timeStr }) : `It's ${timeStr}.` };
         }
         if (/\b(what day is it|what('s| is) the date|today's date)\b/.test(lowerText)) {
             const dateStr = new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
-            return { systemAction: 'info', responseText: `Today is ${dateStr}.` };
+            return { systemAction: 'info', responseText: (typeof window !== 'undefined' && window.t) ? window.t('ASSISTANT_DATE', { date: dateStr }) : `Today is ${dateStr}.` };
         }
 
         // 8. Greetings & kirbAI Info
         if (/^(hi|hello|hey|hey kirbai|hello kirbai|greetings)\b/.test(lowerText)) {
-            return { systemAction: 'info', responseText: "Hello! How can I help you today?" };
+            return { systemAction: 'info', responseText: (typeof window !== 'undefined' && window.t) ? window.t('ASSISTANT_GREETING') : "Hello! How can I help you today?" };
         }
         if (/\b(who are you|what can you do|what is kirbai|what is this)\b/.test(lowerText)) {
-            return { systemAction: 'info', responseText: "I'm kirbAI, your ambient assistant. I can open apps, check the weather, control playback, or manage system settings." };
+            return { systemAction: 'info', responseText: (typeof window !== 'undefined' && window.t) ? window.t('ASSISTANT_INTRO') : "I'm kirbAI, your ambient assistant. I can open apps, check the weather, control playback, or manage system settings." };
         }
 
         // 9. Open / Launch App

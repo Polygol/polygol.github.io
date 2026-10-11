@@ -28,7 +28,7 @@ function loadAvailableWidgets() {
             {
                 appName: 'System',
                 widgetId: 'system-media',
-                title: 'Now Playing',
+                title: (window.t ? window.t('NOW_PLAYING') : 'Now Playing'),
                 url: '/assets/system-widgets/media-widget.html',
                 defaultSize: [1, 1],
                 openUrl: '#open-last-media-app' // Special action handled by the dashboard
@@ -187,14 +187,14 @@ function addAppShortcut(appName, appDetails) {
     renderWidgets();
     saveWidgets();
     if (typeof showPopup === 'function') {
-        showPopup(`${appName} shortcut added`);
+        showPopup(window.t('SHORTCUT_ADDED', { appName }));
     }
 }
 
 async function removeWidget(index) {
     const item = activeWidgets[index];
-    const label = item?.type === 'app-shortcut' ? `${item.appName} shortcut` : 'this widget';
-    if (await showCustomConfirm(`Remove ${label}?`)) {
+    const label = item?.type === 'app-shortcut' ? `${item.appName} ${window.t ? window.t('SHORTCUT') : 'shortcut'}` : (window.t ? window.t('THIS_WIDGET') : 'this widget');
+    if (await showCustomConfirm(window.t('REMOVE_CONFIRM_ITEM', { label }))) {
         activeWidgets.splice(index, 1);
         
 		// CLEANUP: Free base64 string from memory and Swap cache
@@ -298,7 +298,7 @@ function renderWidgets() {
 
             const iframe = document.createElement('iframe');
             iframe.src = widgetDef.url;
-            iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+            iframe.setAttribute('data-polygol-iframe', 'true');
             instance.appendChild(iframe);
         }
 
@@ -783,7 +783,7 @@ function openWidgetPicker() {
     // Quick Widgets Only (Apps automatically reside on the home screen like iOS)
     const widgetSectionTitle = document.createElement('div');
     widgetSectionTitle.className = 'widget-picker-section-title';
-    widgetSectionTitle.textContent = 'Quick Widgets';
+    widgetSectionTitle.textContent = window.t('QUICK_WIDGETS');
     grid.appendChild(widgetSectionTitle);
 
     // Weather widget item
@@ -793,7 +793,7 @@ function openWidgetPicker() {
         <div class="widget-picker-preview" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border-radius:18px;">
             <span class="material-symbols-rounded" style="font-size:42px;color:var(--text-color);">partly_cloudy_day</span>
         </div>
-        <span class="widget-picker-title">Weather</span>
+        <span class="widget-picker-title">${window.t('WEATHER')}</span>
     `;
     weatherItem.addEventListener('click', () => {
         if (typeof window.addHomeItem === 'function') {
@@ -810,7 +810,7 @@ function openWidgetPicker() {
     if (Object.keys(availableWidgets).length === 0) {
         const emptyMsg = document.createElement('p');
         emptyMsg.style.cssText = 'text-align: center; opacity: 0.7; grid-column: 1 / -1;';
-        emptyMsg.textContent = 'No extra widgets available.';
+        emptyMsg.textContent = window.t('NO_EXTRA_WIDGETS');
         grid.appendChild(emptyMsg);
     } else {
         for (const appName in availableWidgets) {
@@ -824,7 +824,7 @@ function openWidgetPicker() {
 
                 const iframe = document.createElement('iframe');
                 iframe.src = widgetData.url;
-				iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+				iframe.setAttribute('data-polygol-iframe', 'true');
                 iframe.scrolling = 'no';
                 iframe.style.pointerEvents = 'none'; // Make the preview non-interactive
 
@@ -931,7 +931,7 @@ async function processStickerFiles(files) {
 
     renderWidgets();
     saveWidgets();
-    showPopup("Sticker added");
+    showPopup(window.t('STICKER_ADDED'));
     // If this was triggered from the drawer, close it
     closeWidgetPicker();
 }
@@ -967,7 +967,7 @@ function setupStickerControls() {
         const hiddenContainer = document.getElementById('hidden-controls-container');
         
         fileInput.value = '';
-        fileBtn.textContent = 'Select Image';
+        fileBtn.textContent = window.t('SELECT_IMAGE');
         borderSwitch.checked = false;
         borderOptions.style.display = 'none';
 
@@ -1020,7 +1020,7 @@ function setupStickerControls() {
 
         newCreate.addEventListener('click', async () => {
             if (!selectedFile) {
-                showPopup('Please select an image');
+                showPopup(window.t('SELECT_IMAGE_PROMPT'));
                 return;
             }
 
@@ -1067,11 +1067,11 @@ function setupStickerControls() {
                 
                 // Reset
                 selectedFile = null;
-                document.getElementById('sticker-select-file-btn').textContent = 'Select Image';
+                document.getElementById('sticker-select-file-btn').textContent = window.t('SELECT_IMAGE');
 
             } catch (e) {
                 console.error("Sticker creation error", e);
-                showPopup("Failed to create sticker");
+                showPopup(window.t('STICKER_CREATE_FAIL'));
             }
         });
     }

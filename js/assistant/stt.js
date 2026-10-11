@@ -15,7 +15,9 @@ export class LocalSTT {
                 this.recognition.continuous = false;
                 this.recognition.interimResults = true;
                 this.recognition.maxAlternatives = 1;
-                const lang = localStorage.getItem('assistantLang') || localStorage.getItem('polygol_language') || 'en-US';
+                const langMap = { 'EN': 'en-US', 'JP': 'ja-JP', 'JA': 'ja-JP', 'KO': 'ko-KR', 'ZH': 'zh-CN', 'en': 'en-US', 'jp': 'ja-JP', 'ja': 'ja-JP', 'ko': 'ko-KR', 'zh': 'zh-CN' };
+                const rawLang = localStorage.getItem('assistantLang') || localStorage.getItem('polygol_language') || localStorage.getItem('selectedLanguage') || 'en-US';
+                const lang = langMap[rawLang] || rawLang;
                 this.recognition.lang = lang;
                 this.isReady = true;
                 return;
@@ -54,7 +56,9 @@ export class LocalSTT {
         if (this.recognition) {
             try {
                 this.isListening = true;
-                const lang = localStorage.getItem('assistantLang') || localStorage.getItem('polygol_language') || 'en-US';
+                const langMap = { 'EN': 'en-US', 'JP': 'ja-JP', 'JA': 'ja-JP', 'KO': 'ko-KR', 'ZH': 'zh-CN', 'en': 'en-US', 'jp': 'ja-JP', 'ja': 'ja-JP', 'ko': 'ko-KR', 'zh': 'zh-CN' };
+                const rawLang = localStorage.getItem('assistantLang') || localStorage.getItem('polygol_language') || localStorage.getItem('selectedLanguage') || 'en-US';
+                const lang = langMap[rawLang] || rawLang;
                 this.recognition.lang = lang;
 
                 this.recognition.onresult = (event) => {

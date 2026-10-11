@@ -701,6 +701,8 @@ function openWallpaperCreator(initialMode = 'emoji') {
 
     const currentThemeClass = document.body.className;
 
+    const _t = (key, fallback) => (window.t ? window.t(key) : fallback);
+
     const sheetHtml = `
 <!DOCTYPE html>
 <html>
@@ -879,9 +881,9 @@ function openWallpaperCreator(initialMode = 'emoji') {
 </head>
 <body class="${currentThemeClass}">
     <div class="toolbar" id="mode-tabs" style="top: 0;">
-        <button class="tab-btn active" data-mode="emoji"><span class="material-symbols-rounded">😎</span>Emoji</button>
-        <button class="tab-btn" data-mode="color"><span class="material-symbols-rounded">🎨</span>Color</button>
-        <button class="tab-btn" data-mode="gradient"><span class="material-symbols-rounded">🔥</span>Gradient</button>
+        <button class="tab-btn active" data-mode="emoji"><span class="material-symbols-rounded">😎</span>${_t('EMOJI', 'Emoji')}</button>
+        <button class="tab-btn" data-mode="color"><span class="material-symbols-rounded">🎨</span>${_t('COLOR', 'Color')}</button>
+        <button class="tab-btn" data-mode="gradient"><span class="material-symbols-rounded">🔥</span>${_t('GRADIENT', 'Gradient')}</button>
     </div>
 
     <!-- Live Preview -->
@@ -893,27 +895,27 @@ function openWallpaperCreator(initialMode = 'emoji') {
     <div id="form-emoji" class="form-section">
         <div class="form-row">
             <div style="flex: 1; min-width: 0;">
-                <label class="form-label">Emojis</label>
-                <input type="text" id="emoji-input" class="text-input" value="💗 🌼 🌸" placeholder="Emoji" autocomplete="off">
+                <label class="form-label">${_t('EMOJIS', 'Emojis')}</label>
+                <input type="text" id="emoji-input" class="text-input" value="💗 🌼 🌸" placeholder="${_t('EMOJI', 'Emoji')}" autocomplete="off">
             </div>
             <div>
-                <label class="form-label">Background</label>
+                <label class="form-label">${_t('BACKGROUND', 'Background')}</label>
                 <div class="color-picker-wrap">
                     <input type="color" id="emoji-bg" value="#1e1b4b">
                 </div>
             </div>
         </div>
         <div>
-            <label class="form-label">Pattern Layout</label>
+            <label class="form-label">${_t('PATTERN_LAYOUT', 'Pattern Layout')}</label>
             <select id="emoji-style" class="select-input">
-                <option value="staggered">Staggered Grid</option>
-                <option value="grid">Straight Grid</option>
-                <option value="dense">Dense</option>
-                <option value="spacious">Spacious</option>
+                <option value="staggered">${_t('LAYOUT_STAGGERED', 'Staggered Grid')}</option>
+                <option value="grid">${_t('LAYOUT_GRID', 'Straight Grid')}</option>
+                <option value="dense">${_t('LAYOUT_DENSE', 'Dense')}</option>
+                <option value="spacious">${_t('LAYOUT_SPACIOUS', 'Spacious')}</option>
             </select>
         </div>
         <div>
-            <label class="form-label">Suggestions</label>
+            <label class="form-label">${_t('SUGGESTIONS', 'Suggestions')}</label>
             <div class="palette-row" id="emoji-presets">
                 <span class="preset-badge" data-val="💗 🌼 🌸">💗 🌼 🌸</span>
                 <span class="preset-badge" data-val="✨ 🌟 💫">✨ 🌟 💫</span>
@@ -927,11 +929,11 @@ function openWallpaperCreator(initialMode = 'emoji') {
     <!-- Color Form -->
     <div id="form-color" class="form-section" style="display: none;">
         <div class="form-row" style="align-items: center;">
-            <label class="form-label" style="margin: 0;">Custom Color:</label>
+            <label class="form-label" style="margin: 0;">${_t('CUSTOM_COLOR', 'Custom Color:')}</label>
             <input type="color" id="color-input" value="#1e293b">
         </div>
         <div>
-            <label class="form-label">Palette Presets</label>
+            <label class="form-label">${_t('PALETTE_PRESETS', 'Palette Presets')}</label>
             <div class="palette-row" id="color-presets">
                 <span class="palette-dot" data-col="#09090b" style="background:#09090b;"></span>
                 <span class="palette-dot" data-col="#1e293b" style="background:#1e293b;"></span>
@@ -950,41 +952,41 @@ function openWallpaperCreator(initialMode = 'emoji') {
     <div id="form-gradient" class="form-section" style="display: none;">
         <div class="form-row">
             <div style="flex: 1; min-width: 0;">
-                <label class="form-label">Color 1</label>
+                <label class="form-label">${_t('COLOR_1', 'Color 1')}</label>
                 <input type="color" id="grad-c1" value="#ff512f">
             </div>
             <div style="flex: 1; min-width: 0;">
-                <label class="form-label">Color 2</label>
+                <label class="form-label">${_t('COLOR_2', 'Color 2')}</label>
                 <input type="color" id="grad-c2" value="#dd2476">
             </div>
             <div style="flex: 1; min-width: 0;">
-                <label class="form-label">Direction</label>
+                <label class="form-label">${_t('DIRECTION', 'Direction')}</label>
                 <select id="grad-type" class="select-input">
                     <option value="135deg">135°</option>
-                    <option value="180deg">Down</option>
-                    <option value="90deg">Right</option>
+                    <option value="180deg">${_t('DIR_DOWN', 'Down')}</option>
+                    <option value="90deg">${_t('DIR_RIGHT', 'Right')}</option>
                     <option value="45deg">45°</option>
-                    <option value="radial">Radial</option>
+                    <option value="radial">${_t('DIR_RADIAL', 'Radial')}</option>
                 </select>
             </div>
         </div>
         <div>
-            <label class="form-label">Presets</label>
+            <label class="form-label">${_t('PRESETS', 'Presets')}</label>
             <div class="palette-row" id="grad-presets">
-                <span class="preset-badge" data-c1="#ff512f" data-c2="#dd2476">Sunset</span>
-                <span class="preset-badge" data-c1="#2193b0" data-c2="#6dd5ed">Ocean</span>
-                <span class="preset-badge" data-c1="#11998e" data-c2="#38ef7d">Forest</span>
-                <span class="preset-badge" data-c1="#0f0c29" data-c2="#302b63">Midnight</span>
-                <span class="preset-badge" data-c1="#ff9a9e" data-c2="#fecfef">Blossom</span>
-                <span class="preset-badge" data-c1="#8a2387" data-c2="#e94057">Smoothie</span>
+                <span class="preset-badge" data-c1="#ff512f" data-c2="#dd2476">${_t('PRESET_SUNSET', 'Sunset')}</span>
+                <span class="preset-badge" data-c1="#2193b0" data-c2="#6dd5ed">${_t('PRESET_OCEAN', 'Ocean')}</span>
+                <span class="preset-badge" data-c1="#11998e" data-c2="#38ef7d">${_t('PRESET_FOREST', 'Forest')}</span>
+                <span class="preset-badge" data-c1="#0f0c29" data-c2="#302b63">${_t('PRESET_MIDNIGHT', 'Midnight')}</span>
+                <span class="preset-badge" data-c1="#ff9a9e" data-c2="#fecfef">${_t('PRESET_BLOSSOM', 'Blossom')}</span>
+                <span class="preset-badge" data-c1="#8a2387" data-c2="#e94057">${_t('PRESET_SMOOTHIE', 'Smoothie')}</span>
             </div>
         </div>
     </div>
 
     <!-- Actions -->
     <div class="action-row">
-        <button type="button" class="btn-sheet" onclick="request('cancel')">Cancel</button>
-        <button type="button" class="btn-sheet primary" onclick="submitCreation()">Create</button>
+        <button type="button" class="btn-sheet" onclick="request('cancel')">${_t('CANCEL', 'Cancel')}</button>
+        <button type="button" class="btn-sheet primary" onclick="submitCreation()">${_t('CREATE', 'Create')}</button>
     </div>
 
     <script>
@@ -1229,7 +1231,7 @@ async function applyCreatedWallpaper(config = {}) {
         } catch (e) {
             console.error('Failed to save created wallpaper:', e);
             if (typeof showDialog === 'function') {
-                showDialog({ type: 'alert', title: 'Failed to create wallpaper' });
+                showDialog({ type: 'alert', title: window.t('FAILED_CREATE_WALLPAPER') });
             }
         }
     }, 'image/png');
@@ -1325,20 +1327,20 @@ function openWallpaperPicker(preserveOrder = false) {
                 const createHeading = document.createElement('h3');
                 createHeading.className = 'wallpaper-picker-title';
                 createHeading.style.cssText = 'grid-column: 1 / -1; font-size: 1.15rem; margin: 0 0 10px 0; font-family: "Open Runde", sans-serif; display: flex; align-items: center; gap: 8px;';
-                createHeading.innerHTML = '<span class="material-symbols-rounded">auto_awesome</span> Create Wallpaper';
+                createHeading.innerHTML = `<span class="material-symbols-rounded">auto_awesome</span> ${window.t('CREATE_WALLPAPER')}`;
                 grid.appendChild(createHeading);
             }
 
-            grid.appendChild(createCreationCard('😎', 'Emoji', '', () => openWallpaperCreator('emoji')));
+            grid.appendChild(createCreationCard('😎', window.t('EMOJI'), '', () => openWallpaperCreator('emoji')));
 
-            grid.appendChild(createCreationCard('🎨', 'Color', '', () => openWallpaperCreator('color')));
+            grid.appendChild(createCreationCard('🎨', window.t('COLOR'), '', () => openWallpaperCreator('color')));
 
-            grid.appendChild(createCreationCard('🔥', 'Gradient', '', () => openWallpaperCreator('gradient')));
+            grid.appendChild(createCreationCard('🔥', window.t('GRADIENT'), '', () => openWallpaperCreator('gradient')));
 
             const isFull = recentWallpapers.length >= MAX_RECENT_WALLPAPERS;
-            grid.appendChild(createCreationCard(isFull ? 'error' : '🖼️', isFull ? 'Storage full' : (currentLanguage.UPLOAD_CUSTOM || 'Photo'), '', () => {
+            grid.appendChild(createCreationCard(isFull ? 'error' : '🖼️', isFull ? window.t('STORAGE_FULL') : (currentLanguage.UPLOAD_CUSTOM || 'Photo'), '', () => {
                 if (isFull) {
-                    showDialog({ type: 'alert', title: 'Wallpaper storage full', message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers.` });
+                    showDialog({ type: 'alert', title: window.t('WALLPAPER_STORAGE_FULL'), message: window.t('WALLPAPER_STORAGE_FULL_MSG', { limit: MAX_RECENT_WALLPAPERS }) });
                 } else {
                     uploadButton.click();
                     closeWallpaperPicker();
@@ -1499,7 +1501,7 @@ const SlideshowManager = {
         // Show Control Widget
         startLiveActivity('System', {
             activityId: 'sys-slideshow',
-            url: '/assets/gurapp/intl/liveactivity/slideshow-control.html',
+            url: '/assets/polygolapp/intl/liveactivity/slideshow-control.html',
             homescreen: false,
 			showInIsland: false,
             height: '40px'
@@ -1582,7 +1584,7 @@ const SlideshowManager = {
         currentGroup.shuffle = !currentGroup.shuffle;
         saveRecentWallpapers();
         this.pushState();
-        showPopup(currentGroup.shuffle ? "Shuffle enabled" : "Shuffle disabled");
+        showPopup(currentGroup.shuffle ? window.t('SHUFFLE_ENABLED') : window.t('SHUFFLE_DISABLED'));
     },
 	
     pushState() {
@@ -1628,19 +1630,19 @@ function closeWallpaperPicker() {
 
 async function exportCurrentWallpaper() {
     if (recentWallpapers.length === 0) {
-        showPopup("No wallpaper to export");
+        showPopup(window.t('NO_WALLPAPER_EXPORT'));
         return;
     }
 
     const current = recentWallpapers[currentWallpaperPosition];
     if (!current.id) return;
 
-    showNotification('Preparing export', { icon: 'ios_share' });
+    showNotification(window.t('PREPARING_EXPORT'), { icon: 'ios_share' });
 
     try {
         const exportObject = {
             version: "1.2",
-            type: "guraatmos",
+            type: "polyacf",
             isSlideshow: !!current.isSlideshow,
             slideshowInterval: current.slideshowInterval || 600000,
             shuffle: !!current.shuffle,
@@ -1683,7 +1685,7 @@ async function exportCurrentWallpaper() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `wallpaper_${Date.now()}.guraatmos`;
+        a.download = `wallpaper_${Date.now()}.polyacf`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1691,7 +1693,7 @@ async function exportCurrentWallpaper() {
 
     } catch (e) {
         console.error("Export failed:", e);
-        showDialog({ type: 'alert', title: "Export Failed", message: e.message });
+        showDialog({ type: 'alert', title: window.t('EXPORT_FAILED'), message: e.message });
     }
 }
 
@@ -1704,13 +1706,13 @@ async function processWallpaperFiles(files) {
     if (recentWallpapers.length + slotsNeeded > MAX_RECENT_WALLPAPERS) {
 		showDialog({ 
 			type: 'alert', 
-			title: 'Wallpaper storage full', 
-			message: `You have reached the limit of ${MAX_RECENT_WALLPAPERS} wallpapers.` 
+			title: window.t('WALLPAPER_STORAGE_FULL'), 
+			message: window.t('WALLPAPER_STORAGE_FULL_MSG', { limit: MAX_RECENT_WALLPAPERS }) 
 		});
 		return;
     }
 
-	showPopup('Adding wallpaper');
+	showPopup(window.t('ADDING_WALLPAPER'));
 
     try {
         const newItems = [];
@@ -1718,24 +1720,24 @@ async function processWallpaperFiles(files) {
         for (let file of files) {
             let wallpaperObject = null;
 
-            // --- Handle .guraatmos files ---
-            if (file.name.endsWith('.guraatmos')) {
+            // --- Handle .polyacf files ---
+            if (file.name.endsWith('.polyacf')) {
                 const text = await file.text();
                 let data;
                 try {
                     data = JSON.parse(text);
                 } catch (e) {
-                    console.error("Invalid GuraAtmosphere file");
+                    console.error("Invalid polyacfphere file");
                     continue;
                 }
 
-                if (data.type !== 'guraatmos') continue;
+                if (data.type !== 'polyacf') continue;
 
                 const itemsToImport = (data.items && data.items.length > 0) ? data.items : [data];
                 const reconstructedItems = [];
 
                 for (const item of itemsToImport) {
-                    const wallpaperId = `guraatmos_${Date.now()}_${Math.random()}`;
+                    const wallpaperId = `polyacf_${Date.now()}_${Math.random()}`;
                     const imageBlob = dataURLtoBlob(item.imageData);
                     let firstFrame = null;
                     let dominantColor = item.dominantColor || null;
@@ -1890,7 +1892,7 @@ async function processWallpaperFiles(files) {
             applyWallpaper();
             syncUiStates();
         } else {
-            showDialog({ type: 'alert', title: "No valid wallpapers imported." });
+            showDialog({ type: 'alert', title: window.t('NO_VALID_WALLPAPERS') });
         }
 
     } catch (error) {
@@ -2804,8 +2806,8 @@ function setupWallpaperInteraction() {
             t.id === 'environment-layer' ||
             t.id === 'time-of-day-overlay' ||
             t.id === 'widget-grid' ||
-            t.id === 'home-menu-container' ||
-            (t.closest && !!t.closest('#home-menu-container')) ||
+            t.id === 'minihompy-container' ||
+            (t.closest && !!t.closest('#minihompy-container')) ||
             t.classList.contains('container') ||
             (t.closest && !!t.closest('.container'));
     };
@@ -3229,7 +3231,7 @@ function renderSwitcherCards(container, isInitialOpen = false) {
         // Edit Button
         const editBtn = document.createElement('button');
         editBtn.className = 'switcher-edit-btn';
-        editBtn.innerHTML = 'Edit';
+        editBtn.innerHTML = window.t('EDIT');
         editBtn.onclick = (e) => {
             e.stopPropagation();
             if (typeof enterEditMode === 'function') {
@@ -3281,7 +3283,7 @@ async function openWallpaperEditMenu(index) {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
-        showPopup("Updating wallpaper");
+        showPopup(window.t('UPDATING_WALLPAPER'));
 
         try {
             const wp = recentWallpapers[index];
@@ -3346,11 +3348,11 @@ async function openWallpaperEditMenu(index) {
             if (index === currentWallpaperPosition) applyWallpaper();
             
             renderSwitcherCards(document.getElementById('wallpaper-cards-container'), false);
-            showPopup(processedItems.length > 1 ? "Slideshow updated" : "Wallpaper updated");
+            showPopup(processedItems.length > 1 ? window.t('SLIDESHOW_UPDATED') : window.t('WALLPAPER_UPDATED_MSG'));
 
         } catch (error) {
             console.error(error);
-            showDialog({type:'alert', title:'Update Failed'});
+            showDialog({type:'alert', title: window.t('UPDATE_FAILED')});
         }
     };
     input.click();
@@ -3360,7 +3362,7 @@ async function duplicateWallpaper(index) {
     const wp = recentWallpapers[index];
     if (!wp) return;
     
-    showPopup("Duplicating...");
+    showPopup(window.t('DUPLICATING'));
     const newId = `wallpaper_${Date.now()}_${Math.random()}`;
     const newWp = JSON.parse(JSON.stringify(wp));
     newWp.id = newId;
@@ -3400,7 +3402,7 @@ function enterEditMode(index) {
 
     openEditSheet('background');
 
-    showPopup('Tap an element to view its settings')
+    showPopup(window.t('TAP_ELEMENT_SETTINGS'));
 }
 
 function exitEditMode() {
@@ -3426,9 +3428,9 @@ function openEditSheet(target) {
     document.getElementById('edit-group-background').style.display = target === 'background' ? 'block' : 'none';
     
     const titles = {
-        'clock': 'Clock',
-        'date': 'Date',
-        'background': 'Home screen'
+        'clock': window.t('CLOCK'),
+        'date': window.t('DATE'),
+        'background': window.t('HOME_SCREEN')
     };
     document.getElementById('edit-sheet-title').textContent = titles[target];
 
@@ -5053,11 +5055,11 @@ if (__uploadButton) {
         e.stopPropagation();
 
         if (recentWallpapers.length >= MAX_RECENT_WALLPAPERS) {
-            showDialog({ type: 'alert', title: 'Limit Reached' });
+            showDialog({ type: 'alert', title: window.t('LIMIT_REACHED') });
             return;
         }
         
-        FileUploadManager.trigger('.png, .jpeg, .jpg, .webp, .gif, .mp4, .guraatmos', true, 'wallpaper');
+        FileUploadManager.trigger('.png, .jpeg, .jpg, .webp, .gif, .mp4, .polyacf', true, 'wallpaper');
     });
 }
 

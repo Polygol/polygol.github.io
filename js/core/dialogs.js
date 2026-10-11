@@ -37,7 +37,8 @@ function _displayDialog(options) {
     
     // Legacy handling: Confirm dialogs default to the title 'Confirm'. 
     // We promote the question to the title for better visual hierarchy if it's using the default.
-    if (options.type === 'confirm' && displayTitle === 'Confirm' && displayMessage) {
+    const confirmWords = ['Confirm', '確認', '확인', '确认'];
+    if (options.type === 'confirm' && confirmWords.includes(displayTitle) && displayMessage) {
         displayTitle = displayMessage;
         displayMessage = '';
     }
@@ -222,15 +223,17 @@ function showDialog(options) {
     processDialogQueue();
 }
 
-function showCustomConfirm(message, title = 'Confirm', icon = null) {
+function showCustomConfirm(message, title = null, icon = null) {
+    const defaultTitle = (typeof currentLanguage !== 'undefined' && currentLanguage.CONFIRM) || (typeof window.t === 'function' ? window.t('CONFIRM') : 'Confirm');
     return new Promise(resolve => {
-        showDialog({ type: 'confirm', message, title, icon, resolve });
+        showDialog({ type: 'confirm', message, title: title !== null ? title : defaultTitle, icon, resolve });
     });
 }
 
-function showCustomPrompt(message, title = 'Prompt', defaultValue = '', icon = null) {
+function showCustomPrompt(message, title = null, defaultValue = '', icon = null) {
+    const defaultTitle = (typeof currentLanguage !== 'undefined' && currentLanguage.PROMPT) || (typeof window.t === 'function' ? window.t('PROMPT') : 'Prompt');
     return new Promise(resolve => {
-        showDialog({ type: 'prompt', message, title, defaultValue, icon, resolve });
+        showDialog({ type: 'prompt', message, title: title !== null ? title : defaultTitle, defaultValue, icon, resolve });
     });
 }
 
@@ -263,7 +266,7 @@ function displaySheet(options) {
 
     const iframe = document.createElement('iframe');
     iframe.className = 'sheet-iframe';
-    iframe.setAttribute('data-gurasuraisu-iframe', 'true');
+    iframe.setAttribute('data-polygol-iframe', 'true');
     iframe.setAttribute('data-is-sheet', 'true');
     if (options.sourceAppId) iframe.dataset.appId = options.sourceAppId;
     
@@ -292,9 +295,9 @@ function displaySheet(options) {
             headInjection += `<style>\n${options.styles}\n</style>\n`;
         }
         
-        const apiScriptUrl = new URL('/assets/gurapp/api/gurasuraisu-api.js', window.location.origin).href;
+        const apiScriptUrl = new URL('/assets/polygolapp/api/polygol-api.js', window.location.origin).href;
         let htmlContent = options.html;
-        if (!htmlContent.includes('gurasuraisu-api.js')) {
+        if (!htmlContent.includes('polygol-api.js')) {
             headInjection += `<script src="${apiScriptUrl}"><\/script>\n`;
         }
 

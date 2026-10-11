@@ -125,19 +125,19 @@ function startSiren() {
     `;
 
     const text = document.createElement("div");
-    text.textContent = "Emergency SOS!\nPlease help me, or call emergency services";
+    text.textContent = window.t('EMERGENCY_SOS_HELP');
 
-    const iceContacts = localStorage.getItem('emergencyContacts') || 'No emergency contacts set';
+    const iceContacts = localStorage.getItem('emergencyContacts') || window.t('NO_EMERGENCY_CONTACTS');
     const iceLabel = document.createElement('div');
     iceLabel.id = 'blackout-ice-info';
     iceLabel.style.cssText = `
         position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
         color: white; font-size: 24px; text-align: center;
     `;
-    iceLabel.innerHTML = `Emergency Contacts:<br>${iceContacts}`;
+    iceLabel.innerHTML = `${window.t('EMERGENCY_CONTACTS')}:<br>${iceContacts}`;
 
     const stopBtn = document.createElement("button");
-    stopBtn.textContent = "Stop";
+    stopBtn.textContent = window.t('STOP');
     stopBtn.style.cssText = `
         font-family: 'Inter';
         color: black;
@@ -207,10 +207,10 @@ function triggerSOS() {
     `;
 
     const text = document.createElement("div");
-    text.textContent = "Emergency SOS will activate in 5 seconds.";
+    text.textContent = window.t('EMERGENCY_SOS_PENDING');
 
     const cancelBtn = document.createElement("button");
-    cancelBtn.textContent = "Cancel";
+    cancelBtn.textContent = window.t('CANCEL');
     cancelBtn.style.cssText = `
         font-family: 'Inter';
         color: black;
@@ -237,9 +237,9 @@ function triggerSOS() {
         pendingSOS = false;
 
         showNotification(
-            "Notifying emergency contacts: " + contacts,
+            window.t('NOTIFYING_CONTACTS', { contacts }),
             {
-                heading: "Emergency SOS",
+                heading: window.t('EMERGENCY_SOS'),
                 icon: "sos",
                 system: true
             }

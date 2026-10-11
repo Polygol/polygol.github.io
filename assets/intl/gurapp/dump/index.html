@@ -6,9 +6,9 @@
     <title>Dump - Instant System State Dump</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
-    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
-    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <link rel="stylesheet" href="/assets/polygolapp/intl/settings/settings.css">
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="/assets/intl/polygolapp/internal-app-api.js" defer></script>
 </head>
 <body data-app-name="Dump">
     <div class="container" style="max-width: 780px; width: 100%; margin: 0 auto;">
@@ -101,8 +101,8 @@
         document.getElementById('btn-copy-dump').onclick = () => {
             const str = JSON.stringify(currentDumpObj, null, 2);
             navigator.clipboard.writeText(str).then(() => {
-                if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                    Gurasuraisu.showPopup('System dump copied to clipboard');
+                if (window.Polygol && Polygol.showPopup) {
+                    Polygol.showPopup('System dump copied to clipboard');
                 } else {
                     alert('Copied to clipboard');
                 }
@@ -112,9 +112,9 @@
         document.getElementById('btn-download-dump').onclick = () => {
             const str = JSON.stringify(currentDumpObj, null, 2);
             const filename = `polygol-dump-${Date.now()}.json`;
-            if (window.Gurasuraisu && Gurasuraisu.downloadFile) {
+            if (window.Polygol && Polygol.downloadFile) {
                 const blob = new Blob([str], { type: 'application/json' });
-                Gurasuraisu.downloadFile(filename, URL.createObjectURL(blob));
+                Polygol.downloadFile(filename, URL.createObjectURL(blob));
             } else {
                 const blob = new Blob([str], { type: 'application/json' });
                 const a = document.createElement('a');

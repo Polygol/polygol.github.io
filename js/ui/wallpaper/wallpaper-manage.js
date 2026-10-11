@@ -25,7 +25,7 @@ async function openWallpaperManager() {
         return {
             id: wp.id,
             index: i,
-            label: wp.isSlideshow ? 'Slideshow' : (wp.isVideo ? 'Video' : 'Image'),
+            label: wp.isSlideshow ? window.t('SLIDESHOW') : (wp.isVideo ? window.t('VIDEO') : window.t('IMAGE')),
             thumb: thumb,
             isActive: i === currentWallpaperPosition
         };
@@ -48,7 +48,7 @@ async function openWallpaperManager() {
             .setting-item.dragging { opacity: 0.5; background: var(--search-background); z-index: 10; scale: 1.02; }
         </style>
         
-        <h2 style="margin-top: 0;">Manage wallpapers</h2>
+        <h2 style="margin-top: 0;">${window.t('MANAGE_WALLPAPERS')}</h2>
         <div id="wp-list" class="setting-section"></div>
         
         <script>
@@ -70,9 +70,9 @@ async function openWallpaperManager() {
                         <button class="action-btn" style="color: #ff5252; margin-right: 10px" onclick="event.stopPropagation(); request('delete', \${i})"><span class="material-symbols-rounded" style="font-size:18px;">cancel</span></button>
                         <div class="wp-thumb" style="background-image: url('\${item.thumb || ""}')"></div>
                         <div class="setting-info">
-                            <div class="setting-label">Wallpaper \${i + 1}</div>
+                            <div class="setting-label">\${window.t('WALLPAPER_NUM', { num: i + 1 })}</div>
                             <div class="setting-description">
-                                \${item.label} \${item.isActive ? '<span class="wp-tag">Active</span>' : ''}
+                                \${item.label} \${item.isActive ? '<span class="wp-tag">' + window.t('ACTIVE') + '</span>' : ''}
                             </div>
                         </div>
                         <div class="setting-control" style="display: flex; align-items: center; gap: 8px;">

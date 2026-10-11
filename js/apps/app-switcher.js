@@ -145,7 +145,7 @@ function renderAppCards(container) {
     });
         
     if (allRunningApps.length === 0) {
-        container.innerHTML = 'No recent items';
+        container.innerHTML = window.t('NO_RECENT_ITEMS');
         // Allow closing by clicking background
         container.onclick = closeAppSwitcherUI;
         return;

@@ -188,8 +188,8 @@ function initWavesHost() {
         wavesRoom.onPeerStream((stream, peerId) => {
             console.log(`[Waves] Incoming stream from ${peerId}`);
             
-            // 1. Launch the Cast Gurapp
-            const castAppUrl = '/assets/gurapp/intl/waves/cast.html';
+            // 1. Launch the Cast APP
+            const castAppUrl = '/assets/polygolapp/intl/waves/cast.html';
             if (typeof window.createFullscreenEmbed === 'function') {
                 window.createFullscreenEmbed(castAppUrl);
             }
@@ -318,8 +318,8 @@ function finalizeEmojiAuth(peerId, answer, psk) {
         registerPeer(peerId, session.tempProfile);
         const state = getWavesHostState();
         wavesSend({ type: 'authorized', psk: psk, deviceName: state.deviceName }, peerId);
-        showNotification('Waves will accept automatic connections to this device.', {
-            heading: `Paired with ${session.tempProfile?.name || 'New Device'}`,
+        showNotification(window.t ? window.t('WAVES_AUTO_CONNECT_MSG') : 'Waves will accept automatic connections to this device.', {
+            heading: window.t ? window.t('WAVES_PAIRED_WITH', { name: session.tempProfile?.name || (window.t ? window.t('NEW_DEVICE') : 'New Device') }) : `Paired with ${session.tempProfile?.name || 'New Device'}`,
             icon: 'verified_user',
             system: true
         });
@@ -328,8 +328,8 @@ function finalizeEmojiAuth(peerId, answer, psk) {
     } else {
         // Fail
         wavesSend({ type: 'auth_failed' }, peerId);
-        showNotification('Your code is now invalidated for security. Re-pair all connected devices with the new code.', {
-            heading: 'Waves authentication failed',
+        showNotification(window.t ? window.t('WAVES_AUTH_FAILED_MSG') : 'Your code is now invalidated for security. Re-pair all connected devices with the new code.', {
+            heading: window.t ? window.t('WAVES_AUTH_FAILED') : 'Waves authentication failed',
             icon: 'gpp_bad',
             system: true
         });
@@ -479,8 +479,8 @@ async function handleRemoteCommand(payload, peerId) {
             const targetApp = window.activeMediaSessionApp || localStorage.getItem('lastMediaSessionApp');
             const action = data.action; 
 
-            if (targetApp && window.Gurasuraisu) {
-                window.Gurasuraisu.callApp(targetApp, action);
+            if (targetApp && window.Polygol) {
+                window.Polygol.callApp(targetApp, action);
             } else {
                 console.warn("[Waves] Media action failed: Target app unknown or System API missing");
             }
@@ -834,9 +834,9 @@ function setDiscovery(enabled) {
     localStorage.setItem('waves_discovery_enabled', enabled);
     
     if (enabled) {
-        showPopup('New device pairing is now enabled');
+        showPopup(window.t ? window.t('WAVES_PAIRING_ENABLED') : 'New device pairing is now enabled');
     } else {
-        showPopup('New device pairing is now disabled');
+        showPopup(window.t ? window.t('WAVES_PAIRING_DISABLED') : 'New device pairing is now disabled');
     }
 }
 
@@ -851,7 +851,7 @@ function rejectCurrentAuth() {
         
         // Hide UI
         broadcastSettingUpdate('waves_auth_challenge', null);
-        showPopup('Pairing request rejected');
+        showPopup(window.t ? window.t('WAVES_PAIRING_REJECTED') : 'Pairing request rejected');
     }
 }
 

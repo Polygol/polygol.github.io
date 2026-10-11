@@ -88,7 +88,7 @@ window.updateActiveWavesPeers = function(peersMap) {
 window.makeAnnouncement = function(text, forceTTS = null, profile = null) {
     if (!text) return;
     
-    let url = `/assets/gurapp/intl/waves/announce.html?text=${encodeURIComponent(text)}`;
+    let url = `/assets/polygolapp/intl/waves/announce.html?text=${encodeURIComponent(text)}`;
     
     if (forceTTS !== null) {
         url += `&tts=${forceTTS}`;

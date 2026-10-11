@@ -4,7 +4,7 @@ let currentTargetElement = null;
 let _isSwitchingOSK = false;
 let registeredOSKs = JSON.parse(localStorage.getItem('registeredOSKs') || '[]');
 let currentOskIndex = 0;
-const DEFAULT_OSK_URL = '/assets/gurapp/intl/overlay/osk/osk.html';
+const DEFAULT_OSK_URL = '/assets/polygolapp/intl/overlay/osk/osk.html';
 
 let oskIframe = null;
 
@@ -35,7 +35,7 @@ window.unregisterCustomOSK = function(appId) {
     
     // If the currently active OSK was uninstalled, revert to default
     if (currentOskIndex > 0) {
-        const allOSKs = [{ name: 'Default', url: '/assets/gurapp/intl/overlay/osk/osk.html' }, ...registeredOSKs];
+        const allOSKs = [{ name: 'Default', url: '/assets/polygolapp/intl/overlay/osk/osk.html' }, ...registeredOSKs];
         if (currentOskIndex >= allOSKs.length) {
             currentOskIndex = 0;
             const iframe = oskIframe;
@@ -73,8 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const iframe = oskIframe;
             if (iframe) {
                 if (selectedOSK.type === 'internal') {
-                    if (!iframe.src.includes('/assets/gurapp/intl/overlay/osk/osk.html')) {
-                        iframe.src = '/assets/gurapp/intl/overlay/osk/osk.html';
+                    if (!iframe.src.includes('/assets/polygolapp/intl/overlay/osk/osk.html')) {
+                        iframe.src = '/assets/polygolapp/intl/overlay/osk/osk.html';
                         iframe.onload = () => {
                             iframe.contentWindow.postMessage({ type: 'set-mode', mode: selectedOSK.mode }, '*');
                             const isLight = document.body.classList.contains('light-theme');
@@ -194,8 +194,8 @@ function closeOSK() {
 
         // Reset OSK to default text mode when closed
         currentOskIndex = 0;
-        if (iframe && !iframe.src.includes('/assets/gurapp/intl/overlay/osk/osk.html')) {
-            iframe.src = '/assets/gurapp/intl/overlay/osk/osk.html';
+        if (iframe && !iframe.src.includes('/assets/polygolapp/intl/overlay/osk/osk.html')) {
+            iframe.src = '/assets/polygolapp/intl/overlay/osk/osk.html';
         } else if (iframe && iframe.contentWindow) {
             iframe.contentWindow.postMessage({ type: 'set-mode', mode: 'text' }, '*');
         }

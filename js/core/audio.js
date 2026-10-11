@@ -164,7 +164,7 @@ window.systemSpeak = function(text) {
         utterance.onstart = () => {
             if (wasPlaying && mediaApp) {
                 // Send toggle command to pause
-                Gurasuraisu.callApp(mediaApp, 'playPause');
+                Polygol.callApp(mediaApp, 'playPause');
             }
         };
 
@@ -176,7 +176,7 @@ window.systemSpeak = function(text) {
                 const currentBtn = document.querySelector('#media-widget-play-pause span');
                 // Only toggle if it is currently paused (showing 'play_arrow')
                 if (currentBtn && currentBtn.textContent === 'play_arrow') {
-                    Gurasuraisu.callApp(mediaApp, 'playPause');
+                    Polygol.callApp(mediaApp, 'playPause');
                 }
             }
         };

@@ -28,6 +28,9 @@ const PERMISSION_MAPPINGS = {
     'requestInstalledApps': 'app-management',
     
     // System Admin (Root)
+    'selectLanguage': 'system-admin',
+    'setSystemDateFormat': 'system-admin',
+    'getSystemDateFormat': 'system-admin',
     'getLocalStorageItem': 'system-admin',
     'setLocalStorageItem': 'system-admin',
     'removeLocalStorageItem': 'system-admin',
@@ -39,7 +42,7 @@ const PERMISSION_MAPPINGS = {
     'clearAllWallpapers': 'system-admin',
     'switchWallpaperParent': 'system-admin',
     'getCurrentTimeParent': 'system-admin',
-    'rebootGurasuraisu': 'system-admin',
+    'rebootPolygol': 'system-admin',
     'promptPWAInstall': 'system-admin',
     'executeParentJS': 'system-admin',
     'listIDBDatabases': 'system-admin',
@@ -73,6 +76,29 @@ const PERMISSION_NAMES = {
     'app-management': 'manage installed apps',
     'system-admin': 'modify core system settings (root access)'
 };
+
+function getPermissionName(perm) {
+    const keyMap = {
+        'notifications': 'PERM_NOTIFICATIONS',
+        'live-activity': 'PERM_LIVE_ACTIVITY',
+        'sheets': 'PERM_SHEETS',
+        'immersive-mode': 'PERM_IMMERSIVE_MODE',
+        'file-upload': 'PERM_FILE_UPLOAD',
+        'widgets': 'PERM_WIDGETS',
+        'media-session': 'PERM_MEDIA_SESSION',
+        'tts': 'PERM_TTS',
+        'waves': 'PERM_WAVES',
+        'custom-osk': 'PERM_CUSTOM_OSK',
+        'ui-sounds': 'PERM_UI_SOUNDS',
+        'app-management': 'PERM_APP_MANAGEMENT',
+        'system-admin': 'PERM_SYSTEM_ADMIN'
+    };
+    const langKey = keyMap[perm];
+    if (langKey && typeof window.t === 'function') {
+        return window.t(langKey);
+    }
+    return PERMISSION_NAMES[perm] || perm;
+}
 
 // Lock mechanism to prevent spamming the user if an app fires 5 requests at once
 const _pendingPermissionRequests = {};
@@ -109,7 +135,7 @@ async function checkAppPermission(sourceAppId, targetAction, origin) {
         return await _pendingPermissionRequests[requestKey];
     }
 
-    const friendlyName = PERMISSION_NAMES[requiredPerm] || requiredPerm;
+    const friendlyName = getPermissionName(requiredPerm);
 
     // Helper to resolve and save permission state
     const resolvePermission = (allowed) => {
@@ -123,25 +149,41 @@ async function checkAppPermission(sourceAppId, targetAction, origin) {
 
     _pendingPermissionRequests[requestKey] = new Promise(async (resolve) => {
         if (requiredPerm === 'system-admin') {
-            let confirmed = await showCustomConfirm(`${sourceAppId} will be able to read, modify, and delete all system data, settings, and other apps from now on. ONLY ALLOW THIS IF YOU ABSOLUTELY TRUST THIS APP!`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (1/5)`, 'report');
+            let confirmed = await showCustomConfirm(
+                window.t('ROOT_WARN_1_TEXT', { appName: sourceAppId, friendlyName }),
+                window.t('ROOT_WARN_1_TITLE', { appName: sourceAppId, friendlyName }),
+                'report'
+            );
             if (!confirmed) return resolve(resolvePermission(false));
 
-            confirmed = await showCustomConfirm(`Are you absolutely sure? A malicious app with root access can permanently destroy your setup and cause irreversible damage.`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (2/5)`, 'report');
+            confirmed = await showCustomConfirm(
+                window.t('ROOT_WARN_2_TEXT', { appName: sourceAppId, friendlyName }),
+                window.t('ROOT_WARN_2_TITLE', { appName: sourceAppId, friendlyName }),
+                'report'
+            );
             if (!confirmed) return resolve(resolvePermission(false));
 
-            confirmed = await showCustomConfirm(`The system is not responsible for any damage caused by granting root to ${sourceAppId}. Proceed?`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (3/5)`, 'report');
+            confirmed = await showCustomConfirm(
+                window.t('ROOT_WARN_3_TEXT', { appName: sourceAppId, friendlyName }),
+                window.t('ROOT_WARN_3_TITLE', { appName: sourceAppId, friendlyName }),
+                'report'
+            );
             if (!confirmed) return resolve(resolvePermission(false));
 
-            confirmed = await showCustomConfirm(`This is last on-screen warning. Do you completely trust ${sourceAppId} with full control over your system?`, `READ CAREFULLY! Allow ${sourceAppId} to ${friendlyName}? (4/5)`, 'report');
+            confirmed = await showCustomConfirm(
+                window.t('ROOT_WARN_4_TEXT', { appName: sourceAppId, friendlyName }),
+                window.t('ROOT_WARN_4_TITLE', { appName: sourceAppId, friendlyName }),
+                'report'
+            );
             if (!confirmed) return resolve(resolvePermission(false));
 
             // STAGE 5: Notification Action
             let resolved = false;
-            showNotification(`Ignore to deny`, {
-                heading: `Allow ${sourceAppId} to ${friendlyName}? (5/5)`,
+            showNotification(window.t('ROOT_WARN_5_TEXT', { appName: sourceAppId, friendlyName }), {
+                heading: window.t('ROOT_WARN_5_TITLE', { appName: sourceAppId, friendlyName }),
                 icon: 'report',
                 system: true,
-                buttonText: 'Grant permission',
+                buttonText: window.t('GRANT_PERMISSION'),
                 buttonAction: () => {
                     if (!resolved) {
                         resolved = true;
@@ -154,16 +196,15 @@ async function checkAppPermission(sourceAppId, targetAction, origin) {
             setTimeout(() => {
                 if (!resolved) {
                     resolved = true;
-                    showPopup(`Automatically denied access to ${friendlyName} for ${sourceAppId}`);
+                    showPopup(window.t('AUTO_DENIED_ACCESS', { friendlyName, appName: sourceAppId }));
                     resolve(resolvePermission(false));
                 }
             }, 6000);
 
         } else {
             // Standard App Permission Flow
-            const friendlyName = PERMISSION_NAMES[requiredPerm] || requiredPerm;
-            let promptText = `${sourceAppId} will be able to ${friendlyName} from now on.`;
-            let promptTitle = `Allow ${sourceAppId} to ${friendlyName}?`;
+            let promptText = window.t('PERM_PROMPT_TEXT', { appName: sourceAppId, friendlyName });
+            let promptTitle = window.t('PERM_PROMPT_TITLE', { appName: sourceAppId, friendlyName });
             let promptIcon = 'shield';
 
             const allowed = await showCustomConfirm(promptText, promptTitle, promptIcon);
@@ -181,12 +222,12 @@ function getLocalStorageItem(key) {
 function setLocalStorageItem(key, value) {
     setControlValueAndDispatch(key, value);
     // Return a confirmation message
-    return `Setting '${key}' was remotely triggered.`;
+    return window.t('SETTING_REMOTE_TRIGGERED', { key });
 }
 
 function removeLocalStorageItem(key) {
     localStorage.removeItem(key);
-    return `Storage key '${key}' removed.`;
+    return window.t('STORAGE_KEY_REMOVED', { key });
 }
 
 function listLocalStorageKeys() {
@@ -201,15 +242,15 @@ async function clearLocalStorage() {
     if (await showCustomConfirm(currentLanguage.RESET_CONFIRM)) {
         localStorage.clear();
         setTimeout(() => window.location.reload(), 100); // Give time for message to send
-        return 'All Polygol localStorage data cleared. Reloading...';
+        return window.t('RESET_SUCCESS');
     } else {
-        return 'Operation cancelled.';
+        return window.t('OPERATION_CANCELLED');
     }
 }
 
 const DEFAULTS_TRUE_KEYS = new Set([
-    'gurappsEnabled', 'animationsEnabled', 'showSeconds', 'showWeather', 
-    'aiAssistantEnabled', 'gurappSoundsEnabled', 'glassEffectsEnabled',
+    'polygolappsEnabled', 'animationsEnabled', 'showSeconds', 'showWeather', 
+    'aiAssistantEnabled', 'polygolappSoundsEnabled', 'glassEffectsEnabled',
     'resourceManagerEnabled', 'smartDisplayZoom', 'telemetryEnabled'
 ]);
 
@@ -229,7 +270,7 @@ function listCommonSettings() {
         'page_brightness': localStorage.getItem('page_brightness'),
         'showSeconds': localStorage.getItem('showSeconds'),
         'showWeather': localStorage.getItem('showWeather'),
-        'gurappsEnabled': localStorage.getItem('gurappsEnabled'),
+        'polygolappsEnabled': localStorage.getItem('polygolappsEnabled'),
         'animationsEnabled': localStorage.getItem('animationsEnabled'),
         'highContrast': localStorage.getItem('highContrast'),
         'use12HourFormat': localStorage.getItem('use12HourFormat'),
@@ -265,15 +306,15 @@ async function removeWallpaperAtIndex(index) {
     }
     if (confirm(currentLanguage.WALLPAPER_REMOVE_CONFIRM)) {
         await removeWallpaper(index);
-        return `Wallpaper at index ${index} removed.`;
+        return window.t('WALLPAPER_INDEX_REMOVED', { index });
     } else {
-        return 'Operation cancelled.';
+        return window.t('OPERATION_CANCELLED');
     }
 }
 
 async function clearAllWallpapers() {
     if (recentWallpapers.length === 0) {
-        return 'No custom wallpapers to clear.';
+        return window.t('NO_WALLPAPER_EXPORT');
     }
     if (confirm(currentLanguage.WALLPAPER_CLEAR_CONFIRM)) {
         const db = await initDB();
@@ -295,12 +336,12 @@ async function clearAllWallpapers() {
                 applyWallpaper();
                 // updatePageIndicatorDots (true);
                 syncUiStates();
-                resolve('All custom wallpapers cleared. Resetting to default.');
+                resolve(window.t('ALL_WALLPAPERS_CLEARED'));
             };
             request.onerror = (e) => reject(new Error('Failed to clear wallpapers from database.'));
         });
     } else {
-        return 'Operation cancelled.';
+        return window.t('OPERATION_CANCELLED');
     }
 }
 
@@ -440,9 +481,9 @@ async function removeIDBRecord(dbName, storeName, key) {
 }
 
 async function clearIDBStore(dbName, storeName) {
-    const confirmed = await showCustomConfirm(`Are you sure you want to clear ALL data from the '${storeName}' store in the '${dbName}' database? This cannot be undone.`);
+    const confirmed = await showCustomConfirm(window.t('CLEAR_STORE_CONFIRM', { storeName, dbName }));
     if (!confirmed) {
-        return 'Operation cancelled.';
+        return window.t('OPERATION_CANCELLED');
     }
     const db = await openIDB(dbName);
     const transaction = db.transaction(storeName, 'readwrite');
@@ -465,12 +506,12 @@ function getOriginFromUrl(url) {
     }
 }
 
-async function rebootGurasuraisu() {
+async function rebootPolygol() {
     if (await showCustomConfirm(currentLanguage.REBOOT_CONFIRM)) {
         setTimeout(() => window.location.reload(), 100);
-        return 'Rebooting Polygol...';
+        return window.t('REBOOTING_SYSTEM');
     } else {
-        return 'Reboot cancelled.';
+        return window.t('REBOOT_CANCELLED');
     }
 }
 
@@ -479,6 +520,9 @@ function setImmersiveMode(enabled) {
         document.body.classList.add('immersive-active');
     } else {
         document.body.classList.remove('immersive-active');
+    }
+    if (typeof window.broadcastSystemLayoutUpdate === 'function') {
+        window.broadcastSystemLayoutUpdate();
     }
 }
 
@@ -492,7 +536,7 @@ function requestInstalledApps() {
     return JSON.parse(localStorage.getItem('userInstalledAppsInfo') || '{}');
 }
 
-const Gurasuraisu = {
+const Polygol = {
     callApp: (appName, action) => {
         if (!appName) return;
         // Use 'i' flag for case-insensitive matching to be robust
@@ -505,11 +549,11 @@ const Gurasuraisu = {
         }
     }
 };
-window.Gurasuraisu = Gurasuraisu; // FIX: Explicitly expose to window
+window.Polygol = Polygol; // FIX: Explicitly expose to window
 
 // --- NEW: Function to broadcast a setting update to the settings app ---
 function broadcastSettingUpdate(key, value) {
-    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
     iframes.forEach(iframe => {
         if (iframe.contentWindow) {
             const targetOrigin = getOriginFromUrl(iframe.src);
@@ -526,6 +570,7 @@ function broadcastSettingUpdate(key, value) {
 function setControlValueAndDispatch(key, value) {
     // Handle settings without a direct UI control in index.html
     const settingsWithoutDirectControl = [
+        'systemDateFormat', 'dateFormatPreference',
         'sleepModeStyle', 'slideshowInterval',
         'autoSleepEnabled', 'autoSleepDuration', 'autoSleepScope',
         'resourceManagerEnabled', 'displayScale', 'smartDisplayZoom',
@@ -551,6 +596,17 @@ function setControlValueAndDispatch(key, value) {
     if (settingsWithoutDirectControl.includes(key)) {
         localStorage.setItem(key, value);
         broadcastSettingUpdate(key, value);
+
+        if (key === 'systemDateFormat' || key === 'dateFormatPreference') {
+            if (typeof window.setSystemDateFormat === 'function') {
+                window.setSystemDateFormat(value);
+            }
+        }
+        if (key === 'timeZoneSelection' || key === 'use12HourFormat') {
+            if (typeof window.broadcastLocaleUpdate === 'function') {
+                window.broadcastLocaleUpdate();
+            }
+        }
 
         if (key === 'navigationMode' || key === 'quickMenuEnabled') {
             const isQm = (key === 'navigationMode' && value === 'quickmenu') || (key === 'quickMenuEnabled' && value === 'true');
@@ -694,7 +750,7 @@ window.addEventListener('message', async (event) => { // Make listener async
 		closeFullscreenEmbed: () => {
             // Identify which iframe sent the close request
             let callingUrl = null;
-            const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+            const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
             for (const iframe of iframes) {
                 // 'event' is available from the parent listener scope
                 if (iframe.contentWindow === event.source) {
@@ -708,7 +764,7 @@ window.addEventListener('message', async (event) => { // Make listener async
                 // Close the specific app that requested it
                 forceCloseApp(callingUrl);
             } else {
-                showPopup('Could not close app')
+                showPopup(window.t ? window.t('COULD_NOT_CLOSE_APP') : 'Could not close app');
             }
         },
 		launchAppSilently: createBackgroundEmbed, // Expose silent launch
@@ -771,7 +827,7 @@ window.addEventListener('message', async (event) => { // Make listener async
             
             // Identify the App sending the request using 'event.source' from the listener closure
             let sourceAppId = 'Unknown';
-            const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+            const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
             for (const iframe of iframes) {
                 if (iframe.contentWindow === event.source) {
                     sourceAppId = iframe.dataset.appId;
@@ -819,7 +875,7 @@ window.addEventListener('message', async (event) => { // Make listener async
             // NEW: Allow ANY running app (even background) to set remote UI if they are the sender.
             // We identify the app by matching the event source window to our iframes.
             let appName = null;
-            const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+            const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
             for (const iframe of iframes) {
                 if (iframe.contentWindow === event.source) {
                     appName = iframe.dataset.appId;
@@ -845,7 +901,7 @@ window.addEventListener('message', async (event) => { // Make listener async
         sendRemoteUpdate: (updates) => {
             // Allow background apps to send updates
             let appName = null;
-            const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+            const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
             for (const iframe of iframes) {
                 if (iframe.contentWindow === event.source) {
                     appName = iframe.dataset.appId;
@@ -985,7 +1041,7 @@ window.addEventListener('message', async (event) => { // Make listener async
         clearAllWallpapers, 
         switchWallpaperParent,
         getCurrentTimeParent, 
-        rebootGurasuraisu, 
+        rebootPolygol, 
         promptPWAInstall, 
         executeParentJS,
         listIDBDatabases, 
@@ -994,12 +1050,17 @@ window.addEventListener('message', async (event) => { // Make listener async
         setIDBRecord, 
         removeIDBRecord, 
         clearIDBStore,
+        selectLanguage: (lang) => (typeof selectLanguage === 'function' ? selectLanguage(lang) : null),
+        setSystemDateFormat: (fmt) => (typeof setSystemDateFormat === 'function' ? setSystemDateFormat(fmt) : null),
+        getSystemDateFormat: () => (typeof getSystemDateFormat === 'function' ? getSystemDateFormat() : (localStorage.getItem('systemDateFormat') || 'auto')),
+        getSystemLocalePayload: () => (typeof getSystemLocalePayload === 'function' ? getSystemLocalePayload() : {}),
+        getSystemLayoutVariables: () => (typeof getSystemLayoutVariables === 'function' ? getSystemLayoutVariables() : {}),
 		setSettingValue: (key, value) => {
             setControlValueAndDispatch(key, value);
             return `Setting '${key}' remotely updated.`;
         },
         deleteIDBDatabase: async (dbName) => {
-            if (await showCustomConfirm(`Are you sure you want to delete the entire database "${dbName}"? This is irreversible.`)) {
+            if (await showCustomConfirm(window.t('DELETE_DB_CONFIRM', { dbName }))) {
                 return new Promise((resolve, reject) => {
                     const req = indexedDB.deleteDatabase(dbName);
                     req.onsuccess = () => resolve(`Database '${dbName}' deleted.`);
@@ -1007,7 +1068,7 @@ window.addEventListener('message', async (event) => { // Make listener async
                     req.onblocked = () => reject(`Deletion blocked: Database '${dbName}' is currently open in another tab/app.`);
                 });
             } else {
-                return "Operation cancelled.";
+                return window.t('OPERATION_CANCELLED');
             }
         },
 		// Get all LS data for the manager list
@@ -1028,7 +1089,7 @@ window.addEventListener('message', async (event) => { // Make listener async
         },
         deleteCache: async (cacheName) => {
             if ('caches' in window) {
-                if (await showCustomConfirm(`Delete cache "${cacheName}"? This may affect app performance.`)) {
+                if (await showCustomConfirm(window.t('DELETE_CACHE_CONFIRM', { cacheName }))) {
                     return await caches.delete(cacheName);
                 }
             }
@@ -1085,7 +1146,7 @@ window.addEventListener('message', async (event) => { // Make listener async
 
     // Identify App Identity safely once at the top
     let sourceAppId = null;
-    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
     for (const iframe of iframes) {
         if (iframe.contentWindow === sourceWindow) {
             sourceAppId = iframe.dataset.appId;
@@ -1095,8 +1156,8 @@ window.addEventListener('message', async (event) => { // Make listener async
     if (!sourceAppId) sourceAppId = 'Untrusted Source';
 
 	// Handle API presence handshake to prevent legacy mode
-	if (data.type === 'gurasuraisu-api-present') {
-	    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+	if (data.type === 'polygol-api-present') {
+	    const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
 	    for (const iframe of iframes) {
 	        if (iframe.contentWindow === sourceWindow) {
 	            const embedContainer = iframe.closest('.fullscreen-embed');
@@ -1181,15 +1242,15 @@ window.addEventListener('message', async (event) => { // Make listener async
         return;
     }
 
-    // Handle a Gurapp announcing it's ready for settings
-    if (data.type === 'gurapp-ready') {
+    // Handle a APP announcing it's ready for settings
+    if (data.type === 'polygolapp-ready') {
         if (!sourceWindow) return;
 
 	    const targetOrigin = event.origin === 'null' ? '*' : event.origin; // Use the actual origin of the sender
 
         // Find which app sent the message
         let sourceAppId = null;
-        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+        const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
         for (const iframe of iframes) {
             if (iframe.contentWindow === sourceWindow) {
                 sourceAppId = iframe.dataset.appId;
@@ -1197,7 +1258,7 @@ window.addEventListener('message', async (event) => { // Make listener async
             }
         }
 
-        console.log(`[Polygol] Received 'gurapp-ready' from: ${sourceAppId || 'Unknown App'}`);
+        console.log(`[Polygol] Received 'polygolapp-ready' from: ${sourceAppId || 'Unknown App'}`);
 
         // --- Core Logic ---
         // If the ready message is from apps, send ALL settings.
@@ -1253,12 +1314,40 @@ window.addEventListener('message', async (event) => { // Make listener async
 
         sourceWindow.postMessage({ type: 'sunUpdate', shadow: currentSunShadow, shadowStrong: currentSunShadowStrong }, targetOrigin);
 
-		const gurappSounds = localStorage.getItem('gurappSoundsEnabled') !== 'false';
+		const polygolappSounds = localStorage.getItem('polygolappSoundsEnabled') !== 'false';
 	    sourceWindow.postMessage({ 
 	        type: 'settingUpdate', 
-	        key: 'gurappSoundsEnabled', 
-	        value: gurappSounds.toString() 
+	        key: 'polygolappSoundsEnabled', 
+	        value: polygolappSounds.toString() 
 	    }, targetOrigin);
+
+        // Send System Layout Variables (including screen padding)
+        if (typeof window.getSystemLayoutVariables === 'function') {
+            sourceWindow.postMessage({
+                type: 'systemLayoutUpdate',
+                variables: window.getSystemLayoutVariables()
+            }, targetOrigin);
+        }
+
+        // Send Global Locale & Language Settings
+        if (typeof window.getSystemLocalePayload === 'function') {
+            const loc = window.getSystemLocalePayload();
+            sourceWindow.postMessage({
+                type: 'localeUpdate',
+                ...loc
+            }, targetOrigin);
+            sourceWindow.postMessage({
+                type: 'languageUpdate',
+                languageCode: loc.languageCode
+            }, targetOrigin);
+            sourceWindow.postMessage({
+                type: 'dateFormatUpdate',
+                dateFormat: loc.dateFormat
+            }, targetOrigin);
+        } else {
+            const currentLang = localStorage.getItem('selectedLanguage') || 'EN';
+            sourceWindow.postMessage({ type: 'languageUpdate', languageCode: currentLang }, targetOrigin);
+        }
 
         return; // Message handled
     }
@@ -1304,7 +1393,7 @@ window.addEventListener('message', async (event) => { // Make listener async
         let specificActivityId = null;
         
         // Find iframe matching source window
-        const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+        const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
         for (const iframe of iframes) {
             if (iframe.contentWindow === sourceWindow) {
                 sourceAppId = iframe.dataset.appId; 
@@ -1378,8 +1467,8 @@ window.addEventListener('message', async (event) => { // Make listener async
         }
     }
 
-    // Check if this is an API call from a Gurapp
-    if (data && data.action === 'callGurasuraisuFunc' && data.functionName) {
+    // Check if this is an API call from a APP
+    if (data && data.action === 'callPolygolFunc' && data.functionName) {
         const funcName = data.functionName;
         const args = Array.isArray(data.args) ? data.args : [];
 		
@@ -1514,12 +1603,12 @@ window.addEventListener('message', async (event) => { // Make listener async
                 sourceWindow.postMessage({ type: 'parentActionError', message: error.message }, replyOrigin);
             }
         } else {
-            console.warn(`A Gurapp attempted to call a disallowed or non-existent function: "${funcName}"`);
+            console.warn(`A APP attempted to call a disallowed or non-existent function: "${funcName}"`);
         }
         return;
     }
 	
-    // Case 2: Gurapp-to-Gurapp communication
+    // Case 2: APP-to-APP communication
     const { targetApp, ...payload } = data;
     if (targetApp) {
         const iframe = document.querySelector(`iframe[data-app-id="${targetApp}"]`);

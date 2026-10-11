@@ -6,9 +6,9 @@
     <title>AiNany - AI Subsystem Testing</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
-    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
-    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <link rel="stylesheet" href="/assets/polygolapp/intl/settings/settings.css">
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="/assets/intl/polygolapp/internal-app-api.js" defer></script>
 </head>
 <body data-app-name="AiNany">
     <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
@@ -96,14 +96,14 @@
 
             try {
                 let res;
-                if (window.Gurasuraisu && Gurasuraisu.ai) {
+                if (window.Polygol && Polygol.ai) {
                     if (action === 'summarize') {
-                        res = await Gurasuraisu.ai.summarize(promptText);
+                        res = await Polygol.ai.summarize(promptText);
                     } else if (action === 'suggest') {
-                        const suggestions = await Gurasuraisu.ai.suggest({ context: promptText });
+                        const suggestions = await Polygol.ai.suggest({ context: promptText });
                         res = JSON.stringify(suggestions, null, 2);
                     } else {
-                        res = await Gurasuraisu.ai.generate(promptText);
+                        res = await Polygol.ai.generate(promptText);
                     }
                 } else {
                     res = `[Fallback AI]: kirbAI response generated for: "${promptText}"`;
@@ -126,8 +126,8 @@
         document.getElementById('btn-save-sysprompt').onclick = () => {
             const val = document.getElementById('ai-sys-prompt').value;
             localStorage.setItem('kirb_ai_system_prompt', val);
-            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                Gurasuraisu.showPopup('System prompt updated');
+            if (window.Polygol && Polygol.showPopup) {
+                Polygol.showPopup('System prompt updated');
             }
         };
     </script>

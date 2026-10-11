@@ -13,9 +13,15 @@ function updateQMClock() {
 
     const qmClock = document.getElementById('qm-clock');
     if (qmClock && typeof moment === 'function') {
+        const selectedLang = (localStorage.getItem('selectedLanguage') || 'EN').toUpperCase();
+        const momentLoc = (selectedLang === 'JP' || selectedLang === 'JA') ? 'ja' : (selectedLang === 'KO' ? 'ko' : (selectedLang === 'ZH' ? 'zh-cn' : 'en'));
         const now = moment();
+        if (typeof now.locale === 'function') now.locale(momentLoc);
         const use12 = localStorage.getItem('use12HourFormat') === 'true';
-        const format = use12 ? 'h:mm A' : 'HH:mm';
+        let format = 'HH:mm';
+        if (use12) {
+            format = (selectedLang === 'JP' || selectedLang === 'JA' || selectedLang === 'KO' || selectedLang === 'ZH') ? 'A h:mm' : 'h:mm A';
+        }
         qmClock.textContent = now.format(format);
     }
 
@@ -89,6 +95,10 @@ function updateNavigationModeUI() {
     const pinnedSwitch = document.getElementById('quickmenu-pinned-switch');
     if (pinnedSwitch && pinnedSwitch.checked !== isPinned) {
         pinnedSwitch.checked = isPinned;
+    }
+
+    if (typeof window.broadcastSystemLayoutUpdate === 'function') {
+        window.broadcastSystemLayoutUpdate();
     }
 }
 
@@ -243,10 +253,10 @@ function updateDockVisibility() {
 
 let appIconColors = JSON.parse(localStorage.getItem('appIconColors')) || {};
 const sortMethods = [
-    { id: 'alpha', icon: 'sort_by_alpha', label: 'Alphabetical' },
-    { id: 'last_used', icon: 'history', label: 'Last Used' },
-    { id: 'most_used', icon: 'trending_up', label: 'Most Used' },
-    { id: 'color', icon: 'palette', label: 'Color' }
+    { id: 'alpha', icon: 'sort_by_alpha', get label() { return window.t ? window.t('ALPHABETICAL') : 'Alphabetical'; } },
+    { id: 'last_used', icon: 'history', get label() { return window.t ? window.t('LAST_USED') : 'Last Used'; } },
+    { id: 'most_used', icon: 'trending_up', get label() { return window.t ? window.t('MOST_USED') : 'Most Used'; } },
+    { id: 'color', icon: 'palette', get label() { return window.t ? window.t('COLOR') : 'Color'; } }
 ];
 let currentSortIndex = 0;
 
@@ -265,28 +275,28 @@ function updateSortButtonUI() {
     }
 }
 
-// Function to handle Gurapps visibility
-function updateGurappsVisibility() {
+// Function to handle APPs visibility
+function updateAPPsVisibility() {
     const drawerHandle = document.querySelector(".drawer-handle");
     const splitTrigger = document.getElementById("split-screen-trigger");
     const dock = document.getElementById("dock");
     
-    if (gurappsEnabled) {
-        // Show Gurapps elements
+    if (polygolappsEnabled) {
+        // Show APPs elements
         if (drawerHandle) drawerHandle.style.display = "flex";
         if (splitTrigger) splitTrigger.classList.remove("force-hide");
         if (dock) dock.classList.remove("force-hide");
         
         // Reset app functionality
-        document.body.classList.remove("gurapps-disabled");
+        document.body.classList.remove("polygolapps-disabled");
     } else {
-        // Hide Gurapps elements
+        // Hide APPs elements
         if (drawerHandle) drawerHandle.style.display = "none";
         if (splitTrigger) splitTrigger.classList.add("force-hide");
         if (dock) dock.classList.add("force-hide");
         
         // Add class to body for CSS targeting
-        document.body.classList.add("gurapps-disabled");
+        document.body.classList.add("polygolapps-disabled");
         
 		// Close app drawer if open
         if (appDrawer.classList.contains("open")) {
@@ -296,21 +306,21 @@ function updateGurappsVisibility() {
     }
 }
 
-const __gurappsSwitch = document.getElementById("gurapps-switch");
-if (__gurappsSwitch) {
-    if (typeof gurappsEnabled === 'undefined') {
-        window.gurappsEnabled = localStorage.getItem("gurappsEnabled") !== "false";
+const __polygolappsSwitch = document.getElementById("polygolapps-switch");
+if (__polygolappsSwitch) {
+    if (typeof polygolappsEnabled === 'undefined') {
+        window.polygolappsEnabled = localStorage.getItem("polygolappsEnabled") !== "false";
     }
-    __gurappsSwitch.checked = window.gurappsEnabled;
-    __gurappsSwitch.addEventListener("change", handleGurappsToggle);
+    __polygolappsSwitch.checked = window.polygolappsEnabled;
+    __polygolappsSwitch.addEventListener("change", handleAPPsToggle);
 }
 
-function handleGurappsToggle() {
-    window.gurappsEnabled = this.checked;
-    const value = window.gurappsEnabled.toString();
-    localStorage.setItem("gurappsEnabled", value);
-    broadcastSettingUpdate('gurappsEnabled', value);
-    updateGurappsVisibility();
+function handleAPPsToggle() {
+    window.polygolappsEnabled = this.checked;
+    const value = window.polygolappsEnabled.toString();
+    localStorage.setItem("polygolappsEnabled", value);
+    broadcastSettingUpdate('polygolappsEnabled', value);
+    updateAPPsVisibility();
 }
 
 function updateOneButtonNavVisibility() {

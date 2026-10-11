@@ -232,7 +232,7 @@ const ResourceManager = {
     recoveryCounter: 0,
     originalGlassMode: null, 
     appActivity: {},
-    gurappMetrics: {},
+    polygolappMetrics: {},
     pressureState: 'nominal',
     maxObservedFps: 0, // Baseline for relative drop detection
     
@@ -297,8 +297,8 @@ const ResourceManager = {
         this.initPressureObserver();
 
         window.addEventListener('message', (e) => {
-            if (e.data.type === 'gurapp-performance-report') {
-                this.gurappMetrics[e.data.appId] = {
+            if (e.data.type === 'polygolapp-performance-report') {
+                this.polygolappMetrics[e.data.appId] = {
                     fps: e.data.fps,
                     memory: e.data.memory,
                     lastUpdate: Date.now()
@@ -469,7 +469,7 @@ const ResourceManager = {
             
             if (typeof forceCloseApp === 'function') forceCloseApp(oldestUrl);
             
-            if (typeof showPopup === 'function') showPopup(`Closed ${appName} to free memory`);
+            if (typeof showPopup === 'function') showPopup(window.t ? window.t('CLOSED_APP_OOM', { name: appName }) : `Closed ${appName} to free memory`);
             SystemGC.run(true); // Force GC immediately after OOM kill
         }
     }

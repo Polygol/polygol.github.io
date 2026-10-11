@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/assets/polygolapp/api/polygol-api.js"></script>
+    <style>
+        body {
+            margin: 0; color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            display: flex; align-items: center; gap: 15px;
+            height: 100vh; width: 100vw; box-sizing: border-box;
+            overflow: hidden;
+        }
+        .icon-box { display: flex; align-items: center; justify-content: center; }
+        .content { display: flex; flex-direction: column; gap: 6px; }
+        .title { font-family: 'Open Runde', sans-serif; font-weight: 700; font-size: 1.1rem; }
+        .desc { color: var(--secondary-text-color); }
+    </style>
+</head>
+<body>
+    <div class="icon-box">
+        <span id="icon" class="material-symbols-rounded" style="font-size: 32px;"></span>
+    </div>
+    <div class="content">
+        <div id="title" class="title" data-lang-key="WEATHER">Weather</div>
+        <div id="desc" class="desc"></div>
+    </div>
+    <script>
+        window.addEventListener('message', (e) => {
+            if (e.data.type === 'live-activity-update') {
+                if (e.data.icon) document.getElementById('icon').textContent = e.data.icon;
+                if (e.data.title) document.getElementById('title').textContent = e.data.title;
+                if (e.data.text) document.getElementById('desc').textContent = e.data.text;
+            }
+        });
+    </script>
+</body>
+</html>

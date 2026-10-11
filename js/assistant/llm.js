@@ -181,7 +181,7 @@ export class LocalLLM {
     }
 
     /**
-     * General AI completion for system and Gurapps
+     * General AI completion for system and APPs
      * @param {string} promptText
      * @param {object} [options]
      * @returns {Promise<{ text: string, json?: object }>}
@@ -293,7 +293,7 @@ export class LocalLLM {
 
         // 1. Weather / Ambient State
         cards.push({
-            label: temp ? `Weather forecast (${temp})` : "What's the weather?",
+            label: temp ? ((typeof window !== 'undefined' && window.t) ? window.t('SUGGESTION_WEATHER_FORECAST', { temp }) : `Weather forecast (${temp})`) : ((typeof window !== 'undefined' && window.t) ? window.t('SUGGESTION_WEATHER') : "What's the weather?"),
             action: { systemAction: 'weather' },
             background: "linear-gradient(135deg, #2b5876, #4e4376)"
         });
@@ -301,13 +301,13 @@ export class LocalLLM {
         // 2. Media / Audio
         if (mediaPlaying) {
             cards.push({
-                label: "Control playback",
+                label: (typeof window !== 'undefined' && window.t) ? window.t('SUGGESTION_CONTROL_PLAYBACK') : "Control playback",
                 action: { systemAction: 'mediaToggle', payload: 'Music' },
                 background: "linear-gradient(135deg, #11998e, #38ef7d)"
             });
         } else {
             cards.push({
-                label: "Play music",
+                label: (typeof window !== 'undefined' && window.t) ? window.t('SUGGESTION_PLAY_MUSIC') : "Play music",
                 action: { systemAction: 'openApp', payload: 'Music' },
                 background: "linear-gradient(135deg, #5b86e5, #36d1dc)"
             });
@@ -316,19 +316,19 @@ export class LocalLLM {
         // 3. Power or Time State
         if (battery <= 30) {
             cards.push({
-                label: "Activate Eco Mode",
+                label: (typeof window !== 'undefined' && window.t) ? window.t('SUGGESTION_ECO_MODE') : "Activate Eco Mode",
                 action: { systemAction: 'ecoMode' },
                 background: "linear-gradient(135deg, #f857a6, #ff5858)"
             });
         } else if (hour >= 21 || hour < 6) {
             cards.push({
-                label: "Activate Night Stand",
+                label: (typeof window !== 'undefined' && window.t) ? window.t('SUGGESTION_NIGHT_STAND') : "Activate Night Stand",
                 action: { systemAction: 'nightStand' },
                 background: "linear-gradient(135deg, #0f2027, #203a43, #2c5364)"
             });
         } else {
             cards.push({
-                label: "Browse files",
+                label: (typeof window !== 'undefined' && window.t) ? window.t('SUGGESTION_BROWSE_FILES') : "Browse files",
                 action: { systemAction: 'openApp', payload: 'Files' },
                 background: "linear-gradient(135deg, #667eea, #764ba2)"
             });
@@ -345,13 +345,13 @@ export class LocalLLM {
             });
         } else if (hour >= 22 || hour < 6) {
             cards.push({
-                label: "Turn off display",
+                label: (typeof window !== 'undefined' && window.t) ? window.t('SUGGESTION_TURN_OFF_DISPLAY') : "Turn off display",
                 action: { systemAction: 'sleep' },
                 background: "linear-gradient(135deg, #141e30, #243b55)"
             });
         } else {
             cards.push({
-                label: "Open Settings",
+                label: (typeof window !== 'undefined' && window.t) ? window.t('SUGGESTION_OPEN_SETTINGS') : "Open Settings",
                 action: { systemAction: 'openApp', payload: 'Settings' },
                 background: "linear-gradient(135deg, #434343, #000000)"
             });
@@ -425,22 +425,22 @@ export class LocalLLM {
 
         // Conversational queries
         if (lower.includes('who are you') || lower.includes('what are you')) {
-            return { action: 'info', systemAction: 'info', responseText: "I'm kirbAI, your Polygol system assistant." };
+            return { action: 'info', systemAction: 'info', responseText: (typeof window !== 'undefined' && window.t) ? window.t('ASSISTANT_INTRO') : "I'm kirbAI, your Polygol system assistant." };
         }
         if (lower.startsWith('hello') || lower.startsWith('hi') || lower === 'hey') {
-            return { action: 'info', systemAction: 'info', responseText: "Hello! How can I help you today?" };
+            return { action: 'info', systemAction: 'info', responseText: (typeof window !== 'undefined' && window.t) ? window.t('ASSISTANT_GREETING') : "Hello! How can I help you today?" };
         }
         if (lower.includes('how are you')) {
-            return { action: 'info', systemAction: 'info', responseText: "I'm doing well, thank you! Ready to help." };
+            return { action: 'info', systemAction: 'info', responseText: (typeof window !== 'undefined' && window.t) ? window.t('ASSISTANT_FEELING') : "I'm doing well, thank you! Ready to help." };
         }
         if (lower.includes('what is polygol') || lower.includes('about polygol')) {
-            return { action: 'info', systemAction: 'info', responseText: "Polygol OS is a lightweight, web-based operating system designed for simplicity and speed." };
+            return { action: 'info', systemAction: 'info', responseText: (typeof window !== 'undefined' && window.t) ? window.t('ASSISTANT_ABOUT_SYSTEM') : "Polygol OS is a lightweight, web-based operating system designed for simplicity and speed." };
         }
         if (lower === 'help' || lower.includes('what can you do')) {
-            return { action: 'info', systemAction: 'info', responseText: "You can ask me to open apps, check the weather, control media, turn on eco mode, or go to sleep." };
+            return { action: 'info', systemAction: 'info', responseText: (typeof window !== 'undefined' && window.t) ? window.t('ASSISTANT_CAPABILITIES') : "You can ask me to open apps, check the weather, control media, turn on eco mode, or go to sleep." };
         }
         if (lower.includes('thank')) {
-            return { action: 'info', systemAction: 'info', responseText: "You're very welcome!" };
+            return { action: 'info', systemAction: 'info', responseText: (typeof window !== 'undefined' && window.t) ? window.t('ASSISTANT_WELCOME') : "You're very welcome!" };
         }
 
         // App matching

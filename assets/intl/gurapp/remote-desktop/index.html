@@ -6,9 +6,9 @@
     <title>Remote Desktop</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
-    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
-    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <link rel="stylesheet" href="/assets/polygolapp/intl/settings/settings.css">
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="/assets/intl/polygolapp/internal-app-api.js" defer></script>
 </head>
 <body data-app-name="Remote Desktop">
     <div class="container" style="max-width: 720px; width: 100%; margin: 0 auto;">
@@ -161,25 +161,25 @@
 
             switch(cmd) {
                 case 'openSettings':
-                    if (window.Gurasuraisu) Gurasuraisu.openApp('/assets/gurapp/intl/settings/index.html');
+                    if (window.Polygol) Polygol.openApp('/assets/polygolapp/intl/settings/index.html');
                     break;
                 case 'openFiles':
-                    if (window.Gurasuraisu) Gurasuraisu.openApp('/assets/gurapp/intl/forudaraisu/index.html');
+                    if (window.Polygol) Polygol.openApp('/assets/polygolapp/intl/forudaraisu/index.html');
                     break;
                 case 'openBrowser':
-                    if (window.Gurasuraisu) Gurasuraisu.openApp('/assets/gurapp/intl/internet/index.html');
+                    if (window.Polygol) Polygol.openApp('/assets/polygolapp/intl/internet/index.html');
                     break;
                 case 'toggleTheme':
                     window.parent.postMessage({ action: 'setInternalVariable', key: 'theme', value: 'toggle' }, '*');
                     break;
                 case 'triggerNotify':
-                    if (window.Gurasuraisu) Gurasuraisu.showNotification("Remote desktop command received", { icon: "desktop_windows" });
+                    if (window.Polygol) Polygol.showNotification("Remote desktop command received", { icon: "desktop_windows" });
                     break;
                 case 'triggerGC':
                     window.parent.postMessage({ action: 'executeInternalCare' }, '*');
                     break;
                 case 'sendText':
-                    if (window.Gurasuraisu) Gurasuraisu.showPopup(`Remote Input: "${params.text}"`);
+                    if (window.Polygol) Polygol.showPopup(`Remote Input: "${params.text}"`);
                     break;
             }
         }
@@ -189,7 +189,7 @@
             try {
                 const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
                 logHostCommand('Screen video stream active.');
-                if (window.Gurasuraisu) Gurasuraisu.showPopup('Screen sharing stream started');
+                if (window.Polygol) Polygol.showPopup('Screen sharing stream started');
             } catch(e) {
                 logHostCommand(`Screen capture error: ${e.message}`);
             }
@@ -211,7 +211,7 @@
                 command: cmd,
                 params: params
             });
-            if (window.Gurasuraisu && Gurasuraisu.playSound) Gurasuraisu.playSound('click');
+            if (window.Polygol && Polygol.playSound) Polygol.playSound('click');
         }
 
         document.getElementById('btn-send-text').onclick = () => {

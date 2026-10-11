@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/assets/polygolapp/api/polygol-api.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        #status {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="status">
+        <svg class="loading-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width: 128px; height: 128px;">
+            <rect width="100%" height="100%" fill="white" stroke="none" class="loading-spinner-ind"></rect>
+        </svg>
+    </div>
+    <video id="cast-video" autoplay playsinline></video>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            Polygol.setImmersiveMode(true);
+        });
+        window.addEventListener('beforeunload', () => {
+            Polygol.setImmersiveMode(false);
+        });
+        const video = document.getElementById('cast-video');
+        video.addEventListener('playing', () => {
+            document.getElementById('status').style.display = 'none';
+        });
+    </script>
+</body>
+</html>

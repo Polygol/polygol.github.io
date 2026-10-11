@@ -6,9 +6,9 @@
     <title>Videoman - Camera Diagnostics</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
-    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
-    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <link rel="stylesheet" href="/assets/polygolapp/intl/settings/settings.css">
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="/assets/intl/polygolapp/internal-app-api.js" defer></script>
 </head>
 <body data-app-name="Videoman">
     <div class="container" style="max-width: 760px; width: 100%; margin: 0 auto;">
@@ -139,8 +139,8 @@
             ctx.drawImage(video, 0, 0);
 
             const dataUrl = c.toDataURL('image/png');
-            if (window.Gurasuraisu && Gurasuraisu.downloadFile) {
-                Gurasuraisu.downloadFile(`snapshot-${Date.now()}.png`, dataUrl);
+            if (window.Polygol && Polygol.downloadFile) {
+                Polygol.downloadFile(`snapshot-${Date.now()}.png`, dataUrl);
             } else {
                 const a = document.createElement('a');
                 a.href = dataUrl;

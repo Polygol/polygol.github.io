@@ -59,8 +59,8 @@ const controlIdMap = {
     'glassEnabled': 'clock-glass-switch',
     'gradientColor': 'clock-gradient-color-picker',
     'gradientEnabled': 'clock-gradient-switch',
-    'gurappsEnabled': 'gurapps-switch',
-    'gurappSoundsEnabled': 'gurapp-sounds-switch',
+    'polygolappsEnabled': 'polygolapps-switch',
+    'polygolappSoundsEnabled': 'polygolapp-sounds-switch',
     'hapticsEnabled': 'haptics-switch',
     'highContrast': 'contrast-switch',
     'hideClockIndicator': 'hideClockIndicator',
@@ -98,6 +98,7 @@ const controlIdMap = {
     'screenCurve': 'screen-curve-slider',
     'screenTimeBreakTimer': 'screenTimeBreakTimer',
     'selectedLanguage': 'language-switcher',
+    'systemDateFormat': 'system-date-format-select',
     'sedentaryReminderEnabled': 'sedentaryReminderEnabled',
     'sfxVolume': 'sfxVolume',
     'shadowBlur': 'clock-shadow-blur-slider',
@@ -201,7 +202,7 @@ function handleContrastChange(e) {
     document.body.classList.toggle('high-contrast', highContrast);
     
     // Inform iframes
-    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
     iframes.forEach((iframe) => {
         if (iframe.contentWindow) {
             const targetOrigin = typeof getOriginFromUrl === 'function' ? getOriginFromUrl(iframe.src) : '*';
@@ -241,7 +242,7 @@ function handleAnimationChange() {
     broadcastSettingUpdate('animationsEnabled', value);
     document.body.classList.toggle('reduce-animations', !enableAnimations);
     
-    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
     iframes.forEach((iframe) => {
         if (iframe.contentWindow) {
             const targetOrigin = getOriginFromUrl(iframe.src);

@@ -343,7 +343,7 @@ function applySystemTint() {
 
 function broadcastWallpaperPaletteColors(colors) {
     if (!colors) return;
-    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
     iframes.forEach(iframe => {
         if (iframe.contentWindow) {
             const targetOrigin = getOriginFromUrl(iframe.src);
@@ -356,7 +356,7 @@ function broadcastWallpaperPaletteColors(colors) {
 }
 
 function broadcastThemeVariables(variables) {
-    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
     iframes.forEach(iframe => {
         if (iframe.contentWindow) {
             const targetOrigin = getOriginFromUrl(iframe.src);
@@ -405,8 +405,8 @@ function applyGlassEffects() {
     root.style.removeProperty('--fx-filter');
     root.style.removeProperty('--edge-refraction-filter');
 
-    // Broadcast update to Gura iframes
-    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    // Broadcast update to Polygol iframes
+    const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
     iframes.forEach(iframe => {
         if (iframe.contentWindow) {
             const targetOrigin = getOriginFromUrl(iframe.src);

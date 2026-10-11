@@ -360,10 +360,10 @@ updateSunEffect = function() {
 };
 
 /**
- * Sends the updated sun shadow value to all active Gurapp iframes.
+ * Sends the updated sun shadow value to all active APP iframes.
  */
 function broadcastSunUpdate() {
-    const iframes = document.querySelectorAll('iframe[data-gurasuraisu-iframe]');
+    const iframes = document.querySelectorAll('iframe[data-polygol-iframe]');
     iframes.forEach(iframe => {
         if (iframe.contentWindow) {
             const targetOrigin = getOriginFromUrl(iframe.src);
@@ -854,7 +854,7 @@ async function processCurrentWallpaperDepth() {
         // --- NEW: Confirmation Dialog ---
         // We use showCustomConfirm because it returns a Promise<boolean>
         const confirmed = await showCustomConfirm(
-            'Analyzing wallpaper may slow down your device for a moment. Continue anyway?',
+            window.t('DEPTH_SLOWDOWN_CONFIRM')
         );
 		
 		if (!confirmed) {
@@ -925,7 +925,7 @@ async function processCurrentWallpaperDepth() {
                 URL.revokeObjectURL(workerUrl);
             };
 
-            showNotification('Generating depth', { icon: 'auto_awesome' });
+            showNotification(window.t('GENERATING_DEPTH'), { icon: 'auto_awesome' });
             
             // Send data to worker
             worker.postMessage(imageBlob);
@@ -943,11 +943,11 @@ async function processCurrentWallpaperDepth() {
 
         // 6. Apply
         applyDepthLayer(compressedDataUrl);
-        showNotification('Task completed', { icon: 'auto_awesome' });
+        showNotification(window.t('TASK_COMPLETED'), { icon: 'auto_awesome' });
 
     } catch (error) {
         console.error("Depth effect failed:", error);
-        showNotification('Failed to complete', { icon: 'auto_awesome' });
+        showNotification(window.t('TASK_FAILED'), { icon: 'auto_awesome' });
         
         currentWallpaper.depthEnabled = false;
         saveRecentWallpapers();

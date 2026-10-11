@@ -6,9 +6,9 @@
     <title>Gaty - App & Permission Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,700,1,0" />
-    <link rel="stylesheet" href="/assets/gurapp/intl/settings/settings.css">
-    <script src="/assets/gurapp/api/gurasuraisu-api.js" defer></script>
-    <script src="/assets/intl/gurapp/internal-app-api.js" defer></script>
+    <link rel="stylesheet" href="/assets/polygolapp/intl/settings/settings.css">
+    <script src="/assets/polygolapp/api/polygol-api.js" defer></script>
+    <script src="/assets/intl/polygolapp/internal-app-api.js" defer></script>
 </head>
 <body data-app-name="Gaty">
     <div class="container" style="max-width: 760px; width: 100%; margin: 0 auto;">
@@ -123,31 +123,31 @@
             if (window.parent && window.parent.localStorage) {
                 window.parent.localStorage.setItem('appPermissions', str);
             }
-            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                Gurasuraisu.showPopup(`Permission ${permId} ${allowed ? 'granted' : 'denied'}`);
+            if (window.Polygol && Polygol.showPopup) {
+                Polygol.showPopup(`Permission ${permId} ${allowed ? 'granted' : 'denied'}`);
             }
         };
 
         window.launchApp = (url) => {
-            if (window.Gurasuraisu && Gurasuraisu.openApp) {
-                Gurasuraisu.openApp(url);
+            if (window.Polygol && Polygol.openApp) {
+                Polygol.openApp(url);
             } else {
                 window.open(url, '_blank');
             }
         };
 
         window.forceStopApp = (appName) => {
-            window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'forceCloseAppByName', args: [appName] }, '*');
-            if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                Gurasuraisu.showPopup(`Force stopped ${appName}`);
+            window.parent.postMessage({ action: 'callPolygolFunc', functionName: 'forceCloseAppByName', args: [appName] }, '*');
+            if (window.Polygol && Polygol.showPopup) {
+                Polygol.showPopup(`Force stopped ${appName}`);
             }
         };
 
         window.clearAppData = (appName) => {
             if (confirm(`Clear all storage data for ${appName}?`)) {
-                window.parent.postMessage({ action: 'callGurasuraisuFunc', functionName: 'clearAppData', args: [appName] }, '*');
-                if (window.Gurasuraisu && Gurasuraisu.showPopup) {
-                    Gurasuraisu.showPopup(`Cleared data for ${appName}`);
+                window.parent.postMessage({ action: 'callPolygolFunc', functionName: 'clearAppData', args: [appName] }, '*');
+                if (window.Polygol && Polygol.showPopup) {
+                    Polygol.showPopup(`Cleared data for ${appName}`);
                 }
             }
         };
