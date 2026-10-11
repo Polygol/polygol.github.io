@@ -136,11 +136,19 @@
         const zoom = getZoomFactor();
         const activeGrid = grid || window.currentHomeGrid || STANDARD_GRIDS['6x5'];
         const viewport = document.getElementById('home-pages-viewport');
-        const maxAvailW = Math.max(300, Math.floor((window.innerWidth / zoom) - 48));
-        const maxAvailH = Math.max(300, Math.floor((window.innerHeight / zoom) - 90));
+        const maxAvailW = Math.max(280, Math.floor((window.innerWidth / zoom) - 32));
+        const maxAvailH = Math.max(220, Math.floor((window.innerHeight / zoom) - 90));
 
-        let vpW = viewport && viewport.clientWidth > 0 ? viewport.clientWidth : maxAvailW;
-        let vpH = viewport && viewport.clientHeight > 0 ? viewport.clientHeight : maxAvailH;
+        // Always bound by physical screen availability
+        let vpW = maxAvailW;
+        let vpH = maxAvailH;
+
+        if (viewport && viewport.clientWidth > 0) {
+            vpW = Math.min(viewport.clientWidth, maxAvailW);
+        }
+        if (viewport && viewport.clientHeight > 0) {
+            vpH = Math.min(viewport.clientHeight, maxAvailH);
+        }
 
         if (activeGrid.maxW) vpW = Math.min(vpW, activeGrid.maxW);
         if (activeGrid.maxH) vpH = Math.min(vpH, activeGrid.maxH);
@@ -461,26 +469,71 @@
         };
     }
 
+    // --- Helper to parse arbitrary item grid sizes (e.g., '1x1', '2x1', '3x2', or named) ---
+    // --- Helper to parse arbitrary item grid sizes (e.g., '1x1', '2x1', '3x2', or named) ---
+    function parseItemSpan(item, maxCols, maxRows) {
+        let spanC = 1;
+        let spanR = 1;
+
+        if (item.type === 'widget' || item.type === 'widget-weather') {
+            const sz = item.size || 'small';
+            if (sz === 'small') {
+                spanC = Math.min(2, maxCols);
+                spanR = Math.min(2, maxRows);
+            } else if (sz === 'medium') {
+                spanC = Math.min(4, maxCols);
+                spanR = maxCols < 4 ? Math.min(3, maxRows) : 2;
+            } else if (sz === 'large') {
+                spanC = Math.min(4, maxCols);
+                spanR = Math.min(4, maxRows);
+            } else if (typeof item.cols === 'number' && typeof item.rows === 'number') {
+                spanC = item.cols;
+                spanR = item.rows;
+            }
+        } else if (item.type === 'sticker') {
+            // Check string dimensions (e.g. "2x1", "3x2") first so resize changes take immediate precedence
+            if (typeof item.size === 'string' && /^\d+x\d+$/i.test(item.size)) {
+                const match = item.size.match(/^(\d+)x(\d+)$/i);
+                spanC = parseInt(match[1], 10);
+                spanR = parseInt(match[2], 10);
+            } else if (typeof item.cols === 'number' && typeof item.rows === 'number') {
+                spanC = item.cols;
+                spanR = item.rows;
+            } else if (item.size === 'small') {
+                spanC = 1; spanR = 1;
+            } else if (item.size === 'medium') {
+                spanC = 2; spanR = 1;
+            } else if (item.size === 'large') {
+                spanC = 2; spanR = 2;
+            }
+        }
+
+        return {
+            spanCols: Math.max(1, Math.min(maxCols, spanC)),
+            spanRows: Math.max(1, Math.min(maxRows, spanR))
+        };
+    }
+
     // --- Custom 2D Packing Positioning Engine (iPadOS Spacing & 1:1 Proportions) ---
     function computePageLayout(items, cols, rows, W, H) {
         const occupied = Array.from({ length: rows }, () => Array(cols).fill(false));
         const layout = [];
 
         // 1. Initial outer padding
-        const padX = Math.max(16, Math.floor(W * 0.03));
-        const padY = Math.max(16, Math.floor(H * 0.03));
+        const padX = Math.max(12, Math.floor(W * 0.025));
+        const padY = Math.max(10, Math.floor(H * 0.025));
         const availW = Math.max(100, W - 2 * padX);
         const availH = Math.max(100, H - 2 * padY);
 
         // 2. Minimum base gap allowance
-        const minGap = 10;
+        const minGap = 8;
 
         // 3. Calculate max square unit size that fits both horizontally and vertically
         const maxUnitW = Math.floor((availW - Math.max(0, cols - 1) * minGap) / Math.max(1, cols));
         const maxUnitH = Math.floor((availH - Math.max(0, rows - 1) * minGap) / Math.max(1, rows));
 
-        // Base 1:1 square cell size (NEVER stretched)
-        const baseSize = Math.max(48, Math.min(maxUnitW, maxUnitH));
+        // Scale down cleanly to 32px so rows never collide on short landscape screens
+        const baseSize = Math.max(32, Math.min(maxUnitW, maxUnitH));
 
         // 4. Adjust the gaps between columns and rows to absorb the remaining space
         const totalUnitsW = cols * baseSize;
@@ -493,14 +546,13 @@
         let gapY = rows > 1 ? Math.floor(remainingH / (rows - 1)) : 0;
 
         // Cap extreme vertical gaps on tall displays and vertically center the page
-        const maxAllowedGapY = Math.max(48, Math.floor(baseSize * 0.85));
+        const maxAllowedGapY = Math.max(36, Math.floor(baseSize * 0.75));
         let extraPadY = 0;
         if (gapY > maxAllowedGapY && rows > 1) {
             extraPadY = Math.floor((remainingH - maxAllowedGapY * (rows - 1)) / 2);
             gapY = maxAllowedGapY;
         }
 
-        // Center the entire grid within the available area
         const extraX = Math.floor((remainingW - gapX * Math.max(0, cols - 1)) / 2);
         const extraY = extraPadY > 0 ? extraPadY : Math.floor((remainingH - gapY * Math.max(0, rows - 1)) / 2);
 
@@ -513,18 +565,10 @@
             let spanCols = 1;
             let spanRows = 1;
 
-            if (item.type === 'widget' || item.type === 'widget-weather' || item.type === 'sticker') {
-                const sz = item.size || 'small';
-                if (sz === 'small') {
-                    spanCols = Math.min(2, cols);
-                    spanRows = Math.min(2, rows);
-                } else if (sz === 'medium') {
-                    spanCols = Math.min(4, cols);
-                    spanRows = Math.min(2, rows);
-                } else if (sz === 'large') {
-                    spanCols = Math.min(4, cols);
-                    spanRows = Math.min(4, rows);
-                }
+            if (item.type === 'sticker' || item.type === 'widget' || item.type === 'widget-weather') {
+                const parsed = parseItemSpan(item, cols, rows);
+                spanCols = parsed.spanCols;
+                spanRows = parsed.spanRows;
             }
 
             let placedR = -1;
@@ -558,27 +602,25 @@
                     }
                 }
 
-                // Allocated slot area
                 const slotW = spanCols * baseSize + (spanCols - 1) * gapX;
                 const slotH = spanRows * baseSize + (spanRows - 1) * gapY;
 
                 let w = slotW;
                 let h = slotH;
 
-                // Enforce strict 1:1 and 2:1 aspect ratios
                 if (spanCols === spanRows) {
-                    // 1x1 apps/folders, 2x2 small widgets/stickers, 4x4 large widgets -> Perfect 1/1
                     const side = Math.min(slotW, slotH);
                     w = side;
                     h = side;
+                } else if (item.type === 'sticker') {
+                    w = slotW;
+                    h = slotH;
                 } else if (spanCols === 4 && spanRows === 2) {
-                    // 4x2 medium widgets -> Perfect 2:1
                     const targetH = Math.min(slotH, Math.floor(slotW / 2));
                     h = targetH;
                     w = targetH * 2;
                 }
 
-                // Center the item inside its allocated slot
                 const offsetX = Math.floor((slotW - w) / 2);
                 const offsetY = Math.floor((slotH - h) / 2);
 
@@ -599,17 +641,20 @@
                     overflow: false
                 });
             } else {
+                const parsed = parseItemSpan(item, cols, rows);
+                const overflowW = parsed.spanCols * baseSize + (parsed.spanCols - 1) * gapX;
+                const overflowH = parsed.spanRows * baseSize + (parsed.spanRows - 1) * gapY;
                 layout.push({
                     item,
                     index: i,
                     r: 0,
                     c: 0,
-                    spanCols: 1,
-                    spanRows: 1,
+                    spanCols: parsed.spanCols,
+                    spanRows: parsed.spanRows,
                     x: startX,
                     y: startY,
-                    w: baseSize,
-                    h: baseSize,
+                    w: overflowW,
+                    h: overflowH,
                     overflow: true
                 });
             }
@@ -630,47 +675,94 @@
             track.className = 'home-pages-track';
             viewport.appendChild(track);
         }
-        track.innerHTML = '';
-
-        // Clean up any orphaned dragged items lingering directly on the container
-        const container = document.getElementById('minihompy-container');
-        if (container) {
-            container.querySelectorAll(':scope > .home-grid-item').forEach(el => {
-                if (!el.classList.contains('is-dragging')) {
-                    el.remove();
-                }
-            });
-        }
 
         const grid = window.currentHomeGrid || STANDARD_GRIDS['6x5'];
         const { vpW, vpH } = getViewportDimensions(grid);
 
+        while (track.children.length > homePages.length) {
+            track.lastElementChild.remove();
+        }
+
         homePages.forEach((pageItems, pageIdx) => {
-            const pageEl = document.createElement('div');
-            pageEl.className = 'home-page';
-            pageEl.dataset.pageIndex = pageIdx;
+            let pageEl = track.querySelector(`.home-page[data-page-index="${pageIdx}"]`);
+            if (!pageEl) {
+                pageEl = document.createElement('div');
+                pageEl.className = 'home-page';
+                pageEl.dataset.pageIndex = pageIdx;
+                track.appendChild(pageEl);
+            }
 
             const { layout } = computePageLayout(pageItems, grid.cols, grid.rows, vpW, vpH);
+            const activeElements = new Set();
 
             layout.forEach(entry => {
                 if (entry.overflow) return;
-                const itemEl = createItemElement(entry.item, pageIdx, entry.index, entry);
-                if (itemEl) {
+
+                let itemEl = Array.from(pageEl.children).find(el => el._boundItem === entry.item);
+
+                if (!itemEl) {
+                    itemEl = createItemElement(entry.item, pageIdx, entry.index, entry);
+                    if (!itemEl) return;
+                    itemEl._boundItem = entry.item;
                     itemEl.classList.add('home-grid-item');
-                    itemEl.style.width = `${entry.w}px`;
-                    itemEl.style.height = `${entry.h}px`;
-                    itemEl.style.transform = `translate3d(${entry.x}px, ${entry.y}px, 0)`;
-                    itemEl.dataset.origX = entry.x;
-                    itemEl.dataset.origY = entry.y;
-                    itemEl.dataset.origW = entry.w;
-                    itemEl.dataset.origH = entry.h;
-                    itemEl.dataset.pageIndex = pageIdx;
-                    itemEl.dataset.itemIndex = entry.index;
                     pageEl.appendChild(itemEl);
+                }
+
+                activeElements.add(itemEl);
+
+                // Update container dimensions
+                itemEl.style.width = `${entry.w}px`;
+                itemEl.style.height = `${entry.h}px`;
+                itemEl.style.transform = `translate3d(${entry.x}px, ${entry.y}px, 0)`;
+                itemEl.dataset.origX = entry.x;
+                itemEl.dataset.origY = entry.y;
+                itemEl.dataset.origW = entry.w;
+                itemEl.dataset.origH = entry.h;
+                itemEl.dataset.pageIndex = pageIdx;
+                itemEl.dataset.itemIndex = entry.index;
+
+                // Dynamically scale inner app icons and folder boxes to match new cell bounds
+                const metrics = getGridItemIconMetrics(entry.w, entry.h);
+
+                const imgContainer = itemEl.querySelector('.app-icon-img');
+                if (imgContainer) {
+                    imgContainer.style.width = `${metrics.iconSize}px`;
+                    imgContainer.style.height = `${metrics.iconSize}px`;
+                    imgContainer.style.minWidth = `${metrics.iconSize}px`;
+                    imgContainer.style.minHeight = `${metrics.iconSize}px`;
+                    imgContainer.style.maxWidth = `${metrics.iconSize}px`;
+                    imgContainer.style.maxHeight = `${metrics.iconSize}px`;
+                }
+
+                const previewBox = itemEl.querySelector('.folder-preview-box');
+                if (previewBox) {
+                    previewBox.style.width = `${metrics.iconSize}px`;
+                    previewBox.style.height = `${metrics.iconSize}px`;
+                    previewBox.style.minWidth = `${metrics.iconSize}px`;
+                    previewBox.style.minHeight = `${metrics.iconSize}px`;
+                    previewBox.style.maxWidth = `${metrics.iconSize}px`;
+                    previewBox.style.maxHeight = `${metrics.iconSize}px`;
+                }
+
+                const label = itemEl.querySelector('.app-icon span, .folder-label');
+                if (label) {
+                    label.style.marginTop = `${metrics.labelGap}px`;
+                    label.style.fontSize = metrics.fontSize;
+                }
+
+                const instance = itemEl.querySelector('.widget-instance');
+                if (instance && entry.item.size) {
+                    instance.dataset.size = entry.item.size;
+                    instance.classList.remove('size-small', 'size-medium', 'size-large');
+                    instance.classList.add(`size-${entry.item.size}`);
                 }
             });
 
-            track.appendChild(pageEl);
+            Array.from(pageEl.children).forEach(child => {
+                if (!activeElements.has(child) && !child.classList.contains('home-widget-resize-ghost')) {
+                    child.remove();
+                }
+            });
         });
 
         renderPageIndicators();
@@ -701,53 +793,82 @@
         const instance = document.createElement('div');
         instance.className = 'widget-instance sticker-instance';
         if (item.transparent) {
+            instance.classList.add('is-transparent', 'transparent-sticker');
             instance.style.background = 'transparent';
             instance.style.border = 'none';
             instance.style.setProperty('--fx-filter', 'none');
             instance.style.boxShadow = 'none';
         }
 
-        // Material Symbol Remove Button
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'home-item-remove-btn';
-        removeBtn.title = window.t ? window.t('REMOVE') : 'Remove';
-        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
-        removeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            removeHomeItem(pageIdx, itemIdx);
-        });
-        instance.appendChild(removeBtn);
-
-        // Touch-Driven Resize Handle
-        const resizeHandle = document.createElement('div');
-        resizeHandle.className = 'home-widget-resize-handle';
-        resizeHandle.title = window.t ? window.t('DRAG_TO_RESIZE') : 'Drag to Resize';
-        resizeHandle.innerHTML = '<span class="material-symbols-rounded">drag_pan</span>';
-        setupWidgetResizeHandle(resizeHandle, wrapper, pageIdx, itemIdx);
-        instance.appendChild(resizeHandle);
-
         const img = document.createElement('img');
         img.src = item.src;
         img.className = 'sticker-content';
         img.draggable = false;
+        img.style.width = '100%';
+        img.style.height = '100%';
 
         if (item.border) {
             img.classList.add('has-border');
             img.style.setProperty('--border-color', item.borderColor || '#ffffff');
             img.style.setProperty('--border-width', `${item.borderWidth || 2}px`);
         }
-
         instance.appendChild(img);
 
+        // Overlay
         const overlay = document.createElement('div');
         overlay.className = 'widget-instance-overlay';
         instance.appendChild(overlay);
+
+        // Remove Button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'home-item-remove-btn';
+        removeBtn.title = window.t ? window.t('REMOVE') : 'Remove';
+        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
+        removeBtn.style.zIndex = '1000';
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeHomeItem(pageIdx, itemIdx);
+        });
+        instance.appendChild(removeBtn);
+
+        // Resize Handle (Appended AFTER overlay)
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'home-widget-resize-handle';
+        resizeHandle.title = window.t ? window.t('DRAG_TO_RESIZE') : 'Drag to Resize';
+        resizeHandle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M 2 22 L 2 20 A 20 20 0 0 1 22 2 L 22 2" transform="rotate(180 12 12)" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        resizeHandle.style.zIndex = '1000';
+        resizeHandle.style.pointerEvents = 'auto';
+        setupWidgetResizeHandle(resizeHandle, wrapper, pageIdx, itemIdx);
+        instance.appendChild(resizeHandle);
 
         wrapper.appendChild(instance);
 
         setupItemLongPress(wrapper);
         setupItemDragAndDrop(wrapper, pageIdx, itemIdx, item);
         return wrapper;
+    }
+
+    // --- Unified Icon & Folder Preview Sizing Helper ---
+    function getGridItemIconMetrics(cellW, cellH) {
+        const labelGap = Math.max(2, Math.min(10, Math.floor(cellH * 0.06)));
+        const approxLabelH = cellH < 65 ? 12 : (cellH < 85 ? 16 : 20);
+        
+        // Strict headroom calculation: icon image + label will never exceed cellH
+        const availH = Math.max(24, cellH - approxLabelH - labelGap);
+        const availW = Math.max(24, Math.floor(cellW * 0.78));
+
+        const iconSize = Math.min(72, availW, availH);
+
+        let fontSize = '0.84rem';
+        if (cellH < 65) {
+            fontSize = '0.68rem';
+        } else if (cellH < 80) {
+            fontSize = '0.74rem';
+        } else if (cellH < 95) {
+            fontSize = '0.80rem';
+        }
+
+        return { iconSize, labelGap, fontSize };
     }
 
     // --- App Icon Item (Strictly using user's CSS classes, never squished) ---
@@ -758,7 +879,6 @@
         wrapper.className = 'home-grid-item app-grid-item';
         wrapper.dataset.app = item.appName;
 
-        // Material Symbol Remove Button - triggers deleteApp rather than deleting shortcut from grid
         const removeBtn = document.createElement('button');
         removeBtn.className = 'home-item-remove-btn';
         removeBtn.title = window.t ? window.t('UNINSTALL') : 'Uninstall';
@@ -775,7 +895,6 @@
         });
         wrapper.appendChild(removeBtn);
 
-        // Required app-icon markup
         const appIcon = document.createElement('div');
         appIcon.className = 'app-icon';
         appIcon.dataset.app = item.appName;
@@ -783,14 +902,8 @@
         const cellW = entry ? entry.w : 120;
         const cellH = entry ? entry.h : 85;
 
-        // Label occupies font-size plus margin-top. Adapt margin and font so they never crowd out the icon.
-        const labelGap = Math.max(4, Math.min(14, Math.floor(cellH * 0.08)));
-        const approxLabelH = cellH < 75 ? 16 : 20;
-        const availH = Math.max(30, cellH - approxLabelH - labelGap);
-        const availW = Math.max(30, Math.floor(cellW * 0.72));
-
-        // App Icon MUST ALWAYS be 1:1 square, clamped to max 72px (iOS standard)
-        const iconSize = Math.min(72, availW, availH);
+        // Use unified metrics
+        const { iconSize, labelGap, fontSize } = getGridItemIconMetrics(cellW, cellH);
 
         const imgContainer = document.createElement('div');
         imgContainer.className = 'app-icon-img';
@@ -800,6 +913,7 @@
         imgContainer.style.minHeight = `${iconSize}px`;
         imgContainer.style.maxWidth = `${iconSize}px`;
         imgContainer.style.maxHeight = `${iconSize}px`;
+        imgContainer.style.boxSizing = 'border-box';
         imgContainer.style.flexShrink = '0';
         imgContainer.style.aspectRatio = '1 / 1';
 
@@ -817,11 +931,7 @@
         const label = document.createElement('span');
         label.textContent = info.name;
         label.style.marginTop = `${labelGap}px`;
-        if (cellH < 75) {
-            label.style.fontSize = '0.76rem';
-        } else if (cellH < 95) {
-            label.style.fontSize = '0.82rem';
-        }
+        label.style.fontSize = fontSize;
         appIcon.appendChild(label);
 
         wrapper.appendChild(appIcon);
@@ -850,7 +960,6 @@
         const wrapper = document.createElement('div');
         wrapper.className = 'home-grid-item folder-grid-item';
 
-        // Material Symbol Remove Button
         const removeBtn = document.createElement('button');
         removeBtn.className = 'home-item-remove-btn';
         removeBtn.title = window.t ? window.t('REMOVE') : 'Remove';
@@ -867,19 +976,8 @@
         const cellW = entry ? entry.w : 120;
         const cellH = entry ? entry.h : 85;
 
-        // Label occupies font-size plus margin-top.
-        // Adapt spacing and font size to prevent crowding the icon.
-        const labelGap = Math.max(4, Math.min(14, Math.floor(cellH * 0.08)));
-        const approxLabelH = cellH < 75 ? 16 : 20;
-        const availH = Math.max(30, cellH - approxLabelH - labelGap);
-        const availW = Math.max(30, Math.floor(cellW * 0.72));
-
-        // Allow larger icons on larger screens.
-        const maxIconSize = cellH >= 130 ? 100
-                        : cellH >= 95  ? 84
-                        : 64;
-
-        const iconSize = Math.min(maxIconSize, availW, availH);
+        // Use unified metrics (identical to app icons)
+        const { iconSize, labelGap, fontSize } = getGridItemIconMetrics(cellW, cellH);
 
         const previewBox = document.createElement('div');
         previewBox.className = 'folder-preview-box';
@@ -889,6 +987,7 @@
         previewBox.style.minHeight = `${iconSize}px`;
         previewBox.style.maxWidth = `${iconSize}px`;
         previewBox.style.maxHeight = `${iconSize}px`;
+        previewBox.style.boxSizing = 'border-box';
         previewBox.style.flexShrink = '0';
         previewBox.style.aspectRatio = '1 / 1';
 
@@ -909,11 +1008,7 @@
         label.className = 'folder-label';
         label.textContent = item.name || window.t('FOLDER');
         label.style.marginTop = `${labelGap}px`;
-        if (cellH < 75) {
-            label.style.fontSize = '0.76rem';
-        } else if (cellH < 95) {
-            label.style.fontSize = '0.82rem';
-        }
+        label.style.fontSize = fontSize;
         folderIcon.appendChild(label);
 
         wrapper.appendChild(folderIcon);
@@ -952,34 +1047,47 @@
         instance.dataset.widgetId = item.widgetId;
         instance.dataset.appName = item.appName;
 
-        // Material Symbol Remove Button
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'home-item-remove-btn';
-        removeBtn.title = window.t ? window.t('REMOVE') : 'Remove';
-        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
-        removeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            removeHomeItem(pageIdx, itemIdx);
-        });
-        instance.appendChild(removeBtn);
+        if (item.transparent) {
+            instance.classList.add('is-transparent', 'transparent-widget');
+            instance.style.background = 'transparent';
+            instance.style.border = 'none';
+            instance.style.setProperty('--fx-filter', 'none');
+            instance.style.boxShadow = 'none';
+        }
 
-        // Touch-Driven Resize Handle (NO BUTTONS!)
-        const resizeHandle = document.createElement('div');
-        resizeHandle.className = 'home-widget-resize-handle';
-        resizeHandle.title = window.t ? window.t('DRAG_TO_RESIZE') : 'Drag to Resize';
-        resizeHandle.innerHTML = '<span class="material-symbols-rounded">drag_pan</span>';
-        setupWidgetResizeHandle(resizeHandle, wrapper, pageIdx, itemIdx);
-        instance.appendChild(resizeHandle);
-
+        // 1. Iframe content
         const iframe = document.createElement('iframe');
         iframe.src = widgetDef.url;
         iframe.setAttribute('data-polygol-iframe', 'true');
         iframe.scrolling = 'no';
         instance.appendChild(iframe);
 
+        // 2. Shield overlay
         const overlay = document.createElement('div');
         overlay.className = 'widget-instance-overlay';
         instance.appendChild(overlay);
+
+        // 3. Remove Button (Above overlay)
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'home-item-remove-btn';
+        removeBtn.title = window.t ? window.t('REMOVE') : 'Remove';
+        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
+        removeBtn.style.zIndex = '1000';
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeHomeItem(pageIdx, itemIdx);
+        });
+        instance.appendChild(removeBtn);
+
+        // 4. Resize Handle (Appended AFTER overlay so it sits directly on top)
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'home-widget-resize-handle';
+        resizeHandle.title = window.t ? window.t('DRAG_TO_RESIZE') : 'Drag to Resize';
+        resizeHandle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M 2 22 L 2 20 A 20 20 0 0 1 22 2 L 22 2" transform="rotate(180 12 12)" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        resizeHandle.style.zIndex = '1000';
+        resizeHandle.style.pointerEvents = 'auto';
+        setupWidgetResizeHandle(resizeHandle, wrapper, pageIdx, itemIdx);
+        instance.appendChild(resizeHandle);
 
         instance.addEventListener('click', (e) => {
             if (document.body.classList.contains('home-edit-active')) return;
@@ -1009,86 +1117,217 @@
         return wrapper;
     }
 
-    // --- Touch-Only Smooth Widget Resizing (NO BUTTONS) ---
+    // --- Zoom-Proof, Fluid Widget & Sticker Resizing ---
     function setupWidgetResizeHandle(handle, wrapper, pageIdx, itemIdx) {
-        let startX = 0, startY = 0;
-        let startW = 0, startH = 0;
         let isResizing = false;
+        let originX = 0, originY = 0;
+        let ghostEl = null;
+        let badgeEl = null;
+        let activeTargetSize = null;
 
-        const onTouchStart = (e) => {
+        const onPointerStart = (e) => {
             if (!document.body.classList.contains('home-edit-active')) return;
-            if (e.touches.length !== 1) return;
-            e.stopPropagation();
+            if (e.touches && e.touches.length !== 1) return;
 
-            const t = e.touches[0];
-            startX = t.clientX;
-            startY = t.clientY;
-            startW = wrapper.offsetWidth;
-            startH = wrapper.offsetHeight;
-            isResizing = true;
-
-            wrapper.classList.add('widget-resizing-live');
-            if (navigator.vibrate) try { navigator.vibrate(20); } catch (err) {}
-        };
-
-        const onTouchMove = (e) => {
-            if (!isResizing || e.touches.length !== 1) return;
             e.stopPropagation();
             if (e.cancelable) e.preventDefault();
 
-            const zoom = getZoomFactor();
-            const t = e.touches[0];
-            const dx = (t.clientX - startX) / zoom;
-            const dy = (t.clientY - startY) / zoom;
+            window._isAnyWidgetResizing = true;
 
-            const liveW = Math.max(100, startW + dx);
-            const liveH = Math.max(100, startH + dy);
+            const zoom = getZoomFactor();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const rect = wrapper.getBoundingClientRect();
+            originX = rect.left;
+            originY = rect.top;
+            isResizing = true;
+
+            const curPageIdx = parseInt(wrapper.dataset.pageIndex ?? pageIdx);
+            const curItemIdx = parseInt(wrapper.dataset.itemIndex ?? itemIdx);
+            const item = homePages[curPageIdx]?.[curItemIdx];
+
+            // Normalize starting size string
+            if (item?.type === 'sticker') {
+                const parsed = parseItemSpan(item, 100, 100);
+                activeTargetSize = `${parsed.spanCols}x${parsed.spanRows}`;
+            } else {
+                activeTargetSize = item?.size || 'small';
+            }
+
+            wrapper.classList.add('widget-resizing-live');
+            wrapper.style.transition = 'none';
+
+            // Create Ghost Preview Box
+            const pageEl = wrapper.closest('.home-page') || wrapper.parentElement;
+            if (pageEl) {
+                ghostEl = document.createElement('div');
+                ghostEl.className = 'home-widget-resize-ghost';
+                ghostEl.style.width = `${wrapper.offsetWidth}px`;
+                ghostEl.style.height = `${wrapper.offsetHeight}px`;
+                ghostEl.style.transform = wrapper.style.transform;
+                pageEl.appendChild(ghostEl);
+            }
+
+            // Create Size Indicator Badge
+            badgeEl = document.createElement('div');
+            badgeEl.className = 'home-widget-resize-badge';
+            badgeEl.textContent = formatSizeLabel(item, activeTargetSize);
+            wrapper.appendChild(badgeEl);
+
+            if (navigator.vibrate) try { navigator.vibrate(20); } catch (err) {}
+
+            window.addEventListener('mousemove', onPointerMove, { passive: false });
+            window.addEventListener('mouseup', onPointerEnd, { passive: false });
+            window.addEventListener('touchmove', onPointerMove, { passive: false });
+            window.addEventListener('touchend', onPointerEnd, { passive: false });
+            window.addEventListener('touchcancel', onPointerEnd, { passive: false });
+        };
+
+        const onPointerMove = (e) => {
+            if (!isResizing) return;
+            if (e.cancelable) e.preventDefault();
+
+            const zoom = getZoomFactor();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const liveW = Math.max(50, (clientX - originX) / zoom);
+            const liveH = Math.max(50, (clientY - originY) / zoom);
 
             wrapper.style.width = `${liveW}px`;
             wrapper.style.height = `${liveH}px`;
-        };
 
-        const onTouchEnd = (e) => {
-            if (!isResizing) return;
-            isResizing = false;
-            e.stopPropagation();
-
-            wrapper.classList.remove('widget-resizing-live');
-
-            const zoom = getZoomFactor();
-            const endTouch = e.changedTouches ? e.changedTouches[0] : null;
-            const dx = endTouch ? (endTouch.clientX - startX) / zoom : 0;
-            const dy = endTouch ? (endTouch.clientY - startY) / zoom : 0;
-
-            const item = homePages[pageIdx]?.[itemIdx];
+            const curPageIdx = parseInt(wrapper.dataset.pageIndex ?? pageIdx);
+            const curItemIdx = parseInt(wrapper.dataset.itemIndex ?? itemIdx);
+            const item = homePages[curPageIdx]?.[curItemIdx];
             if (!item) return;
 
-            const currentSize = item.size || 'small';
-            let targetSize = currentSize;
+            const grid = window.currentHomeGrid || STANDARD_GRIDS['6x5'] || { cols: 6, rows: 5 };
+            const { vpW, vpH } = getViewportDimensions(grid);
+            const { cellW, cellH, gapX, gapY } = computePageLayout([], grid.cols, grid.rows, vpW, vpH);
 
-            if (dx > 60 || dy > 60) {
-                if (currentSize === 'small') targetSize = 'medium';
-                else if (currentSize === 'medium') targetSize = 'large';
-            } else if (dx < -60 || dy < -60) {
-                if (currentSize === 'large') targetSize = 'medium';
-                else if (currentSize === 'medium') targetSize = 'small';
+            let newTargetSize = activeTargetSize;
+
+            if (item.type === 'sticker') {
+                const stepW = cellW + gapX;
+                const stepH = cellH + gapY;
+                // Mathematically exact midpoint threshold: (W + gap) / step
+                const targetCols = Math.max(1, Math.min(grid.cols, Math.round((liveW + gapX) / stepW)));
+                const targetRows = Math.max(1, Math.min(grid.rows, Math.round((liveH + gapY) / stepH)));
+                newTargetSize = `${targetCols}x${targetRows}`;
+            } else {
+                const smallW = 2 * cellW + gapX;
+                const smallH = 2 * cellH + gapY;
+                const medCols = Math.min(4, grid.cols);
+                const medW = medCols * cellW + (medCols - 1) * gapX;
+                const largeRows = Math.min(4, grid.rows);
+                const largeH = largeRows * cellH + (largeRows - 1) * gapY;
+
+                const thresholdW = (smallW + medW) / 2;
+                const thresholdH = (smallH + largeH) / 2;
+
+                if (liveW >= thresholdW && liveH >= thresholdH) {
+                    newTargetSize = 'large';
+                } else if (liveW >= thresholdW) {
+                    newTargetSize = 'medium';
+                } else if (liveH >= thresholdH && grid.cols < 4) {
+                    newTargetSize = 'medium';
+                } else {
+                    newTargetSize = 'small';
+                }
             }
 
-            if (targetSize !== currentSize) {
-                item.size = targetSize;
+            if (newTargetSize !== activeTargetSize) {
+                activeTargetSize = newTargetSize;
+                if (badgeEl) badgeEl.textContent = formatSizeLabel(item, activeTargetSize);
+                if (navigator.vibrate) try { navigator.vibrate(15); } catch (err) {}
+
+                if (ghostEl) {
+                    const testItem = { ...item, size: activeTargetSize };
+                    if (item.type === 'sticker') {
+                        const [c, r] = activeTargetSize.split('x').map(Number);
+                        testItem.cols = c; testItem.rows = r;
+                    }
+                    const tempItems = [...(homePages[curPageIdx] || [])];
+                    tempItems[curItemIdx] = testItem;
+                    const { layout } = computePageLayout(tempItems, grid.cols, grid.rows, vpW, vpH);
+                    const slot = layout[curItemIdx];
+                    if (slot && !slot.overflow) {
+                        ghostEl.style.width = `${slot.w}px`;
+                        ghostEl.style.height = `${slot.h}px`;
+                        ghostEl.style.transform = `translate3d(${slot.x}px, ${slot.y}px, 0)`;
+                    } else if (slot) {
+                        const parsed = parseItemSpan(testItem, grid.cols, grid.rows);
+                        ghostEl.style.width = `${parsed.spanCols * cellW + (parsed.spanCols - 1) * gapX}px`;
+                        ghostEl.style.height = `${parsed.spanRows * cellH + (parsed.spanRows - 1) * gapY}px`;
+                    }
+                }
+            }
+        };
+
+        const onPointerEnd = () => {
+            if (!isResizing) return;
+            isResizing = false;
+            window._isAnyWidgetResizing = false;
+
+            window.removeEventListener('mousemove', onPointerMove);
+            window.removeEventListener('mouseup', onPointerEnd);
+            window.removeEventListener('touchmove', onPointerMove);
+            window.removeEventListener('touchend', onPointerEnd);
+            window.removeEventListener('touchcancel', onPointerEnd);
+
+            wrapper.classList.remove('widget-resizing-live');
+            wrapper.style.transition = '';
+
+            wrapper.dataset.wasDragged = 'true';
+            setTimeout(() => { wrapper.dataset.wasDragged = 'false'; }, 250);
+
+            if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+            if (badgeEl) { badgeEl.remove(); badgeEl = null; }
+
+            const curPageIdx = parseInt(wrapper.dataset.pageIndex ?? pageIdx);
+            const curItemIdx = parseInt(wrapper.dataset.itemIndex ?? itemIdx);
+            const item = homePages[curPageIdx]?.[curItemIdx];
+            if (!item) return;
+
+            if (activeTargetSize) {
+                if (item.type === 'sticker') {
+                    const [c, r] = activeTargetSize.split('x').map(Number);
+                    item.cols = c;
+                    item.rows = r;
+                    item.size = activeTargetSize;
+                } else {
+                    item.size = activeTargetSize;
+                    delete item.cols;
+                    delete item.rows;
+                }
+
                 reflowHomePages();
                 saveHomePages();
                 renderHomePages();
-                if (navigator.vibrate) try { navigator.vibrate(35); } catch (err) {}
+
+                if (navigator.vibrate) try { navigator.vibrate(30); } catch (err) {}
             } else {
                 renderHomePages();
             }
         };
 
-        handle.addEventListener('touchstart', onTouchStart, { passive: false });
-        handle.addEventListener('touchmove', onTouchMove, { passive: false });
-        handle.addEventListener('touchend', onTouchEnd, { passive: false });
-        handle.addEventListener('touchcancel', onTouchEnd, { passive: false });
+        function formatSizeLabel(item, sz) {
+            if (item.type === 'sticker') {
+                if (sz === 'small') return '1×1';
+                if (sz === 'medium') return '2×1';
+                if (sz === 'large') return '2×2';
+                return sz.replace('x', '×');
+            }
+            if (sz === 'small') return '2×2';
+            if (sz === 'medium') return '4×2';
+            if (sz === 'large') return '4×4';
+            return sz;
+        }
+
+        handle.addEventListener('mousedown', onPointerStart);
+        handle.addEventListener('touchstart', onPointerStart, { passive: false });
     }
 
     // --- Smooth Multi-Page iOS Drag & Drop Rearranging (Touch-First & Fluid) ---
@@ -1145,11 +1384,15 @@
 
         const onTouchStart = (e) => {
             if (!document.body.classList.contains('home-edit-active')) return;
-            if (e.target.closest('.home-item-remove-btn') || e.target.closest('.home-widget-resize-handle')) {
+            // Strict guard: ignore touches on remove or resize buttons, or if any resize is active
+            if (e.target.closest('.home-item-remove-btn') || 
+                e.target.closest('.home-widget-resize-handle') ||
+                window._isAnyWidgetResizing ||
+                itemEl.classList.contains('widget-resizing-live')) {
                 return;
             }
             if (e.touches.length !== 1) return;
-
+            
             const zoom = getZoomFactor();
             const t = e.touches[0];
             startX = t.clientX;
@@ -1175,6 +1418,7 @@
 
         const onTouchMove = (e) => {
             if (!document.body.classList.contains('home-edit-active')) return;
+            if (window._isAnyWidgetResizing || itemEl.classList.contains('widget-resizing-live')) return;
             if (e.touches.length !== 1) return;
 
             const zoom = getZoomFactor();
@@ -1453,6 +1697,12 @@
 
         el.addEventListener('touchstart', (e) => {
             if (e.touches.length !== 1) return;
+            if (e.target.closest('.home-item-remove-btn') || 
+                e.target.closest('.home-widget-resize-handle') ||
+                window._isAnyWidgetResizing ||
+                el.classList.contains('widget-resizing-live')) {
+                return;
+            }
             isPressing = true;
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
@@ -1598,7 +1848,7 @@
             img.style.height = '100%';
             img.style.objectFit = 'cover';
             img.style.aspectRatio = '1 / 1';
-            img.onerror = () => { img.src = '/assets/img/icon.svg'; };
+            img.onerror = () => { img.src = '/assets/img/default.png'; };
             imgContainer.appendChild(img);
             icon.appendChild(imgContainer);
 

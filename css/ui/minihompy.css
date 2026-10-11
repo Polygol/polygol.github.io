@@ -20,9 +20,18 @@ body.beginnings-active #minihompy-container {
     transform: translateY(50%) !important;
 }
 
+body.beginnings-active .widget-grid {
+    transform: translateY(0) !important;
+    transition: opacity 0.4s ease, transform 1s linear(0 0%, 0 1.8%, 0.01 3.6%, 0.03 6.35%, 0.07 9.1%, 0.13 11.4%, 0.19 13.4%, 0.27 15%, 0.34 16.1%, 0.54 18.35%, 0.66 20.6%, 0.72 22.4%, 0.77 24.6%, 0.81 27.3%, 0.85 30.4%, 0.88 35.1%, 0.92 40.6%, 0.94 47.2%, 0.96 55%, 0.98 64%, 0.99 74.4%, 1 86.4%, 1 100%) !important;
+}
+
 body.home-screen-active:not(.beginnings-active) .widget-grid {
     opacity: 0 !important;
+    filter: blur(10px) !important;
     pointer-events: none !important;
+    visibility: hidden !important;
+    transform: translateY(-100%) !important;
+    transition: opacity 0.35s ease, filter 0.35s ease, transform 1s linear(0 0%, 0 1.8%, 0.01 3.6%, 0.03 6.35%, 0.07 9.1%, 0.13 11.4%, 0.19 13.4%, 0.27 15%, 0.34 16.1%, 0.54 18.35%, 0.66 20.6%, 0.72 22.4%, 0.77 24.6%, 0.81 27.3%, 0.85 30.4%, 0.88 35.1%, 0.92 40.6%, 0.94 47.2%, 0.96 55%, 0.98 64%, 0.99 74.4%, 1 86.4%, 1 100%), visibility 0.35s ease !important;
 }
 
 /* --- Home Screen Active State --- */
@@ -130,7 +139,6 @@ body:has(#wallpaper-switcher-overlay.show) #minihompy-container * {
     justify-content: center;
     touch-action: none;
     margin: 28px auto auto auto;
-    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 5%, rgba(0, 0, 0, 1) 95%, rgba(0, 0, 0, 0) 100%);
 }
 
 .home-pages-track {
@@ -451,6 +459,17 @@ body.home-edit-active .folder-grid-cell .home-item-remove-btn {
     corner-shape: inherit;
 }
 
+.widget-instance.sticker-instance.is-transparent.transparent-sticker {
+    overflow: visible;
+}
+
+.home-page .widget-instance.sticker-instance img {
+    object-fit: cover;
+}
+.widget-instance.sticker-instance.is-transparent.transparent-sticker img {
+    object-fit: contain;
+}
+
 .home-page .widget-instance-overlay {
     position: absolute;
     inset: 0;
@@ -463,20 +482,22 @@ body.home-edit-active .folder-grid-cell .home-item-remove-btn {
 /* --- Remove Button & Edit Mode (Material Icons Only) --- */
 .home-item-remove-btn {
     position: absolute;
-    top: -6px;
-    left: -6px;
+    top: 0px;
+    left: 10px;
     width: 26px;
     height: 26px;
     border-radius: 50%;
-    background: #ff3b30;
-    color: #ffffff;
+    background: var(--search-background);
+    color: var(--text-color);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow), 0 3px 8px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
     border: none;
     display: none;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     z-index: 60;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
     padding: 0;
     line-height: 1;
     transition: transform 0.15s ease;
@@ -491,7 +512,6 @@ body.home-edit-active .home-item-remove-btn {
     display: flex !important;
 }
 
-/* iOS Jiggle Animation during Edit Mode */
 @keyframes ios-jiggle {
     0% { transform: rotate(-1.3deg); }
     50% { transform: rotate(1.3deg); }
@@ -502,7 +522,7 @@ body.home-edit-active .home-page .app-icon,
 body.home-edit-active .home-page .folder-icon-item,
 body.home-edit-active .home-page .widget-grid-item .widget-instance,
 body.home-edit-active .home-page .sticker-grid-item .widget-instance {
-    animation: ios-jiggle 0.3s ease-in-out infinite alternate !important;
+    animation: ios-jiggle 0.4s ease-in-out infinite alternate !important;
 }
 
 body.home-edit-active .home-page .home-grid-item:nth-child(2n) {
@@ -512,9 +532,9 @@ body.home-edit-active .home-page .home-grid-item:nth-child(2n) {
 /* --- Edit Mode Header (+ and Done) --- */
 .home-edit-header {
     position: absolute;
-    bottom: 20px;
-    left: 24px;
-    right: 24px;
+    bottom: 28px;
+    left: 28px;
+    right: 28px;
     display: none;
     justify-content: space-between;
     align-items: center;
@@ -591,7 +611,6 @@ body.home-edit-active .home-widget-resize-handle {
 
 /* Visual Outline during Live Resize Drag */
 .widget-resizing-live {
-    box-shadow: 0 0 0 3px var(--accent), 0 16px 38px rgba(0, 0, 0, 0.5) !important;
     z-index: 500 !important;
     transition: none !important;
 }
@@ -620,7 +639,6 @@ body.home-edit-active .home-widget-resize-handle {
     position: absolute;
     border-radius: 24px;
     background: rgba(255, 255, 255, 0.08);
-    border: 2px dashed rgba(255, 255, 255, 0.28);
     pointer-events: none;
     box-sizing: border-box;
     transition: transform 0.26s cubic-bezier(0.2, 0.9, 0.3, 1), width 0.24s ease, height 0.24s ease;
@@ -690,4 +708,42 @@ body:has(#wallpaper-switcher-overlay.show) .home-search-btn {
     pointer-events: none !important;
     visibility: hidden !important;
     transform: scale(0.8) !important;
+}
+
+/* While resizing, disable transition on the active widget so it tracks without latency */
+.home-grid-item.widget-resizing-live {
+    transition: none !important;
+    z-index: 9999 !important;
+}
+
+
+/* Live ghost bounding-box that previews the target slot */
+.home-widget-resize-ghost {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.12);
+    corner-shape: superellipse(1.5);
+    border-radius: 40px;
+    backdrop-filter: blur(18px);
+    transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1),
+                width 0.22s cubic-bezier(0.2, 0.9, 0.3, 1),
+                height 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+    z-index: 50;
+}
+
+/* Floating pill badge showing target dimensions */
+.home-widget-resize-badge {
+    position: absolute;
+    bottom: -32px;
+    right: 0;
+    color: var(--text-color);
+    padding: 6px 10px;
+    border-radius: 50px;
+    font-size: 11px;
+    background-color: var(--background-color);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 10000;
 }

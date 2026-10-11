@@ -231,18 +231,22 @@ function renderWidgets() {
         instance.style.left = `${widget.x}px`;
         instance.style.top = `${widget.y}px`;
 
-		// Apply transparency styles if flag is set
+        // Apply dedicated transparency classes and fallback styles
         if (widget.transparent) {
+            instance.classList.add('is-transparent');
+            if (widget.type === 'sticker') {
+                instance.classList.add('transparent-sticker');
+            } else {
+                instance.classList.add('transparent-widget');
+            }
+
             instance.style.background = 'transparent';
             instance.style.border = 'none';
-            instance.style.setProperty(
-                '--fx-filter',
-                'none'
-            );
+            instance.style.setProperty('--fx-filter', 'none');
             instance.style.boxShadow = 'none';
         }
 
-		if (widget.type === 'sticker') {
+        if (widget.type === 'sticker') {
             // --- STICKER WIDGET LOGIC ---
             instance.classList.add('sticker-widget');
             
@@ -257,7 +261,7 @@ function renderWidgets() {
                 img.style.setProperty('--border-width', `${widget.borderWidth}px`);
             }
 
-			if (widget.transparent) {
+            if (widget.transparent) {
                 instance.style.overflow = 'visible';
             }
             
@@ -291,10 +295,7 @@ function renderWidgets() {
 
         } else {
             // --- STANDARD APP WIDGET LOGIC ---
-            // Look up the widget definition ONLY for non-sticker widgets.
             const widgetDef = availableWidgets[widget.appName]?.find(w => w.widgetId === widget.widgetId);
-            
-            // If the definition isn't found (e.g., app was uninstalled), skip rendering this widget.
             if (!widgetDef) return; 
 
             const iframe = document.createElement('iframe');
@@ -305,7 +306,10 @@ function renderWidgets() {
 
         const overlay = document.createElement('div');
         overlay.className = 'widget-instance-overlay';
-        if (widget.transparent) overlay.style.boxShadow = 'none';
+        if (widget.transparent) {
+            overlay.classList.add('is-transparent');
+            overlay.style.boxShadow = 'none';
+        }
 
         const resizeHandle = document.createElement('div');
         resizeHandle.className = 'widget-resize-handle';

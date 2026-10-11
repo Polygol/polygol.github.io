@@ -10,12 +10,6 @@
     pointer-events: none;
 }
 
-body:not(.beginnings-active):not(.edit-mode-active) #widget-grid,
-body:not(.beginnings-active):not(.edit-mode-active) .widget-grid,
-body:not(.beginnings-active):not(.edit-mode-active) #widget-grid .widget-instance,
-body.home-screen-active:not(.beginnings-active) #widget-grid,
-body.home-screen-active:not(.beginnings-active) .widget-grid,
-body.home-screen-active:not(.beginnings-active) #widget-grid .widget-instance,
 body.app-active #widget-grid,
 body.app-active .widget-grid,
 body.app-active #widget-grid .widget-instance,
@@ -44,6 +38,25 @@ body.blackout-active #widget-grid .widget-instance {
     border-radius: 35px;
     corner-shape: superellipse(1.5);
     box-shadow: 0 5px 20px -10px rgba(0, 0, 0, 0.2);
+}
+
+/* All transparent widgets and stickers */
+.widget-instance.is-transparent {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    --fx-filter: none !important;
+}
+
+/* Transparent overlays */
+.widget-instance.is-transparent .widget-instance-overlay,
+.widget-instance-overlay.is-transparent {
+    box-shadow: none !important;
+}
+
+/* Transparent stickers allow overflow if unconstrained */
+.widget-instance.transparent-sticker {
+    overflow: visible;
 }
 
 .widget-instance.is-dragging {
@@ -171,21 +184,14 @@ body.blackout-active #widget-grid .widget-instance {
     box-shadow: var(--sun-shadow);
 }
 
-.widget-instance:hover .widget-rotate-handle,
-.widget-rotate-handle:hover,
 .widget-rotate-handle:active {
     cursor: grabbing;
     opacity: 1;
 }
 
 .widget-instance.is-dragging,
-.widget-instance:hover,
-.widget-instance:has(.widget-resize-handle:hover),
 /* Parent contains hovered child */
-.widget-instance:has(.widget-resize-handle:active)
-
-/* Parent contains active child */
-    {
+.widget-instance:has(.widget-resize-handle:active) {
     background: var(--search-background) !important;
     --fx-filter: var(--blur1) glass(0.6, 8, 0);
 }
@@ -313,109 +319,9 @@ body.blackout-active #widget-grid .widget-instance {
     touch-action: none;
 }
 
-.widget-resize-handle:hover,
 .widget-resize-handle:active {
     background: var(--search-background);
     box-shadow: var(--sun-shadow);
     --fx-filter: var(--blur1) glass(0.6, 8, 0);
     border: 1px solid var(--glass-border);
-}
-
-/* --- App Shortcut Widgets (Astatine 27.1) --- */
-.widget-instance.app-shortcut-widget {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px;
-    background: var(--search-background);
-    border: 1px solid var(--glass-border);
-    --fx-filter: var(--blur1) glass(0.6, 8, 0);
-    border-radius: 30px;
-    corner-shape: superellipse(1.5);
-    cursor: pointer;
-    user-select: none;
-    transition: transform 0.2s cubic-bezier(0.2, 1.3, 0.64, 1), box-shadow 0.2s ease;
-}
-
-.widget-instance.app-shortcut-widget:hover {
-    transform: scale(1.04);
-}
-
-.widget-instance.app-shortcut-widget:active {
-    transform: scale(0.96);
-}
-
-.widget-instance.app-shortcut-widget .app-shortcut-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 20px;
-    corner-shape: superellipse(1.25);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
-    pointer-events: none;
-    background: var(--search-background);
-}
-
-.widget-instance.app-shortcut-widget .app-shortcut-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    pointer-events: none;
-}
-
-.widget-instance.app-shortcut-widget .app-shortcut-name {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-color);
-    font-family: 'Open Runde', 'Inter', sans-serif;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 90%;
-    pointer-events: none;
-}
-
-/* App shortcuts inside widget picker */
-.widget-picker-section-title {
-    grid-column: 1 / -1;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--secondary-text-color);
-    margin: 12px 0 6px 4px;
-}
-
-.app-shortcut-picker-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.2, 1.3, 0.64, 1);
-}
-
-.app-shortcut-picker-item:hover {
-    transform: scale(1.05);
-    background: var(--modal-background);
-}
-
-.app-shortcut-picker-item img {
-    width: 50px;
-    height: 50px;
-    border-radius: 18px;
-    corner-shape: superellipse(1.25);
-    object-fit: cover;
-}
-
-.app-shortcut-picker-item span {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-color);
-    text-align: center;
 }
