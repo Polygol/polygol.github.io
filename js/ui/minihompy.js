@@ -300,16 +300,17 @@
     function reflowHomePages() {
         const grid = window.currentHomeGrid || STANDARD_GRIDS['6x5'];
         const { vpW, vpH } = getViewportDimensions(grid);
+        const viewport = document.getElementById('home-pages-viewport');
+        const W = (viewport && viewport.clientWidth > 0) ? viewport.clientWidth : vpW;
+        const H = (viewport && viewport.clientHeight > 0) ? viewport.clientHeight : vpH;
 
-        // 1. Remove empty pages at the end
         while (homePages.length > 1 && homePages[homePages.length - 1].length === 0) {
             homePages.pop();
         }
 
-        // 2. Cascade overflow forward: items that don't fit on page p flow to page p+1
         for (let p = 0; p < homePages.length; p++) {
             const pageItems = homePages[p];
-            const { layout } = computePageLayout(pageItems, grid.cols, grid.rows, vpW, vpH);
+            const { layout } = computePageLayout(pageItems, grid.cols, grid.rows, W, H);
 
             const fitting = [];
             const overflow = [];
@@ -331,14 +332,13 @@
             }
         }
 
-        // 3. Pull forward: if page p has available empty space, move items from page p+1 to fill it
         for (let p = 0; p < homePages.length - 1; p++) {
             let changed = true;
             while (changed && homePages[p + 1] && homePages[p + 1].length > 0) {
                 changed = false;
                 const candidate = homePages[p + 1][0];
                 const testList = [...homePages[p], candidate];
-                const { layout } = computePageLayout(testList, grid.cols, grid.rows, vpW, vpH);
+                const { layout } = computePageLayout(testList, grid.cols, grid.rows, W, H);
                 const candidateEntry = layout[layout.length - 1];
 
                 if (!candidateEntry.overflow) {
@@ -348,7 +348,6 @@
             }
         }
 
-        // 4. Remove empty trailing pages resulting from pull-forward
         while (homePages.length > 1 && homePages[homePages.length - 1].length === 0) {
             homePages.pop();
         }
@@ -519,7 +518,7 @@
         const occupied = Array.from({ length: rows }, () => Array(cols).fill(false));
         const layout = [];
 
-        // 1. Initial outer padding
+        // 1. Initial outer safety padding
         const padX = Math.max(12, Math.floor(W * 0.025));
         const padY = Math.max(10, Math.floor(H * 0.025));
         const availW = Math.max(100, W - 2 * padX);
@@ -528,14 +527,13 @@
         // 2. Minimum base gap allowance
         const minGap = 8;
 
-        // 3. Calculate max square unit size that fits both horizontally and vertically
+        // 3. Max unit size that fits horizontally and vertically
         const maxUnitW = Math.floor((availW - Math.max(0, cols - 1) * minGap) / Math.max(1, cols));
         const maxUnitH = Math.floor((availH - Math.max(0, rows - 1) * minGap) / Math.max(1, rows));
 
-        // Scale down cleanly to 32px so rows never collide on short landscape screens
         const baseSize = Math.max(32, Math.min(maxUnitW, maxUnitH));
 
-        // 4. Adjust the gaps between columns and rows to absorb the remaining space
+        // 4. Distribute leftover space evenly into gaps
         const totalUnitsW = cols * baseSize;
         const totalUnitsH = rows * baseSize;
 
@@ -545,21 +543,26 @@
         let gapX = cols > 1 ? Math.floor(remainingW / (cols - 1)) : 0;
         let gapY = rows > 1 ? Math.floor(remainingH / (rows - 1)) : 0;
 
-        // Cap extreme vertical gaps on tall displays and vertically center the page
-        const maxAllowedGapY = Math.max(36, Math.floor(baseSize * 0.75));
-        let extraPadY = 0;
+        // Cap excessive gap voids on very wide/tall screens
+        const maxAllowedGapX = Math.max(28, Math.floor(baseSize * 0.65));
+        if (gapX > maxAllowedGapX && cols > 1) {
+            gapX = maxAllowedGapX;
+        }
+
+        const maxAllowedGapY = Math.max(28, Math.floor(baseSize * 0.65));
         if (gapY > maxAllowedGapY && rows > 1) {
-            extraPadY = Math.floor((remainingH - maxAllowedGapY * (rows - 1)) / 2);
             gapY = maxAllowedGapY;
         }
 
-        const extraX = Math.floor((remainingW - gapX * Math.max(0, cols - 1)) / 2);
-        const extraY = extraPadY > 0 ? extraPadY : Math.floor((remainingH - gapY * Math.max(0, rows - 1)) / 2);
+        // 5. Total rendered grid span
+        const gridW = cols * baseSize + (cols - 1) * gapX;
+        const gridH = rows * baseSize + (rows - 1) * gapY;
 
-        const startX = padX + Math.max(0, extraX);
-        const startY = padY + Math.max(0, extraY);
+        // 6. TRUE GEOMETRIC CENTERING: Left Margin === Right Margin
+        const startX = Math.max(0, Math.floor((W - gridW) / 2));
+        const startY = Math.max(0, Math.floor((H - gridH) / 2));
 
-        // 5. Place and size items
+        // 7. Place items
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
             let spanCols = 1;
@@ -692,7 +695,11 @@
                 track.appendChild(pageEl);
             }
 
-            const { layout } = computePageLayout(pageItems, grid.cols, grid.rows, vpW, vpH);
+            // Always center within the exact client bounds of the page element
+            const W = (pageEl && pageEl.clientWidth > 0) ? pageEl.clientWidth : vpW;
+            const H = (pageEl && pageEl.clientHeight > 0) ? pageEl.clientHeight : vpH;
+
+            const { layout } = computePageLayout(pageItems, grid.cols, grid.rows, W, H);
             const activeElements = new Set();
 
             layout.forEach(entry => {
@@ -710,7 +717,6 @@
 
                 activeElements.add(itemEl);
 
-                // Update container dimensions
                 itemEl.style.width = `${entry.w}px`;
                 itemEl.style.height = `${entry.h}px`;
                 itemEl.style.transform = `translate3d(${entry.x}px, ${entry.y}px, 0)`;
@@ -721,7 +727,6 @@
                 itemEl.dataset.pageIndex = pageIdx;
                 itemEl.dataset.itemIndex = entry.index;
 
-                // Dynamically scale inner app icons and folder boxes to match new cell bounds
                 const metrics = getGridItemIconMetrics(entry.w, entry.h);
 
                 const imgContainer = itemEl.querySelector('.app-icon-img');
