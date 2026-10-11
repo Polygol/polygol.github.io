@@ -207,6 +207,9 @@
     }
 
     function syncHomePagesWithApps() {
+        if (typeof window.loadUserInstalledApps === 'function') {
+            window.loadUserInstalledApps();
+        }
         pruneUninstalledApps();
         ensureAllAppsPresent();
         reflowHomePages();
@@ -327,6 +330,7 @@
         if (typeof window.updateDynamicDate === 'function') {
             window.updateDynamicDate();
         }
+        HomeActivityManager.updateVisibility();
     }
 
     function exitBeginningsState() {
@@ -337,18 +341,14 @@
         document.body.classList.add('home-screen-active');
         detachMotionWakeListener();
 
-        if (navigator.vibrate) {
-            try { navigator.vibrate(20); } catch (e) {}
-        }
-        if (window.SoundManager && typeof window.SoundManager.play === 'function') {
-            try { window.SoundManager.play('open'); } catch (e) {}
-        }
         if (typeof window.updatePersistentClock === 'function') {
             window.updatePersistentClock();
         }
         if (typeof window.updateDynamicDate === 'function') {
             window.updateDynamicDate();
         }
+
+        HomeActivityManager.updateVisibility();
     }
 
     function enterHomeScreen() {
@@ -449,7 +449,7 @@
             let spanCols = 1;
             let spanRows = 1;
 
-            if (item.type === 'widget' || item.type === 'widget-weather') {
+            if (item.type === 'widget' || item.type === 'widget-weather' || item.type === 'sticker') {
                 const sz = item.size || 'small';
                 if (sz === 'small') {
                     spanCols = Math.min(2, cols);
@@ -546,6 +546,16 @@
         }
         track.innerHTML = '';
 
+        // Clean up any orphaned dragged items lingering directly on the container
+        const container = document.getElementById('minihompy-container');
+        if (container) {
+            container.querySelectorAll(':scope > .home-grid-item').forEach(el => {
+                if (!el.classList.contains('is-dragging')) {
+                    el.remove();
+                }
+            });
+        }
+
         const grid = window.currentHomeGrid || STANDARD_GRIDS['6x5'];
         const { vpW, vpH } = getViewportDimensions(grid);
 
@@ -588,13 +598,70 @@
         if (item.type === 'folder') {
             return createFolderItemElement(item, pageIdx, itemIdx, entry);
         }
-        if (item.type === 'widget-weather') {
-            return createWeatherWidgetElement(item, pageIdx, itemIdx);
-        }
         if (item.type === 'widget') {
             return createSystemWidgetElement(item, pageIdx, itemIdx);
         }
+        if (item.type === 'sticker') {
+            return createStickerItemElement(item, pageIdx, itemIdx);
+        }
         return null;
+    }
+
+    // --- Sticker Grid Item ---
+    function createStickerItemElement(item, pageIdx, itemIdx) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'home-grid-item sticker-grid-item';
+
+        const instance = document.createElement('div');
+        instance.className = 'widget-instance sticker-instance';
+        if (item.transparent) {
+            instance.style.background = 'transparent';
+            instance.style.border = 'none';
+            instance.style.setProperty('--fx-filter', 'none');
+            instance.style.boxShadow = 'none';
+        }
+
+        // Material Symbol Remove Button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'home-item-remove-btn';
+        removeBtn.title = window.t ? window.t('REMOVE') : 'Remove';
+        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeHomeItem(pageIdx, itemIdx);
+        });
+        instance.appendChild(removeBtn);
+
+        // Touch-Driven Resize Handle
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'home-widget-resize-handle';
+        resizeHandle.title = window.t ? window.t('DRAG_TO_RESIZE') : 'Drag to Resize';
+        resizeHandle.innerHTML = '<span class="material-symbols-rounded">drag_pan</span>';
+        setupWidgetResizeHandle(resizeHandle, wrapper, pageIdx, itemIdx);
+        instance.appendChild(resizeHandle);
+
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.className = 'sticker-content';
+        img.draggable = false;
+
+        if (item.border) {
+            img.classList.add('has-border');
+            img.style.setProperty('--border-color', item.borderColor || '#ffffff');
+            img.style.setProperty('--border-width', `${item.borderWidth || 2}px`);
+        }
+
+        instance.appendChild(img);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'widget-instance-overlay';
+        instance.appendChild(overlay);
+
+        wrapper.appendChild(instance);
+
+        setupItemLongPress(wrapper);
+        setupItemDragAndDrop(wrapper, pageIdx, itemIdx, item);
+        return wrapper;
     }
 
     // --- App Icon Item (Strictly using user's CSS classes, never squished) ---
@@ -675,6 +742,11 @@
 
         wrapper.addEventListener('click', (e) => {
             if (document.body.classList.contains('home-edit-active')) return;
+            if (window._justExitedBeginnings && Date.now() - window._justExitedBeginnings < 450) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
             e.preventDefault();
             e.stopPropagation();
             if (typeof createFullscreenEmbed === 'function') {
@@ -761,77 +833,6 @@
             e.stopPropagation();
             openFolder(item, pageIdx, itemIdx);
         });
-
-        setupItemLongPress(wrapper);
-        setupItemDragAndDrop(wrapper, pageIdx, itemIdx, item);
-        return wrapper;
-    }
-
-    // --- Weather Widget Element (Wrapper isolates layout transform from jiggle animation) ---
-    function createWeatherWidgetElement(item, pageIdx, itemIdx) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'home-grid-item widget-grid-item';
-
-        const instance = document.createElement('div');
-        instance.className = 'widget-instance weather-widget-instance';
-        const size = item.size || 'small';
-        instance.dataset.size = size;
-        instance.classList.add(size === 'large' ? 'size-large' : (size === 'medium' ? 'size-medium' : 'size-small'));
-
-        // Material Symbol Remove Button
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'home-item-remove-btn';
-        removeBtn.title = window.t ? window.t('REMOVE') : 'Remove';
-        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
-        removeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            removeHomeItem(pageIdx, itemIdx);
-        });
-        instance.appendChild(removeBtn);
-
-        // Touch-Driven Resize Handle (NO BUTTONS!)
-        const resizeHandle = document.createElement('div');
-        resizeHandle.className = 'home-widget-resize-handle';
-        resizeHandle.title = window.t ? window.t('DRAG_TO_RESIZE') : 'Drag to Resize';
-        resizeHandle.innerHTML = '<span class="material-symbols-rounded">drag_pan</span>';
-        setupWidgetResizeHandle(resizeHandle, wrapper, pageIdx, itemIdx);
-        instance.appendChild(resizeHandle);
-
-        const tempEl = document.getElementById('temperature');
-        const currentTemp = tempEl ? tempEl.textContent.trim() : '21°';
-        const iconEl = document.getElementById('weather-icon');
-        const iconHtml = iconEl ? iconEl.innerHTML : '<span class="material-symbols-rounded">partly_cloudy_day</span>';
-
-        const content = document.createElement('div');
-        content.className = 'weather-widget-content';
-        content.innerHTML = `
-            <div class="weather-top-row">
-                <span class="weather-title" data-lang-key="WEATHER">Weather</span>
-                <span class="weather-icon" id="home-grid-weather-icon">${iconHtml}</span>
-            </div>
-            <div class="temperature" id="home-grid-weather-temp">${currentTemp || '21°'}</div>
-            <span class="weather-subtext">Current</span>
-        `;
-        instance.appendChild(content);
-
-        const overlay = document.createElement('div');
-        overlay.className = 'widget-instance-overlay';
-        instance.appendChild(overlay);
-
-        instance.addEventListener('click', (e) => {
-            if (document.body.classList.contains('home-edit-active')) return;
-            e.stopPropagation();
-            if (typeof createFullscreenEmbed === 'function') {
-                createFullscreenEmbed('https://polygol.github.io/weather/index.html');
-            }
-        });
-
-        wrapper.appendChild(instance);
-
-        const label = document.createElement('span');
-        label.className = 'widget-label';
-        label.textContent = (typeof currentLanguage !== 'undefined' && currentLanguage.WEATHER) ? currentLanguage.WEATHER : 'Weather';
-        wrapper.appendChild(label);
 
         setupItemLongPress(wrapper);
         setupItemDragAndDrop(wrapper, pageIdx, itemIdx, item);
@@ -1009,6 +1010,9 @@
         let edgeCooldown = false;
         let currentDropIdx = sourceItemIdx;
 
+        let origParent = null;
+        let origNextSibling = null;
+
         const startDrag = (curX, curY) => {
             if (isDragging) return;
             isDragging = true;
@@ -1020,6 +1024,11 @@
             const zoom = getZoomFactor();
             const itemCSSWidth = origRect.width / zoom;
             const itemCSSHeight = origRect.height / zoom;
+
+            origParent = itemEl.parentElement;
+            origNextSibling = itemEl.nextSibling;
+            const container = document.getElementById('minihompy-container') || document.body;
+            container.appendChild(itemEl);
 
             itemEl.style.setProperty('position', 'fixed', 'important');
             itemEl.style.setProperty('width', `${itemCSSWidth}px`, 'important');
@@ -1285,6 +1294,7 @@
                         }
                         reflowHomePages();
                         saveHomePages();
+                        itemEl.remove();
                         renderHomePages();
                         if (navigator.vibrate) try { navigator.vibrate(40); } catch (err) {}
                         return;
@@ -1310,6 +1320,8 @@
                 if (navigator.vibrate) try { navigator.vibrate(30); } catch (err) {}
             }
 
+            // Remove the dragged element from minihompy-container so it does not linger as an orphan
+            itemEl.remove();
             renderHomePages();
         };
 
@@ -1330,6 +1342,7 @@
                 clearTimeout(edgePageTimer);
                 edgePageTimer = null;
             }
+            itemEl.remove();
             renderHomePages();
         };
 
@@ -2226,6 +2239,28 @@
         }
     }
 
+    function setupHomeSearchBtn() {
+        const searchBtn = document.getElementById('home-search-btn');
+        if (searchBtn && !searchBtn.dataset.bound) {
+            searchBtn.dataset.bound = 'true';
+            searchBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // If assistant is available, trigger assistant text input / search
+                if (window.assistantCore && typeof window.assistantCore.open === 'function') {
+                    window.assistantCore.open();
+                    if (window.assistantCore.ui && typeof window.assistantCore.ui.showInput === 'function') {
+                        window.assistantCore.ui.showInput(true);
+                    }
+                } else if (typeof openSearch === 'function') {
+                    openSearch();
+                } else {
+                    const searchInput = document.getElementById('app-search-input');
+                    if (searchInput) searchInput.focus();
+                }
+            });
+        }
+    }
+
     // --- Main Initializer ---
     function initHomeMenu() {
         autoAdaptGridSize();
@@ -2233,6 +2268,7 @@
         renderHomePages();
         setupHomeContainerGestures();
         setupEditModeHeader();
+        setupHomeSearchBtn();
         startRealTimeSync();
 
         let gridResizeTimer = null;
@@ -2260,6 +2296,22 @@
 
         // Boot into Beginnings (idle start state)
         enterBeginningsState();
+
+        // Listen for installed/uninstalled apps changes
+        window.addEventListener('polygol-apps-changed', () => {
+            if (typeof window.loadUserInstalledApps === 'function') {
+                window.loadUserInstalledApps();
+            }
+            syncHomePagesWithApps();
+        });
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'userInstalledApps' || e.key === 'userInstalledAppsInfo') {
+                if (typeof window.loadUserInstalledApps === 'function') {
+                    window.loadUserInstalledApps();
+                }
+                syncHomePagesWithApps();
+            }
+        });
     }
 
     // Global Exposure

@@ -1357,7 +1357,7 @@ function setupOneButtonNav() {
                     appDrawer.style.zIndex = '';
                 }
             }, 300);
-            document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+            document.querySelectorAll('.container, .clockwidgets, .settings-grid.home-settings, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
                 el.style.display = el.dataset.originalDisplay || '';
                 el.style.removeProperty('content-visibility'); // OPTIMIZATION

@@ -30,7 +30,7 @@ function handleHourFormatChange() {
 }
 hourFormatSwitch.addEventListener('change', handleHourFormatChange);
 
-// Function to get current time in 24-hour format (HH:MM:SS)
+// Function to get current time in 24-hour format (h:mm:ss)
 function getCurrentTime24() {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, '0');
@@ -60,7 +60,7 @@ function ensureMomentLocales() {
             weekdaysMin: '日_月_火_水_木_金_土'.split('_'),
             longDateFormat: {
                 LT: 'HH:mm',
-                LTS: 'HH:mm:ss',
+                LTS: 'h:mm:ss',
                 L: 'YYYY/MM/DD',
                 LL: 'YYYY年M月D日',
                 LLL: 'YYYY年M月D日 HH:mm',
@@ -100,7 +100,7 @@ function ensureMomentLocales() {
             weekdaysMin: '日_一_二_三_四_五_六'.split('_'),
             longDateFormat: {
                 LT: 'HH:mm',
-                LTS: 'HH:mm:ss',
+                LTS: 'h:mm:ss',
                 L: 'YYYY/MM/DD',
                 LL: 'YYYY年M月D日',
                 LLL: 'YYYY年M月D日Ah点mm分',
@@ -174,7 +174,7 @@ function updateClockAndDate() {
         ['ddd MMM D $(separator.dot)$ $(smart)50$', 'M月D日(ddd) $(separator.dot)$ $(smart)50$', 'M월 D일 (ddd) $(separator.dot)$ $(smart)50$', 'M月D日 ddd $(separator.dot)$ $(smart)50$'].includes(savedDateFormat);
 
     // Prevent empty strings from causing ISO date flashes during boot
-    let defaultClockFormat = 'HH:mm:ss';
+    let defaultClockFormat = 'h:mm:ss A';
     if (localStorage.getItem('use12HourFormat') === 'true') {
         if (selectedLang === 'JP' || selectedLang === 'JA' || selectedLang === 'KO' || selectedLang === 'ZH') {
             defaultClockFormat = 'A h:mm:ss';

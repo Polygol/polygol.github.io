@@ -133,7 +133,7 @@ function loadWidgets() {
 }
 
 function addWidget(widgetData, isTransparent = false) {
-    if (typeof window.addHomeItem === 'function') {
+    if (document.body.classList.contains('home-edit-active') && typeof window.addHomeItem === 'function') {
         window.addHomeItem(window.currentHomePageIndex || 0, {
             type: 'widget',
             widgetId: widgetData.widgetId,
@@ -355,7 +355,10 @@ function renderWidgets() {
         let widgetCenter = { x: 0, y: 0 };
 
         const onRotateStart = (e) => {
-            if (localStorage.getItem('lockHomeLayout') === 'true' && !document.body.classList.contains('edit-mode-active')) {
+            if (!document.body.classList.contains('beginnings-active') && !document.body.classList.contains('edit-mode-active')) {
+                return;
+            }
+            if (localStorage.getItem('lockHomeLayout') === 'true' && !document.body.classList.contains('edit-mode-active') && !document.body.classList.contains('beginnings-active')) {
                 return;
             }
             e.stopPropagation();
@@ -453,7 +456,10 @@ function renderWidgets() {
         let dragAnimationFrame = null;
 
         const onDragStart = (e) => {
-            if (localStorage.getItem('lockHomeLayout') === 'true' && !document.body.classList.contains('edit-mode-active')) {
+            if (!document.body.classList.contains('beginnings-active') && !document.body.classList.contains('edit-mode-active')) {
+                return;
+            }
+            if (localStorage.getItem('lockHomeLayout') === 'true' && !document.body.classList.contains('edit-mode-active') && !document.body.classList.contains('beginnings-active')) {
                 return;
             }
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -658,7 +664,10 @@ function renderWidgets() {
         let isAnchoredRight, isAnchoredBottom; // Flags to track edge snapping
 
         const onResizeStart = (e) => {
-            if (localStorage.getItem('lockHomeLayout') === 'true' && !document.body.classList.contains('edit-mode-active')) {
+            if (!document.body.classList.contains('beginnings-active') && !document.body.classList.contains('edit-mode-active')) {
+                return;
+            }
+            if (localStorage.getItem('lockHomeLayout') === 'true' && !document.body.classList.contains('edit-mode-active') && !document.body.classList.contains('beginnings-active')) {
                 return;
             }
             e.stopPropagation(); 
@@ -923,14 +932,28 @@ async function processStickerFiles(files) {
                 y: 50
             };
 
-            activeWidgets.push(stickerData);
+            if (document.body.classList.contains('home-edit-active') && typeof window.addHomeItem === 'function') {
+                window.addHomeItem(window.currentHomePageIndex || 0, {
+                    type: 'sticker',
+                    src: compressedSrc,
+                    border: false,
+                    borderColor: '#ffffff',
+                    borderWidth: '0',
+                    transparent: isTransparent,
+                    size: 'small'
+                });
+            } else {
+                activeWidgets.push(stickerData);
+            }
         } catch (e) {
             console.error("Sticker processing failed", e);
         }
     }
 
-    renderWidgets();
-    saveWidgets();
+    if (!document.body.classList.contains('home-edit-active')) {
+        renderWidgets();
+        saveWidgets();
+    }
     showPopup(window.t('STICKER_ADDED'));
     // If this was triggered from the drawer, close it
     closeWidgetPicker();
@@ -1053,7 +1076,19 @@ function setupStickerControls() {
                     y: 50
                 };
         
-                activeWidgets.push(stickerData);
+                if (document.body.classList.contains('home-edit-active') && typeof window.addHomeItem === 'function') {
+                    window.addHomeItem(window.currentHomePageIndex || 0, {
+                        type: 'sticker',
+                        src: compressedSrc,
+                        border: document.getElementById('sticker-border-switch').checked,
+                        borderColor: document.getElementById('sticker-border-color').value,
+                        borderWidth: document.getElementById('sticker-border-width').value,
+                        transparent: isTransparent,
+                        size: 'small'
+                    });
+                } else {
+                    activeWidgets.push(stickerData);
+                }
                 
                 // Close popup logic...
                 const controlPopup = document.querySelector('.control-popup');
@@ -1061,8 +1096,10 @@ function setupStickerControls() {
                 if(controlPopup) controlPopup.style.display = 'none';
                 if(hiddenContainer) hiddenContainer.appendChild(popup);
                 
-                renderWidgets();
-                saveWidgets();
+                if (!document.body.classList.contains('home-edit-active')) {
+                    renderWidgets();
+                    saveWidgets();
+                }
                 closeWidgetPicker();
                 
                 // Reset

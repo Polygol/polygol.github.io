@@ -120,7 +120,7 @@ hourFormatSwitch.addEventListener('change', function() {
   updateClockAndDate(); // Update clock immediately after change
 });
 
-// Function to get current time in 24-hour format (HH:MM:SS)
+// Function to get current time in 24-hour format (h:mm:ss)
 function getCurrentTime24() {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, '0');
@@ -1370,7 +1370,7 @@ async function createFullscreenEmbed(url) {
             embedContainer.style.borderRadius = '0px';
         }, 10);
         
-        document.querySelectorAll('.container, .settings-grid.home-settings').forEach(el => {
+        document.querySelectorAll('.container, .clockwidgets, .settings-grid.home-settings').forEach(el => {
             if (!el.dataset.originalDisplay) {
                 el.dataset.originalDisplay = window.getComputedStyle(el).display;
             }
@@ -1494,7 +1494,7 @@ async function createFullscreenEmbed(url) {
     }
     
     // 4. Finalize UI Transitions
-    document.querySelectorAll('.container, .settings-grid.home-settings').forEach(el => {
+    document.querySelectorAll('.container, .clockwidgets, .settings-grid.home-settings').forEach(el => {
         if (!el.dataset.originalDisplay) {
             el.dataset.originalDisplay = window.getComputedStyle(el).display;
         }
@@ -1560,7 +1560,7 @@ function minimizeFullscreenEmbed() {
     }
     
     // Restore all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings').forEach(el => {
+    document.querySelectorAll('.container, .clockwidgets, .settings-grid.home-settings').forEach(el => {
 	el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay;
         el.style.transition = 'opacity 0.3s ease';

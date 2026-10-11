@@ -509,15 +509,16 @@
             <div class="date" id="date"></div>
         </div>
         <div class="clock" id="clock"></div>
-        <div class="clockwidgets">
-            <div class="weather-widget" id="weather">
-                <span class="temperature" id="temperature"></span>
-                <span class="weather-icon" id="weather-icon">
-                    <svg class="loading-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="100%" height="100%" fill="currentColor" stroke="none" class="loading-spinner-ind" />
-                    </svg>
-                </span>
-            </div>
+    </div>
+
+    <div class="clockwidgets">
+        <div class="clock-activity-capsule" id="weather">
+            <span class="clock-activity-text" id="temperature"></span>
+            <span class="clock-activity-icon" id="weather-icon">
+                <svg class="loading-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100%" height="100%" fill="currentColor" stroke="none" class="loading-spinner-ind" />
+                </svg>
+            </span>
         </div>
     </div>
 
@@ -536,6 +537,12 @@
             <div class="home-pages-track" id="home-pages-track"></div>
         </div>
         <div class="home-page-indicators" id="home-page-indicators"></div>
+        <button id="home-search-btn" class="home-search-btn" title="Search" data-lang-title="SEARCH">
+            <svg xmlns="http://w3.org" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="7" />
+                <line x1="21" y1="21" x2="15" y2="15" />
+            </svg>
+        </button>
     </div>
 
     <!-- Home Screen Folder Overlay Modal-->
@@ -1012,7 +1019,7 @@
             </div>
             <div class="popup-control-row" style="flex-direction: column; align-items: flex-start; gap: 5px;">
                 <label for="clock-format-input" data-lang-key="CLOCK_FORMAT">Clock Format</label>
-                <input type="text" id="clock-format-input" placeholder="e.g., HH:mm:ss" data-lang-placeholder="CLOCK_FORMAT_PLACEHOLDER" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 12px; background: var(--transparent-color); border: 1px solid var(--glass-border); color: var(--text-color);">
+                <input type="text" id="clock-format-input" placeholder="e.g., h:mm:ss" data-lang-placeholder="CLOCK_FORMAT_PLACEHOLDER" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 12px; background: var(--transparent-color); border: 1px solid var(--glass-border); color: var(--text-color);">
             </div>
             <div style="font-size: 11px; color: var(--secondary-text-color); margin-top: 5px; line-height: 1.4;">
                 <b data-lang-key="VARIABLES_LABEL">Variables:</b> $(media.title)$, $(media.artist)$, $(weather.degrees)$, $(weather.icon)$, $(separator.pipe)$, $(separator.dot)$, $(greeting.time)$, $(greeting.personal)$, $(smart)$<br>

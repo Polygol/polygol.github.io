@@ -164,6 +164,101 @@ const IslandManager = {
         if (typeof window.updatePersistentClock === 'function') {
             window.updatePersistentClock();
         }
+
+        // 4. Sync Live Activities into .clockwidgets
+        const clockWidgetsContainer = document.querySelector('.clockwidgets');
+        if (clockWidgetsContainer) {
+            let clockActivityContainer = clockWidgetsContainer.querySelector('.clock-activity-container');
+            if (toShow.length === 0) {
+                if (clockActivityContainer) clockActivityContainer.remove();
+            } else {
+                if (!clockActivityContainer) {
+                    clockActivityContainer = document.createElement('div');
+                    clockActivityContainer.className = 'clock-activity-container';
+                    clockWidgetsContainer.appendChild(clockActivityContainer);
+                }
+                
+                // Keep active items in sync
+                const curClockIds = new Set(toShow.map(i => i.id));
+                Array.from(clockActivityContainer.children).forEach(child => {
+                    if (!curClockIds.has(child.dataset.islandId)) {
+                        child.remove();
+                    }
+                });
+
+                toShow.forEach(item => {
+                    let pill = clockActivityContainer.querySelector(`.clock-activity-capsule[data-island-id="${item.id}"]`);
+                    if (!pill) {
+                        pill = document.createElement('div');
+                        pill.className = 'clock-activity-capsule';
+                        pill.dataset.islandId = item.id;
+                        clockActivityContainer.appendChild(pill);
+                    } else {
+                        clockActivityContainer.appendChild(pill);
+                    }
+
+                    let canonicalAppName = item.data.appName;
+                    let appDef = null;
+                    if (canonicalAppName) {
+                        if (!apps[canonicalAppName]) {
+                            const match = Object.keys(apps).find(k => k.toLowerCase() === canonicalAppName.toLowerCase());
+                            if (match) canonicalAppName = match;
+                        }
+                        appDef = apps[canonicalAppName];
+                    }
+
+                    let iconEl = pill.querySelector('.clock-activity-icon');
+                    let desiredTag = (!item.data.imgUrl && item.data.iconString) ? 'SPAN' : 'IMG';
+                    if (!iconEl || iconEl.tagName !== desiredTag) {
+                        if (iconEl) iconEl.remove();
+                        if (desiredTag === 'IMG') {
+                            iconEl = document.createElement('img');
+                            iconEl.className = 'clock-activity-icon';
+                            iconEl.onerror = () => { iconEl.src = '/assets/appicon/system.png'; };
+                            pill.prepend(iconEl);
+                        } else {
+                            iconEl = document.createElement('span');
+                            iconEl.className = 'clock-activity-icon material-symbols-rounded';
+                            pill.prepend(iconEl);
+                        }
+                    }
+
+                    if (desiredTag === 'IMG') {
+                        let targetSrc = item.data.imgUrl;
+                        if (!targetSrc) {
+                            targetSrc = '/assets/appicon/system.png';
+                            if (appDef && appDef.icon) {
+                                const rawIcon = appDef.icon;
+                                targetSrc = (rawIcon.startsWith('http') || rawIcon.startsWith('/') || rawIcon.startsWith('data:')) ? rawIcon : `/assets/appicon/${rawIcon}`;
+                            }
+                        }
+                        if (iconEl.src !== targetSrc) iconEl.src = targetSrc;
+                    } else {
+                        if (iconEl.textContent !== item.data.iconString) iconEl.textContent = item.data.iconString;
+                    }
+
+                    let textEl = pill.querySelector('.clock-activity-text');
+                    const hasText = item.data.text && item.data.text.trim().length > 0;
+                    if (hasText) {
+                        if (!textEl) {
+                            textEl = document.createElement('span');
+                            textEl.className = 'clock-activity-text';
+                            pill.appendChild(textEl);
+                        }
+                        if (textEl.textContent !== item.data.text) textEl.textContent = item.data.text;
+                    } else if (textEl) {
+                        textEl.remove();
+                    }
+
+                    pill.onclick = (e) => {
+                        e.stopPropagation();
+                        if (item.data.openUrl) createFullscreenEmbed(item.data.openUrl);
+                        else if (appDef) createFullscreenEmbed(appDef.url);
+                        else if (item.data.url) createFullscreenEmbed(item.data.url);
+                    };
+                });
+            }
+        }
     }
 };
 
@@ -322,11 +417,11 @@ const HomeActivityManager = {
 	updateVisibility() {
         const hasItems = this.items.length > 0;
         const appOpen = document.body.classList.contains('app-active');
-        const drawerOpen = document.getElementById('app-drawer')?.classList.contains('open');
         const donburiOpen = document.getElementById('donburi-container')?.classList.contains('open');
-        const isHomeScreen = !document.body.classList.contains('beginnings-active') && !appOpen;
-        
-        if (this.enabled && hasItems && !appOpen && !drawerOpen && !donburiOpen && !isHomeScreen && !document.body.classList.contains('blackout-active')) {
+        const isBeginnings = document.body.classList.contains('beginnings-active') && !appOpen;
+        const isMinihompy = document.body.classList.contains('home-screen-active') && !appOpen;
+
+        if (this.enabled && hasItems && !appOpen && !donburiOpen && isBeginnings && !document.body.classList.contains('blackout-active')) {
             this.container.style.display = 'flex';
             document.body.classList.add('home-activities-visible');
             // Slight delay to allow display:flex to apply before opacity transition
@@ -355,7 +450,6 @@ const HomeActivityManager = {
             longPressTimer = setTimeout(() => {
                 isDragging = true;
                 this.container.classList.add('dragging');
-                if (navigator.vibrate) navigator.vibrate(50);
             }, 500);
         };
         

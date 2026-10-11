@@ -75,17 +75,10 @@
         }
         .key {
             background: var(--key-bg);
-            border-radius: 20px;
+            border-radius: 28px;
             corner-shape: superellipse(1.5);
             flex: 1;
-            height: calc(
-                (
-                    100vh
-                    - var(--body-padding)
-                    - var(--predictions-height)
-                    - (4 * var(--row-gap))
-                ) / 4
-            );
+            height: calc((100vh - var(--body-padding) - var(--predictions-height) - (4 * var(--row-gap))) / 4);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -93,10 +86,11 @@
             cursor: pointer;
             transition: background 0.1s, transform 0.1s;
             color: inherit;
+            box-shadow: var(--sun-shadow);
         }
         .key.active {
-            background: var(--key-active);
-            transform: scale(0.9);
+            filter: brightness(1.5);
+            transform: scale(1.1);
         }
         .alt-popup {
             position: absolute;

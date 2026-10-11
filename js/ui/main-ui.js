@@ -19,6 +19,12 @@ if (__clockElement) {
         if (isWallpaperEditingActive()) return;
         if (document.body.classList.contains('beginnings-active')) {
             e.stopPropagation();
+            window._justExitedBeginnings = Date.now();
+            const barrier = document.getElementById('app-gesture-barrier');
+            if (barrier) {
+                barrier.style.display = 'block';
+                setTimeout(() => { barrier.style.display = 'none'; }, 400);
+            }
             if (typeof window.exitBeginningsState === 'function') window.exitBeginningsState();
             return;
         }
@@ -36,8 +42,7 @@ if (__weatherWidget) {
         if (isWallpaperEditingActive()) return;
         if (document.body.classList.contains('beginnings-active')) {
             e.stopPropagation();
-            if (typeof window.exitBeginningsState === 'function') window.exitBeginningsState();
-            return;
+            createFullscreenEmbed('https://polygol.github.io/weather/index.html')
         }
     });
 }
@@ -53,6 +58,12 @@ if (__dateElement) {
         if (isWallpaperEditingActive()) return;
         if (document.body.classList.contains('beginnings-active')) {
             e.stopPropagation();
+            window._justExitedBeginnings = Date.now();
+            const barrier = document.getElementById('app-gesture-barrier');
+            if (barrier) {
+                barrier.style.display = 'block';
+                setTimeout(() => { barrier.style.display = 'none'; }, 400);
+            }
             if (typeof window.exitBeginningsState === 'function') window.exitBeginningsState();
             return;
         }
@@ -65,6 +76,12 @@ if (__containerElement) {
         if (document.body.classList.contains('edit-mode-active') || isWallpaperEditingActive()) return;
         if (document.body.classList.contains('beginnings-active')) {
             e.stopPropagation();
+            window._justExitedBeginnings = Date.now();
+            const barrier = document.getElementById('app-gesture-barrier');
+            if (barrier) {
+                barrier.style.display = 'block';
+                setTimeout(() => { barrier.style.display = 'none'; }, 400);
+            }
             if (typeof window.exitBeginningsState === 'function') window.exitBeginningsState();
         }
     });

@@ -2,7 +2,6 @@
     translate: 0 0;
     position: fixed;
     top: 0;
-    right: auto;
     height: 28px;
     display: flex;
     align-items: center;
@@ -11,8 +10,20 @@
     pointer-events: none;
 }
 
+body.home-activities-visible:has(#home-activity-container.pos-tl) #dynamic-area {
+    right: 30px;
+}
+
 body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area {
-    right: calc(25px + clamp(300px, 30%, 420px));
+    left: 30px;
+}
+
+body.home-activities-visible:has(#home-activity-container.pos-bl) .clockwidgets {
+    right: 45px;
+}
+
+body.home-activities-visible:has(#home-activity-container.pos-br) .clockwidgets {
+    left: 45px;
 }
 
 #activity-island {
@@ -194,8 +205,8 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 }
 
 .persistent-clock-actions {
-position: fixed;
-    top: 10px;
+    position: fixed;
+    top: 0px;
     right: auto;
     padding: 8px;
     z-index: 9996;
@@ -209,7 +220,7 @@ position: fixed;
     background-color: var(--search-background);
     border: 1px solid var(--glass-border);
     box-shadow: var(--sun-shadow);
-    border-radius: 50px;
+    border-radius: 0 0 24px 24px;
     --fx-filter: var(--blur1) glass(0.6, 8, 0);
 }
 
@@ -243,11 +254,17 @@ position: fixed;
 body.beginnings-active #dynamic-area .persistent-clock,
 body.beginnings-active #dynamic-area #persistent-clock,
 body.beginnings-active #dynamic-area .dynamic-date,
-body.beginnings-active #dynamic-area #dynamic-date,
-body.beginnings-active #dynamic-area #activity-island {
+body.beginnings-active #dynamic-area #dynamic-date {
     display: none !important;
     opacity: 0 !important;
     pointer-events: none !important;
+}
+
+/* Activity Island can show on Beginnings */
+body.beginnings-active #dynamic-area #activity-island {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
 }
 
 body.beginnings-active #dynamic-area #status-indicator {
@@ -266,9 +283,79 @@ body:not(.beginnings-active) #dynamic-area #status-indicator {
     opacity: 1 !important;
 }
 
+/* --- Clockwidgets Live Activity Capsule --- */
+.clock-activity-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.clock-activity-capsule {
+    position: relative;
+    font-size: 1.2rem;
+    width: fit-content;
+    font-weight: 400;
+    color: var(--text-color);
+    padding: 8px 18px;
+    background-color: var(--search-background);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
+    box-shadow: var(--sun-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s;
+    box-sizing: border-box;
+    border-radius: 50px;
+    height: 52px;
+    transform: scale(1);
+    transition: transform 0.15s cubic-bezier(.2, 1.3, .64, 1);
+    border: 1px solid var(--glass-border);
+    gap: 10px;
+    font-size: 1.2rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+}
+
+.clock-activity-capsule:active {
+    transform: scale(1.04);
+    filter: brightness(1.5);
+}
+
+.clock-activity-capsule img.clock-activity-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    corner-shape: superellipse(1.5);
+    object-fit: cover;
+}
+
+.clock-activity-capsule span.clock-activity-icon,
+.clock-activity-capsule .material-symbols-rounded {
+    font-size: 24px;
+    font-family: 'Material Symbols Rounded', sans-serif;
+    font-variation-settings: 'FILL' 1, 'wght' 700, 'GRAD' 0, 'opsz' 24;
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    user-select: none;
+}
+
+.clock-activity-text {
+    font-size: 1.2rem;
+    font-weight: 400;
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    user-select: none;
+    font-variant-numeric: tabular-nums;
+}
+
 /* --- Home Screen Activities --- */
-body.home-screen-active #home-activity-container,
-body:not(.beginnings-active):not(.app-active) #home-activity-container {
+body.app-active #home-activity-container,
+body.blackout-active #home-activity-container {
     display: none !important;
     opacity: 0 !important;
     pointer-events: none !important;

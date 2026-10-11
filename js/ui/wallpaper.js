@@ -2708,7 +2708,7 @@ function loadRecentWallpapers() {
         }
         if (wallpaper.clockStyles.dateFormat === undefined) {
             wallpaper.clockStyles.dateFormat = 'ddd MMM D $(separator.dot)$ $(smart)50$';
-            wallpaper.clockStyles.clockFormat = 'HH:mm:ss';
+            wallpaper.clockStyles.clockFormat = 'h:mm:ss';
             updated = true;
         }
 		// Migration for new typography settings
@@ -2964,6 +2964,7 @@ function setupWallpaperInteraction() {
                 }
 
                 if (typeof window.exitBeginningsState === 'function') {
+                    window._justExitedBeginnings = Date.now();
                     window.exitBeginningsState();
                     return;
                 }
@@ -3172,6 +3173,7 @@ function closeWallpaperSwitcher() {
         document.getElementById('wallpaper-cards-container').innerHTML = '';
         // Restore UI
         document.querySelector('.container').classList.remove('force-hide');
+        document.querySelector('.clockwidgets').classList.remove('force-hide');
 	    document.querySelector('.widget-grid').classList.remove('force-hide');
         updateDockVisibility();
     }, 300);
@@ -4085,7 +4087,7 @@ async function jumpToWallpaper(index) {
 	    if (posYSlider) posYSlider.value = wallpaper.clockStyles.clockPosY || '50';
 	    if (alignmentSelect) alignmentSelect.value = wallpaper.clockStyles.alignment || 'center';
         if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'ddd MMM D $(separator.dot)$ $(smart)50$';
-        if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
+        if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'h:mm:ss');
 
 		if (document.getElementById('depth-effect-switch')) {
             document.getElementById('depth-effect-switch').checked = wallpaper.depthEnabled || false;
@@ -4263,7 +4265,7 @@ function switchWallpaper(direction, skipSave = false) {
         }
         if (roundnessSlider) roundnessSlider.value = wallpaper.clockStyles.roundness || '0';
         if (dateFormatInput) dateFormatInput.value = wallpaper.clockStyles.dateFormat || 'ddd MMM D $(separator.dot)$ $(smart)50$';
-        if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
+        if (clockFormatInput) clockFormatInput.value = wallpaper.clockStyles.clockFormat || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'h:mm:ss');
 
         if (document.getElementById('depth-effect-switch')) {
             document.getElementById('depth-effect-switch').checked = wallpaper.depthEnabled || false;
@@ -4651,7 +4653,7 @@ function setupFontSelection() {
     document.getElementById('wallpaper-hue-slider').value = initialEffects.hue || '0';
     document.getElementById('wallpaper-vignette-slider').value = initialEffects.vignette || '0';
     document.getElementById('date-format-input').value = localStorage.getItem('dateFormat') || 'ddd MMM D $(separator.dot)$ $(smart)50$';
-    document.getElementById('clock-format-input').value = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss');
+    document.getElementById('clock-format-input').value = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'h:mm:ss');
 
     // --- 2. Apply the visual styles based on the now-correct state of the controls ---
     applyClockLayout();
@@ -4975,7 +4977,7 @@ function resetAndApplyDefaultClockStyles() {
         customLineHeight: null,
         customCSS: null,
         dateFormat: 'ddd MMM D $(separator.dot)$ $(smart)50$',
-        clockFormat: document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss'
+        clockFormat: document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'h:mm:ss'
     };
 
     // Update UI controls to their default values

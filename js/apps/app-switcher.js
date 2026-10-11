@@ -311,7 +311,7 @@ function openAppSwitcher() {
         setTimeout(() => { if (!appDrawer.classList.contains('open')) appDrawer.style.display = 'none'; }, 300);
         
         // Restore Main UI visibility
-        document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+        document.querySelectorAll('.container, .clockwidgets, .settings-grid.home-settings, .widget-grid').forEach(el => {
             el.classList.remove('force-hide');
             el.style.display = el.dataset.originalDisplay || '';
             el.style.opacity = '1';
@@ -541,7 +541,7 @@ function selectAndCloseAppSwitcher() {
         // 3. Only restore background UI if NO app is open (Optimization)
         const openEmbed = document.querySelector('.fullscreen-embed[style*="display: block"]');
         if (!openEmbed) {
-            document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+            document.querySelectorAll('.container, .clockwidgets, .settings-grid.home-settings, .widget-grid').forEach(el => {
                 el.classList.remove('force-hide');
                 el.style.display = el.dataset.originalDisplay || '';
                 el.style.opacity = '1';

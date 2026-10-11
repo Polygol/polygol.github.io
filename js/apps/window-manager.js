@@ -149,16 +149,19 @@ function saveUsageData(appName) {
     }
 }
 
+const systemApps = { ...apps };
+
 function loadUserInstalledApps() {
     try {
         const userApps = JSON.parse(localStorage.getItem('userInstalledApps')) || {};
-        // Merge user-installed apps into the main apps object
-        apps = { ...apps, ...userApps };
+        // Merge user-installed apps with base system apps
+        apps = { ...systemApps, ...userApps };
         console.log('Loaded and merged user-installed apps.');
     } catch (e) {
         console.error('Could not load user-installed apps:', e);
     }
 }
+window.loadUserInstalledApps = loadUserInstalledApps;
 
 async function installApp(appData) {
     // Prevent overwriting core system apps
@@ -167,7 +170,7 @@ async function installApp(appData) {
     
     if (reservedNames.includes(normalizedName)) {
         console.error(`[Security] Blocked installation of protected system app: ${appData.name}`);
-        showDialog({ type: 'alert', title: window.t('APP_INSTALL_BLOCKED'), message: window.t('APP_INSTALL_BLOCKED_MSG', { appName: appData.name }), icon: 'do_not_touch'});
+        showDialog({ type: 'alert', title: window.t('APP_INSTALL_BLOCKED'), message: window.t('APP_INSTALL_BLOCKED_MSG', { appName: appData.name }), icon: 'policy_alert'});
         return;
     }
 	
@@ -226,9 +229,17 @@ async function installApp(appData) {
     if (typeof window.syncHomePagesWithApps === 'function') {
         window.syncHomePagesWithApps();
     }
+    window.dispatchEvent(new CustomEvent('polygol-apps-changed'));
 }
 
 async function deleteApp(appName) {
+    if (typeof appName === 'object' && appName !== null) {
+        appName = appName.name || appName.appName || appName.title;
+    }
+    if (!appName || typeof appName !== 'string') {
+        console.error('[deleteApp] Invalid appName provided:', appName);
+        return;
+    }
     // --- Protection Clause ---
     const appToDelete = apps[appName];
     if (
@@ -239,7 +250,7 @@ async function deleteApp(appName) {
         showDialog({ 
             type: 'alert', 
             title: currentLanguage.GURAPP_DELETE_STORE_DENIED,
-            icon: 'do_not_touch'
+            icon: 'policy_alert'
         });
         return; // Stop the function immediately
     }
@@ -310,6 +321,7 @@ async function deleteApp(appName) {
         if (typeof window.syncHomePagesWithApps === 'function') {
             window.syncHomePagesWithApps();
         }
+        window.dispatchEvent(new CustomEvent('polygol-apps-changed'));
         showPopup(currentLanguage.GURAPP_DELETED.replace('{appName}', appName));
     } else {
 		showDialog({ 
@@ -928,7 +940,7 @@ async function createFullscreenEmbed(url, options = {}) {
 	    });
         
         // Hide all main UI elements
-        document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+        document.querySelectorAll('.container, .clockwidgets, .settings-grid.home-settings, .widget-grid').forEach(el => {
             if (!el.dataset.originalDisplay) {
                 el.dataset.originalDisplay = window.getComputedStyle(el).display;
             }
@@ -1155,7 +1167,7 @@ async function createFullscreenEmbed(url, options = {}) {
 	});
     
     // Hide all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+    document.querySelectorAll('.container, .clockwidgets, .settings-grid.home-settings, .widget-grid').forEach(el => {
         if (!el.dataset.originalDisplay) {
             el.dataset.originalDisplay = window.getComputedStyle(el).display;
         }
@@ -1528,7 +1540,7 @@ function closeFullscreenEmbed() {
 	
     // --- STANDARD HOME RESTORATION (Only if history is empty) ---
     // Restore all main UI elements
-    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+    document.querySelectorAll('.container, .clockwidgets, .settings-grid.home-settings, .widget-grid').forEach(el => {
 	    el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay || ''; // Restore original display property
         el.style.removeProperty('content-visibility'); // OPTIMIZATION: Enable rendering
@@ -1646,7 +1658,7 @@ function forceCloseApp(url) {
         }
 
         // Restore Home Screen UI
-        document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+        document.querySelectorAll('.container, .clockwidgets, .settings-grid.home-settings, .widget-grid').forEach(el => {
             el.classList.remove('force-hide');
             el.style.display = el.dataset.originalDisplay || ''; 
             el.style.removeProperty('content-visibility'); 
@@ -1775,7 +1787,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         if (interactionBlocker) interactionBlocker.style.pointerEvents = 'auto';
 		
         // Unhide all main UI elements
-        document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+        document.querySelectorAll('.container, .clockwidgets, .settings-grid.home-settings, .widget-grid').forEach(el => {
             el.classList.remove('force-hide');
             el.style.display = el.dataset.originalDisplay || '';
             el.style.removeProperty('content-visibility'); // OPTIMIZATION
@@ -1845,7 +1857,7 @@ function minimizeFullscreenEmbed(animate = true, urlToMinimize = null) {
         }
     }
     
-    document.querySelectorAll('.container, .settings-grid.home-settings, .widget-grid').forEach(el => {
+    document.querySelectorAll('.container, .clockwidgets, .settings-grid.home-settings, .widget-grid').forEach(el => {
 	    el.classList.remove('force-hide');
         el.style.display = el.dataset.originalDisplay;
         el.style.removeProperty('content-visibility'); // OPTIMIZATION

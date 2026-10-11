@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
 
         setTimeout(() => {
-            document.querySelectorAll('.container, .widget-grid, #dynamic-area').forEach(el => {
+            document.querySelectorAll('.container, .clockwidgets, .widget-grid, #dynamic-area').forEach(el => {
                 el.style.opacity = '';
                 el.style.scale = '';
             });
@@ -963,7 +963,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (clockWidgetsContainer) {
             const homescreenWidget = document.createElement('div');
             homescreenWidget.id = 'live-activity-homescreen';
-            homescreenWidget.className = 'weather-widget'; // Reuse existing styles
+            homescreenWidget.className = 'clock-activity-capsule'; // Reuse existing styles
             homescreenWidget.style.display = 'none'; // Initially hidden
             homescreenWidget.innerHTML = `
                 <span class="material-symbols-rounded"></span>
@@ -1675,47 +1675,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
                 if (appIsOpen) showQuickActions(false);
             });
+
+            dynamicArea.addEventListener('mouseleave', hideQuickActions);
+            if (interactionBlocker) {
+                interactionBlocker.addEventListener('click', hideQuickActions);
+                interactionBlocker.addEventListener('touchend', hideQuickActions);
+            }
+
+            // Touch Long-Press Logic
+            dynamicArea.addEventListener('touchstart', (e) => {
+                isLongPress = false;
+                const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
+                if (!appIsOpen) return;
+
+                clearTimeout(longPressTimeout);
+                longPressTimeout = setTimeout(() => {
+                    isLongPress = true;
+                    // showQuickActions(true);
+                }, 500);
+            }, { passive: true });
+
+            dynamicArea.addEventListener('touchmove', () => {
+                clearTimeout(longPressTimeout);
+            });
+
+            dynamicArea.addEventListener('touchend', (e) => {
+                clearTimeout(longPressTimeout);
+                if (!isLongPress) {
+                    window.openControls();
+                }
+                isLongPress = false;
+            });
+
+            dynamicArea.addEventListener('click', () => {
+                clearTimeout(hideActionsTimeout);
+                window.openControls();
+            });
         }
 
         if (quickActions) {
             quickActions.addEventListener('mouseenter', () => clearTimeout(hideActionsTimeout));
             quickActions.addEventListener('mouseleave', hideQuickActions);
         }
-        persistentClock.addEventListener('mouseleave', hideQuickActions);
-        if (interactionBlocker) {
-            interactionBlocker.addEventListener('click', hideQuickActions);
-            interactionBlocker.addEventListener('touchend', hideQuickActions);
-        }
-
-        // Touch Long-Press Logic
-        persistentClock.addEventListener('touchstart', (e) => {
-            isLongPress = false;
-            const appIsOpen = !!document.querySelector('.fullscreen-embed[style*="display: block"]');
-            if (!appIsOpen) return;
-
-            clearTimeout(longPressTimeout);
-            longPressTimeout = setTimeout(() => {
-                isLongPress = true;
-                showQuickActions(true);
-            }, 500);
-        }, { passive: true });
-
-        persistentClock.addEventListener('touchmove', () => {
-            clearTimeout(longPressTimeout);
-        });
-
-        persistentClock.addEventListener('touchend', (e) => {
-            clearTimeout(longPressTimeout);
-            if (!isLongPress) {
-                window.openControls();
-            }
-            isLongPress = false;
-        });
-
-        persistentClock.addEventListener('click', () => {
-            clearTimeout(hideActionsTimeout);
-            window.openControls();
-        });
     }
 
     const qaMin = document.getElementById('quick-action-minimize');

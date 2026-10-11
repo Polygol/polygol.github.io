@@ -15,6 +15,7 @@ body.beginnings-active .container .clock {
 body.beginnings-active #minihompy-container {
     opacity: 0 !important;
     pointer-events: none !important;
+    visibility: hidden !important;
     transform: scale(0.92) translateY(20px) !important;
 }
 
@@ -27,14 +28,49 @@ body.home-screen-active:not(.beginnings-active) .widget-grid {
 body.home-screen-active:not(.beginnings-active) .container {
     opacity: 0 !important;
     pointer-events: none !important;
+    visibility: hidden !important;
     transform: translate(-50%, -55%) scale(0.92) !important;
-    transition: opacity 0.35s ease, transform 0.35s ease !important;
+    transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s ease !important;
 }
 
 body.home-screen-active:not(.beginnings-active):not(.blackout-active):not(.app-active):not(.edit-mode-active) #minihompy-container {
     opacity: 1 !important;
     pointer-events: auto !important;
+    visibility: visible !important;
     transform: scale(1) translateY(0) !important;
+}
+
+body.home-screen-active:not(.beginnings-active) .clockwidgets {
+    z-index: 50;
+    bottom: 28px;
+    gap: 16px;
+}
+
+body.home-screen-active:not(.beginnings-active) .clock-activity-capsule {
+    height: 42px;
+    padding: 0 14px;
+}
+
+body.home-screen-active:not(.beginnings-active) .clock-activity-capsule .clock-activity-text {
+    font-size: 1rem;
+}
+
+body.home-screen-active:not(.beginnings-active) .clock-activity-capsule  span.clock-activity-icon,
+body.home-screen-active:not(.beginnings-active) .clock-activity-capsule .material-symbols-rounded {
+    font-size: 18px;
+}
+
+body.home-screen-active:not(.beginnings-active) .clock-activity-capsule img.clock-activity-icon {
+    width: 24px;
+    height: 24px;
+}
+
+body.beginnings-active .clockwidgets {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.2, 1.2, 0.64, 1) !important;
+    z-index: 10 !important;
+    cursor: pointer;
 }
 
 /* Hide Minihompy during App execution, Blackout, Screen sleep, or Wallpaper editing */
@@ -44,7 +80,16 @@ body.edit-mode-active #minihompy-container,
 body:has(#wallpaper-switcher-overlay.show) #minihompy-container {
     opacity: 0 !important;
     pointer-events: none !important;
+    visibility: hidden !important;
     transform: scale(0.94) !important;
+}
+
+body.beginnings-active #minihompy-container *,
+body.app-active #minihompy-container *,
+body.blackout-active #minihompy-container *,
+body.edit-mode-active #minihompy-container *,
+body:has(#wallpaper-switcher-overlay.show) #minihompy-container * {
+    pointer-events: none !important;
 }
 
 /* --- Main Minihompy Container --- */
@@ -59,7 +104,7 @@ body:has(#wallpaper-switcher-overlay.show) #minihompy-container {
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
-    padding: 24px;
+    padding: 24px 24px 100px 24px;
     pointer-events: none;
     opacity: 0;
     transform: scale(0.95);
@@ -245,7 +290,7 @@ body.home-edit-active .home-page .folder-icon-item:active .folder-preview-box {
     position: fixed;
     inset: 0;
     z-index: 120;
-    background: var(--overlay-color);
+    background: var(--search-background);
     backdrop-filter: blur(0px);
     display: flex;
     align-items: center;
@@ -300,6 +345,7 @@ body.home-edit-active .home-page .folder-icon-item:active .folder-preview-box {
     border: none;
     outline: none;
     font-family: 'Open Runde', 'Inter', sans-serif;
+    color: var(--text-color);
     width: 100%;
     cursor: text;
 }
@@ -315,7 +361,7 @@ body.home-edit-active .home-page .folder-icon-item:active .folder-preview-box {
     overflow-x: hidden;
     overflow-y: auto;
     max-height: 55vh;
-    padding: 10px 0;
+    padding: 0;
     justify-items: center;
     touch-action: none;
 }
@@ -409,52 +455,6 @@ body.home-edit-active .folder-grid-cell .home-item-remove-btn {
     corner-shape: inherit;
 }
 
-/* Weather Widget Content */
-.home-page .weather-widget-instance {
-    padding: 20px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: flex-start;
-    color: var(--text-color);
-}
-
-.home-page .weather-widget-instance .weather-widget-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-    width: 100%;
-}
-
-.home-page .weather-widget-instance .weather-top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
-.home-page .weather-widget-instance .weather-title {
-    font-size: 14px;
-    font-weight: 600;
-    font-family: 'Open Runde', sans-serif;
-    opacity: 0.9;
-}
-
-.home-page .weather-widget-instance .temperature {
-    font-size: 44px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-    margin: 8px 0;
-}
-
-.home-page .weather-widget-instance .weather-subtext {
-    font-size: 12px;
-    opacity: 0.75;
-}
-
 /* --- Remove Button & Edit Mode (Material Icons Only) --- */
 .home-item-remove-btn {
     position: absolute;
@@ -495,7 +495,8 @@ body.home-edit-active .home-item-remove-btn {
 
 body.home-edit-active .home-page .app-icon,
 body.home-edit-active .home-page .folder-icon-item,
-body.home-edit-active .home-page .widget-grid-item .widget-instance {
+body.home-edit-active .home-page .widget-grid-item .widget-instance,
+body.home-edit-active .home-page .sticker-grid-item .widget-instance {
     animation: ios-jiggle 0.3s ease-in-out infinite alternate !important;
 }
 
@@ -648,4 +649,40 @@ body.home-edit-active .home-widget-resize-handle {
 .home-page-dot.active {
     opacity: 1;
     background: var(--accent);
+}
+
+/* Home Screen Bottom-Right Search Button */
+.home-search-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50px;
+    background: var(--search-background);
+    color: var(--text-color);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 90;
+    transition: transform 0.2s cubic-bezier(0.2, 1.2, 0.64, 1), background-color 0.2s ease, opacity 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    outline: none;
+}
+
+body.home-edit-active .home-search-btn,
+body.beginnings-active .home-search-btn,
+body.app-active .home-search-btn,
+body.blackout-active .home-search-btn,
+body.edit-mode-active .home-search-btn,
+body:has(#wallpaper-switcher-overlay.show) .home-search-btn {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    transform: scale(0.8) !important;
 }

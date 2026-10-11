@@ -5,9 +5,26 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1;
+    z-index: 15;
     transition: transform 0.4s cubic-bezier(.2, 1.3, .64, 1);
     pointer-events: none;
+}
+
+body:not(.beginnings-active):not(.edit-mode-active) #widget-grid,
+body:not(.beginnings-active):not(.edit-mode-active) .widget-grid,
+body:not(.beginnings-active):not(.edit-mode-active) #widget-grid .widget-instance,
+body.home-screen-active:not(.beginnings-active) #widget-grid,
+body.home-screen-active:not(.beginnings-active) .widget-grid,
+body.home-screen-active:not(.beginnings-active) #widget-grid .widget-instance,
+body.app-active #widget-grid,
+body.app-active .widget-grid,
+body.app-active #widget-grid .widget-instance,
+body.blackout-active #widget-grid,
+body.blackout-active .widget-grid,
+body.blackout-active #widget-grid .widget-instance {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
 }
 
 .widget-instance {
@@ -154,6 +171,7 @@
     box-shadow: var(--sun-shadow);
 }
 
+.widget-instance:hover .widget-rotate-handle,
 .widget-rotate-handle:hover,
 .widget-rotate-handle:active {
     cursor: grabbing;
@@ -291,8 +309,8 @@
     height: 40px;
     border-radius: 50%;
     cursor: se-resize;
-    z-index: 2;
-    /* Must be above the iframe but below the drag overlay */
+    z-index: 10;
+    touch-action: none;
 }
 
 .widget-resize-handle:hover,

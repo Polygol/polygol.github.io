@@ -1,4 +1,4 @@
-const CORE_CACHE_VERSION = 'Astatine 2027.2026.10A';
+const CORE_CACHE_VERSION = 'Astatine 2027.2026.10B';
 const CORE_CACHE_NAME = `polcore${CORE_CACHE_VERSION}`;
 const APPS_CACHE_NAME = 'polapps';
 

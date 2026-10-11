@@ -1028,7 +1028,12 @@ window.addEventListener('message', async (event) => { // Make listener async
                 });
             }
         },
-		deleteApp,
+		deleteApp: (appArg) => {
+            const name = typeof appArg === 'string' ? appArg : (appArg?.name || appArg?.appName || appArg?.title);
+            if (name && typeof window.deleteApp === 'function') {
+                window.deleteApp(name);
+            }
+        },
 		requestInstalledApps, 
 		getLocalStorageItem, 
 		setLocalStorageItem,
@@ -1658,7 +1663,7 @@ function broadcastAllWallpaperSettings(wallpaper) {
     };
     
     // Clock format might default based on 12hr setting
-    const defaultClockFormat = document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'HH:mm:ss';
+    const defaultClockFormat = document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'h:mm:ss';
     settings['clockFormat'] = val(styles.clockFormat, defaultClockFormat);
 
     // Theme-dependent effects
