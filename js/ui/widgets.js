@@ -141,6 +141,7 @@ function addWidget(widgetData, isTransparent = false) {
             title: widgetData.title,
             size: widgetData.defaultSize ? (widgetData.defaultSize[0] >= 2 ? 'medium' : 'small') : 'small'
         });
+        return;
     }
 
     const baseUnit = 200; // The size of a 1x1 widget block

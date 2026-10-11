@@ -108,7 +108,7 @@ body:has(#wallpaper-switcher-overlay.show) #minihompy-container * {
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
-    padding: 24px 24px 100px 24px;
+    padding: 0;
     pointer-events: none;
     opacity: 0;
     filter: blur(10px);
@@ -122,15 +122,15 @@ body:has(#wallpaper-switcher-overlay.show) #minihompy-container * {
 /* --- Home Pages Viewport (Fluid iPadOS Spacing) --- */
 .home-pages-viewport {
     width: 100%;
-    max-width: min(94vw, 1380px);
-    height: calc(100vh - 90px);
-    max-height: calc(100vh - 90px);
+    height: calc(100% - 100px);
     overflow: hidden;
     position: relative;
     box-sizing: border-box;
     display: flex;
     justify-content: center;
     touch-action: none;
+    margin: 28px auto auto auto;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 5%, rgba(0, 0, 0, 1) 95%, rgba(0, 0, 0, 0) 100%);
 }
 
 .home-pages-track {
@@ -422,13 +422,13 @@ body.home-edit-active .folder-grid-cell .home-item-remove-btn {
 }
 
 .home-page .widget-instance {
-    width: 100%;
+    width: calc(100% - 26px);
     height: calc(100% - 26px);
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 35px;
+    border-radius: 40px;
     corner-shape: superellipse(1.5);
     background: var(--search-background);
     border: 1px solid var(--glass-border);

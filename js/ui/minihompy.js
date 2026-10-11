@@ -1,10 +1,3 @@
-/**
- * Astatine 27.1 - iPadOS-Style Fluid Widget, Folder & App Minihompy
- * Custom absolute positioning layout engine with smooth iOS rearranging,
- * multi-page touch drag & drop, automatic empty-space filling reflow,
- * touch-driven widget resizing, and Cards deck integration.
- */
-
 (function () {
     let currentHomePageIndex = 0;
     let homePages = [];
@@ -15,12 +8,41 @@
 
     // --- Standard Grid Auto-Adaptation Presets (6x5, 4x6, 8x12, 8x6, 4x5, 6x6) ---
     const STANDARD_GRIDS = {
-        '6x5': { cols: 6, rows: 5, maxW: 1380, maxH: 820 },
-        '4x6': { cols: 4, rows: 6, maxW: 620, maxH: 900 },
-        '8x12': { cols: 8, rows: 12, maxW: 1400, maxH: 920 },
-        '8x6': { cols: 8, rows: 6, maxW: 1400, maxH: 820 },
-        '4x5': { cols: 4, rows: 5, maxW: 560, maxH: 740 },
-        '6x6': { cols: 6, rows: 6, maxW: 1200, maxH: 880 }
+        // --- Extremely Small Screens ---
+        '2x1':  { cols: 2, rows: 1, maxW: 320, maxH: 320, density: 'compact' },
+        '2x2':  { cols: 2, rows: 2, maxW: 320, maxH: 480, density: 'compact' },
+        '3x1':  { cols: 3, rows: 1, maxW: 480, maxH: 320, density: 'compact' },
+        '3x2':  { cols: 3, rows: 2, maxW: 540, maxH: 540, density: 'compact' },
+
+        // --- Standard Portrait Screens ---
+        '4x3':  { cols: 4, rows: 3, maxW: 600, maxH: 650, density: 'normal' },
+        '4x4':  { cols: 4, rows: 4, maxW: 560, maxH: 740, density: 'normal' },
+        '4x5':  { cols: 4, rows: 5, maxW: 620, maxH: 900, density: 'normal' },
+        '4x6':  { cols: 4, rows: 6, maxW: 620, maxH: 1050, density: 'normal' },
+        '4x7':  { cols: 4, rows: 7, maxW: 620, maxH: 1200, density: 'normal' },
+
+        // --- Standard Landscape Screens ---
+        '5x3':  { cols: 5, rows: 3, maxW: 1100, maxH: 800, density: 'normal' },
+        '6x3':  { cols: 6, rows: 3, maxW: 1200, maxH: 800, density: 'normal' },
+        '6x4':  { cols: 6, rows: 4, maxW: 1380, maxH: 820, density: 'normal' },
+        '8x4':  { cols: 8, rows: 4, maxW: 1500, maxH: 800, density: 'normal' },
+        '8x5':  { cols: 8, rows: 5, maxW: 1400, maxH: 820, density: 'normal' },
+        '10x5': { cols: 10, rows: 5, maxW: 1500, maxH: 900, density: 'normal' },
+        '12x5': { cols: 12, rows: 5, maxW: 1600, maxH: 900, density: 'normal' },
+
+        // --- Square Displays ---
+        '4x3-square': { cols: 4, rows: 3, maxW: 600, maxH: 600, density: 'normal' },
+        '6x5':  { cols: 6, rows: 5, maxW: 1000, maxH: 1000, density: 'spacious' },
+        '8x7':  { cols: 8, rows: 7, maxW: 1200, maxH: 1200, density: 'spacious' },
+        '10x9': { cols: 10, rows: 9, maxW: 1400, maxH: 1400, density: 'spacious' },
+
+        // --- Large Desktop Displays ---
+        '7x4':  { cols: 7, rows: 4, maxW: 1400, maxH: 850, density: 'spacious' },
+        '7x5':  { cols: 7, rows: 5, maxW: 1400, maxH: 900, density: 'spacious' },
+        '9x5':  { cols: 9, rows: 5, maxW: 1500, maxH: 900, density: 'spacious' },
+        '10x6': { cols: 10, rows: 6, maxW: 1600, maxH: 1000, density: 'spacious' },
+        '12x7': { cols: 12, rows: 7, maxW: 1800, maxH: 1100, density: 'spacious' },
+        '12x9': { cols: 12, rows: 9, maxW: 1800, maxH: 1300, density: 'spacious' }
     };
 
     function getZoomFactor() {
@@ -32,39 +54,57 @@
     }
 
     function detectOptimalGridSize() {
+        if (!STANDARD_GRIDS || typeof STANDARD_GRIDS !== 'object') {
+            return '6x5';
+        }
+
         const zoom = getZoomFactor();
         const w = window.innerWidth / zoom;
         const h = window.innerHeight / zoom;
-        const isPortrait = h > w;
+        const shortSide = Math.min(w, h);
+        const screenRatio = w / Math.max(1, h);
 
-        if (isPortrait) {
-            // Large tablet portrait (iPad 768x1024 or larger)
-            if (w >= 650 && h >= 780) {
-                return '6x6';
-            }
-            // Standard phone portrait (iPhone, etc.)
-            if (h >= 640) {
-                return '4x6';
-            }
-            // Compact portrait
-            return '4x5';
-        }
+        const isSquareish = screenRatio >= 0.80 && screenRatio <= 1.25;
+        const isPortrait = !isSquareish && h > w;
 
-        // Landscape / Tablet / Desktop
-        // Ultra-large display / 4K monitor
-        if (w >= 1350 && h >= 880) {
-            return '8x12';
-        }
-        // Wide desktop / high-res landscape
-        if (w >= 1150 && h >= 680) {
-            return '8x6';
-        }
-        // Standard iPad / tablet landscape
-        if (w >= 780 && h >= 580) {
-            return '6x5';
-        }
-        // Compact landscape / short viewport / zoomed landscape (e.g. 928x548 screen where zoomed h is < 580)
-        return '4x5';
+        const entries = Object.entries(STANDARD_GRIDS);
+
+        // 1. Filter presets by orientation
+        let candidates = entries.filter(([_, cfg]) => {
+            if (isSquareish) return cfg.maxW === cfg.maxH || cfg.cols === cfg.rows;
+            if (isPortrait) return cfg.maxW < cfg.maxH || cfg.rows > cfg.cols;
+            return cfg.maxW > cfg.maxH || cfg.cols > cfg.rows;
+        });
+
+        if (candidates.length === 0) candidates = entries;
+
+        // 2. Score based on target cell size and short-side capacity
+        let bestGridName = null;
+        let bestScore = Infinity;
+
+        candidates.forEach(([name, cfg]) => {
+            // Target ideal cell size (~75px to ~110px per cell)
+            const cellW = w / cfg.cols;
+            const cellH = h / cfg.rows;
+            const cellSizeScore = Math.abs(cellW - 88) + Math.abs(cellH - 88);
+
+            // Dimension alignment
+            const diffW = Math.abs(cfg.maxW - w);
+            const diffH = Math.abs(cfg.maxH - h);
+
+            // Aspect ratio deviation
+            const gridAspect = cfg.cols / Math.max(1, cfg.rows);
+            const aspectDiff = Math.abs(screenRatio - gridAspect);
+
+            const score = cellSizeScore * 2 + (diffW + diffH) * 0.5 + aspectDiff * 100;
+
+            if (score < bestScore) {
+                bestScore = score;
+                bestGridName = name;
+            }
+        });
+
+        return bestGridName || Object.keys(STANDARD_GRIDS)[0] || '6x5';
     }
 
     function applyGridSize(gridName) {
@@ -421,27 +461,53 @@
         };
     }
 
-    // --- Custom 2D Packing Positioning Engine (iPadOS Spacing) ---
+    // --- Custom 2D Packing Positioning Engine (iPadOS Spacing & 1:1 Proportions) ---
     function computePageLayout(items, cols, rows, W, H) {
         const occupied = Array.from({ length: rows }, () => Array(cols).fill(false));
         const layout = [];
 
+        // 1. Initial outer padding
         const padX = Math.max(16, Math.floor(W * 0.03));
         const padY = Math.max(16, Math.floor(H * 0.03));
-        const availW = W - 2 * padX;
-        const availH = H - 2 * padY;
+        const availW = Math.max(100, W - 2 * padX);
+        const availH = Math.max(100, H - 2 * padY);
 
-        const cellW = Math.floor(availW / cols);
-        const cellH = Math.floor(availH / rows);
+        // 2. Minimum base gap allowance
+        const minGap = 10;
 
-        const gapX = Math.max(8, Math.min(18, Math.floor(cellW * 0.12)));
-        const gapY = Math.max(8, Math.min(18, Math.floor(cellH * 0.12)));
+        // 3. Calculate max square unit size that fits both horizontally and vertically
+        const maxUnitW = Math.floor((availW - Math.max(0, cols - 1) * minGap) / Math.max(1, cols));
+        const maxUnitH = Math.floor((availH - Math.max(0, rows - 1) * minGap) / Math.max(1, rows));
 
-        const extraX = Math.floor((availW - (cols * cellW)) / 2);
-        const extraY = Math.floor((availH - (rows * cellH)) / 2);
-        const startX = padX + extraX;
-        const startY = padY + extraY;
+        // Base 1:1 square cell size (NEVER stretched)
+        const baseSize = Math.max(48, Math.min(maxUnitW, maxUnitH));
 
+        // 4. Adjust the gaps between columns and rows to absorb the remaining space
+        const totalUnitsW = cols * baseSize;
+        const totalUnitsH = rows * baseSize;
+
+        const remainingW = Math.max(0, availW - totalUnitsW);
+        const remainingH = Math.max(0, availH - totalUnitsH);
+
+        let gapX = cols > 1 ? Math.floor(remainingW / (cols - 1)) : 0;
+        let gapY = rows > 1 ? Math.floor(remainingH / (rows - 1)) : 0;
+
+        // Cap extreme vertical gaps on tall displays and vertically center the page
+        const maxAllowedGapY = Math.max(48, Math.floor(baseSize * 0.85));
+        let extraPadY = 0;
+        if (gapY > maxAllowedGapY && rows > 1) {
+            extraPadY = Math.floor((remainingH - maxAllowedGapY * (rows - 1)) / 2);
+            gapY = maxAllowedGapY;
+        }
+
+        // Center the entire grid within the available area
+        const extraX = Math.floor((remainingW - gapX * Math.max(0, cols - 1)) / 2);
+        const extraY = extraPadY > 0 ? extraPadY : Math.floor((remainingH - gapY * Math.max(0, rows - 1)) / 2);
+
+        const startX = padX + Math.max(0, extraX);
+        const startY = padY + Math.max(0, extraY);
+
+        // 5. Place and size items
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
             let spanCols = 1;
@@ -492,10 +558,32 @@
                     }
                 }
 
-                const x = startX + placedC * cellW + Math.floor(gapX / 2);
-                const y = startY + placedR * cellH + Math.floor(gapY / 2);
-                const w = spanCols * cellW - gapX;
-                const h = spanRows * cellH - gapY;
+                // Allocated slot area
+                const slotW = spanCols * baseSize + (spanCols - 1) * gapX;
+                const slotH = spanRows * baseSize + (spanRows - 1) * gapY;
+
+                let w = slotW;
+                let h = slotH;
+
+                // Enforce strict 1:1 and 2:1 aspect ratios
+                if (spanCols === spanRows) {
+                    // 1x1 apps/folders, 2x2 small widgets/stickers, 4x4 large widgets -> Perfect 1/1
+                    const side = Math.min(slotW, slotH);
+                    w = side;
+                    h = side;
+                } else if (spanCols === 4 && spanRows === 2) {
+                    // 4x2 medium widgets -> Perfect 2:1
+                    const targetH = Math.min(slotH, Math.floor(slotW / 2));
+                    h = targetH;
+                    w = targetH * 2;
+                }
+
+                // Center the item inside its allocated slot
+                const offsetX = Math.floor((slotW - w) / 2);
+                const offsetY = Math.floor((slotH - h) / 2);
+
+                const x = startX + placedC * (baseSize + gapX) + offsetX;
+                const y = startY + placedR * (baseSize + gapY) + offsetY;
 
                 layout.push({
                     item,
@@ -520,14 +608,14 @@
                     spanRows: 1,
                     x: startX,
                     y: startY,
-                    w: cellW - gapX,
-                    h: cellH - gapY,
+                    w: baseSize,
+                    h: baseSize,
                     overflow: true
                 });
             }
         }
 
-        return { layout, cellW, cellH, gapX, gapY, padX, padY };
+        return { layout, cellW: baseSize, cellH: baseSize, gapX, gapY, padX, padY };
     }
 
     // --- Rendering Minihompy Pages ---
@@ -779,11 +867,19 @@
         const cellW = entry ? entry.w : 120;
         const cellH = entry ? entry.h : 85;
 
+        // Label occupies font-size plus margin-top.
+        // Adapt spacing and font size to prevent crowding the icon.
         const labelGap = Math.max(4, Math.min(14, Math.floor(cellH * 0.08)));
         const approxLabelH = cellH < 75 ? 16 : 20;
         const availH = Math.max(30, cellH - approxLabelH - labelGap);
         const availW = Math.max(30, Math.floor(cellW * 0.72));
-        const iconSize = Math.min(72, availW, availH);
+
+        // Allow larger icons on larger screens.
+        const maxIconSize = cellH >= 130 ? 100
+                        : cellH >= 95  ? 84
+                        : 64;
+
+        const iconSize = Math.min(maxIconSize, availW, availH);
 
         const previewBox = document.createElement('div');
         previewBox.className = 'folder-preview-box';

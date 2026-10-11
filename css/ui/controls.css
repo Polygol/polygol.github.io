@@ -162,6 +162,11 @@
         display: none;
     }
 
+    .notification-shade {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+
     .modal-right-pane:has(.notification-shade:empty)::before {
         content: var(--no-notifications-text, 'No notifications');
         display: flex;

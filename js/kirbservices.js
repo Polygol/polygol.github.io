@@ -452,70 +452,143 @@ function resetAdTimer() {
 }
 
 function setupAdGestures(element) {
-    const handleStart = (x) => {
-        isAdDragging = true;
+    let isAdDragging = false;
+    let adStartX = 0;
+    let adCurrentX = 0;
+    let startY = 0;
+    let isHorizontalSwipe = false;
+
+    const INTERACTIVE_SELECTOR = [
+        'button',
+        'a',
+        'input',
+        'textarea',
+        'select',
+        'label',
+        '[role="button"]',
+        '[contenteditable="true"]',
+        '[data-no-swipe]'
+    ].join(',');
+
+    const handleStart = (x, y, target) => {
+        // Don't interfere with buttons or other interactive elements
+        if (target.closest(INTERACTIVE_SELECTOR)) return;
+
         adStartX = x;
-        element.style.transition = 'none';
-        // Pause rotation while user interacts
+        adCurrentX = x;
+        startY = y;
+        isHorizontalSwipe = false;
+        isAdDragging = true;
+
         if (adTimer) clearInterval(adTimer);
     };
 
-    const handleMove = (x) => {
+    const handleMove = (x, y) => {
         if (!isAdDragging) return;
+
+        const diffX = x - adStartX;
+        const diffY = y - startY;
+
+        // Wait for intentional horizontal movement
+        if (!isHorizontalSwipe) {
+            if (Math.abs(diffX) < 8 && Math.abs(diffY) < 8) return;
+
+            // Allow normal vertical scrolling
+            if (Math.abs(diffY) > Math.abs(diffX)) {
+                isAdDragging = false;
+                resetAdTimer();
+                return;
+            }
+
+            isHorizontalSwipe = true;
+            element.style.transition = 'none';
+        }
+
         adCurrentX = x;
-        const diff = adCurrentX - adStartX;
-        
-        // Visual Feedback
-        element.style.transform = `translateX(${diff}px)`;
-        
-        // Opacity fade based on distance
-        const opacity = 1 - (Math.abs(diff) / 300);
+
+        element.style.transform = `translateX(${diffX}px)`;
+
+        const opacity = 1 - Math.abs(diffX) / 300;
         element.style.opacity = Math.max(0, opacity);
     };
 
     const handleEnd = () => {
         if (!isAdDragging) return;
+
         isAdDragging = false;
-        element.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+
+        // A click or an incomplete gesture should do nothing
+        if (!isHorizontalSwipe) return;
+
+        element.style.transition =
+            'transform 0.3s ease, opacity 0.3s ease';
 
         const diff = adCurrentX - adStartX;
-        const threshold = 80; // px to trigger action
+        const threshold = 80;
 
         if (diff < -threshold) {
             // Swipe LEFT -> Next Ad
             const activeAd = adQueue[0];
+
             if (activeAd) {
-                window.Analytics?.trackEvent('ad-next', { 
-                    path: `/ads/next/${activeAd.id}`, 
-                    title: `Ad Swipe Next: ${activeAd.name}` 
+                window.Analytics?.trackEvent('ad-next', {
+                    path: `/ads/next/${activeAd.id}`,
+                    title: `Ad Swipe Next: ${activeAd.name}`
                 });
             }
+
             element.style.transform = 'translateX(-120%)';
             element.style.opacity = '0';
+
             setTimeout(nextAd, 300);
+
         } else if (diff > threshold) {
             // Swipe RIGHT -> Confirm Block
             element.style.transform = 'translateX(120%)';
             element.style.opacity = '0';
+
             closeControls();
-            // Wait for animation to finish before showing dialog
+
             setTimeout(() => confirmBlockAd(element), 300);
+
         } else {
             // Snap Back
             element.style.transform = 'translateX(0)';
             element.style.opacity = '1';
+
             resetAdTimer();
         }
     };
 
-    // Touch
-    element.addEventListener('touchstart', e => handleStart(e.touches[0].clientX), {passive: true});
-    element.addEventListener('touchmove', e => handleMove(e.touches[0].clientX), {passive: true});
-    element.addEventListener('touchend', handleEnd);
+    // Touch events
+    element.addEventListener('touchstart', e => {
+        const touch = e.touches[0];
+        handleStart(touch.clientX, touch.clientY, e.target);
+    }, { passive: true });
 
-    // Mouse
-    element.addEventListener('mousedown', e => { e.preventDefault(); handleStart(e.clientX); });
-    document.addEventListener('mousemove', e => { if(isAdDragging) { e.preventDefault(); handleMove(e.clientX); } });
+    element.addEventListener('touchmove', e => {
+        if (!isAdDragging) return;
+
+        const touch = e.touches[0];
+        handleMove(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    element.addEventListener('touchend', handleEnd);
+    element.addEventListener('touchcancel', handleEnd);
+
+    // Mouse events
+    element.addEventListener('mousedown', e => {
+        if (e.button !== 0) return;
+
+        handleStart(e.clientX, e.clientY, e.target);
+    });
+
+    document.addEventListener('mousemove', e => {
+        if (!isAdDragging) return;
+
+        handleMove(e.clientX, e.clientY);
+    });
+
     document.addEventListener('mouseup', handleEnd);
 }
 
