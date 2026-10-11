@@ -4678,6 +4678,6 @@ window.kirbAI = Polygol.ai;
 window.GURAPP_STRINGS = _polygolappStrings;
 
 // Announce that the API is ready
-window.GURASURAISU_API_READY = true;
+window.POLYGOL_API_READY = true;
 const readyEvent = new CustomEvent('PolygolReady');
 window.dispatchEvent(readyEvent);

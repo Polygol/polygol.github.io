@@ -194,18 +194,28 @@ body.home-activities-visible:has(#home-activity-container.pos-tr) #dynamic-area 
 }
 
 .persistent-clock-actions {
-    position: fixed;
-    top: 16px;
-    right: 16px;
+position: fixed;
+    top: 10px;
+    right: auto;
     padding: 8px;
     z-index: 9996;
-    gap: 12px;
-    transform-origin: right;
+    gap: 8px;
+    transform-origin: top;
     transform: scale(0.9);
     filter: blur(2.5px);
     opacity: 0;
     transition: transform 0.2s ease, opacity 0.2s ease;
     pointer-events: none;
+    background-color: var(--search-background);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow);
+    border-radius: 50px;
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
+}
+
+.persistent-clock-actions .btn-qc {
+    width: 50px;
+    height: 32px;
 }
 
 #quick-action-minimize,

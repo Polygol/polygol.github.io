@@ -1257,7 +1257,7 @@ function initializeSettingsApp() {
 // This is the foolproof entry point. It checks if the API is already loaded.
 // If yes, it runs the app logic immediately.
 // If not, it waits for the event. This covers all timing scenarios.
-if (window.GURASURAISU_API_READY) {
+if (window.POLYGOL_API_READY) {
     initializeSettingsApp();
 } else {
     window.addEventListener('PolygolReady', initializeSettingsApp, { once: true });
