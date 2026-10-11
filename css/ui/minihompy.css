@@ -18,7 +18,7 @@ body.beginnings-active #minihompy-container {
     transform: scale(0.92) translateY(20px) !important;
 }
 
-body.beginnings-active .widget-grid {
+body.home-screen-active:not(.beginnings-active) .widget-grid {
     opacity: 0 !important;
     pointer-events: none !important;
 }
