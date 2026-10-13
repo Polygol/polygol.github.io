@@ -796,7 +796,22 @@ const LANG_EN = {
     "BOOKMARKS": "Bookmarks",
     "ADD_SHORTCUT": "Add Shortcut",
     "TABS": "Tabs",
-    "SEARCH_OR_TYPE_URL": "Search or type URL"
+    "SEARCH_OR_TYPE_URL": "Search or type URL",
+    "SHOW_DATE": "Date Visibility",
+    "SHOW_CLOCK": "Clock Visibility",
+    "CLOCK_STRETCH": "Clock Stretch",
+    "CLOCK_BACKGROUND": "Clock Background",
+    "CLOCK_WIDGETS": "Clock Widgets",
+    "ALIGN_HINT": "Drag clock • Hold date to decouple",
+    "DEPTH_EFFECT": "Depth Effect",
+    "ENABLE": "Enable",
+    "OPACITY": "Opacity",
+    "PADDING": "Padding",
+    "THEME": "Theme",
+    "LIGHT": "Light",
+    "DARK": "Dark",
+    "DATE_DECOUPLED": "Date decoupled",
+    "DATE_DOCKED": "Date docked"
 };
 
 const LANG_JP = {
@@ -1594,7 +1609,22 @@ const LANG_JP = {
     "BOOKMARKS": "ブックマーク",
     "ADD_SHORTCUT": "ショートカットを追加",
     "TABS": "タブ",
-    "SEARCH_OR_TYPE_URL": "検索またはURLを入力"
+    "SEARCH_OR_TYPE_URL": "検索またはURLを入力",
+    "SHOW_DATE": "日付の表示",
+    "SHOW_CLOCK": "時計の表示",
+    "CLOCK_STRETCH": "時計の伸縮",
+    "CLOCK_BACKGROUND": "時計の背景",
+    "CLOCK_WIDGETS": "時計ウィジェット",
+    "ALIGN_HINT": "時計をドラッグ • 日付を長押しで分離",
+    "DEPTH_EFFECT": "被写界深度",
+    "ENABLE": "有効",
+    "OPACITY": "不透明度",
+    "PADDING": "余白",
+    "THEME": "テーマ",
+    "LIGHT": "ライト",
+    "DARK": "ダーク",
+    "DATE_DECOUPLED": "日付を分離しました",
+    "DATE_DOCKED": "日付を結合しました"
 };
 const LANG_JA = LANG_JP;
 
@@ -2393,7 +2423,22 @@ const LANG_KO = {
     "BOOKMARKS": "북マク",
     "ADD_SHORTCUT": "단축키 추가",
     "TABS": "탭",
-    "SEARCH_OR_TYPE_URL": "검색 또는 URL 입력"
+    "SEARCH_OR_TYPE_URL": "검색 또는 URL 입력",
+    "SHOW_DATE": "날짜 표시",
+    "SHOW_CLOCK": "시계 표시",
+    "CLOCK_STRETCH": "시계 늘이기",
+    "CLOCK_BACKGROUND": "시계 배경",
+    "CLOCK_WIDGETS": "시계 위젯",
+    "ALIGN_HINT": "시계 드래그 • 날짜를 길게 눌러 분리",
+    "DEPTH_EFFECT": "피사체 심도",
+    "ENABLE": "활성화",
+    "OPACITY": "불투명도",
+    "PADDING": "여백",
+    "THEME": "테마",
+    "LIGHT": "라이트",
+    "DARK": "다크",
+    "DATE_DECOUPLED": "날짜가 분리되었습니다",
+    "DATE_DOCKED": "날짜가 결합되었습니다"
 };
 
 const LANG_ZH = {
@@ -3191,7 +3236,22 @@ const LANG_ZH = {
     "BOOKMARKS": "书签",
     "ADD_SHORTCUT": "添加快捷方式",
     "TABS": "标签页",
-    "SEARCH_OR_TYPE_URL": "搜索或输入网址"
+    "SEARCH_OR_TYPE_URL": "搜索或输入网址",
+    "SHOW_DATE": "日期显示",
+    "SHOW_CLOCK": "时钟显示",
+    "CLOCK_STRETCH": "时钟拉伸",
+    "CLOCK_BACKGROUND": "时钟背景",
+    "CLOCK_WIDGETS": "时钟小组件",
+    "ALIGN_HINT": "拖动时钟 • 长按日期解耦",
+    "DEPTH_EFFECT": "景深效果",
+    "ENABLE": "启用",
+    "OPACITY": "不透明度",
+    "PADDING": "内边距",
+    "THEME": "主题",
+    "LIGHT": "浅色",
+    "DARK": "深色",
+    "DATE_DECOUPLED": "日期已解耦",
+    "DATE_DOCKED": "日期已连接"
 };
 
 if (typeof window !== 'undefined') {

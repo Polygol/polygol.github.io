@@ -34,7 +34,7 @@
 
 .info.glass-effect .date,
 .clock.glass-effect>* {
-    color: var(--search-background-op) !important;
+    color: var(--glass-color, var(--search-background-op)) !important;
     background: none !important;
     /* Ensure no other backgrounds interfere */
 
@@ -45,7 +45,8 @@
     mask-image: linear-gradient(black, black);
     mask-composite: source-in;
 
-    backdrop-filter: saturate(2) blur(10px);
+    backdrop-filter: saturate(2) blur(var(--glass-blur, 10px));
+    -webkit-backdrop-filter: saturate(2) blur(var(--glass-blur, 10px));
     transition: transform 0.3s cubic-bezier(.3, 1.2, .64, 1), filter 0.3s cubic-bezier(.3, 1.2, .64, 1), font-size 0.3s cubic-bezier(.3, 1.2, .64, 1) !important;
 }
 
@@ -62,7 +63,8 @@
     mask-image: linear-gradient(black, black);
     mask-composite: source-in;
 
-    backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(1) saturate(2) blur(10px);
+    backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(var(--dynamic-contrast, 1)) saturate(2) blur(var(--dynamic-blur, 10px));
+    -webkit-backdrop-filter: invert(0.8) hue-rotate(180deg) contrast(var(--dynamic-contrast, 1)) saturate(2) blur(var(--dynamic-blur, 10px));
     transition: transform 0.3s cubic-bezier(.3, 1.2, .64, 1), filter 0.3s cubic-bezier(.3, 1.2, .64, 1), font-size 0.3s cubic-bezier(.3, 1.2, .64, 1) !important;
 }
 
@@ -84,7 +86,8 @@
     cursor: pointer;
     user-select: none;
     font-variant-numeric: tabular-nums;
-    transform: scale(1);
+    transform: scaleX(var(--clock-stretch, 1));
+    transform-origin: center center;
     transition: transform 0.3s cubic-bezier(.3, 1.2, .64, 1), filter 0.3s cubic-bezier(.3, 1.2, .64, 1), font-size 0.3s cubic-bezier(.3, 1.2, .64, 1) !important;
     position: relative;
     line-height: 1;
@@ -92,6 +95,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.container.align-left .clock {
+    transform-origin: left center;
+}
+
+.container.align-right .clock {
+    transform-origin: right center;
 }
 
 .clock .digit,
@@ -156,8 +167,56 @@ body.light-theme[style*="background-image"] .info {
 } */
 
 .clock:active {
-    transform: scale(1.04);
+    transform: scaleX(var(--clock-stretch, 1)) scale(1.04);
     filter: brightness(1.5);
+}
+
+/* Date Placement: Below Clock */
+.container.date-below {
+    flex-direction: column !important;
+}
+.container.date-below .info {
+    order: 2 !important;
+    margin-top: 12px !important;
+    margin-bottom: 0 !important;
+}
+.container.date-below #clock {
+    order: 1 !important;
+}
+
+.container:not(.date-below) .info {
+    order: 1 !important;
+}
+.container:not(.date-below) #clock {
+    order: 2 !important;
+}
+
+/* Decoupled Date */
+.container.date-decoupled .info,
+.info.is-decoupled {
+    position: fixed !important;
+    left: var(--date-pos-x, 50%) !important;
+    top: var(--date-pos-y, 40%) !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 9998 !important;
+    margin: 0 !important;
+    transition: opacity 0.35s ease, filter 0.35s ease, visibility 0.35s ease;
+}
+
+body.home-screen-active:not(.beginnings-active) .info.is-decoupled,
+body.home-screen-active:not(.beginnings-active) .container.date-decoupled .info,
+body:not(.beginnings-active):not(.edit-mode-active) .info.is-decoupled,
+body:not(.beginnings-active):not(.edit-mode-active) .container.date-decoupled .info {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+}
+
+body.beginnings-active .container.date-decoupled .info,
+body.beginnings-active .info.is-decoupled {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
 }
 
 .info {

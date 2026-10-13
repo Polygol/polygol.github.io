@@ -3397,6 +3397,8 @@ function enterEditMode(index) {
     editUI.style.display = 'block';
     
     setupEditSheetDrag();
+    if (typeof setupEditDepthToggleButton === 'function') setupEditDepthToggleButton();
+    if (typeof updateDepthButtonState === 'function') updateDepthButtonState();
 
     requestAnimationFrame(() => {
         editUI.style.opacity = '1';
@@ -3408,6 +3410,9 @@ function enterEditMode(index) {
 }
 
 function exitEditMode() {
+    if (typeof isAlignmentMode !== 'undefined' && isAlignmentMode) {
+        if (typeof exitAlignmentMode === 'function') exitAlignmentMode();
+    }
     document.body.classList.remove('edit-mode-active');
     const editUI = document.getElementById('edit-mode-ui');
     editUI.style.opacity = '0';
@@ -4131,6 +4136,8 @@ async function jumpToWallpaper(index) {
             offSwitch.checked = !(wallpaper.clockStyles.colorEnabled) && !(wallpaper.clockStyles.gradientEnabled) && !(wallpaper.clockStyles.glassEnabled) && !(wallpaper.clockStyles.clockDynamicFillEnabled);
         }
 
+        if (typeof syncControlsFromWallpaperStyles === 'function') syncControlsFromWallpaperStyles(wallpaper.clockStyles, wallpaper);
+
         applyCustomWallpaperStyles(wallpaper.clockStyles);
 
         // Apply the styles
@@ -4316,6 +4323,8 @@ function switchWallpaper(direction, skipSave = false) {
         if (document.getElementById('date-size-slider')) document.getElementById('date-size-slider').value = wallpaper.clockStyles.dateSize || '100';
         if (document.getElementById('date-offset-slider')) document.getElementById('date-offset-slider').value = wallpaper.clockStyles.dateOffset || '0';
         
+        if (typeof syncControlsFromWallpaperStyles === 'function') syncControlsFromWallpaperStyles(wallpaper.clockStyles, wallpaper);
+
         // Apply the styles
 		applyClockLayout();
         applyClockStyles();
@@ -4455,6 +4464,9 @@ function syncUiStates() {
 	const isColorActive = !document.getElementById('clock-off-switch').checked;
     document.getElementById('setting-clock-color')?.classList.toggle('active', isColorActive);
     document.getElementById('setting-clock-shadow')?.classList.toggle('active', document.getElementById('clock-shadow-switch').checked);
+    document.getElementById('setting-clock-stretch')?.classList.toggle('active', document.getElementById('clock-stretch-slider')?.value !== '100');
+    document.getElementById('setting-clock-bg')?.classList.toggle('active', !!document.getElementById('clock-bg-switch')?.checked);
+    if (typeof updateDepthButtonState === 'function') updateDepthButtonState();
 }
 
 function applyWallpaperEffects() {
@@ -4562,7 +4574,26 @@ function setupFontSelection() {
             clockStrokeColor: document.getElementById('clock-stroke-color-picker')?.value || '#000000',
             clockBlendMode: document.getElementById('clock-blend-mode-select')?.value || 'normal',
 			dateFormat: document.getElementById('date-format-input').value,
-            clockFormat: document.getElementById('clock-format-input').value
+            clockFormat: document.getElementById('clock-format-input').value,
+            showDate: document.getElementById('date-visibility-switch')?.checked !== false,
+            showClock: document.getElementById('clock-visibility-switch')?.checked !== false,
+            showClockWidgets: document.getElementById('clockwidgets-switch')?.checked !== false,
+            clockStretch: document.getElementById('clock-stretch-slider')?.value || '100',
+            clockBgEnabled: document.getElementById('clock-bg-switch')?.checked || false,
+            clockBgColor: document.getElementById('clock-bg-color-picker')?.value || '#000000',
+            clockBgOpacity: document.getElementById('clock-bg-opacity-slider')?.value || '40',
+            clockBgBlur: document.getElementById('clock-bg-blur-slider')?.value || '20',
+            clockBgRadius: document.getElementById('clock-bg-radius-slider')?.value || '28',
+            clockBgPadding: document.getElementById('clock-bg-padding-slider')?.value || '20',
+            clockGlassTheme: document.getElementById('clock-glass-theme-select')?.value || 'light',
+            clockGlassBlur: document.getElementById('clock-glass-blur-slider')?.value || '10',
+            clockGlassOpacity: document.getElementById('clock-glass-opacity-slider')?.value || '60',
+            clockDynamicContrast: document.getElementById('clock-dynamic-contrast-slider')?.value || '100',
+            clockDynamicBlur: document.getElementById('clock-dynamic-blur-slider')?.value || '10',
+            dateDecoupled: currentStyles.dateDecoupled || false,
+            datePosX: currentStyles.datePosX || '50',
+            datePosY: currentStyles.datePosY || '40',
+            datePlacement: currentStyles.datePlacement || 'above'
         };
 
 	    // Save to localStorage and broadcast each change to the settings app
@@ -4638,6 +4669,21 @@ function setupFontSelection() {
 	textCaseSelect.value = localStorage.getItem('textCase') || 'none';
 	dateSizeSlider.value = localStorage.getItem('dateSize') || '100';
 	dateOffsetSlider.value = localStorage.getItem('dateOffset') || '0';
+    if (document.getElementById('clock-visibility-switch')) document.getElementById('clock-visibility-switch').checked = localStorage.getItem('showClock') !== 'false';
+    if (document.getElementById('date-visibility-switch')) document.getElementById('date-visibility-switch').checked = localStorage.getItem('showDate') !== 'false';
+    if (document.getElementById('clockwidgets-switch')) document.getElementById('clockwidgets-switch').checked = localStorage.getItem('showClockWidgets') !== 'false';
+    if (document.getElementById('clock-stretch-slider')) document.getElementById('clock-stretch-slider').value = localStorage.getItem('clockStretch') || '100';
+    if (document.getElementById('clock-bg-switch')) document.getElementById('clock-bg-switch').checked = localStorage.getItem('clockBgEnabled') === 'true';
+    if (document.getElementById('clock-bg-color-picker')) document.getElementById('clock-bg-color-picker').value = localStorage.getItem('clockBgColor') || '#000000';
+    if (document.getElementById('clock-bg-opacity-slider')) document.getElementById('clock-bg-opacity-slider').value = localStorage.getItem('clockBgOpacity') || '40';
+    if (document.getElementById('clock-bg-blur-slider')) document.getElementById('clock-bg-blur-slider').value = localStorage.getItem('clockBgBlur') || '20';
+    if (document.getElementById('clock-bg-radius-slider')) document.getElementById('clock-bg-radius-slider').value = localStorage.getItem('clockBgRadius') || '28';
+    if (document.getElementById('clock-bg-padding-slider')) document.getElementById('clock-bg-padding-slider').value = localStorage.getItem('clockBgPadding') || '20';
+    if (document.getElementById('clock-glass-theme-select')) document.getElementById('clock-glass-theme-select').value = localStorage.getItem('clockGlassTheme') || 'light';
+    if (document.getElementById('clock-glass-blur-slider')) document.getElementById('clock-glass-blur-slider').value = localStorage.getItem('clockGlassBlur') || '10';
+    if (document.getElementById('clock-glass-opacity-slider')) document.getElementById('clock-glass-opacity-slider').value = localStorage.getItem('clockGlassOpacity') || '60';
+    if (document.getElementById('clock-dynamic-contrast-slider')) document.getElementById('clock-dynamic-contrast-slider').value = localStorage.getItem('clockDynamicContrast') || '100';
+    if (document.getElementById('clock-dynamic-blur-slider')) document.getElementById('clock-dynamic-blur-slider').value = localStorage.getItem('clockDynamicBlur') || '10';
     document.getElementById('clock-italic-switch').checked = localStorage.getItem('clockItalic') === 'true';
     document.getElementById('clock-stroke-width-slider').value = localStorage.getItem('clockStrokeWidth') || '0';
     document.getElementById('clock-stroke-color-picker').value = localStorage.getItem('clockStrokeColor') || '#000000';
@@ -4654,6 +4700,10 @@ function setupFontSelection() {
     document.getElementById('wallpaper-vignette-slider').value = initialEffects.vignette || '0';
     document.getElementById('date-format-input').value = localStorage.getItem('dateFormat') || 'ddd MMM D $(separator.dot)$ $(smart)50$';
     document.getElementById('clock-format-input').value = localStorage.getItem('clockFormat') || (document.getElementById('hour-switch').checked ? 'h:mm:ss A' : 'h:mm:ss');
+
+    if (typeof setupColorDropdownSuboptions === 'function') setupColorDropdownSuboptions();
+    if (typeof setupEditDepthToggleButton === 'function') setupEditDepthToggleButton();
+    if (typeof updateDepthButtonState === 'function') updateDepthButtonState();
 
     // --- 2. Apply the visual styles based on the now-correct state of the controls ---
     applyClockLayout();
@@ -4687,7 +4737,22 @@ function setupFontSelection() {
         document.getElementById('clock-blend-mode-select'),
         document.getElementById('wallpaper-saturate-slider'),
         document.getElementById('wallpaper-hue-slider'),
-        document.getElementById('wallpaper-vignette-slider')
+        document.getElementById('wallpaper-vignette-slider'),
+        document.getElementById('clock-visibility-switch'),
+        document.getElementById('date-visibility-switch'),
+        document.getElementById('clockwidgets-switch'),
+        document.getElementById('clock-stretch-slider'),
+        document.getElementById('clock-bg-switch'),
+        document.getElementById('clock-bg-color-picker'),
+        document.getElementById('clock-bg-opacity-slider'),
+        document.getElementById('clock-bg-blur-slider'),
+        document.getElementById('clock-bg-radius-slider'),
+        document.getElementById('clock-bg-padding-slider'),
+        document.getElementById('clock-glass-theme-select'),
+        document.getElementById('clock-glass-blur-slider'),
+        document.getElementById('clock-glass-opacity-slider'),
+        document.getElementById('clock-dynamic-contrast-slider'),
+        document.getElementById('clock-dynamic-blur-slider')
     ].filter(Boolean);
 
     allControls.forEach(control => {
@@ -4732,6 +4797,354 @@ function setupFontSelection() {
     });
 }
 
+// --- Sync Controls from Wallpaper Styles Helper ---
+function syncControlsFromWallpaperStyles(styles, wp) {
+    if (!styles) return;
+    if (document.getElementById('clock-visibility-switch')) document.getElementById('clock-visibility-switch').checked = styles.showClock !== false;
+    if (document.getElementById('date-visibility-switch')) document.getElementById('date-visibility-switch').checked = styles.showDate !== false;
+    if (document.getElementById('clockwidgets-switch')) document.getElementById('clockwidgets-switch').checked = styles.showClockWidgets !== false;
+    if (document.getElementById('clock-stretch-slider')) document.getElementById('clock-stretch-slider').value = styles.clockStretch || '100';
+    if (document.getElementById('clock-bg-switch')) document.getElementById('clock-bg-switch').checked = styles.clockBgEnabled || false;
+    if (document.getElementById('clock-bg-color-picker')) document.getElementById('clock-bg-color-picker').value = styles.clockBgColor || '#000000';
+    if (document.getElementById('clock-bg-opacity-slider')) document.getElementById('clock-bg-opacity-slider').value = styles.clockBgOpacity || '40';
+    if (document.getElementById('clock-bg-blur-slider')) document.getElementById('clock-bg-blur-slider').value = styles.clockBgBlur || '20';
+    if (document.getElementById('clock-bg-radius-slider')) document.getElementById('clock-bg-radius-slider').value = styles.clockBgRadius || '28';
+    if (document.getElementById('clock-bg-padding-slider')) document.getElementById('clock-bg-padding-slider').value = styles.clockBgPadding || '20';
+    if (document.getElementById('clock-glass-theme-select')) document.getElementById('clock-glass-theme-select').value = styles.clockGlassTheme || 'light';
+    if (document.getElementById('clock-glass-blur-slider')) document.getElementById('clock-glass-blur-slider').value = styles.clockGlassBlur || '10';
+    if (document.getElementById('clock-glass-opacity-slider')) document.getElementById('clock-glass-opacity-slider').value = styles.clockGlassOpacity || '60';
+    if (document.getElementById('clock-dynamic-contrast-slider')) document.getElementById('clock-dynamic-contrast-slider').value = styles.clockDynamicContrast || '100';
+    if (document.getElementById('clock-dynamic-blur-slider')) document.getElementById('clock-dynamic-blur-slider').value = styles.clockDynamicBlur || '10';
+    updateDepthButtonState();
+}
+
+// --- Edit Top Bar Depth Button ---
+function updateDepthButtonState() {
+    const depthBtn = document.getElementById('edit-depth-toggle-btn');
+    if (!depthBtn) return;
+    const currentWp = (recentWallpapers.length > 0 && currentWallpaperPosition >= 0) ? recentWallpapers[currentWallpaperPosition] : null;
+    const isDepthActive = !!(currentWp && currentWp.depthEnabled);
+    depthBtn.classList.toggle('active', isDepthActive);
+}
+window.updateDepthButtonState = updateDepthButtonState;
+
+function setupEditDepthToggleButton() {
+    const depthBtn = document.getElementById('edit-depth-toggle-btn');
+    if (depthBtn && !depthBtn.dataset.listenerAttached) {
+        depthBtn.dataset.listenerAttached = 'true';
+        depthBtn.addEventListener('click', () => {
+            const depthSwitch = document.getElementById('depth-effect-switch');
+            if (depthSwitch) {
+                depthSwitch.checked = !depthSwitch.checked;
+                depthSwitch.dispatchEvent(new Event('change'));
+                setTimeout(updateDepthButtonState, 50);
+            }
+        });
+    }
+}
+
+// --- Color Dropdown Sub-options ---
+function setupColorDropdownSuboptions() {
+    const glassExpandBtn = document.getElementById('clock-glass-expand-btn');
+    const glassSuboptions = document.getElementById('clock-glass-suboptions');
+    const glassSwitch = document.getElementById('clock-glass-switch');
+
+    if (glassExpandBtn && glassSuboptions && !glassExpandBtn.dataset.listenerAttached) {
+        glassExpandBtn.dataset.listenerAttached = 'true';
+        glassExpandBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = glassSuboptions.style.display === 'flex';
+            glassSuboptions.style.display = isOpen ? 'none' : 'flex';
+            glassExpandBtn.classList.toggle('open', !isOpen);
+            if (!isOpen && glassSwitch) {
+                glassSwitch.checked = true;
+                glassSwitch.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+
+    const dynamicExpandBtn = document.getElementById('clock-dynamic-expand-btn');
+    const dynamicSuboptions = document.getElementById('clock-dynamic-suboptions');
+    const dynamicSwitch = document.getElementById('clock-dynamicfill-switch');
+
+    if (dynamicExpandBtn && dynamicSuboptions && !dynamicExpandBtn.dataset.listenerAttached) {
+        dynamicExpandBtn.dataset.listenerAttached = 'true';
+        dynamicExpandBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = dynamicSuboptions.style.display === 'flex';
+            dynamicSuboptions.style.display = isOpen ? 'none' : 'flex';
+            dynamicExpandBtn.classList.toggle('open', !isOpen);
+            if (!isOpen && dynamicSwitch) {
+                dynamicSwitch.checked = true;
+                dynamicSwitch.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+}
+
+// --- Alignment Interactive Mode & Free Movement ---
+let isAlignmentMode = false;
+let alignmentDraggersAttached = false;
+
+function enterAlignmentMode() {
+    isAlignmentMode = true;
+    closeEditSheet();
+    const alignBar = document.getElementById('alignment-mode-bar');
+    if (alignBar) alignBar.style.display = 'flex';
+    document.body.classList.add('align-interactive-active');
+
+    const doneBtn = document.getElementById('align-mode-done-btn');
+    if (doneBtn && !doneBtn.dataset.listenerAttached) {
+        doneBtn.dataset.listenerAttached = 'true';
+        doneBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            exitAlignmentMode();
+        });
+    }
+    setupAlignmentDraggers();
+}
+window.enterAlignmentMode = enterAlignmentMode;
+
+function exitAlignmentMode() {
+    isAlignmentMode = false;
+    const alignBar = document.getElementById('alignment-mode-bar');
+    if (alignBar) alignBar.style.display = 'none';
+    document.body.classList.remove('align-interactive-active');
+    
+    const clock = document.getElementById('clock');
+    if (clock) clock.classList.remove('snap-target-hover');
+
+    openEditSheet('clock');
+    saveCurrentWallpaperSettings();
+    syncUiStates();
+}
+window.exitAlignmentMode = exitAlignmentMode;
+
+function setupAlignmentDraggers() {
+    if (alignmentDraggersAttached) return;
+    alignmentDraggersAttached = true;
+
+    const clockElement = document.getElementById('clock');
+    const infoElement = document.querySelector('.info');
+    const container = document.querySelector('.container');
+    if (!clockElement || !infoElement || !container) return;
+
+    // --- Clock Dragging ---
+    let clockDragging = false;
+    let clockStartX = 0, clockStartY = 0;
+    let containerStartPercentX = 50, containerStartPercentY = 50;
+
+    const onClockStart = (e) => {
+        if (!isAlignmentMode) return;
+        clockDragging = true;
+        const pt = e.touches ? e.touches[0] : e;
+        clockStartX = pt.clientX;
+        clockStartY = pt.clientY;
+        
+        const posXSlider = document.getElementById('clock-pos-x-slider');
+        const posYSlider = document.getElementById('clock-pos-y-slider');
+        containerStartPercentX = posXSlider ? parseFloat(posXSlider.value) : 50;
+        containerStartPercentY = posYSlider ? parseFloat(posYSlider.value) : 50;
+        
+        e.preventDefault();
+    };
+
+    const onClockMove = (e) => {
+        if (!clockDragging || !isAlignmentMode) return;
+        const pt = e.touches ? e.touches[0] : e;
+        const deltaX = pt.clientX - clockStartX;
+        const deltaY = pt.clientY - clockStartY;
+        
+        const deltaPercentX = (deltaX / window.innerWidth) * 100;
+        const deltaPercentY = (deltaY / window.innerHeight) * 100;
+        
+        let newX = Math.round(Math.max(5, Math.min(95, containerStartPercentX + deltaPercentX)));
+        let newY = Math.round(Math.max(5, Math.min(95, containerStartPercentY + deltaPercentY)));
+        
+        container.style.setProperty('--clock-pos-x', `${newX}%`);
+        container.style.setProperty('--clock-pos-y', `${newY}%`);
+        
+        const posXSlider = document.getElementById('clock-pos-x-slider');
+        const posYSlider = document.getElementById('clock-pos-y-slider');
+        if (posXSlider) posXSlider.value = newX;
+        if (posYSlider) posYSlider.value = newY;
+        
+        const currentStyles = (recentWallpapers.length > 0 && recentWallpapers[currentWallpaperPosition]?.clockStyles) ?
+                               recentWallpapers[currentWallpaperPosition].clockStyles : null;
+        if (currentStyles) {
+            currentStyles.clockPosX = newX.toString();
+            currentStyles.clockPosY = newY.toString();
+        }
+        e.preventDefault();
+    };
+
+    const onClockEnd = () => {
+        if (!clockDragging) return;
+        clockDragging = false;
+        saveCurrentWallpaperSettings();
+    };
+
+    clockElement.addEventListener('mousedown', onClockStart);
+    clockElement.addEventListener('touchstart', onClockStart, { passive: false });
+    window.addEventListener('mousemove', onClockMove, { passive: false });
+    window.addEventListener('touchmove', onClockMove, { passive: false });
+    window.addEventListener('mouseup', onClockEnd);
+    window.addEventListener('touchend', onClockEnd);
+
+    // --- Date Dragging & Decoupling ---
+    let dateDragging = false;
+    let dateDecoupleTimer = null;
+    let holdStartX = 0, holdStartY = 0;
+    let dateStartPercentX = 50, dateStartPercentY = 40;
+
+    const onDateStart = (e) => {
+        if (!isAlignmentMode) return;
+        dateDragging = true;
+        const pt = e.touches ? e.touches[0] : e;
+        holdStartX = pt.clientX;
+        holdStartY = pt.clientY;
+
+        const currentStyles = (recentWallpapers.length > 0 && recentWallpapers[currentWallpaperPosition]?.clockStyles) ?
+                               recentWallpapers[currentWallpaperPosition].clockStyles : {};
+        const isDecoupled = !!currentStyles.dateDecoupled;
+
+        if (isDecoupled) {
+            dateStartPercentX = parseFloat(currentStyles.datePosX || '50');
+            dateStartPercentY = parseFloat(currentStyles.datePosY || '40');
+        } else {
+            // Start hold timer to decouple
+            dateDecoupleTimer = setTimeout(() => {
+                const rect = infoElement.getBoundingClientRect();
+                const initX = Math.round(((rect.left + rect.width / 2) / window.innerWidth) * 100);
+                const initY = Math.round(((rect.top + rect.height / 2) / window.innerHeight) * 100);
+
+                currentStyles.dateDecoupled = true;
+                currentStyles.datePosX = initX.toString();
+                currentStyles.datePosY = initY.toString();
+                dateStartPercentX = initX;
+                dateStartPercentY = initY;
+
+                container.classList.add('date-decoupled');
+                infoElement.classList.add('is-decoupled');
+                infoElement.style.setProperty('--date-pos-x', `${initX}%`);
+                infoElement.style.setProperty('--date-pos-y', `${initY}%`);
+
+                infoElement.classList.remove('date-popped');
+                void infoElement.offsetWidth;
+                infoElement.classList.add('date-popped');
+
+                if (navigator.vibrate) navigator.vibrate(60);
+                if (typeof showPopup === 'function') showPopup(window.t('DATE_DECOUPLED'));
+            }, 400);
+        }
+
+        e.preventDefault();
+    };
+
+    const onDateMove = (e) => {
+        if (!dateDragging || !isAlignmentMode) return;
+        const pt = e.touches ? e.touches[0] : e;
+        const currentStyles = (recentWallpapers.length > 0 && recentWallpapers[currentWallpaperPosition]?.clockStyles) ?
+                               recentWallpapers[currentWallpaperPosition].clockStyles : {};
+        const isDecoupled = !!currentStyles.dateDecoupled;
+
+        if (!isDecoupled) {
+            // Check if finger moved sufficiently to cancel decouple
+            const movedDist = Math.hypot(pt.clientX - holdStartX, pt.clientY - holdStartY);
+            if (movedDist > 15 && dateDecoupleTimer) {
+                clearTimeout(dateDecoupleTimer);
+                dateDecoupleTimer = null;
+            }
+
+            // User can drag date above or below clock without decoupling
+            const clockRect = clockElement.getBoundingClientRect();
+            if (pt.clientY > clockRect.bottom - 10) {
+                currentStyles.datePlacement = 'below';
+                container.classList.add('date-below');
+            } else if (pt.clientY < clockRect.top + 10) {
+                currentStyles.datePlacement = 'above';
+                container.classList.remove('date-below');
+            }
+        } else {
+            // Date is decoupled: move freely across screen
+            const deltaX = pt.clientX - holdStartX;
+            const deltaY = pt.clientY - holdStartY;
+            const deltaPercentX = (deltaX / window.innerWidth) * 100;
+            const deltaPercentY = (deltaY / window.innerHeight) * 100;
+
+            let newX = Math.round(Math.max(5, Math.min(95, dateStartPercentX + deltaPercentX)));
+            let newY = Math.round(Math.max(5, Math.min(95, dateStartPercentY + deltaPercentY)));
+
+            infoElement.style.setProperty('--date-pos-x', `${newX}%`);
+            infoElement.style.setProperty('--date-pos-y', `${newY}%`);
+            currentStyles.datePosX = newX.toString();
+            currentStyles.datePosY = newY.toString();
+
+            // Check if hovering over clock to snap back
+            const clockRect = clockElement.getBoundingClientRect();
+            const clockCenterX = clockRect.left + clockRect.width / 2;
+            const clockCenterY = clockRect.top + clockRect.height / 2;
+            const dist = Math.hypot(pt.clientX - clockCenterX, pt.clientY - clockCenterY);
+            const isNearClock = dist < 120 || (
+                pt.clientX >= clockRect.left - 25 && pt.clientX <= clockRect.right + 25 &&
+                pt.clientY >= clockRect.top - 35 && pt.clientY <= clockRect.bottom + 35
+            );
+
+            if (isNearClock) {
+                clockElement.classList.add('snap-target-hover');
+            } else {
+                clockElement.classList.remove('snap-target-hover');
+            }
+        }
+        e.preventDefault();
+    };
+
+    const onDateEnd = (e) => {
+        if (!dateDragging) return;
+        dateDragging = false;
+        if (dateDecoupleTimer) {
+            clearTimeout(dateDecoupleTimer);
+            dateDecoupleTimer = null;
+        }
+
+        const currentStyles = (recentWallpapers.length > 0 && recentWallpapers[currentWallpaperPosition]?.clockStyles) ?
+                               recentWallpapers[currentWallpaperPosition].clockStyles : {};
+
+        // If hovering over clock, snap date back!
+        if (clockElement.classList.contains('snap-target-hover')) {
+            clockElement.classList.remove('snap-target-hover');
+            currentStyles.dateDecoupled = false;
+            container.classList.remove('date-decoupled');
+            infoElement.classList.remove('is-decoupled');
+            infoElement.style.removeProperty('--date-pos-x');
+            infoElement.style.removeProperty('--date-pos-y');
+
+            const pt = e.changedTouches ? e.changedTouches[0] : e;
+            const clockRect = clockElement.getBoundingClientRect();
+            const clockCenterY = clockRect.top + clockRect.height / 2;
+            if (pt && pt.clientY > clockCenterY) {
+                currentStyles.datePlacement = 'below';
+                container.classList.add('date-below');
+            } else {
+                currentStyles.datePlacement = 'above';
+                container.classList.remove('date-below');
+            }
+
+            if (navigator.vibrate) navigator.vibrate([30, 30, 60]);
+            if (typeof showPopup === 'function') showPopup(window.t('DATE_DOCKED'));
+        }
+
+        saveCurrentWallpaperSettings();
+    };
+
+    infoElement.addEventListener('mousedown', onDateStart);
+    infoElement.addEventListener('touchstart', onDateStart, { passive: false });
+    window.addEventListener('mousemove', onDateMove, { passive: false });
+    window.addEventListener('touchmove', onDateMove, { passive: false });
+    window.addEventListener('mouseup', onDateEnd);
+    window.addEventListener('touchend', onDateEnd);
+}
+
 // Handle layout (size and position)
 function applyClockLayout() {
     const container = document.querySelector('.container');
@@ -4743,19 +5156,52 @@ function applyClockLayout() {
     const alignmentSelect = document.getElementById('alignment-select');
 
     // 1. Apply Size
-    const sizeValue = parseInt(sizeSlider.value, 10);
-    const sizeMultiplier = 1 + (sizeValue / 100);
-    container.style.setProperty('--clock-size-multiplier', sizeMultiplier);
+    if (sizeSlider) {
+        const sizeValue = parseInt(sizeSlider.value, 10);
+        const sizeMultiplier = 1 + (sizeValue / 100);
+        container.style.setProperty('--clock-size-multiplier', sizeMultiplier);
+    }
 
     // 2. Apply Position from sliders
-    container.style.setProperty('--clock-pos-x', `${posXSlider.value}%`);
-    container.style.setProperty('--clock-pos-y', `${posYSlider.value}%`);
+    if (posXSlider && posYSlider) {
+        container.style.setProperty('--clock-pos-x', `${posXSlider.value}%`);
+        container.style.setProperty('--clock-pos-y', `${posYSlider.value}%`);
+    }
 
     // 3. Apply Alignment from preset dropdown
     container.classList.remove('align-left', 'align-right');
-    const alignment = alignmentSelect.value;
-    if (alignment === 'left' || alignment === 'right') {
-        container.classList.add(`align-${alignment}`);
+    if (alignmentSelect) {
+        const alignment = alignmentSelect.value;
+        if (alignment === 'left' || alignment === 'right') {
+            container.classList.add(`align-${alignment}`);
+        }
+    }
+
+    // 4. Decoupled Date & Date Placement
+    const currentStyles = (recentWallpapers.length > 0 && recentWallpapers[currentWallpaperPosition] && recentWallpapers[currentWallpaperPosition].clockStyles) ?
+                           recentWallpapers[currentWallpaperPosition].clockStyles : {};
+    const info = document.querySelector('.info');
+
+    if (currentStyles.dateDecoupled) {
+        container.classList.add('date-decoupled');
+        if (info) {
+            info.classList.add('is-decoupled');
+            info.style.setProperty('--date-pos-x', `${currentStyles.datePosX || '50'}%`);
+            info.style.setProperty('--date-pos-y', `${currentStyles.datePosY || '40'}%`);
+        }
+    } else {
+        container.classList.remove('date-decoupled');
+        if (info) {
+            info.classList.remove('is-decoupled');
+            info.style.removeProperty('--date-pos-x');
+            info.style.removeProperty('--date-pos-y');
+        }
+    }
+
+    if (currentStyles.datePlacement === 'below') {
+        container.classList.add('date-below');
+    } else {
+        container.classList.remove('date-below');
     }
 }
 
@@ -4792,6 +5238,53 @@ function applyClockStyles() {
     const currentStyles = (recentWallpapers.length > 0 && recentWallpapers[currentWallpaperPosition] && recentWallpapers[currentWallpaperPosition].clockStyles) ?
                            recentWallpapers[currentWallpaperPosition].clockStyles : {};
     
+    // --- Visibility Toggles ---
+    const dateVisibilitySwitch = document.getElementById('date-visibility-switch');
+    const isDateVisible = currentStyles.showDate !== undefined ? (currentStyles.showDate !== false && currentStyles.showDate !== 'false') : (dateVisibilitySwitch ? dateVisibilitySwitch.checked : true);
+    infoElement.style.display = isDateVisible ? '' : 'none';
+
+    const clockVisibilitySwitch = document.getElementById('clock-visibility-switch');
+    const isClockVisible = currentStyles.showClock !== undefined ? (currentStyles.showClock !== false && currentStyles.showClock !== 'false') : (clockVisibilitySwitch ? clockVisibilitySwitch.checked : true);
+    clockElement.style.display = isClockVisible ? '' : 'none';
+
+    const clockWidgetsEl = document.querySelector('.clockwidgets');
+    const clockwidgetsSwitch = document.getElementById('clockwidgets-switch');
+    const isWidgetsVisible = currentStyles.showClockWidgets !== undefined ? (currentStyles.showClockWidgets !== false && currentStyles.showClockWidgets !== 'false') : (clockwidgetsSwitch ? clockwidgetsSwitch.checked : true);
+    if (clockWidgetsEl) {
+        clockWidgetsEl.style.display = isWidgetsVisible ? '' : 'none';
+    }
+
+    // --- Clock Stretch ---
+    const stretchSlider = document.getElementById('clock-stretch-slider');
+    const stretchVal = currentStyles.clockStretch !== undefined ? currentStyles.clockStretch : (stretchSlider ? stretchSlider.value : '100');
+    clockElement.style.setProperty('--clock-stretch', (parseInt(stretchVal, 10) / 100).toString());
+
+    // --- Clock Background ---
+    const bgSwitch = document.getElementById('clock-bg-switch');
+    const isBgActive = currentStyles.clockBgEnabled !== undefined ? (currentStyles.clockBgEnabled === true || currentStyles.clockBgEnabled === 'true') : (bgSwitch ? bgSwitch.checked : false);
+    if (isBgActive) {
+        const bgColor = currentStyles.clockBgColor || document.getElementById('clock-bg-color-picker')?.value || '#000000';
+        const bgOpacity = parseInt(currentStyles.clockBgOpacity || document.getElementById('clock-bg-opacity-slider')?.value || '40', 10) / 100;
+        const bgBlur = currentStyles.clockBgBlur || document.getElementById('clock-bg-blur-slider')?.value || '20';
+        const bgRadius = currentStyles.clockBgRadius || document.getElementById('clock-bg-radius-slider')?.value || '28';
+        const bgPadding = currentStyles.clockBgPadding || document.getElementById('clock-bg-padding-slider')?.value || '20';
+        
+        const r = parseInt(bgColor.slice(1, 3), 16) || 0;
+        const g = parseInt(bgColor.slice(3, 5), 16) || 0;
+        const b = parseInt(bgColor.slice(5, 7), 16) || 0;
+        clockElement.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${bgOpacity})`;
+        clockElement.style.backdropFilter = parseInt(bgBlur, 10) > 0 ? `blur(${bgBlur}px)` : 'none';
+        clockElement.style.webkitBackdropFilter = parseInt(bgBlur, 10) > 0 ? `blur(${bgBlur}px)` : 'none';
+        clockElement.style.borderRadius = `${bgRadius}px`;
+        clockElement.style.padding = `${bgPadding}px ${Math.round(parseInt(bgPadding, 10) * 1.5)}px`;
+    } else {
+        clockElement.style.backgroundColor = '';
+        clockElement.style.backdropFilter = '';
+        clockElement.style.webkitBackdropFilter = '';
+        clockElement.style.borderRadius = '';
+        clockElement.style.padding = '';
+    }
+
     // --- Apply New Typography Settings ---
     if (spacingSlider) {
         const spacing = `${spacingSlider.value}px`;
@@ -4895,6 +5388,15 @@ function applyClockStyles() {
 	else if (document.getElementById('clock-glass-switch').checked) {
 	    clockElement.classList.add('glass-effect');
 	    infoElement.classList.add('glass-effect');
+        const glassTheme = currentStyles.clockGlassTheme || document.getElementById('clock-glass-theme-select')?.value || 'light';
+        const glassBlur = currentStyles.clockGlassBlur || document.getElementById('clock-glass-blur-slider')?.value || '10';
+        const glassOpacity = parseInt(currentStyles.clockGlassOpacity || document.getElementById('clock-glass-opacity-slider')?.value || '60', 10) / 100;
+        const colorBase = glassTheme === 'dark' ? `rgba(0, 0, 0, ${glassOpacity})` : `rgba(255, 255, 255, ${glassOpacity})`;
+        
+        clockElement.style.setProperty('--glass-color', colorBase);
+        clockElement.style.setProperty('--glass-blur', `${glassBlur}px`);
+        infoElement.style.setProperty('--glass-color', colorBase);
+        infoElement.style.setProperty('--glass-blur', `${glassBlur}px`);
 	} 
 	else if (document.getElementById('clock-gradient-switch').checked) {
 	    clockElement.classList.add('gradient-effect');
@@ -4907,6 +5409,13 @@ function applyClockStyles() {
 	else if (document.getElementById('clock-dynamicfill-switch').checked) {
 	    clockElement.classList.add('dynamic-fill-effect');
 	    infoElement.classList.add('dynamic-fill-effect');
+        const dynamicContrast = parseInt(currentStyles.clockDynamicContrast || document.getElementById('clock-dynamic-contrast-slider')?.value || '100', 10) / 100;
+        const dynamicBlur = currentStyles.clockDynamicBlur || document.getElementById('clock-dynamic-blur-slider')?.value || '10';
+        
+        clockElement.style.setProperty('--dynamic-contrast', dynamicContrast.toString());
+        clockElement.style.setProperty('--dynamic-blur', `${dynamicBlur}px`);
+        infoElement.style.setProperty('--dynamic-contrast', dynamicContrast.toString());
+        infoElement.style.setProperty('--dynamic-blur', `${dynamicBlur}px`);
 	} 
 	else if (document.getElementById('clock-color-switch').checked) {
 	    const color = document.getElementById('clock-color-picker').value;
@@ -4972,6 +5481,25 @@ function resetAndApplyDefaultClockStyles() {
         textCase: 'none',
         dateSize: '100',
         dateOffset: '0',
+        showDate: true,
+        showClock: true,
+        showClockWidgets: true,
+        clockStretch: '100',
+        clockBgEnabled: false,
+        clockBgColor: '#000000',
+        clockBgOpacity: '40',
+        clockBgBlur: '20',
+        clockBgRadius: '28',
+        clockBgPadding: '20',
+        clockGlassTheme: 'light',
+        clockGlassBlur: '10',
+        clockGlassOpacity: '60',
+        clockDynamicContrast: '100',
+        clockDynamicBlur: '10',
+        dateDecoupled: false,
+        datePosX: '50',
+        datePosY: '40',
+        datePlacement: 'above',
 		customFontName: null,
         customFontUrl: null,
         customLineHeight: null,
@@ -5019,6 +5547,10 @@ function resetAndApplyDefaultClockStyles() {
 	document.getElementById('clock-pos-y-slider').value = defaultStyles.clockPosY;
     document.getElementById('date-format-input').value = defaultStyles.dateFormat;
     document.getElementById('clock-format-input').value = defaultStyles.clockFormat;
+
+    if (typeof syncControlsFromWallpaperStyles === 'function') {
+        syncControlsFromWallpaperStyles(defaultStyles);
+    }
 
 	// Update global state variables
     showSeconds = defaultStyles.showSeconds;

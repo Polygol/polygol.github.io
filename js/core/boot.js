@@ -1249,11 +1249,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Connect Popups ---
     connectGridItem('setting-clock-color', null, 'clock-color-popup');
     connectGridItem('setting-clock-shadow', null, 'shadow-controls-popup');
-    connectGridItem('setting-position', null, 'position-controls-popup');
+    connectGridItem('setting-clock-bg', null, 'clock-bg-popup');
+    
+    // Alignment free-move trigger
+    const settingPosition = document.getElementById('setting-position');
+    if (settingPosition) {
+        settingPosition.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (typeof window.enterAlignmentMode === 'function') {
+                window.enterAlignmentMode();
+            }
+        });
+    }
+    
     connectGridItem('setting-clock-stroke', null, 'stroke-controls-popup');
     connectGridItem('setting-format', null, 'format-popup');
 
     // --- Connect all other settings ---
+    connectGridItem('setting-clock-visibility', 'clock-visibility-switch');
+    connectGridItem('setting-date-visibility', 'date-visibility-switch');
+    connectGridItem('setting-clockwidgets', 'clockwidgets-switch');
+    connectGridItem('setting-clock-stretch', 'clock-stretch-slider');
     connectGridItem('setting-wallpaper-blur', 'wallpaper-blur-slider');
     connectGridItem('setting-wallpaper-brightness', 'wallpaper-brightness-slider');
     connectGridItem('setting-wallpaper-contrast-fx', 'wallpaper-contrast-slider');

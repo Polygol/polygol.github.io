@@ -11,6 +11,10 @@ const isWallpaperEditingActive = () => {
 const __clockElement = document.getElementById('clock');
 if (__clockElement) {
     __clockElement.addEventListener('click', (e) => {
+        if (document.body.classList.contains('align-interactive-active')) {
+            e.stopPropagation();
+            return;
+        }
         if (document.body.classList.contains('edit-mode-active')) {
             e.stopPropagation();
             if (typeof openEditSheet === 'function') openEditSheet('clock');
@@ -34,6 +38,10 @@ if (__clockElement) {
 const __weatherWidget = document.getElementById('weather');
 if (__weatherWidget) {
     __weatherWidget.addEventListener('click', (e) => {
+        if (document.body.classList.contains('align-interactive-active')) {
+            e.stopPropagation();
+            return;
+        }
         if (document.body.classList.contains('edit-mode-active')) {
             e.stopPropagation();
             if (typeof openEditSheet === 'function') openEditSheet('background');
@@ -50,6 +58,10 @@ if (__weatherWidget) {
 const __dateElement = document.getElementById('date');
 if (__dateElement) {
     __dateElement.addEventListener('click', (e) => {
+        if (document.body.classList.contains('align-interactive-active')) {
+            e.stopPropagation();
+            return;
+        }
         if (document.body.classList.contains('edit-mode-active')) {
             e.stopPropagation();
             if (typeof openEditSheet === 'function') openEditSheet('date');
