@@ -7,6 +7,7 @@ Object.defineProperty(window, 'currentWallpaperPosition', {
     set: function(val) { currentWallpaperPosition = val; }
 });
 let isSlideshow = false;
+let saveCurrentWallpaperSettings = async function(immediate = false) {};
 
 let WALLPAPER_PRESETS = [];
 async function fetchWallpaperPresets() {
@@ -2806,8 +2807,6 @@ function setupWallpaperInteraction() {
             t.id === 'environment-layer' ||
             t.id === 'time-of-day-overlay' ||
             t.id === 'widget-grid' ||
-            t.id === 'minihompy-container' ||
-            (t.closest && !!t.closest('#minihompy-container')) ||
             t.classList.contains('container') ||
             (t.closest && !!t.closest('.container'));
     };
@@ -2952,22 +2951,6 @@ function setupWallpaperInteraction() {
             if (longPressFired) {
                 longPressFired = false;
                 return;
-            }
-
-            // In Beginnings state: tap to enter Home screen
-            if (document.body.classList.contains('beginnings-active')) {
-                if (document.body.classList.contains('edit-mode-active') ||
-                    document.getElementById('wallpaper-switcher-overlay')?.classList.contains('show') ||
-                    document.getElementById('wallpaper-picker-drawer')?.classList.contains('open') ||
-                    document.getElementById('edit-mode-ui')?.style.display === 'block') {
-                    return; // Prevent home screen from being opened when editing wallpaper
-                }
-
-                if (typeof window.exitBeginningsState === 'function') {
-                    window._justExitedBeginnings = Date.now();
-                    window.exitBeginningsState();
-                    return;
-                }
             }
 
             const now = Date.now();
@@ -3389,8 +3372,18 @@ let editModeWallpaperIndex = -1;
 function enterEditMode(index) {
     closeWallpaperSwitcher(); // Close the switcher overlay
     
+    // Ensure app drawer and switcher are closed
+    const drawer = document.getElementById('app-drawer');
+    if (drawer && drawer.classList.contains('open')) {
+        drawer.classList.remove('open');
+        drawer.style.display = 'none';
+    }
+    if (typeof closeAppSwitcherUI === 'function') {
+        closeAppSwitcherUI();
+    }
+    
     editModeWallpaperIndex = index;
-    jumpToWallpaper(index);
+    jumpToWallpaper(index, true);
     
     document.body.classList.add('edit-mode-active');
     const editUI = document.getElementById('edit-mode-ui');
@@ -3405,6 +3398,7 @@ function enterEditMode(index) {
     });
 
     openEditSheet('background');
+    syncUiStates();
 
     showPopup(window.t('TAP_ELEMENT_SETTINGS'));
 }
@@ -3413,6 +3407,12 @@ function exitEditMode() {
     if (typeof isAlignmentMode !== 'undefined' && isAlignmentMode) {
         if (typeof exitAlignmentMode === 'function') exitAlignmentMode();
     }
+    if (typeof saveCurrentWallpaperSettings === 'function') {
+        saveCurrentWallpaperSettings(true);
+    }
+    applyClockLayout();
+    applyClockStyles();
+    applyWallpaperEffects();
     document.body.classList.remove('edit-mode-active');
     const editUI = document.getElementById('edit-mode-ui');
     editUI.style.opacity = '0';
@@ -3443,6 +3443,7 @@ function openEditSheet(target) {
 
     sheet.classList.add('open');
     sheet.style.transform = 'translateY(0) translateX(-50%)'; // Ensure it's visible if dragged down
+    syncUiStates();
 }
 
 function closeEditSheet() {
@@ -3730,11 +3731,8 @@ function resetIndicatorTimeout() {
   // 2. Check if the app drawer is open
   const isDrawerOpen = document.getElementById('app-drawer')?.classList.contains('open');
 
-  // 3. Check if Donburi is open
-  const isDonburiOpen = document.getElementById('donburi-container')?.classList.contains('open');
-
-  // 3. If either is true, force hide the indicator immediately
-  if (isAppOpen || isDrawerOpen || isDonburiOpen) {
+  // 2. If either is true, force hide the indicator immediately
+  if (isAppOpen || isDrawerOpen) {
       pageIndicator.classList.remove('persistent-mode');
       pageIndicator.classList.add('fade-out');
       return;
@@ -4020,8 +4018,12 @@ function handleDotDragEnd(e) {
 }
 
 // New function to jump to a specific wallpaper by index
-async function jumpToWallpaper(index) {
-    if (index < 0 || index >= recentWallpapers.length || index === currentWallpaperPosition) return;
+async function jumpToWallpaper(index, force = false) {
+    if (index < 0 || index >= recentWallpapers.length) return;
+    if (index === currentWallpaperPosition && !force) {
+        syncUiStates();
+        return;
+    }
 
     // Save the widget layout for the current wallpaper before switching
     saveWidgets();
@@ -4148,6 +4150,8 @@ async function jumpToWallpaper(index) {
         updateClockAndDate();
 
 		broadcastAllWallpaperSettings(wallpaper);
+    } else {
+        resetAndApplyDefaultClockStyles();
     }
         
     clearInterval(slideshowInterval);
@@ -4172,6 +4176,7 @@ async function jumpToWallpaper(index) {
     
     // updatePageIndicatorDots (false);
     resetIndicatorTimeout();
+    syncUiStates();
 }
 
 // Add a function to check if we need to load or restore default wallpaper
@@ -4335,6 +4340,8 @@ function switchWallpaper(direction, skipSave = false) {
         if (window.refreshClockUI) window.refreshClockUI();
 
 		broadcastAllWallpaperSettings(wallpaper);
+    } else {
+        resetAndApplyDefaultClockStyles();
     }
     
     // Save the position for persistence
@@ -4536,8 +4543,10 @@ function setupFontSelection() {
     const strokeColorPicker = document.getElementById('clock-stroke-color-picker');
     const blendModeSelect = document.getElementById('clock-blend-mode-select');
     
+    let saveWallpaperDebounceTimer = null;
+
     // --- Function to save all settings (triggered by user interaction) ---
-    async function saveCurrentWallpaperSettings() {
+    saveCurrentWallpaperSettings = async function(immediate = false) {
 	    const isLightMode = document.body.classList.contains('light-theme');
 	    const theme = isLightMode ? 'light' : 'dark';
 			
@@ -4596,17 +4605,9 @@ function setupFontSelection() {
             datePlacement: currentStyles.datePlacement || 'above'
         };
 
-	    // Save to localStorage and broadcast each change to the settings app
-	    for (const key in settingsFromUI) {
-	        const value = settingsFromUI[key];
-	        localStorage.setItem(key, value);
-	        broadcastSettingUpdate(key, value); // Broadcasts the update
-	    }
-
+        // Immediately update in-memory object synchronously
         if (currentWallpaper) {
-            // Merge the latest UI settings with the existing styles
             const finalSettings = { ...currentStyles, ...settingsFromUI };
-
             currentWallpaper.clockStyles = finalSettings;
 				
             // --- Handle saving theme-specific wallpaper effects ---
@@ -4624,23 +4625,44 @@ function setupFontSelection() {
                 hue: document.getElementById('wallpaper-hue-slider')?.value || '0',
                 vignette: document.getElementById('wallpaper-vignette-slider')?.value || '0'
             };
+        }
 
-            saveRecentWallpapers();
+        const persist = async () => {
+            for (const key in settingsFromUI) {
+                const value = settingsFromUI[key];
+                localStorage.setItem(key, value);
+                broadcastSettingUpdate(key, value);
+            }
 
-            // --- UPDATE IndexedDB record as well ---
-            if (currentWallpaper.id) { // Only for non-slideshow wallpapers
-                try {
-                    const wallpaperRecord = await getWallpaper(currentWallpaper.id);
-                    if (wallpaperRecord) {
-                        wallpaperRecord.clockStyles = finalSettings;
-                        await storeWallpaper(currentWallpaper.id, wallpaperRecord);
+            if (currentWallpaper) {
+                saveRecentWallpapers();
+
+                if (currentWallpaper.id) {
+                    try {
+                        const wallpaperRecord = await getWallpaper(currentWallpaper.id);
+                        if (wallpaperRecord) {
+                            wallpaperRecord.clockStyles = currentWallpaper.clockStyles;
+                            await storeWallpaper(currentWallpaper.id, wallpaperRecord);
+                        }
+                    } catch (error) {
+                        console.error("Failed to save clock styles to IndexedDB:", error);
                     }
-                } catch (error) {
-                    console.error("Failed to save clock styles to IndexedDB:", error);
                 }
             }
+        };
+
+        if (immediate) {
+            if (saveWallpaperDebounceTimer) {
+                clearTimeout(saveWallpaperDebounceTimer);
+                saveWallpaperDebounceTimer = null;
+            }
+            await persist();
+        } else {
+            if (saveWallpaperDebounceTimer) clearTimeout(saveWallpaperDebounceTimer);
+            saveWallpaperDebounceTimer = setTimeout(persist, 150);
         }
-    }
+    };
+    window.saveCurrentWallpaperSettings = saveCurrentWallpaperSettings;
 
     // --- 1. Load saved preferences and set the state of the UI controls ---
     const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#ffffff';
@@ -4705,11 +4727,16 @@ function setupFontSelection() {
     if (typeof setupEditDepthToggleButton === 'function') setupEditDepthToggleButton();
     if (typeof updateDepthButtonState === 'function') updateDepthButtonState();
 
+    if (initialWallpaper && initialWallpaper.clockStyles) {
+        syncControlsFromWallpaperStyles(initialWallpaper.clockStyles, initialWallpaper);
+    }
+
     // --- 2. Apply the visual styles based on the now-correct state of the controls ---
     applyClockLayout();
     applyClockStyles();
     applyWallpaperEffects();
     applyAlignment(alignmentSelect.value);
+    syncUiStates();
 
     // Special listener for the font dropdown to handle clearing custom fonts
     fontSelect.addEventListener('change', async () => {
@@ -4756,26 +4783,40 @@ function setupFontSelection() {
     ].filter(Boolean);
 
     allControls.forEach(control => {
-        // Use a Set to avoid duplicate event listeners for alignmentSelect
-        if(control.id === 'alignment-select' && control.dataset.listenerAttached) return;
+        if (control.dataset.listenerAttached) return;
+        control.dataset.listenerAttached = 'true';
 
+        const isRange = control.type === 'range';
         const eventType = (control.type === 'checkbox' || control.tagName === 'SELECT') ? 'change' : 'input';
-        control.addEventListener(eventType, async () => {
+
+        const onControlUpdate = (immediate = false) => {
+            saveCurrentWallpaperSettings(immediate);
             applyClockLayout();
             applyClockStyles();
 		    applyWallpaperEffects();
-            await saveCurrentWallpaperSettings();
             syncUiStates();
+        };
+
+        control.addEventListener(eventType, () => {
+            onControlUpdate(!isRange);
         });
-        if(control.id === 'alignment-select') control.dataset.listenerAttached = 'true';
+
+        if (isRange) {
+            control.addEventListener('change', () => {
+                onControlUpdate(true);
+            });
+        }
     });
 	
     // --- Special handler for Alignment Preset Dropdown ---
-    alignmentSelect.addEventListener('change', async () => {
-        applyClockLayout();
-        await saveCurrentWallpaperSettings();
-        syncUiStates();
-    });
+    if (!alignmentSelect.dataset.presetListenerAttached) {
+        alignmentSelect.dataset.presetListenerAttached = 'true';
+        alignmentSelect.addEventListener('change', async () => {
+            applyClockLayout();
+            saveCurrentWallpaperSettings(true);
+            syncUiStates();
+        });
+    }
 
     // Special logic: uncheck gradient if solid color is checked, and vice-versa
 	const radioSwitchColor = [
@@ -4787,10 +4828,11 @@ function setupFontSelection() {
 	];
 	
     radioSwitchColor.forEach(radio => {
-        if (radio) {
+        if (radio && !radio.dataset.listenerAttached) {
+            radio.dataset.listenerAttached = 'true';
             radio.addEventListener('change', async () => {
                 applyClockStyles();
-                await saveCurrentWallpaperSettings();
+                saveCurrentWallpaperSettings(true);
                 syncUiStates();
             });
         }
@@ -4799,12 +4841,12 @@ function setupFontSelection() {
 
 // --- Sync Controls from Wallpaper Styles Helper ---
 function syncControlsFromWallpaperStyles(styles, wp) {
-    if (!styles) return;
-    if (document.getElementById('clock-visibility-switch')) document.getElementById('clock-visibility-switch').checked = styles.showClock !== false;
-    if (document.getElementById('date-visibility-switch')) document.getElementById('date-visibility-switch').checked = styles.showDate !== false;
-    if (document.getElementById('clockwidgets-switch')) document.getElementById('clockwidgets-switch').checked = styles.showClockWidgets !== false;
+    if (!styles) styles = {};
+    if (document.getElementById('clock-visibility-switch')) document.getElementById('clock-visibility-switch').checked = styles.showClock !== false && styles.showClock !== 'false';
+    if (document.getElementById('date-visibility-switch')) document.getElementById('date-visibility-switch').checked = styles.showDate !== false && styles.showDate !== 'false';
+    if (document.getElementById('clockwidgets-switch')) document.getElementById('clockwidgets-switch').checked = styles.showClockWidgets !== false && styles.showClockWidgets !== 'false';
     if (document.getElementById('clock-stretch-slider')) document.getElementById('clock-stretch-slider').value = styles.clockStretch || '100';
-    if (document.getElementById('clock-bg-switch')) document.getElementById('clock-bg-switch').checked = styles.clockBgEnabled || false;
+    if (document.getElementById('clock-bg-switch')) document.getElementById('clock-bg-switch').checked = styles.clockBgEnabled === true || styles.clockBgEnabled === 'true';
     if (document.getElementById('clock-bg-color-picker')) document.getElementById('clock-bg-color-picker').value = styles.clockBgColor || '#000000';
     if (document.getElementById('clock-bg-opacity-slider')) document.getElementById('clock-bg-opacity-slider').value = styles.clockBgOpacity || '40';
     if (document.getElementById('clock-bg-blur-slider')) document.getElementById('clock-bg-blur-slider').value = styles.clockBgBlur || '20';
@@ -4816,6 +4858,7 @@ function syncControlsFromWallpaperStyles(styles, wp) {
     if (document.getElementById('clock-dynamic-contrast-slider')) document.getElementById('clock-dynamic-contrast-slider').value = styles.clockDynamicContrast || '100';
     if (document.getElementById('clock-dynamic-blur-slider')) document.getElementById('clock-dynamic-blur-slider').value = styles.clockDynamicBlur || '10';
     updateDepthButtonState();
+    syncUiStates();
 }
 
 // --- Edit Top Bar Depth Button ---
@@ -5240,34 +5283,34 @@ function applyClockStyles() {
     
     // --- Visibility Toggles ---
     const dateVisibilitySwitch = document.getElementById('date-visibility-switch');
-    const isDateVisible = currentStyles.showDate !== undefined ? (currentStyles.showDate !== false && currentStyles.showDate !== 'false') : (dateVisibilitySwitch ? dateVisibilitySwitch.checked : true);
+    const isDateVisible = dateVisibilitySwitch ? dateVisibilitySwitch.checked : (currentStyles.showDate !== undefined ? (currentStyles.showDate !== false && currentStyles.showDate !== 'false') : true);
     infoElement.style.display = isDateVisible ? '' : 'none';
 
     const clockVisibilitySwitch = document.getElementById('clock-visibility-switch');
-    const isClockVisible = currentStyles.showClock !== undefined ? (currentStyles.showClock !== false && currentStyles.showClock !== 'false') : (clockVisibilitySwitch ? clockVisibilitySwitch.checked : true);
+    const isClockVisible = clockVisibilitySwitch ? clockVisibilitySwitch.checked : (currentStyles.showClock !== undefined ? (currentStyles.showClock !== false && currentStyles.showClock !== 'false') : true);
     clockElement.style.display = isClockVisible ? '' : 'none';
 
     const clockWidgetsEl = document.querySelector('.clockwidgets');
     const clockwidgetsSwitch = document.getElementById('clockwidgets-switch');
-    const isWidgetsVisible = currentStyles.showClockWidgets !== undefined ? (currentStyles.showClockWidgets !== false && currentStyles.showClockWidgets !== 'false') : (clockwidgetsSwitch ? clockwidgetsSwitch.checked : true);
+    const isWidgetsVisible = clockwidgetsSwitch ? clockwidgetsSwitch.checked : (currentStyles.showClockWidgets !== undefined ? (currentStyles.showClockWidgets !== false && currentStyles.showClockWidgets !== 'false') : true);
     if (clockWidgetsEl) {
         clockWidgetsEl.style.display = isWidgetsVisible ? '' : 'none';
     }
 
     // --- Clock Stretch ---
     const stretchSlider = document.getElementById('clock-stretch-slider');
-    const stretchVal = currentStyles.clockStretch !== undefined ? currentStyles.clockStretch : (stretchSlider ? stretchSlider.value : '100');
+    const stretchVal = stretchSlider ? stretchSlider.value : (currentStyles.clockStretch !== undefined ? currentStyles.clockStretch : '100');
     clockElement.style.setProperty('--clock-stretch', (parseInt(stretchVal, 10) / 100).toString());
 
     // --- Clock Background ---
     const bgSwitch = document.getElementById('clock-bg-switch');
-    const isBgActive = currentStyles.clockBgEnabled !== undefined ? (currentStyles.clockBgEnabled === true || currentStyles.clockBgEnabled === 'true') : (bgSwitch ? bgSwitch.checked : false);
+    const isBgActive = bgSwitch ? bgSwitch.checked : (currentStyles.clockBgEnabled === true || currentStyles.clockBgEnabled === 'true');
     if (isBgActive) {
-        const bgColor = currentStyles.clockBgColor || document.getElementById('clock-bg-color-picker')?.value || '#000000';
-        const bgOpacity = parseInt(currentStyles.clockBgOpacity || document.getElementById('clock-bg-opacity-slider')?.value || '40', 10) / 100;
-        const bgBlur = currentStyles.clockBgBlur || document.getElementById('clock-bg-blur-slider')?.value || '20';
-        const bgRadius = currentStyles.clockBgRadius || document.getElementById('clock-bg-radius-slider')?.value || '28';
-        const bgPadding = currentStyles.clockBgPadding || document.getElementById('clock-bg-padding-slider')?.value || '20';
+        const bgColor = document.getElementById('clock-bg-color-picker')?.value || currentStyles.clockBgColor || '#000000';
+        const bgOpacity = parseInt(document.getElementById('clock-bg-opacity-slider')?.value || currentStyles.clockBgOpacity || '40', 10) / 100;
+        const bgBlur = document.getElementById('clock-bg-blur-slider')?.value || currentStyles.clockBgBlur || '20';
+        const bgRadius = document.getElementById('clock-bg-radius-slider')?.value || currentStyles.clockBgRadius || '28';
+        const bgPadding = document.getElementById('clock-bg-padding-slider')?.value || currentStyles.clockBgPadding || '20';
         
         const r = parseInt(bgColor.slice(1, 3), 16) || 0;
         const g = parseInt(bgColor.slice(3, 5), 16) || 0;
@@ -5388,9 +5431,9 @@ function applyClockStyles() {
 	else if (document.getElementById('clock-glass-switch').checked) {
 	    clockElement.classList.add('glass-effect');
 	    infoElement.classList.add('glass-effect');
-        const glassTheme = currentStyles.clockGlassTheme || document.getElementById('clock-glass-theme-select')?.value || 'light';
-        const glassBlur = currentStyles.clockGlassBlur || document.getElementById('clock-glass-blur-slider')?.value || '10';
-        const glassOpacity = parseInt(currentStyles.clockGlassOpacity || document.getElementById('clock-glass-opacity-slider')?.value || '60', 10) / 100;
+        const glassTheme = document.getElementById('clock-glass-theme-select')?.value || currentStyles.clockGlassTheme || 'light';
+        const glassBlur = document.getElementById('clock-glass-blur-slider')?.value || currentStyles.clockGlassBlur || '10';
+        const glassOpacity = parseInt(document.getElementById('clock-glass-opacity-slider')?.value || currentStyles.clockGlassOpacity || '60', 10) / 100;
         const colorBase = glassTheme === 'dark' ? `rgba(0, 0, 0, ${glassOpacity})` : `rgba(255, 255, 255, ${glassOpacity})`;
         
         clockElement.style.setProperty('--glass-color', colorBase);
@@ -5409,8 +5452,8 @@ function applyClockStyles() {
 	else if (document.getElementById('clock-dynamicfill-switch').checked) {
 	    clockElement.classList.add('dynamic-fill-effect');
 	    infoElement.classList.add('dynamic-fill-effect');
-        const dynamicContrast = parseInt(currentStyles.clockDynamicContrast || document.getElementById('clock-dynamic-contrast-slider')?.value || '100', 10) / 100;
-        const dynamicBlur = currentStyles.clockDynamicBlur || document.getElementById('clock-dynamic-blur-slider')?.value || '10';
+        const dynamicContrast = parseInt(document.getElementById('clock-dynamic-contrast-slider')?.value || currentStyles.clockDynamicContrast || '100', 10) / 100;
+        const dynamicBlur = document.getElementById('clock-dynamic-blur-slider')?.value || currentStyles.clockDynamicBlur || '10';
         
         clockElement.style.setProperty('--dynamic-contrast', dynamicContrast.toString());
         clockElement.style.setProperty('--dynamic-blur', `${dynamicBlur}px`);
@@ -5570,6 +5613,7 @@ function resetAndApplyDefaultClockStyles() {
         localStorage.setItem(key, value);
     }
     
+    syncUiStates();
     return defaultStyles;
 }
 

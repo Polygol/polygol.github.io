@@ -540,7 +540,7 @@ class AssistantCore {
                 targetUrl = apps[rawName].url;
                 displayName = rawName;
             } else if (rawName.toLowerCase() === 'music') {
-                targetUrl = '/music/index.html';
+                targetUrl = 'https://polygol.github.io/music/index.html';
                 displayName = 'Music';
             } else if (rawName.toLowerCase() === 'weather') {
                 targetUrl = 'https://polygol.github.io/weather/index.html';

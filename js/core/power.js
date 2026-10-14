@@ -154,28 +154,56 @@ function blackoutScreen() {
             blocker.addEventListener('click', exitBlackoutMode, { once: true });
             blocker.addEventListener('touchstart', exitBlackoutMode, { once: true });
 
-            // Look at display (motion) or manually tap to enter Home screen (Astatine 27.1)
-            const handleLookAtDisplay = () => {
-                exitBlackoutMode();
-                blocker.removeEventListener('mousemove', handleLookAtDisplay);
-                window.removeEventListener('devicemotion', handleDeviceMotion);
-            };
-            const handleDeviceMotion = (event) => {
-                const acc = event.accelerationIncludingGravity;
-                if (acc) {
-                    const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
-                    if (total > 12) {
-                        handleLookAtDisplay();
+            // Look at display (motion) if wakeOnMotion setting is explicitly enabled
+            if (localStorage.getItem('wakeOnMotion') === 'true') {
+                let lastAcc = null;
+                const cleanupAndWake = () => {
+                    window.removeEventListener('devicemotion', handleDeviceMotion);
+                    if (blocker) blocker.removeEventListener('mousemove', cleanupAndWake);
+                    exitBlackoutMode();
+                };
+
+                const handleDeviceMotion = (event) => {
+                    // Check linear acceleration (without gravity) if supported
+                    if (event.acceleration && (event.acceleration.x !== null || event.acceleration.y !== null)) {
+                        const mag = Math.hypot(event.acceleration.x || 0, event.acceleration.y || 0, event.acceleration.z || 0);
+                        if (mag > 4) {
+                            cleanupAndWake();
+                        }
+                        return;
                     }
-                }
-            };
-            blocker.addEventListener('mousemove', handleLookAtDisplay, { once: true });
-            window.addEventListener('devicemotion', handleDeviceMotion, { passive: true });
+                    // Otherwise compare delta of accelerationIncludingGravity
+                    const acc = event.accelerationIncludingGravity;
+                    if (acc && acc.x !== null) {
+                        if (lastAcc) {
+                            const delta = Math.abs((acc.x || 0) - lastAcc.x) +
+                                          Math.abs((acc.y || 0) - lastAcc.y) +
+                                          Math.abs((acc.z || 0) - lastAcc.z);
+                            if (delta > 6) {
+                                cleanupAndWake();
+                            }
+                        }
+                        lastAcc = { x: acc.x || 0, y: acc.y || 0, z: acc.z || 0 };
+                    }
+                };
+
+                window._blackoutMotionCleanup = () => {
+                    window.removeEventListener('devicemotion', handleDeviceMotion);
+                    if (blocker) blocker.removeEventListener('mousemove', cleanupAndWake);
+                };
+
+                blocker.addEventListener('mousemove', cleanupAndWake, { once: true });
+                window.addEventListener('devicemotion', handleDeviceMotion, { passive: true });
+            }
         }
     }, 200);
 }
 
 function exitBlackoutMode() {
+    if (typeof window._blackoutMotionCleanup === 'function') {
+        window._blackoutMotionCleanup();
+        window._blackoutMotionCleanup = null;
+    }
     window.isBlackoutActive = false;
     const iceLabel = document.getElementById('blackout-ice-info');
     if (iceLabel) iceLabel.remove();

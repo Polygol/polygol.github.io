@@ -232,37 +232,9 @@ function updateClockAndDate() {
     
     // --- Hourly Greeting Logic ---
     const updateGreetings = () => {
-        if (window.personalGreetingGenerator) {
-            window.currentPersonalGreeting = window.personalGreetingGenerator();
-        } else if (window.personalGreetingsList) {
-            window.currentPersonalGreeting = window.personalGreetingsList[Math.floor(Math.random() * window.personalGreetingsList.length)];
-        }
         window.lastGreetingHour = new Date().getHours();
         if (window.refreshClockUI) window.refreshClockUI();
     };
-
-    if (!window.currentPersonalGreeting) {
-        window.personalGreetingsList = [
-            window.t ? window.t('GREETING_WELCOME_BACK') : "Welcome back",
-            window.t ? window.t('GREETING_HELLO') : "Hello there",
-            window.t ? window.t('GREETING_YOU_GOT_THIS') : "You've got this"
-        ];
-        window.currentPersonalGreeting = window.personalGreetingsList[0];
-        window.lastGreetingHour = new Date().getHours();
-
-        fetch('/assets/text/greet/home.json')
-            .then(res => res.json())
-            .then(data => {
-                if (data.matrix) {
-                    const m = data.matrix;
-                    const pick = (arr) => arr[Math.floor(Math.random() * (arr ? arr.length : 0))];
-                    window.personalGreetingGenerator = () => `${pick(m.subjects)} ${pick(m.connectors)}, ${pick(m.attributes)}`;
-                } else if (data.greetings) {
-                    window.personalGreetingsList = data.greetings;
-                }
-                updateGreetings();
-            }).catch(e => console.warn("[System] Greet fail:", e));
-    }
 
     // Check for hour rollover to refresh greetings
     const currentHour = new Date().getHours();
@@ -292,11 +264,6 @@ function updateClockAndDate() {
                 items.push(`${weatherIconEmoji} ${weatherDegrees}`);
             }
             
-            const isPersonalGreetingSmartEnabled = localStorage.getItem('isPersonalGreetingSmartEnabled') !== 'false';
-            if (isPersonalGreetingSmartEnabled) {
-                items.push(window.currentPersonalGreeting);
-            }
-            
             const isTimeGreetingSmartEnabled = localStorage.getItem('isTimeGreetingSmartEnabled') !== 'false';
             if (isTimeGreetingSmartEnabled) {
                 items.push(timeGreeting);
@@ -317,7 +284,6 @@ function updateClockAndDate() {
                 case 'weather.degrees': res = weatherDegrees; break;
                 case 'weather.icon': res = weatherIconEmoji; break;
                 case 'greeting.time': res = timeGreeting; break;
-                case 'greeting.personal': res = window.currentPersonalGreeting; break;
                 case 'smart': res = getSmartValue(); break;
             }
 

@@ -517,7 +517,6 @@ function initializeSettingsApp() {
             'kirbServices': { iconSymbol: 'auto_awesome', url: 'internal://kirbservices', type: 'component', desc: 'Communication service with kirbIndustries' },
             'Waves': { iconSymbol: 'cell_tower', url: 'internal://waves', type: 'component', desc: 'Communication service with phone remote control' },
             'SunShadow': { iconSymbol: 'light_mode', url: 'internal://sunshadow', type: 'component', desc: 'Dynamic directional shadows based on time' },
-            'Donburi': { iconSymbol: 'dashboard', url: 'internal://donburi', type: 'component', desc: 'Dashboard and assistant menu' },
             'SystemUpdate': { iconSymbol: 'update', url: 'internal://systemupdate', type: 'component', desc: 'Background updates and caching' },
             'TitleFavicon': { iconSymbol: 'tab', url: 'internal://titlefavicon', type: 'component', desc: 'Dynamic browser tab title and icon updates' },
             'NavBlocker': { iconSymbol: 'block', url: 'internal://navblocker', type: 'component', desc: 'Prevents browser navigation' },
@@ -526,7 +525,7 @@ function initializeSettingsApp() {
         };
 
         const allApps = new Set([...Object.keys(installedAppsObj), ...Object.keys(perms)]);
-        const excludedApps = ['Settings', 'Terminal', 'Donburi', 'kirbStore', 'Apps'];
+        const excludedApps = ['Settings', 'Terminal', 'kirbStore', 'Apps'];
 
         // Render normal apps (Sorted Alphabetically)
         const sortedApps = Array.from(allApps)

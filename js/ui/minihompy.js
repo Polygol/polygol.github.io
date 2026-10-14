@@ -2,7 +2,6 @@
     let currentHomePageIndex = 0;
     let homePages = [];
     let lastScrollTime = 0;
-    let motionWakeAttached = false;
     let activeFolderContext = null;
     let isPageTransitioning = false;
 
@@ -366,9 +365,9 @@
     }
 
     function enterBeginningsState() {
+        window._enteredBeginningsTime = Date.now();
         document.body.classList.add('beginnings-active');
         document.body.classList.remove('home-screen-active', 'home-edit-active');
-        attachMotionWakeListener();
         if (typeof window.updatePersistentClock === 'function') {
             window.updatePersistentClock();
         }
@@ -381,10 +380,10 @@
     function exitBeginningsState() {
         if (!document.body.classList.contains('beginnings-active')) return;
         if (isWallpaperEditingActive()) return;
+        if (Date.now() - (window._enteredBeginningsTime || 0) < 500) return;
 
         document.body.classList.remove('beginnings-active');
         document.body.classList.add('home-screen-active');
-        detachMotionWakeListener();
 
         if (typeof window.updatePersistentClock === 'function') {
             window.updatePersistentClock();
@@ -398,6 +397,7 @@
 
     function enterHomeScreen() {
         if (isWallpaperEditingActive()) return;
+        if (Date.now() - (window._enteredBeginningsTime || 0) < 500) return;
         exitBeginningsState();
         document.body.classList.add('home-screen-active');
         autoAdaptGridSize();
@@ -407,39 +407,6 @@
         }
         if (typeof window.updateDynamicDate === 'function') {
             window.updateDynamicDate();
-        }
-    }
-
-    function attachMotionWakeListener() {
-        if (motionWakeAttached) return;
-        motionWakeAttached = true;
-
-        const onMotion = (event) => {
-            if (!document.body.classList.contains('beginnings-active')) {
-                detachMotionWakeListener();
-                return;
-            }
-            if (isWallpaperEditingActive()) return;
-
-            const acc = event.accelerationIncludingGravity;
-            if (acc) {
-                const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
-                if (total > 14) {
-                    exitBeginningsState();
-                }
-            }
-        };
-
-        window.addEventListener('devicemotion', onMotion, { passive: true });
-        window._homeMotionWakeHandler = onMotion;
-    }
-
-    function detachMotionWakeListener() {
-        if (!motionWakeAttached) return;
-        motionWakeAttached = false;
-        if (window._homeMotionWakeHandler) {
-            window.removeEventListener('devicemotion', window._homeMotionWakeHandler);
-            window._homeMotionWakeHandler = null;
         }
     }
 
@@ -1102,7 +1069,7 @@
                     if (typeof activeMediaSessionApp !== 'undefined' && activeMediaSessionApp && apps[activeMediaSessionApp]) {
                         createFullscreenEmbed(apps[activeMediaSessionApp].url);
                     } else {
-                        createFullscreenEmbed('/music/index.html');
+                        return
                     }
                 } else if (typeof createFullscreenEmbed === 'function') {
                     createFullscreenEmbed(widgetDef.openUrl);

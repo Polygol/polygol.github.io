@@ -1421,10 +1421,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 closeControls();
                 createFullscreenEmbed(appToOpen.url);
             } else {
-                // 4. If no app is found, provide a sensible default action.
-                console.warn('[Media Widget] No active or cached app found. Falling back to default Music app.');
+                // 4. If no app is found.
+                console.warn('[Media Widget] No active or cached app found.');
                 closeControls();
-                createFullscreenEmbed('/music/index.html');
+                return
             }
         }
     });

@@ -649,8 +649,7 @@ function renderWidgets() {
                     if (lastApp && apps[lastApp]) {
                         createFullscreenEmbed(apps[lastApp].url);
                     } else {
-                        // SENSIBLE FALLBACK: If no app is found, open Music
-                        createFullscreenEmbed('/music/index.html');
+                        return
                     }
                 } else {
                     // Standard app widget behavior

@@ -113,7 +113,7 @@ async function checkAppPermission(sourceAppId, targetAction, origin) {
     let status = perms[sourceAppId][requiredPerm];
 
     // Auto-grant for trusted internal system apps to prevent annoying the user
-    const systemApps = ['Settings', 'Donburi', 'kirbStore'];
+    const systemApps = ['Settings', 'kirbStore'];
     if (systemApps.includes(sourceAppId) && (origin === window.location.origin || origin.startsWith('internal://'))) {
         return true;
     }
@@ -1268,7 +1268,7 @@ window.addEventListener('message', async (event) => { // Make listener async
         // --- Core Logic ---
         // If the ready message is from apps, send ALL settings.
 	    // When sending messages back, use the correct targetOrigin
-	    if (sourceAppId === 'Settings' || sourceAppId === 'DONBURI') {
+	    if (sourceAppId === 'Settings') {
 	        Object.keys(controlIdMap).forEach(key => {
 	            const effectiveValue = getEffectiveSettingValue(key);
 	            sourceWindow.postMessage({ 
@@ -1417,7 +1417,7 @@ window.addEventListener('message', async (event) => { // Make listener async
             }
         }
         
-        if (sourceAppId && sourceAppId !== 'Donburi') {
+        if (sourceAppId) {
             let targetActivityId = specificActivityId;
             
             // If we didn't find the ID from the container, look it up by app name
@@ -1441,35 +1441,6 @@ window.addEventListener('message', async (event) => { // Make listener async
         }
         
         return;
-    }
-
-	// Donburi specialized communication
-    const donburiIframe = document.querySelector('#donburi-container iframe');
-    const isDonburiSender = donburiIframe && event.source === donburiIframe.contentWindow;
-
-    if (isDonburiSender) {
-        if (data.type === 'get-system-weather') {
-            const weatherData = JSON.parse(localStorage.getItem('lastWeatherData'));
-            if (weatherData) {
-                const code = weatherData.current.weathercode;
-                const unit = weatherData.temperatureUnit === 'fahrenheit' ? '°F' : '°C';
-                const info = weatherConditions[code] || { icon: () => 'question_mark' };
-                const iconString = info.icon();
-                const replyOrigin = event.origin === 'null' ? '*' : event.origin;
-                event.source.postMessage({
-                    type: 'system-weather-response',
-                    temp: Math.round(weatherData.current.temperature),
-                    unit: unit,
-                    icon: iconString,
-                    city: weatherData.city
-                }, replyOrigin);
-            }
-            return;
-        }
-        if (data.type === 'donburi-close') {
-            window.closeDonburi();
-            return;
-        }
     }
 
     // Check if this is an API call from a APP

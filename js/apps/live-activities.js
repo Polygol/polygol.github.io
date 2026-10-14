@@ -417,11 +417,10 @@ const HomeActivityManager = {
 	updateVisibility() {
         const hasItems = this.items.length > 0;
         const appOpen = document.body.classList.contains('app-active');
-        const donburiOpen = document.getElementById('donburi-container')?.classList.contains('open');
         const isBeginnings = document.body.classList.contains('beginnings-active') && !appOpen;
         const isMinihompy = document.body.classList.contains('home-screen-active') && !appOpen;
 
-        if (this.enabled && hasItems && !appOpen && !donburiOpen && isBeginnings && !document.body.classList.contains('blackout-active')) {
+        if (this.enabled && hasItems && !appOpen && isBeginnings && !document.body.classList.contains('blackout-active')) {
             this.container.style.display = 'flex';
             document.body.classList.add('home-activities-visible');
             // Slight delay to allow display:flex to apply before opacity transition
@@ -574,16 +573,6 @@ function startLiveActivity(appName, options) {
         notificationControl: notificationControl
     };
 
-    // Inform Donburi that a new activity has started
-    const donburiFrame = document.querySelector('#donburi-container iframe');
-    if (donburiFrame && donburiFrame.contentWindow) {
-        donburiFrame.contentWindow.postMessage({
-            type: 'system-live-activity-start',
-            appName,
-            options
-        }, getOriginFromUrl(donburiFrame.src));
-    }
-
     // If it's a homescreen activity, show the container.
     if (options.homescreen) {
         // Create Iframe for Home Activity
@@ -627,16 +616,6 @@ function updateLiveActivity(activityId, data) {
         
         // Forward to Home Screen Activity (if exists)
         HomeActivityManager.forwardMessage(activityId, data);
-
-        // REDIRECT TO DONBURI: Forward data updates
-        const donburiFrame = document.querySelector('#donburi-container iframe');
-        if (donburiFrame && donburiFrame.contentWindow) {
-            donburiFrame.contentWindow.postMessage({
-                type: 'system-live-activity-update',
-                activityId,
-                data
-            }, getOriginFromUrl(donburiFrame.src));
-        }
 		
         // Only update the island if allowed by initial start options
         if (activity.options.showInIsland !== false) {
@@ -683,15 +662,6 @@ function stopLiveActivity(activityId, fromNotification = false) {
         // 3. Remove from Registry
         // We delete it before closing the notification to ensure any side-effects don't see it as active
         delete activeLiveActivities[activityId];
-
-        // REDIRECT TO DONBURI: Inform Donburi to clear the smart area
-        const donburiFrame = document.querySelector('#donburi-container iframe');
-        if (donburiFrame && donburiFrame.contentWindow) {
-            donburiFrame.contentWindow.postMessage({
-                type: 'system-live-activity-stop',
-                activityId
-            }, getOriginFromUrl(donburiFrame.src));
-        }
 
         // 4. Close the notification shade item
         // Only do this if the stop command didn't come FROM the notification itself (e.g. swipe dismiss)

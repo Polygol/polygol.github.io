@@ -2,20 +2,38 @@
 body.edit-mode-active #dynamic-area,
 body.edit-mode-active .dock,
 body.edit-mode-active .drawer-handle,
+body.edit-mode-active .drawer-pill,
 body.edit-mode-active .nav-btn-small,
-body.edit-mode-active .page-indicator {
+body.edit-mode-active .page-indicator,
+body.edit-mode-active #navigation-bar,
+body.edit-mode-active #app-drawer,
+body.edit-mode-active #app-switcher {
     opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+body.edit-mode-active .app-icon,
+body.edit-mode-active .app-card,
+body.edit-mode-active #app-drawer,
+body.edit-mode-active #app-switcher,
+body.edit-mode-active .widget-item,
+body.edit-mode-active .dock,
+body.edit-mode-active #navigation-bar,
+body.edit-mode-active #minihompy-container,
+body.edit-mode-active #minihompy-container * {
     pointer-events: none !important;
 }
 
 body.edit-mode-active .container {
     pointer-events: auto !important;
     z-index: 9997; /* Above background but below edit UI */
+    transition: none !important;
 }
 
 body.edit-mode-active #clock,
 body.edit-mode-active .info {
     position: relative;
+    transition: none !important;
 }
 
 body.edit-mode-active #clock::after,
@@ -283,7 +301,6 @@ body.align-interactive-active .edit-top-bar {
 
 body.align-interactive-active .container {
     pointer-events: auto !important;
-    z-index: 10000 !important;
 }
 
 body.align-interactive-active #clock,

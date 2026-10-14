@@ -116,18 +116,6 @@ function _updateActiveMediaSession() {
     // Update Home Screen Activity
     HomeActivityManager.updateMediaUI(metadata, playbackState || 'paused');
 
-    // BROADCAST TO DONBURI
-    const donburiFrame = document.querySelector('#donburi-container iframe');
-    if (donburiFrame && donburiFrame.contentWindow) {
-        const targetOrigin = getOriginFromUrl(donburiFrame.src);
-        donburiFrame.contentWindow.postMessage({
-            type: 'mediaUpdate',
-            metadata: metadata,
-            appName: appName,
-            playbackState: playbackState || 'paused'
-        }, targetOrigin);
-    }
-
     // Restore the playback state (default to paused if not set)
     updateMediaWidgetState(playbackState || 'paused');
     _handleMediaInactivity(appName, playbackState || 'paused');
@@ -234,15 +222,6 @@ function updateMediaWidgetState(playbackState) {
         }
     });
 
-    // BROADCAST TO DONBURI
-    const donburiFrame = document.querySelector('#donburi-container iframe');
-    if (donburiFrame && donburiFrame.contentWindow) {
-        const targetOrigin = getOriginFromUrl(donburiFrame.src);
-        donburiFrame.contentWindow.postMessage({
-            type: 'playback-state',
-            state: playbackState
-        }, targetOrigin);
-    }
 }
 
 // This is the new function that APPs will call
@@ -364,15 +343,5 @@ function updateMediaProgress(appName, progressState) {
             if (durationEl) durationEl.textContent = formatTime(progressState.duration);
         }
 
-	    // BROADCAST TO DONBURI
-	    const donburiFrame = document.querySelector('#donburi-container iframe');
-	    if (donburiFrame && donburiFrame.contentWindow) {
-	        const targetOrigin = getOriginFromUrl(donburiFrame.src);
-	        donburiFrame.contentWindow.postMessage({
-	            type: 'mediaProgress',
-	            currentTime: progressState.currentTime,
-	            duration: progressState.duration
-	        }, targetOrigin);
-	    }
     }
 }

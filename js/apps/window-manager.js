@@ -29,7 +29,7 @@ var apps = {
 // Helper to calculate and send final volume (Master * App)
 function syncAppVolume(iframe) {
     const appId = iframe.dataset.appId;
-    if (!appId || appId === 'Donburi') return;
+    if (!appId) return;
 
     const master = (parseInt(localStorage.getItem('master_volume') || 100)) / 100;
     const appLevel = (parseInt(localStorage.getItem(`vol_${appId}`) || 100)) / 100;
@@ -67,9 +67,8 @@ function updateVolumeMixerUI() {
     };
     list.appendChild(sysItem);
 
-    // 2. Add Active Apps (Exclude Donburi)
-    const activeApps = Array.from(document.querySelectorAll('iframe[data-app-id]'))
-                            .filter(f => f.dataset.appId !== 'Donburi');
+    // 2. Add Active Apps
+    const activeApps = Array.from(document.querySelectorAll('iframe[data-app-id]'));
     
     if (activeApps.length === 0) {
         const msg = document.createElement('p');
@@ -165,7 +164,7 @@ window.loadUserInstalledApps = loadUserInstalledApps;
 
 async function installApp(appData) {
     // Prevent overwriting core system apps
-    const reservedNames = ['settings', 'kirbstore', 'donburi', 'system', 'files', 'assistant', 'tips', 'feedback', 'apps'];
+    const reservedNames = ['settings', 'kirbstore', 'system', 'files', 'assistant', 'tips', 'feedback', 'apps'];
     const normalizedName = appData.name ? appData.name.trim().toLowerCase() : '';
     
     if (reservedNames.includes(normalizedName)) {
@@ -554,6 +553,11 @@ function resetDrawerInactivityTimer() {
 }
 
 async function createFullscreenEmbed(url, options = {}) {
+    if (document.body.classList.contains('edit-mode-active')) {
+        console.warn("Apps cannot be opened during Edit Mode.");
+        return;
+    }
+
     // Save drawer state before opening app
     drawerWasOpen = appDrawer.classList.contains('open');
 	
@@ -1237,6 +1241,11 @@ async function createFullscreenEmbed(url, options = {}) {
 // Wrapper to intercept app open calls
 const originalCreateFullscreenEmbed = createFullscreenEmbed;
 createFullscreenEmbed = async function(url, options = {}) {
+    if (document.body.classList.contains('edit-mode-active')) {
+        console.warn("Apps cannot be opened during Edit Mode.");
+        return;
+    }
+
     if (url && (url.includes('assistant-for-polygol') || url === 'internal://assistant')) {
         if (window.Assistant && typeof window.Assistant.trigger === 'function') {
             window.Assistant.trigger();
@@ -1251,11 +1260,6 @@ createFullscreenEmbed = async function(url, options = {}) {
 	
     // Default options to empty object if undefined
     const { isSplitActivation = false } = options || {};
-
-    // Close Donburi dynamically when an app is opened
-    if (typeof window.closeDonburi === 'function') {
-        window.closeDonburi();
-    }
 
     // Bypass for internal calls
     if (isSplitActivation) {

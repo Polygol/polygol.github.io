@@ -55,7 +55,7 @@ async function captureAppScreenshot(url) {
 
 
 async function openAppSwitcherUI() {
-    if (isAppSwitcherOpen) return;
+    if (isAppSwitcherOpen || document.body.classList.contains('edit-mode-active')) return;
     
     // 1. Snapshot first 4 recently opened apps dynamically
     const recentEmbeds = Array.from(document.querySelectorAll('.fullscreen-embed'))
@@ -299,7 +299,7 @@ function setupAppCardGestures(card, url, container) {
 
 // --- App Switcher Functions ---
 function openAppSwitcher() {
-    if (document.body.classList.contains('immersive-active')) return;
+    if (document.body.classList.contains('immersive-active') || document.body.classList.contains('edit-mode-active')) return;
 	
     // Force Close App Drawer if it's open
     const appDrawer = document.getElementById('app-drawer');
