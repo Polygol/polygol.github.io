@@ -1,4 +1,4 @@
-// Polygol Assistant TTS (kirbAI)
+// Assistant TTS (kirbAI)
 export class LocalTTS {
     constructor() {
         this.isReady = true;

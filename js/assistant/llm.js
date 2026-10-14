@@ -1,4 +1,4 @@
-// Polygol Assistant LLM & System AI (kirbAI)
+// Assistant LLM & System AI (kirbAI)
 // Powered by asynchronous Web Worker execution with zero main-thread freezing
 
 const WORKER_CODE = `

@@ -1020,8 +1020,10 @@ function setupDrawerInteractions() {
     if (drawerHandle) {
         let qmDragging = false;
         let qmStartY = 0;
+        let lastTouchTime = 0;
 
         drawerHandle.addEventListener('touchstart', (e) => {
+            lastTouchTime = Date.now();
             if (e.touches.length !== 1) return;
             const touch = e.touches[0];
 
@@ -1037,6 +1039,7 @@ function setupDrawerInteractions() {
         }, { passive: true });
 
         drawerHandle.addEventListener('touchmove', (e) => {
+            lastTouchTime = Date.now();
             if (e.touches.length !== 1) return;
             const touch = e.touches[0];
 
@@ -1065,6 +1068,7 @@ function setupDrawerInteractions() {
         }, { passive: true });
 
         drawerHandle.addEventListener('touchend', (e) => {
+            lastTouchTime = Date.now();
             if (isQuickMenuEnabled()) {
                 if (qmDragging) {
                     qmDragging = false;
@@ -1084,6 +1088,9 @@ function setupDrawerInteractions() {
                         window.forwardClick(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
                     }
                 }
+            }
+            if (e.cancelable) {
+                e.preventDefault();
             }
         });
 
@@ -1143,6 +1150,7 @@ function setupDrawerInteractions() {
         };
 
         drawerHandle.addEventListener('mousedown', (e) => {
+            if (Date.now() - lastTouchTime < 800) return; // Prevent emulated mouse events after touch
             if (e.button !== 0) return;
             if (isQuickMenuEnabled()) {
                 if (qmTriggerBtn) return;

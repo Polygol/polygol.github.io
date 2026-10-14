@@ -1,4 +1,4 @@
-// Polygol Assistant UI (kirbAI)
+// Assistant UI (kirbAI)
 export const AssistantUI = {
     isOpen: false,
 

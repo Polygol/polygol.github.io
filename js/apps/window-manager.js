@@ -558,6 +558,10 @@ async function createFullscreenEmbed(url, options = {}) {
         return;
     }
 
+    if (typeof window.closeSpotlight === 'function') {
+        window.closeSpotlight();
+    }
+
     // Save drawer state before opening app
     drawerWasOpen = appDrawer.classList.contains('open');
 	

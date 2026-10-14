@@ -1,4 +1,4 @@
-// Polygol Assistant STT (kirbAI)
+// Assistant STT (kirbAI)
 export class LocalSTT {
     constructor() {
         this.recognition = null;

@@ -7,7 +7,8 @@ body.edit-mode-active .nav-btn-small,
 body.edit-mode-active .page-indicator,
 body.edit-mode-active #navigation-bar,
 body.edit-mode-active #app-drawer,
-body.edit-mode-active #app-switcher {
+body.edit-mode-active #app-switcher,
+body.edit-mode-active #home-spotlight-overlay {
     opacity: 0 !important;
     pointer-events: none !important;
 }

@@ -4125,7 +4125,17 @@ window.addEventListener('message', async (event) => {
             }
         }
         break;
-      case 'forward-click':
+      case 'forward-click': {
+          const now = Date.now();
+          if (typeof window._lastForwardClickTime === 'number' &&
+              now - window._lastForwardClickTime < 300 &&
+              Math.hypot(data.x - (window._lastForwardClickX || 0), data.y - (window._lastForwardClickY || 0)) < 30) {
+              break;
+          }
+          window._lastForwardClickTime = now;
+          window._lastForwardClickX = data.x;
+          window._lastForwardClickY = data.y;
+
           // Catch forwarded taps from the parent OS handle zone
           const el = document.elementFromPoint(data.x, data.y);
           if (el) {
@@ -4143,6 +4153,7 @@ window.addEventListener('message', async (event) => {
               }
           }
           break;
+      }
       case 'executeActivityIntent':
         if (data.intentName && _intentHandlers[data.intentName]) {
             _intentHandlers[data.intentName](data.parameters || {});

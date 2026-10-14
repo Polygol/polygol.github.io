@@ -1,4 +1,4 @@
-// Polygol Assistant Natural Language Processor (kirbAI)
+// Assistant Natural Language Processor (kirbAI)
 export class AssistantNLP {
     parseNumber(text) {
         if (!text) return null;

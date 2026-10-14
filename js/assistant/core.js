@@ -1,4 +1,4 @@
-// Polygol Assistant Core (kirbAI)
+// Assistant Core (kirbAI)
 import { LocalSTT } from './stt.js';
 import { LocalTTS } from './tts.js';
 import { LocalLLM } from './llm.js';
@@ -282,22 +282,30 @@ class AssistantCore {
                 }
             };
 
+            let lastTouchTime = 0;
+
             // Touch events
             handle.addEventListener('touchstart', (e) => {
+                lastTouchTime = Date.now();
                 if (e.touches.length === 1) {
                     onStart(e.touches[0].clientX, e.touches[0].clientY);
                 }
             }, { passive: true });
 
             handle.addEventListener('touchmove', (e) => {
+                lastTouchTime = Date.now();
                 if (e.touches.length === 1) {
                     onMove(e.touches[0].clientX, e.touches[0].clientY, e);
                 }
             }, { passive: false });
 
             handle.addEventListener('touchend', (e) => {
+                lastTouchTime = Date.now();
                 if (e.changedTouches.length === 1) {
                     onEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+                }
+                if (e.cancelable) {
+                    e.preventDefault();
                 }
             });
 
@@ -317,6 +325,8 @@ class AssistantCore {
             };
 
             handle.addEventListener('mousedown', (e) => {
+                if (Date.now() - lastTouchTime < 800) return; // Prevent emulated mouse events after touch
+                if (e.button !== 0) return;
                 onStart(e.clientX, e.clientY);
                 document.addEventListener('mousemove', onMouseMove);
                 document.addEventListener('mouseup', onMouseUp);

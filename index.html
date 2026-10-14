@@ -581,6 +581,27 @@
             <div class="home-folder-grid" id="home-folder-grid"></div>
         </div>
     </div>
+
+    <!-- Home Screen Spotlight Search Overlay (iPadOS Style) -->
+    <div id="home-spotlight-overlay" class="home-spotlight-overlay">
+        <div class="home-spotlight-card" id="home-spotlight-card" role="dialog" aria-modal="true" aria-label="Spotlight Search">
+            <div class="spotlight-search-bar">
+                <svg class="spotlight-search-icon" xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="10" cy="10" r="7"></circle>
+                    <line x1="21" y1="21" x2="15" y2="15"></line>
+                </svg>
+                <input type="text" id="spotlight-search-input" class="spotlight-search-input" placeholder="Search" data-lang-placeholder="SEARCH" autocomplete="off" spellcheck="false" />
+                <button id="spotlight-clear-btn" class="spotlight-action-btn" title="Clear" aria-label="Clear search" style="display: none;">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+                <button id="spotlight-mic-btn" class="spotlight-action-btn" title="Assistant" aria-label="Voice Search">
+                    <span class="material-symbols-rounded">mic</span>
+                </button>
+            </div>
+            <div class="spotlight-divider"></div>
+            <div class="spotlight-content" id="spotlight-content"></div>
+        </div>
+    </div>
     
     <!-- 500ms App Gesture Window Barrier-->
     <div id="app-gesture-barrier" class="app-gesture-barrier"></div>

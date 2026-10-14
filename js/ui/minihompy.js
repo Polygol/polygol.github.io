@@ -365,6 +365,7 @@
     }
 
     function enterBeginningsState() {
+        if (typeof closeSpotlight === 'function') closeSpotlight();
         window._enteredBeginningsTime = Date.now();
         document.body.classList.add('beginnings-active');
         document.body.classList.remove('home-screen-active', 'home-edit-active');
@@ -2337,6 +2338,10 @@
             ? forceState
             : !document.body.classList.contains('home-edit-active');
 
+        if (isEditing && typeof closeSpotlight === 'function') {
+            closeSpotlight();
+        }
+
         document.body.classList.toggle('home-edit-active', isEditing);
 
         // If a folder is open, re-render its contents to show/hide edit buttons and jiggle
@@ -2555,24 +2560,490 @@
         }
     }
 
+    // --- Spotlight Search (iPadOS Style) ---
+    let isSpotlightOpen = false;
+    let spotlightExpanded = true;
+    let spotlightSelectedIndex = -1;
+    let spotlightNavItems = [];
+
+    function evaluateMathExpression(expr) {
+        if (!expr || typeof expr !== 'string') return null;
+        const trimmed = expr.trim();
+        // Whitelist safe arithmetic characters: digits, spaces, +, -, *, /, %, ^, (, ), .
+        if (!/^[\d\s+\-*/%^().]+$/.test(trimmed)) return null;
+        if (!/[+\-*/%^]/.test(trimmed)) return null;
+        if (/[+\-*/%^]$/.test(trimmed)) return null;
+
+        let sanitized = trimmed.replace(/\^/g, '**');
+        sanitized = sanitized.replace(/(\d+(?:\.\d+)?)\s*%/g, '($1/100)');
+
+        try {
+            const fn = new Function('"use strict"; return (' + sanitized + ');');
+            const res = fn();
+            if (typeof res === 'number' && !isNaN(res) && isFinite(res)) {
+                return Math.round(res * 100000000) / 100000000;
+            }
+        } catch {
+            return null;
+        }
+        return null;
+    }
+
+    function openSpotlight() {
+        if (isSpotlightOpen) return;
+        if (isWallpaperEditingActive() || document.body.classList.contains('edit-mode-active')) return;
+
+        const overlay = document.getElementById('home-spotlight-overlay');
+        const input = document.getElementById('spotlight-search-input');
+        if (!overlay) return;
+
+        isSpotlightOpen = true;
+        overlay.classList.add('show');
+        if (input) {
+            input.value = '';
+            setTimeout(() => {
+                input.focus();
+            }, 60);
+        }
+
+        const clearBtn = document.getElementById('spotlight-clear-btn');
+        const micBtn = document.getElementById('spotlight-mic-btn');
+        if (clearBtn) clearBtn.style.display = 'none';
+        if (micBtn) micBtn.style.display = 'flex';
+
+        spotlightSelectedIndex = -1;
+        renderSpotlightSuggestions();
+    }
+
+    function closeSpotlight() {
+        if (!isSpotlightOpen) return;
+        const overlay = document.getElementById('home-spotlight-overlay');
+        const input = document.getElementById('spotlight-search-input');
+        if (overlay) overlay.classList.remove('show');
+        if (input && document.activeElement === input) {
+            input.blur();
+        }
+        isSpotlightOpen = false;
+        spotlightSelectedIndex = -1;
+        spotlightNavItems = [];
+    }
+
+    function toggleSpotlight() {
+        if (isSpotlightOpen) {
+            closeSpotlight();
+        } else {
+            openSpotlight();
+        }
+    }
+
+    function getSpotlightAppSuggestions() {
+        const allApps = getInstalledAppsListAZ();
+        let appUsage = {};
+        try {
+            appUsage = JSON.parse(localStorage.getItem('appUsage') || '{}');
+        } catch {
+            appUsage = {};
+        }
+
+        const sorted = [...allApps].sort((a, b) => {
+            const countA = appUsage[a] || 0;
+            const countB = appUsage[b] || 0;
+            if (countB !== countA) return countB - countA;
+            return a.localeCompare(b);
+        });
+
+        return sorted;
+    }
+
+    function renderSpotlightSuggestions() {
+        const content = document.getElementById('spotlight-content');
+        if (!content) return;
+        content.innerHTML = '';
+        spotlightNavItems = [];
+
+        const suggestions = getSpotlightAppSuggestions();
+        const maxCount = spotlightExpanded ? 12 : 6;
+        const displayApps = suggestions.slice(0, maxCount);
+
+        // Header
+        const header = document.createElement('div');
+        header.className = 'spotlight-section-header';
+
+        const title = document.createElement('span');
+        title.className = 'spotlight-section-title';
+        title.textContent = (window.t ? window.t('SUGGESTIONS') : null) || 'Suggestions';
+        header.appendChild(title);
+
+        if (suggestions.length > 6) {
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'spotlight-toggle-btn';
+            const toggleKey = spotlightExpanded ? 'SHOW_LESS' : 'SHOW_MORE';
+            const defaultToggleText = spotlightExpanded ? 'Show Less' : 'Show More';
+            toggleBtn.textContent = (window.t ? window.t(toggleKey) : null) || defaultToggleText;
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                spotlightExpanded = !spotlightExpanded;
+                renderSpotlightSuggestions();
+            });
+            header.appendChild(toggleBtn);
+        }
+        content.appendChild(header);
+
+        // Grid
+        const grid = document.createElement('div');
+        grid.className = 'spotlight-grid';
+
+        displayApps.forEach(appName => {
+            const info = resolveAppInfo(appName);
+            const item = document.createElement('div');
+            item.className = 'spotlight-app-item';
+            item.setAttribute('role', 'button');
+            item.tabIndex = 0;
+            item.title = appName;
+
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'app-icon-img';
+
+            const icon = document.createElement('img');
+            icon.src = info.icon;
+            icon.alt = appName;
+            icon.loading = 'lazy';
+            icon.onerror = () => { icon.src = '/assets/img/icon.svg'; };
+
+            imgContainer.appendChild(icon);
+
+            const nameEl = document.createElement('span');
+            nameEl.className = 'spotlight-app-name';
+            nameEl.textContent = appName;
+
+            item.appendChild(imgContainer);
+            item.appendChild(nameEl);
+
+            const launch = () => {
+                closeSpotlight();
+                if (typeof createFullscreenEmbed === 'function') {
+                    createFullscreenEmbed(info.url);
+                }
+            };
+
+            item.addEventListener('click', launch);
+            grid.appendChild(item);
+            spotlightNavItems.push({ element: item, action: launch });
+        });
+
+        content.appendChild(grid);
+
+        // Quick Action Row (e.g. Open Settings / Browse Files)
+        const qaDivider = document.createElement('div');
+        qaDivider.className = 'spotlight-divider';
+        content.appendChild(qaDivider);
+
+        const quickActionDef = (typeof apps !== 'undefined' && apps['Settings'])
+            ? { title: (window.t ? window.t('SUGGESTION_OPEN_SETTINGS') : null) || 'Open Settings', icon: 'settings', url: apps['Settings'].url }
+            : { title: 'Open Settings', icon: 'settings', url: '/assets/polygolapp/intl/settings/index.html' };
+
+        const qaRow = document.createElement('div');
+        qaRow.className = 'spotlight-quick-action';
+        qaRow.tabIndex = 0;
+        qaRow.innerHTML = `
+            <div class="spotlight-qa-left">
+                <div class="spotlight-qa-icon">
+                    <span class="material-symbols-rounded">${quickActionDef.icon}</span>
+                </div>
+                <span class="spotlight-qa-title">${quickActionDef.title}</span>
+            </div>
+            <span class="material-symbols-rounded spotlight-qa-action">arrow_forward_ios</span>
+        `;
+        const launchQa = () => {
+            closeSpotlight();
+            if (typeof createFullscreenEmbed === 'function') {
+                createFullscreenEmbed(quickActionDef.url);
+            }
+        };
+        qaRow.addEventListener('click', launchQa);
+        content.appendChild(qaRow);
+        spotlightNavItems.push({ element: qaRow, action: launchQa });
+    }
+
+    function renderSpotlightResults(query) {
+        const content = document.getElementById('spotlight-content');
+        if (!content) return;
+        content.innerHTML = '';
+        spotlightNavItems = [];
+
+        const q = (query || '').trim();
+        if (!q) {
+            renderSpotlightSuggestions();
+            return;
+        }
+
+        const qLower = q.toLowerCase();
+
+        // 1. Math Calculation Card
+        const mathResult = evaluateMathExpression(q);
+        if (mathResult !== null) {
+            const calcCard = document.createElement('div');
+            calcCard.className = 'spotlight-calc-card';
+            calcCard.tabIndex = 0;
+            calcCard.innerHTML = `
+                <div class="spotlight-calc-left">
+                    <div class="spotlight-calc-symbol">
+                        <span class="material-symbols-rounded">calculate</span>
+                    </div>
+                    <div class="spotlight-calc-info">
+                        <span class="spotlight-calc-val">${mathResult}</span>
+                        <span class="spotlight-calc-expr">${q}</span>
+                    </div>
+                </div>
+                <span class="material-symbols-rounded" style="color: var(--secondary-text-color); font-size: 22px;">content_copy</span>
+            `;
+            const copyAction = () => {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(mathResult.toString());
+                    if (typeof showToast === 'function') showToast(mathResult.toString());
+                }
+            };
+            calcCard.addEventListener('click', copyAction);
+            content.appendChild(calcCard);
+            spotlightNavItems.push({ element: calcCard, action: copyAction });
+        }
+
+        // 2. Matching Applications
+        const allAppNames = getInstalledAppsListAZ();
+        const matchingApps = allAppNames.filter(name => {
+            if (name.toLowerCase().includes(qLower)) return true;
+            if (typeof apps !== 'undefined' && apps[name]) {
+                const appObj = apps[name];
+                if (appObj.url && appObj.url.toLowerCase().includes(qLower)) return true;
+                if (appObj.desc && appObj.desc.toLowerCase().includes(qLower)) return true;
+            }
+            return false;
+        });
+
+        if (matchingApps.length > 0) {
+            const appGroup = document.createElement('div');
+            appGroup.className = 'spotlight-results-group';
+
+            matchingApps.forEach(appName => {
+                const info = resolveAppInfo(appName);
+                const item = document.createElement('div');
+                item.className = 'spotlight-result-item';
+                item.tabIndex = 0;
+
+                const left = document.createElement('div');
+                left.className = 'spotlight-result-left';
+
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'app-icon-img';
+
+                const icon = document.createElement('img');
+                icon.src = info.icon;
+                icon.alt = appName;
+                icon.loading = 'lazy';
+                icon.onerror = () => { icon.src = '/assets/img/icon.svg'; };
+
+                imgContainer.appendChild(icon);
+
+                const infoBox = document.createElement('div');
+                infoBox.className = 'spotlight-result-info';
+
+                const title = document.createElement('span');
+                title.className = 'spotlight-result-title';
+                title.textContent = appName;
+
+                const subtitle = document.createElement('span');
+                subtitle.className = 'spotlight-result-subtitle';
+                subtitle.textContent = (window.t ? window.t('APPLICATIONS') : null) || 'Application';
+
+                infoBox.appendChild(title);
+                infoBox.appendChild(subtitle);
+                left.appendChild(imgContainer);
+                left.appendChild(infoBox);
+
+                const right = document.createElement('div');
+                right.className = 'spotlight-result-right';
+                right.innerHTML = '<span class="material-symbols-rounded">arrow_forward_ios</span>';
+
+                item.appendChild(left);
+                item.appendChild(right);
+
+                const launch = () => {
+                    closeSpotlight();
+                    if (typeof createFullscreenEmbed === 'function') {
+                        createFullscreenEmbed(info.url);
+                    }
+                };
+                item.addEventListener('click', launch);
+                appGroup.appendChild(item);
+                spotlightNavItems.push({ element: item, action: launch });
+            });
+
+            content.appendChild(appGroup);
+        }
+
+        // 3. Ask Assistant Item
+        const assistantGroup = document.createElement('div');
+        assistantGroup.className = 'spotlight-results-group';
+
+        const askAssistantText = (window.t ? window.t('ASK_ASSISTANT_ABOUT', { query: q }) : null) || `Ask Assistant about "${q}"`;
+        const assistantItem = document.createElement('div');
+        assistantItem.className = 'spotlight-result-item';
+        assistantItem.tabIndex = 0;
+        assistantItem.innerHTML = `
+            <div class="spotlight-result-left">
+                <div class="spotlight-result-symbol">
+                    <span class="material-symbols-rounded">auto_awesome</span>
+                </div>
+                <div class="spotlight-result-info">
+                    <span class="spotlight-result-title">${askAssistantText}</span>
+                    <span class="spotlight-result-subtitle">Assistant</span>
+                </div>
+            </div>
+            <div class="spotlight-result-right">
+                <span class="material-symbols-rounded">chat</span>
+            </div>
+        `;
+        const launchAssistant = () => {
+            closeSpotlight();
+            if (window.Assistant && typeof window.Assistant.trigger === 'function') {
+                window.Assistant.trigger(q);
+            } else if (window.assistantCore && typeof window.assistantCore.open === 'function') {
+                window.assistantCore.open();
+                if (window.assistantCore.ui && typeof window.assistantCore.ui.showInput === 'function') {
+                    window.assistantCore.ui.showInput(true);
+                }
+            } else if (typeof createFullscreenEmbed === 'function' && typeof apps !== 'undefined' && apps['Assistant']) {
+                createFullscreenEmbed(apps['Assistant'].url);
+            }
+        };
+        assistantItem.addEventListener('click', launchAssistant);
+        assistantGroup.appendChild(assistantItem);
+        spotlightNavItems.push({ element: assistantItem, action: launchAssistant });
+
+        content.appendChild(assistantGroup);
+
+        // Auto-select the first item
+        if (spotlightNavItems.length > 0) {
+            spotlightSelectedIndex = 0;
+            updateSpotlightSelection();
+        }
+    }
+
+    function updateSpotlightSelection() {
+        spotlightNavItems.forEach((item, idx) => {
+            if (idx === spotlightSelectedIndex) {
+                item.element.classList.add('selected');
+                item.element.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            } else {
+                item.element.classList.remove('selected');
+            }
+        });
+    }
+
+    function setupSpotlightEvents() {
+        const overlay = document.getElementById('home-spotlight-overlay');
+        const input = document.getElementById('spotlight-search-input');
+        const clearBtn = document.getElementById('spotlight-clear-btn');
+        const micBtn = document.getElementById('spotlight-mic-btn');
+
+        if (!overlay || overlay.dataset.eventsBound) return;
+        overlay.dataset.eventsBound = 'true';
+
+        // Close on backdrop tap
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                closeSpotlight();
+            }
+        });
+
+        // Search input handling
+        if (input) {
+            input.addEventListener('input', () => {
+                const val = input.value;
+                if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
+                if (micBtn) micBtn.style.display = val ? 'none' : 'flex';
+
+                renderSpotlightResults(val);
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeSpotlight();
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (spotlightNavItems.length > 0) {
+                        spotlightSelectedIndex = (spotlightSelectedIndex + 1) % spotlightNavItems.length;
+                        updateSpotlightSelection();
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (spotlightNavItems.length > 0) {
+                        spotlightSelectedIndex = (spotlightSelectedIndex - 1 + spotlightNavItems.length) % spotlightNavItems.length;
+                        updateSpotlightSelection();
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (spotlightSelectedIndex >= 0 && spotlightSelectedIndex < spotlightNavItems.length) {
+                        spotlightNavItems[spotlightSelectedIndex].action();
+                    } else if (spotlightNavItems.length > 0) {
+                        spotlightNavItems[0].action();
+                    }
+                }
+            });
+        }
+
+        // Clear button
+        if (clearBtn) {
+            clearBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (input) {
+                    input.value = '';
+                    clearBtn.style.display = 'none';
+                    if (micBtn) micBtn.style.display = 'flex';
+                    renderSpotlightSuggestions();
+                    input.focus();
+                }
+            });
+        }
+
+        // Mic / Assistant button
+        if (micBtn) {
+            micBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeSpotlight();
+                if (window.Assistant && typeof window.Assistant.trigger === 'function') {
+                    window.Assistant.trigger();
+                } else if (window.assistantCore && typeof window.assistantCore.open === 'function') {
+                    window.assistantCore.open();
+                } else if (typeof createFullscreenEmbed === 'function' && typeof apps !== 'undefined' && apps['Assistant']) {
+                    createFullscreenEmbed(apps['Assistant'].url);
+                }
+            });
+        }
+
+        // Global hotkey: Cmd+Space or Ctrl+Space on Home Screen
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.code === 'Space') {
+                if (document.body.classList.contains('home-screen-active') &&
+                    !document.body.classList.contains('edit-mode-active') &&
+                    !document.body.classList.contains('app-active')) {
+                    e.preventDefault();
+                    toggleSpotlight();
+                }
+            } else if (e.key === 'Escape' && isSpotlightOpen) {
+                closeSpotlight();
+            }
+        });
+    }
+
     function setupHomeSearchBtn() {
         const searchBtn = document.getElementById('home-search-btn');
         if (searchBtn && !searchBtn.dataset.bound) {
             searchBtn.dataset.bound = 'true';
             searchBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                // If assistant is available, trigger assistant text input / search
-                if (window.assistantCore && typeof window.assistantCore.open === 'function') {
-                    window.assistantCore.open();
-                    if (window.assistantCore.ui && typeof window.assistantCore.ui.showInput === 'function') {
-                        window.assistantCore.ui.showInput(true);
-                    }
-                } else if (typeof openSearch === 'function') {
-                    openSearch();
-                } else {
-                    const searchInput = document.getElementById('app-search-input');
-                    if (searchInput) searchInput.focus();
-                }
+                toggleSpotlight();
             });
         }
     }
@@ -2585,6 +3056,7 @@
         setupHomeContainerGestures();
         setupEditModeHeader();
         setupHomeSearchBtn();
+        setupSpotlightEvents();
         startRealTimeSync();
 
         let gridResizeTimer = null;
@@ -2635,6 +3107,9 @@
     window.enterBeginningsState = enterBeginningsState;
     window.exitBeginningsState = exitBeginningsState;
     window.enterHomeScreen = enterHomeScreen;
+    window.openSpotlight = openSpotlight;
+    window.closeSpotlight = closeSpotlight;
+    window.toggleSpotlight = toggleSpotlight;
     window.goToHomePage = goToHomePage;
     window.nextHomePage = nextHomePage;
     window.prevHomePage = prevHomePage;

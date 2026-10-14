@@ -811,7 +811,16 @@ const LANG_EN = {
     "LIGHT": "Light",
     "DARK": "Dark",
     "DATE_DECOUPLED": "Date decoupled",
-    "DATE_DOCKED": "Date docked"
+    "DATE_DOCKED": "Date docked",
+    "SHOW_MORE": "Show More",
+    "SHOW_LESS": "Show Less",
+    "SEARCH_WEB": "Search the Web",
+    "SEARCH_WEB_FOR": "Search the Web for \"{query}\"",
+    "ASK_ASSISTANT_ABOUT": "Ask Assistant about \"{query}\"",
+    "NO_RESULTS_FOUND": "No results found",
+    "CALCULATION": "Calculation",
+    "TOP_RESULT": "Top Result",
+    "APPLICATIONS": "Applications"
 };
 
 const LANG_JP = {
@@ -1624,7 +1633,16 @@ const LANG_JP = {
     "LIGHT": "ライト",
     "DARK": "ダーク",
     "DATE_DECOUPLED": "日付を分離しました",
-    "DATE_DOCKED": "日付を結合しました"
+    "DATE_DOCKED": "日付を結合しました",
+    "SHOW_MORE": "さらに表示",
+    "SHOW_LESS": "閉じる",
+    "SEARCH_WEB": "ウェブを検索",
+    "SEARCH_WEB_FOR": "「{query}」をウェブで検索",
+    "ASK_ASSISTANT_ABOUT": "「{query}」についてアシスタントに聞く",
+    "NO_RESULTS_FOUND": "一致する結果がありません",
+    "CALCULATION": "計算",
+    "TOP_RESULT": "上位の検索結果",
+    "APPLICATIONS": "アプリケーション"
 };
 const LANG_JA = LANG_JP;
 
@@ -2438,7 +2456,16 @@ const LANG_KO = {
     "LIGHT": "라이트",
     "DARK": "다크",
     "DATE_DECOUPLED": "날짜가 분리되었습니다",
-    "DATE_DOCKED": "날짜가 결합되었습니다"
+    "DATE_DOCKED": "날짜가 결합되었습니다",
+    "SHOW_MORE": "더 보기",
+    "SHOW_LESS": "간략히 보기",
+    "SEARCH_WEB": "웹 검색",
+    "SEARCH_WEB_FOR": "웹에서 \"{query}\" 검색",
+    "ASK_ASSISTANT_ABOUT": "어시스턴트에게 \"{query}\" 문의",
+    "NO_RESULTS_FOUND": "검색 결과 없음",
+    "CALCULATION": "계산",
+    "TOP_RESULT": "최고 일치 결과",
+    "APPLICATIONS": "응용 프로그램"
 };
 
 const LANG_ZH = {
@@ -3251,7 +3278,16 @@ const LANG_ZH = {
     "LIGHT": "浅色",
     "DARK": "深色",
     "DATE_DECOUPLED": "日期已解耦",
-    "DATE_DOCKED": "日期已连接"
+    "DATE_DOCKED": "日期已连接",
+    "SHOW_MORE": "显示更多",
+    "SHOW_LESS": "显示更少",
+    "SEARCH_WEB": "搜索网页",
+    "SEARCH_WEB_FOR": "在网页上搜索“{query}”",
+    "ASK_ASSISTANT_ABOUT": "向助手询问“{query}”",
+    "NO_RESULTS_FOUND": "未找到结果",
+    "CALCULATION": "计算",
+    "TOP_RESULT": "最佳结果",
+    "APPLICATIONS": "应用程序"
 };
 
 if (typeof window !== 'undefined') {

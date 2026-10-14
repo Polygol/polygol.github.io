@@ -564,12 +564,25 @@ window.getSystemStatus = function() {
     };
 };
 
+let lastForwardClickTime = 0;
+let lastForwardClickX = -1;
+let lastForwardClickY = -1;
+
 /**
  * Central Click Passthrough Function
  * Forwards clicks/taps through overlay handles (edge handles, gesture barrier, drawer handle, etc.)
  * directly to whatever element or app iframe is underneath.
  */
 function forwardClick(clientX, clientY) {
+    const now = Date.now();
+    // Guard against duplicate forwarded clicks from the same tap gesture
+    if (now - lastForwardClickTime < 300 && Math.hypot(clientX - lastForwardClickX, clientY - lastForwardClickY) < 30) {
+        return;
+    }
+    lastForwardClickTime = now;
+    lastForwardClickX = clientX;
+    lastForwardClickY = clientY;
+
     // 1. Temporarily disable pointer events on gesture overlays and edge handles
     const overlays = document.querySelectorAll('.kirbai-edge-handle, .drawer-handle, #home-gesture-bar, #swipe-overlay, .app-gesture-barrier, #app-gesture-barrier');
     const prevOverlayEvents = new Map();

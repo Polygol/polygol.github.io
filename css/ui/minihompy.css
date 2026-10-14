@@ -746,3 +746,466 @@ body:has(#wallpaper-switcher-overlay.show) .home-search-btn {
     white-space: nowrap;
     z-index: 10000;
 }
+
+/* ==========================================================================
+   Home Screen Spotlight Search Overlay (iPadOS Style)
+   ========================================================================== */
+.home-spotlight-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    background: var(--overlay-color);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 40px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0.25s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    filter: blur(10px);
+}
+
+.home-spotlight-overlay.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    filter: none;
+}
+
+body.beginnings-active .home-spotlight-overlay,
+body.edit-mode-active .home-spotlight-overlay,
+body.blackout-active .home-spotlight-overlay,
+body.app-active .home-spotlight-overlay {
+    display: none !important;
+}
+
+.home-spotlight-card {
+    width: min(680px, 92vw);
+    max-height: calc(100% - min(40vh, 320px));
+    background: var(--modal-background);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--sun-shadow), 0 24px 60px rgba(0, 0, 0, 0.35);
+    border-radius: 50px;
+    corner-shape: superellipse(1.5);
+    --fx-filter: var(--blur2) glass(0.6, 8, 0);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(1.1) translateY(-50px);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+}
+
+.home-spotlight-overlay.show .home-spotlight-card {
+    transform: scale(1) translateY(0);
+    filter: none;
+}
+
+.spotlight-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    box-sizing: border-box;
+}
+
+.spotlight-search-icon {
+    font-size: 26px;
+    flex-shrink: 0;
+    padding-left: 8px;
+}
+
+.spotlight-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 1.35rem;
+    font-weight: 500;
+    font-family: 'Open Runde', 'Inter', -apple-system, sans-serif;
+    color: var(--text-color);
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.spotlight-search-input::placeholder {
+    color: var(--secondary-text-color);
+    opacity: 0.6;
+    font-weight: 400;
+}
+
+.spotlight-action-btn {
+    border: none;
+    background: transparent;
+    color: var(--secondary-text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    flex-shrink: 0;
+}
+
+.spotlight-action-btn .material-symbols-rounded {
+    font-size: 22px;
+}
+
+.spotlight-divider {
+    height: 1px;
+    background: var(--overlay-color-op);
+    margin: 0 16px;
+    opacity: 0.8;
+    flex-shrink: 0;
+}
+
+.spotlight-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(80vh - 72px);
+    padding: 0 0 12px 0;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+.spotlight-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 22px 10px 22px;
+}
+
+.spotlight-section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--secondary-text-color);
+    font-family: 'Open Runde', 'Inter', -apple-system, sans-serif;
+    letter-spacing: -0.01em;
+}
+
+.spotlight-toggle-btn {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--secondary-text-color);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 4px 8px;
+    border-radius: 12px;
+    transition: color 0.15s, background-color 0.15s;
+}
+
+.spotlight-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px 10px;
+    padding: 6px 18px 16px 18px;
+    justify-items: center;
+}
+
+@media (max-width: 600px) {
+    .spotlight-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px 8px;
+        padding: 6px 12px 14px 12px;
+    }
+}
+
+.spotlight-app-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    corner-shape: superellipse(1.5);
+    border-radius: 18px;
+    padding: 8px 6px;
+    box-sizing: border-box;
+    width: 100%;
+    transition: transform 0.15s cubic-bezier(0.2, 1, 0.4, 1), background-color 0.15s, border-color 0.15s;
+    text-decoration: none;
+    outline: none;
+    border: 1px solid transparent;
+}
+
+.spotlight-app-item.selected {
+    background: var(--background-color);
+    box-shadow: var(--sun-shadow);
+    border-color: var(--glass-border);
+}
+
+.spotlight-app-item .app-icon-img {
+    width: 54px;
+    height: 54px;
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .spotlight-app-item .app-icon-img {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+.spotlight-app-name {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-color);
+    text-align: center;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+    font-family: 'Inter', -apple-system, sans-serif;
+}
+
+/* Quick Action Item */
+.spotlight-quick-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    margin: 4px 16px;
+    border-radius: 18px;
+    corner-shape: superellipse(1.5);
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+    text-decoration: none;
+    color: var(--text-color);
+    border: 1px solid transparent;
+}
+
+.spotlight-quick-action.selected {
+    background: var(--background-color);
+    box-shadow: var(--sun-shadow);
+    border-color: var(--glass-border);
+}
+
+.spotlight-qa-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.spotlight-qa-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 35%;
+    corner-shape: superellipse(1.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--search-background);
+    color: var(--text-color);
+    box-shadow: var(--sun-shadow);
+    flex-shrink: 0;
+}
+
+.spotlight-qa-icon .material-symbols-rounded {
+    font-size: 22px;
+}
+
+.spotlight-qa-title {
+    font-size: 0.98rem;
+    font-weight: 600;
+    font-family: 'Open Runde', 'Inter', -apple-system, sans-serif;
+}
+
+.spotlight-qa-action {
+    color: var(--secondary-text-color);
+    font-size: 20px;
+}
+
+/* Results List Items */
+.spotlight-results-group {
+    padding: 6px 8px;
+}
+
+.spotlight-result-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    margin: 3px 8px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+    border: 1px solid transparent;
+}
+
+.spotlight-result-item.selected {
+    background: var(--background-color);
+    box-shadow: var(--sun-shadow);
+    border-color: var(--glass-border);
+}
+
+.spotlight-result-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+}
+
+.spotlight-result-item .app-icon-img {
+    width: 44px;
+    height: 44px;
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+.spotlight-result-symbol {
+    width: 44px;
+    height: 44px;
+    border-radius: 35%;
+    corner-shape: superellipse(1.25);
+    background: var(--search-background);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--text-color);
+    box-shadow: var(--sun-shadow);
+    flex-shrink: 0;
+}
+
+.spotlight-result-symbol .material-symbols-rounded {
+    font-size: 24px;
+}
+
+.spotlight-result-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.spotlight-result-title {
+    font-size: 1.02rem;
+    font-weight: 600;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Open Runde', 'Inter', -apple-system, sans-serif;
+}
+
+.spotlight-result-subtitle {
+    font-size: 0.82rem;
+    color: var(--secondary-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+.spotlight-result-right {
+    color: var(--secondary-text-color);
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    padding-left: 10px;
+    flex-shrink: 0;
+}
+
+/* Calculator Card */
+.spotlight-calc-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    margin: 8px 16px 12px 16px;
+    background: var(--search-background);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    corner-shape: superellipse(1.5);
+    box-shadow: var(--sun-shadow);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.spotlight-calc-card.selected {
+    background: var(--transparent-color);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.spotlight-calc-card:active {
+    transform: scale(0.98);
+}
+
+.spotlight-calc-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.spotlight-calc-symbol {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    corner-shape: superellipse(1.5);
+    background: var(--accent);
+    color: var(--background-pure);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.spotlight-calc-symbol .material-symbols-rounded {
+    font-size: 26px;
+}
+
+.spotlight-calc-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.spotlight-calc-val {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-color);
+    font-family: 'Open Runde', 'Inter', -apple-system, sans-serif;
+    line-height: 1.1;
+}
+
+.spotlight-calc-expr {
+    font-size: 0.88rem;
+    color: var(--secondary-text-color);
+    margin-top: 3px;
+}
+
+/* Empty State */
+.spotlight-empty-state {
+    padding: 44px 20px;
+    text-align: center;
+    color: var(--secondary-text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.spotlight-empty-icon {
+    font-size: 42px;
+    opacity: 0.5;
+}
+
+.spotlight-empty-text {
+    font-size: 1rem;
+    font-weight: 500;
+    font-family: 'Open Runde', 'Inter', -apple-system, sans-serif;
+}
