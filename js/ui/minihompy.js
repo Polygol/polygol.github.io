@@ -4,6 +4,15 @@
     let lastScrollTime = 0;
     let activeFolderContext = null;
     let isPageTransitioning = false;
+    let lastTouchTime = 0;
+
+    function recordTouch() {
+        lastTouchTime = Date.now();
+    }
+
+    function isGhostMouse() {
+        return Date.now() - lastTouchTime < 750;
+    }
 
     // --- Standard Grid Auto-Adaptation Presets (6x5, 4x6, 8x12, 8x6, 4x5, 6x6) ---
     const STANDARD_GRIDS = {
@@ -1355,63 +1364,12 @@
             itemEl.style.setProperty('transform', `translate3d(${posX}px, ${posY}px, 0) scale(1.08)`, 'important');
         };
 
-        const onTouchStart = (e) => {
-            if (!document.body.classList.contains('home-edit-active')) return;
-            // Strict guard: ignore touches on remove or resize buttons, or if any resize is active
-            if (e.target.closest('.home-item-remove-btn') || 
-                e.target.closest('.home-widget-resize-handle') ||
-                window._isAnyWidgetResizing ||
-                itemEl.classList.contains('widget-resizing-live')) {
-                return;
-            }
-            if (e.touches.length !== 1) return;
-            
+        const processDragMove = (clientX, clientY, e) => {
             const zoom = getZoomFactor();
-            const t = e.touches[0];
-            startX = t.clientX;
-            startY = t.clientY;
+            updateDragPosition(clientX, clientY);
 
-            origRect = itemEl.getBoundingClientRect();
-            const itemCSSLeft = origRect.left / zoom;
-            const itemCSSTop = origRect.top / zoom;
-
-            grabOffsetX = (startX / zoom) - itemCSSLeft;
-            grabOffsetY = (startY / zoom) - itemCSSTop;
-
-            isDragging = false;
-            currentDropIdx = sourceItemIdx;
-
-            clearTimeout(holdTimer);
-            holdTimer = setTimeout(() => {
-                if (!isDragging && document.body.classList.contains('home-edit-active')) {
-                    startDrag(startX, startY);
-                }
-            }, 180);
-        };
-
-        const onTouchMove = (e) => {
-            if (!document.body.classList.contains('home-edit-active')) return;
-            if (window._isAnyWidgetResizing || itemEl.classList.contains('widget-resizing-live')) return;
-            if (e.touches.length !== 1) return;
-
-            const zoom = getZoomFactor();
-            const t = e.touches[0];
-            const dx = (t.clientX - startX) / zoom;
-            const dy = (t.clientY - startY) / zoom;
-            const dist = Math.hypot(dx, dy);
-
-            if (!isDragging && dist > 8) {
-                clearTimeout(holdTimer);
-                startDrag(t.clientX, t.clientY);
-            }
-
-            if (!isDragging) return;
-            if (e.cancelable) e.preventDefault();
-
-            updateDragPosition(t.clientX, t.clientY);
-
-            const curCSSX = t.clientX / zoom;
-            const curCSSY = t.clientY / zoom;
+            const curCSSX = clientX / zoom;
+            const curCSSY = clientY / zoom;
 
             // 1. Edge of Viewport Detection: Drag to top/bottom to flip pages
             const vp = document.getElementById('home-pages-viewport');
@@ -1557,7 +1515,7 @@
             }
         };
 
-        const onTouchEnd = (e) => {
+        const handleDragEnd = () => {
             clearTimeout(holdTimer);
             if (!isDragging) return;
             isDragging = false;
@@ -1636,7 +1594,71 @@
             renderHomePages();
         };
 
+        const onTouchStart = (e) => {
+            recordTouch();
+            if (!document.body.classList.contains('home-edit-active')) return;
+            // Strict guard: ignore touches on remove or resize buttons, or if any resize is active
+            if (e.target.closest('.home-item-remove-btn') || 
+                e.target.closest('.home-widget-resize-handle') ||
+                window._isAnyWidgetResizing ||
+                itemEl.classList.contains('widget-resizing-live')) {
+                return;
+            }
+            if (e.touches.length !== 1) return;
+            
+            const zoom = getZoomFactor();
+            const t = e.touches[0];
+            startX = t.clientX;
+            startY = t.clientY;
+
+            origRect = itemEl.getBoundingClientRect();
+            const itemCSSLeft = origRect.left / zoom;
+            const itemCSSTop = origRect.top / zoom;
+
+            grabOffsetX = (startX / zoom) - itemCSSLeft;
+            grabOffsetY = (startY / zoom) - itemCSSTop;
+
+            isDragging = false;
+            currentDropIdx = sourceItemIdx;
+
+            clearTimeout(holdTimer);
+            holdTimer = setTimeout(() => {
+                if (!isDragging && document.body.classList.contains('home-edit-active')) {
+                    startDrag(startX, startY);
+                }
+            }, 180);
+        };
+
+        const onTouchMove = (e) => {
+            recordTouch();
+            if (!document.body.classList.contains('home-edit-active')) return;
+            if (window._isAnyWidgetResizing || itemEl.classList.contains('widget-resizing-live')) return;
+            if (e.touches.length !== 1) return;
+
+            const zoom = getZoomFactor();
+            const t = e.touches[0];
+            const dx = (t.clientX - startX) / zoom;
+            const dy = (t.clientY - startY) / zoom;
+            const dist = Math.hypot(dx, dy);
+
+            if (!isDragging && dist > 8) {
+                clearTimeout(holdTimer);
+                startDrag(t.clientX, t.clientY);
+            }
+
+            if (!isDragging) return;
+            if (e.cancelable) e.preventDefault();
+
+            processDragMove(t.clientX, t.clientY, e);
+        };
+
+        const onTouchEnd = () => {
+            recordTouch();
+            handleDragEnd();
+        };
+
         const onTouchCancel = () => {
+            recordTouch();
             clearTimeout(holdTimer);
             if (!isDragging) return;
             isDragging = false;
@@ -1657,10 +1679,67 @@
             renderHomePages();
         };
 
+        const onMouseDown = (e) => {
+            if (isGhostMouse()) return;
+            if (e.button !== 0) return;
+            if (!document.body.classList.contains('home-edit-active')) return;
+            if (e.target.closest('.home-item-remove-btn') || 
+                e.target.closest('.home-widget-resize-handle') ||
+                window._isAnyWidgetResizing ||
+                itemEl.classList.contains('widget-resizing-live')) {
+                return;
+            }
+
+            const zoom = getZoomFactor();
+            startX = e.clientX;
+            startY = e.clientY;
+
+            origRect = itemEl.getBoundingClientRect();
+            const itemCSSLeft = origRect.left / zoom;
+            const itemCSSTop = origRect.top / zoom;
+
+            grabOffsetX = (startX / zoom) - itemCSSLeft;
+            grabOffsetY = (startY / zoom) - itemCSSTop;
+
+            isDragging = false;
+            currentDropIdx = sourceItemIdx;
+
+            const onWindowMouseMove = (me) => {
+                if (!document.body.classList.contains('home-edit-active')) {
+                    cleanupWindowMouse();
+                    return;
+                }
+                const dist = Math.hypot(me.clientX - startX, me.clientY - startY);
+                if (!isDragging && dist > 5) {
+                    startDrag(me.clientX, me.clientY);
+                }
+                if (isDragging) {
+                    me.preventDefault();
+                    processDragMove(me.clientX, me.clientY, me);
+                }
+            };
+
+            const onWindowMouseUp = () => {
+                cleanupWindowMouse();
+                if (isDragging) {
+                    handleDragEnd();
+                }
+            };
+
+            const cleanupWindowMouse = () => {
+                window.removeEventListener('mousemove', onWindowMouseMove);
+                window.removeEventListener('mouseup', onWindowMouseUp);
+            };
+
+            window.addEventListener('mousemove', onWindowMouseMove);
+            window.addEventListener('mouseup', onWindowMouseUp);
+        };
+
         itemEl.addEventListener('touchstart', onTouchStart, { passive: true });
         itemEl.addEventListener('touchmove', onTouchMove, { passive: false });
         itemEl.addEventListener('touchend', onTouchEnd, { passive: true });
         itemEl.addEventListener('touchcancel', onTouchCancel, { passive: true });
+        itemEl.addEventListener('mousedown', onMouseDown);
     }
 
     function setupItemLongPress(el) {
@@ -1669,6 +1748,7 @@
         let startX = 0, startY = 0;
 
         el.addEventListener('touchstart', (e) => {
+            recordTouch();
             if (e.touches.length !== 1) return;
             if (e.target.closest('.home-item-remove-btn') || 
                 e.target.closest('.home-widget-resize-handle') ||
@@ -1689,6 +1769,7 @@
         }, { passive: true });
 
         const cancel = (e) => {
+            recordTouch();
             if (e && e.touches && e.touches.length > 0) {
                 const dx = e.touches[0].clientX - startX;
                 const dy = e.touches[0].clientY - startY;
@@ -1705,6 +1786,59 @@
         el.addEventListener('touchmove', cancel, { passive: true });
         el.addEventListener('touchend', cancel, { passive: true });
         el.addEventListener('touchcancel', cancel, { passive: true });
+
+        // Right-click to enter edit mode
+        el.addEventListener('contextmenu', (e) => {
+            if (isGhostMouse()) return;
+            if (!document.body.classList.contains('home-edit-active')) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleHomeEditMode(true);
+            }
+        });
+
+        // Mouse click-and-hold to enter edit mode
+        el.addEventListener('mousedown', (e) => {
+            if (isGhostMouse()) return;
+            if (e.button !== 0) return;
+            if (document.body.classList.contains('home-edit-active')) return;
+            if (e.target.closest('.home-item-remove-btn') || 
+                e.target.closest('.home-widget-resize-handle') ||
+                window._isAnyWidgetResizing ||
+                el.classList.contains('widget-resizing-live')) {
+                return;
+            }
+
+            let mPressing = true;
+            const mStartX = e.clientX;
+            const mStartY = e.clientY;
+            let mTimer = setTimeout(() => {
+                if (mPressing && !document.body.classList.contains('home-edit-active')) {
+                    mPressing = false;
+                    toggleHomeEditMode(true);
+                    if (navigator.vibrate) try { navigator.vibrate(40); } catch (err) {}
+                }
+            }, 550);
+
+            const onWindowMouseCancel = (me) => {
+                if (me.type === 'mousemove') {
+                    if (Math.hypot(me.clientX - mStartX, me.clientY - mStartY) > 8) {
+                        mPressing = false;
+                        clearTimeout(mTimer);
+                        window.removeEventListener('mousemove', onWindowMouseCancel);
+                        window.removeEventListener('mouseup', onWindowMouseCancel);
+                    }
+                } else {
+                    mPressing = false;
+                    clearTimeout(mTimer);
+                    window.removeEventListener('mousemove', onWindowMouseCancel);
+                    window.removeEventListener('mouseup', onWindowMouseCancel);
+                }
+            };
+
+            window.addEventListener('mousemove', onWindowMouseCancel);
+            window.addEventListener('mouseup', onWindowMouseCancel);
+        });
     }
 
     // --- Folder Overlay Modal ---
@@ -1912,62 +2046,18 @@
             cellEl.style.setProperty('transform', `translate3d(${posX}px, ${posY}px, 0) scale(1.08)`, 'important');
         };
 
-        const onTouchStart = (e) => {
-            if (!document.body.classList.contains('home-edit-active')) return;
-            if (e.target.closest('.home-item-remove-btn')) return;
-            if (e.touches.length !== 1) return;
+        const processFolderDragMove = (clientX, clientY, e) => {
+            updateFolderDragPos(clientX, clientY);
 
             const zoom = getZoomFactor();
-            const t = e.touches[0];
-            startX = t.clientX;
-            startY = t.clientY;
-
-            origRect = cellEl.getBoundingClientRect();
-            const cellCSSLeft = origRect.left / zoom;
-            const cellCSSTop = origRect.top / zoom;
-
-            grabOffsetX = (startX / zoom) - cellCSSLeft;
-            grabOffsetY = (startY / zoom) - cellCSSTop;
-
-            isDragging = false;
-            isOutsideModal = false;
-            currentFolderDropIdx = itemIdx;
-
-            clearTimeout(holdTimer);
-            holdTimer = setTimeout(() => {
-                if (!isDragging && document.body.classList.contains('home-edit-active')) {
-                    startFolderDrag(startX, startY);
-                }
-            }, 180);
-        };
-
-        const onTouchMove = (e) => {
-            if (!document.body.classList.contains('home-edit-active')) return;
-            if (e.touches.length !== 1) return;
-
-            const zoom = getZoomFactor();
-            const t = e.touches[0];
-            const dx = (t.clientX - startX) / zoom;
-            const dy = (t.clientY - startY) / zoom;
-
-            if (!isDragging && Math.hypot(dx, dy) > 8) {
-                clearTimeout(holdTimer);
-                startFolderDrag(t.clientX, t.clientY);
-            }
-
-            if (!isDragging) return;
-            if (e.cancelable) e.preventDefault();
-
-            updateFolderDragPos(t.clientX, t.clientY);
-
-            const curCSSX = t.clientX / zoom;
-            const curCSSY = t.clientY / zoom;
+            const curCSSX = clientX / zoom;
+            const curCSSY = clientY / zoom;
 
             const overlay = document.getElementById('home-folder-overlay');
             const modal = document.getElementById('home-folder-modal');
             const modalRect = modal ? modal.getBoundingClientRect() : null;
 
-            // Check if finger moved outside folder modal
+            // Check if pointer moved outside folder modal
             const isOutsideNow = modalRect ? (
                 curCSSX < (modalRect.left / zoom) - 15 ||
                 curCSSX > (modalRect.right / zoom) + 15 ||
@@ -2104,7 +2194,7 @@
             }
         };
 
-        const onTouchEnd = () => {
+        const handleFolderDragEnd = () => {
             clearTimeout(holdTimer);
             if (edgePageTimer) {
                 clearTimeout(edgePageTimer);
@@ -2168,10 +2258,115 @@
             }
         };
 
+        const onTouchStart = (e) => {
+            recordTouch();
+            if (!document.body.classList.contains('home-edit-active')) return;
+            if (e.target.closest('.home-item-remove-btn')) return;
+            if (e.touches.length !== 1) return;
+
+            const zoom = getZoomFactor();
+            const t = e.touches[0];
+            startX = t.clientX;
+            startY = t.clientY;
+
+            origRect = cellEl.getBoundingClientRect();
+            const cellCSSLeft = origRect.left / zoom;
+            const cellCSSTop = origRect.top / zoom;
+
+            grabOffsetX = (startX / zoom) - cellCSSLeft;
+            grabOffsetY = (startY / zoom) - cellCSSTop;
+
+            isDragging = false;
+            isOutsideModal = false;
+            currentFolderDropIdx = itemIdx;
+
+            clearTimeout(holdTimer);
+            holdTimer = setTimeout(() => {
+                if (!isDragging && document.body.classList.contains('home-edit-active')) {
+                    startFolderDrag(startX, startY);
+                }
+            }, 180);
+        };
+
+        const onTouchMove = (e) => {
+            recordTouch();
+            if (!document.body.classList.contains('home-edit-active')) return;
+            if (e.touches.length !== 1) return;
+
+            const zoom = getZoomFactor();
+            const t = e.touches[0];
+            const dx = (t.clientX - startX) / zoom;
+            const dy = (t.clientY - startY) / zoom;
+
+            if (!isDragging && Math.hypot(dx, dy) > 8) {
+                clearTimeout(holdTimer);
+                startFolderDrag(t.clientX, t.clientY);
+            }
+
+            if (!isDragging) return;
+            if (e.cancelable) e.preventDefault();
+
+            processFolderDragMove(t.clientX, t.clientY, e);
+        };
+
+        const onTouchEnd = () => {
+            recordTouch();
+            handleFolderDragEnd();
+        };
+
+        const onMouseDown = (e) => {
+            if (isGhostMouse()) return;
+            if (e.button !== 0) return;
+            if (!document.body.classList.contains('home-edit-active')) return;
+            if (e.target.closest('.home-item-remove-btn')) return;
+
+            const zoom = getZoomFactor();
+            startX = e.clientX;
+            startY = e.clientY;
+
+            origRect = cellEl.getBoundingClientRect();
+            const cellCSSLeft = origRect.left / zoom;
+            const cellCSSTop = origRect.top / zoom;
+
+            grabOffsetX = (startX / zoom) - cellCSSLeft;
+            grabOffsetY = (startY / zoom) - cellCSSTop;
+
+            isDragging = false;
+            isOutsideModal = false;
+            currentFolderDropIdx = itemIdx;
+
+            const onWindowMouseMove = (me) => {
+                const dist = Math.hypot(me.clientX - startX, me.clientY - startY);
+                if (!isDragging && dist > 5) {
+                    startFolderDrag(me.clientX, me.clientY);
+                }
+                if (isDragging) {
+                    me.preventDefault();
+                    processFolderDragMove(me.clientX, me.clientY, me);
+                }
+            };
+
+            const onWindowMouseUp = () => {
+                cleanupWindowMouse();
+                if (isDragging) {
+                    handleFolderDragEnd();
+                }
+            };
+
+            const cleanupWindowMouse = () => {
+                window.removeEventListener('mousemove', onWindowMouseMove);
+                window.removeEventListener('mouseup', onWindowMouseUp);
+            };
+
+            window.addEventListener('mousemove', onWindowMouseMove);
+            window.addEventListener('mouseup', onWindowMouseUp);
+        };
+
         cellEl.addEventListener('touchstart', onTouchStart, { passive: true });
         cellEl.addEventListener('touchmove', onTouchMove, { passive: false });
         cellEl.addEventListener('touchend', onTouchEnd, { passive: true });
         cellEl.addEventListener('touchcancel', onTouchEnd, { passive: true });
+        cellEl.addEventListener('mousedown', onMouseDown);
     }
 
     function closeFolder() {
@@ -2384,6 +2579,7 @@
         let startTranslateY = 0;
 
         container.addEventListener('touchstart', (e) => {
+            recordTouch();
             if (e.touches.length !== 1) return;
             if (document.body.classList.contains('home-edit-active') || document.body.classList.contains('edit-mode-active')) {
                 return;
@@ -2404,6 +2600,7 @@
         }, { passive: true });
 
         container.addEventListener('touchmove', (e) => {
+            recordTouch();
             if (!isTouching || e.touches.length !== 1) return;
             if (document.body.classList.contains('home-edit-active') || document.body.classList.contains('edit-mode-active')) {
                 return;
@@ -2446,6 +2643,7 @@
         }, { passive: false });
 
         container.addEventListener('touchend', (e) => {
+            recordTouch();
             if (!isTouching) return;
             isTouching = false;
 
@@ -2523,9 +2721,202 @@
         }, { passive: true });
 
         container.addEventListener('touchcancel', () => {
+            recordTouch();
             isTouching = false;
             updateTrackTransform();
         }, { passive: true });
+
+        // --- Mouse Drag Support on Container Background ---
+        let isMouseDragging = false;
+        let mStartX = 0, mStartY = 0;
+        let mStartTime = 0;
+        let mIsVertical = false;
+        let mIsHorizontal = false;
+        let mHasDecided = false;
+        let mHoldTimer = null;
+
+        const onContainerMouseMove = (me) => {
+            if (!isMouseDragging) return;
+            const zoom = getZoomFactor();
+            const deltaX = (me.clientX - mStartX) / zoom;
+            const deltaY = (me.clientY - mStartY) / zoom;
+            const absX = Math.abs(deltaX);
+            const absY = Math.abs(deltaY);
+
+            if (!mHasDecided) {
+                if (absX < 8 && absY < 8) return;
+                mHasDecided = true;
+                clearTimeout(mHoldTimer);
+                if (absY >= absX) {
+                    mIsVertical = true;
+                } else {
+                    mIsHorizontal = true;
+                }
+            }
+
+            if (mIsVertical) {
+                me.preventDefault();
+                const pageH = viewport ? (viewport.clientHeight || (window.innerHeight / zoom - 90)) : (window.innerHeight / zoom - 90);
+
+                // Damping at boundaries
+                let dampedDeltaY = deltaY;
+                if (currentHomePageIndex === 0 && deltaY > 0) {
+                    dampedDeltaY = deltaY * 0.35;
+                } else if (currentHomePageIndex === homePages.length - 1 && deltaY < 0) {
+                    dampedDeltaY = deltaY * 0.35;
+                }
+
+                if (track) {
+                    track.style.transition = 'none';
+                    track.style.transform = `translate3d(0, ${startTranslateY + dampedDeltaY}px, 0)`;
+                }
+            }
+        };
+
+        const onContainerMouseUp = (me) => {
+            clearTimeout(mHoldTimer);
+            cleanupContainerMouse();
+            if (!isMouseDragging) return;
+            isMouseDragging = false;
+
+            if (document.body.classList.contains('home-edit-active') || document.body.classList.contains('edit-mode-active')) {
+                return;
+            }
+
+            const zoom = getZoomFactor();
+            const deltaX = (me.clientX - mStartX) / zoom;
+            const deltaY = (me.clientY - mStartY) / zoom;
+            const absX = Math.abs(deltaX);
+            const absY = Math.abs(deltaY);
+            const elapsed = Math.max(1, Date.now() - mStartTime);
+            const velocityY = deltaY / elapsed;
+
+            const pageH = viewport ? (viewport.clientHeight || (window.innerHeight / zoom - 90)) : (window.innerHeight / zoom - 90);
+
+            if (absX < 15 && absY < 15) {
+                updateTrackTransform();
+                return;
+            }
+
+            if (mIsVertical || (!mHasDecided && absY >= 40 && absY > absX)) {
+                const swipeThreshold = Math.max(50, pageH * 0.16);
+                const isFlickUp = velocityY < -0.38;
+                const isFlickDown = velocityY > 0.38;
+
+                if (deltaY < -swipeThreshold || isFlickUp) {
+                    if (currentHomePageIndex < homePages.length - 1) {
+                        goToHomePage(currentHomePageIndex + 1);
+                    } else {
+                        updateTrackTransform();
+                    }
+                } else if (deltaY > swipeThreshold || isFlickDown) {
+                    if (currentHomePageIndex > 0) {
+                        goToHomePage(currentHomePageIndex - 1);
+                    } else {
+                        enterBeginningsState();
+                        updateTrackTransform();
+                    }
+                } else {
+                    updateTrackTransform();
+                }
+            } else if (mIsHorizontal || (!mHasDecided && absX >= 45 && absX > absY * 1.15)) {
+                updateTrackTransform();
+                if (document.body.classList.contains('beginnings-active')) return;
+                if (typeof isQuickMenuEnabled === 'function' && isQuickMenuEnabled()) return;
+                if (window.CardsManager && typeof window.CardsManager.openCardsDeck === 'function') {
+                    window.CardsManager.openCardsDeck();
+                }
+            } else {
+                updateTrackTransform();
+            }
+        };
+
+        const cleanupContainerMouse = () => {
+            window.removeEventListener('mousemove', onContainerMouseMove);
+            window.removeEventListener('mouseup', onContainerMouseUp);
+        };
+
+        container.addEventListener('mousedown', (e) => {
+            if (isGhostMouse()) return;
+            if (e.button !== 0) return;
+            if (document.body.classList.contains('home-edit-active') || document.body.classList.contains('edit-mode-active')) {
+                return;
+            }
+            if (e.target.closest('.app-icon, .widget-instance, .folder-icon-item, .home-edit-top-bar, .home-page-indicator, #home-search-btn')) {
+                return;
+            }
+
+            mStartX = e.clientX;
+            mStartY = e.clientY;
+            mStartTime = Date.now();
+            isMouseDragging = true;
+            mIsVertical = false;
+            mIsHorizontal = false;
+            mHasDecided = false;
+
+            const zoom = getZoomFactor();
+            const pageH = viewport ? (viewport.clientHeight || (window.innerHeight / zoom - 90)) : (window.innerHeight / zoom - 90);
+            startTranslateY = -currentHomePageIndex * pageH;
+
+            clearTimeout(mHoldTimer);
+            mHoldTimer = setTimeout(() => {
+                if (isMouseDragging && !mHasDecided && document.body.classList.contains('home-screen-active') && !document.body.classList.contains('beginnings-active')) {
+                    isMouseDragging = false;
+                    cleanupContainerMouse();
+                    toggleHomeEditMode(true);
+                    if (navigator.vibrate) try { navigator.vibrate(40); } catch (err) {}
+                }
+            }, 550);
+
+            window.addEventListener('mousemove', onContainerMouseMove);
+            window.addEventListener('mouseup', onContainerMouseUp);
+        });
+
+        // --- Mouse Wheel Vertical Paging ---
+        let wheelCooldown = false;
+        container.addEventListener('wheel', (e) => {
+            if (document.body.classList.contains('home-edit-active') ||
+                document.body.classList.contains('edit-mode-active') ||
+                document.body.classList.contains('beginnings-active') ||
+                document.body.classList.contains('app-active')) {
+                return;
+            }
+            if (wheelCooldown) return;
+
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && Math.abs(e.deltaY) > 25) {
+                if (e.deltaY > 0) {
+                    if (currentHomePageIndex < homePages.length - 1) {
+                        wheelCooldown = true;
+                        goToHomePage(currentHomePageIndex + 1);
+                        setTimeout(() => { wheelCooldown = false; }, 380);
+                    }
+                } else {
+                    if (currentHomePageIndex > 0) {
+                        wheelCooldown = true;
+                        goToHomePage(currentHomePageIndex - 1);
+                        setTimeout(() => { wheelCooldown = false; }, 380);
+                    } else if (currentHomePageIndex === 0) {
+                        wheelCooldown = true;
+                        enterBeginningsState();
+                        setTimeout(() => { wheelCooldown = false; }, 380);
+                    }
+                }
+            }
+        }, { passive: true });
+
+        // --- Right-Click on Empty Space -> Enter Edit Mode ---
+        container.addEventListener('contextmenu', (e) => {
+            if (isGhostMouse()) return;
+            if (e.target.closest('.app-icon, .widget-instance, .folder-icon-item, .home-edit-top-bar, .home-page-indicator, #home-search-btn')) {
+                return;
+            }
+            if (document.body.classList.contains('home-screen-active') &&
+                !document.body.classList.contains('beginnings-active') &&
+                !document.body.classList.contains('home-edit-active')) {
+                e.preventDefault();
+                toggleHomeEditMode(true);
+            }
+        });
 
         // Tap on empty space dismisses edit mode
         container.addEventListener('click', (e) => {

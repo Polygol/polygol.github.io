@@ -528,6 +528,16 @@ body.home-edit-active .home-page .home-grid-item:nth-child(2n) {
     animation-delay: 0.09s !important;
 }
 
+body.home-edit-active .home-grid-item,
+body.home-edit-active .folder-grid-cell {
+    cursor: grab;
+}
+
+body.home-edit-active .home-grid-item.is-dragging,
+body.home-edit-active .folder-grid-cell.is-dragging {
+    cursor: grabbing;
+}
+
 /* --- Edit Mode Header (+ and Done) --- */
 .home-edit-header {
     position: absolute;
