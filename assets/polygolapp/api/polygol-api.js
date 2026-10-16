@@ -230,6 +230,13 @@ let _isSuspended = false;
 
         :root {
             --sun-shadow: 0 0 0 0 transparent;
+            --sun-shadow-strong: 0 0 0 0 transparent;
+            
+            /* Glassmorphism & FxFilter Blur Variables */
+            --blur0: blur(1.0px);
+            --blur1: blur(2.5px);
+            --blur2: blur(5.0px);
+            --blur3: blur(10.0px);
             
             /* System Screen Padding & Layout Variables */
             --top-screen-padding: 80px;
@@ -385,9 +392,11 @@ let _isSuspended = false;
             --glass-border: var(--accent-light-highcontrast);
         }
 
-        /* Universal backdrop-filter removal for high contrast */
+        /* Universal backdrop-filter and fx-filter removal for high contrast */
         html.polygol-high-contrast * {
             backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            --fx-filter: none !important;
         }
 
         html.polygol-glass-disabled {
@@ -560,7 +569,7 @@ let _isSuspended = false;
             height: 40px;
             top: 50%;
             left: 14px;
-            backdrop-filter: saturate(0.5) blur(2.5px);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0);
             border-radius: 36px;
         }
 
@@ -1147,24 +1156,322 @@ let _isSuspended = false;
     });
 })();
 
+// Helper queue for standalone dialogs
+let _fallbackDialogQueue = [];
+let _currentActiveFallbackModal = null;
+
+function _detectSystemLanguage() {
+    try {
+        const nav = (typeof window !== 'undefined' && window.navigator) ? window.navigator : (typeof navigator !== 'undefined' ? navigator : null);
+        if (nav) {
+            const sysLang = (nav.languages && nav.languages.length ? nav.languages[0] : (nav.language || '')).toLowerCase();
+            if (sysLang.startsWith('ja')) return 'JP';
+            if (sysLang.startsWith('ko')) return 'KO';
+            if (sysLang.startsWith('zh')) return 'ZH';
+        }
+    } catch (e) {}
+    return 'EN';
+}
+
+function _t(key) {
+    if (typeof APPAPI !== 'undefined' && typeof APPAPI.t === 'function') {
+        const val = APPAPI.t(key);
+        if (val) return val;
+    }
+    const lang = (typeof _systemLocaleState !== 'undefined' && _systemLocaleState && _systemLocaleState.languageCode) 
+        ? _systemLocaleState.languageCode 
+        : _detectSystemLanguage();
+    if (typeof _polygolappStrings !== 'undefined') {
+        if (_polygolappStrings[lang] && _polygolappStrings[lang][key] !== undefined) {
+            return _polygolappStrings[lang][key];
+        }
+        if (_polygolappStrings.EN && _polygolappStrings.EN[key] !== undefined) {
+            return _polygolappStrings.EN[key];
+        }
+    }
+    return key;
+}
+
+function _lerpColor(color1, color2, factor) {
+    const result = color1.slice();
+    for (let i = 0; i < 3; i++) {
+        result[i] = Math.round(color1[i] + factor * (color2[i] - color1[i]));
+    }
+    return result;
+}
+
+const _miniSunCalc = {
+    getPosition: function(date, lat, lng) {
+        if (typeof window !== 'undefined' && window.SunCalc && typeof window.SunCalc.getPosition === 'function') {
+            return window.SunCalc.getPosition(date, lat, lng);
+        }
+        const PI = Math.PI, sin = Math.sin, cos = Math.cos, tan = Math.tan, asin = Math.asin, atan2 = Math.atan2;
+        const rad = PI / 180;
+        const e = rad * 23.4397;
+        const d = (date.getTime() / 86400000 - 0.5 + 2440588) - 2451545;
+        const M = rad * (357.5291 + 0.98560028 * d);
+        const C = rad * (1.9148 * sin(M) + 0.02 * sin(2 * M) + 0.0003 * sin(3 * M));
+        const L = M + C + rad * 102.9372 + PI;
+        const dec = asin(sin(e) * sin(L));
+        const ra = atan2(sin(L) * cos(e), cos(L));
+        const th = rad * (280.16 + 360.9856235 * d) - rad * lng;
+        const H = th - ra;
+        const phi = rad * lat;
+        const alt = asin(sin(phi) * sin(dec) + cos(phi) * cos(dec) * cos(H));
+        const az = atan2(sin(H), cos(H) * sin(phi) - tan(dec) * cos(phi));
+        return { azimuth: az, altitude: alt };
+    },
+    getMoonPosition: function(date, lat, lng) {
+        if (typeof window !== 'undefined' && window.SunCalc && typeof window.SunCalc.getMoonPosition === 'function') {
+            return window.SunCalc.getMoonPosition(date, lat, lng);
+        }
+        const PI = Math.PI, sin = Math.sin, cos = Math.cos, tan = Math.tan, asin = Math.asin, atan2 = Math.atan2;
+        const rad = PI / 180;
+        const e = rad * 23.4397;
+        const d = (date.getTime() / 86400000 - 0.5 + 2440588) - 2451545;
+        const L = rad * (218.316 + 13.176396 * d);
+        const M = rad * (134.963 + 13.064993 * d);
+        const F = rad * (93.272 + 13.229350 * d);
+        const l = L + rad * 6.289 * sin(M);
+        const b = rad * 5.128 * sin(F);
+        const dec = asin(sin(b) * cos(e) + cos(b) * sin(e) * sin(l));
+        const ra = atan2(sin(l) * cos(e) - tan(b) * sin(e), cos(l));
+        const th = rad * (280.16 + 360.9856235 * d) - rad * lng;
+        const H = th - ra;
+        const phi = rad * lat;
+        const alt = asin(sin(phi) * sin(dec) + cos(phi) * cos(dec) * cos(H));
+        const az = atan2(sin(H), cos(H) * sin(phi) - tan(dec) * cos(phi));
+        return { azimuth: az, altitude: alt };
+    }
+};
+
+let currentSunShadow = '';
+let currentSunShadowStrong = '';
+
+function updateSunEffect() {
+    try {
+        const disabledSys = JSON.parse(localStorage.getItem('disabledSystemComponents') || '[]');
+        if (disabledSys.includes('SunShadow')) {
+            document.documentElement.style.removeProperty('--sun-shadow');
+            document.documentElement.style.removeProperty('--sun-shadow-strong');
+            if (document.body) {
+                document.body.style.removeProperty('--sun-shadow');
+                document.body.style.removeProperty('--sun-shadow-strong');
+            }
+            return;
+        }
+    } catch (e) {}
+
+    const now = new Date();
+    const longitude = (now.getTimezoneOffset() / 60) * -15;
+
+    let latitude = 40;
+    try {
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (timeZone) {
+            if (timeZone.startsWith('Australia')) latitude = -25;
+            else if (timeZone.startsWith('Africa')) latitude = 0;
+            else if (timeZone.startsWith('Asia')) latitude = 35;
+            else if (timeZone.startsWith('Europe')) latitude = 50;
+            else if (timeZone.startsWith('America')) {
+                latitude = 40;
+                if (timeZone.includes('Sao_Paulo') || timeZone.includes('Argentina') || timeZone.includes('Santiago') || timeZone.includes('Lima')) {
+                    latitude = -20;
+                }
+            }
+            else if (timeZone.startsWith('Pacific')) latitude = 0;
+            else if (timeZone.startsWith('Atlantic')) latitude = 30;
+            else if (timeZone.startsWith('Indian')) latitude = -10;
+            else if (timeZone.startsWith('Antarctica')) latitude = -75;
+        }
+    } catch (e) {}
+
+    const sunPosition = (typeof window !== 'undefined' && window.SunCalc && typeof window.SunCalc.getPosition === 'function')
+        ? window.SunCalc.getPosition(now, latitude, longitude)
+        : _miniSunCalc.getPosition(now, latitude, longitude);
+
+    const isLightMode = (document.body && document.body.classList.contains('light-theme')) || 
+                        document.documentElement.classList.contains('light-theme') || 
+                        (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
+
+    const SUNRISE_COLOR = [255, 170, 90];
+    const MIDDAY_COLOR = [255, 255, 255];
+    const SHADOW_DISTANCE = 1.0;
+    const MAX_SUN_ALPHA = isLightMode ? 0.95 : 0.7;
+    const blackAlpha = isLightMode ? 0.4 : 0.2;
+    const strongBlackAlpha = isLightMode ? 0.6 : 0.4;
+
+    if (sunPosition.altitude > 0) {
+        const altitudeFactor = Math.sin(sunPosition.altitude); 
+        const offsetX = Math.sin(sunPosition.azimuth) * SHADOW_DISTANCE;
+        const offsetY = Math.cos(sunPosition.azimuth) * SHADOW_DISTANCE;
+
+        const fadeOffsetX = offsetX * 12;
+        const fadeOffsetY = offsetY * 12;
+        const fresnelAlpha = isLightMode ? 0.25 : 0.10;
+        const fresnelAlphaStrong = isLightMode ? 0.35 : 0.20;
+
+        const innerFade1 = `inset ${fadeOffsetX.toFixed(2)}px ${fadeOffsetY.toFixed(2)}px 15px -5px rgba(255, 255, 255, ${fresnelAlpha})`;
+        const innerFade2 = `inset ${-fadeOffsetX.toFixed(2)}px ${-fadeOffsetY.toFixed(2)}px 15px -5px rgba(255, 255, 255, ${fresnelAlpha})`;
+        const innerFade = `${innerFade1}, ${innerFade2}`;
+
+        const innerFadeStrong1 = `inset ${fadeOffsetX.toFixed(2)}px ${fadeOffsetY.toFixed(2)}px 20px -5px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
+        const innerFadeStrong2 = `inset ${-fadeOffsetX.toFixed(2)}px ${-fadeOffsetY.toFixed(2)}px 20px -5px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
+        const innerFadeStrong = `${innerFadeStrong1}, ${innerFadeStrong2}`;
+
+        const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
+        const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
+        
+        const blackOutline1 = `${(-offsetY).toFixed(2)}px ${offsetX.toFixed(2)}px 0px -0.5px rgba(20, 20, 20, ${blackAlpha})`;
+        const blackOutline2 = `${offsetY.toFixed(2)}px ${(-offsetX).toFixed(2)}px 0px -0.5px rgba(20, 20, 20, ${blackAlpha})`;
+
+        currentSunShadow = `${innerFade}, ${specularHighlight}, ${reflectedSpecular}, ${blackOutline1}, ${blackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
+        
+        const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.25px rgba(255, 255, 255, 1)`;
+        const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.25px rgba(255, 255, 255, 1)`;
+        
+        const strongBlackOutline1 = `${(-offsetY).toFixed(2)}px ${offsetX.toFixed(2)}px 0px -0.25px rgba(20, 20, 20, ${strongBlackAlpha})`;
+        const strongBlackOutline2 = `${offsetY.toFixed(2)}px ${(-offsetX).toFixed(2)}px 0px -0.25px rgba(20, 20, 20, ${strongBlackAlpha})`;
+
+        currentSunShadowStrong = `${innerFadeStrong}, ${strongSpecular}, ${strongReflectedSpecular}, ${strongBlackOutline1}, ${strongBlackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
+
+    } else {
+        const moonPosition = (typeof window !== 'undefined' && window.SunCalc && typeof window.SunCalc.getMoonPosition === 'function')
+            ? window.SunCalc.getMoonPosition(now, latitude, longitude)
+            : _miniSunCalc.getMoonPosition(now, latitude, longitude);
+
+        const fresnelAlpha = isLightMode ? 0.25 : 0.10;
+        const fresnelAlphaStrong = isLightMode ? 0.35 : 0.20;
+
+        const innerFade1 = `inset 0px 3.5px 5px -1.5px rgba(255, 255, 255, ${fresnelAlpha})`;
+        const innerFade2 = `inset 0px -3.5px 5px -5px rgba(255, 255, 255, ${fresnelAlpha})`;
+        const innerFade = `${innerFade1}, ${innerFade2}`;
+
+        const innerFadeStrong1 = `inset 0px 4px 7px -5px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
+        const innerFadeStrong2 = `inset 0px -4px 7px -5px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
+        const innerFadeStrong = `${innerFadeStrong1}, ${innerFadeStrong2}`;
+
+        const starlightSpecular = `inset 0px 1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
+        const starlightReflected = `inset 0px -1px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
+        
+        const starlightBlackOutline1 = `-1px 0px 0px -0.5px rgba(20, 20, 20, ${blackAlpha})`;
+        const starlightBlackOutline2 = `1px 0px 0px -0.5px rgba(20, 20, 20, ${blackAlpha})`;
+
+        currentSunShadow = `${innerFade}, ${starlightSpecular}, ${starlightReflected}, ${starlightBlackOutline1}, ${starlightBlackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
+
+        const strongStarlightSpecular = `inset 0px 1px 1px -0.25px rgba(255, 255, 255, 1)`;
+        const strongStarlightReflected = `inset 0px -1px 1px -0.25px rgba(255, 255, 255, 1)`;
+        
+        const strongStarlightBlackOutline1 = `-1px 0px 0px -0.25px rgba(20, 20, 20, ${strongBlackAlpha})`;
+        const strongStarlightBlackOutline2 = `1px 0px 0px -0.25px rgba(20, 20, 20, ${strongBlackAlpha})`;
+
+        currentSunShadowStrong = `${innerFadeStrong}, ${strongStarlightSpecular}, ${strongStarlightReflected}, ${strongStarlightBlackOutline1}, ${strongStarlightBlackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
+        
+        if (moonPosition.altitude > 0) {
+            const offsetX = Math.sin(moonPosition.azimuth) * SHADOW_DISTANCE;
+            const offsetY = Math.cos(moonPosition.azimuth) * SHADOW_DISTANCE;
+            
+            const specularHighlight = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
+            const reflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, ${isLightMode ? 1 : 0.5})`;
+            
+            const moonBlackOutline1 = `${(-offsetY).toFixed(2)}px ${offsetX.toFixed(2)}px 0px -0.5px rgba(20, 20, 20, ${blackAlpha})`;
+            const moonBlackOutline2 = `${offsetY.toFixed(2)}px ${(-offsetX).toFixed(2)}px 0px -0.5px rgba(20, 20, 20, ${blackAlpha})`;
+            
+            const fadeOffsetX = offsetX * 3.5;
+            const fadeOffsetY = offsetY * 3.5;
+
+            const innerFade1 = `inset ${fadeOffsetX.toFixed(2)}px ${fadeOffsetY.toFixed(2)}px 6px -5px rgba(255, 255, 255, ${fresnelAlpha})`;
+            const innerFade2 = `inset ${-fadeOffsetX.toFixed(2)}px ${-fadeOffsetY.toFixed(2)}px 6px -5px rgba(255, 255, 255, ${fresnelAlpha})`;
+            const innerFade = `${innerFade1}, ${innerFade2}`;
+
+            const innerFadeStrong1 = `inset ${fadeOffsetX.toFixed(2)}px ${fadeOffsetY.toFixed(2)}px 8px -5px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
+            const innerFadeStrong2 = `inset ${-fadeOffsetX.toFixed(2)}px ${-fadeOffsetY.toFixed(2)}px 8px -5px rgba(255, 255, 255, ${fresnelAlphaStrong})`;
+            const innerFadeStrong = `${innerFadeStrong1}, ${innerFadeStrong2}`;
+            
+            currentSunShadow = `${innerFade}, ${specularHighlight}, ${reflectedSpecular}, ${moonBlackOutline1}, ${moonBlackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
+
+            const strongSpecular = `inset ${offsetX.toFixed(2)}px ${offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, 1)`;
+            const strongReflectedSpecular = `inset ${-offsetX.toFixed(2)}px ${-offsetY.toFixed(2)}px 1px -0.5px rgba(255, 255, 255, 1)`;
+            
+            const strongMoonBlackOutline1 = `${(-offsetY).toFixed(2)}px ${offsetX.toFixed(2)}px 0px -0.5px rgba(20, 20, 20, ${strongBlackAlpha})`;
+            const strongMoonBlackOutline2 = `${offsetY.toFixed(2)}px ${(-offsetX).toFixed(2)}px 0px -0.5px rgba(20, 20, 20, ${strongBlackAlpha})`;
+                            
+            currentSunShadowStrong = `${innerFadeStrong}, ${strongSpecular}, ${strongReflectedSpecular}, ${strongMoonBlackOutline1}, ${strongMoonBlackOutline2}, 0 5px 20px -10px rgba(0, 0, 0, 0.2)`;
+        }
+    }
+    
+    document.documentElement.style.setProperty('--sun-shadow', currentSunShadow);
+    document.documentElement.style.setProperty('--sun-shadow-strong', currentSunShadowStrong);
+    if (document.body) {
+        document.body.style.setProperty('--sun-shadow', currentSunShadow);
+        document.body.style.setProperty('--sun-shadow-strong', currentSunShadowStrong);
+    }
+}
+
+function _initStandaloneFxFilter() {
+    try {
+        let mode = localStorage.getItem('glassEffectsMode');
+        if (!mode) {
+            const oldSetting = localStorage.getItem('glassEffectsEnabled');
+            mode = (oldSetting === 'false') ? '0' : '5';
+        }
+        const root = document.documentElement;
+        const val = parseInt(mode, 10);
+        const isOff = isNaN(val) ? (mode === 'off') : (val <= 0);
+        const activeVal = isOff ? 0 : (isNaN(val) ? 5 : val);
+
+        root.style.setProperty('--blur0', isOff ? 'none' : `blur(${(activeVal * 0.2).toFixed(1)}px)`);
+        root.style.setProperty('--blur1', isOff ? 'none' : `blur(${(activeVal * 0.5).toFixed(1)}px)`);
+        root.style.setProperty('--blur2', isOff ? 'none' : `blur(${(activeVal * 1.0).toFixed(1)}px)`);
+        root.style.setProperty('--blur3', isOff ? 'none' : `blur(${(activeVal * 2.0).toFixed(1)}px)`);
+
+        if (!isOff) {
+            root.classList.remove('polygol-trans-off', 'trans-off');
+        } else {
+            root.classList.add('polygol-trans-off', 'trans-off');
+        }
+
+        root.style.removeProperty('--fx-filter');
+        root.style.removeProperty('--edge-refraction-filter');
+
+        if (typeof window !== 'undefined' && window.FxFilter && typeof window.FxFilter.init === 'function') {
+            window.FxFilter.init();
+        }
+    } catch (e) {
+        console.warn("[APP API] Standalone FxFilter init error:", e);
+    }
+}
+
 // Native JS solutions for when the app is running outside of Polygol
 const _fallbacks = {
     showPopup: function(message) {
+        if (!message) return;
         const toast = document.createElement('div');
         toast.textContent = message;
         toast.style.cssText = `
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);--fx-filter: var(--blur1) glass(0.6, 8, 0);padding: 10px 20px; border-radius: 20px;
-            z-index: 9999; transition: opacity 0.5s; font-family: sans-serif;
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px) scale(0.95);
+            border: 1px solid var(--glass-border); color: var(--text-color); background: var(--search-background);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0); padding: 12px 24px; border-radius: 20px;
+            corner-shape: superellipse(1.5); box-shadow: var(--sun-shadow), 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 999999; opacity: 0; transition: opacity 0.3s cubic-bezier(0.2, 1.3, 0.64, 1), transform 0.3s cubic-bezier(0.2, 1.3, 0.64, 1);
+            font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 500; pointer-events: none;
+            max-width: min(90vw, 420px); text-align: center; word-break: break-word; user-select: none;
         `;
         document.body.appendChild(toast);
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0) scale(1)';
+        });
         setTimeout(() => {
             toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 500);
-        }, 3000);
+            toast.style.transform = 'translateX(-50%) translateY(10px) scale(0.95)';
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 300);
+        }, 3200);
     },
     showNotification: function(message, options = {}) {
-        const title = options.heading || options.header || "Notification";
+        const title = options.heading || options.header || _t('NOTIFICATION');
         if ("Notification" in window) {
             if (Notification.permission === "granted") {
                 new Notification(title, { body: message, icon: options.iconUrl || options.icon });
@@ -1176,7 +1483,7 @@ const _fallbacks = {
                 });
             }
         } else {
-            alert(title + "\n\n" + message);
+            _fallbacks.showPopup(title + (message ? ": " + message : ""));
         }
     },
     speakText: function(text) {
@@ -1223,15 +1530,214 @@ const _fallbacks = {
         document.body.removeChild(a);
     },
     showDialog: function(options) {
-        let res;
-        if (options.type === 'confirm') res = window.confirm(options.message);
-        else if (options.type === 'prompt') res = window.prompt(options.message, options.defaultValue);
-        else { window.alert(options.message); res = true; }
-        
-        if (options.requestId && _dialogCallbacks[options.requestId]) {
-            _dialogCallbacks[options.requestId](res);
-            delete _dialogCallbacks[options.requestId];
+        options = options || {};
+        if (_currentActiveFallbackModal) {
+            _fallbackDialogQueue.push(options);
+            return;
         }
+
+        const overlay = document.createElement('div');
+        overlay.id = 'polygol-fallback-dialog-overlay';
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--overlay-color);
+            --fx-filter: var(--blur2) glass(0.6, 8, 0);
+            z-index: 999998; display: flex; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s ease;
+            touch-action: manipulation;
+        `;
+
+        const modal = document.createElement('div');
+        modal.className = 'polygol-standalone-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.style.cssText = `
+            position: relative;
+            width: calc(100% - 32px);
+            max-width: 440px;
+            max-height: 90vh;
+            background-color: var(--search-background);
+            --fx-filter: var(--blur2) glass(0.6, 8, 0);
+            color: var(--text-color);
+            border: 1px solid var(--glass-border);
+            border-radius: 35px;
+            corner-shape: superellipse(1.5);
+            padding: 24px;
+            box-shadow: var(--sun-shadow), 0 20px 40px rgba(0, 0, 0, 0.25);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transform: scale(0.92);
+            filter: blur(4px);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.2, 1.3, 0.64, 1), opacity 0.3s ease, filter 0.3s ease;
+            user-select: none;
+            z-index: 999999;
+        `;
+
+        _currentActiveFallbackModal = overlay;
+
+        let displayTitle = options.title;
+        let displayMessage = options.message;
+
+        if (!displayTitle && displayMessage) {
+            displayTitle = displayMessage;
+            displayMessage = '';
+        }
+
+        const confirmWords = ['Confirm', '確認', '확인', '确认'];
+        if (options.type === 'confirm' && confirmWords.includes(displayTitle) && displayMessage) {
+            displayTitle = displayMessage;
+            displayMessage = '';
+        }
+
+        if (!displayTitle) {
+            if (options.type === 'confirm') displayTitle = _t('CONFIRM');
+            else if (options.type === 'prompt') displayTitle = _t('PROMPT');
+            else displayTitle = _t('INFO');
+        }
+
+        const headerRow = document.createElement('div');
+        headerRow.style.cssText = 'display: flex; align-items: center; gap: 12px; margin-bottom: 12px;';
+
+        if (options.icon) {
+            const iconEl = document.createElement('span');
+            iconEl.className = 'material-symbols-rounded';
+            iconEl.style.cssText = 'font-size: 28px; color: var(--accent); flex-shrink: 0;';
+            iconEl.textContent = options.icon;
+            headerRow.appendChild(iconEl);
+        }
+
+        const titleEl = document.createElement('h2');
+        titleEl.style.cssText = 'margin: 0; font-family: "Open Runde", sans-serif; font-size: 1.25rem; font-weight: 600; color: var(--text-color); line-height: 1.3; word-break: break-word;';
+        titleEl.textContent = displayTitle;
+        headerRow.appendChild(titleEl);
+        modal.appendChild(headerRow);
+
+        if (displayMessage) {
+            const msgEl = document.createElement('div');
+            msgEl.style.cssText = 'font-family: "Inter", sans-serif; font-size: 0.95rem; line-height: 1.45; color: var(--secondary-text-color); margin-bottom: 20px; word-break: break-word;';
+            msgEl.textContent = displayMessage;
+            modal.appendChild(msgEl);
+        } else {
+            headerRow.style.marginBottom = '20px';
+        }
+
+        let promptInput = null;
+        if (options.type === 'prompt') {
+            promptInput = document.createElement('input');
+            promptInput.type = 'text';
+            promptInput.className = 'form-input';
+            promptInput.value = options.defaultValue || '';
+            promptInput.style.cssText = `
+                width: 100%; box-sizing: border-box; padding: 12px 16px; margin-bottom: 20px;
+                border-radius: 20px; corner-shape: superellipse(1.5);
+                border: 1px solid var(--glass-border); background: var(--background-color);
+                color: var(--text-color); font-family: 'Inter', sans-serif; font-size: 1rem;
+                outline: none; box-shadow: var(--sun-shadow); transition: border-color 0.2s;
+            `;
+            modal.appendChild(promptInput);
+        }
+
+        const btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display: flex; gap: 10px; justify-content: flex-end; width: 100%; margin-top: auto;';
+
+        const createButton = (text, isPrimary, onClick) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = text;
+            btn.style.cssText = `
+                flex: 1; padding: 12px 16px; border-radius: 20px; corner-shape: superellipse(1.5);
+                border: 1px solid var(--glass-border); cursor: pointer; font-family: 'Inter', sans-serif;
+                font-size: 0.95rem; font-weight: 600; box-shadow: var(--sun-shadow); outline: none;
+                min-height: 44px; touch-action: manipulation; transition: transform 0.15s ease, filter 0.2s ease;
+                background: ${isPrimary ? 'var(--accent)' : 'var(--search-background)'};
+                color: ${isPrimary ? 'var(--background-color)' : 'var(--text-color)'};
+            `;
+            btn.addEventListener('pointerdown', () => { btn.style.transform = 'scale(0.97)'; });
+            btn.addEventListener('pointerup', () => { btn.style.transform = 'scale(1)'; });
+            btn.addEventListener('pointerleave', () => { btn.style.transform = 'scale(1)'; });
+            btn.onclick = onClick;
+            return btn;
+        };
+
+        const cleanupAndResolve = (val) => {
+            modal.style.transform = 'scale(0.92)';
+            modal.style.opacity = '0';
+            modal.style.filter = 'blur(4px)';
+            overlay.style.opacity = '0';
+            window.removeEventListener('keydown', keydownHandler);
+            
+            setTimeout(() => {
+                if (overlay.parentNode) overlay.remove();
+                _currentActiveFallbackModal = null;
+
+                if (options.requestId && _dialogCallbacks[options.requestId]) {
+                    _dialogCallbacks[options.requestId](val);
+                    delete _dialogCallbacks[options.requestId];
+                }
+
+                if (_fallbackDialogQueue && _fallbackDialogQueue.length > 0) {
+                    const next = _fallbackDialogQueue.shift();
+                    _fallbacks.showDialog(next);
+                }
+            }, 300);
+        };
+
+        let primaryBtn = null;
+
+        if (options.type === 'confirm') {
+            const noBtn = createButton(_t('NO'), false, () => cleanupAndResolve(false));
+            const yesBtn = createButton(_t('YES'), true, () => cleanupAndResolve(true));
+            btnRow.appendChild(noBtn);
+            btnRow.appendChild(yesBtn);
+            primaryBtn = yesBtn;
+        } else if (options.type === 'prompt') {
+            const cancelBtn = createButton(_t('CANCEL'), false, () => cleanupAndResolve(null));
+            const okBtn = createButton(_t('OK'), true, () => cleanupAndResolve(promptInput ? promptInput.value : ''));
+            btnRow.appendChild(cancelBtn);
+            btnRow.appendChild(okBtn);
+            primaryBtn = okBtn;
+        } else {
+            primaryBtn = createButton(_t('OK'), true, () => cleanupAndResolve(true));
+            btnRow.appendChild(primaryBtn);
+        }
+
+        modal.appendChild(btnRow);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        const keydownHandler = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                cleanupAndResolve(options.type === 'confirm' ? false : (options.type === 'prompt' ? null : true));
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (primaryBtn) primaryBtn.click();
+            }
+        };
+        window.addEventListener('keydown', keydownHandler);
+
+        overlay.addEventListener('pointerdown', (e) => {
+            if (e.target === overlay) {
+                cleanupAndResolve(options.type === 'confirm' ? false : (options.type === 'prompt' ? null : true));
+            }
+        });
+
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            modal.style.opacity = '1';
+            modal.style.transform = 'scale(1)';
+            modal.style.filter = 'none';
+
+            if (promptInput && typeof promptInput.focus === 'function') {
+                promptInput.focus();
+                if (typeof promptInput.select === 'function') promptInput.select();
+            } else if (primaryBtn && typeof primaryBtn.focus === 'function') {
+                primaryBtn.focus();
+            }
+        });
     },
     setLocalStorageItem: function(key, value) {
         localStorage.setItem(key, value);
@@ -1245,14 +1751,28 @@ const _fallbacks = {
         window.postMessage({ type: 'localStorageKeysList', keys: keys }, '*');
     },
     showSheet: function(options = {}) {
+        const existing = document.getElementById('polygol-fallback-sheet');
+        if (existing) existing.remove();
+
         const overlay = document.createElement('div');
         overlay.id = 'polygol-fallback-sheet';
-        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:var(--overlay-color);backdrop-filter: blur(10px);z-index:99999;display:flex;justify-content:center;align-items:flex-end;';
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay-color);
+            --fx-filter: var(--blur2) glass(0.6, 8, 0);
+            z-index: 99999; display: flex; justify-content: center; align-items: flex-end;
+            opacity: 0; transition: opacity 0.3s ease;
+        `;
         
         const container = document.createElement('div');
-        container.style.cssText = 'width:100%;max-width:800px;height:' + (options.height || '60%') + ';max-height:calc(100% - 80px);background:var(--background-color);corner-shape: superellipse(1.5);border-radius:35px 35px 0 0;overflow:hidden;position:relative;border:1px solid var(--glass-border);box-shadow: var(--sun-shadow), 0 10px 30px rgba(0, 0, 0, 0.2);';
+        container.style.cssText = `
+            width: 100%; max-width: 800px; height: ${options.height || '60%'}; max-height: calc(100% - 80px);
+            background: var(--background-color); corner-shape: superellipse(1.5); border-radius: 35px 35px 0 0;
+            overflow: hidden; position: relative; border: 1px solid var(--glass-border);
+            box-shadow: var(--sun-shadow), 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 1.3, 0.64, 1);
+        `;
         
-        // Spinner Element
         const spinnerContainer = document.createElement('div');
         spinnerContainer.className = 'sheet-loading-spinner';
         spinnerContainer.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; z-index: 1; transition: opacity 0.3s ease; pointer-events: none;';
@@ -1263,13 +1783,25 @@ const _fallbacks = {
         `;
         container.appendChild(spinnerContainer);
 
-        // Close Button
         const closeBtn = document.createElement('button');
-        closeBtn.textContent = (typeof APPAPI !== 'undefined' && APPAPI.t) ? APPAPI.t('DONE') : ((typeof window !== 'undefined' && window.t) ? window.t('DONE') : 'Done');
-        closeBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:10;padding:10px 15px;border-radius:50px;border:1px solid var(--glass-border);color:var(--text-color);background:var(--search-background);--fx-filter: var(--blur1) glass(0.6, 8, 0);cursor:pointer;';
-        closeBtn.onclick = () => overlay.remove();
+        closeBtn.textContent = _t('DONE');
+        closeBtn.style.cssText = `
+            position: absolute; top: 12px; right: 12px; z-index: 10; padding: 10px 18px; border-radius: 50px;
+            corner-shape: superellipse(1.5); border: 1px solid var(--glass-border); color: var(--text-color);
+            background: var(--search-background); --fx-filter: var(--blur1) glass(0.6, 8, 0); cursor: pointer;
+            box-shadow: var(--sun-shadow); font-family: 'Inter', sans-serif; font-weight: 500; font-size: 0.9rem;
+            min-height: 44px; touch-action: manipulation;
+        `;
+        const closeSheetFn = () => {
+            overlay.style.opacity = '0';
+            container.style.transform = 'translateY(100%)';
+            setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 300);
+        };
+        closeBtn.onclick = closeSheetFn;
+        overlay.onclick = (e) => {
+            if (e.target === overlay) closeSheetFn();
+        };
 
-        // Iframe Element
         const iframe = document.createElement('iframe');
         iframe.className = 'sheet-iframe';
         iframe.style.cssText = 'width:100%;height:100%;border:none;border-radius:inherit;corner-shape:inherit;';
@@ -1287,12 +1819,10 @@ const _fallbacks = {
             }, 300);
         };
 
-        // Setting iframe source
         if (options.url) {
             iframe.src = options.url;
         } else if (options.html) {
-            iframe.sandbox = "allow-scripts"; // Secure: No allow-same-origin
-            
+            iframe.sandbox = "allow-scripts";
             let headInjection = '';
             if (options.styleUrls && Array.isArray(options.styleUrls)) {
                 options.styleUrls.forEach(url => {
@@ -1302,29 +1832,37 @@ const _fallbacks = {
             if (options.styles) {
                 headInjection += `<style>\n${options.styles}\n</style>\n`;
             }
-            
             const apiScriptUrl = new URL('https://polygol.github.io/assets/polygolapp/api/polygol-api.js', window.location.origin).href;
             let htmlContent = options.html;
             if (!htmlContent.includes('polygol-api.js')) {
                 headInjection += `<script src="${apiScriptUrl}"><\/script>\n`;
             }
-
             if (htmlContent.includes('<head>')) {
                 htmlContent = htmlContent.replace('<head>', '<head>\n' + headInjection);
             } else {
                 htmlContent = headInjection + htmlContent;
             }
-            
             iframe.srcdoc = htmlContent;
         }
 
-        // Append iframe and close button
         container.appendChild(closeBtn);
         container.appendChild(iframe);
-
-        // Append container to overlay
         overlay.appendChild(container);
         document.body.appendChild(overlay);
+
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            container.style.transform = 'translateY(0)';
+        });
+    },
+    closeSheet: function() {
+        const overlay = document.getElementById('polygol-fallback-sheet');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            const container = overlay.firstElementChild;
+            if (container) container.style.transform = 'translateY(100%)';
+            setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 300);
+        }
     },
     aiPrompt: function(options) {
         if (options && options.requestId && _aiCallbacks[options.requestId]) {
@@ -1387,6 +1925,9 @@ const _polygolappStrings = {
         "YES": "Yes",
         "NO": "No",
         "OK": "OK",
+        "ALERT": "Alert",
+        "PROMPT": "Prompt",
+        "NOTIFICATION": "Notification",
         "NAME": "Name",
         "TITLE": "Title",
         "DESCRIPTION": "Description",
@@ -1784,6 +2325,9 @@ const _polygolappStrings = {
         "YES": "はい",
         "NO": "いいえ",
         "OK": "OK",
+        "ALERT": "警告",
+        "PROMPT": "入力",
+        "NOTIFICATION": "通知",
         "NAME": "名前",
         "TITLE": "タイトル",
         "DESCRIPTION": "説明",
@@ -2181,6 +2725,9 @@ const _polygolappStrings = {
         "YES": "예",
         "NO": "아니요",
         "OK": "확인",
+        "ALERT": "알림",
+        "PROMPT": "입력",
+        "NOTIFICATION": "알림",
         "NAME": "이름",
         "TITLE": "제목",
         "DESCRIPTION": "설명",
@@ -2578,6 +3125,9 @@ const _polygolappStrings = {
         "YES": "是",
         "NO": "否",
         "OK": "好的",
+        "ALERT": "提示",
+        "PROMPT": "输入",
+        "NOTIFICATION": "通知",
         "NAME": "名称",
         "TITLE": "标题",
         "DESCRIPTION": "描述",
@@ -2968,10 +3518,14 @@ const _localeChangeListeners = new Set();
 // Read initial locale settings from localStorage if accessible
 try {
     const storedLang = localStorage.getItem('selectedLanguage');
-    if (storedLang) {
+    if (storedLang && storedLang !== 'auto') {
         const norm = (storedLang === 'JA' || storedLang === 'JP') ? 'JP' : (['KO', 'ZH'].includes(storedLang) ? storedLang : 'EN');
         _systemLocaleState.languageCode = norm;
         _systemLocaleState.locale = _getBcp47Locale(norm);
+    } else if (!isInsidePolygol) {
+        const detected = _detectSystemLanguage();
+        _systemLocaleState.languageCode = detected;
+        _systemLocaleState.locale = _getBcp47Locale(detected);
     }
     const storedDateFormat = localStorage.getItem('systemDateFormat') || localStorage.getItem('dateFormatPreference');
     if (storedDateFormat) _systemLocaleState.dateFormat = storedDateFormat;
@@ -3074,8 +3628,12 @@ function _applySystemLocale(payload) {
     let changed = false;
 
     if (payload.languageCode) {
-        const norm = (payload.languageCode === 'JA' || payload.languageCode === 'JP') ? 'JP' : 
-            (['KO', 'ZH'].includes(payload.languageCode) ? payload.languageCode : 'EN');
+        let code = payload.languageCode;
+        if (code === 'auto') {
+            code = _detectSystemLanguage();
+        }
+        const norm = (code === 'JA' || code === 'JP') ? 'JP' : 
+            (['KO', 'ZH'].includes(code) ? code : 'EN');
         if (_systemLocaleState.languageCode !== norm) {
             _systemLocaleState.languageCode = norm;
             _systemLocaleState.locale = payload.locale || _getBcp47Locale(norm);
@@ -3866,29 +4424,30 @@ const Polygol = {
     this._call('downloadFile', [filename, dataUrl]);
   },
   
-  showAlert: function(message, title = 'Alert', icon = null) {
-      this._call('showDialog', [{ type: 'alert', message, title, icon }]);
-  },
-
-  showConfirm: function(message, title = 'Confirm', icon = null) {
+  showAlert: function(message, title = null, icon = null) {
       return new Promise((resolve) => {
-          if (!isInsidePolygol) {
-              return resolve(window.confirm(message));
-          }
-          const requestId = `confirm_${++_dialogRequestId}`;
+          const requestId = `alert_${++_dialogRequestId}`;
           _dialogCallbacks[requestId] = resolve;
-          this._call('showDialog', [{ type: 'confirm', message, title, icon, requestId }]);
+          const defaultTitle = _t('INFO');
+          this._call('showDialog', [{ type: 'alert', message, title: title || defaultTitle, icon, requestId }]);
       });
   },
 
-  showPrompt: function(message, title = 'Prompt', defaultValue = '', icon = null) {
+  showConfirm: function(message, title = null, icon = null) {
       return new Promise((resolve) => {
-          if (!isInsidePolygol) {
-              return resolve(window.prompt(message, defaultValue));
-          }
+          const requestId = `confirm_${++_dialogRequestId}`;
+          _dialogCallbacks[requestId] = resolve;
+          const defaultTitle = _t('CONFIRM');
+          this._call('showDialog', [{ type: 'confirm', message, title: title || defaultTitle, icon, requestId }]);
+      });
+  },
+
+  showPrompt: function(message, title = null, defaultValue = '', icon = null) {
+      return new Promise((resolve) => {
           const requestId = `prompt_${++_dialogRequestId}`;
           _dialogCallbacks[requestId] = resolve;
-          this._call('showDialog', [{ type: 'prompt', message, title, defaultValue, icon, requestId }]);
+          const defaultTitle = _t('PROMPT');
+          this._call('showDialog', [{ type: 'prompt', message, title: title || defaultTitle, defaultValue, icon, requestId }]);
       });
   },
 
@@ -4399,6 +4958,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const updateTheme = (e) => {
             const isLight = e.matches;
             document.body.classList.toggle('light-theme', isLight);
+            if (typeof updateSunEffect === 'function') {
+                updateSunEffect();
+            }
         };
         
         // Apply immediately and listen for changes
@@ -4435,13 +4997,34 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.classList.toggle('polygol-high-contrast', highContrastEnabled);
 
     // --- System Locale & Layout Initialization ---
-    const currentLang = localStorage.getItem('selectedLanguage') || _systemLocaleState.languageCode;
+    let currentLang = localStorage.getItem('selectedLanguage');
+    if (!currentLang || currentLang === 'auto') {
+        currentLang = !isInsidePolygol ? _detectSystemLanguage() : _systemLocaleState.languageCode;
+    }
     _applySystemLocale({
         languageCode: currentLang,
         dateFormat: localStorage.getItem('systemDateFormat') || localStorage.getItem('dateFormatPreference') || _systemLocaleState.dateFormat,
         use12HourFormat: localStorage.getItem('use12HourFormat') === 'true',
         timeZone: localStorage.getItem('timeZoneSelection') || _systemLocaleState.timeZone
     });
+
+    if (!isInsidePolygol) {
+        // Dynamic live language switching based on system
+        window.addEventListener('languagechange', () => {
+            const storedLang = localStorage.getItem('selectedLanguage');
+            if (!storedLang || storedLang === 'auto') {
+                const detected = _detectSystemLanguage();
+                _applySystemLocale({ languageCode: detected });
+            }
+        });
+
+        // Initialize standalone FxFilter and blur variables
+        _initStandaloneFxFilter();
+
+        // Initialize standalone SunShadow calculation and periodic refresh (every 60s)
+        updateSunEffect();
+        setInterval(updateSunEffect, 60000);
+    }
 
     const cs = window.getComputedStyle ? window.getComputedStyle(document.documentElement) : null;
     if (cs) {
