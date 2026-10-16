@@ -1438,10 +1438,16 @@ async function createFullscreenEmbed(url) {
             const htmlContent = await response.text();
             
             embedContainer.innerHTML = `
-                <div style="max-width: 600px; margin: 0 auto; font-family: 'Inter', sans-serif; line-height: 1.6; font-size: 1.1rem; padding-bottom: 50px;">
+                <div style="max-width: 600px; margin: 0 auto; font-family: 'Open Runde', 'Inter', sans-serif; line-height: 1.6; font-size: 1.1rem; padding-bottom: 50px;">
                     ${htmlContent}
                 </div>
             `;
+            embedContainer.querySelectorAll('[data-lang-key]').forEach(el => {
+                const key = el.getAttribute('data-lang-key');
+                if (currentLanguage && currentLanguage[key]) {
+                    el.textContent = currentLanguage[key];
+                }
+            });
         } catch (error) {
             embedContainer.innerHTML = `
                 <div style="max-width: 600px; margin: 0 auto; text-align: center; padding-top: 20vh;">
@@ -1685,7 +1691,9 @@ function createAppIcons() {
         };
         
         const label = document.createElement('span');
-        label.textContent = app.name;
+        const langKey = 'APP_' + app.name.toUpperCase();
+        label.setAttribute('data-lang-key', langKey);
+        label.textContent = (currentLanguage && currentLanguage[langKey]) || app.name;
         
         appIcon.appendChild(img);
         appIcon.appendChild(label);
@@ -2842,6 +2850,21 @@ function createSetupScreen() {
             options: []
         },
         {
+            title: "SETUP_NAVIGATION_TITLE",
+            description: "SETUP_NAVIGATION_DESC",
+            icon: "gesture",
+            isGuide: true,
+            guides: [
+                { icon: "swipe_up", title: "GESTURE_BEGINNINGS_TITLE", desc: "GESTURE_BEGINNINGS_DESC" },
+                { icon: "swap_vert", title: "GESTURE_PAGES_TITLE", desc: "GESTURE_PAGES_DESC" },
+                { icon: "swipe", title: "GESTURE_CARDS_TITLE", desc: "GESTURE_CARDS_DESC" },
+                { icon: "swipe_down", title: "GESTURE_CONTROLS_TITLE", desc: "GESTURE_CONTROLS_DESC" },
+                { icon: "swipe_left", title: "GESTURE_ASSISTANT_TITLE", desc: "GESTURE_ASSISTANT_DESC" },
+                { icon: "touch_long", title: "GESTURE_EDIT_MODE_TITLE", desc: "GESTURE_EDIT_MODE_DESC" }
+            ],
+            options: []
+        },
+        {
             title: "SETUP_GOODBYE",
             description: "SETUP_GOODBYE_DESC",
 		    image: "https://github.com/kirbIndustries/assets/blob/main/screwy/img/1/Screwy3.png?raw=true",
@@ -2889,6 +2912,39 @@ function createSetupScreen() {
         description.textContent = currentLanguage[pageData.description] || pageData.description;
         page.appendChild(description);
         
+        // Add guide cards if specified
+        if (pageData.isGuide && Array.isArray(pageData.guides)) {
+            const guideList = document.createElement('div');
+            guideList.className = 'setup-guide-list';
+            pageData.guides.forEach(item => {
+                const guideItem = document.createElement('div');
+                guideItem.className = 'setup-guide-item';
+
+                const icon = document.createElement('span');
+                icon.className = 'material-symbols-rounded';
+                icon.style.cssText = 'font-size: 28px; color: var(--text-color); flex-shrink: 0;';
+                icon.textContent = item.icon;
+
+                const textCol = document.createElement('div');
+                textCol.style.cssText = 'display: flex; flex-direction: column; gap: 2px;';
+
+                const itemTitle = document.createElement('strong');
+                itemTitle.style.cssText = 'font-size: 0.95rem; font-weight: 600; color: var(--text-color);';
+                itemTitle.textContent = currentLanguage[item.title] || item.title;
+
+                const itemDesc = document.createElement('span');
+                itemDesc.style.cssText = 'font-size: 0.85rem; opacity: 0.8; color: var(--secondary-text-color);';
+                itemDesc.textContent = currentLanguage[item.desc] || item.desc;
+
+                textCol.appendChild(itemTitle);
+                textCol.appendChild(itemDesc);
+                guideItem.appendChild(icon);
+                guideItem.appendChild(textCol);
+                guideList.appendChild(guideItem);
+            });
+            page.appendChild(guideList);
+        }
+
         // Add options
         if (pageData.isInput) {
             const input = document.createElement('input');

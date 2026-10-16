@@ -1,40 +1,80 @@
-<div style="text-align: center; max-width: 500px; margin: 0 auto; font-family: 'Inter', sans-serif;">
-    <img src="https://polygol.github.io/assets/appicon/feedback.png" style="width: 64px; height: 64px; margin-bottom: 20px; border-radius: 50%;">
-    <h1 style="margin: 0 0 10px 0; font-weight: 600;">Customization</h1>
-    <p style="opacity: 0.8; font-size: 1.1rem; line-height: 1.5; margin-bottom: 30px;">
-        Make Polygol yours. The environment adapts to your style.
+<div style="text-align: center; max-width: 520px; margin: 0 auto; font-family: 'Open Runde', 'Inter', sans-serif;">
+    <img src="/assets/appicon/feedback.png" alt="Customize" style="width: 64px; height: 64px; margin-bottom: 16px; border-radius: 50%; box-shadow: var(--sun-shadow); --fx-filter: var(--blur1) glass(0.6, 8, 0);">
+    <h1 style="margin: 0 0 10px 0; font-weight: 700; font-size: 2rem; color: var(--text-color);" data-lang-key="APP_CUSTOMIZE">Customization</h1>
+    <p style="opacity: 0.85; font-size: 1.05rem; line-height: 1.5; margin-bottom: 24px; color: var(--text-color);" data-lang-key="CUSTOMIZATION_DESC">
+        Make Polygol yours. The environment seamlessly adapts to your unique aesthetic.
     </p>
 
-    <div style="text-align: left; margin-bottom: 30px;">
-        <h3 style="margin-bottom: 10px;">Wallpapers</h3>
-        <p style="opacity: 0.8; margin-bottom: 15px;">
-            Open Controls and select Wallpaper to upload images or videos. If you upload multiple files, they will automatically play as a slideshow.
-        </p>
+    <div style="text-align: left; display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px;">
+        <div style="background: var(--search-background); padding: 18px 20px; border-radius: 24px; border: 1px solid var(--glass-border); --fx-filter: var(--blur1) glass(0.6, 8, 0); box-shadow: var(--sun-shadow);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="material-symbols-rounded" style="font-size: 22px; color: var(--text-color);">edit</span>
+                <strong style="font-size: 1.05rem; color: var(--text-color);" data-lang-key="CUST_EDITMODE_TITLE">Minihompy Edit Mode</strong>
+            </div>
+            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; opacity: 0.8; color: var(--secondary-text-color);" data-lang-key="CUST_EDITMODE_DESC">
+                Press and hold or right-click any item on Minihompy to enter Edit Mode. Rearrange apps, drop icons together to create folders, and resize widgets.
+            </p>
+        </div>
 
-        <h3 style="margin-bottom: 10px;">Clock Styles</h3>
-        <p style="opacity: 0.8; margin-bottom: 15px;">
-            Change the font, weight, color, and size of the clock directly from the Controls menu. You can even create a stacked layout.
-        </p>
+        <div style="background: var(--search-background); padding: 18px 20px; border-radius: 24px; border: 1px solid var(--glass-border); --fx-filter: var(--blur1) glass(0.6, 8, 0); box-shadow: var(--sun-shadow);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="material-symbols-rounded" style="font-size: 22px; color: var(--text-color);">wallpaper</span>
+                <strong style="font-size: 1.05rem; color: var(--text-color);" data-lang-key="CUST_WALLPAPERS_TITLE">Wallpapers</strong>
+            </div>
+            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; opacity: 0.8; color: var(--secondary-text-color);" data-lang-key="CUST_WALLPAPERS_DESC">
+                Long press empty space in Beginnings to browse the Wallpaper Switcher, or open Controls to add images and dynamic slideshows.
+            </p>
+        </div>
 
-        <h3 style="margin-bottom: 10px;">Widgets</h3>
-        <p style="opacity: 0.8; margin-bottom: 15px;">
-            Polygol supports a simple weather widget that appear automatically when needed. Toggle them in Controls.
-        </p>
+        <div style="background: var(--search-background); padding: 18px 20px; border-radius: 24px; border: 1px solid var(--glass-border); --fx-filter: var(--blur1) glass(0.6, 8, 0); box-shadow: var(--sun-shadow);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="material-symbols-rounded" style="font-size: 22px; color: var(--text-color);">schedule</span>
+                <strong style="font-size: 1.05rem; color: var(--text-color);" data-lang-key="CUST_CLOCK_TITLE">Clock Styles & Typography</strong>
+            </div>
+            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5; opacity: 0.8; color: var(--secondary-text-color);" data-lang-key="CUST_CLOCK_DESC">
+                Personalize font, weight, color, stretch, stacked layout, and date formats directly from Controls.
+            </p>
+        </div>
     </div>
 
-    <button onclick="minimizeFullscreenEmbed(); document.getElementById('persistent-clock').click();" style="
-        padding: 12px 24px; 
-        border-radius: 20px; 
-        background: var(--search-background); 
-        color: var(--text-color); 
-        border: 1px solid var(--glass-border); 
-        font-size: 1rem; 
-        font-weight: 500; 
-        cursor: pointer; 
-        display: inline-flex; 
-        align-items: center; 
+    <button onclick="if(window.parent&&window.parent.Polygol)window.parent.Polygol.openApp('/assets/polygolapp/intl/settings/index.html');" style="
+        padding: 14px 28px;
+        border-radius: 30px;
+        background: var(--search-background);
+        color: var(--text-color);
+        border: 1px solid var(--glass-border);
+        --fx-filter: var(--blur1) glass(0.6, 8, 0);
+        box-shadow: var(--sun-shadow);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
         gap: 8px;
-        font-family: 'Inter';">
-        Try customization
+        font-family: inherit;">
+        <span class="material-symbols-rounded" style="font-size: 20px;">tune</span>
+        <span data-lang-key="CUST_TRY_BUTTON">Open Settings</span>
     </button>
 </div>
+<script>
+(function() {
+    function translateDoc() {
+        const langCode = (localStorage.getItem('selectedLanguage') || 'EN').toUpperCase();
+        const langMap = { 'EN': window.LANG_EN, 'JP': window.LANG_JP, 'JA': window.LANG_JP, 'KO': window.LANG_KO, 'ZH': window.LANG_ZH };
+        const L = (window.currentLanguage) || (langMap[langCode]) || window.LANG_EN;
+        if (!L) return;
+        document.querySelectorAll('[data-lang-key]').forEach(el => {
+            const key = el.getAttribute('data-lang-key');
+            if (L[key]) el.textContent = L[key];
+        });
+    }
+    if (typeof window.LANG_EN === 'undefined') {
+        const s = document.createElement('script');
+        s.src = '/assets/polygolapp/intl/airy/lang.js';
+        s.onload = translateDoc;
+        document.head.appendChild(s);
+    } else {
+        translateDoc();
+    }
+})();
+</script>

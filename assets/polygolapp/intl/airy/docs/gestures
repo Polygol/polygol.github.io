@@ -1,41 +1,95 @@
-<div style="text-align: center; max-width: 500px; margin: 0 auto; font-family: 'Inter', sans-serif;">
-    <img src="https://polygol.github.io/assets/appicon/tips.png" style="width: 64px; height: 64px; margin-bottom: 20px; border-radius: 50%;">
-    <h1 style="margin: 0 0 10px 0; font-weight: 600;">Gestures</h1>
-    <p style="opacity: 0.8; font-size: 1.1rem; line-height: 1.5; margin-bottom: 30px;">
+<div style="text-align: center; max-width: 520px; margin: 0 auto; font-family: 'Open Runde', 'Inter', sans-serif;">
+    <img src="/assets/appicon/tips.png" alt="Tips" style="width: 64px; height: 64px; margin-bottom: 16px; border-radius: 50%; box-shadow: var(--sun-shadow); --fx-filter: var(--blur1) glass(0.6, 8, 0);">
+    <h1 style="margin: 0 0 10px 0; font-weight: 700; font-size: 2rem; color: var(--text-color);" data-lang-key="APP_GESTURES">Gestures</h1>
+    <p style="opacity: 0.85; font-size: 1.05rem; line-height: 1.5; margin-bottom: 24px; color: var(--text-color);" data-lang-key="SETUP_NAVIGATION_DESC">
         Polygol is designed to feel fluid. Navigate the interface using natural movements.
     </p>
 
-    <div style="text-align: left; background: var(--search-background); padding: 20px; border-radius: 25px; border: 1px solid var(--glass-border);">
-        <div style="display: flex; align-items: center; margin-bottom: 15px;">
-            <span class="material-symbols-rounded" style="font-size: 24px; margin-right: 15px; color: var(--text-color);">swipe_up</span>
+    <div style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+        <div style="background: var(--search-background); padding: 16px; border-radius: 24px; border: 1px solid var(--glass-border); --fx-filter: var(--blur1) glass(0.6, 8, 0); box-shadow: var(--sun-shadow); display: flex; align-items: center; gap: 16px;">
+            <span class="material-symbols-rounded" style="font-size: 28px; color: var(--text-color); flex-shrink: 0;">swipe_up</span>
             <div>
-                <strong style="display: block; font-size: 1rem;">Open App Drawer or Minimize App</strong>
-                <span style="opacity: 0.7; font-size: 0.9rem;">Swipe up from the bottom pill.</span>
-            </div>
-        </div>
-        
-        <div style="display: flex; align-items: center; margin-bottom: 15px;">
-            <span class="material-symbols-rounded" style="font-size: 24px; margin-right: 15px; color: var(--text-color);">swipe_down</span>
-            <div>
-                <strong style="display: block; font-size: 1rem;">Donburi Dashboard</strong>
-                <span style="opacity: 0.7; font-size: 0.9rem;">Swipe down on the home screen to access the Donburi dashboard.</span>
+                <strong style="display: block; font-size: 0.95rem; color: var(--text-color);" data-lang-key="GESTURE_BEGINNINGS_TITLE">Enter Home Screen</strong>
+                <span style="opacity: 0.8; font-size: 0.85rem; color: var(--secondary-text-color);" data-lang-key="GESTURE_BEGINNINGS_DESC">Swipe up from Beginnings (idle/lock screen) to enter your Minihompy home screen.</span>
             </div>
         </div>
 
-        <div style="display: flex; align-items: center; margin-bottom: 15px;">
-            <span class="material-symbols-rounded" style="font-size: 24px; margin-right: 15px; color: var(--text-color);">touch_long</span>
+        <div style="background: var(--search-background); padding: 16px; border-radius: 24px; border: 1px solid var(--glass-border); --fx-filter: var(--blur1) glass(0.6, 8, 0); box-shadow: var(--sun-shadow); display: flex; align-items: center; gap: 16px;">
+            <span class="material-symbols-rounded" style="font-size: 28px; color: var(--text-color); flex-shrink: 0;">swap_vert</span>
             <div>
-                <strong style="display: block; font-size: 1rem;">Wallpaper Switcher</strong>
-                <span style="opacity: 0.7; font-size: 0.9rem;">Long press anywhere on an empty part of the home screen.</span>
+                <strong style="display: block; font-size: 0.95rem; color: var(--text-color);" data-lang-key="GESTURE_PAGES_TITLE">Vertical Page Navigation</strong>
+                <span style="opacity: 0.8; font-size: 0.85rem; color: var(--secondary-text-color);" data-lang-key="GESTURE_PAGES_DESC">Swipe vertically (or use mouse scroll / drag) to browse home screen pages. Swipe down on the first page to return to Beginnings.</span>
             </div>
         </div>
 
-        <div style="display: flex; align-items: center;">
-            <span class="material-symbols-rounded" style="font-size: 24px; margin-right: 15px; color: var(--text-color);">swipe</span>
+        <div style="background: var(--search-background); padding: 16px; border-radius: 24px; border: 1px solid var(--glass-border); --fx-filter: var(--blur1) glass(0.6, 8, 0); box-shadow: var(--sun-shadow); display: flex; align-items: center; gap: 16px;">
+            <span class="material-symbols-rounded" style="font-size: 28px; color: var(--text-color); flex-shrink: 0;">swipe</span>
             <div>
-                <strong style="display: block; font-size: 1rem;">Quick Switch</strong>
-                <span style="opacity: 0.7; font-size: 0.9rem;">Swipe left or right on the desktop to cycle wallpapers.</span>
+                <strong style="display: block; font-size: 0.95rem; color: var(--text-color);" data-lang-key="GESTURE_CARDS_TITLE">Cards Deck</strong>
+                <span style="opacity: 0.8; font-size: 0.85rem; color: var(--secondary-text-color);" data-lang-key="GESTURE_CARDS_DESC">Swipe horizontally on Minihompy to reveal live activity cards and widgets.</span>
+            </div>
+        </div>
+
+        <div style="background: var(--search-background); padding: 16px; border-radius: 24px; border: 1px solid var(--glass-border); --fx-filter: var(--blur1) glass(0.6, 8, 0); box-shadow: var(--sun-shadow); display: flex; align-items: center; gap: 16px;">
+            <span class="material-symbols-rounded" style="font-size: 28px; color: var(--text-color); flex-shrink: 0;">swipe_down</span>
+            <div>
+                <strong style="display: block; font-size: 0.95rem; color: var(--text-color);" data-lang-key="GESTURE_CONTROLS_TITLE">Controls & Toggles</strong>
+                <span style="opacity: 0.8; font-size: 0.85rem; color: var(--secondary-text-color);" data-lang-key="GESTURE_CONTROLS_DESC">Swipe down from the top edge (or tap the clock) to access Controls.</span>
+            </div>
+        </div>
+
+        <div style="background: var(--search-background); padding: 16px; border-radius: 24px; border: 1px solid var(--glass-border); --fx-filter: var(--blur1) glass(0.6, 8, 0); box-shadow: var(--sun-shadow); display: flex; align-items: center; gap: 16px;">
+            <span class="material-symbols-rounded" style="font-size: 28px; color: var(--text-color); flex-shrink: 0;">swipe_left</span>
+            <div>
+                <strong style="display: block; font-size: 0.95rem; color: var(--text-color);" data-lang-key="GESTURE_ASSISTANT_TITLE">Kirbai Assistant</strong>
+                <span style="opacity: 0.8; font-size: 0.85rem; color: var(--secondary-text-color);" data-lang-key="GESTURE_ASSISTANT_DESC">Swipe inward from the left or right edges to chat with Kirbai.</span>
+            </div>
+        </div>
+
+        <div style="background: var(--search-background); padding: 16px; border-radius: 24px; border: 1px solid var(--glass-border); --fx-filter: var(--blur1) glass(0.6, 8, 0); box-shadow: var(--sun-shadow); display: flex; align-items: center; gap: 16px;">
+            <span class="material-symbols-rounded" style="font-size: 28px; color: var(--text-color); flex-shrink: 0;">bottom_panel_open</span>
+            <div>
+                <strong style="display: block; font-size: 0.95rem; color: var(--text-color);" data-lang-key="GESTURE_BOTTOM_HANDLE_TITLE">Quick Menu & Switcher</strong>
+                <span style="opacity: 0.8; font-size: 0.85rem; color: var(--secondary-text-color);" data-lang-key="GESTURE_BOTTOM_HANDLE_DESC">Swipe up from the bottom bar to open the Quick Menu or App Switcher.</span>
+            </div>
+        </div>
+
+        <div style="background: var(--search-background); padding: 16px; border-radius: 24px; border: 1px solid var(--glass-border); --fx-filter: var(--blur1) glass(0.6, 8, 0); box-shadow: var(--sun-shadow); display: flex; align-items: center; gap: 16px;">
+            <span class="material-symbols-rounded" style="font-size: 28px; color: var(--text-color); flex-shrink: 0;">touch_long</span>
+            <div>
+                <strong style="display: block; font-size: 0.95rem; color: var(--text-color);" data-lang-key="GESTURE_EDIT_MODE_TITLE">Home Edit Mode</strong>
+                <span style="opacity: 0.8; font-size: 0.85rem; color: var(--secondary-text-color);" data-lang-key="GESTURE_EDIT_MODE_DESC">Long press or right-click anywhere to customize widgets, organize folders, and rearrange apps.</span>
+            </div>
+        </div>
+
+        <div style="background: var(--search-background); padding: 16px; border-radius: 24px; border: 1px solid var(--glass-border); --fx-filter: var(--blur1) glass(0.6, 8, 0); box-shadow: var(--sun-shadow); display: flex; align-items: center; gap: 16px;">
+            <span class="material-symbols-rounded" style="font-size: 28px; color: var(--text-color); flex-shrink: 0;">search</span>
+            <div>
+                <strong style="display: block; font-size: 0.95rem; color: var(--text-color);" data-lang-key="GESTURE_SPOTLIGHT_TITLE">Spotlight Search</strong>
+                <span style="opacity: 0.8; font-size: 0.85rem; color: var(--secondary-text-color);" data-lang-key="GESTURE_SPOTLIGHT_DESC">Tap the search icon or press Cmd/Ctrl + Space to quickly search and launch apps.</span>
             </div>
         </div>
     </div>
 </div>
+<script>
+(function() {
+    function translateDoc() {
+        const langCode = (localStorage.getItem('selectedLanguage') || 'EN').toUpperCase();
+        const langMap = { 'EN': window.LANG_EN, 'JP': window.LANG_JP, 'JA': window.LANG_JP, 'KO': window.LANG_KO, 'ZH': window.LANG_ZH };
+        const L = (window.currentLanguage) || (langMap[langCode]) || window.LANG_EN;
+        if (!L) return;
+        document.querySelectorAll('[data-lang-key]').forEach(el => {
+            const key = el.getAttribute('data-lang-key');
+            if (L[key]) el.textContent = L[key];
+        });
+    }
+    if (typeof window.LANG_EN === 'undefined') {
+        const s = document.createElement('script');
+        s.src = '/assets/polygolapp/intl/airy/lang.js';
+        s.onload = translateDoc;
+        document.head.appendChild(s);
+    } else {
+        translateDoc();
+    }
+})();
+</script>

@@ -742,6 +742,87 @@ let _isSuspended = false;
             font-size: 18px;
             color: var(--text-color);
         }
+            
+        /* Default: preserve the original toolbar positioning */
+        @media (min-width: 600px) {
+            .toolbar {
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+            }
+
+            /* Counterweight only when Search is present */
+            .toolbar:has(.tab-btn[data-view="search"]) {
+                left: calc(50% - 28px);
+            }
+        }
+
+        /* Separate Search button */
+        .toolbar .tab-btn[data-view="search"] {
+            position: fixed;
+            left: calc(100% + 12px);
+            right: auto;
+            top: 50%;
+            transform: translateY(-50%);
+
+            width: 45px;
+            height: 45px;
+            min-width: 45px;
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            background: var(--search-background);
+            box-shadow: var(--sun-shadow);
+            gap: 0;
+            --fx-filter: var(--blur1) glass(0.6, 8, 0);
+        }
+
+        .toolbar .tab-btn[data-view="search"] [data-lang-key="SEARCH"] {
+            display: none;
+        }
+
+        .toolbar .tab-btn[data-view="search"] .material-symbols-rounded {
+            display: inline-block;
+            font-size: 20px;
+            color: var(--secondary-text-color);
+            opacity: 1;
+        }
+
+        /* Search button transition */
+        .toolbar .tab-btn[data-view="search"] {
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+        }
+
+        .toolbar .tab-btn[data-view="search"] {
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
+        }
+
+        .toolbar .tab-btn[data-view="search"]:active {
+            transform: translateY(-50%) scale(1.15);
+        }
+
+        .toolbar .tab-btn[data-view="search"].active:active {
+            transform: translateY(-50%) scale(1.15);
+        }
+
+        .toolbar .tab-btn[data-view="search"].active {
+            background-color: var(--accent);
+            color: var(--background-color);
+            corner-shape: superellipse(1.5);
+        }
+
+        .toolbar .tab-btn[data-view="search"].active .material-symbols-rounded {
+            color: var(--background-color) !important; 
+            font-size: 24px;
+            opacity: 1;
+        }
 
         .modal-content {
             max-height: 100%;

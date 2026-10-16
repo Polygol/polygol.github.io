@@ -1706,7 +1706,7 @@ body.onboarding-active .page-indicator {
     justify-content: center;
     color: var(--text-color);
     transition: opacity 0.5s ease;
-    backdrop-filter: blur(50px);
+    --fx-filter: var(--blur2) glass(0.6, 8, 0);
 }
 
 .setup-top-btn {
@@ -1720,6 +1720,7 @@ body.onboarding-active .page-indicator {
     box-shadow: var(--sun-shadow);
     background-color: var(--search-background);
     color: var(--text-color);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
 }
 
 .setup-page {
@@ -1740,11 +1741,34 @@ body.onboarding-active .page-indicator {
     border-radius: 64px;
     corner-shape: superellipse(1.5);
     border: 1px solid var(--glass-border);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
     box-shadow: var(--sun-shadow), 0 0 50px rgba(0, 0, 0, 0.2);
     max-width: 500px;
     width: 60%;
     height: 50%;
     filter: blur(2.5px);
+}
+
+.setup-guide-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    margin: 8px 0;
+}
+
+.setup-guide-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--search-background);
+    padding: 14px 18px;
+    border-radius: 24px;
+    corner-shape: superellipse(1.25);
+    border: 1px solid var(--glass-border);
+    --fx-filter: var(--blur1) glass(0.6, 8, 0);
+    box-shadow: var(--sun-shadow);
 }
 
 .setup-page.active {
@@ -1755,6 +1779,7 @@ body.onboarding-active .page-indicator {
 }
 
 .setup-screen.startimpression {
+    --fx-filter: none;
     backdrop-filter: none;
 }
 

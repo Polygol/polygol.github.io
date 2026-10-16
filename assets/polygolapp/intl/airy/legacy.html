@@ -48,7 +48,7 @@
         
         .card {
             background-color: var(--card-background);
-            backdrop-filter: blur(10px) saturate(2);
+            --fx-filter: var(--blur1) glass(0.6, 8, 0);
             border: 1px solid var(--glass-border);
             border-radius: 50px;
             corner-shape: superellipse(1.5);
@@ -213,19 +213,19 @@
                     mediaType: 'video',
                     media: '/assets/polygolapp/intl/airy/gesture.mp4',
                     title: L.LEGACY_GESTURE_TITLE || 'Not really used to these touch things... probably still works with the mouse though...',
-                    description: L.LEGACY_GESTURE_DESC || 'Swipe left or right on the Home Screen to switch wallpapers, and that\'s if you even have any. Swipe up from the pill shaped thing to open the App Drawer. Yay...'
+                    description: L.LEGACY_GESTURE_DESC || 'Swipe up from Beginnings to enter your Minihompy home screen. Swipe vertically to switch between pages, or swipe down from the top edge for Controls. Touch is priority #1, but your mouse works great too.'
                 },
                 {
                     mediaType: 'image',
                     media: '/assets/polygolapp/intl/airy/controls.png',
                     title: L.LEGACY_CONTROLS_TITLE || 'Apparently, you can change anything about your home screen.',
-                    description: L.LEGACY_CONTROLS_DESC || 'When you open Controls, you can change nearly everything about your Home Screen. Why are you staring at me? I don\'t know. I just got spawned here...'
+                    description: L.LEGACY_CONTROLS_DESC || 'Swipe down from the top edge or tap the clock to open Controls. You can adjust daylight, brightness, tone, and system settings anytime. Why are you staring at me? I don\'t know. I just got spawned here...'
                 },
                 {
                     mediaType: 'image',
                     media: '/assets/polygolapp/intl/airy/bye.png',
                     title: L.LEGACY_BYE_TITLE || 'Uhhh... pretty sure this is the end of our chat.',
-                    description: L.LEGACY_BYE_DESC || 'Polygol is waiting for you. Tap below to get started and explore your new dashboard... or don\'t... ...bye.'
+                    description: L.LEGACY_BYE_DESC || 'Polygol is ready for you. Tap below to get started and explore your new home screen... or don\'t... ...bye.'
                 }
             ];
 

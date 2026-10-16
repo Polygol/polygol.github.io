@@ -1,7 +1,38 @@
-<div style='text-align:center;'>
-  <br><br>
-  <h1>Learn how to use Polygol.</h1>
-  <p style='font-size: 1.1rem; opacity: 0.8;'>Swipe up from the bottom pill to continue.</p>
-  <br><br>
-  <p style='font-size: 0.8rem; opacity: 0.5;'>Data will not be saved for this instance.</p>
+<div style="text-align: center; max-width: 520px; margin: 0 auto; font-family: 'Open Runde', 'Inter', sans-serif;">
+    <div style="margin-top: 20px; margin-bottom: 24px;">
+        <img src="/assets/appicon/airy.png" alt="Airy" style="width: 72px; height: 72px; border-radius: 50%; box-shadow: var(--sun-shadow); --fx-filter: var(--blur1) glass(0.6, 8, 0);">
+    </div>
+    <h1 style="margin: 0 0 12px 0; font-size: 2.2rem; font-weight: 700; color: var(--text-color);" data-lang-key="WELCOME_TITLE">Welcome to Polygol</h1>
+    <p style="font-size: 1.15rem; line-height: 1.6; opacity: 0.85; color: var(--text-color); margin-bottom: 30px;" data-lang-key="WELCOME_DESC">
+        Swipe up from the bottom to enter your Minihompy home screen, or explore the modules below to learn fluid gestures, controls, and customization.
+    </p>
+
+    <div style="background: var(--search-background); padding: 16px 20px; border-radius: 24px; border: 1px solid var(--glass-border); --fx-filter: var(--blur1) glass(0.6, 8, 0); box-shadow: var(--sun-shadow); text-align: left; display: flex; align-items: center; gap: 14px; margin-bottom: 24px;">
+        <span class="material-symbols-rounded" style="font-size: 28px; color: var(--text-color);">touch_app</span>
+        <span style="font-size: 0.95rem; line-height: 1.4; color: var(--secondary-text-color);" data-lang-key="WELCOME_TOUCH_MOUSE">
+            Polygol is touch-first with full mouse support. Data is not saved for this instance.
+        </span>
+    </div>
 </div>
+<script>
+(function() {
+    function translateDoc() {
+        const langCode = (localStorage.getItem('selectedLanguage') || 'EN').toUpperCase();
+        const langMap = { 'EN': window.LANG_EN, 'JP': window.LANG_JP, 'JA': window.LANG_JP, 'KO': window.LANG_KO, 'ZH': window.LANG_ZH };
+        const L = (window.currentLanguage) || (langMap[langCode]) || window.LANG_EN;
+        if (!L) return;
+        document.querySelectorAll('[data-lang-key]').forEach(el => {
+            const key = el.getAttribute('data-lang-key');
+            if (L[key]) el.textContent = L[key];
+        });
+    }
+    if (typeof window.LANG_EN === 'undefined') {
+        const s = document.createElement('script');
+        s.src = '/assets/polygolapp/intl/airy/lang.js';
+        s.onload = translateDoc;
+        document.head.appendChild(s);
+    } else {
+        translateDoc();
+    }
+})();
+</script>
