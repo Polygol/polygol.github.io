@@ -1541,7 +1541,6 @@ const _fallbacks = {
         overlay.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: var(--overlay-color);
-            --fx-filter: var(--blur2) glass(0.6, 8, 0);
             z-index: 999998; display: flex; justify-content: center; align-items: center;
             opacity: 0; transition: opacity 0.3s ease;
             touch-action: manipulation;
@@ -1560,7 +1559,7 @@ const _fallbacks = {
             --fx-filter: var(--blur2) glass(0.6, 8, 0);
             color: var(--text-color);
             border: 1px solid var(--glass-border);
-            border-radius: 35px;
+            border-radius: 50px;
             corner-shape: superellipse(1.5);
             padding: 24px;
             box-shadow: var(--sun-shadow), 0 20px 40px rgba(0, 0, 0, 0.25);
@@ -1648,7 +1647,7 @@ const _fallbacks = {
             btn.type = 'button';
             btn.textContent = text;
             btn.style.cssText = `
-                flex: 1; padding: 12px 16px; border-radius: 20px; corner-shape: superellipse(1.5);
+                flex: 1; padding: 12px 16px; border-radius: 50px;
                 border: 1px solid var(--glass-border); cursor: pointer; font-family: 'Inter', sans-serif;
                 font-size: 0.95rem; font-weight: 600; box-shadow: var(--sun-shadow); outline: none;
                 min-height: 44px; touch-action: manipulation; transition: transform 0.15s ease, filter 0.2s ease;
