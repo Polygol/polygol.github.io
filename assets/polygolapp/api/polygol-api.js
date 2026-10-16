@@ -746,82 +746,88 @@ let _isSuspended = false;
         /* Default: preserve the original toolbar positioning */
         @media (min-width: 600px) {
             .toolbar {
-                left: 50%;
-                right: auto;
-                transform: translateX(-50%);
+                left: 50% !important;
+                right: auto !important;
+                transform: translateX(-50%) !important;
             }
 
             /* Counterweight only when Search is present */
             .toolbar:has(.tab-btn[data-view="search"]) {
-                left: calc(50% - 28px);
+                left: calc(50% - 28px) !important;
             }
         }
 
         /* Separate Search button */
         .toolbar .tab-btn[data-view="search"] {
-            position: fixed;
-            left: calc(100% + 12px);
-            right: auto;
-            top: 50%;
-            transform: translateY(-50%);
+            position: fixed !important;
+            left: calc(100% + 12px) !important;
+            right: auto !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
 
-            width: 45px;
-            height: 45px;
-            min-width: 45px;
-            padding: 0;
-            margin: 0;
-            box-sizing: border-box;
+            width: 45px !important;
+            height: 45px !important;
+            min-width: 45px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-sizing: border-box !important;
 
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
 
-            border: 1px solid var(--glass-border);
-            border-radius: 50%;
-            background: var(--search-background);
-            box-shadow: var(--sun-shadow);
-            gap: 0;
+            border: 1px solid var(--glass-border) !important;
+            border-radius: 50% !important;
+            background: var(--search-background) !important;
+            box-shadow: var(--sun-shadow) !important;
+            gap: 0 !important;
             --fx-filter: var(--blur1) glass(0.6, 8, 0);
+
+            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1) !important;
         }
 
+        /* Hide Search label by default */
         .toolbar .tab-btn[data-view="search"] [data-lang-key="SEARCH"] {
-            display: none;
+            display: none !important;
         }
 
+        /* Search icon */
         .toolbar .tab-btn[data-view="search"] .material-symbols-rounded {
-            display: inline-block;
-            font-size: 20px;
-            color: var(--secondary-text-color);
-            opacity: 1;
+            display: inline-block !important;
+            font-size: 20px !important;
+            color: var(--secondary-text-color) !important;
+            opacity: 1 !important;
         }
 
-        /* Search button transition */
-        .toolbar .tab-btn[data-view="search"] {
-            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
-        }
-
-        .toolbar .tab-btn[data-view="search"] {
-            transition: all 0.3s cubic-bezier(.2, 1.3, .64, 1);
-        }
-
+        /* Search button press animation */
         .toolbar .tab-btn[data-view="search"]:active {
-            transform: translateY(-50%) scale(1.15);
+            transform: translateY(-50%) scale(1.15) !important;
         }
 
         .toolbar .tab-btn[data-view="search"].active:active {
-            transform: translateY(-50%) scale(1.15);
+            transform: translateY(-50%) scale(1.15) !important;
         }
 
+        /* Active Search button */
         .toolbar .tab-btn[data-view="search"].active {
-            background-color: var(--accent);
-            color: var(--background-color);
-            corner-shape: superellipse(1.5);
+            background-color: var(--accent) !important;
+            color: var(--background-color) !important;
+            corner-shape: superellipse(1.5) !important;
+            border-radius: 25px !important;
+            gap: 8px !important;
+            padding: 0 14px !important;
+            width: auto !important;
         }
 
+        /* Show label when Search is active */
+        .toolbar .tab-btn[data-view="search"].active [data-lang-key="SEARCH"] {
+            display: inline !important;
+        }
+
+        /* Active Search icon */
         .toolbar .tab-btn[data-view="search"].active .material-symbols-rounded {
-            color: var(--background-color) !important; 
-            font-size: 24px;
-            opacity: 1;
+            color: var(--background-color) !important;
+            opacity: 1 !important;
         }
 
         .modal-content {
